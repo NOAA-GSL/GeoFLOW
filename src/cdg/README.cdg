@@ -1,0 +1,32 @@
+Largely a designation to distinguish between the DG method and the low-order
+IFV counterpart, this is the src entry for the Cubesphere Discontinuous Galerkin 
+(CDG) Dwarf. It may, nevertheless, use a variety of grids.
+
+NOTES:
+
+(1) Source file types:
+
+    .hpp files contain the header, which in most cases will contain
+    prototypes of methods;
+
+    .tpp files are included in the .hpp files, and contain full method
+    specifications, as though they _were_ included in the .hpp file. 
+    They are in #included in the .hpp file header specification. This 
+    was done in order to get the template meta-programming (via SFINAE)
+    to work properly. It is hoped that these will be able to wrapped 
+    into the .ipp files in the future (hence, the 't' in '.tpp' may
+    be regarded as meaning 'temporary').
+
+    .ipp files generally contain the methods that would be contained 
+    in .cpp files, but are exclusive to template classes. These are
+    contained after the header specification in a .hpp file. This is 
+    required for some template classes (e.g., GTVector), that may 
+    use themselves as template arguments. For template classes that 
+    do no specialize, it is expected that _all_ methods will be included
+    in these files, and that there will be _no_ .cpp file. 
+
+    .cpp files contain the definition for the methods in the .hpp file.
+    In the case of template classes, this would, e.g., also contain
+    those methods that are fully specialized (e.g., as in GTVector).
+    
+
