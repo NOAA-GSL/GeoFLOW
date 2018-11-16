@@ -50,6 +50,9 @@ GAdvect::~GAdvect()
 // METHOD : apply
 // DESC   : Compute application of this operator to input vector:
 //            po = p Div u
+//          NOTE: Require GDIM velocity components for GE_DEFORMED or
+//                GE_REGULAR elements, and require GDIM+1 components
+//                for GE_2DEMBEDDED elements.
 // ARGS   : p : input p field
 //          u : input vector field
 //          po: output (result) vector
@@ -60,6 +63,10 @@ void GAdvect::apply(GTVector<GFTYPE> &p, GTVector<GTVector<GFTYPE>*> &u, GTVecto
 {
   assert(bInitialized_ && "Operator not initialized");
     
+  GSIZET nxy = grid_->itype(GE_2DEMBEDDED) > 0 > GDIM+1 : GDIM;
+
+  assert(u.size() >= nxy && "Insufficient number of velocity components");
+
   if ( grid_->itype(GE_REGULAR).size() > 0 ) {
     reg_prod(p, u, po);
   }
@@ -75,7 +82,9 @@ void GAdvect::apply(GTVector<GFTYPE> &p, GTVector<GTVector<GFTYPE>*> &u, GTVecto
 //**********************************************************************************
 // METHOD : def_prod
 // DESC   : Compute this term for 2d & 3d GE_DEFORMED elements.
-//          NOTE: must have GDIM+1 utmp_ vectors set via set_tmp method
+//          NOTE: must have 5 utmp_ vectors set via set_tmp method if
+//                using GDIM=3 or if GDIM=2 & are using GE_2DEMBEDDED elements;
+//                If using 2D deformed elements, need just 4 utmp_ vectors.
 // ARGS   : p : input vector (global)
 //          u : input vector field (global)
 //          po: output (result) field (global)
@@ -87,29 +96,39 @@ void GAdvect::def_prod(GTVector<GFTYPE> &p, GTVector<GTVector<GFTYPE>*> &u, GTVe
   assert( utmp_.size() >= GDIM+1
        && "Insufficient temp space specified");
 
-  GElemList *gelems=&grid_->elems();
 
 // Must compute:
 //    po = u . Grad p = Dj Rji (pu^i) W J  
-//                      --              -- --    --
-//                      | R11   R12  R13 | | p u1 |
-//       = [D1 D2 D3]^T | R21   R22  R23 | | p u2 | W J
-//                      | R31   R32  R33 | | p u3 |
-//                      --              -- --    --
+// Can be cast into:
+//                      --              -- --  --
+//                      | R11   R12  R13 | | D1 |
+//       = [u1 u2 u3]   | R21   R22  R23 | | D2 | p W J
+//                      | R31   R32  R33 | | D3 |
+//                      --              -- --  --
 //
 // where
 //    D1 f = (I_X_I_X_Dx)f; D2 f = (I_X_Dy_X_I)f; D3 f = (Dz_X_I_X_I)f
-// and Rij derivative matrix computed in the element, dXi^i/dX^j, which
+// and Rij derivative matrix computed in the element, dX^j/dX^i, which
 // doesn't include the weights or the Jacobian.
 
-  GMTK::compute_grefderivs(*grid_, p, etmp1_, utmp_); // utmp stores tensor-prod derivatives, Dj u
+  GTVector<GTVector<GFTYPE>> *dXidX = &grid_->dXidX(); // get Rij
+  GTVector<GFTYPE>           *Jac   = &grid_->Jac  (); // get J
 
-  // Compute po += Gj uj (D^j p): 
+  // Get derivatives with weights:
+  GMTK::compute_grefderivsW(*grid_, p, etmp1_, utmp_); // utmp stores tensor-prod derivatives, Dj p
+
+  GSIZET nxy = grid_->itype(GE_2DEMBEDDED) > 0 > GDIM+1 : GDIM;
+
+  // Compute po += ui Rij (D^j p): 
   po = 0.0;
-  for ( GSIZET j=0; j<GDIM; j++ ) { 
-    utmp_[j]->pointProd(*G_[j],*utmp_[GDIM]); // Gj * Dj p
-    *utmp_[j].pointProd(*u[j]); // do uj * (Gj * Dj p)
-    po += *utmp_[GDIM];
+  for ( GSIZET j=0; j<nxy; j++ ) { 
+    *utmp_[nxy+1]0.0;
+    for ( GSIZE i=0; i<nxy; i++ ) {
+      dXidX(i,j)=>->pointProd(*utmp_[i],*utmp_[nxy]); // Rij Dj p
+      *utmp_[nxy+1] += *utmp_[nxy];
+    }
+    utmp_[nxy+1]->pointProd(*Jac); // J Rij  Dj p
+    po += *utmp_[nxy+1];
   }
 
 } // end of method def_prod
@@ -133,8 +152,6 @@ void GAdvect::reg_prod(GTVector<GFTYPE> &p, GTVector<GTVector<GFTYPE>*> &u, GTVe
   assert( utmp_.size() >= GDIM+1
        && "Insufficient temp space specified");
 
-  GElemList *gelems=&grid_->elems();
-
 // Must compute:
 //    po = u . Grad p = W J (G1 u1 D1 + G2 u2 D2 + G3 u3 D3 ) p
 //
@@ -146,9 +163,10 @@ void GAdvect::reg_prod(GTVector<GFTYPE> &p, GTVector<GTVector<GFTYPE>*> &u, GTVe
 // as is the Jacobian. Weights are provided by mass matrix, which
 // is set on construction, so that we don't have to re-compute it here:
 
-  GMTK::compute_grefderivs(*grid_, p, etmp1_, utmp_); // utmp stores tensor-prod derivatives, Dj u
+  // Get derivatives with weights:
+  GMTK::compute_grefderivsW(*grid_, p, etmp1_, utmp_); // utmp stores tensor-prod derivatives, Dj p
 
-  // Compute po += Gj uj D^j p): 
+  // Compute po += Rj uj D^j p): 
   po = 0.0;
   for ( GSIZET j=0; j<GDIM; j++ ) { 
     *utmp_[j] *= (*G_[j])[0];   // remember, mass not included in G here
@@ -156,8 +174,10 @@ void GAdvect::reg_prod(GTVector<GFTYPE> &p, GTVector<GTVector<GFTYPE>*> &u, GTVe
     po += *utmp_[GDIM];
   }
 
+#if 0
   // apply mass:
   massop_->opVec_prod(*utmp_[0], po);
+#endif
 
 } // end of method reg_prod
 
