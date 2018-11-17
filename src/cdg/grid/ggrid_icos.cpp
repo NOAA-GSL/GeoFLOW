@@ -490,7 +490,9 @@ void GGridIcos::do_grid2d(GGrid &grid, GINT irank)
   //   (5) project the node coords to sphere in Cart. coords 
   fact = 1.0/3.0;
   GSIZET i;
+  GSIZET nfnodes;   // no. face nodes
   GSIZET icurr = 0; // current global index
+  GSIZET fcurr = 0; // current global face index
   // For each triangle in base mesh owned by this rank...
   for ( GSIZET n=0; n<iind.size(); n++ ) { 
     i = iind[n];
@@ -515,8 +517,6 @@ void GGridIcos::do_grid2d(GGrid &grid, GINT irank)
       xNodes  = &pelem->xNodes();  // node spatial data
       xiNodes = &pelem->xiNodes(); // node ref interval data
       Ni.resize(pelem->nnodes());
-      pelem->igbeg() = icurr;      // beginning global index
-      pelem->igend() = icurr+pelem->nnodes()-1; // end global index
 
       project2sphere(cverts, radiusi_); // project verts to sphere     
       c = (cverts[0] + cverts[1] + cverts[2] + cverts[3])*0.25; // elem centroid
@@ -539,7 +539,15 @@ void GGridIcos::do_grid2d(GGrid &grid, GINT irank)
       project2sphere(*xNodes, radiusi_);
       pelem->init(*xNodes);
       gelems->push_back(pelem);
+      pelem->igbeg() = icurr;      // beginning global index
+      pelem->igend() = icurr+pelem->nnodes()-1; // end global index
+      nfnodes = 0;
+      for ( GSIZET j=0; j<gelems_[i]->nfaces(); j++ )  // get # face nodes
+        nfnodes += gelems_[i]->face_indices(j).size();
+      pelem->ifbeg() = fcurr;
+      pelem->ifend() = fcurr+pelem->face_indices; // end global face index
       icurr += pelem->nnodes();
+      fcurr += nfnodes;
     } // end of element loop for this triangle
   } // end of triangle base mesh loop
 
@@ -587,7 +595,9 @@ void GGridIcos::do_grid3d(GGrid &grid, GINT irank)
   gdd_->doDD(ftcentroids_, irank, iind);
 
   GSIZET i, n;
+  GSIZET nfnodes;   // no. face nodes
   GSIZET icurr = 0; // current global index
+  GSIZET fcurr = 0; // current global face index
   for ( GSIZET n=0; n<iind.size(); n++ ) { // for each hex in irank's mesh
     i = iind[n];
 
@@ -600,8 +610,6 @@ void GGridIcos::do_grid3d(GGrid &grid, GINT irank)
     Ni.resize(pelem->nnodes()); // tensor product shape function
     bdy_ind = &pelem->bdy_indices(); // get bdy indices data member
     bdy_ind->clear();
-    pelem->igbeg() = icurr;      // beginning global index
-    pelem->igend() = icurr + pelem->nnodes()-1; // end global index
     for ( GSIZET l=0; l<3; l++ ) { // loop over sph coords 
       (*xNodes)[l] = 0.0;
       for ( GSIZET m=0; m<8; m++ ) { // loop over verts given in sph coords
@@ -621,7 +629,15 @@ void GGridIcos::do_grid3d(GGrid &grid, GINT irank)
     spherical2xyz(*xNodes); // convert nodal coords to Cartesian coords
     pelem->init(*xNodes);
     gelems->push_back(pelem);
+    nfnodes = 0;
+    for ( GSIZET j=0; j<gelems_[i]->nfaces(); j++ )  // get # face nodes
+      nfnodes += gelems_[i]->face_indices(j).size();
+    pelem->igbeg() = icurr;      // beginning global index
+    pelem->igend() = icurr + pelem->nnodes()-1; // end global index
+    pelem->ifbeg() = fcurr;
+    pelem->ifend() = fcurr+pelem->face_indices; // end global face index
     icurr += pelem->nnodes();
+    fcurr += nfnodes;
   } // end of hex mesh loop
 
   // If we have a callback function, set the boundary conditions here:

@@ -289,7 +289,9 @@ void GGridBox::do_grid2d(GGrid &grid, GINT irank)
   gdd_->doDD(ftcentroids_, irank, iind);
 
   GSIZET i, n;
+  GSIZET nfnodes;   // no. face nodes
   GSIZET icurr = 0; // current global index
+  GSIZET fcurr = 0; // current global face index
   for ( GSIZET n=0; n<iind.size(); n++ ) { // for each hex in irank's mesh
     i = iind[n];
 
@@ -299,8 +301,6 @@ void GGridBox::do_grid2d(GGrid &grid, GINT irank)
     Ni.resize(pelem->nnodes()); // tensor product shape function
     bdy_ind = &pelem->bdy_indices(); // get bdy indices data member
     bdy_ind->clear();
-    pelem->igbeg() = icurr;      // beginning global index
-    pelem->igend() = icurr + pelem->nnodes()-1; // end global index
     for ( GSIZET l=0; l<ndim_; l++ ) { // loop over element Cart coords
       (*xNodes)[l] = 0.0;
       for ( GSIZET m=0; m<pow(2,ndim_); m++ ) { // loop over verts given in Cart coords
@@ -323,7 +323,16 @@ void GGridBox::do_grid2d(GGrid &grid, GINT irank)
     }
 
     gelems->push_back(pelem);
+
+    nfnodes = 0;
+    for ( GSIZET j=0; j<gelems_[i]->nfaces(); j++ )  // get # face nodes
+      nfnodes += gelems_[i]->face_indices(j).size();
+    pelem->igbeg() = icurr;      // beginning global index
+    pelem->igend() = icurr + pelem->nnodes()-1; // end global index
+    pelem->ifbeg() = fcurr;
+    pelem->ifend() = fcurr+nfnodes-1 // end global face index
     icurr += pelem->nnodes();
+    fcurr += nfnodes;
   } // end of hex mesh loop
 
   // If we have a callback function, set the boundary conditions here:
@@ -377,7 +386,9 @@ void GGridBox::do_grid3d(GGrid &grid, GINT irank)
   gdd_->doDD(ftcentroids_, irank, iind);
 
   GSIZET i, n;
+  GSIZET nfnodes;   // no. face indices
   GSIZET icurr = 0; // current global index
+  GSIZET fcurr = 0; // current global face index
   for ( GSIZET n=0; n<iind.size(); n++ ) { // for each hex in irank's mesh
     i = iind[n];
 
@@ -414,7 +425,15 @@ void GGridBox::do_grid3d(GGrid &grid, GINT irank)
     }
 
     gelems->push_back(pelem);
+    nfnodes = 0;
+    for ( GSIZET j=0; j<gelems_[i]->nfaces(); j++ )  // get # face nodes
+      nfnodes += gelems_[i]->face_indices(j).size();
+    pelem->igbeg() = icurr;      // beginning global index
+    pelem->igend() = icurr + pelem->nnodes()-1; // end global index
+    pelem->ifbeg() = fcurr;
+    pelem->ifend() = fcurr+nfnodes-1 // end global face index
     icurr += pelem->nnodes();
+    fcurr += nfnodes;
   } // end of hex mesh loop
 
   // If we have a callback function, set the boundary conditions here:
