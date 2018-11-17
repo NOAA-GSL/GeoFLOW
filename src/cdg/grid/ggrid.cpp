@@ -22,6 +22,7 @@
 // RETURNS: none
 //**********************************************************************************
 GGrid::GGrid()
+:
 {
 } // end of constructor method (1)
 
@@ -171,17 +172,40 @@ std::ostream &operator<<(std::ostream &str, GGrid &e)
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : ndof
-// DESC   : Find number of local dof in grid
+// DESC   : Find number of dof in grid
 // ARGS   : none
 // RETURNS: GSIZET number local dof
 //**********************************************************************************
 GSIZET GGrid::ndof()
 {
+   assert(gelems_.size() > 0 && "Elements not set");
+
    GSIZET Ntot=0;
    for ( GSIZET i=0; i<gelems_.size(); i++ ) Ntot += gelems_[i]->nnodes();
 
    return Ntot;
 } // end of method ndof
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : nsurfdof
+// DESC   : Find number of surface dof in grid
+// ARGS   : none
+// RETURNS: GSIZET number surface dof
+//**********************************************************************************
+GSIZET GGrid::nsurfdof()
+{
+   assert(gelems_.size() > 0 && "Elements not set");
+
+   GSIZET Ntot=0;
+   for ( GSIZET i=0; i<gelems_.size(); i++ ) {
+      for ( GSIZET j=0; j<gelems_[i]->nfaces(); j++ ) 
+        Ntot += gelems_[i]->face_indices(j).size();
+   }
+
+   return Ntot;
+} // end of method nsurfdof
 
 
 //**********************************************************************************
@@ -193,6 +217,8 @@ GSIZET GGrid::ndof()
 //**********************************************************************************
 GFTYPE GGrid::minsep()
 {
+   assert(gelems_.size() > 0 && "Elements not set");
+
    GFTYPE msep = std::numeric_limits<GFTYPE>::max();
    GFTYPE dr;
    GTVector<GTVector<GFTYPE>> *xnodes;
@@ -245,6 +271,8 @@ GFTYPE GGrid::minsep()
 //**********************************************************************************
 GFTYPE GGrid::maxsep()
 {
+   assert(gelems_.size() > 0 && "Elements not set");
+
    GFTYPE msep = 0.0;
    GFTYPE dr;
    GTVector<GTVector<GFTYPE>> *xnodes;
@@ -286,5 +314,106 @@ GFTYPE GGrid::maxsep()
 
    return msep;
 } // end of method maxsep
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : init
+// DESC   : Initialize global (metric) variables. All elements are assumed to be
+//          of the same type.
+// ARGS   : none
+// RETURNS: none
+//**********************************************************************************
+void GGrid::init()
+{
+
+   assert(gelems_.size() > 0 && "Elements not set");
+
+  // Restrict grid to a single element type:
+  assert(grid_->ntype().multiplicity(0) == GE_MAX-1
+        && "Only a single element type allowed on grid");
+
+  if ( grid_->itype(GE_2DEMBEDDED).size() > 0
+    || grid_->itype  (GE_DEFORMED).size() > 0 ) {
+    def_init();
+  }
+
+  if ( grid_->itype(GE_REGULAR).size() > 0 ) {
+    reg_init();
+  }
+
+
+} // end of method init
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : def_init
+// DESC   : Initialize global (metric) variables. All elements are assumed to be
+//          of the same type.
+// ARGS   : none
+// RETURNS: none
+//**********************************************************************************
+void GGrid::def_init()
+{
+   assert(gelems_.size() > 0 && "Elements not set");
+
+   GSIZET nxy = grid_->itype(GE_2DEMBEDDED) > 0 > GDIM+1 : GDIM;
+   GMatrix<GTVector<GFTYPE>> rijtmp;
+
+   // Resize geometric quantities to global size:
+   dXidX_.resize(nxy,nxy);
+   rijtmp.resize(nxy,nxy);
+   for ( GSIZET j=0; j<nxy; j++ ) {
+     for ( GSIZET i=0; i<nxy; i++ )  {
+       dXidX_(i,j).resize(ndof());
+     }
+   }
+   Jac_.resize(ndof());
+   faceJac_.resize(nsurfdof());
+
+   // Resize surface-point-wise normals:
+   faceNormal.resize(nxy); // no. coords for each normal at each face point
+   for ( GSIZET i=0; i<faceNormal.size(); i++ ) faceNormal[i].resize(nsurfdof());
+
+   // Now, set the geometry/metric quanties from the elements:
+   GSIZET nfnode; // number of face nodes
+   GSIZET ibeg, iend; // beg, end indices for global arrays
+   GSIZET ifbeg, ifend; // beg, end indices for global arrays for face quantities
+   for ( GSIZET i=0; i<gelems_.size(); i++ ) {
+     ibeg  = (*gelems)[e]->igbeg(); iend  = (*gelems)[e]->igend();
+     ifbeg = (*gelems)[e]->ifbeg(); ifend = (*gelems)[e]->ifend();
+
+     // Restrict global data to local scope:
+     for ( GSIZET j=0; j<nxy; j++ ) {
+       faceNormal[j].range(ifbeg, ifend); // set range for each coord, j
+       for ( GSIZET i=0; i<nxy; i++ )  {
+         dXidX_(i,j).range(ibeg, iend);
+       }
+     }
+     Jac_.range(ibeg, iend);
+     faceJac_.range(ifbeg, ifend);
+
+     // Set the geom/metric quantities:
+     if ( GDIM == 2 ) {
+       gelems_[i]->dogeom2d(rijtmp, dXidX_, Jac_, faceJac_, faceNormal_);
+     } else if ( GDIM == 3 ) {
+       gelems_[i]->dogeom3d(rijtmp, dXidX_, Jac_, faceJac_, faceNormal_);
+     }
+     
+   } // end, element loop
+
+   // Reset global scope:
+   ibeg  = 0; iend  = ndof()-1;;
+   ifbeg = 0; ifend = nsurfdof()-1;
+   for ( GSIZET j=0; j<nxy; j++ ) {
+     faceNormal[j].range(ifbeg, ifend);
+     for ( GSIZET i=0; i<nxy; i++ )  {
+       dXidX_(i,j).range(ibeg, iend);
+     }
+   }
+   Jac_.range(ibeg, iend);
+   
+} // end of method def_init
 
 
