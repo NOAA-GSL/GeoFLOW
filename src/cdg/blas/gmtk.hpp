@@ -88,7 +88,7 @@ void cross_prod_k(GTVector<GTVector<T>*> &A, GINT *iind, GINT nind, GINT isgn, G
 template<typename T>
 void cross_prod_k(GTVector<T> &Ax, GTVector<T> &Ay, 
                   GINT *iind, GINT nind, GINT isgn, 
-                  GTVector<T> &Cx, GTVector<T> &Cy)
+                  T *Cx, T *Cy)
 {
 
   GSIZET n;
@@ -185,7 +185,7 @@ template<typename T>
 void cross_prod(GTVector<T> &Ax, GTVector<T> &Ay, GTVector<T> &Az,
                 GTVector<T> &Bx, GTVector<T> &By, GTVector<T> &Bz,
                 GINT *iind, GINT nind, 
-                GTVector<T> &Cx, GTVector<T> &Cy, GTVector<T> &Cz)
+                T *Cx, T *Cy, T *Cz)
 {
 
   GSIZET n;
