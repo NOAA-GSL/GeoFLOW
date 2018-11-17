@@ -1726,7 +1726,7 @@ GTVector<GTMatrix<GFTYPE>> &matv, GTVector<GTMatrix<GFTYPE>> &matu, GTVector<GFT
 //          
 // RETURNS: none.
 //***********************************************************************************
-void GElem_base::set_faceNormal2d(GTMatrix<GTVector<GFTYPE>> &rij, GTVector<GVVFType> &faceNormal)
+void GElem_base::set_faceNormal2d(GTMatrix<GTVector<GFTYPE>> &rij, GTVector<GTVector<GFTYPE>> &faceNormal)
 {
   GString serr = "GElem_base::set_faceNormal2d: ";
 
@@ -1739,41 +1739,71 @@ void GElem_base::set_faceNormal2d(GTMatrix<GTVector<GFTYPE>> &rij, GTVector<GVVF
   //   Normal = d_x_/deta X _x_, sides 1, 3
   // if embedded (and normalize; _x_ is vector Cartesian coord)
 
+  GSIZET ibeg, iend;
   if ( elemtype_ == GE_2DEMBEDDED ) { // embedded surfaces
+    ibeg = 0;
+    iend = edge_indices_[0].size()-1;
+    faceNormal.range(ibeg, iend);
     GMTK::cross_prod<GFTYPE>(rij         (0,0), rij         (1,0), rij             (2,0),
                              xNodes_       [0], xNodes_       [1], xNodes_           [2], 
                              edge_indices_ [0].data()            , edge_indices_[0].size(), 
-                             faceNormal [0][0], faceNormal [0][1], faceNormal      [0][2]);
+                             faceNormal    [0], faceNormal    [1], faceNormal         [2]);
+
+    for ( GSIZET j=0; j<2; j++ ) ibeg += edge_indices_[j].size();
+    iend = ibeg + edge_indices_[2].size()-1:
+    faceNormal.range(ibeg, iend);
     GMTK::cross_prod<GFTYPE>(rij         (0,0), rij         (1,0), rij             (2,0),
                              xNodes_       [0], xNodes_       [1], xNodes_           [2], 
                              edge_indices_ [2].data()            , edge_indices_[2].size(), 
-                             faceNormal [2][0], faceNormal [2][1], faceNormal      [2][2]);
+                             faceNormal    [0], faceNormal    [1], faceNormal         [2]);
 
+    ibeg = edge_indices_[0].size();
+    iend = ibeg + edge_indices_[1].size()-1:
+    faceNormal.range(ibeg, iend);
     GMTK::cross_prod<GFTYPE>(rij         (0,1), rij         (1,1), rij             (2,1),
                              xNodes_       [0], xNodes_       [1], xNodes_           [2], 
                              edge_indices_ [1].data()            , edge_indices_[1].size(), 
-                             faceNormal [1][0], faceNormal [1][1], faceNormal      [1][2]);
+                             faceNormal    [0], faceNormal    [1], faceNormal         [2]);
+
+    for ( GSIZET j=0; j<3; j++ ) ibeg += edge_indices_[j].size();
+    iend = ibeg + edge_indices_[3].size()-1:
+    faceNormal.range(ibeg, iend);
     GMTK::cross_prod<GFTYPE>(rij         (0,1), rij         (1,1), rij             (2,1),
                              xNodes_       [0], xNodes_       [1], xNodes_           [2], 
                              edge_indices_ [3].data()            , edge_indices_[3].size(), 
-                             faceNormal [3][0], faceNormal [3][1], faceNormal      [3][2]);
+                             faceNormal    [0], faceNormal    [1], faceNormal         [2]);
   }
   else { // non-embedded surfaces
 
+    ibeg = 0;
+    iend = edge_indices_[0].size()-1;
+    faceNormal.range(ibeg, iend);
     GMTK::cross_prod_k<GFTYPE>(rij         (0,0), rij         (1,0), 
                                edge_indices_ [0].data() , edge_indices_[0].size(),  1,
-                               faceNormal [0][0], faceNormal [0][1]);
+                               faceNormal    [0], faceNormal    [1]);
+    for ( GSIZET j=0; j<2; j++ ) ibeg += edge_indices_[j].size();
+    iend = ibeg + edge_indices_[2].size()-1:
+    faceNormal.range(ibeg, iend);
     GMTK::cross_prod_k<GFTYPE>(rij         (0,0), rij         (1,0), 
                                edge_indices_ [2].data() , edge_indices_[2].size(), -1,
-                               faceNormal [2][0], faceNormal [2][1]);
+                               faceNormal    [0], faceNormal    [1]);
 
+    ibeg = edge_indices_[0].size();
+    iend = ibeg + edge_indices_[1].size()-1:
+    faceNormal.range(ibeg, iend);
     GMTK::cross_prod_k<GFTYPE>(rij         (0,1), rij         (1,1), 
                                edge_indices_ [1].data() , edge_indices_[1].size(),  1,
-                               faceNormal [1][0], faceNormal [1][1]);
+                               faceNormal    [0], faceNormal    [1]);
+    for ( GSIZET j=0; j<3; j++ ) ibeg += edge_indices_[j].size();
+    iend = ibeg + edge_indices_[3].size()-1:
+    faceNormal.range(ibeg, iend);
     GMTK::cross_prod_k<GFTYPE>(rij         (0,1), rij         (1,1), 
                                edge_indices_ [3].data() , edge_indices_[3].size(), -1,
-                               faceNormal [3][0], faceNormal [3][1]);
+                               faceNormal    [0], faceNormal    [1]);
   }
+  
+  for ( GSIZET j=0; j<4; j++ ) iend += edge_indices_[j].size();
+  faceNormal.range(0, iend-1);
 
   
 } // end of method set_faceNormal2d
@@ -1784,31 +1814,38 @@ void GElem_base::set_faceNormal2d(GTMatrix<GTVector<GFTYPE>> &rij, GTVector<GVVF
 // METHOD : set_faceNormal3d
 // DESC   : Compute faceNormal  components for 3d element
 // ARGS   : 
-//          rij  : matrix of quantities dx_i/dxi_j
+//          rij  : matrix of quantities dx_j/dxi_i
 //          
 // RETURNS: none.
 //***********************************************************************************
-void GElem_base::set_faceNormal3d(GTMatrix<GTVector<GFTYPE>> &rij, GTVector<GVVFType> &faceNormal)
+void GElem_base::set_faceNormal3d(GTMatrix<GTVector<GFTYPE>> &rij, GTVector<GTVector<GFTYPE>> &faceNormal)
 {
   GString serr = "GElem_base::set_faceNormal3d: ";
 
+  GSIZET ibeg, iend, ntot;
 
   // For each face, take cross prod of d_x_/dxi_1 X d_x_/dxi_2
   // where xi1, and xi2 are the reference coords of the face:
+  ibeg = 0;
+  ntot = 0;
   for ( GSIZET k=0; k<4; k++ ) { // vertical faces
 //  GMTK::cross_prod<GFTYPE>(pdx1, pdx2, face_indices_[k].data(), face_indices_[k].size(), pf);
     GMTK::cross_prod<GFTYPE>(rij           (0,k%2), rij         (1,k%2), rij             (2,k%2),
                              rij             (0,2), rij           (1,2), rij               (2,2),
-                             face_indices_ [0].data()                  , face_indices_[0].size(), 
-                             faceNormal     [k][0], faceNormal   [k][1], faceNormal      [k][2]);
+                             face_indices_ [k].data()                  , face_indices_[k].size(), 
+                             faceNormal        [0], faceNormal      [1], faceNormal         [2]);
+    ntot += face_indices_[k].size();
   }
   
   for ( GSIZET k=4; k<6; k++ ) { // bottom, top faces
     GMTK::cross_prod<GFTYPE>(rij             (0,0), rij           (1,0), rij               (2,0),
                              rij             (0,1), rij           (1,1), rij               (2,1),
-                             face_indices_ [0].data()                  , face_indices_[0].size(), 
-                             faceNormal     [k][0], faceNormal   [k][1], faceNormal      [k][2]);
+                             face_indices_ [k].data()                  , face_indices_[k].size(), 
+                             faceNormal        [0], faceNormal      [1], faceNormal         [2]);
+    ntot += face_indices_[k].size();
   }
+  for ( GSIZET k=0; k<faceNormal.size(); k++ ) 
+    faceNormal[k].range(0, ntot);
   
 } // end of method set_faceNormal3d
 

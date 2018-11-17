@@ -44,11 +44,8 @@ inline  GTVector<GFTYPE>   *dXidX(GINT i,GINT j){ return &dXidX_(i,j);}
 inline  GTVector<GFTYPE>   &Jac(){ return Jac_; }                     // global Jacobian
 inline  GTVector<GTVector<GFTYPE>>
                            &faceJac(){ return faceJac_; }             // global face Jacobian
-inline  GTVector<GFTYPE>   &faceJac(GINT i){ return faceJac_[i];}     // global face Jacobian
-inline  GTVector<GTVector<GTVector<GFTYPE>>>
-                           &faceNormal(){ return faceNormal_;}        // global face Jacobian
 inline  GTVector<GTVector<GFTYPE>>
-                           &faceNormal(GINT i){ return faceNormal_[i];}  // global face Jacobian
+                           &faceNormal(){ return faceNormal_;}        // global face Jacobian
 
 
 friend  std::ostream&        operator<<(std::ostream&, GGrid &);    // Output stream operator

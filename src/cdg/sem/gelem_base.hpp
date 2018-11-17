@@ -147,8 +147,8 @@ inline  GTVector<GBdyType> &bdy_types(){ return bdy_types_;}
 inline  GTVector<GFTYPE>   &mask(){ return mask_;}
 
 virtual void                dogeom1d (GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFTYPE>> &irij, GTVector<GFTYPE> &jac, GVVFType &facejac, GTVector<GVVFType> &faceNormal); 
-virtual void                dogeom2d (GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFTYPE>> &irij, GTVector<GFTYPE> &jac, GVVFType &facejac, GTVector<GVVFType> &faceNormal); 
-virtual void                dogeom3d (GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFTYPE>> &irij, GTVector<GFTYPE> &jac, GVVFType &facejac, GTVector<GVVFType> &faceNormal); 
+virtual void                dogeom2d (GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFTYPE>> &irij, GTVector<GFTYPE> &jac, GVVFType &facejac, GTVector<GTVector<GFTYPE>> &faceNormal); 
+virtual void                dogeom3d (GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFTYPE>> &irij, GTVector<GFTYPE> &jac, GVVFType &facejac, GTVector<GTVector<GFTYPE>> &faceNormal); 
 
 friend std::ostream&        operator<<(std::ostream&, GElem_base &);    // Output stream operator
  
@@ -174,8 +174,8 @@ virtual void                get_indirect3d(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b,
         void                det(GMVFType &gij, GTVector<GFTYPE> &det, GBOOL &pChk, GINT *ind, GINT nind);
 virtual void                Jac_embed(GMVFType &G, GTVector<GFTYPE> &jac, GBOOL &pChk, GINT *pind, GINT nind);
         void                inv(GMVFType &G, const GTVector<GFTYPE> &jac, GMVFType &iG);
-        void                set_faceNormal2d(GTMatrix<GTVector<GFTYPE>> &rij, GTVector<GVVFType> &faceNormal);
-        void                set_faceNormal3d(GTMatrix<GTVector<GFTYPE>> &rij, GTVector<GVVFType> &faceNormal);
+        void                set_faceNormal2d(GTMatrix<GTVector<GFTYPE>> &rij, GTVector<GTVector<GFTYPE>> &faceNormal);
+        void                set_faceNormal3d(GTMatrix<GTVector<GFTYPE>> &rij, GTVector<GTVector<GFTYPE>> &faceNormal);
                                         
 
 GINT                    Ntot_;          // total no. node points in element
