@@ -96,20 +96,20 @@ void GMass::init1d()
   GTVector<GFTYPE> *Jac;
   GElemList *gelems;
 
- 
+  Jac    = &grid_->Jac(); 
   gelems = &grid_->elems(); 
   mass_.resize(grid_->ndof());
   mass_ = 0.0;
   for ( GSIZET i=0, n=0; i<gelems->size(); i++ ) {
     for ( GSIZET j=0; j<GDIM; j++ ) {
-      Jac     = &(*gelems)[i]->Jac();
       W[i]    = (*gelems)[i]->gbasis(j)->getWeights();
       N[j]    = (*gelems)[i]->size(j);
     }
     for ( GSIZET j=0; j<N[0]; j++,n++ ) {
-      mass_[n] = (*W[0])[j]*(*Jac)[j];
+      mass_[n] = (*W[0])[j];
     }
   }
+  mass_.pointProd(*Jac);
 
 } // end of method init1d
 
@@ -134,21 +134,22 @@ void GMass::init2d()
 
   // Fill Fill mass vector with tensor product of weights and
   // Jacobian: 
+  Jac    = &grid_->Jac(); 
   gelems = &grid_->elems();
   mass_.resize(grid_->ndof());
   for ( GSIZET i=0, n=0; i<gelems->size(); i++ ) {
-    Jac     = &(*gelems)[i]->Jac();
     for ( GSIZET j=0; j<GDIM; j++ ) {
       W[j]    = (*gelems)[i]->gbasis(j)->getWeights();
       N[j]    = (*gelems)[i]->size(j);
     }
     for ( GSIZET k=0; k<N[1]; k++ ) {
       for ( GSIZET j=0; j<N[0]; j++,n++ ) {
-        mass_[n] = (*W[1])[k]*(*W[0])[j] 
-                 * (*Jac)[j+k*N[0]];
+        mass_[n] = (*W[1])[k]*(*W[0])[j];
+                 
       }
     }
   }
+  mass_.pointProd(*Jac);
 
 } // end of method init2d
 
@@ -173,11 +174,11 @@ void GMass::init3d()
 
   // Fill mass vector with tensor product of weights and
   // Jacobian: 
+  Jac    = &grid_->Jac(); 
   gelems = &grid_->elems();
   mass_.resize(grid_->ndof());
   mass_ = 0.0;
   for ( GSIZET i=0, n=0; i<gelems->size(); i++ ) {
-    Jac     = &(*gelems)[i]->Jac();
     for ( GSIZET j=0; j<GDIM; j++ ) {
       W[i]    = (*gelems)[i]->gbasis(j)->getWeights();
       N[j]    = (*gelems)[i]->size(j);
@@ -185,12 +186,12 @@ void GMass::init3d()
     for ( GSIZET l=0; l<N[2]; l++ ) {
       for ( GSIZET k=0; k<N[1]; k++) {
         for ( GSIZET j=0; j<N[0]; j++,n++ ) {
-          mass_[n] = (*W[2])[l]*(*W[1])[k]*(*W[0])[j]
-                   * (*Jac)[j+k*N[0]+l*N[0]*N[1]];
+          mass_[n] = (*W[2])[l]*(*W[1])[k]*(*W[0])[j];
         }
       }
     }
   }
+  mass_.pointProd(*Jac);
 
 } // end of method init3d
 

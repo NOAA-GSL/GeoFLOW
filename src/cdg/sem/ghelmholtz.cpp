@@ -284,7 +284,7 @@ void GHelmholtz::reg_prod(GTVector<GFTYPE> &u, GTVector<GFTYPE> &uo)
   GMTK::compute_grefderivsW(*grid_, u, etmp1_, utmp_); // utmp stores tensor-prod derivatives
 
   // Multiply by (const) metric factors
-  for ( GSIZET k=0; k<GDIM; k++ ) *utmp_[k] *= (*G_(k,0))[0];
+  for ( GSIZET k=0; k<GDIM; k++ ) *utmp_[k] *= (*G_(k,0))[k];
 
   // Take 'divergence' with transpose(D):
   GMTK::compute_grefdiv(*grid_, gdu, etmp1_, uo, TRUE); // Compute 'divergence' with DT_j
@@ -375,17 +375,26 @@ void GHelmholtz::def_init()
 
 
   // Cycle through all elements; fill metric elements
+
+
+  Jac = &grid_->Jac();
+  dXidX = &grid_->dXidX();
+
+
   for ( GSIZET e=0; e<grid_->elems().size(); e++ ) {
     if ( (*gelems)[e]->elemtype() != GE_DEFORMED 
       && (*gelems)[e]->elemtype() != GE_2DEMBEDDED ) continue;
 
+    // Restrict global data to element range:
     ibeg = (*gelems)[e]->igbeg(); iend = (*gelems)[e]->igend();
     for ( GSIZET j=0; j<GDIM; j++ ) {
       W[j]= (*gelems)[e]->gbasis(j)->getWeights();
       N[j]= (*gelems)[e]->size(j);
     }
-    Jac = &(*gelems)[e]->Jac();
-    dXidX = &(*gelems)[e]->dXidX();
+    Jac->range(ibeg, iend);
+    for ( GSIZET j=0; j<nxy; j++ ) 
+      for ( GSIZET i=0; i<nxy; i++ ) (*dXidX)(i,j).range(ibeg, iend);
+    
 
 #if defined(_G_IS2D)
 
@@ -425,6 +434,10 @@ void GHelmholtz::def_init()
 
 #endif
   }
+  ibeg = 0; iend = grid_->ndof();
+  Jac->range(ibeg, iend);
+  for ( GSIZET j=0; j<nxy; j++ ) 
+    for ( GSIZET i=0; i<nxy; i++ ) (*dXidX)(i,j).range(ibeg, iend);
 
 } // end of method def_init
 
@@ -476,14 +489,21 @@ void GHelmholtz::reg_init()
   }
 
 
+
   // Cycle through all elements; fill metric elements
+  Jac   = &grid_->Jac();
+  dXidX = &grid_->dXidX();
   for ( GSIZET e=0; e<grid_->elems().size(); e++ ) {
     if ( (*gelems)[e]->elemtype() != GE_REGULAR ) continue;
 
-    dXidX = &(*gelems)[e]->dXidX();
+    ibeg = (*gelems)[e]->igbeg(); iend = (*gelems)[e]->igend();
+    Jac->range(ibeg, ibeg);
+    for ( GSIZET i=0; i<nxy; i++ ) (*dXidX)(i,0).range(ibeg, ibeg);
+
 
     for ( GSIZET j=0; j<GDIM; j++ ) {
       (*G_(j,0))[0] = (*dXidX)(j,0)[0] * (*dXidX)(j,0)[0];
+      (*G_(j,0)) *= (*Jac)[0];
     }
   }
 
@@ -491,6 +511,11 @@ void GHelmholtz::reg_init()
     massop_ = new GMass(*grid_);
     bown_mass_ = TRUE;
   }
+
+  ibeg = 0; iend = grid_->elems().size()-1;
+  Jac->range(ibeg, iend);
+  for ( GSIZET j=0; j<nxy; j++ ) 
+    for ( GSIZET i=0; i<nxy; i++ ) (*dXidX)(i,j).range(ibeg, iend);
 
 } // end of method reg_init
 
