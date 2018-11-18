@@ -146,7 +146,7 @@ inline  GTVector<GINT>     &bdy_indices(){ return bdy_indices_;}
 inline  GTVector<GBdyType> &bdy_types(){ return bdy_types_;}
 inline  GTVector<GFTYPE>   &mask(){ return mask_;}
 
-virtual void                dogeom1d (GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFTYPE>> &irij, GTVector<GFTYPE> &jac, GVVFType &facejac, GTVector<GVVFType> &faceNormal); 
+virtual void                dogeom1d (GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFTYPE>> &irij, GTVector<GFTYPE> &jac, GVVFType &facejac, GTVector<GTVector<GFTYPE>> &faceNormal); 
 virtual void                dogeom2d (GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFTYPE>> &irij, GTVector<GFTYPE> &jac, GVVFType &facejac, GTVector<GTVector<GFTYPE>> &faceNormal); 
 virtual void                dogeom3d (GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFTYPE>> &irij, GTVector<GFTYPE> &jac, GVVFType &facejac, GTVector<GTVector<GFTYPE>> &faceNormal); 
 

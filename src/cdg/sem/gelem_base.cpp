@@ -830,7 +830,7 @@ void GElem_base::build_elem3d()
 //          faceNormal  : normal at face nodes; may be global 
 // RETURNS: none.
 //***********************************************************************************
-void GElem_base::dogeom1d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFTYPE>> &irij, GTVector<GFTYPE> &jac, GVVFType &fjac, GTVector<GVVFType> &faceNormal)
+void GElem_base::dogeom1d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFTYPE>> &irij, GTVector<GFTYPE> &jac, GVVFType &fjac, GTVector<GTVector<GFTYPE>> &faceNormal)
 {
   GString serr = "GElem_base::dogeom1d: ";
   assert(gshapefcn_ != NULLPTR && "GElem_base::dogeom1d: No shape function specified");
@@ -888,8 +888,8 @@ void GElem_base::dogeom1d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
 
   // Compute edge/face normals: 
   // A vector of GFPoints for each face:
-  faceNormal[0][0][0] = -1.0;
-  faceNormal[1][0][0] =  1.0;
+  faceNormal[0][0] = -1.0;
+  faceNormal[0][1] =  1.0;
 
 } // end of method dogeom1d
 
@@ -910,7 +910,7 @@ void GElem_base::dogeom1d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
 //          faceNormal  : normal at face nodes; may be global 
 // RETURNS: none.
 //***********************************************************************************
-void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFTYPE>> &irij, GTVector<GFTYPE> &jac, GVVFType &fjac, GTVector<GVVFType> &faceNormal)
+void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFTYPE>> &irij, GTVector<GFTYPE> &jac, GVVFType &fjac, GTVector<GTVector<GFTYPE>> &faceNormal)
 {
   GString serr = "GElem_base::dogeom2d: ";
   assert(gshapefcn_ != NULLPTR && "GElem_base::dogeom2d: No shape function specified");
@@ -968,7 +968,7 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
   } else {  // dXi/dX are just constants for reg elements:
 //  irij.resize(nxy,1);
     for ( k=0; k<nxy; k++ ) { // rij matrix element col
-      irij(k,0).bconstdata(TRUE);
+//    irij(k,0).bconstdata(TRUE);
       irij(k,0) = 2.0/L[k];
     } // k-loop
   }
@@ -987,7 +987,7 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
     det (rij, jac, pChk, NULLPTR, 0);
   }
   else if ( elemtype_ == GE_REGULAR ) {
-    jac.bconstdata(TRUE);
+//  jac.bconstdata(TRUE);
     jac[0] = 0.25*L[0]*L[1];
   }
 #endif
@@ -1048,7 +1048,7 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
 //          faceNormal  : normal at face nodes; may be global 
 // RETURNS: none.
 //***********************************************************************************
-void GElem_base::dogeom3d(GTVector<GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFTYPE>> &irij, GTVector<GFTYPE> &jac, GVVFType &fjac, GTVector<GVVFType> &faceNormal)
+void GElem_base::dogeom3d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFTYPE>> &irij, GTVector<GFTYPE> &jac, GVVFType &fjac, GTVector<GTVector<GFTYPE>> &faceNormal)
 {
   GString serr = "GElem_base::dogeom3d: ";
   assert(gshapefcn_ != NULLPTR && "GElem_base::dogeom3d: No shape function specified");
@@ -1109,7 +1109,7 @@ void GElem_base::dogeom3d(GTVector<GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTV
   } else {  // dXi/dX are just constants for reg elements:
 //  irij.resize(nxy,1);
     for ( k=0; k<nxy; k++ ) { 
-      irij(k,0).bconstdata(TRUE);
+//    irij(k,0).bconstdata(TRUE);
       irij(k,0) = 2.0/L[k];
     } // k-loop
   }
@@ -1119,7 +1119,7 @@ void GElem_base::dogeom3d(GTVector<GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTV
     det (rij, jac, pChk, NULLPTR, 0);
   }
   else if ( elemtype_ == GE_REGULAR ) {
-    jac.bconstdata(TRUE);
+//  jac.bconstdata(TRUE);
     jac[0] = 0.125*L[0]*L[1]*L[2];
   }
 
