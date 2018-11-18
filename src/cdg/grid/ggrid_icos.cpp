@@ -430,6 +430,9 @@ void GGridIcos::do_grid(GGrid &grid, GINT irank)
   if ( ndim_ == 3 ) do_grid3d(grid, irank);
   grid.do_typing();
 
+  // Inititialized global grid quantities:
+  grid.init();
+
 } // end, method do_grid
 
 
@@ -475,8 +478,6 @@ void GGridIcos::do_grid2d(GGrid &grid, GINT irank)
 
 
   GTVector<GSIZET> isort;
-  std::ofstream ios;
-  ios.open("mygrid.txt");
 
 
   // When setting elements, must first construct Cartesian
@@ -539,19 +540,17 @@ void GGridIcos::do_grid2d(GGrid &grid, GINT irank)
       project2sphere(*xNodes, radiusi_);
       pelem->init(*xNodes);
       gelems->push_back(pelem);
+      nfnodes = 0;
+      for ( GSIZET j=0; j<(*gelems)[i]->nfaces(); j++ )  // get # face nodes
+        nfnodes += (*gelems)[i]->face_indices(j).size();
       pelem->igbeg() = icurr;      // beginning global index
       pelem->igend() = icurr+pelem->nnodes()-1; // end global index
-      nfnodes = 0;
-      for ( GSIZET j=0; j<gelems_[i]->nfaces(); j++ )  // get # face nodes
-        nfnodes += gelems_[i]->face_indices(j).size();
       pelem->ifbeg() = fcurr;
-      pelem->ifend() = fcurr+pelem->face_indices; // end global face index
+      pelem->ifend() = fcurr+nfnodes-1; // end global face index
       icurr += pelem->nnodes();
       fcurr += nfnodes;
     } // end of element loop for this triangle
   } // end of triangle base mesh loop
-
-  ios.close();
 
 } // end of method do_grid2d
 
@@ -630,12 +629,12 @@ void GGridIcos::do_grid3d(GGrid &grid, GINT irank)
     pelem->init(*xNodes);
     gelems->push_back(pelem);
     nfnodes = 0;
-    for ( GSIZET j=0; j<gelems_[i]->nfaces(); j++ )  // get # face nodes
-      nfnodes += gelems_[i]->face_indices(j).size();
+    for ( GSIZET j=0; j<(*gelems)[i]->nfaces(); j++ )  // get # face nodes
+      nfnodes += (*gelems)[i]->face_indices(j).size();
     pelem->igbeg() = icurr;      // beginning global index
     pelem->igend() = icurr + pelem->nnodes()-1; // end global index
     pelem->ifbeg() = fcurr;
-    pelem->ifend() = fcurr+pelem->face_indices; // end global face index
+    pelem->ifend() = fcurr+nfnodes-1; // end global face index
     icurr += pelem->nnodes();
     fcurr += nfnodes;
   } // end of hex mesh loop

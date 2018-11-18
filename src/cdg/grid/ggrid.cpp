@@ -1,5 +1,5 @@
 //==================================================================================
-// Module       : ggrid_
+// Module       : ggrid
 // Date         : 8/31/18 (DLR)
 // Description  : GeoFLOW grid object. Is primarily a container for
 //                a list of elements, as an indirection buffer
@@ -23,6 +23,7 @@
 //**********************************************************************************
 GGrid::GGrid()
 :
+bInitialized_  (FALSE)
 {
 } // end of constructor method (1)
 
@@ -327,21 +328,25 @@ GFTYPE GGrid::maxsep()
 void GGrid::init()
 {
 
-   assert(gelems_.size() > 0 && "Elements not set");
 
   // Restrict grid to a single element type:
-  assert(grid_->ntype().multiplicity(0) == GE_MAX-1
+  assert(ntype_.multiplicity(0) == GE_MAX-1
         && "Only a single element type allowed on grid");
 
-  if ( grid_->itype(GE_2DEMBEDDED).size() > 0
-    || grid_->itype  (GE_DEFORMED).size() > 0 ) {
+
+  // Have elements been set yet?
+  assert(gelems_.size() > 0 && "Elements not set");
+
+  if ( itype_[GE_2DEMBEDDED].size() > 0
+    || itype_  [GE_DEFORMED].size() > 0 ) {
     def_init();
   }
 
-  if ( grid_->itype(GE_REGULAR).size() > 0 ) {
+  if ( itype_[GE_REGULAR].size() > 0 ) {
     reg_init();
   }
 
+  bInitialized_ = TRUE;
 
 } // end of method init
 
@@ -349,8 +354,8 @@ void GGrid::init()
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : def_init
-// DESC   : Initialize global (metric) variables. All elements are assumed to be
-//          of the same type.
+// DESC   : Initialize global (metric) variables for deformed elems. 
+//          All elements are assumed to be of the same type.
 // ARGS   : none
 // RETURNS: none
 //**********************************************************************************
@@ -358,8 +363,8 @@ void GGrid::def_init()
 {
    assert(gelems_.size() > 0 && "Elements not set");
 
-   GSIZET nxy = grid_->itype(GE_2DEMBEDDED) > 0 > GDIM+1 : GDIM;
-   GMatrix<GTVector<GFTYPE>> rijtmp;
+   GSIZET nxy = itype_[GE_2DEMBEDDED].size() > 0 ? GDIM+1 : GDIM;
+   GTMatrix<GTVector<GFTYPE>> rijtmp;
 
    // Resize geometric quantities to global size:
    dXidX_.resize(nxy,nxy);
@@ -373,20 +378,20 @@ void GGrid::def_init()
    faceJac_.resize(nsurfdof());
 
    // Resize surface-point-wise normals:
-   faceNormal.resize(nxy); // no. coords for each normal at each face point
-   for ( GSIZET i=0; i<faceNormal.size(); i++ ) faceNormal[i].resize(nsurfdof());
+   faceNormal_.resize(nxy); // no. coords for each normal at each face point
+   for ( GSIZET i=0; i<faceNormal_.size(); i++ ) faceNormal_[i].resize(nsurfdof());
 
    // Now, set the geometry/metric quanties from the elements:
    GSIZET nfnode; // number of face nodes
    GSIZET ibeg, iend; // beg, end indices for global arrays
    GSIZET ifbeg, ifend; // beg, end indices for global arrays for face quantities
-   for ( GSIZET i=0; i<gelems_.size(); i++ ) {
-     ibeg  = (*gelems)[e]->igbeg(); iend  = (*gelems)[e]->igend();
-     ifbeg = (*gelems)[e]->ifbeg(); ifend = (*gelems)[e]->ifend();
+   for ( GSIZET e=0; e<gelems_.size(); e++ ) {
+     ibeg  = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
+     ifbeg = gelems_[e]->ifbeg(); ifend = gelems_[e]->ifend();
 
      // Restrict global data to local scope:
      for ( GSIZET j=0; j<nxy; j++ ) {
-       faceNormal[j].range(ifbeg, ifend); // set range for each coord, j
+       faceNormal_[j].range(ifbeg, ifend); // set range for each coord, j
        for ( GSIZET i=0; i<nxy; i++ )  {
          dXidX_(i,j).range(ibeg, iend);
        }
@@ -396,9 +401,9 @@ void GGrid::def_init()
 
      // Set the geom/metric quantities:
      if ( GDIM == 2 ) {
-       gelems_[i]->dogeom2d(rijtmp, dXidX_, Jac_, faceJac_, faceNormal_);
+       gelems_[e]->dogeom2d(rijtmp, dXidX_, Jac_, faceJac_, faceNormal_);
      } else if ( GDIM == 3 ) {
-       gelems_[i]->dogeom3d(rijtmp, dXidX_, Jac_, faceJac_, faceNormal_);
+       gelems_[e]->dogeom3d(rijtmp, dXidX_, Jac_, faceJac_, faceNormal_);
      }
      
    } // end, element loop
@@ -407,7 +412,7 @@ void GGrid::def_init()
    ibeg  = 0; iend  = ndof()-1;;
    ifbeg = 0; ifend = nsurfdof()-1;
    for ( GSIZET j=0; j<nxy; j++ ) {
-     faceNormal[j].range(ifbeg, ifend);
+     faceNormal_[j].range(ifbeg, ifend);
      for ( GSIZET i=0; i<nxy; i++ )  {
        dXidX_(i,j).range(ibeg, iend);
      }
@@ -415,5 +420,150 @@ void GGrid::def_init()
    Jac_.range(ibeg, iend);
    
 } // end of method def_init
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : reg_init
+// DESC   : Initialize global (metric) variables for regular elemes. 
+//          All elements are assumed to be
+//          of the same type.
+// ARGS   : none
+// RETURNS: none
+//**********************************************************************************
+void GGrid::reg_init()
+{
+   assert(gelems_.size() > 0 && "Elements not set");
+
+   GSIZET nxy = GDIM;
+   GTMatrix<GTVector<GFTYPE>> rijtmp;
+
+   // Resize geometric quantities to global size:
+   dXidX_.resize(nxy,1);
+   rijtmp.resize(nxy,1);
+   for ( GSIZET i=0; i<nxy; i++ ) {
+     dXidX_(i,0).resize(ndof());
+   }
+   Jac_.resize(ndof());
+   faceJac_.resize(nsurfdof());
+
+   // Resize surface-point-wise normals:
+   faceNormal_.resize(nxy); // no. coords for each normal at each face point
+   for ( GSIZET i=0; i<faceNormal_.size(); i++ ) faceNormal_[i].resize(nsurfdof());
+
+   // Now, set the geometry/metric quanties from the elements:
+   GSIZET nfnode; // number of face nodes
+   GSIZET ibeg, iend; // beg, end indices for global arrays
+   GSIZET ifbeg, ifend; // beg, end indices for global arrays for face quantities
+   for ( GSIZET e=0; e<gelems_.size(); e++ ) {
+     ibeg  = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
+     ifbeg = gelems_[e]->ifbeg(); ifend = gelems_[e]->ifend();
+
+     // Restrict global data to local scope:
+     for ( GSIZET j=0; j<nxy; j++ ) {
+       faceNormal_[j].range(ifbeg, ifend); // set range for each coord, j
+       for ( GSIZET i=0; i<nxy; i++ )  {
+         dXidX_(i,j).range(ibeg, iend);
+       }
+     }
+     Jac_.range(ibeg, iend);
+     faceJac_.range(ifbeg, ifend);
+
+     // Set the geom/metric quantities:
+     if ( GDIM == 2 ) {
+       gelems_[e]->dogeom2d(rijtmp, dXidX_, Jac_, faceJac_, faceNormal_);
+     } else if ( GDIM == 3 ) {
+       gelems_[e]->dogeom3d(rijtmp, dXidX_, Jac_, faceJac_, faceNormal_);
+     }
+     
+   } // end, element loop
+
+   // Reset global scope:
+   ibeg  = 0; iend  = ndof()-1;;
+   ifbeg = 0; ifend = nsurfdof()-1;
+   for ( GSIZET j=0; j<nxy; j++ ) {
+     faceNormal_[j].range(ifbeg, ifend);
+     for ( GSIZET i=0; i<nxy; i++ )  {
+       dXidX_(i,j).range(ibeg, iend);
+     }
+   }
+   Jac_.range(ibeg, iend);
+   
+} // end of method reg_init
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : dXidX (1)
+// DESC   : return global metric terms
+// ARGS   : none
+// RETURNS: GTMatrix<GTVector<GFTYPE>> &
+//**********************************************************************************
+GTMatrix<GTVector<GFTYPE>> &GGrid::dXidX()
+{
+   assert(bInitialized_ && "Object not inititaized");
+   return dXidX_;
+
+} // end of method dXidX
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : dXidX (2)
+// DESC   : return global metric element
+// ARGS   : i,j : matrix element indices
+// RETURNS: GTVector<GFTYPE> &
+//**********************************************************************************
+GTVector<GFTYPE> &GGrid::dXidX(GSIZET i, GSIZET j)
+{
+   assert(bInitialized_ && "Object not inititaized");
+   return dXidX_(i,j);
+
+} // end of method dXidX
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : Jac
+// DESC   : return global coord transform Jacobian
+// ARGS   : none
+// RETURNS: GTVector<GFTYPE> &
+//**********************************************************************************
+GTVector<GFTYPE> &GGrid::Jac()
+{
+   assert(bInitialized_ && "Object not inititaized");
+   return Jac_;
+
+} // end of method Jac
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : faceJac
+// DESC   : return global coord transform Jacobian for faces
+// ARGS   : none
+// RETURNS: GTVector<GTVector<GFTYPE>> &
+//**********************************************************************************
+GTVector<GTVector<GFTYPE>> &GGrid::faceJac()
+{
+   assert(bInitialized_ && "Object not inititaized");
+   return faceJac_;
+
+} // end of method faceJac
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : faceNormal
+// DESC   : return global vector of normals at face nodes
+// ARGS   : none
+// RETURNS: GTVector<GTVector<GFTYPE>> &
+//**********************************************************************************
+GTVector<GTVector<GFTYPE>> &GGrid::faceNormal()
+{
+   assert(bInitialized_ && "Object not inititaized");
+   return faceNormal_;
+
+} // end of method faceNormal
 
 

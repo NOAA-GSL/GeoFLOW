@@ -35,35 +35,38 @@ public:
         void                 print(GString fname, GBOOL bdof=FALSE);
         GSIZET               ndof();                                  // compute total number elem dof
         GSIZET               nsurfdof();                              // compute total number elem surf dof
+        void                 init();                                  // inititlize class
         GFTYPE               minsep();                                // find min nodal sep
         GFTYPE               maxsep();                                // find max nodal sep
-inline  GTMatrix<GTVector<GFTYPE>>
-                           &dXidX(){ return dXidX_; };                // global Rij = dXi^j/dX^i
-inline  GTVector<GFTYPE>   *dXidX(GINT i,GINT j){ return &dXidX_(i,j);}
+        GTMatrix<GTVector<GFTYPE>>
+                            &dXidX();                                 // global Rij = dXi^j/dX^i
+        GTVector<GFTYPE>    &dXidX(GSIZET i,GSIZET j);                // Rij matrix element 
 
-inline  GTVector<GFTYPE>   &Jac(){ return Jac_; }                     // global Jacobian
-inline  GTVector<GTVector<GFTYPE>>
-                           &faceJac(){ return faceJac_; }             // global face Jacobian
-inline  GTVector<GTVector<GFTYPE>>
-                           &faceNormal(){ return faceNormal_;}        // global face Jacobian
+        GTVector<GFTYPE>    &Jac();                                    // global Jacobian
+        GTVector<GTVector<GFTYPE>>
+                            &faceJac();                                // global face Jacobian
+        GTVector<GTVector<GFTYPE>>
+                            &faceNormal();                             // global face normals
 
 
-friend  std::ostream&        operator<<(std::ostream&, GGrid &);    // Output stream operator
+friend  std::ostream&        operator<<(std::ostream&, GGrid &);      // Output stream operator
  
 
 protected:
        
+        void                 def_init();                              // iniitialze deformed elems
+        void                 reg_init();                              // initialize regular elems
 
 private:
 
+GBOOL                       bInitialized_;  // object initialized?
 GElemList                   gelems_;        // element list
 GTVector<GTVector<GSIZET>>  itype_;         // indices in elem list of each type
 GTVector<GSIZET>            ntype_;         // no. elems of each type on grid
 GTMatrix<GTVector<GFTYPE>>  dXidX_;         // matrix Rij = dXi^j/dX^i, global
-GTVector<GFTYPE>            Jac_;           // interior Jacobian
-GTVector<GTVector<GFTYPE>>  faceJac_;       // face Jacobian
-GTVector<GTVector<GFTYPE>>  
-                            faceNormal_;    // normal to face at each node point (2d & 3d), global
+GTVector<GFTYPE>            Jac_;           // interior Jacobian, global
+GTVector<GTVector<GFTYPE>>  faceJac_;       // face Jacobian, global
+GTVector<GTVector<GFTYPE>>  faceNormal_;    // normal to face at each node point (2d & 3d), global
 
 
 };
