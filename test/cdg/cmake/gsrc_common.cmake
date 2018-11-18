@@ -22,7 +22,7 @@
                     ${GHOME}/sem/gshapefcn_hostd.cpp
                     ${GHOME}/sem/gmass.cpp
                     ${GHOME}/sem/ghelmholtz.cpp
-                    ${GHOME}/sem/gpdv.cpp
+#                   ${GHOME}/sem/gpdv.cpp
     )
 
  set(CDG_GRID_SRC   ${GHOME}/grid/gdd_base.cpp
