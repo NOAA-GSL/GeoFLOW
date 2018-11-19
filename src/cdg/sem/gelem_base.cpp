@@ -830,7 +830,7 @@ void GElem_base::build_elem3d()
 //          faceNormal  : normal at face nodes; may be global 
 // RETURNS: none.
 //***********************************************************************************
-void GElem_base::dogeom1d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFTYPE>> &irij, GTVector<GFTYPE> &jac, GVVFType &fjac, GTVector<GTVector<GFTYPE>> &faceNormal)
+void GElem_base::dogeom1d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFTYPE>> &irij, GTVector<GFTYPE> &jac, GTVector<GFTYPE> &fjac, GTVector<GTVector<GFTYPE>> &faceNormal)
 {
   GString serr = "GElem_base::dogeom1d: ";
   assert(gshapefcn_ != NULLPTR && "GElem_base::dogeom1d: No shape function specified");
@@ -910,7 +910,7 @@ void GElem_base::dogeom1d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
 //          faceNormal  : normal at face nodes; may be global 
 // RETURNS: none.
 //***********************************************************************************
-void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFTYPE>> &irij, GTVector<GFTYPE> &jac, GVVFType &fjac, GTVector<GTVector<GFTYPE>> &faceNormal)
+void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFTYPE>> &irij, GTVector<GFTYPE> &jac, GTVector<GFTYPE> &fjac, GTVector<GTVector<GFTYPE>> &faceNormal)
 {
   GString serr = "GElem_base::dogeom2d: ";
   assert(gshapefcn_ != NULLPTR && "GElem_base::dogeom2d: No shape function specified");
@@ -1021,10 +1021,16 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
 
 //assert(pChk && "Jacobian not positive definite");
 
-  // Compute face Jacobians:
-  for ( j=0; j<nEdges_; j++ ) { 
-    det(rij, fjac[j], pChk, edge_indices_[j].data(), edge_indices_[j].size()); 
+  // Compute face Jacobians. Linearize edge_indices:
+  GINT ntot=0;
+  GTVector<GINT> iedge;
+  for ( j=0; j<nEdges_; j++ ) ntot += edge_indices_[j].size();
+  iedge.resize(ntot);
+  for ( j=0,ntot=0; j<nEdges_; j++ ) { 
+    for ( k=0; k<edge_indices_[j].size(); k++ ) 
+      iedge[ntot++] = edge_indices_[j][k];
   }
+  det(rij, fjac, pChk, iedge.data(), iedge.size()); 
 
   // Compute edge/face normals: 
   set_faceNormal2d(rij, faceNormal);
@@ -1048,7 +1054,7 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
 //          faceNormal  : normal at face nodes; may be global 
 // RETURNS: none.
 //***********************************************************************************
-void GElem_base::dogeom3d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFTYPE>> &irij, GTVector<GFTYPE> &jac, GVVFType &fjac, GTVector<GTVector<GFTYPE>> &faceNormal)
+void GElem_base::dogeom3d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFTYPE>> &irij, GTVector<GFTYPE> &jac, GTVector<GFTYPE> &fjac, GTVector<GTVector<GFTYPE>> &faceNormal)
 {
   GString serr = "GElem_base::dogeom3d: ";
   assert(gshapefcn_ != NULLPTR && "GElem_base::dogeom3d: No shape function specified");
@@ -1150,10 +1156,16 @@ void GElem_base::dogeom3d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
   }
 #endif
 
-  // Compute face Jacobians:
-  for ( j=0; j<nFaces_; j++ ) { 
-    det(rij, fjac[j], pChk, face_indices_[j].data(), face_indices_[j].size()); 
+  // Compute face Jacobians. Linearize face_indices:
+  GINT ntot=0;
+  GTVector<GINT> iface;
+  for ( j=0; j<nFaces_; j++ ) ntot += face_indices_[j].size();
+  iface.resize(ntot);
+  for ( j=0,ntot=0; j<nFaces_; j++ ) { 
+    for ( k=0; k<face_indices_[j].size(); k++ ) 
+      iface[ntot++] = face_indices_[j][k];
   }
+  det(rij, fjac, pChk, iface.data(), iface.size()); 
 
   // Compute face normals: 
   set_faceNormal3d(rij, faceNormal);
