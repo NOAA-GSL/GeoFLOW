@@ -7,6 +7,7 @@
 #
 set(test_ode_files  
         equation_euler.cpp
+        linear_advection.cpp
 )
 
 #

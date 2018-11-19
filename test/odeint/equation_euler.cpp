@@ -62,7 +62,7 @@ protected:
 	}
 
 	void dfdu_impl(const State& u, Jacobian& dfdu, const Time& t){
-		(void*)(&dfdu);
+		//(void*)(&dfdu);
 	}
 
 };
@@ -91,10 +91,6 @@ int main(){
 		stepper->step(sys,u,t,dt);
 		t += dt;
 	}
-
-	std::valarray<std::valarray<double>> a = {{1,2},{3,4}};
-	std::valarray<std::valarray<double>> b = {{1,2},{3,4}};
-	b = std::valarray<double>(3.1415,2) * a;
 
 
 	return 0;
