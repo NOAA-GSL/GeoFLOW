@@ -1,19 +1,17 @@
 /*
- * odeint.cpp
+ * control_stepper.cpp
  *
- *  Created on: Nov 16, 2018
+ *  Created on: Nov 18, 2018
  *      Author: bflynt
  */
 
 
-
 #include <iostream>
 #include <memory>
-#include <vector>
+#include <valarray>
 
 #include "odeint/equation_base.hpp"
-#include "odeint/euler_stepper.hpp"
-#include "odeint/stepper_base.hpp"
+#include "odeint/control_stepper_base.hpp"
 
 using namespace geoflow::odeint;
 
@@ -73,7 +71,7 @@ protected:
 
 int main(){
 
-	using MyTypes = EquationTypes<std::vector<double>>;
+	using MyTypes = EquationTypes<std::valarray<double>>;
 	using EqnBase = EquationBase<MyTypes>;
 	using EqnImpl = HarmonicOscillator<MyTypes>;
 	using StpBase = StepperBase<EqnBase>;
@@ -92,5 +90,12 @@ int main(){
 		t += dt;
 	}
 
+	std::valarray<std::valarray<double>> a = {{1,2},{3,4}};
+	std::valarray<std::valarray<double>> b = {{1,2},{3,4}};
+	b = std::valarray<double>(3.1415,2) * a;
+
+
 	return 0;
 }
+
+

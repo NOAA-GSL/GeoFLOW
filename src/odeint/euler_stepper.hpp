@@ -54,9 +54,8 @@ protected:
 
 
 	void step_impl(EquationPtr& eqn, const State& uin, const Time& t, State& uout, const Time& dt){
-		Derivative dudt(uin.size());
-		eqn->dudt(uin, dudt, t);
-		this->step_impl(eqn,uin,dudt,t,uout,dt);
+		uout = uin;
+		this->step_impl(eqn,uout,t,dt);
 	}
 
 
@@ -66,9 +65,8 @@ protected:
 
 
 	void step_impl(EquationPtr& eqn, const State& uin, const Derivative& dudt, const Time& t, State& uout, const Time& dt){
-		uout = uin + dt * dudt;  // <-- Allows for TMPT optimization
-		//uout = uin;  // Forces copy & axpy
-		//uout += dt * dudt;
+		uout = uin;
+		this->step_impl(eqn,uout,dudt,t,dt);
 	}
 
 };

@@ -6,7 +6,7 @@
 # Build list of all tests to create
 #
 set(test_ode_files  
-        odeint.cpp
+        equation_euler.cpp
 )
 
 #

@@ -23,8 +23,8 @@ namespace odeint {
  * The base class provides the strategy for all time step
  * implementations.
  */
-template<typename EquationType, typename ErrorType = double>
-class ErrorStepperBase {
+template<typename EquationType>
+class StateStepperBase {
 
 public:
 	using Equation    = EquationType;
@@ -35,12 +35,11 @@ public:
 	using Jacobian    = typename Equation::Jacobian;
 	using EquationPtr = std::shared_ptr<Equation>;
 	using Size        = std::size_t;
-	using Error       = ErrorType;
 
-	ErrorStepperBase() = default;
-	ErrorStepperBase(const ErrorStepperBase& si) = default;
-	virtual ~ErrorStepperBase() = default;
-	ErrorStepperBase& operator=(const ErrorStepperBase& si) = default;
+	StateStepperBase() = default;
+	StateStepperBase(const StateStepperBase& si) = default;
+	virtual ~StateStepperBase() = default;
+	StateStepperBase& operator=(const StateStepperBase& si) = default;
 
 	/**
 	 * Return the order of temporal accuracy for the method
@@ -58,21 +57,21 @@ public:
 	 * \param[in,out] u Is the state of the system
 	 * \param[in] t Current time of state u before taking step
 	 * \param[in] dt Size of time step to take
-	 * \param[out] uerr Error of current step
+	 * \param[out] uerr State of current step
 	 */
-	void step(EquationPtr& sys, State& u, const Time& t, const Time& dt, Error& uerr){
+	void step(EquationPtr& sys, State& u, const Time& t, const Time& dt, State& uerr){
 		this->step_impl(sys,u,t,dt,uerr);
 	}
 
-	void step(EquationPtr& sys, const State& uin, const Time& t, State& uout, const Time& dt, Error& uerr){
+	void step(EquationPtr& sys, const State& uin, const Time& t, State& uout, const Time& dt, State& uerr){
 		this->step_impl(sys,uin,t,uout,dt,uerr);
 	}
 
-	void step(EquationPtr& sys, State& u, const Derivative& dudt, const Time& t, const Time& dt, Error& uerr){
+	void step(EquationPtr& sys, State& u, const Derivative& dudt, const Time& t, const Time& dt, State& uerr){
 		this->step_impl(sys,u,dudt,t,t,dt,uerr);
 	}
 
-	void step(EquationPtr& sys, const State& uin, const Derivative& dudt, const Time& t, State& uout, const Time& dt, Error& uerr){
+	void step(EquationPtr& sys, const State& uin, const Derivative& dudt, const Time& t, State& uout, const Time& dt, State& uerr){
 		this->step_impl(sys,uin,dudt,t,uout,dt,uerr);
 	}
 
@@ -83,16 +82,16 @@ protected:
 	virtual Size order_impl() const = 0;
 
 
-	virtual void step_impl(EquationPtr& sys, State& u, const Time& t, const Time& dt, Error& uerr) = 0;
+	virtual void step_impl(EquationPtr& sys, State& u, const Time& t, const Time& dt, State& uerr) = 0;
 
 
-	virtual void step_impl(EquationPtr& sys, const State& uin, const Time& t, State& uout, const Time& dt, Error& uerr) = 0;
+	virtual void step_impl(EquationPtr& sys, const State& uin, const Time& t, State& uout, const Time& dt, State& uerr) = 0;
 
 
-	virtual void step_impl(EquationPtr& sys, State& u, const Derivative& dudt, const Time& t, const Time& dt, Error& uerr) = 0;
+	virtual void step_impl(EquationPtr& sys, State& u, const Derivative& dudt, const Time& t, const Time& dt, State& uerr) = 0;
 
 
-	virtual void step_impl(EquationPtr& sys, const State& uin, const Derivative& dudt, const Time& t, State& uout, const Time& dt, Error& uerr) = 0;
+	virtual void step_impl(EquationPtr& sys, const State& uin, const Derivative& dudt, const Time& t, State& uout, const Time& dt, State& uerr) = 0;
 
 };
 
