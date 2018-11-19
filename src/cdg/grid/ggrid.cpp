@@ -60,6 +60,8 @@ void GGrid::do_typing()
   for ( GSIZET j=0; j<gelems_.size(); j++ ) itmp[j] = gelems_[j]->elemtype();
 
   itype_.resize(GE_MAX);
+  ntype_.resize(GE_MAX);
+  ntype_ = 0;
   for ( GSIZET j=0; j<GE_MAX; j++ ) {
     itmp.contains(static_cast<GElemType>(j),ind,nd);
     for ( GSIZET i=0; i<nd; i++ ) itype_[j].push_back(ind[i]);
