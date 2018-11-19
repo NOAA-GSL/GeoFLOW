@@ -199,12 +199,18 @@ if ( std::isnan(error) ) exit(1);
     GPTLstop("gen_elem_grid");
 
     // Print grid:
+    char    sbuff[1024];
+    GString supp, fname;
+    sprintf(sbuff, "level%d_p%d", ilevel, np);
+    supp = sbuff;
+    fname = "grid_wire_" + supp + ".txt";
     GPTLstart("print_wire_grid");
-    grid.print("grid_wire.txt"); // print vertices only
+    grid.print(fname); // print vertices only
     GPTLstop("print_wire_grid");
 
     GPTLstart("print_elem_grid");
-    grid.print("grid.txt",TRUE); // print internal dof too
+    fname = "grid_" + supp + ".txt";
+    grid.print(fname, TRUE); // print internal dof too
     GPTLstop("print_elem_grid");
 
     // Accumulate errors:
