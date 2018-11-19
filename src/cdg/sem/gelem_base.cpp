@@ -1021,7 +1021,8 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
 
 //assert(pChk && "Jacobian not positive definite");
 
-  // Compute face Jacobians. Linearize edge_indices:
+  // Compute face Jacobians. Linearize edge nodes, including them
+  // in order:
   GINT ntot=0;
   GTVector<GINT> iedge;
   for ( j=0; j<nEdges_; j++ ) ntot += edge_indices_[j].size();
@@ -1156,7 +1157,8 @@ void GElem_base::dogeom3d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
   }
 #endif
 
-  // Compute face Jacobians. Linearize face_indices:
+  // Compute face Jacobians. Linearize edge nodes, including them
+  // in order:
   GINT ntot=0;
   GTVector<GINT> iface;
   for ( j=0; j<nFaces_; j++ ) ntot += face_indices_[j].size();
