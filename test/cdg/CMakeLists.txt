@@ -35,11 +35,11 @@ enable_language (Fortran)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/gtest_macros.cmake)
 
 # Define and set default CMake logical variables here:
-option(DO_DEBUG        "DO_DEBUG"    OFF)   # Compile for DEBUG
+option(DO_DEBUG        "DO_DEBUG"     ON)   # Compile for DEBUG
 option(DO_OPENMP       "DO_OPENMP"    ON)   # Compile for OpenMP
 option(DO_OPENACC      "DO_OPENACC"  OFF)   # Compile for OpenACC
 option(USE_GBLAS       "USE_GBLAS"    ON)   # Use GBlas instead of C 
-option(USE_MPI         "USE_MPI"     OFF)   # Build with MPI?
+option(USE_MPI         "USE_MPI"      ON)   # Build with MPI?
 option(HAVE_PAPI       "HAVE_PAPI"   OFF)   # Is GPTL built with PAPI support?
 option(DO_AUTO_PROF "DO_AUTO_PROF"   OFF)   # Do auto-profing with GPTL?
  
@@ -82,7 +82,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/gcomp_options.cmake)
 # Define libs/paths to link to (used based on target);
 # may be changed in glocale.cmake:
 set(MPI_PATH 
-#   /scratch/duane.rosenberg/lib/mpich-3.2_gcc
+    /scratch/duane.rosenberg/lib/mpich-3.2_gcc
    )
 
 # GPTL path; may be changed in glocale.cmake:
@@ -94,7 +94,6 @@ set(GPTL_PATH
 
 set(CDG_COMMON_LIBS  
     ${GPTL_PATH}/lib/libgptl.a
-#   ${MPI_PATH}/lib/libmpich.a
    )
 
 if (HAVE_PAPI)
@@ -104,10 +103,19 @@ if (HAVE_PAPI)
 
 endif()
 
-set(CDG_COMMON_INC
+set(CDG_COMMON_INC ${CDG_COMMON_INC}
     ${GPTL_PATH}/include
-#   ${MPI_PATH}/include
    )
+
+if (USE_MPI)
+  set(CDG_COMMON_LIBS ${CDG_COMMON_LIBS}
+      ${MPI_PATH}/lib/libmpi.a
+     )
+set(CDG_COMMON_INC ${CDG_COMMON_INC}
+    ${MPI_PATH}/include
+   )
+endif()
+
 
 # Add executables here. If we want to build only one, XXX, 
 # then invoke 'cmake --target XXX'. Derive executable name
