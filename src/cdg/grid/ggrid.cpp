@@ -544,9 +544,9 @@ GTVector<GFTYPE> &GGrid::Jac()
 // METHOD : faceJac
 // DESC   : return global coord transform Jacobian for faces
 // ARGS   : none
-// RETURNS: GTVector<GTVector<GFTYPE>> &
+// RETURNS: GTVector<GFTYPE> &
 //**********************************************************************************
-GTVector<GTVector<GFTYPE>> &GGrid::faceJac()
+GTVector<GFTYPE> &GGrid::faceJac()
 {
    assert(bInitialized_ && "Object not inititaized");
    return faceJac_;

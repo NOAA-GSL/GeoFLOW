@@ -43,7 +43,7 @@ public:
         GTVector<GFTYPE>    &dXidX(GSIZET i,GSIZET j);                // Rij matrix element 
 
         GTVector<GFTYPE>    &Jac();                                    // global Jacobian
-        GTVector<GTVector<GFTYPE>>
+        GTVector<GFTYPE>
                             &faceJac();                                // global face Jacobian
         GTVector<GTVector<GFTYPE>>
                             &faceNormal();                             // global face normals
@@ -65,7 +65,7 @@ GTVector<GTVector<GSIZET>>  itype_;         // indices in elem list of each type
 GTVector<GSIZET>            ntype_;         // no. elems of each type on grid
 GTMatrix<GTVector<GFTYPE>>  dXidX_;         // matrix Rij = dXi^j/dX^i, global
 GTVector<GFTYPE>            Jac_;           // interior Jacobian, global
-GTVector<GTVector<GFTYPE>>  faceJac_;       // face Jacobian, global
+GTVector<GFTYPE>            faceJac_;       // face Jacobian, global
 GTVector<GTVector<GFTYPE>>  faceNormal_;    // normal to face at each node point (2d & 3d), global
 
 
