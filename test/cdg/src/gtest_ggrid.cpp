@@ -183,11 +183,16 @@ if ( std::isnan(error) ) exit(1);
       std::cout << "main: ----------------------------gnomonic transform OK" << std::endl;
     }
 
+    char    sbuff[1024];
+    GString supp, fname;
 
     GPTLstart("print_base_grid");
     // Print base grid:
     #if defined(_G_IS2D)
-    gen_icos.print("icos_grid.txt",GICOS_CART);
+    sprintf(sbuff, "level%d_p%d", ilevel, np);
+    supp = sbuff;
+    fname = "tgrid_" + supp + ".txt";
+    gen_icos.print(fname,GICOS_CART);
     #endif
     GPTLstop("print_base_grid");
 
@@ -199,8 +204,6 @@ if ( std::isnan(error) ) exit(1);
     GPTLstop("gen_elem_grid");
 
     // Print grid:
-    char    sbuff[1024];
-    GString supp, fname;
     sprintf(sbuff, "level%d_p%d", ilevel, np);
     supp = sbuff;
     fname = "grid_wire_" + supp + ".txt";
