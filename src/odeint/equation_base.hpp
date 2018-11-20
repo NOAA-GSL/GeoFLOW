@@ -38,15 +38,15 @@ public:
 	virtual ~EquationBase() = default;
 	EquationBase& operator=(const EquationBase& eb) = default;
 
-	void dt(const State& u, Time& dt){
+	void dt(State& u, Time& dt){
 		this->dt_impl(u,dt);
 	}
 
-	void dudt(const State& u, Derivative& dudt, const Time& t){
+	void dudt(State& u, Derivative& dudt, const Time& t){
 		this->dudt_impl(u,dudt,t);
 	}
 
-	void dfdu(const State& u, Jacobian& dfdu, const Time& t){
+	void dfdu(State& u, Jacobian& dfdu, const Time& t){
 		this->dfdu_impl(u,dfdu,t);
 	}
 
@@ -54,11 +54,11 @@ public:
 
 protected:
 
-	virtual void dt_impl(const State& u, Time& dt) = 0;
+	virtual void dt_impl(State& u, Time& dt) = 0;
 
-	virtual void dudt_impl(const State& u, Derivative& dudt, const Time& t) = 0;
+	virtual void dudt_impl(State& u, Derivative& dudt, const Time& t) = 0;
 
-	virtual void dfdu_impl(const State& u, Jacobian& dfdu, const Time& t) = 0;
+	virtual void dfdu_impl(State& u, Jacobian& dfdu, const Time& t) = 0;
 };
 
 

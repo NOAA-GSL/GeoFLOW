@@ -52,16 +52,16 @@ struct HarmonicOscillator : public EquationBase<TypePack> {
 
 protected:
 
-	void dt_impl(const State& u, Time& dt){
+	void dt_impl(State& u, Time& dt){
 		dt = 0.1;
 	}
 
-	void dudt_impl(const State& u, Derivative& dudt, const Time& t){
+	void dudt_impl(State& u, Derivative& dudt, const Time& t){
 		dudt[0] = +u[1];
 		dudt[1] = -u[0] - m_gam*u[1];
 	}
 
-	void dfdu_impl(const State& u, Jacobian& dfdu, const Time& t){
+	void dfdu_impl(State& u, Jacobian& dfdu, const Time& t){
 		//(void*)(&dfdu);
 	}
 

@@ -5,6 +5,7 @@
  *      Author: bflynt
  */
 
+#include <cassert>
 #include <cstdlib>
 #include <iostream>
 #include <memory>
@@ -73,7 +74,7 @@ struct LinearAdvection : public EquationBase<TypePack> {
 
 protected:
 
-	void dt_impl(const State& u, Time& dt){
+	void dt_impl(State& u, Time& dt){
 		using std::min;
 		const Value cfl = 1.0;
 		Value dxmin = 9999999;
@@ -92,7 +93,7 @@ protected:
 	 * - Calculates dudt using a 1st order up winding
 	 * - Applies BC's to dudt (needed ?)
 	 */
-	void dudt_impl(const State& u, Derivative& dudt, const Time& t){
+	void dudt_impl(State& u, Derivative& dudt, const Time& t){
 		dudt.resize(u.size(),0.0);
 		using std::abs;
 		//this->apply_bc(u,t); // Update BC's before calculating dudt
@@ -101,12 +102,12 @@ protected:
 			const Value ws_mns = 0.5*(wave_speed_-abs(wave_speed_));
 			Value dudt_pls = ws_pls*(u[i]-u[i-1])/(x_[i]-x_[i-1]);
 			Value dudt_mns = ws_mns*(u[i+1]-u[i])/(x_[i+1]-x_[i]);
-			dudt[i] = (dudt_pls + dudt_mns);
+			dudt[i] = -1.0 * (dudt_pls + dudt_mns);
 		}
 		this->apply_bc(dudt,t); // Not always valid
 	}
 
-	void dfdu_impl(const State& u, Jacobian& dfdu, const Time& t){
+	void dfdu_impl(State& u, Jacobian& dfdu, const Time& t){
 
 	}
 
@@ -119,8 +120,9 @@ private:
 /**
  * Static functions to create 1-D grid.
  */
-struct GridFunctions {
-	static std::vector<double> create(double X0, double X1, int N){
+struct HelperFunctions {
+
+	static std::vector<double> createGrid(double X0, double X1, int N){
 		std::vector<double> X(N+3); // 1 layer of ghost cells +2
 		double dx = (X1-X0)/N;
 		for(int i = 0; i < N+3; ++i){
@@ -128,6 +130,18 @@ struct GridFunctions {
 		}
 		return X;
 	}
+
+	template<typename T>
+	static void initConditions(T& u){
+		const int sz = u.size();
+		for(auto& val : u){
+			val = 0;
+		}
+		for(int i = 1; i < sz/2+1; ++i){
+			u[i] = (i-1) * 1.0/static_cast<double>((sz-2)/2);
+		}
+	}
+
 };
 
 
@@ -147,7 +161,8 @@ int main(){
 	// - We create simple 1D array
 	// - Application could read from disk or create using other methods
 	// - Probably should return as a shared pointer to a grid base type
-	auto grid = GridFunctions::create(0,1,10);
+	int N = 20; // Grid dimensions
+	auto grid = HelperFunctions::createGrid(0,1,N);
 
 	// Pass the Grid and other equation parameters to Equation Constructor
 	double wave_speed = +1.0;
@@ -156,15 +171,30 @@ int main(){
 	// Create the Stepper Implementation
 	std::shared_ptr<StpBase> stepper(new StpImpl());
 
-	const int MaxSteps = 10;
-	typename MyTypes::State u(2);
+	const int MaxSteps = 21; // <-- 21 is one full lap
+	typename MyTypes::State u(grid.size());
 	typename MyTypes::Time  t  = 0;
-	typename MyTypes::Time  dt = 0.01;
+	typename MyTypes::Time  dt = grid[1] - grid[0];
 
+	HelperFunctions::initConditions(u);
+	auto u_init = u;
+
+	//
+	// Complete one full lap around grid
+	//
 	for(int i = 0; i < MaxSteps; ++i){
 		stepper->step(sys,u,t,dt);
 		t += dt;
 	}
+
+	//std::cout << "Result:" << std::endl;
+	//for(int i = 0; i < u.size(); ++i){
+	//	std::cout << u_init[i] << "  " << u[i] << std::endl;
+	//}
+
+	double inf_err = std::abs(u_init-u).max();
+	std::cout << "Max Error = " << inf_err << std::endl;
+	assert(inf_err < 1.0e-13);
 
 	return 0;
 }
