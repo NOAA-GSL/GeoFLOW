@@ -13,7 +13,7 @@
 #include <cstddef>
 #include <memory>
 
-#include "odeint/error_stepper/error_stepper_base.hpp"
+#include "odeint/error_stepper_base.hpp"
 
 namespace geoflow {
 namespace odeint {
@@ -27,25 +27,30 @@ namespace odeint {
  * The base class provides the strategy for all time step
  * implementations.
  */
-template<typename EquationType, typename ErrorType = double>
-class EulerHeun : public ErrorStepperBase<EquationType,ErrorType> {
+template<typename EquationType>
+class EulerHeun : public ErrorStepperBase<EquationType> {
 
 public:
+	// Inheriting these from the Base we insure our
+	// interface is consistent and we can perform runtime
+	// polymorphism or use them directly.
 	using Equation    = EquationType;
-	using State       = typename Equation::State;
-	using Value       = typename Equation::Value;
-	using Derivative  = typename Equation::Derivative;
-	using Time        = typename Equation::Time;
-	using Jacobian    = typename Equation::Jacobian;
+	using Interface   = ErrorStepperBase<EquationType>;
+	using State       = typename Interface::State;
+	using Value       = typename Interface::Value;
+	using Derivative  = typename Interface::Derivative;
+	using Time        = typename Interface::Time;
+	using Jacobian    = typename Interface::Jacobian;
+	using Size        = typename Interface::Size;
 	using EquationPtr = std::shared_ptr<Equation>;
-	using Size        = std::size_t;
-	using Error       = ErrorType;
 
 	EulerHeun() = default;
 	EulerHeun(const EulerHeun& si) = default;
 	virtual ~EulerHeun() = default;
 	EulerHeun& operator=(const EulerHeun& si) = default;
 
+	EulerHeun(const EquationPtr& eqn) : Interface(eqn){
+	}
 
 protected:
 
@@ -53,28 +58,28 @@ protected:
 		return 2;
 	}
 
-	void step_impl(EquationPtr& sys, State& u, const Time& t, const Time& dt, Error& uerr){
+	void step_impl(State& u, const Time& t, const Time& dt, Error& uerr){
 		Derivative dudt(u.size());
-		eqn->dudt(u, dudt, t);
-		this->step_impl(eqn,u,dudt,t,dt,uerr);
+		this->eqn_ptr_->dudt(u, dudt, t);
+		this->step_impl(u,dudt,t,dt,uerr);
 	}
 
-	void step_impl(EquationPtr& sys, const State& uin, const Time& t, State& uout, const Time& dt, Error& uerr){
+	void step_impl(State& uin, const Time& t, State& uout, const Time& dt, Error& uerr){
 		uout = uin;
-		this->step_impl(eqn,uout,t,dt,uerr);
+		this->step_impl(uout,t,dt,uerr);
 	}
 
-	void step_impl(EquationPtr& sys, State& u, const Derivative& dudt, const Time& t, const Time& dt, Error& uerr){
+	void step_impl(State& u, const Derivative& dudt, const Time& t, const Time& dt, Error& uerr){
 		u += dt * dudt;
 		Derivative dudt1(dudt.size());
-		eqn->dudt(u, dudt1, t+dt);
+		this->eqn_ptr_->dudt(u, dudt1, t+dt);
 		uerr = 0.5 * dt * (dudt1 - dudt);
 		u += uerr;
 	}
 
-	void step_impl(EquationPtr& sys, const State& uin, const Derivative& dudt, const Time& t, State& uout, const Time& dt, Error& uerr){
+	void step_impl(State& uin, const Derivative& dudt, const Time& t, State& uout, const Time& dt, Error& uerr){
 		uout = uin;
-		this->step_impl(sys,uout,dudt,t,dt,uerr);
+		this->step_impl(uout,dudt,t,dt,uerr);
 	}
 
 };

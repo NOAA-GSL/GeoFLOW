@@ -33,14 +33,26 @@ public:
 	using Derivative  = typename Equation::Derivative;
 	using Time        = typename Equation::Time;
 	using Jacobian    = typename Equation::Jacobian;
+	using Size        = typename Equation::Size;
 	using EquationPtr = std::shared_ptr<Equation>;
-	using Size        = std::size_t;
 
 
 	StepperBase() = default;
 	StepperBase(const StepperBase& si) = default;
 	virtual ~StepperBase() = default;
 	StepperBase& operator=(const StepperBase& si) = default;
+
+
+	StepperBase(const EquationPtr& eqn) :
+		eqn_ptr_(eqn){
+	}
+
+	/**
+	 * Set the system of equations we are stepping
+	 */
+	void setEquation(EquationPtr& eqn){
+		this->eqn_ptr_ = eqn;
+	}
 
 	/**
 	 * Return the order of temporal accuracy for the method
@@ -59,39 +71,41 @@ public:
 	 * \param[in] t Current time of state u before taking step
 	 * \param[in] dt Size of time step to take
 	 */
-	void step(EquationPtr& eqn, State& u, const Time& t, const Time& dt){
-		this->step_impl(eqn,u,t,dt);
+	void step(State& u, const Time& t, const Time& dt){
+		this->step_impl(u,t,dt);
 	}
 
-	void step(EquationPtr& eqn, const State& uin, const Time& t, State& uout, const Time& dt){
-		this->step_impl(eqn,uin,t,uout,dt);
+	void step(State& uin, const Time& t, State& uout, const Time& dt){
+		this->step_impl(uin,t,uout,dt);
 	}
 
-	void step(EquationPtr& eqn, State& u, const Derivative& dudt, const Time& t, const Time& dt){
-		this->step_impl(eqn,u,dudt,t,t,dt);
+	void step(State& u, const Derivative& dudt, const Time& t, const Time& dt){
+		this->step_impl(u,dudt,t,t,dt);
 	}
 
-	void step(EquationPtr& eqn, const State& uin, const Derivative& dudt, const Time& t, State& uout, const Time& dt){
-		this->step_impl(eqn,uin,dudt,t,uout,dt);
+	void step(State& uin, const Derivative& dudt, const Time& t, State& uout, const Time& dt){
+		this->step_impl(uin,dudt,t,uout,dt);
 	}
 
 
 
 protected:
 
+	EquationPtr eqn_ptr_;
+
 	virtual Size order_impl() const = 0;
 
 
-	virtual void step_impl(EquationPtr& eqn, State& u, const Time& t, const Time& dt) = 0;
+	virtual void step_impl(State& u, const Time& t, const Time& dt) = 0;
 
 
-	virtual void step_impl(EquationPtr& eqn, const State& uin, const Time& t, State& uout, const Time& dt) = 0;
+	virtual void step_impl(State& uin, const Time& t, State& uout, const Time& dt) = 0;
 
 
-	virtual void step_impl(EquationPtr& eqn, State& u, const Derivative& dudt, const Time& t, const Time& dt) = 0;
+	virtual void step_impl(State& u, const Derivative& dudt, const Time& t, const Time& dt) = 0;
 
 
-	virtual void step_impl(EquationPtr& eqn, const State& uin, const Derivative& dudt, const Time& t, State& uout, const Time& dt) = 0;
+	virtual void step_impl(State& uin, const Derivative& dudt, const Time& t, State& uout, const Time& dt) = 0;
 
 };
 

@@ -23,7 +23,8 @@ typename StateType,
 typename ValueType = double,
 typename DerivType = StateType,
 typename TimeType  = ValueType,
-typename JacoType  = std::nullptr_t
+typename JacoType  = std::nullptr_t,
+typename SizeType  = std::size_t
 >
 struct EquationTypes {
 	using State      = StateType;
@@ -31,6 +32,7 @@ struct EquationTypes {
 	using Derivative = DerivType;
 	using Time       = TimeType;
 	using Jacobian   = JacoType;
+	using Size       = SizeType;
 };
 
 
@@ -79,8 +81,12 @@ int main(){
 	using StpBase = StepperBase<EqnBase>;
 	using StpImpl = EulerStepper<EqnBase>;
 
-	std::shared_ptr<EqnBase> sys(new EqnImpl());
-	std::shared_ptr<StpBase> stepper(new StpImpl());
+	std::shared_ptr<EqnImpl> eqn_impl(new EqnImpl());
+	std::shared_ptr<EqnBase> eqn_base = eqn_impl;
+
+	std::shared_ptr<StpImpl> stp_impl(new StpImpl(eqn_base));
+	std::shared_ptr<StpBase> stp_base = stp_impl;
+
 
 	const int N = 10;
 	typename MyTypes::State u(2);
@@ -88,7 +94,7 @@ int main(){
 	typename MyTypes::Time  dt = 0.1;
 
 	for(int i = 0; i < N; ++i){
-		stepper->step(sys,u,t,dt);
+		stp_base->step(u,t,dt);
 		t += dt;
 	}
 

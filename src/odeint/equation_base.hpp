@@ -32,6 +32,7 @@ public:
 	using Derivative = typename TypePack::Derivative;
 	using Time       = typename TypePack::Time;
 	using Jacobian   = typename TypePack::Jacobian;
+	using Size       = typename TypePack::Size;
 
 	EquationBase() = default;
 	EquationBase(const EquationBase& eb) = default;

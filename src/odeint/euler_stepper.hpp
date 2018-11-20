@@ -38,6 +38,12 @@ public:
 	virtual ~EulerStepper() = default;
 	EulerStepper& operator=(const EulerStepper& eb) = default;
 
+
+	EulerStepper(const EquationPtr& eqn) : Interface(eqn){
+	}
+
+
+
 protected:
 
 
@@ -46,27 +52,27 @@ protected:
 	}
 
 
-	void step_impl(EquationPtr& eqn, State& u, const Time& t, const Time& dt){
+	void step_impl(State& u, const Time& t, const Time& dt){
 		Derivative dudt(u.size());
-		eqn->dudt(u, dudt, t);
-		this->step_impl(eqn,u,dudt,t,dt);
+		this->eqn_ptr_->dudt(u, dudt, t);
+		this->step_impl(u,dudt,t,dt);
 	}
 
 
-	void step_impl(EquationPtr& eqn, const State& uin, const Time& t, State& uout, const Time& dt){
+	void step_impl(State& uin, const Time& t, State& uout, const Time& dt){
 		uout = uin;
-		this->step_impl(eqn,uout,t,dt);
+		this->step_impl(uout,t,dt);
 	}
 
 
-	void step_impl(EquationPtr& eqn, State& u, const Derivative& dudt, const Time& t, const Time& dt){
+	void step_impl(State& u, const Derivative& dudt, const Time& t, const Time& dt){
 		u += dt * dudt;
 	}
 
 
-	void step_impl(EquationPtr& eqn, const State& uin, const Derivative& dudt, const Time& t, State& uout, const Time& dt){
+	void step_impl(State& uin, const Derivative& dudt, const Time& t, State& uout, const Time& dt){
 		uout = uin;
-		this->step_impl(eqn,uout,dudt,t,dt);
+		this->step_impl(uout,dudt,t,dt);
 	}
 
 };
