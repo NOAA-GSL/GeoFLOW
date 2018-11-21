@@ -66,8 +66,7 @@ public:
 	 * The simplest time step method which takes exactly one
 	 * time step from t to t+dt.
 	 *
-	 * \param[in,out] eqn Is the eqntem of equations were are solving
-	 * \param[in,out] u Is the state of the eqntem
+	 * \param[in,out] u Is the state of the system of equations
 	 * \param[in] t Current time of state u before taking step
 	 * \param[in] dt Size of time step to take
 	 */

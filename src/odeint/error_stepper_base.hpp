@@ -64,11 +64,10 @@ public:
 	 * The simplest time step method which takes exactly one
 	 * time step from t to t+dt.
 	 *
-	 * \param[in,out] sys Is the system of equations were are solving
-	 * \param[in,out] u Is the state of the system
+	 * \param[in,out] u Is the state of the system of equations
 	 * \param[in] t Current time of state u before taking step
 	 * \param[in] dt Size of time step to take
-	 * \param[out] uerr State of current step
+	 * \param[out] uerr Error of current step
 	 */
 	void step(State& u, const Time& t, const Time& dt, State& uerr){
 		this->step_impl(u,t,dt,uerr);
