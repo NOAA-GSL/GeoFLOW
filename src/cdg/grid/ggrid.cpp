@@ -7,9 +7,9 @@
 // Copyright    : Copyright 2018. Colorado State University. All rights reserved
 // Derived From : none.
 //==================================================================================
-#include <stdlib.h>
-#include <memory.h>
-#include <math.h>
+#include <memory>
+#include <cmath>
+#include <limits>
 #include "gelem_base.hpp"
 #include "ggrid.hpp"
 
@@ -18,12 +18,13 @@
 //**********************************************************************************
 // METHOD : Constructor method (1)
 // DESC   : Default constructor
-// ARGS   : 
+// ARGS   : comm: communicator
 // RETURNS: none
 //**********************************************************************************
-GGrid::GGrid()
+GGrid::GGrid(GC_COMM comm)
 :
-bInitialized_  (FALSE)
+bInitialized_  (FALSE),
+comm_          (comm)
 {
 } // end of constructor method (1)
 
@@ -213,110 +214,92 @@ GSIZET GGrid::nsurfdof()
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : minsep
-// DESC   : Find min nodal separation
+// METHOD : minlength
+// DESC   : Find elem length separation
 // ARGS   : none
 // RETURNS: GFTYPE separation
 //**********************************************************************************
-GFTYPE GGrid::minsep()
+GFTYPE GGrid::minlength()
 {
    assert(gelems_.size() > 0 && "Elements not set");
 
-   GFTYPE msep = std::numeric_limits<GFTYPE>::max();
-   GFTYPE dr;
-   GTVector<GTVector<GFTYPE>> *xnodes;
+   GFTYPE lmin, gmin;
+   GTPoint<GFTYPE> dr;
+   GTVector<GTPoint<GFTYPE>> *xverts;
 
+   lmin = std::numeric_limits<GFTYPE>::max();
    for ( GSIZET i=0; i<gelems_.size(); i++ ) {
-     xnodes = &gelems_[i]->xNodes();
-     if ( xnodes->size() == 1 ) { 
-
-       for ( GSIZET k=0; k<(*xnodes)[0].size()-1; k++ ) {
-         dr   = fabs( (*xnodes)[0][k+1]-(*xnodes)[0][k] ); 
-         msep = MIN(msep, dr);
-       }
-
-     } else if ( xnodes->size() == 2 ) {
-
-       for ( GSIZET l=0; l<(*xnodes)[1].size()-1; l++ ) {
-         for ( GSIZET k=0; k<(*xnodes)[0].size()-1; k++ ) {
-           dr   = sqrt( pow((*xnodes)[0][k+1]-(*xnodes)[0][k],2) 
-                      + pow((*xnodes)[1][l+1]-(*xnodes)[1][l],2) );
-           msep = MIN(msep, dr);
-         }
-       }
-
-     } else if ( xnodes->size() == 3 ) {
-
-       for ( GSIZET m=0; m<(*xnodes)[2].size()-1; m++ ) {
-         for ( GSIZET l=0; l<(*xnodes)[1].size()-1; l++ ) {
-           for ( GSIZET k=0; k<(*xnodes)[0].size()-1; k++ ) {
-             dr   = sqrt( pow((*xnodes)[0][k+1]-(*xnodes)[0][k],2) 
-                        + pow((*xnodes)[1][l+1]-(*xnodes)[1][l],2)
-                        + pow((*xnodes)[2][m+1]-(*xnodes)[2][m],2) );
-             msep = MIN(msep, dr);
-           }
-         }
-       }
-
+     xverts = &gelems_[i]->xVertices();
+     #if defined(_G_IS2D)
+     for ( GSIZET j=0; j<xverts->size(); j++ ) {
+       dr = (*xverts)[(j+1)%xverts->size()] - (*xverts)[j];
+       lmin = MIN(lmin,dr.norm());
      }
+     #elif defined(_G_IS3D)
+     for ( GSIZET j=0; j<4; j++ ) { // bottom
+       dr = (*xverts)[(j+1)%xverts->size()] - (*xverts)[j];
+       lmin = MIN(lmin,dr.norm());
+     }
+     for ( GSIZET j=4; j<8; j++ ) { // top
+       dr = (*xverts)[(j+1)%xverts->size()] - (*xverts)[j];
+       lmin = MIN(lmin,dr.norm());
+     }
+     for ( GSIZET j=0; j<4; j++ ) { // vertical edges
+       dr = (*xverts)[j+4] - (*xverts)[j];
+       lmin = MIN(lmin,dr.norm());
+     }
+     #endif
    }
 
-   return msep;
-} // end of method minsep
+   GComm::Allreduce(&lmin, &gmin, 1, T2GCDatatype<GFTYPE>() , GC_OP_MIN, comm_);
+
+   return gmin;
+} // end of method minlength
 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : maxsep
-// DESC   : Find max nodal separation
+// METHOD : maxlength
+// DESC   : Find max elem length 
 // ARGS   : none
 // RETURNS: GFTYPE separation
 //**********************************************************************************
-GFTYPE GGrid::maxsep()
+GFTYPE GGrid::maxlength()
 {
    assert(gelems_.size() > 0 && "Elements not set");
 
-   GFTYPE msep = 0.0;
-   GFTYPE dr;
-   GTVector<GTVector<GFTYPE>> *xnodes;
+   GFTYPE lmax, gmax;
+   GTPoint<GFTYPE> dr;
+   GTVector<GTPoint<GFTYPE>> *xverts;
 
+   lmax = 0.0;
    for ( GSIZET i=0; i<gelems_.size(); i++ ) {
-     xnodes = &gelems_[i]->xNodes();
-     if ( xnodes->size() == 1 ) { 
-
-       for ( GSIZET k=0; k<(*xnodes)[0].size()-1; k++ ) {
-         dr   = fabs( (*xnodes)[0][k+1]-(*xnodes)[0][k] ); 
-         msep = MAX(msep, dr);
-       }
-
-     } else if ( xnodes->size() == 2 ) {
-
-       for ( GSIZET l=0; l<(*xnodes)[1].size()-1; l++ ) {
-         for ( GSIZET k=0; k<(*xnodes)[0].size()-1; k++ ) {
-           dr   = sqrt( pow((*xnodes)[0][k+1]-(*xnodes)[0][k],2) 
-                      + pow((*xnodes)[1][l+1]-(*xnodes)[1][l],2) );
-           msep = MAX(msep, dr);
-         }
-       }
-
-     } else if ( xnodes->size() == 3 ) {
-
-       for ( GSIZET m=0; m<(*xnodes)[2].size()-1; m++ ) {
-         for ( GSIZET l=0; l<(*xnodes)[1].size()-1; l++ ) {
-           for ( GSIZET k=0; k<(*xnodes)[0].size()-1; k++ ) {
-             dr   = sqrt( pow((*xnodes)[0][k+1]-(*xnodes)[0][k],2) 
-                        + pow((*xnodes)[1][l+1]-(*xnodes)[1][l],2)
-                        + pow((*xnodes)[2][m+1]-(*xnodes)[2][m],2) );
-             msep = MAX(msep, dr);
-           }
-         }
-       }
-
+     xverts = &gelems_[i]->xVertices();
+     #if defined(_G_IS2D)
+     for ( GSIZET j=0; j<xverts->size(); j++ ) {
+       dr = (*xverts)[(j+1)%xverts->size()] - (*xverts)[j];
+       lmax = MAX(lmax,dr.norm());
      }
+     #elif defined(_G_IS3D)
+     for ( GSIZET j=0; j<4; j++ ) { // bottom
+       dr = (*xverts)[(j+1)%xverts->size()] - (*xverts)[j];
+       lmax = MAX(lmax,dr.norm());
+     }
+     for ( GSIZET j=4; j<8; j++ ) { // top
+       dr = (*xverts)[(j+1)%xverts->size()] - (*xverts)[j];
+       lmax = MAX(lmax,dr.norm());
+     }
+     for ( GSIZET j=0; j<4; j++ ) { // vertical edges
+       dr = (*xverts)[j+4] - (*xverts)[j];
+       lmax = MAX(lmax,dr.norm());
+     }
+     #endif
    }
 
-   return msep;
-} // end of method maxsep
+   GComm::Allreduce(&lmax, &gmax, 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm_);
+
+   return gmax;
+} // end of method maxlength
 
 
 //**********************************************************************************

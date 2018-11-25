@@ -13,6 +13,7 @@
 #include <iostream>
 #include "gtvector.hpp"
 #include "gtmatrix.hpp"
+#include "gcomm.hpp"
 #include "gelem_base.hpp"
 
 
@@ -22,7 +23,7 @@ typedef GTVector<GElem_base*> GElemList;
 class GGrid 
 {
 public:
-                             GGrid();
+                             GGrid(GC_COMM comm);
                             ~GGrid();
 
         void                do_typing(); // classify into types
@@ -36,8 +37,8 @@ public:
         GSIZET               ndof();                                  // compute total number elem dof
         GSIZET               nsurfdof();                              // compute total number elem surf dof
         void                 init();                                  // inititlize class
-        GFTYPE               minsep();                                // find min nodal sep
-        GFTYPE               maxsep();                                // find max nodal sep
+        GFTYPE               minlength();                             // find min elem length
+        GFTYPE               maxlength();                             // find max elem length
         GTMatrix<GTVector<GFTYPE>>
                             &dXidX();                                 // global Rij = dXi^j/dX^i
         GTVector<GFTYPE>    &dXidX(GSIZET i,GSIZET j);                // Rij matrix element 
@@ -60,6 +61,7 @@ protected:
 private:
 
 GBOOL                       bInitialized_;  // object initialized?
+GC_COMM                     comm_;          // communicator
 GElemList                   gelems_;        // element list
 GTVector<GTVector<GSIZET>>  itype_;         // indices in elem list of each type
 GTVector<GSIZET>            ntype_;         // no. elems of each type on grid
