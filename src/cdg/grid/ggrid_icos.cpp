@@ -477,7 +477,6 @@ void GGridIcos::do_grid2d(GGrid &grid, GINT irank)
   // only for this task:
   gdd_->doDD(ftcentroids_, irank, iind);
 
-
   GTVector<GSIZET> isort;
 
 
@@ -542,8 +541,8 @@ void GGridIcos::do_grid2d(GGrid &grid, GINT irank)
       pelem->init(*xNodes);
       gelems->push_back(pelem);
       nfnodes = 0;
-      for ( GSIZET j=0; j<(*gelems)[i]->nfaces(); j++ )  // get # face nodes
-        nfnodes += (*gelems)[i]->face_indices(j).size();
+      for ( GSIZET j=0; j<(*gelems)[n]->nfaces(); j++ )  // get # face nodes
+        nfnodes += (*gelems)[n]->face_indices(j).size();
       pelem->igbeg() = icurr;      // beginning global index
       pelem->igend() = icurr+pelem->nnodes()-1; // end global index
       pelem->ifbeg() = fcurr;
@@ -630,8 +629,8 @@ void GGridIcos::do_grid3d(GGrid &grid, GINT irank)
     pelem->init(*xNodes);
     gelems->push_back(pelem);
     nfnodes = 0;
-    for ( GSIZET j=0; j<(*gelems)[i]->nfaces(); j++ )  // get # face nodes
-      nfnodes += (*gelems)[i]->face_indices(j).size();
+    for ( GSIZET j=0; j<(*gelems)[n]->nfaces(); j++ )  // get # face nodes
+      nfnodes += (*gelems)[n]->face_indices(j).size();
     pelem->igbeg() = icurr;      // beginning global index
     pelem->igend() = icurr + pelem->nnodes()-1; // end global index
     pelem->ifbeg() = fcurr;
