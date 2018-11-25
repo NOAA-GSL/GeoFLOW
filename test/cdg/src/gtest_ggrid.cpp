@@ -101,7 +101,7 @@ int main(int argc, char **argv)
     GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis(GDIM);
     for ( GSIZET k=0; k<GDIM; k++ ) gbasis[k] = new GLLBasis<GCTYPE,GFTYPE>(np);
     
-    GGrid grid;
+    GGrid grid(comm);
 
     GPTLstart("gen_base_grid");
 
@@ -202,6 +202,9 @@ if ( std::isnan(error) ) exit(1);
     gen_icos.do_grid(grid, myrank);
    std::cout << "main: ----------------------------gelem.size=" << grid.elems().size() << std::endl;
     GPTLstop("gen_elem_grid");
+
+   std::cout << "main: ----------------------------gelem.minlen=" << grid.minlength() << std::endl;
+   std::cout << "main: ----------------------------gelem.maxlen=" << grid.maxlength() << std::endl;
 
     // Print grid:
     sprintf(sbuff, "level%d_p%d", ilevel, np);

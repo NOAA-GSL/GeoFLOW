@@ -108,7 +108,7 @@ int main(int argc, char **argv)
 std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << std::endl;
     }
     
-    GGrid grid;
+    GGrid grid(comm);
 
     GPTLstart("gen_base_grid");
 
