@@ -124,7 +124,7 @@ int main(int argc, char **argv)
     for ( GSIZET j=0; j<gnom.size(); j++ ) gnom[j].resize(2);
 
     eps *= 1000.0;
-    std::cout << "eps=" << eps << std::endl;
+    GPP(comm,"eps=" << eps);
 
     // Check a range of reference locations (xlatc, xlongc) to
     // check gnomonic transform:
@@ -171,16 +171,15 @@ if ( std::isnan(error) ) exit(1);
       }
     }
 
-    std::cout << std::endl;
-    std::cout << "noise level=" << xnoise << std::endl;
-    std::cout << "ntotal = " << nlat*nlong <<  " nbad =" << nbad  << std::endl;
-    std::cout << "max error = " << emax << std::endl;
-    std::cout << "min error = " << emin << std::endl;
+    GPP(comm,"noise level=" << xnoise);
+    GPP(comm,"ntotal = " << nlat*nlong <<  " nbad =" << nbad);
+    GPP(comm,"max error = " << emax);
+    GPP(comm,"min error = " << emin);
     if ( errcode > 0 ) {
-      std::cout << "main: ----------------------------gnomonic transform  FAILED" << std::endl;
+      GPP(comm,"main: ----------------------------gnomonic transform  FAILED");
       exit(errcode);
     } else {
-      std::cout << "main: ----------------------------gnomonic transform OK" << std::endl;
+      GPP(comm,"main: ----------------------------gnomonic transform OK");
     }
 
     char    sbuff[1024];
@@ -200,23 +199,27 @@ if ( std::isnan(error) ) exit(1);
     GPTLstart("gen_elem_grid");
     // Generate grid:
     gen_icos.do_grid(grid, myrank);
-   std::cout << "main: ----------------------------gelem.size=" << grid.elems().size() << std::endl;
+    GPP(comm,"main: ----------------------------gelem.size=" << grid.elems().size());
     GPTLstop("gen_elem_grid");
 
-   std::cout << "main: ----------------------------gelem.minlen=" << grid.minlength() << std::endl;
-   std::cout << "main: ----------------------------gelem.maxlen=" << grid.maxlength() << std::endl;
+   GPP(comm,"main: ----------------------------gelem.minlen=" << grid.minlength());
+   GPP(comm,"main: ----------------------------gelem.maxlen=" << grid.maxlength());
 
     // Print grid:
     sprintf(sbuff, "level%d_p%d", ilevel, np);
     supp = sbuff;
     fname = "grid_wire_" + supp + ".txt";
     GPTLstart("print_wire_grid");
-    grid.print(fname); // print vertices only
+    if ( myrank == 0 ) {
+      grid.print(fname); // print vertices only
+    }
     GPTLstop("print_wire_grid");
 
     GPTLstart("print_elem_grid");
     fname = "grid_" + supp + ".txt";
-    grid.print(fname, TRUE); // print internal dof too
+    if ( myrank == 0 ) {
+      grid.print(fname, TRUE); // print internal dof too
+    }
     GPTLstop("print_elem_grid");
 
     // Accumulate errors:
