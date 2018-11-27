@@ -59,7 +59,7 @@ protected:
 	}
 
 
-	void step_impl(State& uin, const Time& t, State& uout, const Time& dt){
+	void step_impl(const State& uin, const Time& t, State& uout, const Time& dt){
 		uout = uin;
 		this->step_impl(uout,t,dt);
 	}
@@ -70,7 +70,7 @@ protected:
 	}
 
 
-	void step_impl(State& uin, const Derivative& dudt, const Time& t, State& uout, const Time& dt){
+	void step_impl(const State& uin, const Derivative& dudt, const Time& t, State& uout, const Time& dt){
 		uout = uin;
 		this->step_impl(uout,dudt,t,dt);
 	}

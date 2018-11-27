@@ -159,6 +159,10 @@ int main(){
 	using StpBase = StepperBase<EqnBase>;                 // Stepper Base Type
 	using StpImpl = EulerStepper<EqnBase>;                // Stepper Implementation Type
 
+	//using IntBase = IntegratorBase<StpBase>;              // Integrator Base Type
+	//using IntImpl = StepIntegrator<StpBase>;              // Integrator Implementation Type
+
+
 	// Create the Grid
 	// - We create simple 1D array
 	// - Application could read from disk or create using other methods
@@ -175,6 +179,10 @@ int main(){
 	std::shared_ptr<StpImpl> stp_impl(new StpImpl(eqn_base));
 	std::shared_ptr<StpBase> stp_base = stp_impl;
 
+	// Create the Integrator Implementation
+	//std::shared_ptr<IntImpl> int_impl(new IntImpl(eqn_base,stp_base));
+	//std::shared_ptr<IntBase> int_base = int_impl;
+
 	const int MaxSteps = 21; // <-- 21 is one full lap
 	typename MyTypes::State u(grid.size());
 	typename MyTypes::Time  t  = 0;
@@ -186,15 +194,14 @@ int main(){
 	//
 	// Complete one full lap around grid
 	//
+	//Integrator<StpBase>::time(stp_base, u, t0, t1, dt, obs);
+	//Integrator<StpBase>::steps(stp_base, u, t, dt, MaxSteps, obs);
+	//Integrator<StpBase>::list(stp_base, u, tlist, obs);
 	for(int i = 0; i < MaxSteps; ++i){
 		stp_base->step(u,t,dt);
 		t += dt;
 	}
 
-	//std::cout << "Result:" << std::endl;
-	//for(int i = 0; i < u.size(); ++i){
-	//	std::cout << u_init[i] << "  " << u[i] << std::endl;
-	//}
 
 	double inf_err = std::abs(u_init-u).max();
 	std::cout << "Max Error = " << inf_err << std::endl;

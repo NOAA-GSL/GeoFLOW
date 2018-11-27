@@ -73,7 +73,7 @@ public:
 		this->step_impl(u,t,dt,uerr);
 	}
 
-	void step(State& uin, const Time& t, State& uout, const Time& dt, State& uerr){
+	void step(const State& uin, const Time& t, State& uout, const Time& dt, State& uerr){
 		this->step_impl(uin,t,uout,dt,uerr);
 	}
 
@@ -81,7 +81,7 @@ public:
 		this->step_impl(u,dudt,t,t,dt,uerr);
 	}
 
-	void step(State& uin, const Derivative& dudt, const Time& t, State& uout, const Time& dt, State& uerr){
+	void step(const State& uin, const Derivative& dudt, const Time& t, State& uout, const Time& dt, State& uerr){
 		this->step_impl(uin,dudt,t,uout,dt,uerr);
 	}
 
@@ -98,13 +98,13 @@ protected:
 	virtual void step_impl(State& u, const Time& t, const Time& dt, State& uerr) = 0;
 
 
-	virtual void step_impl(State& uin, const Time& t, State& uout, const Time& dt, State& uerr) = 0;
+	virtual void step_impl(const State& uin, const Time& t, State& uout, const Time& dt, State& uerr) = 0;
 
 
 	virtual void step_impl(State& u, const Derivative& dudt, const Time& t, const Time& dt, State& uerr) = 0;
 
 
-	virtual void step_impl(State& uin, const Derivative& dudt, const Time& t, State& uout, const Time& dt, State& uerr) = 0;
+	virtual void step_impl(const State& uin, const Derivative& dudt, const Time& t, State& uout, const Time& dt, State& uerr) = 0;
 
 };
 

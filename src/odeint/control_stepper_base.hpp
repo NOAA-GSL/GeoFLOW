@@ -59,7 +59,7 @@ public:
 		return this->step_impl(u,t,dt);
 	}
 
-	bool step(State& uin, const Time& t, State& uout, Time& dt){
+	bool step(const State& uin, const Time& t, State& uout, Time& dt){
 		return this->step_impl(uin,t,uout,dt);
 	}
 
@@ -67,7 +67,7 @@ public:
 		return this->step_impl(u,dudt,t,t,dt);
 	}
 
-	bool step(State& uin, const Derivative& dudt, const Time& t, State& uout, Time& dt){
+	bool step(const State& uin, const Derivative& dudt, const Time& t, State& uout, Time& dt){
 		return this->step_impl(uin,dudt,t,uout,dt);
 	}
 
@@ -81,13 +81,13 @@ protected:
 	virtual bool step_impl(State& u, const Time& t, Time& dt) = 0;
 
 
-	virtual bool step_impl(State& uin, const Time& t, State& uout, Time& dt) = 0;
+	virtual bool step_impl(const State& uin, const Time& t, State& uout, Time& dt) = 0;
 
 
 	virtual bool step_impl(State& u, const Derivative& dudt, const Time& t, Time& dt) = 0;
 
 
-	virtual bool step_impl(State& uin, const Derivative& dudt, const Time& t, State& uout, Time& dt) = 0;
+	virtual bool step_impl(const State& uin, const Derivative& dudt, const Time& t, State& uout, Time& dt) = 0;
 
 };
 
