@@ -13,21 +13,27 @@
 namespace geoflow {
 namespace odeint {
 
+
 template<typename EquationType>
 class ObserverBase {
 
 public:
 	using Equation    = EquationType;
 	using State       = typename Equation::State;
-	//using Value       = typename Equation::Value;
-	//using Derivative  = typename Equation::Derivative;
+	using Value       = typename Equation::Value;
+	using Derivative  = typename Equation::Derivative;
 	using Time        = typename Equation::Time;
-	//using Jacobian    = typename Equation::Jacobian;
-	//using Size        = typename Equation::Size;
-	//using EquationPtr = std::shared_ptr<Equation>;
+	using Jacobian    = typename Equation::Jacobian;
+	using Size        = typename Equation::Size;
+	using EquationPtr = std::shared_ptr<Equation>;
+
+	ObserverBase() = default;
+	ObserverBase(const ObserverBase& obs) = default;
+	virtual ~ObserverBase() = default;
+	ObserverBase& operator=(const ObserverBase& obs) = default;
 
 
-	void observe( const Time& t, const State& u){
+	void observe(const Time& t, const State& u){
 		this->observe_impl(t,u);
 	}
 

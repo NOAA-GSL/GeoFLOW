@@ -47,6 +47,16 @@ void PropertyTree::save_file(const std::string& file_name) const{
 	}
 }
 
+void PropertyTree::load_string(const std::string& content){
+	try{
+		std::stringstream ss;
+		ss << content;
+		boost::property_tree::read_json(ss,this->node_);
+	} catch(std::exception &e){
+		EH_ERROR("PropertyTree::load_string(...) -> " <<  e.what());
+	}
+}
+
 bool
 PropertyTree::keyExists(const std::string& key) const{
 	return (node_.count(key) > 0);
