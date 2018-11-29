@@ -13,8 +13,11 @@
 #include <valarray>
 
 #include "odeint/equation_base.hpp"
+#include "odeint/null_observer.hpp"
+#include "odeint/observer_base.hpp"
 #include "odeint/stepper_base.hpp"
 #include "odeint/euler_stepper.hpp"
+#include "odeint/integrator.hpp"
 
 using namespace geoflow::odeint;
 
@@ -162,6 +165,10 @@ int main(){
 	using EqnImpl = LinearAdvection<MyTypes>;             // Equation Implementation Type
 	using StpBase = StepperBase<EqnBase>;                 // Stepper Base Type
 	using StpImpl = EulerStepper<EqnBase>;                // Stepper Implementation Type
+	using ObsBase = ObserverBase<EqnBase>;                // Observer Base Type
+	using ObsImpl = NullObserver<EqnBase>;                // Observer Implementation Type
+	using IntImpl = Integrator<EqnBase>;                  // Integrator Implementation Type
+
 
 	//using IntBase = IntegratorBase<StpBase>;              // Integrator Base Type
 	//using IntImpl = StepIntegrator<StpBase>;              // Integrator Implementation Type
@@ -184,8 +191,16 @@ int main(){
 	std::shared_ptr<StpBase> stp_base = stp_impl;
 
 	// Create the Integrator Implementation
-	//std::shared_ptr<IntImpl> int_impl(new IntImpl(eqn_base,stp_base));
-	//std::shared_ptr<IntBase> int_base = int_impl;
+	IntImpl::Traits traits;
+	traits.cfl_min = 0;
+	traits.cfl_max = 9999;
+	traits.dt_min  = 0;
+	traits.dt_max  = 9999;
+
+	std::shared_ptr<ObsImpl> obs_impl(new ObsImpl());
+	std::shared_ptr<ObsBase> obs_base = obs_impl;
+
+	std::shared_ptr<IntImpl> int_impl(new IntImpl(stp_base,obs_base,traits));
 
 	const int MaxSteps = 21; // <-- 21 is one full lap
 	typename MyTypes::State u(grid.size());
@@ -197,15 +212,9 @@ int main(){
 	auto u_init = u;
 
 	//
-	// Complete one full lap around grid
+	// Complete one full lap around grid using Integrator
 	//
-	//Integrator<StpBase>::time(stp_base, u, t0, t1, dt, obs);
-	//Integrator<StpBase>::steps(stp_base, u, t, dt, MaxSteps, obs);
-	//Integrator<StpBase>::list(stp_base, u, tlist, obs);
-	for(int i = 0; i < MaxSteps; ++i){
-		stp_base->step(t,dt,u);
-		t += dt;
-	}
+	int_impl->steps(0,dt,MaxSteps,u,t);
 
 
 	double inf_err = std::abs(u_init-u).max();

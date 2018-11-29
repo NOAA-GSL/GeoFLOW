@@ -54,16 +54,20 @@ struct HarmonicOscillator : public EquationBase<TypePack> {
 
 protected:
 
-	void dt_impl(State& u, Time& dt){
-		dt = 0.1;
+	bool has_dt_impl() const{
+		return false;
 	}
 
-	void dudt_impl(State& u, Derivative& dudt, const Time& t){
+	void dt_impl(const Time& t, State& u, Time& dt){
+		dt = 1.0;
+	}
+
+	void dudt_impl(const Time& t, State& u, Derivative& dudt){
 		dudt[0] = +u[1];
 		dudt[1] = -u[0] - m_gam*u[1];
 	}
 
-	void dfdu_impl(State& u, Jacobian& dfdu, const Time& t){
+	void dfdu_impl(const Time& t, State& u, Jacobian& dfdu){
 		//(void*)(&dfdu);
 	}
 
@@ -90,11 +94,12 @@ int main(){
 
 	const int N = 10;
 	typename MyTypes::State u(2);
+	typename MyTypes::State uerr(2);
 	typename MyTypes::Time  t  = 0;
 	typename MyTypes::Time  dt = 0.1;
 
 	for(int i = 0; i < N; ++i){
-		stp_base->step(u,t,dt);
+		stp_base->step(t,dt,u);
 		t += dt;
 	}
 

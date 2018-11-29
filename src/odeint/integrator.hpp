@@ -10,74 +10,79 @@
 
 
 #include <memory>
+#include <vector>
+
+#include "odeint/null_observer.hpp"
+#include "odeint/stepper_base.hpp"
+#include "stepper_base.hpp"
 
 namespace geoflow {
 namespace odeint {
 
-template<typename StepperType>
-struct Integrator {
-	using Stepper     = StepperType;
-	using Equation    = typename Stepper::Equation;
-	using State       = typename Stepper::State;
-	using Value       = typename Stepper::Value;
-	using Derivative  = typename Stepper::Derivative;
-	using Time        = typename Stepper::Time;
-	using Jacobian    = typename Stepper::Jacobian;
-	using EquationPtr = typename Stepper::EquationPtr;
-	using StepperPtr  = std::shared_ptr<Stepper>;
-	using Size        = typename Stepper::Size;
+template<typename EquationType>
+class Integrator {
+
+public:
+	using Equation     = EquationType;
+	using State        = typename Equation::State;
+	using Value        = typename Equation::Value;
+	using Derivative   = typename Equation::Derivative;
+	using Time         = typename Equation::Time;
+	using Jacobian     = typename Equation::Jacobian;
+	using Size         = typename Equation::Size;
+	using StepBasePtr  = std::shared_ptr<StepperBase<Equation>>;
+	using ObsBasePtr   = std::shared_ptr<ObserverBase<Equation>>;
 
 
-	static void time(StepperPtr&  stp_ptr,
-			         EquationPtr& eqn_ptr,
-					 State& u,
-					 Time& t0,
-					 Time& t1,
-					 Time& dt
-					 ) //, ObserverPtr& obs_ptr = std::nullptr);
-	{
+	struct Traits {
+		Value cfl_min;
+		Value cfl_max;
+		Time  dt_min;
+		Time  dt_max;
+	};
 
-		// Build list of times
-		const Size sz = static_cast<Size>((t1-t0)/dt);
-		std::vector<Time> tlist(sz);
-		for(Size i = 0; i < sz; ++i){
-			tlist[i] = t0 + (i * dt);
-		}
-		tlist.push_back(t1);
+	Integrator() = delete;
 
-		// Call the list integrator
-		list(stp_ptr,eqn_ptr,u,tlist);
-	}
+	Integrator(const StepBasePtr& stepper,
+			   const ObsBasePtr&  observer,
+			   const Traits& traits);
 
-	static void step(StepperPtr&  stp_ptr,
-			         EquationPtr& eqn_ptr,
-					 State& u0,
-					 Time&  t0,
-					 Time&  dt,
-					 Size&  n
-					 ){ //, ObserverPtr& obs_ptr = std::nullptr);
-
-		for(Size i = 0; i < n; ++i){
-
-			do{
-
-			} while(true);
-
-		}
+	Integrator(const Integrator& I) = default;
+	~Integrator() = default;
+	Integrator& operator=(const Integrator& I) = default;
 
 
-	}
+	void time( const Time& t0,
+			   const Time& t1,
+			   const Time& dt,
+			   State&      u );
 
-	static void list(StepperPtr&  stp_ptr,
-			         EquationPtr& eqn_ptr,
-					 State& u0,
-					 std::vector<Time>&  tlist,
-					 ); //, ObserverPtr& obs_ptr = std::nullptr);
+
+	void steps( const Time& t0,
+			    const Time& dt,
+				const Size& n,
+			    State&      u,
+				Time&       t );
+
+	void list( const std::vector<Time>& tlist,
+		       State&                   u );
+
+
+
+protected:
+	Traits      traits_;
+	StepBasePtr stp_ptr_;
+	ObsBasePtr  obs_ptr_;
+
+	void init_dt(const Time& t, State& u, Time& dt) const;
 
 };
 
 
 } // namespace odeint
 } // namespace geoflow
+
+
+#include "odeint/integrator.ipp"
 
 #endif /* SRC_ODEINT_INTEGRATOR_HPP_ */

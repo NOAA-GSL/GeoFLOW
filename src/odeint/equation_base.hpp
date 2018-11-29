@@ -39,27 +39,37 @@ public:
 	virtual ~EquationBase() = default;
 	EquationBase& operator=(const EquationBase& eb) = default;
 
-	void dt(State& u, Time& dt){
-		this->dt_impl(u,dt);
+
+	bool has_dt() const{
+		return this->has_dt_impl();
 	}
 
-	void dudt(State& u, Derivative& dudt, const Time& t){
-		this->dudt_impl(u,dudt,t);
+	/** Time difference corresponding to a CFL of one.
+	 *
+	 */
+	void dt(const Time& t, State& u, Time& dt){
+		this->dt_impl(t,u,dt);
 	}
 
-	void dfdu(State& u, Jacobian& dfdu, const Time& t){
-		this->dfdu_impl(u,dfdu,t);
+	void dudt(const Time& t, State& u, Derivative& dudt){
+		this->dudt_impl(t,u,dudt);
+	}
+
+	void dfdu(const Time& t, State& u, Jacobian& dfdu){
+		this->dfdu_impl(t,u,dfdu);
 	}
 
 
 
 protected:
 
-	virtual void dt_impl(State& u, Time& dt) = 0;
+	virtual bool has_dt_impl() const = 0;
 
-	virtual void dudt_impl(State& u, Derivative& dudt, const Time& t) = 0;
+	virtual void dt_impl(const Time& t, State& u, Time& dt) = 0;
 
-	virtual void dfdu_impl(State& u, Jacobian& dfdu, const Time& t) = 0;
+	virtual void dudt_impl(const Time& t, State& u, Derivative& dudt) = 0;
+
+	virtual void dfdu_impl(const Time& t, State& u, Jacobian& dfdu) = 0;
 };
 
 

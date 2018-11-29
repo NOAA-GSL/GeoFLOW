@@ -51,28 +51,27 @@ protected:
 		return 1;
 	}
 
-
-	void step_impl(State& u, const Time& t, const Time& dt){
+	void step_impl(const Time& t, const Time& dt, State& u){
 		Derivative dudt(u.size());
-		this->eqn_ptr_->dudt(u, dudt, t);
-		this->step_impl(u,dudt,t,dt);
+		this->eqn_ptr_->dudt(t,u,dudt);
+		this->step_impl(t,dt,dudt,u);
 	}
 
 
-	void step_impl(const State& uin, const Time& t, State& uout, const Time& dt){
+	void step_impl(const Time& t, const State& uin, const Time& dt, State& uout){
 		uout = uin;
-		this->step_impl(uout,t,dt);
+		this->step_impl(t,dt,uout);
 	}
 
 
-	void step_impl(State& u, const Derivative& dudt, const Time& t, const Time& dt){
+	void step_impl(const Time& t, const Time& dt, const Derivative& dudt, State& u){
 		u += dt * dudt;
 	}
 
 
-	void step_impl(const State& uin, const Derivative& dudt, const Time& t, State& uout, const Time& dt){
+	void step_impl(const Time& t, const State& uin, const Derivative& dudt, const Time& dt, State& uout){
 		uout = uin;
-		this->step_impl(uout,dudt,t,dt);
+		this->step_impl(t,dt,dudt,uout);
 	}
 
 };

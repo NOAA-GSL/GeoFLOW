@@ -1,5 +1,5 @@
 /*
- * stepper_interface.hpp
+ * stepper_base.hpp
  *
  *  Created on: Nov 16, 2018
  *      Author: bflynt
@@ -36,22 +36,20 @@ public:
 	using Size        = typename Equation::Size;
 	using EquationPtr = std::shared_ptr<Equation>;
 
-
 	StepperBase() = default;
 	StepperBase(const StepperBase& si) = default;
 	virtual ~StepperBase() = default;
 	StepperBase& operator=(const StepperBase& si) = default;
-
 
 	StepperBase(const EquationPtr& eqn) :
 		eqn_ptr_(eqn){
 	}
 
 	/**
-	 * Set the system of equations we are stepping
+	 * Get the system of equations we are stepping
 	 */
-	void setEquation(EquationPtr& eqn){
-		this->eqn_ptr_ = eqn;
+	const EquationPtr& getEquationPtr() const{
+		return this->eqn_ptr_;
 	}
 
 	/**
@@ -69,21 +67,22 @@ public:
 	 * \param[in,out] u Is the state of the system of equations
 	 * \param[in] t Current time of state u before taking step
 	 * \param[in] dt Size of time step to take
+	 * \param[out] uerr Error of current step
 	 */
-	void step(State& u, const Time& t, const Time& dt){
-		this->step_impl(u,t,dt);
+	void step(const Time& t, const Time& dt, State& u){
+		this->step_impl(t,dt,u);
 	}
 
-	void step(const State& uin, const Time& t, State& uout, const Time& dt){
-		this->step_impl(uin,t,uout,dt);
+	void step(const Time& t, const State& uin, const Time& dt, State& uout){
+		this->step_impl(t,uin,dt,uout);
 	}
 
-	void step(State& u, const Derivative& dudt, const Time& t, const Time& dt){
-		this->step_impl(u,dudt,t,t,dt);
+	void step(const Time& t,  const Time& dt, const Derivative& dudt, State& u){
+		this->step_impl(t,dt,dudt,u);
 	}
 
-	void step(const State& uin, const Derivative& dudt, const Time& t, State& uout, const Time& dt){
-		this->step_impl(uin,dudt,t,uout,dt);
+	void step(const Time& t, const State& uin, const Derivative& dudt, const Time& dt, State& uout){
+		this->step_impl(t,uin,dudt,dt,uout);
 	}
 
 
@@ -96,22 +95,20 @@ protected:
 	virtual Size order_impl() const = 0;
 
 
-	virtual void step_impl(State& u, const Time& t, const Time& dt) = 0;
+	virtual void step_impl(const Time& t, const Time& dt, State& u) = 0;
 
 
-	virtual void step_impl(const State& uin, const Time& t, State& uout, const Time& dt) = 0;
+	virtual void step_impl(const Time& t, const State& uin, const Time& dt, State& uout) = 0;
 
 
-	virtual void step_impl(State& u, const Derivative& dudt, const Time& t, const Time& dt) = 0;
+	virtual void step_impl(const Time& t, const Time& dt, const Derivative& dudt, State& u) = 0;
 
 
-	virtual void step_impl(const State& uin, const Derivative& dudt, const Time& t, State& uout, const Time& dt) = 0;
+	virtual void step_impl(const Time& t, const State& uin, const Derivative& dudt, const Time& dt, State& uout) = 0;
 
 };
 
 } // namespace odeint
 } // namespace geoflow
-
-
 
 #endif /* SRC_ODEINT_STEPPER_BASE_HPP_ */
