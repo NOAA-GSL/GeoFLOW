@@ -311,18 +311,21 @@ void GGridIcos::lagrefine()
   tmesh_.resize(20*(ilevel_*(ilevel_+2)+1)); // refined triangular mesh
   for ( j=0; j<tmesh_.size(); j++ ) tmesh_[j].resize(3);
 
-  GTPoint<GFTYPE> rL(3), rR(3);
   GTPoint<GFTYPE> a(3), b(3), c(3); // base vertices
+
+  n = 0;
   GTVector<GTPoint<GFTYPE>> R0(2*(ilevel_+1)-1), R1(2*(ilevel_+1));
   GTVector<GTPoint<GFTYPE>> Rz(2*(ilevel_+1)+1); // interleave R0, R1
 
+#pragma omp parallel private (ibeg,l,m,t,a,b,c,R0,R1,Rz) reduction(+: n)
+  R0.resize(2*(ilevel_+1)-1);
+  R1.resize(2*(ilevel_+1));
+  Rz.resize(2*(ilevel_+1)+1);
+
   // Do refinement of base mesh triandles:
-//#pragma omp parallel for if (ilevel_ < omp_get_max_threads()) private (ibeg,l,m,a,b,c,R0,R1,Rz)
-  n = 0;
-#pragma omp parallel for reduction(+: n)
+#pragma omp for
   for ( t=0; t<tbase_.size(); t++ ) { // for each base triangle 
     a = tbase_[t].v1; b = tbase_[t].v2; c = tbase_[t].v3;
-//#pragma omp parallel for if (ilevel_ >= omp_get_max_threads()) shared(n,a,b,c) private (ibeg,l,m,R0,R1,Rz)
     for ( l=0; l<ilevel_+1; l++ ) { // for each triangle 'row'
       lagvert(a,b,c,l   ,R0); // get previous row of points
       lagvert(a,b,c,l+1 ,R1); // get current row of points
