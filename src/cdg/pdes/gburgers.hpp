@@ -14,21 +14,22 @@
 #include "gtvector.hpp"
 #include "gdd_base.hpp"
 #include "ggrid.hpp"
+#include "equation_base.hpp"
 
-class GBurgers 
+class GBurgers :: public EquationBase
 {
 
 public:
-                            GBurgers(GGrid &grid, GTVector<GFTYPE>> &u, GTVector<GFTYPE> &v, GTVector<GFTYPE> &tmp);
-                            GBurgers(GGrid &grid, GTVector<GFTYPE>> &u, GTVector<GFTYPE> &v, GTVector<GFTYPE> &w, GTVector<GFTYPE>> &tmp);
+                            GBurgers(GGrid &grid, GTvector<GTVector<GFTYPE>*> &u, GTVector<GTVector<GFTYPE>*> &tmp);
                            ~GBurgers();
 
-        GINT                step();                                      // take a time step
+        void                dt_impl();                                   // Get dt
+        void                dudt_impl();                                 // Compute RHS
+        void                dfdu_impl();                                 // Compute Jacobian dF/du
         void                set_bdy_callback(
                             std::function<void(GGrid &)> &callback);     // set bdy-set callback
 
-
-friend  std::ostream&       operator<<(std::ostream&, GBurgers &);       // Output stream operator
+friend  std::ostream&       operator<<(std::ostream&, GBurgers &) {};    // Output stream operator
  
 
 protected:
