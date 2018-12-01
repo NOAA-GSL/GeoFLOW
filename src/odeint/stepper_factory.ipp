@@ -19,14 +19,14 @@ typename StepperFactory<EquationType>::StepBasePtr
 StepperFactory<EquationType>::build(const tbox::PropertyTree& ptree, const EqnBasePtr& eqn){
 
 	// Set the default stepper type
-	const std::string default_stepper = "euler";
+	const std::string default_stepper = "bdf1";
 
 	// Get the type of stepper
 	const std::string stepper_name = ptree.getValue("time stepper", default_stepper);
 
 	// Create the Stepper and cast to base type
 	StepBasePtr base_ptr;
-	if( "euler" == stepper_name ){
+	if( "bdf1" == stepper_name ){
 		using StpImpl = EulerStepper<Equation>;
 
 		// Allocate Stepper Implementation

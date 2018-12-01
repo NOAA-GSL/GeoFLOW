@@ -26,7 +26,6 @@ int main(int argc, char* argv[]) {
 	// Entry Point to your application
 	// -->
 
-
 	// Call shutdown call backs
 	GlobalManager::shutdown();
 

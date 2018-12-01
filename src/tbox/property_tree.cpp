@@ -118,8 +118,8 @@ bool PropertyTree::key_is_list(const std::string& key) const {
 
 // Key leads to an array
 bool PropertyTree::key_is_array(const std::string& key) const{
-	return ( this->keyExists(key)     &&
-			 this->key_is_list(key)   &&
+	ASSERT(this->keyExists(key));
+	return ( this->key_is_list(key)   &&
 			!this->list_has_keys(key) );
 }
 

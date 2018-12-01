@@ -11,6 +11,7 @@
 #include <memory>
 #include <valarray>
 
+#include "tbox/pio.hpp"
 #include "tbox/property_tree.hpp"
 
 #include "odeint/equation_base.hpp"
@@ -87,12 +88,14 @@ int main(){
 	using EqnBase = EquationBase<MyTypes>;
 	using EqnImpl = HarmonicOscillator<MyTypes>;
 
+	pio::initialize(0);
+
 	std::shared_ptr<EqnImpl> eqn_impl(new EqnImpl());
 	std::shared_ptr<EqnBase> eqn_base = eqn_impl;
 
 	// Load the Property Tree
 	PropertyTree ptree;
-	ptree.load_string("{ \"time stepper\":\"bob\",\"observer\":\"none\",\"dt_max\":1.0}");
+	ptree.load_string("{ \"time stepper\":\"bdf1\",\"observer\":\"none\",\"dt_max\":1.0}");
 
 	// Create the Stepper
 	auto stp_ptr = StepperFactory<EqnBase>::build(ptree,eqn_base);

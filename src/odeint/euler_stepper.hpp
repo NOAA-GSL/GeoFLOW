@@ -15,7 +15,18 @@
 namespace geoflow {
 namespace odeint {
 
-
+/**
+ * Explicit first order forward difference time stepping scheme.
+ *
+ * Simple first order time stepping scheme which only requires
+ * derivative information from the system of equations.
+ *
+ * \f[
+ * u_{n+1} = u_{n} + \Delta t \left( \frac{\partial u_{n}}{\partial t} \right)
+ * \f]
+ *
+ * @see StepperBase
+ */
 template<typename EquationType>
 class EulerStepper : public StepperBase<EquationType> {
 
@@ -63,11 +74,9 @@ protected:
 		this->step_impl(t,dt,uout);
 	}
 
-
 	void step_impl(const Time& t, const Time& dt, const Derivative& dudt, State& u){
 		u += dt * dudt;
 	}
-
 
 	void step_impl(const Time& t, const State& uin, const Derivative& dudt, const Time& dt, State& uout){
 		uout = uin;

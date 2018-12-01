@@ -8,14 +8,20 @@
 #ifndef SRC_ODEINT_NULL_OBSERVER_HPP_
 #define SRC_ODEINT_NULL_OBSERVER_HPP_
 
-#include <memory>
 
 #include "odeint/observer_base.hpp"
-
 
 namespace geoflow {
 namespace odeint {
 
+/**
+ * Do nothing Observer implementation
+ *
+ * The NullObserver is the default observer when nothing else is
+ * provided and does nothing when called.
+ *
+ * @see ObserverBase
+ */
 template<typename EquationType>
 class NullObserver : public ObserverBase<EquationType> {
 
@@ -27,6 +33,7 @@ public:
 protected:
 
 	void observe_impl(const Time& /* t */, const State& /* u */){
+		// Do nothing ...
 	}
 
 };
