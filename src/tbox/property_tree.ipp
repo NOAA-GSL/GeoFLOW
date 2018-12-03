@@ -26,7 +26,7 @@ void PropertyTree::serialize(Archive & ar, const unsigned int version){
 
 template<typename T>
 bool PropertyTree::isValue(const std::string& key) const{
-	bool result = key_is_terminal(key);
+	bool result = (keyExists(key) && key_is_terminal(key));
 	if( result ){
 		try{
 			const T b = this->get_value_impl<T>(key);
@@ -40,7 +40,7 @@ bool PropertyTree::isValue(const std::string& key) const{
 
 template<typename T>
 bool PropertyTree::isArray(const std::string& key) const{
-	bool result = key_is_array(key);
+	bool result = (keyExists(key) && key_is_array(key));
 	if( result ){
 		try{
 			std::vector<T> tmp = this->get_array_impl<T>(key);

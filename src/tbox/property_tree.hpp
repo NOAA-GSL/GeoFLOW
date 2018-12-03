@@ -76,6 +76,8 @@ public:
 	void save_file(const std::string& file_name) const;
 
 
+	void load_string(const std::string& content);
+
 	// *********************************************************************
 	//                           Serialization
 	// *********************************************************************
