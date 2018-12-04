@@ -26,11 +26,10 @@ public:
         using Derivative = typename Interface::Derivative;
         using Time       = typename Interface::Time;
         using Jacobian   = typename Interface::Jacobian;
-        using Grid       = typename Interface::Grid;
 
         GBurgers() = delete; 
-//      GBurgers(GGrid &grid, GTvector<GTVector<GFTYPE>*> &u, GTVector<GTVector<GFTYPE>*> &tmp);
-       ~GBurgers() = default;
+        GBurgers(GGrid &grid, State &u, GTVector<GTVector<GFTYPE>*> &tmp);
+       ~GBurgers();
         GBurgers(const GBurgers &bu) = default;
         GBurgers &operator=(const Burgers &bu) = default;
 
@@ -44,17 +43,14 @@ protected:
                                       Derivative& dudt);                 // Compute RHS
         void                dfdu_impl(const Time& t, State &u, 
                                       Jacobian &dfdu);                   // Compute Jacobian dF/du
-        void                set_bdy_callback(
-                            std::function<void(GGrid &)> &callback);     // set bdy-set callback
+        void                set_bc();                                    // Set bdy conditions
 
 private:
         void                init2d();                                    // initialize for 2d grid
         void                init3d();                                    // initialize for 3d grid
        
 
-std::function<void(GGrid&)>
-                       *bdycallback_ ; // callback object+method to set bdy conditions
-State                   tmp_;
+        State               tmp_;
 
 };
 

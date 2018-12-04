@@ -15,43 +15,22 @@
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : Constructor method (1)
-// DESC   : Instantiate with 2 fields, so a 2d problem
+// METHOD : Constructor method 
+// DESC   : Instantiate with grid + state + tmp 
 // ARGS   : grid  : grid object
-//          u, v, : fields
+//          u     : state 
 //          tmp   : tmp vectors of same size as u, v
 // RETURNS: none
 //**********************************************************************************
-GBurgers::GBurgers(GGrid &ggrid, GTVector<GFTYPE> &u, GTVector<GFTYPE> &v, GTVector<GFTYPE> &tmp) :
-ggrid_      (&ggrid),
-u_          (&u),
-v_          (&v),
-tmp_        (&tmp),
-bdycallback_(NULLPTR)
+GBurgers::GBurgers(GGrid &grid, State &u, GTVector<GTVectorGFTYPE>*> &tmp) :
+ggrid_      (&ggrid)
 {
-  init2d();
-} // end of constructor method (1)
+  static_assert(std::is_same<State,GTVector<GTVectorGFTYPE>>>::value,
+               "State is of incorrect type"); 
 
-
-//**********************************************************************************
-//**********************************************************************************
-// METHOD : Constructor method (2)
-// DESC   : Instantiate with 3 fields, so a 3d problem. NOTE: do we allow 2.5d?
-// ARGS   : grid    : grid object
-//          u, v, w : fields
-//          tmp     : tmp vectors of same size as u, v
-// RETURNS: none
-//**********************************************************************************
-GBurgers::GBurgers(GGrid &ggrid, GTVector<GFTYPE> &u, GTVector<GFTYPE> &v, GTVector<GFTYPE> &w, GTVector<GFTYPE> &tmp) :
-ggrid_      (&ggrid),
-u_          (&u),
-v_          (&v),
-v_          (&w),
-tmp_        (&tmp),
-bdycallback_(NULLPTR)
-{
-  init3d();
-} // end of constructor method (2)
+  init();
+  
+} // end of constructor method 
 
 
 
@@ -79,7 +58,6 @@ GBurgers::~GBurgers()
 void GBurgers::dt_impl(const Time &t, State &u, Time &dt)
 {
     dt = 1.0;
-
 } // end of method dt_impl
 
 
