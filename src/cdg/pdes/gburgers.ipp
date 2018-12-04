@@ -1,5 +1,5 @@
 //==================================================================================
-// Module       : gburgers.cpp
+// Module       : gburgers.ipp
 // Date         : 10/18/18 (DLR)
 // Description  : Object defining a multidimensional Burgers (advection-diffusion) 
 //                PDE. 
@@ -69,18 +69,63 @@ GBurgers::~GBurgers()
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD :  << operator method (1)
-// DESC   : output stream operator
-// ARGS   :
-// RETURNS: ostream &
+// METHOD : dt_impl
+// DESC   : Compute time step
+// ARGS   : t : time
+//          u : state
+//          dt: timestep, returned
+// RETURNS: none.
 //**********************************************************************************
-std::ostream &operator<<(std::ostream &str, GBurgers &e)
+void GBurgers::dt_impl(const Time &t, State &u, Time &dt)
 {
-  
+    dt = 1.0;
 
-  return str;
-} // end of operator <<
+} // end of method dt_impl
 
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : dudt_impl
+// DESC   : Compute RHS for explicit schemes
+// ARGS   : t  : time
+//          u  : state
+//          dt : time step
+// RETURNS: none.
+//**********************************************************************************
+void GBurgers::dudt_impl(const Time &t, State &u, Time &dt, Derivative &dudt)
+{
+
+
+} // end of method dudt_impl
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : dfdu_impl
+// DESC   : Compute Jacobian dF/du for F == RHS
+// ARGS   : t  : time
+//          u  : state
+//          dt : time step
+// RETURNS: none.
+//**********************************************************************************
+void GBurgers::dfdu_impl(const Time &t, State &u, Time &dt, Jacobian &dfdu)
+{
+
+} // end of method dfdu_impl
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : set_bdy_callback
+// DESC   : Set the callback object and method pointers for setting bdy conditions
+// ARGS   : ptr2obj : pointer to object that hosts method callback
+//          callback: method name
+// RETURNS: none.
+//**********************************************************************************
+void GBurgers::set_bdy_callback(std::function<void(GGrid &)> &callback)
+{
+  bdycallback_  = &callback;
+} // end of method set_bdy_callback
 
 
 //**********************************************************************************
@@ -109,34 +154,5 @@ void GBurgers::init3d()
 {
 
 } // end, method init3d
-
-
-//**********************************************************************************
-//**********************************************************************************
-// METHOD : step 
-// DESC   : Take a time step
-// ARGS   : none.
-// RETURNS: none.
-//**********************************************************************************
-void GBurgers::step()
-{
-  GString serr = "GBurgers::step: ";
-   
-
-} // end of method step
-
-
-//**********************************************************************************
-//**********************************************************************************
-// METHOD : set_bdy_callback
-// DESC   : Set the callback object and method pointers for setting bdy conditions
-// ARGS   : ptr2obj : pointer to object that hosts method callback
-//          callback: method name
-// RETURNS: none.
-//**********************************************************************************
-void GBurgers::set_bdy_callback(std::function<void(GGrid &)> &callback)
-{
-  bdycallback_  = &callback;
-} // end of method set_bdy_callback
 
 
