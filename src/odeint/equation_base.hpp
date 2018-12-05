@@ -87,6 +87,15 @@ public:
 		this->dfdu_impl(t,u,dfdu);
 	}
 
+	/**
+	 * Apply boundary conditions to u at time t
+	 *
+     * @param[in]     t Current time of state u before taking step
+     * @param[in,out] u State of the system of equations at time t
+	 */
+	bool apply_bc(const Time& t, State& u){
+		return this->apply_bc_impl(t,u);
+	}
 
 protected:
 
@@ -109,6 +118,11 @@ protected:
 	 * Must be provided by implementation
 	 */
 	virtual void dfdu_impl(const Time& t, State& u, Jacobian& dfdu) = 0;
+
+	/**
+	 * Must be provided by implementation
+	 */
+	virtual void apply_bc_impl(const Time& t, State& u) = 0;
 };
 
 
