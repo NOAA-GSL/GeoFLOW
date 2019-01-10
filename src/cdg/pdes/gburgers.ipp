@@ -80,7 +80,8 @@ void GBurgers::dudt_impl(const Time &t, State &u, Time &dt, Derivative &dudt)
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : dfdu_impl
-// DESC   : Compute Jacobian dF/du for F == RHS
+// DESC   : Compute Jacobian dF/du for F == RHS. Used to linearize
+//          equations for purely implicit schemes.
 // ARGS   : t  : time
 //          u  : state
 //          dt : time step
