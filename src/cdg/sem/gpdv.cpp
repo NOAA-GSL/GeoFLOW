@@ -241,7 +241,7 @@ void GpdV::def_init()
                       * (*W[0])[l] * (*W[1])[m] * (*Jac)[n];
         }
       }
-      (*G_[j]).range(0, grid_->ndof()-1); // reset to global range
+      (*G_[j]).range_reset(); // reset to global range
     }
 
 #else
@@ -256,7 +256,7 @@ void GpdV::def_init()
             }
           }
         }
-      (*G_[j]).range(0, grid_->ndof()-1); // reset global vec to global range
+      (*G_[j]).range_reset(); // reset global vec to global range
     }
 
 #endif

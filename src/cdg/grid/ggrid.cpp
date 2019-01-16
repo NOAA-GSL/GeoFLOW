@@ -396,15 +396,15 @@ void GGrid::def_init()
    } // end, element loop
 
    // Reset global scope:
-   ibeg  = 0; iend  = ndof()-1;;
-   ifbeg = 0; ifend = nsurfdof()-1;
-   for ( GSIZET j=0; j<nxy; j++ ) {
-     faceNormal_[j].range(ifbeg, ifend);
-     for ( GSIZET i=0; i<nxy; i++ )  {
-       dXidX_(i,j).range(ibeg, iend);
+   for ( GSIZET j=0; j<faceNormal_.size(); j++ ) {
+     faceNormal_[j].range_reset();
+   }
+   for ( GSIZET j=0; j<dXidX_.size(2); j++ )  {
+     for ( GSIZET i=0; i<dXidX_.size(1); i++ )  {
+       dXidX_(i,j).range_reset();
      }
    }
-   Jac_.range(ibeg, iend);
+   Jac_.range_reset();
    
 } // end of method def_init
 
@@ -466,15 +466,15 @@ void GGrid::reg_init()
    } // end, element loop
 
    // Reset global scope:
-   ibeg  = 0; iend  = ndof()-1;;
-   ifbeg = 0; ifend = nsurfdof()-1;
-   for ( GSIZET j=0; j<nxy; j++ ) {
-     faceNormal_[j].range(ifbeg, ifend);
-     for ( GSIZET i=0; i<nxy; i++ )  {
-       dXidX_(i,j).range(ibeg, iend);
+   for ( GSIZET j=0; j<faceNormal_.size(); j++ ) {
+     faceNormal_[j].range_reset();
+   }
+   for ( GSIZET j=0; j<dXidX_.size(2); j++ )  {
+     for ( GSIZET i=0; i<dXidX_.size(1); i++ )  {
+       dXidX_(i,j).range_reset();
      }
    }
-   Jac_.range(ibeg, iend);
+   Jac_.range_reset();
    
 } // end of method reg_init
 

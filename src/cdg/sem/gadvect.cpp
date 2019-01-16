@@ -20,8 +20,9 @@
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : Constructor method (1)
-// DESC   : Default constructor
-// ARGS   : none
+// DESC   : Constructor accepting grid and mass operator
+// ARGS   : grid  : GGrid object
+//          massop: Mass operator 
 // RETURNS: none
 //**********************************************************************************
 GAdvect::GAdvect(GGrid &grid, GMass &massop)
@@ -29,6 +30,22 @@ GAdvect::GAdvect(GGrid &grid, GMass &massop)
 bInitialized_   (FALSE),
 grid_           (&grid),
 massop_       (&massop)
+{
+} // end of constructor method (1)
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : Constructor method (2)
+// DESC   : Constructor accepting grid operator only
+// ARGS   : grid  : GGrid object
+// RETURNS: none
+//**********************************************************************************
+GAdvect::GAdvect(GGrid &grid)
+:
+bInitialized_   (FALSE),
+grid_           (&grid),
+massop_       (NULLPTR)
 {
 } // end of constructor method (1)
 
@@ -262,7 +279,7 @@ void GAdvect::def_init()
                       * (*W[0])[l] * (*W[1])[m] * (*Jac)[n];
         }
       }
-      (*G_[j]).range(0, grid_->ndof()-1); // reset to global range
+      (*G_[j]).range_reset(); // reset to global range
     }
 
 #else
@@ -277,7 +294,7 @@ void GAdvect::def_init()
             }
           }
         }
-      (*G_[j]).range(0, grid_->ndof()-1); // reset global vec to global range
+      (*G_[j]).range_reset(); // reset global vec to global range
     }
 
 #endif

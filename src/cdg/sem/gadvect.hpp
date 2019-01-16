@@ -22,6 +22,7 @@ class GAdvect
 public:
 
                           GAdvect(GGrid &grid, GMass &massop);
+                          GAdvect(GGrid &grid);
                           GAdvect(const GAdvect &);
                          ~GAdvect();
 

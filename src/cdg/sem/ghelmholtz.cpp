@@ -409,7 +409,7 @@ void GHelmholtz::def_init()
             }
           }
         }
-        (*G_(i,j)).range(0, grid_->ndof()-1); // reset to global range
+        (*G_(i,j)).range_reset(); // reset to global range
       }
     }
 
@@ -428,16 +428,17 @@ void GHelmholtz::def_init()
             }
           }
         }
-        (*G_(i,j)).range(0, grid_->ndof()-1); // reset global vec to global range
+        (*G_(i,j)).range_reset(); // reset global vec to global range
       }
     }
 
 #endif
   }
-  ibeg = 0; iend = grid_->ndof();
-  Jac->range(ibeg, iend);
+
+  // Reset ranges to global scope:
+  Jac->range_reset();
   for ( GSIZET j=0; j<nxy; j++ ) 
-    for ( GSIZET i=0; i<nxy; i++ ) (*dXidX)(i,j).range(ibeg, iend);
+    for ( GSIZET i=0; i<nxy; i++ ) (*dXidX)(i,j).range_reset();
 
 } // end of method def_init
 
@@ -512,10 +513,10 @@ void GHelmholtz::reg_init()
     bown_mass_ = TRUE;
   }
 
-  ibeg = 0; iend = grid_->elems().size()-1;
-  Jac->range(ibeg, iend);
+  // Reset range to global scope:
+  Jac->range_reset();
   for ( GSIZET j=0; j<nxy; j++ ) 
-    for ( GSIZET i=0; i<nxy; i++ ) (*dXidX)(i,j).range(ibeg, iend);
+    for ( GSIZET i=0; i<nxy; i++ ) (*dXidX)(i,j).range_reset();
 
 } // end of method reg_init
 
