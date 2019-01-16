@@ -160,7 +160,7 @@ void GHelmholtz::def_prod(GTVector<GFTYPE> &u, GTVector<GFTYPE> &uo)
     massop_->opVec_prod(u, *utmp_[0]);
     if ( q_ != NULLPTR ) {
       if ( q_->size() >= grid_->ndof() ) utmp_[0]->pointProd(*q_);
-      if ( (*q_)[0] != 1.0)              *utmp_[0] *= (*q_)[0];
+      if ( (*q_)[0] != 1.0)             *utmp_[0] *= (*q_)[0];
     }
     uo += *utmp_[0];
   }

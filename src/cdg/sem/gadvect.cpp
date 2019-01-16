@@ -66,7 +66,7 @@ GAdvect::~GAdvect()
 //**********************************************************************************
 // METHOD : apply
 // DESC   : Compute application of this operator to input vector:
-//            po = p Div u
+//            po = u.Grad p
 //          NOTE: Require GDIM velocity components for GE_DEFORMED or
 //                GE_REGULAR elements, and require GDIM+1 components
 //                for GE_2DEMBEDDED elements.
