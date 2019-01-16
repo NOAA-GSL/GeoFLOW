@@ -39,6 +39,9 @@ public:
         void                 init();                                  // inititlize class
         GFTYPE               minlength();                             // find min elem length
         GFTYPE               maxlength();                             // find max elem length
+        GTVector<GFTYPE>    &minnodedist();                           // find min node distance
+                            {return minnodedist_; }
+
         GTMatrix<GTVector<GFTYPE>>
                             &dXidX();                                 // global Rij = dXi^j/dX^i
         GTVector<GFTYPE>    &dXidX(GSIZET i,GSIZET j);                // Rij matrix element 
@@ -59,6 +62,8 @@ protected:
         void                 reg_init();                              // initialize regular elems
 
 private:
+         
+void                        find_min_dist(); 
 
 GBOOL                       bInitialized_;  // object initialized?
 GC_COMM                     comm_;          // communicator
@@ -69,6 +74,7 @@ GTMatrix<GTVector<GFTYPE>>  dXidX_;         // matrix Rij = dXi^j/dX^i, global
 GTVector<GFTYPE>            Jac_;           // interior Jacobian, global
 GTVector<GFTYPE>            faceJac_;       // face Jacobian, global
 GTVector<GTVector<GFTYPE>>  faceNormal_;    // normal to face at each node point (2d & 3d), global
+GTVector<GFTYPE>            minnodedist_;   // min node length array (for each elem)
 
 
 };
