@@ -53,6 +53,7 @@ template <class T> class GTVector
     void   bconstdata(GBOOL);   // If data const, all access access 1 element only
 
     void range(GSIZET ibeg, GSIZET end);    // Set range of vector within capacity
+    void range_reset();                     // Reset range of vector 
     GIndex &getIndex() ;        // Return generalized index member
 
     #pragma acc routine vector
@@ -186,7 +187,8 @@ inline    T operator[](const GSIZET i) const {
 
   private:
 
-    GIndex gindex_; // gen. index object
+    GIndex gindex_; // gen. index object, changeable
+    GIndex gindex_keep_; // gen. index object, stored
     T     *data_;
     GSIZET n_;
     GBOOL  bdatalocal_; // tells us that data_ is owned by caller

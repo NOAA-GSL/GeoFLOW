@@ -28,6 +28,7 @@ bdatalocal_ (TRUE),
 bconstdata_ (FALSE)
 {
   gindex_(n_, n_, 0, n_-1, 1,  0);
+  gindex_keep_ = gindex_;
 
   #if defined(_G_AUTO_CREATE_DEV)
     #pragma acc enter data copyin( this[0:1] ) create( data_[0:n_-1] )
@@ -51,6 +52,7 @@ bconstdata_ (FALSE)
 {
   data_ = new T [n_];
   gindex_(n_, n_, 0, n_-1, 1,  0);
+  gindex_keep_ = gindex_;
 
   #if defined(_G_AUTO_CREATE_DEV)
     #pragma acc enter data copyin( this[0:1] ) create( data_[0:n_-1] )
@@ -71,6 +73,7 @@ bdatalocal_ (TRUE),
 bconstdata_ (FALSE)
 {
   gindex_ = gi;
+  gindex_keep_ = gindex_;
   n_=gindex_.end()+1+gindex_.pad();
 
   data_ = new T [n_];
@@ -101,6 +104,7 @@ bconstdata_ (FALSE)
     this->data_[j] = obj[j];
   }
   gindex_(n_, n_, 0, n_-1, 1,  0);
+  gindex_keep_ = gindex_;
 
   #if defined(_G_AUTO_CREATE_DEV)
     #pragma acc enter data copyin( this[0:1] ) create( data_[0:n_-1] )
@@ -133,6 +137,7 @@ bconstdata_ (FALSE)
     k += istride;
   }
   gindex_(n_, n_, 0, n_-1, 1,  0);
+  gindex_keep_ = gindex_;
 
   #if defined(_G_AUTO_CREATE_DEV)
     #pragma acc enter data copyin( this[0:1] ) create( data_[0:n_-1] )
@@ -171,7 +176,7 @@ bconstdata_ (FALSE)
     data_ = indata;
     gindex_(n_, n_, 0, n_-1, istride,  0);
   }
-
+  gindex_keep_ = gindex_;
 
   #if defined(_G_AUTO_CREATE_DEV)
     #pragma acc enter data copyin( this[0:1] ) create( data_[0:n_-1] )
@@ -198,6 +203,7 @@ bconstdata_ (FALSE)
     data_[j] = obj[j];
   }
   gindex_ = obj.gindex_;
+  gindex_keep_ = gindex_;
 
   #if defined(_G_AUTO_CREATE_DEV)
     #pragma acc enter data copyin( this[0:1] ) create( data_[0:n_-1] )
@@ -611,7 +617,8 @@ void GTVector<T>::operator=(T a)
 //************************************************************************************
 //************************************************************************************
 // METHOD : range 
-// DESC   : Sets GTVector<T> range ibeg, iend.
+// DESC   : Sets GTVector<T> range ibeg, iend, by
+//          re-defining variable gindex_ object.
 // ARGS   : ibeg : starting index
 //          iend : ending index
 // RETURNS: none.
@@ -628,6 +635,23 @@ void  GTVector<T>::range(GSIZET ibeg, GSIZET iend)
   gindex_.end() = iend;
   
 } // end of method range
+
+
+//************************************************************************************
+//************************************************************************************
+// METHOD : range_reset
+// DESC   : Resets range to that stored in gindex_keep object.
+//          Capacity, etc does not change.
+// ARGS   : none.
+// RETURNS: none.
+//************************************************************************************
+template<class T> 
+void  GTVector<T>::range_reset() 
+{
+
+  gindex_ = gindex_keep_;
+  
+} // end of method range_reset
 
 
 //**********************************************************************************
