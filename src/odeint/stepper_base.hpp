@@ -43,7 +43,7 @@ public:
 	/**
 	 * Constructor taking a pointer to the set of equations.
 	 *
-	 * @param[in] peqn Pointer to the set of equation to time step
+	 * @param[in] peqn Pointer to the set of equations to time step
 	 */
 	StepperBase(const EquationPtr& peqn) :
 		eqn_ptr_(peqn){

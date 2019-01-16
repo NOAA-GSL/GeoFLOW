@@ -52,7 +52,7 @@ public:
 	 * Time difference corresponding to a CFL of one.
 	 *
 	 * Calculate the time step size which equates to a CFL of one
-	 * using the equations your modeling.
+	 * using the equations you're modeling.
 	 *
 	 * @param[in]     t  Current time of state u before taking step
 	 * @param[in,out] u  Is the state of the system of equations
@@ -90,8 +90,8 @@ public:
 	/**
 	 * Apply boundary conditions to u at time t
 	 *
-     * @param[in]     t Current time of state u before taking step
-     * @param[in,out] u State of the system of equations at time t
+         * @param[in]     t Current time of state u before taking step
+         * @param[in,out] u State of the system of equations at time t
 	 */
 	bool apply_bc(const Time& t, State& u){
 		return this->apply_bc_impl(t,u);
