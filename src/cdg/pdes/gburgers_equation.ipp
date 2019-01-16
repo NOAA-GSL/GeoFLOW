@@ -92,6 +92,7 @@ void GBurgers_equation::dt_impl(const Time &t, State &u, Time &dt)
        umax = u[k].max();
        dtmin = MIN(dtmin, (*drmin_)[e] / umax);
      }
+     u[k].range_reset();
    }
 
    GComm::Allreduce(&dtmin, &dt, 1, T2GCDatatype<GFTYPE>() , GC_OP_MIN, comm_);
@@ -116,7 +117,12 @@ void GBurgers_equation::dudt_impl(const Time &t, State &u, Time &dt, Derivative 
   // If non-conservative, compute RHS from:
   //     du/dt = -u.Grad u + nu nabla u 
   // for each u
-
+  
+  for ( auto k=0; k<u.size(); k++ ) {
+    gadvect_->apply(u[k], u, dudt[k]);
+    ghelm_->opVec_prod(u[k],utmp_[0]);
+  }
+  
 } // end of method dudt_impl
 
 
