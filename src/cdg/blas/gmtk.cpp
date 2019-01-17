@@ -1246,7 +1246,7 @@ void compute_grefderiv(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &etm
 //**********************************************************************************
 template<>
 void compute_grefderivs(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &etmp,
-                        GTVector<GTVector<GDOUBLE>*> &du, GBOOL dotrans)
+                        GBOOL dotrans, GTVector<GTVector<GDOUBLE>*> &du)
 {
   assert((grid.itype(GE_REGULAR)   .size() > 0 && du.size() >= GDIM)
        ||(grid.itype(GE_DEFORMED)  .size() > 0 && du.size() >= GDIM)
@@ -1329,7 +1329,7 @@ void compute_grefderivs(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &et
 //**********************************************************************************
 template<>
 void compute_grefderivsW(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &etmp,
-                         GTVector<GTVector<GDOUBLE>*> &du, GBOOL dotrans)
+                         GBOOL dotrans, GTVector<GTVector<GDOUBLE>*> &du)
 {
   assert((grid.itype(GE_REGULAR)   .size() > 0 && du.size() >= GDIM)
        ||(grid.itype(GE_DEFORMED)  .size() > 0 && du.size() >= GDIM)
@@ -1413,7 +1413,7 @@ void compute_grefderivsW(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &e
 //**********************************************************************************
 template<>
 void compute_grefdiv(GGrid &grid, GTVector<GTVector<GDOUBLE>*> &u, 
-                     GTVector<GDOUBLE> &etmp, GTVector<GDOUBLE> &divu, GBOOL dotrans)
+                     GBOOL dotrans, GTVector<GDOUBLE> &etmp, GTVector<GDOUBLE> &divu)
 {
 
   GBOOL                        bembedded;
