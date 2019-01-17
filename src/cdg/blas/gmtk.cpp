@@ -1113,6 +1113,115 @@ void matmat_prod<GQUAD>(GTMatrix<GQUAD> &C, GTMatrix<GQUAD> &A, GTMatrix<GQUAD> 
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD : compute_grefderiv
+// DESC   : Compute tensor product derivative in specified direction
+//          of specified field, u, in ref space, using grid object.
+//          Compute
+//            du = [ I_X_I_X_Dx, or
+//                   I_X_Dy_X_I, or
+//                   Dz_X_I_X_I].
+//     
+//          depending on whether idir = 1, 2, or 3, respectively,
+//          where Dx, Dy, Dz are 1d derivative objects from basis functions     
+// ARGS   : 
+//          grid   : GGrid object 
+//          u      : input field whose derivative we want, allocated globally 
+//                   (e.g., for all elements).
+//          etmp   : tmp array (possibly resized here) for element-based ops.
+//                   Is not global.
+//          idir   : coordinate direction (1, 2, or 3)
+//          dotrans: flag telling us to tak transpose of deriv operators (TRUE) or
+//                   not (FALSE).
+//          du     : vector of length of u containing the derivative.
+//             
+// RETURNS:  none
+//**********************************************************************************
+template<>
+void compute_grefderiv(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &etmp,
+                       GINT idir, GBOOL dotrans, GTVector<GDOUBLE>> &du)
+{
+  GSIZET                       ibeg, iend; // beg, end indices for global array
+  GTVector<GSIZET>             N(GDIM);
+  GTVector<GTMatrix<GDOUBLE>*> Di;   // element-based 1d derivative operators
+  GElemList                   *gelems = &grid.elems();
+
+#if defined(_G_IS2D)
+  switch (idir) {
+  case 1:
+    for ( GSIZET e=0; e<grid.elems().size(); e++ ) {
+      ibeg = (*gelems)[e]->igbeg(); iend = (*gelems)[e]->igend();
+      u.range(ibeg, iend); // restrict global vecs to local range
+      du[k].range(ibeg, iend);
+      for ( GSIZET k=0; k<GDIM; k++ ) N[k]= (*gelems)[e]->size(k);
+      Di = (*gelems)[e]->gbasis(0)->getDerivMatrix (dotrans);
+      GMTK::I2_X_D1(*Di, u, N[0], N[1], du]); 
+    }
+    break;
+  case 2:
+    for ( GSIZET e=0; e<grid.elems().size(); e++ ) {
+      ibeg = (*gelems)[e]->igbeg(); iend = (*gelems)[e]->igend();
+      u.range(ibeg, iend); // restrict global vecs to local range
+      du.range(ibeg, iend);
+      for ( GSIZET k=0; k<GDIM; k++ ) N[k]= (*gelems)[e]->size(k);
+      Di = (*gelems)[e]->gbasis(1)->getDerivMatrix(!dotrans);
+      GMTK::D2_X_I1(*Di, u, N[0], N[1], du); 
+    }
+    break;
+  default:
+    assert(FALSE && "Invalid coordinate direction");
+  }
+  u.range_reset(); // reset to global range
+  for ( GSIZET k=0; k<GDIM+1; k++ ) du[k]->range_reset();
+
+#elif defined(_G_IS3D)
+
+  switch (idir) {
+  case 1:
+    for ( GSIZET e=0; e<grid.elems().size(); e++ ) {
+      ibeg = (*gelems)[e]->igbeg(); iend = (*gelems)[e]->igend();
+      u.range(ibeg, iend); // restrict global vecs to local range
+      du.range(ibeg, iend);
+      for ( GSIZET k=0; k<GDIM  ; k++ ) N[k]= (*gelems)[e]->size(k);
+      Di = (*gelems)[e]->gbasis(0)->getDerivMatrix (dotrans); 
+      GMTK::I3_X_I2_X_D1(*Di, u, N[0], N[1], N[2], du); 
+    }
+    break;
+
+  case 2:
+    for ( GSIZET e=0; e<grid.elems().size(); e++ ) {
+      ibeg = (*gelems)[e]->igbeg(); iend = (*gelems)[e]->igend();
+      u.range(ibeg, iend); // restrict global vecs to local range
+      du.range(ibeg, iend);
+      for ( GSIZET k=0; k<GDIM  ; k++ ) N[k]= (*gelems)[e]->size(k);
+      Di = (*gelems)[e]->gbasis(1)->getDerivMatrix(!dotrans); 
+      GMTK::I3_X_D2_X_I1(*Di, u, N[0], N[1], N[2], du); 
+    }
+    break;
+
+  case 3:
+    for ( GSIZET e=0; e<grid.elems().size(); e++ ) {
+      ibeg = (*gelems)[e]->igbeg(); iend = (*gelems)[e]->igend();
+      u.range(ibeg, iend); // restrict global vecs to local range
+      du.range(ibeg, iend);
+      for ( GSIZET k=0; k<GDIM  ; k++ ) N[k]= (*gelems)[e]->size(k);
+      Di = (*gelems)[e]->gbasis(2)->getDerivMatrix(!dotrans); 
+      GMTK::D3_X_I2_X_I1(*Di, u, N[0], N[1], N[2], du); 
+    }
+    break;
+
+  default:
+    assert(FALSE && "Invalid coordinate direction");
+  }
+  u.range_reset(); // reset global vec to globalrange
+  du->range_reset();
+
+#endif
+
+} // end of method compute_grefderiv
+
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD : compute_grefderivs
 // DESC   : Compute tensor product derivs of specified field, u, in ref space
 //          for grid, using grid object to determine which to compute. Compute:
@@ -1173,7 +1282,7 @@ void compute_grefderivs(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &et
     for ( GSIZET k=0; k<GDIM  ; k++ ) N[k]= (*gelems)[e]->size(k);
     Di[0] = (*gelems)[e]->gbasis(0)->getDerivMatrix (dotrans); 
     Di[1] = (*gelems)[e]->gbasis(1)->getDerivMatrix(!dotrans); 
-    Di[2] = (*gelems)[e]->gbasis(1)->getDerivMatrix(!dotrans); 
+    Di[2] = (*gelems)[e]->gbasis(2)->getDerivMatrix(!dotrans); 
     GMTK::I3_X_I2_X_D1(*Di[0], u, N[0], N[1], N[2], *du[0]); 
     GMTK::I3_X_D2_X_I1(*Di[1], u, N[0], N[1], N[2], *du[1]); 
     GMTK::D3_X_I2_X_I1(*Di[2], u, N[0], N[1], N[2], *du[2]); 
@@ -1211,7 +1320,7 @@ void compute_grefderivs(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &et
 //          etmp   : tmp array (possibly resized here) for element-based ops.
 //                   Is not global.
 //          du     : vector of length 2 or 3 containing the derivatives.
-//                   If using GE_REGULAR in 2D, we only need to vector
+//                   If using GE_REGULAR in 2D, we only need two vector
 //                   elements; else we need 3. These should be allocated globally.
 //          dotrans: flag telling us to tak transpose of deriv operators (TRUE) or
 //                   not (FALSE).
@@ -1228,7 +1337,7 @@ void compute_grefderivsW(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &e
   
 
   GSIZET                       ibeg, iend; // beg, end indices for global array
-  GTVector<GSIZET>             N(GDIM);
+  GTVector<GSIZET>              N(GDIM);
   GTVector<GTVector<GDOUBLE>*>  W(GDIM);    // element weights
   GTVector<GTMatrix<GDOUBLE>*>  Di(GDIM);   // element-based 1d derivative operators
   GElemList                   *gelems = &grid.elems();
@@ -1261,7 +1370,7 @@ void compute_grefderivsW(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &e
     }
     Di[0] = (*gelems)[e]->gbasis(0)->getDerivMatrix (dotrans); 
     Di[1] = (*gelems)[e]->gbasis(1)->getDerivMatrix(!dotrans); 
-    Di[2] = (*gelems)[e]->gbasis(1)->getDerivMatrix(!dotrans); 
+    Di[2] = (*gelems)[e]->gbasis(2)->getDerivMatrix(!dotrans); 
     GMTK::Dg3_X_Dg2_X_D1(*Di[0], *W [1], *W [2], u, N[0], N[1], N[2], etmp, *du[0]); 
     GMTK::Dg3_X_D2_X_Dg1(*W [0], *Di[1], *W [2], u, N[0], N[1], N[2], etmp, *du[1]); 
     GMTK::D3_X_Dg2_X_Dg1(*W [0], *W [1], *Di[2], u, N[0], N[1], N[2], etmp, *du[2]); 
