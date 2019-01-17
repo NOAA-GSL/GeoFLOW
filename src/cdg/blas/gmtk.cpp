@@ -1161,8 +1161,8 @@ void compute_grefderivs(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &et
     GMTK::I2_X_D1(*Di[0], u, N[0], N[1], *du[0]); 
     GMTK::D2_X_I1(*Di[1], u, N[0], N[1], *du[1]); 
   }
-  u.range(0, grid.ndof()); // restrict global vec to local range
-  for ( GSIZET k=0; k<GDIM+1; k++ ) du[k]->range(0, grid.ndof()-1);
+  u.range_reset(); // reset to global range
+  for ( GSIZET k=0; k<GDIM+1; k++ ) du[k]->range_reset();
 
 #elif defined(_G_IS3D)
 
@@ -1178,8 +1178,8 @@ void compute_grefderivs(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &et
     GMTK::I3_X_D2_X_I1(*Di[1], u, N[0], N[1], N[2], *du[1]); 
     GMTK::D3_X_I2_X_I1(*Di[2], u, N[0], N[1], N[2], *du[2]); 
   }
-  u.range(0, grid.ndof()); // reset global vec to globalrange
-  for ( GSIZET k=0; k<GDIM+1; k++ ) du[k]->range(0, grid.ndof()-1);
+  u.range_reset(); // reset global vec to globalrange
+  for ( GSIZET k=0; k<GDIM+1; k++ ) du[k]->range_reset();
 
 #endif
 
@@ -1246,8 +1246,8 @@ void compute_grefderivsW(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &e
     GMTK::Dg2_X_D1(*Di[0], *W[1], u, etmp, *du[0]); 
     GMTK::D2_X_Dg1(*W[0], *Di[1], u, etmp, *du[1]); 
   }
-  u.range(0, grid.ndof()); // restrict global vec to local range
-  for ( GSIZET k=0; k<GDIM+1; k++ ) du[k]->range(0, grid.ndof()-1);
+  u.range_reset()); // reset global vec to global range
+  for ( GSIZET k=0; k<GDIM+1; k++ ) du[k]->range_reset();
 
 #elif defined(_G_IS3D)
 
@@ -1266,8 +1266,8 @@ void compute_grefderivsW(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &e
     GMTK::Dg3_X_D2_X_Dg1(*W [0], *Di[1], *W [2], u, N[0], N[1], N[2], etmp, *du[1]); 
     GMTK::D3_X_Dg2_X_Dg1(*W [0], *W [1], *Di[2], u, N[0], N[1], N[2], etmp, *du[2]); 
   }
-  u.range(0, grid.ndof()); // reset global vec to globalrange
-  for ( GSIZET k=0; k<GDIM+1; k++ ) du[k]->range(0, grid.ndof()-1);
+  u.range_reset(); // reset global vec to globalrange
+  for ( GSIZET k=0; k<GDIM+1; k++ ) du[k]->range_reset();
 
 #endif
 
@@ -1356,9 +1356,8 @@ void compute_grefdiv(GGrid &grid, GTVector<GTVector<GDOUBLE>*> &u,
     GMTK::D3_X_I2_X_I1(*Di[2], *u[2], N[0], N[1], N[2], etmp); // D3 u3
     divu += etmp;
   }
-  ibeg = 0; iend = grid.ndof()-1;
-  divu.range(ibeg,iend); 
-  for ( GSIZET k=0; k<u.size(); k++ ) u[k]->range(ibeg, iend); 
+  divu.range_reset();  // reset range to global scope
+  for ( GSIZET k=0; k<u.size(); k++ ) u[k]->range_reset(); 
 
 #endif
 
