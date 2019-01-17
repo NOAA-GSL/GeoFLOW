@@ -25,7 +25,7 @@ public:
                           GpdV(const GpdV &);
                          ~GpdV();
 
-        void              apply(GTVector<GFTYPE> &p, GTVector<GTVector<GFTYPE>*> &u, 
+        void              apply(GTVector<GFTYPE> &p, GTVector<GTVector<GFTYPE>*> &utmp, GTVector<GTVector<GFTYPE>*> &u, 
                                 GTVector<GFTYPE> &po);                       // Operator-field evaluation
         void              init();                                            // must call after all 'sets'
         void              set_tmp(GTVector<GTVector<GFTYPE>*> &utmp) 
@@ -34,9 +34,9 @@ public:
 private:
         void              def_init();
         void              reg_init();
-        void              def_prod(GTVector<GFTYPE> &p, GTVector<GTVector<GFTYPE>*> &u, 
+        void              def_prod(GTVector<GFTYPE> &p, GTVector<GTVector<GFTYPE>*> &utmp, GTVector<GTVector<GFTYPE>*> &u, 
                                    GTVector<GFTYPE> &po);
-        void              reg_prod(GTVector<GFTYPE> &p, GTVector<GTVector<GFTYPE>*> &u, 
+        void              reg_prod(GTVector<GFTYPE> &p, GTVector<GTVector<GFTYPE>*> &utmp,  GTVector<GTVector<GFTYPE>*> &u, 
                                    GTVector<GFTYPE> &po);
 
         GBOOL                         bInitialized_;
