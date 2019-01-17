@@ -119,7 +119,7 @@ void GBurgers_equation::dudt_impl(const Time &t, State &u, Time &dt, Derivative 
   // for each u
   
   for ( auto k=0; k<u.size(); k++ ) {
-    gadvect_->apply(u[k], u, dudt[k]);
+    gadvect_->apply(u[k], u, utmp_, dudt[k]);
     ghelm_->opVec_prod(u[k],utmp_[0]);
   }
   
