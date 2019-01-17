@@ -70,13 +70,14 @@ GAdvect::~GAdvect()
 //          NOTE: Require GDIM velocity components for GE_DEFORMED or
 //                GE_REGULAR elements, and require GDIM+1 components
 //                for GE_2DEMBEDDED elements.
-// ARGS   : p : input p field
-//          u : input vector field
-//          po: output (result) vector
+// ARGS   : p   : input p field
+//          u   : input vector field
+//          utmp: tmp arrays
+//          po  : output (result) vector
 //             
 // RETURNS:  none
 //**********************************************************************************
-void GAdvect::apply(GTVector<GFTYPE> &p, GTVector<GTVector<GFTYPE>*> &u, GTVector<GFTYPE> &po) 
+void GAdvect::apply(GTVector<GFTYPE> &p, GTVector<GTVector<GFTYPE>*> &u, GTVector<GTVector<GFTYPE>*> &utmp, GTVector<GFTYPE> &po) 
 {
   assert(bInitialized_ && "Operator not initialized");
     
@@ -85,11 +86,11 @@ void GAdvect::apply(GTVector<GFTYPE> &p, GTVector<GTVector<GFTYPE>*> &u, GTVecto
   assert(u.size() >= nxy && "Insufficient number of velocity components");
 
   if ( grid_->itype(GE_REGULAR).size() > 0 ) {
-    reg_prod(p, u, po);
+    reg_prod(p, u, utmp, po);
   }
   else if ( grid_->itype(GE_DEFORMED).size() > 0 
          || grid_->itype(GE_2DEMBEDDED).size() > 0 ) {
-    def_prod(p, u, po);
+    def_prod(p, u, utmp, po);
   }
 
 } // end of method apply
@@ -99,18 +100,18 @@ void GAdvect::apply(GTVector<GFTYPE> &p, GTVector<GTVector<GFTYPE>*> &u, GTVecto
 //**********************************************************************************
 // METHOD : def_prod
 // DESC   : Compute this term for 2d & 3d GE_DEFORMED elements.
-//          NOTE: must have 5 utmp_ vectors set via set_tmp method if
+//          NOTE: must have 5 utmp vectors set via call if
 //                using GDIM=3 or if GDIM=2 & are using GE_2DEMBEDDED elements;
-//                If using 2D deformed elements, need just 4 utmp_ vectors.
+//                If using 2D deformed elements, need just 4 utmp vectors.
 // ARGS   : p : input vector (global)
 //          u : input vector field (global)
 //          po: output (result) field (global)
 //             
 // RETURNS:  none
 //**********************************************************************************
-void GAdvect::def_prod(GTVector<GFTYPE> &p, GTVector<GTVector<GFTYPE>*> &u, GTVector<GFTYPE> &po) 
+void GAdvect::def_prod(GTVector<GFTYPE> &p, GTVector<GTVector<GFTYPE>*> &u, GTVector<GTVector<GFTYPE>*> &utmp, GTVector<GFTYPE> &po) 
 {
-  assert( utmp_.size() >= GDIM+1
+  assert( utmp.size() >= GDIM+1
        && "Insufficient temp space specified");
 
 
@@ -132,20 +133,20 @@ void GAdvect::def_prod(GTVector<GFTYPE> &p, GTVector<GTVector<GFTYPE>*> &u, GTVe
   GTVector<GFTYPE>           *Jac   = &grid_->Jac  (); // get J
 
   // Get derivatives with weights:
-  GMTK::compute_grefderivsW(*grid_, p, etmp1_, utmp_); // utmp stores tensor-prod derivatives, Dj p
+  GMTK::compute_grefderivsW(*grid_, p, etmp1_, utmp); // utmp stores tensor-prod derivatives, Dj p
 
   GSIZET nxy = grid_->itype(GE_2DEMBEDDED) > 0 > GDIM+1 : GDIM;
 
   // Compute po += ui Rij (D^j p): 
   po = 0.0;
   for ( GSIZET j=0; j<nxy; j++ ) { 
-    *utmp_[nxy+1]0.0;
+    *utmp[nxy+1]=0.0;
     for ( GSIZE i=0; i<nxy; i++ ) {
-      dXidX(i,j)=>->pointProd(*utmp_[i],*utmp_[nxy]); // Rij Dj p
-      *utmp_[nxy+1] += *utmp_[nxy];
+      dXidX(i,j)=>->pointProd(*utmp[i],*utmp[nxy]); // Rij Dj p
+      *utmp[nxy+1] += *utmp[nxy];
     }
-    utmp_[nxy+1]->pointProd(*Jac); // J Rij  Dj p
-    po += *utmp_[nxy+1];
+    utmp[nxy+1]->pointProd(*Jac); // J Rij  Dj p
+    po += *utmp[nxy+1];
   }
 
 } // end of method def_prod
@@ -156,17 +157,18 @@ void GAdvect::def_prod(GTVector<GFTYPE> &p, GTVector<GTVector<GFTYPE>*> &u, GTVe
 // METHOD : reg_prod
 // DESC   : Compute application of this operator to input vector for 
 //          GE_REGULAR elements
-//          NOTE: must have GDIM+1 utmp_ vectors set via set_tmp method
-// ARGS   : p : input vector (global)
-//          u : input vector field (global)
-//          po: output (result) field (global)
+//          NOTE: must have GDIM+1 utmp vectors set via call
+// ARGS   : p   : input vector (global)
+//          u   : input vector field (global)
+//          utmp: temp arrays
+//          po  : output (result) field (global)
 //             
 // RETURNS:  none
 //**********************************************************************************
-void GAdvect::reg_prod(GTVector<GFTYPE> &p, GTVector<GTVector<GFTYPE>*> &u, GTVector<GFTYPE> &po) 
+void GAdvect::reg_prod(GTVector<GFTYPE> &p, GTVector<GTVector<GFTYPE>*> &u, GTVector<GTVector<GFTYPE>*> &utmp, GTVector<GFTYPE> &po) 
 {
 
-  assert( utmp_.size() >= GDIM+1
+  assert( utmp.size() >= GDIM+1
        && "Insufficient temp space specified");
 
 // Must compute:
@@ -181,19 +183,19 @@ void GAdvect::reg_prod(GTVector<GFTYPE> &p, GTVector<GTVector<GFTYPE>*> &u, GTVe
 // is set on construction, so that we don't have to re-compute it here:
 
   // Get derivatives with weights:
-  GMTK::compute_grefderivsW(*grid_, p, etmp1_, utmp_); // utmp stores tensor-prod derivatives, Dj p
+  GMTK::compute_grefderivsW(*grid_, p, etmp1_, utmp); // utmp stores tensor-prod derivatives, Dj p
 
   // Compute po += Rj uj D^j p): 
   po = 0.0;
   for ( GSIZET j=0; j<GDIM; j++ ) { 
-    *utmp_[j] *= (*G_[j])[0];   // remember, mass not included in G here
-    *utmp_[j].pointProd(*u[j]); // do uj * (Gj * Dj p)
-    po += *utmp_[GDIM];
+    *utmp [j] *= (*G_[j])[0];   // remember, mass not included in G here
+    *utmp [j].pointProd(*u[j]); // do uj * (Gj * Dj p)
+    po += *utmp[GDIM];
   }
 
 #if 0
   // apply mass:
-  massop_->opVec_prod(*utmp_[0], po);
+  massop_->opVec_prod(*utmp[0], po);
 #endif
 
 } // end of method reg_prod
