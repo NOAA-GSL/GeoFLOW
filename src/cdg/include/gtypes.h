@@ -118,30 +118,6 @@ typedef std::string GString;
 #define GSIGN(a,b) ( b>=0 ? ( a>=0 ? a:-a ) : ( a>=0 ? -a : a ) )
 #endif
 
-#if 0
-#define GBYTE      unsigned char
-#define GBOOL      bool
-#define GCHAR      char
-#define GUCHAR     unsigned char
-#define GSHORT     short
-#define GUSHORT    unsigned short
-#define GINT       int
-#define GUINT      unsigned int
-#define GLONG      long
-#define GULONG     unsigned  long
-#define GLONGLONG  long long
-#define GLLONG     GLONGLONG
-#define GWORD      int
-#define GDWORD     long
-#define GKEY       size_t
-#define GNODEID    long long
-#define GSIZET     size_t
-#define GFPOS      size_t
-#define GFLOAT     float
-#define GDOUBLE    double
-#define GQUAD      long double
-#endif
-
 
 // Define datatypes (there is a corresponding 'communication' 
 // set in gcommdata_t.h):
@@ -183,7 +159,7 @@ enum GElemType           {GE_REGULAR=0, GE_DEFORMED, GE_2DEMBEDDED, GE_MAX}; // 
 
 #if !defined(_G_STEPPERTYPE_DEF)
 #define _G_STEPPERTYPE_DEF
-enum GStepperType        {GSTEPPER_EXRK23=0 ,GSTEPPER_EXRK45, GSTEPPER_ABBDF, GSTEPPER_EXTBDF, GSTEPPER_OIFS, GSTEPPER_SISL, GSTEPPER_MAX}; 
+enum GStepperType        {GSTEPPER_EXRK2=0 ,GSTEPPER_EXRK4, GSTEPPER_ABBDF, GSTEPPER_EXTBDF, GSTEPPER_OIFS, GSTEPPER_SISL, GSTEPPER_NUMBER}; 
 #endif
 
 // Variables used to set dimension & operational stack size:
