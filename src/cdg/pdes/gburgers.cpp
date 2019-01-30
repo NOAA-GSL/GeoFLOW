@@ -17,26 +17,72 @@
 //**********************************************************************************
 // METHOD : Constructor method 
 // DESC   : Instantiate with grid + state + tmp 
-// ARGS   : grid  : grid object
-//          u     : state (i.e., vector of GVectors)
-//          tmp   : Array of tmp vector pointers, pointing to vectors
-//                  of same size as State
+// ARGS   : grid     : grid object
+//          u        : state (i.e., vector of GVectors)
+//          isteptype: stepper type
+//          iorder   : vector of integers indicating the 
+//                       index 0: time order for du/dt derivaitve for multistep
+//                                methods; RK order (= num stages + 1)
+//                       index 1: order of approximation for nonlin term
+//          tmp      : Array of tmp vector pointers, pointing to vectors
+//                     of same size as State
 // RETURNS: none
 //**********************************************************************************
-GBurgers::GBurgers(GGrid &grid, State &u, GTVector<GTVectorGFTYPE>*> &tmp) :
-bconserved_ (FALSE),
-gadvect_    (NULLPTR),
-gmass_      (NULLPTR),
-gpdv_       (NULLPTR),
+GBurgers::GBurgers(GGrid &grid, State &u, GStepperType isteptype, GTVector<GINT> iorder, GTVector<GTVectorGFTYPE>*> &tmp) :
+bconserved_     (FALSE),
+isteptype_  (isteptype),
+nsteps_             (0),
+itorder_            (0),
+inorder_            (0),
+gadvect_      (NULLPTR),
+gmass_        (NULLPTR),
+gpdv_         (NULLPTR),
 //gflux_      (NULLPTR),
-grid_       (&grid)
+grid_           (&grid)
 {
   static_assert(std::is_same<State,GTVector<GTVectorGFTYPE>>>::value,
                "State is of incorrect type"); 
-  valid_types_.resize(3);
-  valid_types_[0] = GSTEPPER_EXRK23;
-  valid_types_[1] = GSTEPPER_ABBDF;
-  valid_types_[2] = GSTEPPER_EXTBDF;
+  valid_types_.resize(4);
+  valid_types_[0] = GSTEPPER_RK2;
+  valid_types_[1] = GSTEPPER_RK4;
+  valid_types_[2] = GSTEPPER_BDFAB;
+  valid_types_[3] = GSTEPPER_BDFEXT;
+ 
+  assert(valid_types_.contains(isteptype) && "Invalid stepper type"); 
+
+  // Find multistep/multistage coefficients:
+  GMultilevel_coeffs_base *tcoeff_obj; // time deriv coeffs
+  GMultilevel_coeffs_base *acoeff_obj; // adv op. coeffs
+  switch ( isteptype_ ) {
+    case GSTEPPER_RK2:
+      itorder_   = iorder[0];
+      break;
+    case GSTEPPER_RK4:
+      itorder_   = iorder[0];
+      break;
+    case GSTEPPER_BDFAB:
+      itorder_   = iorder[0];
+      inorder_   = iorder[1];
+      tcoeff_obj = new G_BDF(itorder_);
+      acoeff_obj = new G_AB (inorder_);
+      tcoeffs_.resize(tcoeff_obj.getCoeffs().size());
+      acoeffs_.resize(acoeff_obj.getCoeffs().size());
+      tcoeffs_ = tcoeff_obj;
+      acoeffs_ = acoeff_obj;
+      break;
+    case GSTEPPER_BDFEXT:
+      itorder_   = iorder[0];
+      inorder_   = iorder[1];
+      tcoeff_obj = new G_BDF(itorder_);
+      acoeff_obj = new G_EXT(inorder_);
+      tcoeffs_.resize(tcoeff_obj.getCoeffs().size());
+      acoeffs_.resize(acoeff_obj.getCoeffs().size());
+      tcoeffs_ = tcoeff_obj;
+      acoeffs_ = acoeff_obj;
+      break;
+  }
+  delete tcoeff_obj;
+  delete acoeff_obj'
   init();
   
 } // end of constructor method 
@@ -109,7 +155,7 @@ void GBurgers::dt_impl(const Time &t, State &u, Time &dt)
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : step_explicit
+// METHOD : dudt_impl
 // DESC   : Compute RHS for explicit schemes
 // ARGS   : t  : time
 //          u  : state
@@ -119,7 +165,32 @@ void GBurgers::dt_impl(const Time &t, State &u, Time &dt)
 void GBurgers::dudt_impl(const Time &t, State &u, Time &dt, Derivative &dudt)
 {
   assert(!bconserved_ &&
-         "Jacobian computation not implemented"); 
+         "conservation not yet supported"); 
+
+  // If non-conservative, compute RHS from:
+  //     du/dt = -u.Grad u + nu nabla u 
+  // for each u
+  
+  for ( auto k=0; k<u.size(); k++ ) {
+    gadvect_->apply(u[k], u, utmp_, dudt[k]);
+    ghelm_->opVec_prod(u[k],utmp_[0]);
+  }
+  
+} // end of method dudt_impl
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : step_extbdf
+// DESC   : EXT/BDF time stepping: apply EXT to advection terms, and BDF to time
+//          derivative
+// ARGS   : t  : time
+//          u  : state
+//          dt : time step
+// RETURNS: none.
+//**********************************************************************************
+void GBurgers::step_extbdf(const Time &t, State &uin, Time &dt, Derivative &uout)
+{
 
   // If non-conservative, compute RHS from:
   //     du/dt = -u.Grad u + nu nabla u 

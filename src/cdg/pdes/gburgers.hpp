@@ -39,7 +39,7 @@ public:
         using Size       = typename Interface::Size;
 
         GBurgers() = delete; 
-        GBurgers(GGrid &grid, State &u, GTVector<GTVector<GFTYPE>*> &tmp);
+        GBurgers(GGrid &grid, State &u, GStepperType isteptype, GTVector<GTVector<GFTYPE>*> &tmp);
        ~GBurgers();
         GBurgers(const GBurgers &bu) = default;
         GBurgers &operator=(const Burgers &bu) = default;
@@ -54,25 +54,35 @@ protected:
 private:
 
         GBOOL               bconserved_;
-
-        void                init();                                    // initialize 
+        GStepperType        isteptype_;                                  // stepper type
+        GINT                nsteps_                                      // num steps taken
+        GINT                itorder_;                                    // time deriv order
+        GINT                inorder_;                                    // nonlin term order
+        GTVector<GFTYPE>    tcoeffs_;                                    // coeffs for time deriv
+        GTVector<GFTYPE>    acoeffs_;                                    // coeffs for NL adv term
+        void                init();                                      // initialize 
         void                init2d();                                    // initialize for 2d grid
         void                init3d();                                    // initialize for 3d grid
-        void                step_rk23(const Time &t, State &uin,
-                                      Time &dt, State &uout);
-        void                step_abbdf(const Time &t, State &uin,
-                                      Time &dt, State &uout);
+        void                step_rk    (const Time &t, State &uin,
+                                        Time &dt, State &uout);
+        void                step_extbdf(const Time &t, State &uin,
+                                        Time &dt, State &uout);
+        void                dudt_impl  (const Time &t, State &u,
+                                        Time &dt, State &dudt);
        
 
         GTVector<GTVector<GFLOAT>*>  
                             tmp_;
         GTVector<GStepperType>
-                            valid_types_;  
-        GMassop            *gmass_;
-        GAdvect            *gadvect_;
-        GHelmholtz         *ghelm_;
-        GpdV               *gpdv_;
-//      GFlux              *gflux_;
+                            valid_types_;   // valid stepping methods supported
+        GTVector<GFTYPE>    butcher_alpha_; // Butcher tableau alpha (time) coeffs
+        GTMatrix<GFTYPE>    butcher_beta_;  // Butcher tableau beta coeffs
+        GTVector<GFTYPE>    butcher_c_;     // Butcher tableau c coeffs
+        GMassop            *gmass_;         // mass op
+        GAdvect            *gadvect_;       // advection op
+        GHelmholtz         *ghelm_;         // Helmholz and Laplacian op
+        GpdV               *gpdv_;          // pdV op
+//      GFlux              *gflux_;         // flux op
 
 };
 
