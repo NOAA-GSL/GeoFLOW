@@ -87,8 +87,8 @@ typedef std::string GString;
 #define PI               3.14159265358979323846264338328
 
 // Miscellaneous macros:
-#if !defined(GDISTANCE_DEF)
-#define GDISTANCE_DEF
+#if !defined(_GDISTANCE_DEF)
+#define _GDISTANCE_DEF
   #if defined(_G_IS1D)
     #define GDISTANCE(p1,p2) sqrt( ((p2)[0]-(p1)[0])*((p2)[0]-(p1)[0]) ) 
   #elif defined(_G_IS2D)
@@ -145,8 +145,8 @@ typedef std::string GString;
 
 // Define datatypes (there is a corresponding 'communication' 
 // set in gcommdata_t.h):
-#if !defined(G_DATATYPE_DEFTYPE_DEF)
-#define  G_DATATYPE_DEFTYPE_DEF
+#if !defined(_G_DATATYPE_DEFTYPE_DEF)
+#define  _G_DATATYPE_DEFTYPE_DEF
 enum GD_DATATYPE        {GD_GBYTE=0,GD_GBOOL  ,GD_GCHAR   ,GD_GUCHAR ,
                          GD_GSHORT ,GD_GUSHORT,GD_GINT    ,GD_GUINT  ,
                          GD_GLONG  ,GD_GULONG ,GD_GLLONG  ,GD_GWORD  ,
@@ -164,21 +164,26 @@ const GINT GD_DATATYPE_SZ[] =
 
 // Define reduction operations (there is a 'communication' set
 // in gcommdata_t.h):
-#if !defined(GC_OP_DEF)
-#define GC_OP_DEF
+#if !defined(_GC_OP_DEF)
+#define _GC_OP_DEF
 enum GC_OP              {GC_OP_MAX=0,GC_OP_MIN  ,GC_OP_SUM  ,GC_OP_PROD,
                          GC_OP_LAND ,GC_OP__BAND,GC_OP_LOR  ,GC_OP_BOR ,
                          GC_OP_LXOR ,GC_OP_BXOR};
 #endif
 
-#if !defined(G_BDYTYPE_DEF)
-#define G_BDYTYPE_DEF
-enum GBdyType           {GB_DIRICHLET=0,GB_NOSLIP,GB_0FLUX,GB_NEUMANN,GB_NODE};
+#if !defined(_G_BDYTYPE_DEF)
+#define _G_BDYTYPE_DEF
+enum GBdyType           {GBDY_DIRICHLET=0, GBDY_NOSLIP, GBDY_0FLUX, GBDY_NEUMANN, GBDY_NONE};
 #endif
 
-#if !defined(G_ELEMTYPE_DEF)
-#define G_ELEMTYPE_DEF
-enum GElemType           {GE_REGULAR=0,GE_DEFORMED,GE_2DEMBEDDED, GE_MAX}; // regular, deformed, embedded 2d
+#if !defined(_G_ELEMTYPE_DEF)
+#define _G_ELEMTYPE_DEF
+enum GElemType           {GE_REGULAR=0, GE_DEFORMED, GE_2DEMBEDDED, GE_MAX}; // regular, deformed, embedded 2d
+#endif
+
+#if !defined(_G_STEPPERTYPE_DEF)
+#define _G_STEPPERTYPE_DEF
+enum GStepperType        {GSTEPPER_EXRK23=0 ,GSTEPPER_EXRK45, GSTEPPER_ABBDF, GSTEPPER_EXTBDF, GSTEPPER_OIFS, GSTEPPER_SISL, GSTEPPER_MAX}; 
 #endif
 
 // Variables used to set dimension & operational stack size:
