@@ -9,8 +9,8 @@ NOTES:
     .hpp files contain the header, which in most cases will contain
     prototypes of methods;
 
-    .tpp files are included in the .hpp files, and contain full method
-    specifications, as though they _were_ included in the .hpp file. 
+    .tpp files, when used, are included in the .hpp files, and contain 
+    full method specifications, as though they _were_ included in the .hpp file. 
     They are in #included in the .hpp file header specification. This 
     was done in order to get the template meta-programming (via SFINAE)
     to work properly. It is hoped that these will be able to wrapped 
