@@ -62,7 +62,7 @@ private:
         GTVector<GFTYPE>    acoeffs_;                                    // coeffs for NL adv term
         GButcherRK          butcher_;                                    // Butcher tableau for EXRK
         void                init(State &u);                              // initialize 
-        void                step_rk    (const Time &t, State &uin,
+        void                step_exrk  (const Time &t, State &uin,
                                         Time &dt, State &uout);
         void                dudt_impl  (const Time &t, State &u,
                                         Time &dt, State &dudt);

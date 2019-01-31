@@ -175,22 +175,20 @@ void GBurgers::step_extbdf(const Time &t, State &uin, Time &dt, Derivative &uout
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : step_rk
-// DESC   : Take a step using RK method
+// METHOD : step_exrk
+// DESC   : Take a step using Explicit RK method
 // ARGS   : t  : time
 //          u  : state
 //          dt : time step
 // RETURNS: none.
 //**********************************************************************************
-void GBurgers::step_rk(const Time &t, State &uin, Time &dt, Derivative &uout)
+void GBurgers::step_exrk(const Time &t, State &uin, Time &dt, Derivative &uout)
 {
 
-  // If non-conservative, compute RHS from:
-  //     du/dt = -u.Grad u + nu nabla u 
-  // for each u
+  // Compute
 
 
-} // end of method step_rk
+} // end of method step_exrk
 
 
 
