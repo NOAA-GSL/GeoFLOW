@@ -2,7 +2,11 @@
 // Module       : gburgers.hpp
 // Date         : 10/18/18 (DLR)
 // Description  : Object defining a multidimensional Burgers (advection-diffusion) 
-//                PDE. 
+//                PDE:
+//                     du/dt + u . Del u = nu Del^2 u
+//                This solver can be built in 2D or 3D, and can be configured to
+//                remove the nonlinear terms so as to solve only the heat equation;
+//                the dissipation coefficient may also be provided as a field.
 // Copyright    : Copyright 2018. Colorado State University. All rights reserved
 // Derived From : none.
 //==================================================================================
@@ -39,7 +43,7 @@ public:
         using Size       = typename Interface::Size;
 
         GBurgers() = delete; 
-        GBurgers(GGrid &grid, State &u, GStepperType isteptype, GTVector<GTVector<GFTYPE>*> &tmp);
+        GBurgers(GGrid &grid, State &u, GStepperType isteptype, GTVector<GINT> iorder, GBOOL bconserved, GBOOL doheat, GTVector<GTVector<GFTYPE>*> &tmp);
        ~GBurgers();
         GBurgers(const GBurgers &bu) = default;
         GBurgers &operator=(const Burgers &bu) = default;
@@ -49,18 +53,11 @@ protected:
         GBOOL               step_impl(const Time &t, State &uin, 
                                       Time &dt, State &uout);             // Take a step
         void                dt_impl(const Time &t, State &u, Time &dt);   // Get dt
+        void                set_nu(GTVector<GFTYPE> &nu);                 // Set nu
         void                apply_bc_impl();                              // Apply bdy conditions
 
 private:
 
-        GBOOL               bconserved_;
-        GStepperType        isteptype_;                                  // stepper type
-        GINT                nsteps_                                      // num steps taken
-        GINT                itorder_;                                    // time deriv order
-        GINT                inorder_;                                    // nonlin term order
-        GTVector<GFTYPE>    tcoeffs_;                                    // coeffs for time deriv
-        GTVector<GFTYPE>    acoeffs_;                                    // coeffs for NL adv term
-        GButcherRK          butcher_;                                    // Butcher tableau for EXRK
         void                init(State &u, GTVector<GINT> &vorder);      // initialize 
         void                step_exrk  (const Time &t, State &uin,
                                         Time &dt, State &uout);
@@ -71,11 +68,22 @@ private:
         void                cycle_keep(State &u);
        
 
+        GBOOL               bconserved_;    // use conservation form?
+        GBOOL               doheat_;        // flag to do heat equation alone
+        GBOOL               bpureadv_;      // do pure advection?
+        GStepperType        isteptype_;     // stepper type
+        GINT                nsteps_         // num steps taken
+        GINT                itorder_;       // time deriv order
+        GINT                inorder_;       // nonlin term order
+        GTVector<GFTYPE>    tcoeffs_;       // coeffs for time deriv
+        GTVector<GFTYPE>    acoeffs_;       // coeffs for NL adv term
+        GButcherRK          butcher_;       // Butcher tableau for EXRK
         GTVector<GTVector<GFLOAT>*>  
                             tmp_;
         GTVector<State>     u_keep_;        // state at prev. time levels
         GTVector<GStepperType>
                             valid_types_;   // valid stepping methods supported
+        GTVector<GFTYPE>   *nu_   ;         // dissipoation
         GExRKstepper        gexrk_;         // ExRK stepper, if needed
         GMassop            *gmass_;         // mass op
         GAdvect            *gadvect_;       // advection op

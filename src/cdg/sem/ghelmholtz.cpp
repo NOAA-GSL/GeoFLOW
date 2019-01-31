@@ -34,7 +34,7 @@
 //**********************************************************************************
 GHelmholtz::GHelmholtz(GGrid &grid)
 : GLinOp(grid),
-bown_p_       (FALSE),
+bown_p_       (TRUE),
 bown_q_       (FALSE),
 bown_mass_    (FALSE),
 bcompute_helm_(FALSE),
@@ -43,6 +43,8 @@ q_          (NULLPTR),
 massop_     (NULLPTR)
 {
   grid_ = &grid;
+  p_ = new GTVector<GFTYPE>(1);
+ *p_  1.0; // diffusion defaults to a scalar, with value 1
 } // end of constructor method (1)
 
 
@@ -61,6 +63,7 @@ GHelmholtz::~GHelmholtz()
     }
   }
   if ( bown_q_ && q_ != NULLPTR ) delete q_;
+  if ( bown_p_ && p_ != NULLPTR ) delete p_;
   if ( bown_mass_ && massop_ != NULLPTR ) delete massop_;
 
 } // end, destructor

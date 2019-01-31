@@ -2,7 +2,11 @@
 // Module       : gburgers.cpp
 // Date         : 10/18/18 (DLR)
 // Description  : Object defining a multidimensional Burgers (advection-diffusion) 
-//                PDE. 
+//                PDE:
+//                     du/dt + u . Del u = nu Del^2 u
+//                This solver can be built in 2D or 3D, and can be configured to
+//                remove the nonlinear terms so as to solve only the heat equation;
+//                the dissipation coefficient may also be provided as a field.
 // Copyright    : Copyright 2018. Colorado State University. All rights reserved
 // Derived From : none.
 //==================================================================================
@@ -17,28 +21,32 @@
 //**********************************************************************************
 // METHOD : Constructor method 
 // DESC   : Instantiate with grid + state + tmp 
-// ARGS   : grid     : grid object
-//          u        : state (i.e., vector of GVectors)
+// ARGS   : grid      : grid object
+//          u         : state (i.e., vector of GVectors)
 //          isteptype: stepper type
-//          iorder   : vector of integers indicating the 
-//                       index 0: time order for du/dt derivaitve for multistep
-//                                methods; RK order (= num stages + 1)
-//                       index 1: order of approximation for nonlin term
-//          tmp      : Array of tmp vector pointers, pointing to vectors
-//                     of same size as State
+//          iorder    : vector of integers indicating the 
+//                        index 0: time order for du/dt derivaitve for multistep
+//                                 methods; RK order (= num stages + 1)
+//                        index 1: order of approximation for nonlin term
+//          bconserved: do conservative form?
+//          doheat    : do heat equation only?
+//          tmp       : Array of tmp vector pointers, pointing to vectors
+//                      of same size as State
 // RETURNS: none
 //**********************************************************************************
-GBurgers::GBurgers(GGrid &grid, State &u, GStepperType isteptype, GTVector<GINT> iorder, GTVector<GTVectorGFTYPE>*> &tmp) :
-bconserved_     (FALSE),
-isteptype_  (isteptype),
-nsteps_             (0),
-itorder_            (0),
-inorder_            (0),
-gadvect_      (NULLPTR),
-gmass_        (NULLPTR),
-gpdv_         (NULLPTR),
-//gflux_      (NULLPTR),
-grid_           (&grid)
+GBurgers::GBurgers(GGrid &grid, State &u, GStepperType isteptype, GTVector<GINT> &iorder, GBOOL bconserved, GBOOL doheat, GTVector<GTVectorGFTYPE>*> &tmp) :
+bconserved_ (bconserved),
+doheat_         (doheat),
+isteptype_   (isteptype),
+nsteps_              (0),
+itorder_             (0),
+inorder_             (0),
+nu_            (NULLPTR),
+gadvect_       (NULLPTR),
+gmass_         (NULLPTR),
+gpdv_          (NULLPTR),
+//gflux_        (NULLPTR),
+grid_            (&grid)
 {
   static_assert(std::is_same<State,GTVector<GTVectorGFTYPE>>>::value,
                "State is of incorrect type"); 
@@ -125,7 +133,13 @@ void GBurgers::dt_impl(const Time &t, State &u, Time &dt)
 // METHOD : dudt_impl
 // DESC   : Compute RHS for explicit schemes
 // ARGS   : t  : time
-//          u  : state
+//          u  : state. If doing full nonlinear problem, the
+//               u[0] = u[1] = u[2] are nonlinear fields.
+//               If doing pure advection, only the last
+//               element is the field being advected; the
+//               remainder of the State elements are the 
+//               (linear) velocity components that are not
+//               updated.
 //          dt : time step
 // RETURNS: none.
 //**********************************************************************************
@@ -135,14 +149,23 @@ void GBurgers::dudt_impl(const Time &t, State &u, Time &dt, Derivative &dudt)
          "conservation not yet supported"); 
 
   // If non-conservative, compute RHS from:
-  //     du/dt = -u.Grad u + nu nabla u 
+  //     du/dt = -u.Grad u + nu nabla^2 u 
   // for each u
 
   // Make sure that, in init(), Helmholtz op is using only
-  // weak Laplacian, or there will be problems:
-  for ( auto k=0; k<u.size(); k++ ) {
-    gadvect_->apply(u[k], u, utmp_, dudt[k]);
-    ghelm_->opVec_prod(u[k],utmp_[0]);
+  // (mass isn't being used) weak Laplacian, or there will 
+  // be problems:
+  if ( bpureadv_ ) { // pure linear advection
+    for ( auto k=0; k<u.size(); k++ ) {
+      if ( !doheat_ ) gadvect_->apply(u[k], u, utmp_, dudt[k]);
+      ghelm_->opVec_prod(u[k],utmp_[0]);
+    }
+  }
+  else {             // nonlinear advection
+    for ( auto k=0; k<u.size(); k++ ) {
+      if ( !doheat_ ) gadvect_->apply(u[k], u, utmp_, dudt[k]);
+      ghelm_->opVec_prod(u[k],utmp_[0]);
+    }
   }
   
 } // end of method dudt_impl
@@ -346,4 +369,22 @@ void GBurgers::cycle_keep(State &u)
 
 } // end of method cycle_keep
 
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : set_nu
+// DESC   : Set viscosity quantity. This may be a field, or effectively a
+//          scalar (where only element 0 contains valid data). If not set, 
+//          Helmholtz op creates a default of nu = 1.
+//          nu : viscosity vector (may be of length 1). Will be managed
+//               by caller; only a pointer is used by internal operators.
+// RETURNS: none.
+//**********************************************************************************
+void GBurgers::set_nu(GTVector<GFTYPE> &nu)
+{
+  assert(ghelm_ != NULLPTR && "Init must be called first");
+  nu_ = &nu; // Not sure this class actually needs this. May be removed later
+  ghelm_->set_Lap_scalar(nu);
+
+} // end of method set_nu
 
