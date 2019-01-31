@@ -66,13 +66,14 @@ private:
                                         Time &dt, State &uout);
         void                dudt_impl  (const Time &t, State &u,
                                         Time &dt, State &dudt);
-        void                step_extbdf(const Time &t, State &uin,
-                                        Time &dt, State &uout);
+        void                step_multistep(const Time &t, State &uin,
+                                           Time &dt, State &uout);
+        void                cycle_keep(State &u);
        
 
         GTVector<GTVector<GFLOAT>*>  
                             tmp_;
-        GTVector<State *>   u_keep_;        // state at prev. time levels
+        GTVector<State>     u_keep_;        // state at prev. time levels
         GTVector<GStepperType>
                             valid_types_;   // valid stepping methods supported
         GExRKstepper        gexrk_;         // ExRK stepper, if needed

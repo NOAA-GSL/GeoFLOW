@@ -32,8 +32,8 @@ public:
 
 private:
 // Private data:
-         GButcherRK         butcher_;
-         std::function<void(const GFTYPE &t, 
+         GButcherRK         butcher_;                         // Butcher tableau
+         std::function<void(const GFTYPE &t,                  // RHS callback function
                             GTVector<GTVector<GFTYPE>> &uin,
                             GFTYPE &dt, GTVector<GTVector<GFTYPE>> &dudt)>
                             *rhs_callback_;

@@ -324,3 +324,26 @@ void GBurgers::init(State &u, GTVector<GINT> &iorder)
 } // end of method init
 
 
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : cycle_keep
+// DESC   : Cycle the mult-level states making sure the most
+//          recent is at index 0, the next most recent, at index 1, etc...
+// ARGS   : u     : State variable providing most recent state
+// RETURNS: none.
+//**********************************************************************************
+void GBurgers::cycle_keep(State &u)
+{
+
+  // Make sure following index map contains the 
+  // correct time level information:
+  //   u_keep[0] <--> time level n (most recent)
+  //   u_keep[1] <--> time level n-1
+  //   u_keep[2] <--> time level n-2 ...
+  u_keep_ .resize(itorder_);
+  for ( auto i=itorder_-1; i>=1; i-- ) u_keep[i] = u_keep[i+1];
+  u_keep[0] = u;
+
+} // end of method cycle_keep
+
+
