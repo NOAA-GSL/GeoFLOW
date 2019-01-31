@@ -50,7 +50,7 @@ grid_           (&grid)
  
   assert(valid_types_.contains(isteptype_) && "Invalid stepper type"); 
 
-  init();
+  init(u);
   
 } // end of constructor method 
 
@@ -137,7 +137,9 @@ void GBurgers::dudt_impl(const Time &t, State &u, Time &dt, Derivative &dudt)
   // If non-conservative, compute RHS from:
   //     du/dt = -u.Grad u + nu nabla u 
   // for each u
-  
+
+  // Make sure that, in init(), Helmholtz op is using only
+  // weak Laplacian, or there will be problems:
   for ( auto k=0; k<u.size(); k++ ) {
     gadvect_->apply(u[k], u, utmp_, dudt[k]);
     ghelm_->opVec_prod(u[k],utmp_[0]);
@@ -168,7 +170,28 @@ void GBurgers::step_extbdf(const Time &t, State &uin, Time &dt, Derivative &uout
     ghelm_->opVec_prod(u[k],utmp_[0]);
   }
   
-} // end of method dudt_impl
+} // end of method step_extbdf
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : step_rk
+// DESC   : Take a step using RK method
+// ARGS   : t  : time
+//          u  : state
+//          dt : time step
+// RETURNS: none.
+//**********************************************************************************
+void GBurgers::step_rk(const Time &t, State &uin, Time &dt, Derivative &uout)
+{
+
+  // If non-conservative, compute RHS from:
+  //     du/dt = -u.Grad u + nu nabla u 
+  // for each u
+
+
+} // end of method step_rk
+
 
 
 #if 0
@@ -192,10 +215,10 @@ void GBurgers::set_bdy_callback(std::function<void(GGrid &)> &callback)
 //**********************************************************************************
 // METHOD : init
 // DESC   : Initialize equation object
-// ARGS   : none.
+// ARGS   : u: State variable
 // RETURNS: none.
 //**********************************************************************************
-void GBurgers::init()
+void GBurgers::init(State &u)
 {
   GString serr = "GBurgers::init: ";
 
@@ -235,11 +258,14 @@ void GBurgers::init()
   gmass_   = new GMass(*grid_);
   ghelm_   = new GHelmholtz(*grid_);
   
+  // If doing semi-implicit time stepping; handle viscous term 
+  // (linear) inplicitly, which implies using full Helmholtz operator:
   if ( isteptype_ == GSTEPPER_BDFAB || isteptype_ == GSTEPPER_BDFEXT ) {
     ghelm_->set_mass(*gmass_);
   }
 
-  if ( bconsrved_ ) {
+  if ( bconserved_ ) {
+    assert(FALSE && "Conservation not yet supported");
     gpdv_  = new GpdV(*grid_,*gmass_);
 //  gflux_ = new GFlux(*grid_);
     assert( (gmass_   != NULLPTR
@@ -251,6 +277,13 @@ void GBurgers::init()
     assert( (gmass_   != NULLPTR
           || ghelm_   != NULLPTR
           || gaevect_ != NULLPTR) && "1 or more operators undefined");
+  }
+
+  // If doing a multi-step method, instantiate (deep) space for 
+  // required time levels for state:
+  u_keep_ .resize(itorder_);
+  for ( auto i=0; i<itorder_-1; i++ ) { // for each time level
+    for ( auto j=0; j<u.size(); j++ ) u_keep_.resize(u[j].size());
   }
 
 } // end of method init
