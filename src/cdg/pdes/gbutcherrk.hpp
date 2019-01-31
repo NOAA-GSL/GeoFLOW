@@ -17,12 +17,12 @@ template class<typename T>
 class GButcherRK
 {
 public:
-                           GButcherRK() = delete;
+                           GButcherRK();
                            GButcherRK(GSIZET iorder=4);
                           ~GButcherRK() = default;
                            GButcherRK(const GButcherRK &a) = default;
                            GButcherRK &operator=(const GButcherRK &bu) = default;
-
+                           setOrder(GINT iorder);
 
          GTVector<T>      &alpha() { return alpha_ };
          GTVector<T>      &beta () { return beta_ };

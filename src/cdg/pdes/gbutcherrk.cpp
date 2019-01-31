@@ -28,12 +28,26 @@
 // ARGS   : iorder: truncation order
 //**********************************************************************************
 template<typename T>
-GButcherRK<T>::GButcherRK(GSIZET iorder
+GButcherRK<T>::GButcherRK()
+:
+iorder_               (0)
+{
+} // end of constructor (1) method
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : Constructor method (2)
+// DESC   : Instantiate with global order
+// ARGS   : iorder: truncation order
+//**********************************************************************************
+template<typename T>
+GButcherRK<T>::GButcherRK(GSIZET iorder)
 :
 iorder_               (iorder)
 {
   computeCoeffs();
-} // end of constructor (1) method
+} // end of constructor (2) method
 
 
 //**********************************************************************************
