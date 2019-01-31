@@ -32,6 +32,7 @@ private:
 // Private methods:
          void               computeCoeffs();
 
+// Private data:
          GTVector<T> alpha_; // time coeffs
          GTMatrix<T> beta_;  // stage coeffs
          GTVector<T> c_;     // stage weights

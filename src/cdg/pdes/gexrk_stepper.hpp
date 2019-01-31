@@ -22,21 +22,21 @@ public:
                            GExRKstepper(const GExRKstepper &a) = default;
                            GExRKstepper &operator=(const GExRKstepper &bu) = default;
                            setOrder(INT iorder);
-                           setRHSfunction(std::function<void(const GFTYPE &t, 
+        void               setRHSfunction(std::function<void(const GFTYPE &t, 
                                           GTVector<GTVector<GFTYPE>> &uin,
-                                          GFTYPE &dt, GTVector<GTVector<GFTYPE>> &dudt)> &callback);
-                           step(const GFTYPE &t, GTVector<GTVector<GFTYPE>> &uin,
+                                          GFTYPE &dt, GTVector<GTVector<GFTYPE>> &dudt)> &callback)
+                                          { rhs_callback_ = callback; }
+        void               step(const GFTYPE &t, GTVector<GTVector<GFTYPE>> &uin,
                                 GFTYPE &dt, GTVector<GTVector<GFTYPE>> &uout);
 
 
 private:
-// Private methods:
-
+// Private data:
          GButcherRK         butcher_;
          std::function<void(const GFTYPE &t, 
                             GTVector<GTVector<GFTYPE>> &uin,
                             GFTYPE &dt, GTVector<GTVector<GFTYPE>> &dudt)>
-                            *rhd_callback_;
+                            *rhs_callback_;
 
 };
 #endif
