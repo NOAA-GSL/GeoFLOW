@@ -43,46 +43,13 @@ grid_           (&grid)
   static_assert(std::is_same<State,GTVector<GTVectorGFTYPE>>>::value,
                "State is of incorrect type"); 
   valid_types_.resize(4);
-  valid_types_[0] = GSTEPPER_RK2;
-  valid_types_[1] = GSTEPPER_RK4;
+  valid_types_[0] = GSTEPPER_EXRK2;
+  valid_types_[1] = GSTEPPER_EXRK4;
   valid_types_[2] = GSTEPPER_BDFAB;
   valid_types_[3] = GSTEPPER_BDFEXT;
  
-  assert(valid_types_.contains(isteptype) && "Invalid stepper type"); 
+  assert(valid_types_.contains(isteptype_) && "Invalid stepper type"); 
 
-  // Find multistep/multistage coefficients:
-  GMultilevel_coeffs_base *tcoeff_obj; // time deriv coeffs
-  GMultilevel_coeffs_base *acoeff_obj; // adv op. coeffs
-  switch ( isteptype_ ) {
-    case GSTEPPER_RK2:
-      itorder_   = iorder[0];
-      break;
-    case GSTEPPER_RK4:
-      itorder_   = iorder[0];
-      break;
-    case GSTEPPER_BDFAB:
-      itorder_   = iorder[0];
-      inorder_   = iorder[1];
-      tcoeff_obj = new G_BDF(itorder_);
-      acoeff_obj = new G_AB (inorder_);
-      tcoeffs_.resize(tcoeff_obj.getCoeffs().size());
-      acoeffs_.resize(acoeff_obj.getCoeffs().size());
-      tcoeffs_ = tcoeff_obj;
-      acoeffs_ = acoeff_obj;
-      break;
-    case GSTEPPER_BDFEXT:
-      itorder_   = iorder[0];
-      inorder_   = iorder[1];
-      tcoeff_obj = new G_BDF(itorder_);
-      acoeff_obj = new G_EXT(inorder_);
-      tcoeffs_.resize(tcoeff_obj.getCoeffs().size());
-      acoeffs_.resize(acoeff_obj.getCoeffs().size());
-      tcoeffs_ = tcoeff_obj;
-      acoeffs_ = acoeff_obj;
-      break;
-  }
-  delete tcoeff_obj;
-  delete acoeff_obj'
   init();
   
 } // end of constructor method 
@@ -231,23 +198,59 @@ void GBurgers::set_bdy_callback(std::function<void(GGrid &)> &callback)
 void GBurgers::init()
 {
   GString serr = "GBurgers::init: ";
-  
-  padvect_ = new GAdvect(grid_,
 
-  gmass_ = new GMass(*grid_);
-  ghelm_ = new GHelmholtz(*grid_);
+  // Find multistep/multistage time stepping coefficients:
+  GMultilevel_coeffs_base *tcoeff_obj; // time deriv coeffs
+  GMultilevel_coeffs_base *acoeff_obj; // adv op. coeffs
+  switch ( isteptype_ ) {
+    case GSTEPPER_EXRK2:
+    case GSTEPPER_EXRK4:
+      itorder_   = iorder[0];
+      butcher_.setOrder(itorder_);
+      break;
+    case GSTEPPER_BDFAB:
+      itorder_   = iorder[0];
+      inorder_   = iorder[1];
+      tcoeff_obj = new G_BDF(itorder_);
+      acoeff_obj = new G_AB (inorder_);
+      tcoeffs_.resize(tcoeff_obj.getCoeffs().size());
+      acoeffs_.resize(acoeff_obj.getCoeffs().size());
+      tcoeffs_ = tcoeff_obj; acoeffs_ = acoeff_obj;
+      break;
+    case GSTEPPER_BDFEXT:
+      itorder_   = iorder[0];
+      inorder_   = iorder[1];
+      tcoeff_obj = new G_BDF(itorder_);
+      acoeff_obj = new G_EXT(inorder_);
+      tcoeffs_.resize(tcoeff_obj.getCoeffs().size());
+      acoeffs_.resize(acoeff_obj.getCoeffs().size());
+      tcoeffs_ = tcoeff_obj; acoeffs_ = acoeff_obj;
+      break;
+  }
+  delete tcoeff_obj;
+  delete acoeff_obj'
+  
+  // Instantiate spatial discretization operators:
+  padvect_ = new GAdvect(grid_);
+  gmass_   = new GMass(*grid_);
+  ghelm_   = new GHelmholtz(*grid_);
+  
+  if ( isteptype_ == GSTEPPER_BDFAB || isteptype_ == GSTEPPER_BDFEXT ) {
+    ghelm_->set_mass(*gmass_);
+  }
+
   if ( bconsrved_ ) {
     gpdv_  = new GpdV(*grid_,*gmass_);
 //  gflux_ = new GFlux(*grid_);
     assert( (gmass_   != NULLPTR
           || ghelm_   != NULLPTR
-          || gpdv_    != NULLPTR) && "operators undefined");
+          || gpdv_    != NULLPTR) && "1 or more operators undefined");
   }
   else {
     gadvect_ = new GAdvect(*grid_);
     assert( (gmass_   != NULLPTR
           || ghelm_   != NULLPTR
-          || gaevect_ != NULLPTR) && "operators undefined");
+          || gaevect_ != NULLPTR) && "1 or more operators undefined");
   }
 
 } // end of method init

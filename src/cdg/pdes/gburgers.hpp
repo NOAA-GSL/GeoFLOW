@@ -60,6 +60,7 @@ private:
         GINT                inorder_;                                    // nonlin term order
         GTVector<GFTYPE>    tcoeffs_;                                    // coeffs for time deriv
         GTVector<GFTYPE>    acoeffs_;                                    // coeffs for NL adv term
+        GButcherRK          butcher_;                                    // Butcher tableau for EXRK
         void                init();                                      // initialize 
         void                init2d();                                    // initialize for 2d grid
         void                init3d();                                    // initialize for 3d grid
