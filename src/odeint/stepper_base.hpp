@@ -49,6 +49,24 @@ public:
 		eqn_ptr_(peqn){
 	}
 
+	/**
+	 * Get a pointer to the system of equations the stepper operates on.
+	 *
+	 * @return Pointer to the system of equations
+	 */
+	const EquationPtr& getEquationPtr() const{
+		return this->eqn_ptr_;
+	}
+
+	/**
+	 * Return the order of temporal accuracy for the method
+	 *
+	 * @return Order of temparal accuracy
+	 */
+	Size order() const{
+		return this->order_impl();
+	}
+
 	/** Take one step from time t to time t+dt.
 	 *
 	 * Take exactly one time step from t with current solution u to
@@ -76,14 +94,66 @@ public:
 		this->step_impl(t,uin,dt,uout);
 	}
 
+	/** Take one step from time t to time t + dt using derivative dudt.
+	 *
+	 * Take exactly one time step from t with current solution u and
+	 * derivative dudt to time t + dt and return new solution within u.
+	 *
+	 * \param[in]     t     Current time of state u before taking step
+	 * \param[in]     dt    Size of time step to take
+	 * \param[in]     dudt  Derivative dudt at time t
+	 * \param[in,out] u     State of the system of equations
+	 */
+	void step(const Time& t,  const Time& dt, const Derivative& dudt, State& u){
+		this->step_impl(t,dt,dudt,u);
+	}
+
+	/** Take one step from time t to time t + dt using derivative dudt.
+	 *
+	 * Take exactly one time step from t with current solution uin and
+	 * derivative dudt to time t + dt and return new solution in uout.
+	 *
+	 * \param[in]  t     Current time of state u before taking step
+	 * \param[in]  uin   State of the system of equations at time t
+	 * \param[in]  dudt  Derivative dudt at time t
+	 * \param[in]  dt    Size of time step to take
+	 * \param[out] uout  New state of the system of equations at t + dt
+	 */
+	void step(const Time& t, const State& uin, const Derivative& dudt, const Time& dt, State& uout){
+		this->step_impl(t,uin,dudt,dt,uout);
+	}
+
 
 protected:
+	EquationPtr eqn_ptr_;
 
 
+	/**
+	 * Must be provided by implementation
+	 */
+	virtual Size order_impl() const = 0;
 
+	/**
+	 * Must be provided by implementation
+	 */
+	virtual void step_impl(const Time& t, const Time& dt, State& u) = 0;
+
+	/**
+	 * Must be provided by implementation
+	 */
+	virtual void step_impl(const Time& t, const State& uin, const Time& dt, State& uout) = 0;
+
+	/**
+	 * Must be provided by implementation
+	 */
+	virtual void step_impl(const Time& t, const Time& dt, const Derivative& dudt, State& u) = 0;
+
+	/**
+	 * Must be provided by implementation
+	 */
+	virtual void step_impl(const Time& t, const State& uin, const Derivative& dudt, const Time& dt, State& uout) = 0;
 
 };
-
 
 } // namespace odeint
 } // namespace geoflow
