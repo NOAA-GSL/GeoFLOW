@@ -52,6 +52,24 @@ iorder_               (iorder)
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD     : setOrder
+// DESCRIPTION: Set RK order, and compute coeffs
+// ARGUMENTS  : iorder: global truncation order
+// RETURNS    : none.
+//**********************************************************************************
+template<typename T>
+void GButcherRK<T>::setOrder(GINT iorder)
+{
+  iorder_ = iorder;
+
+  assert( (iorder_ == 2 || iorder_ == 4) && "Invalid RK order");
+  computeCoeffs();
+
+} // end of method computeCoeffs
+
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD     : computeCoeffs
 // DESCRIPTION: Computes Butcher tableau
 // ARGUMENTS  : none.
