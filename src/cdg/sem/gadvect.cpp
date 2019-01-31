@@ -17,26 +17,10 @@
 #include "gmtk.hpp"
 
 
+
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : Constructor method (1)
-// DESC   : Constructor accepting grid and mass operator
-// ARGS   : grid  : GGrid object
-//          massop: Mass operator 
-// RETURNS: none
-//**********************************************************************************
-GAdvect::GAdvect(GGrid &grid, GMass &massop)
-:
-bInitialized_   (FALSE),
-grid_           (&grid),
-massop_       (&massop)
-{
-} // end of constructor method (1)
-
-
-//**********************************************************************************
-//**********************************************************************************
-// METHOD : Constructor method (2)
 // DESC   : Constructor accepting grid operator only
 // ARGS   : grid  : GGrid object
 // RETURNS: none
@@ -44,8 +28,7 @@ massop_       (&massop)
 GAdvect::GAdvect(GGrid &grid)
 :
 bInitialized_   (FALSE),
-grid_           (&grid),
-massop_       (NULLPTR)
+grid_           (&grid)
 {
 } // end of constructor method (1)
 
@@ -179,8 +162,7 @@ void GAdvect::reg_prod(GTVector<GFTYPE> &p, GTVector<GTVector<GFTYPE>*> &u, GTVe
 // and Gj are the 'metric' terms computed in the element, dXi^j/dX^j
 // that include the weights and Jacobian. For regular elements, 
 // Gj are constant in each direction (but not necessarily all equal), 
-// as is the Jacobian. Weights are provided by mass matrix, which
-// is set on construction, so that we don't have to re-compute it here:
+// as is the Jacobian. Weights are included in the derivatives:
 
   // Get derivatives with weights:
   GMTK::compute_grefderivsW(*grid_, p, etmp1_, utmp); // utmp stores tensor-prod derivatives, Dj p
@@ -192,11 +174,6 @@ void GAdvect::reg_prod(GTVector<GFTYPE> &p, GTVector<GTVector<GFTYPE>*> &u, GTVe
     *utmp [j].pointProd(*u[j]); // do uj * (Gj * Dj p)
     po += *utmp[GDIM];
   }
-
-#if 0
-  // apply mass:
-  massop_->opVec_prod(*utmp[0], po);
-#endif
 
 } // end of method reg_prod
 

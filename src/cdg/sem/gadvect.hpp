@@ -21,7 +21,6 @@ class GAdvect
 
 public:
 
-                          GAdvect(GGrid &grid, GMass &massop);
                           GAdvect(GGrid &grid);
                           GAdvect(const GAdvect &);
                          ~GAdvect();
@@ -41,7 +40,6 @@ private:
         GBOOL                         bInitialized_;
         GTVector<GFTYPE>              etmp1_;  // elem-based (non-global) tmp vector
         GTVector<GTVector<GFTYPE>*>   G_;      // metric components
-        GMass                        *massop_; // mass matrix, required
         GGrid                        *grid_;   // grid set on construction
 
 
