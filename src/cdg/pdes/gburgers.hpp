@@ -61,7 +61,7 @@ private:
         GTVector<GFTYPE>    tcoeffs_;                                    // coeffs for time deriv
         GTVector<GFTYPE>    acoeffs_;                                    // coeffs for NL adv term
         GButcherRK          butcher_;                                    // Butcher tableau for EXRK
-        void                init(State &u);                              // initialize 
+        void                init(State &u, GTVector<GINT> &vorder);      // initialize 
         void                step_exrk  (const Time &t, State &uin,
                                         Time &dt, State &uout);
         void                dudt_impl  (const Time &t, State &u,
@@ -75,9 +75,7 @@ private:
         GTVector<State *>   u_keep_;        // state at prev. time levels
         GTVector<GStepperType>
                             valid_types_;   // valid stepping methods supported
-        GTVector<GFTYPE>    butcher_alpha_; // Butcher tableau alpha (time) coeffs
-        GTMatrix<GFTYPE>    butcher_beta_;  // Butcher tableau beta coeffs
-        GTVector<GFTYPE>    butcher_c_;     // Butcher tableau c coeffs
+        GExRKstepper        gexrk_;         // ExRK stepper, if needed
         GMassop            *gmass_;         // mass op
         GAdvect            *gadvect_;       // advection op
         GHelmholtz         *ghelm_;         // Helmholz and Laplacian op

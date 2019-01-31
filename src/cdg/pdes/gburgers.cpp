@@ -50,7 +50,7 @@ grid_           (&grid)
  
   assert(valid_types_.contains(isteptype_) && "Invalid stepper type"); 
 
-  init(u);
+  init(u, iorder);
   
 } // end of constructor method 
 
@@ -150,15 +150,46 @@ void GBurgers::dudt_impl(const Time &t, State &u, Time &dt, Derivative &dudt)
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : step_extbdf
-// DESC   : EXT/BDF time stepping: apply EXT to advection terms, and BDF to time
-//          derivative
-// ARGS   : t  : time
-//          u  : state
-//          dt : time step
+// METHOD : step_impl
+// DESC   : Step implementation method
+// ARGS   : t   : time
+//          u   : state
+//          dt  : time step
+//          uout: updated state
 // RETURNS: none.
 //**********************************************************************************
 void GBurgers::step_extbdf(const Time &t, State &uin, Time &dt, Derivative &uout)
+{
+
+  switch ( isteptype_ ) {
+    case GSTEPPER_EXRK2:
+    case GSTEPPER_EXRK4:
+      step_exrk(t, uin, dt, uout);
+      break;
+    case GSTEPPER_BDFAB:
+    case GSTEPPER_BDFEXT:
+      step_imex(t, uin, dt, uout);
+      break;
+  }
+  
+} // end of method step_extbdf
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : step_multistep
+// DESC   : Carries out multistep update. The time derivative and 
+//          advection terms are handlex using a multistep expansion. The
+//          advection term is 'extrapolated' to the new time level
+//          using known state data so as to obviate the need for a fully 
+//          implicit treatment. The dissipation term is handled implicitly.
+// ARGS   : t   : time
+//          u   : state
+//          dt  : time step
+//          uout: updated state
+// RETURNS: none.
+//**********************************************************************************
+void GBurgers::step_multistep(const Time &t, State &uin, Time &dt, Derivative &uout)
 {
 
   // If non-conservative, compute RHS from:
@@ -170,22 +201,23 @@ void GBurgers::step_extbdf(const Time &t, State &uin, Time &dt, Derivative &uout
     ghelm_->opVec_prod(u[k],utmp_[0]);
   }
   
-} // end of method step_extbdf
+} // end of method step_multistep
 
 
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : step_exrk
 // DESC   : Take a step using Explicit RK method
-// ARGS   : t  : time
-//          u  : state
-//          dt : time step
+// ARGS   : t   : time
+//          u   : state
+//          dt  : time step
+//          uout: updated state
 // RETURNS: none.
 //**********************************************************************************
 void GBurgers::step_exrk(const Time &t, State &uin, Time &dt, Derivative &uout)
 {
 
-  // Compute
+  
 
 
 } // end of method step_exrk
@@ -213,10 +245,15 @@ void GBurgers::set_bdy_callback(std::function<void(GGrid &)> &callback)
 //**********************************************************************************
 // METHOD : init
 // DESC   : Initialize equation object
-// ARGS   : u: State variable
+// ARGS   : u     : State variable
+//          iorder: time stepping trunction order vector. If using an explicit 
+//                  scheme, only the first vector member is used. If using
+//                  semi-implicit schemes, the first slot is for the time 
+//                  derivative order, and the second for the nonlinear 
+//                  term 'extrapolation' order. 
 // RETURNS: none.
 //**********************************************************************************
-void GBurgers::init(State &u)
+void GBurgers::init(State &u, GTVector<GINT> &iorder)
 {
   GString serr = "GBurgers::init: ";
 
@@ -226,8 +263,8 @@ void GBurgers::init(State &u)
   switch ( isteptype_ ) {
     case GSTEPPER_EXRK2:
     case GSTEPPER_EXRK4:
-      itorder_   = iorder[0];
-      butcher_.setOrder(itorder_);
+      gextk_.setOrder(itorder_);
+      gextk_.setRHSfunction(this->dudt);
       break;
     case GSTEPPER_BDFAB:
       itorder_   = iorder[0];
