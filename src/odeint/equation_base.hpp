@@ -88,6 +88,7 @@ public:
 	}
 
 	/**
+<<<<<<< HEAD
 	 * Apply boundary conditions to u at time t
 	 *
          * @param[in]     t Current time of state u before taking step
@@ -96,6 +97,37 @@ public:
 	bool apply_bc(const Time& t, State& u){
 		return this->apply_bc_impl(t,u);
 	}
+=======
+	 * Calculate non-linear component of dudt for the system of equations.
+	 *
+	 * Using the time and current state calculate the
+	 * non-linear portion of the derivative for the state with
+	 * respect to time.
+	 *
+	 * @param[in]     t    Current time of state u before taking step
+	 * @param[in,out] u    State of the system of equations at time t
+	 * @param[out]    dudt Non-Linear derivative of the state u with respect to time t
+	 */
+	void nonlinear_dudt(const Time& t, State &u, Derivative& dudt){
+		this->nonlinear_dudt_impl(t,u,nlin);
+	}
+
+	/**
+	 * Calculate linear component of dudt for the system of equations.
+	 *
+	 * Using the time and current state calculate the
+	 * linear portion of the derivative for the state with
+	 * respect to time.
+	 *
+	 * @param[in]     t    Current time of state u before taking step
+	 * @param[in,out] u    State of the system of equations at time t
+	 * @param[out]    dudt Linear derivative of the state u with respect to time t
+	 */
+	void linear_dudt(const Time& t, State &u, Derivative& dudt){
+		this->linear_dudt_impl(t,u,lin);
+	}
+
+>>>>>>> develop
 
 protected:
 
@@ -122,7 +154,17 @@ protected:
 	/**
 	 * Must be provided by implementation
 	 */
+<<<<<<< HEAD
 	virtual void apply_bc_impl(const Time& t, State& u) = 0;
+=======
+	virtual void nonlinear_dudt_impl(const Time& t, State &u, Derivative& dudt) = 0;
+
+	/**
+	 * Must be provided by implementation
+	 */
+	virtual void linear_dudt_impl(const Time& t, State &u, Derivative& dudt) = 0;
+
+>>>>>>> develop
 };
 
 
