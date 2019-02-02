@@ -56,11 +56,12 @@ public:
 
         // Burgers solver traits:
         struct Traits {
-          GBOOL doheat;
-          GBOOL bpureadv;
-          GBOOL bconserved;
-          GINT  steptype;
-          GTVector<GINT? iorder;
+          GBOOL        doheat;
+          GBOOL        bpureadv;
+          GBOOL        bconserved;
+          GStepperType steptype;
+          GINT         itorder;
+          GINT         inorder;
         };
 
         GBurgers() = delete; 
@@ -79,7 +80,7 @@ protected:
 
 private:
 
-        void                init(State &u, GTVector<GINT> &vorder);      // initialize 
+        void                init(State &u, Traits &);      // initialize 
         void                step_exrk  (const Time &t, State &uin,
                                         Time &dt, State &uout);
         void                dudt_impl  (const Time &t, State &u,

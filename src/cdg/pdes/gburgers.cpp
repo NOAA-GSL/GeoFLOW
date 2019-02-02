@@ -39,11 +39,10 @@
 // ARGS   : grid      : grid object
 //          u         : state (i.e., vector of GVectors)
 //          traits    :
-//            isteptype: stepper type
-//            iorder    : vector of integers indicating :
-//                          index 0: time order for du/dt derivaitve for multistep
-//                                   methods; RK order (= num stages + 1)
-//                          index 1: order of approximation for nonlin term
+//            steptype  : stepper type
+//            itorder   : time order to du/dt derivative for multistep
+//                        methods; RK num stages (~ order)
+//            inorder   : order of approximation for nonlin term
 //            doheat    : do heat equation only? If this is TRUE, then neither 
 //                        of the following 2 flags have any meaning.
 //            pureadv   : do pure advection? Has meaning only if doheat==FALSE
@@ -57,10 +56,10 @@ GBurgers::GBurgers(GGrid &grid, State &u, Traits &traits, GTVector<GTVectorGFTYP
 doheat_         (traits.doheat),
 bpureadv_     (traits.bpureadv),
 bconserved_ (traits.bconserved),
-isteptype_   (traits.isteptype),
+isteptype_    (traits.steptype),
 nsteps_                     (0),
-itorder_                    (0),
-inorder_                    (0),
+itorder_       (traits.itorder),
+inorder_       (traits.inorder),
 nu_                   (NULLPTR),
 gadvect_              (NULLPTR),
 gmass_                (NULLPTR),
@@ -322,7 +321,7 @@ void GBurgers::set_bdy_callback(std::function<void(GGrid &)> &callback)
 //                  term 'extrapolation' order. 
 // RETURNS: none.
 //**********************************************************************************
-void GBurgers::init(State &u, GTVector<GINT> &iorder)
+void GBurgers::init(State &u)
 {
   GString serr = "GBurgers::init: ";
 
@@ -336,8 +335,6 @@ void GBurgers::init(State &u, GTVector<GINT> &iorder)
       gextk_.setRHSfunction(this->dudt);
       break;
     case GSTEPPER_BDFAB:
-      itorder_   = iorder[0];
-      inorder_   = iorder[1];
       tcoeff_obj = new G_BDF(itorder_);
       acoeff_obj = new G_AB (inorder_);
       tcoeffs_.resize(tcoeff_obj.getCoeffs().size());
@@ -345,8 +342,6 @@ void GBurgers::init(State &u, GTVector<GINT> &iorder)
       tcoeffs_ = tcoeff_obj; acoeffs_ = acoeff_obj;
       break;
     case GSTEPPER_BDFEXT:
-      itorder_   = iorder[0];
-      inorder_   = iorder[1];
       tcoeff_obj = new G_BDF(itorder_);
       acoeff_obj = new G_EXT(inorder_);
       tcoeffs_.resize(tcoeff_obj.getCoeffs().size());
