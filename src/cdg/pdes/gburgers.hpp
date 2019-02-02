@@ -5,9 +5,23 @@
 //                PDE:
 //                     du/dt + u . Del u = nu Del^2 u
 //                This solver can be built in 2D or 3D, and can be configured to
-//                remove the nonlinear terms so as to solve only the heat equation;
-//                the dissipation coefficient may also be provided as a field.
-// Copyright    : Copyright 2018. Colorado State University. All rights reserved
+//                remove the nonlinear terms so as to solve only the heat equation.
+//
+//                The State variable must always be of specific type
+//                   GTVector<GTVector<GFTYPE>*>, but the elements rep-
+//                resent different things depending on whether
+//                the equation is doing nonlinear advection, heat only, or 
+//                pure linear advection. If solving with nonlinear advection or 
+//                the heat equation, the State consists of elements [*u1, *u2, ....]
+//                which is a vector solution. If solving the pure advection equation,
+//                the State consists of [*u, *c1, *c2, *c3], where u is the solution
+//                desired (there is only one, and it's a scalar), and ci 
+//                are the constant-in-time Eulerian velocity components.
+// 
+// 
+//                The dissipation coefficient may also be provided as a spatial field.
+// 
+// Copyright    : Copyright 2019. Colorado State University. All rights reserved
 // Derived From : none.
 //==================================================================================
 #if !defined(_GBURGERS_HPP)
@@ -28,9 +42,9 @@ enum GICOSPTYPE {GICOS_BASE, GICOS_ELEMENTAL};
 
 class GBurgers :: public StepperBase<TypePack>
 {
-        static_assert(std::is_same<State,GTVector<GTVectorGFTYPE>>>::value,
+        static_assert(std::is_same<State,GTVector<GTVector<GFTYPE>*>>::value,
                "State is of incorrect type");
-        static_assert(std::is_same<Derivative,GTVector<GTVectorGFTYPE>>>::value,
+        static_assert(std::is_same<Derivative,GTVector<GTVector<GFTYPE>*>>::value,
                "Derivative is of incorrect type");
 
 public:
@@ -43,7 +57,7 @@ public:
         using Size       = typename Interface::Size;
 
         GBurgers() = delete; 
-        GBurgers(GGrid &grid, State &u, GStepperType isteptype, GTVector<GINT> iorder, GBOOL bconserved, GBOOL doheat, GTVector<GTVector<GFTYPE>*> &tmp);
+        GBurgers(GGrid &grid, State &u, GStepperType isteptype, GTVector<GINT> iorder, GBOOL doheat , GBOOL pureadv, GBOOL bconserved, GTVector<GTVector<GFTYPE>*> &tmp);
        ~GBurgers();
         GBurgers(const GBurgers &bu) = default;
         GBurgers &operator=(const Burgers &bu) = default;
@@ -68,9 +82,9 @@ private:
         void                cycle_keep(State &u);
        
 
-        GBOOL               bconserved_;    // use conservation form?
         GBOOL               doheat_;        // flag to do heat equation alone
-        GBOOL               bpureadv_;      // do pure advection?
+        GBOOL               bpureadv_;      // do pure (linear) advection?
+        GBOOL               bconserved_;    // use conservation form?
         GStepperType        isteptype_;     // stepper type
         GINT                nsteps_         // num steps taken
         GINT                itorder_;       // time deriv order
@@ -80,12 +94,15 @@ private:
         GButcherRK          butcher_;       // Butcher tableau for EXRK
         GTVector<GTVector<GFLOAT>*>  
                             tmp_;
+        GTVector<GTVector<GFLOAT>*>  
+                            c_;             // linear velocity if bpureadv = TRUE
         GTVector<State>     u_keep_;        // state at prev. time levels
         GTVector<GStepperType>
                             valid_types_;   // valid stepping methods supported
         GTVector<GFTYPE>   *nu_   ;         // dissipoation
         GExRKstepper        gexrk_;         // ExRK stepper, if needed
         GMassop            *gmass_;         // mass op
+        GMassop            *gimass_;        // inverse mass op
         GAdvect            *gadvect_;       // advection op
         GHelmholtz         *ghelm_;         // Helmholz and Laplacian op
         GpdV               *gpdv_;          // pdV op
