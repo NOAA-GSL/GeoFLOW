@@ -18,7 +18,7 @@ class GMass: public GLinOp
 
 public:
 
-                          GMass(GGrid &grid);
+                          GMass(GGrid &grid, GBOOL doinverse=FALSE);
                           GMass(const GMass &);
                          ~GMass();
 
@@ -32,6 +32,7 @@ private:
         void              init3d();
 
 
+        GBOOL             bdoinverse_;
         GBOOL             bmasslumped_;
         GTVector<GFTYPE>  mass_;
         GGrid            *grid_;

@@ -20,8 +20,9 @@
 // ARGS   : none
 // RETURNS: none
 //**********************************************************************************
-GMass::GMass(GGrid &grid)
+GMass::GMass(GGrid &grid, GBOOL bdoinverse)
 : GLinOp(grid),
+bdoinverse_      (FALSE),
 bmasslumped_      (TRUE)
 {
   grid_ = &grid;
@@ -73,6 +74,12 @@ void GMass::init()
   #elif defined(_G_IS3D)
     init3d();
   #endif
+
+  if ( binverse_ ) {
+    for ( GSIZET j=0; j<mass_.size(); j++ ) {
+      mass_[j] = 1.0 / mass_[j];
+    }
+  }
   bInitialized_ = TRUE;
 
 } // end of method init
