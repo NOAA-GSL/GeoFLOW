@@ -220,14 +220,14 @@ void GBurgers::dudt_impl(const Time &t, State &u, Time &dt, Derivative &dudt)
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : step_impl
-// DESC   : Step implementation method
+// DESC   : Step implementation method  entry point
 // ARGS   : t   : time
 //          u   : state
 //          dt  : time step
 //          uout: updated state
 // RETURNS: none.
 //**********************************************************************************
-void GBurgers::step_extbdf(const Time &t, State &uin, Time &dt, Derivative &uout)
+void GBurgers::step_impl(const Time &t, State &uin, Time &dt, Derivative &uout)
 {
 
   switch ( isteptype_ ) {
@@ -241,7 +241,7 @@ void GBurgers::step_extbdf(const Time &t, State &uin, Time &dt, Derivative &uout
       break;
   }
   
-} // end of method step_extbdf
+} // end of method step_impl
 
 
 //**********************************************************************************
