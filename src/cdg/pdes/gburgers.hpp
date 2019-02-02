@@ -37,8 +37,6 @@
 #include "ghelmholtz.hpp"
 //#include "gflux.hpp"
 
-enum GICOSPTYPE {GICOS_BASE, GICOS_ELEMENTAL}; 
-
 
 class GBurgers :: public StepperBase<TypePack>
 {
@@ -56,8 +54,17 @@ public:
         using Jacobian   = typename Interface::Jacobian;
         using Size       = typename Interface::Size;
 
+        // Burgers solver traits:
+        struct Traits {
+          GBOOL doheat;
+          GBOOL bpureadv;
+          GBOOL bconserved;
+          GINT  steptype;
+          GTVector<GINT? iorder;
+        };
+
         GBurgers() = delete; 
-        GBurgers(GGrid &grid, State &u, GStepperType isteptype, GTVector<GINT> iorder, GBOOL doheat , GBOOL pureadv, GBOOL bconserved, GTVector<GTVector<GFTYPE>*> &tmp);
+        GBurgers(GGrid &grid, State &u, Traits &traits, GTVector<GTVector<GFTYPE>*> &tmp);
        ~GBurgers();
         GBurgers(const GBurgers &bu) = default;
         GBurgers &operator=(const Burgers &bu) = default;

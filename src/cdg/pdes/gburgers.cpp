@@ -38,34 +38,35 @@
 //          Burgers equation, heat equation.
 // ARGS   : grid      : grid object
 //          u         : state (i.e., vector of GVectors)
-//          isteptype: stepper type
-//          iorder    : vector of integers indicating the 
-//                        index 0: time order for du/dt derivaitve for multistep
-//                                 methods; RK order (= num stages + 1)
-//                        index 1: order of approximation for nonlin term
-//          doheat    : do heat equation only? If this is TRUE, then neither 
-//                      of the following 2 flags have any meaning.
-//          pureadv   : do pure advection? Has meaning only if doheat==FALSE
-//          bconserved: do conservative form? Has meaning only if pureadv==FALSE.
+//          traits    :
+//            isteptype: stepper type
+//            iorder    : vector of integers indicating :
+//                          index 0: time order for du/dt derivaitve for multistep
+//                                   methods; RK order (= num stages + 1)
+//                          index 1: order of approximation for nonlin term
+//            doheat    : do heat equation only? If this is TRUE, then neither 
+//                        of the following 2 flags have any meaning.
+//            pureadv   : do pure advection? Has meaning only if doheat==FALSE
+//            bconserved: do conservative form? Has meaning only if pureadv==FALSE.
 //          tmp       : Array of tmp vector pointers, pointing to vectors
 //                      of same size as State. Must be MAX(2*DIM+2,iorder+1)
 //                      vectors
 // RETURNS: none
 //**********************************************************************************
-GBurgers::GBurgers(GGrid &grid, State &u, GStepperType isteptype, GTVector<GINT> &iorder, GBOOL doheat, GBOOL pureadv, GBOOL bconserved, GTVector<GTVectorGFTYPE>*> &tmp) :
-doheat_         (doheat),
-bpureadv_     (bpureadv),
-bconserved_ (bconserved),
-isteptype_   (isteptype),
-nsteps_              (0),
-itorder_             (0),
-inorder_             (0),
-nu_            (NULLPTR),
-gadvect_       (NULLPTR),
-gmass_         (NULLPTR),
-gpdv_          (NULLPTR),
-//gflux_        (NULLPTR),
-grid_            (&grid)
+GBurgers::GBurgers(GGrid &grid, State &u, Traits &traits, GTVector<GTVectorGFTYPE>*> &tmp) :
+doheat_         (traits.doheat),
+bpureadv_     (traits.bpureadv),
+bconserved_ (traits.bconserved),
+isteptype_   (traits.isteptype),
+nsteps_                     (0),
+itorder_                    (0),
+inorder_                    (0),
+nu_                   (NULLPTR),
+gadvect_              (NULLPTR),
+gmass_                (NULLPTR),
+gpdv_                 (NULLPTR),
+//gflux_                (NULLPTR),
+grid_                   (&grid)
 {
   static_assert(std::is_same<State,GTVector<GTVectorGFTYPE>>>::value,
                "State is of incorrect type"); 
@@ -78,7 +79,7 @@ grid_            (&grid)
   assert(valid_types_.contains(isteptype_) && "Invalid stepper type"); 
 
   utmp_.resize(tmp.size()); utmp_ = tmp;
-  init(u, iorder);
+  init(u, traits.iorder);
   
 } // end of constructor method (1)
 
