@@ -35,6 +35,7 @@ public:
         GTVector<GSIZET>    &itype(GElemType i) { return itype_[i]; } // indices for type i    
         void                 print(GString fname, GBOOL bdof=FALSE);
         GSIZET               ndof();                                  // compute total number elem dof
+        GSIZET               size() { return ndof(); }
         GSIZET               nsurfdof();                              // compute total number elem surf dof
         void                 init();                                  // inititlize class
         GFTYPE               minlength();                             // find min elem length
