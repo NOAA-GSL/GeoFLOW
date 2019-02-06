@@ -32,13 +32,14 @@
 #include "gtvector.hpp"
 #include "gdd_base.hpp"
 #include "ggrid.hpp"
-#include "stepper_base.hpp"
+#include "equation_base.hpp"
 #include "gadvect.hpp"
 #include "ghelmholtz.hpp"
 //#include "gflux.hpp"
 
 
-class GBurgers :: public StepperBase<TypePack>
+template<typename TypePack>
+class GBurgers :: public EquationBase<TypePack>
 {
         static_assert(std::is_same<State,GTVector<GTVector<GFTYPE>*>>::value,
                "State is of incorrect type");
@@ -46,7 +47,7 @@ class GBurgers :: public StepperBase<TypePack>
                "Derivative is of incorrect type");
 
 public:
-        using Interface  = StepperBase<TypePack>;
+        using Interface  = EquationBase<TypePack>;
         using State      = typename Interface::State;
         using Value      = typename Interface::Value;
         using Derivative = typename Interface::Derivative;

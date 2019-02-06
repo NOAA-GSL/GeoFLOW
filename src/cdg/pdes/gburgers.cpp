@@ -52,7 +52,8 @@
 //                      vectors
 // RETURNS: none
 //**********************************************************************************
-GBurgers::GBurgers(GGrid &grid, State &u, Traits &traits, GTVector<GTVectorGFTYPE>*> &tmp) :
+template<typename TypePack>
+GBurgers<TypePak>::GBurgers(GGrid &grid, State &u, Traits &traits, GTVector<GTVectorGFTYPE>*> &tmp) :
 doheat_         (traits.doheat),
 bpureadv_     (traits.bpureadv),
 bconserved_ (traits.bconserved),
@@ -90,7 +91,8 @@ grid_                   (&grid)
 // ARGS   : none
 // RETURNS: none
 //**********************************************************************************
-GBurgers::~GBurgers()
+template<typename TypePack>
+GBurgers<TypePak>::~GBurgers()
 {
   if ( gmass_   != NULLPTR ) delete gmass_;
   if ( gimass_  != NULLPTR ) delete gimass_;
@@ -112,7 +114,8 @@ GBurgers::~GBurgers()
 //          dt: timestep, returned
 // RETURNS: none.
 //**********************************************************************************
-void GBurgers::dt_impl(const Time &t, State &u, Time &dt)
+template<typename TypePack>
+void GBurgers<TypePak>::dt_impl(const Time &t, State &u, Time &dt)
 {
    GSIZET ibeg, iend;
    GFTYPE dtmin, umax;
@@ -169,7 +172,8 @@ void GBurgers::dt_impl(const Time &t, State &u, Time &dt)
 //          dt : time step
 // RETURNS: none.
 //**********************************************************************************
-void GBurgers::dudt_impl(const Time &t, State &u, Time &dt, Derivative &dudt)
+template<typename TypePack>
+void GBurgers<TypePak>::dudt_impl(const Time &t, State &u, Time &dt, Derivative &dudt)
 {
   assert(!bconserved_ &&
          "conservation not yet supported"); 
@@ -227,7 +231,8 @@ void GBurgers::dudt_impl(const Time &t, State &u, Time &dt, Derivative &dudt)
 //          uout: updated state
 // RETURNS: none.
 //**********************************************************************************
-void GBurgers::step_impl(const Time &t, State &uin, Time &dt, Derivative &uout)
+template<typename TypePack>
+void GBurgers<TypePak>::step_impl(const Time &t, State &uin, Time &dt, Derivative &uout)
 {
 
   switch ( isteptype_ ) {
@@ -258,7 +263,8 @@ void GBurgers::step_impl(const Time &t, State &uin, Time &dt, Derivative &uout)
 //          uout: updated state
 // RETURNS: none.
 //**********************************************************************************
-void GBurgers::step_multistep(const Time &t, State &uin, Time &dt, Derivative &uout)
+template<typename TypePack>
+void GBurgers<TypePak>::step_multistep(const Time &t, State &uin, Time &dt, Derivative &uout)
 {
   assert(FALSE && "Multistep methods not yet available");
 
@@ -276,7 +282,8 @@ void GBurgers::step_multistep(const Time &t, State &uin, Time &dt, Derivative &u
 //          uout: updated state
 // RETURNS: none.
 //**********************************************************************************
-void GBurgers::step_exrk(const Time &t, State &uin, Time &dt, Derivative &uout)
+template<typename TypePack>
+void GBurgers<TypePak>::step_exrk(const Time &t, State &uin, Time &dt, Derivative &uout)
 {
 
   // If non-conservative, compute RHS from:
@@ -301,7 +308,7 @@ void GBurgers::step_exrk(const Time &t, State &uin, Time &dt, Derivative &uout)
 //          callback: method name
 // RETURNS: none.
 //**********************************************************************************
-void GBurgers::set_bdy_callback(std::function<void(GGrid &)> &callback)
+void GBurgers<TypePak>::set_bdy_callback(std::function<void(GGrid &)> &callback)
 {
   bdycallback_  = &callback;
 } // end of method set_bdy_callback
@@ -321,9 +328,10 @@ void GBurgers::set_bdy_callback(std::function<void(GGrid &)> &callback)
 //                  term 'extrapolation' order. 
 // RETURNS: none.
 //**********************************************************************************
-void GBurgers::init(State &u)
+template<typename TypePack>
+void GBurgers<TypePak>::init(State &u)
 {
-  GString serr = "GBurgers::init: ";
+  GString serr = "GBurgers<TypePak>::init: ";
 
   // Find multistep/multistage time stepping coefficients:
   GMultilevel_coeffs_base *tcoeff_obj; // time deriv coeffs
@@ -407,7 +415,8 @@ void GBurgers::init(State &u)
 // ARGS   : u     : State variable providing most recent state
 // RETURNS: none.
 //**********************************************************************************
-void GBurgers::cycle_keep(State &u)
+template<typename TypePack>
+void GBurgers<TypePak>::cycle_keep(State &u)
 {
 
   // Make sure following index map contains the 
@@ -432,7 +441,8 @@ void GBurgers::cycle_keep(State &u)
 //               by caller; only a pointer is used by internal operators.
 // RETURNS: none.
 //**********************************************************************************
-void GBurgers::set_nu(GTVector<GFTYPE> &nu)
+template<typename TypePack>
+void GBurgers<TypePak>::set_nu(GTVector<GFTYPE> &nu)
 {
   assert(ghelm_ != NULLPTR && "Init must be called first");
   nu_ = &nu; // Not sure this class actually needs this. May be removed later
