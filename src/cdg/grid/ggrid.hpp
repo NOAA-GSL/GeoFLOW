@@ -7,8 +7,8 @@
 // Copyright    : Copyright 2018. Colorado State University. All rights reserved
 // Derived From : none.
 //==================================================================================
-#if !defined(GGRID_HPP)
-#define GGRID_HPP 
+#if !defined(_GGRID_HPP)
+#define _GGRID_HPP 
 
 #include <iostream>
 #include "gtvector.hpp"
