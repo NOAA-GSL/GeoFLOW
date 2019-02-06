@@ -159,7 +159,9 @@ enum GElemType           {GE_REGULAR=0, GE_DEFORMED, GE_2DEMBEDDED, GE_MAX}; // 
 
 #if !defined(_G_STEPPERTYPE_DEF)
 #define _G_STEPPERTYPE_DEF
-enum GStepperType        {GSTEPPER_EXRK2=0 ,GSTEPPER_EXRK4, GSTEPPER_BDFAB, GSTEPPER_BDFEXT, GSTEPPER_OIFS, GSTEPPER_SISL, GSTEPPER_NUMBER}; 
+enum GStepperType        {GSTEPPER_EXRK2=0 , GSTEPPER_EXRK4 , GSTEPPER_BDFAB , GSTEPPER_BDFEXT , GSTEPPER_OIFS , GSTEPPER_SISL , GSTEPPER_MAX}; 
+const char * const sGStepperType    {
+                         "GSTEPPER_EXRK2"  ,"GSTEPPER_EXRK4","GSTEPPER_BDFAB","GSTEPPER_BDFEXT","GSTEPPER_OIFS","GSTEPPER_SISL"};
 #endif
 
 // Variables used to set dimension & operational stack size:
