@@ -595,6 +595,39 @@ GTVector<T> &GTVector<T>::operator=(const GTVector<T> &obj)
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD : assignment operator= std::vector
+// DESC   : Equate to std::vector of same template type
+// ARGS   : GTVector<T> & right-hand side arg 
+// RETURNS: GTVector & 
+//**********************************************************************************
+template<class T> 
+GTVector<T> &GTVector<T>::operator=(const std::vector<T> &obj) 
+{
+  
+  if ( n_ > 0 ) { // If not allocated, allocate; else it's an error
+    assert( (this->n_ < obj.capacity() || this->data_ != NULLPTR) && "L-vector has insufficient size");
+  }
+
+  if ( data_ == NULLPTR ) {
+    n_ = obj.capacity();
+    data_ = new T [n_];
+    gindex_(n_, n_, 0, n_-1, 1,  0);
+  }
+
+  for ( GLLONG j=0; j<obj.capacity(); j++ ) {
+    data_[j] = obj[j];
+  }
+
+  #if defined(_G_AUTO_UPDATE_DEV)
+  updatedev();
+  #endif
+  
+  return *this;
+} // end, operator=(std::vector &)
+
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD : operator=
 // DESC   : Set vector to a constant
 // ARGS   : T aarg

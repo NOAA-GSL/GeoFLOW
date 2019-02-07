@@ -58,6 +58,7 @@ template <class T> class GTVector
 
     #pragma acc routine vector
     GTVector<T>       &operator=(const GTVector<T> &b);
+    GTVector<T>       &operator=(const std::vector<T> &b);
     #pragma acc routine vector
     void               operator=(T b);
     #pragma acc routine vector
