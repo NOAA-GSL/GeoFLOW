@@ -1,6 +1,7 @@
 { // JSON file for Burgers solver
   "exp_order": 2,
   "grid_type": "grid_box",
+  "restart_index": 0,
   "adv_equation_traits": {
     "doheat": TRUE,
     "bconserved": FALSE,
@@ -39,7 +40,6 @@
     "nu_type": "scalar",
   },
   "time_integration": {
-    "restart_index": 0,
     "time_type": "cycle",
     "time_end": 1.0,
     "cycle_end": 50,
