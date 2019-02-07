@@ -10,13 +10,12 @@
     "stepping_method": "GSTEPPER_EXRK2",
     "time_deriv_order": 2,
     "extrap_order": 2 
-    "num_stages": 2 
   },
   "grid_icos": {
     "grid_name": "grid_icos",
     "ilevel": 1.0,
     "radius": 1.0,
-    "num_elems": [10,10,10], 
+    "num_elems": [10,10,10]  // used for 3D grids 
   },
   "grid_sphere": {
     "grid_name": "grid_sphere",
@@ -42,8 +41,8 @@
   "time_integration": {
     "restart_index": 0,
     "time_type": "cycle",
-    "time_end": "scalar",
-    "cycle_end": "scalar",
+    "time_end": 1.0,
+    "cycle_end": 50,
     "dt": 1.0e-02
   }
 }
