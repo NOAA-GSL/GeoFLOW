@@ -1,0 +1,49 @@
+{ // JSON file for Burgers solver
+  "exp_order": 2,
+  "grid_type": "grid_box",
+  "adv_equation_traits": {
+    "doheat": TRUE,
+    "bconserved": FALSE,
+    "bpureadv": FALSE
+  },
+  "stepper_props": {
+    "stepping_method": "GSTEPPER_EXRK2",
+    "time_deriv_order": 2,
+    "extrap_order": 2 
+    "num_stages": 2 
+  },
+  "grid_icos": {
+    "grid_name": "grid_icos",
+    "ilevel": 1.0,
+    "radius": 1.0,
+    "num_elems": [10,10,10], 
+  },
+  "grid_sphere": {
+    "grid_name": "grid_sphere",
+    "radiusi": 1.0,
+    "radiuso": 2.0,
+    "num_elems": [10,10,10], 
+    "bdy_inner": 0,
+    "bdy_outer": 0
+  },
+  "grid_box": {
+    "grid_name": "grid_box",
+    "xyz0": [0.0, 0.0, 0.0],
+    "delxyz": [1.0, 1.0, 1.0],
+    "num_elems": [10,10,10], 
+    "bdy_x": [0 0],
+    "bdy_y": [0 0],
+    "bdy_z": [0 0]
+  },
+  "dissipation_traits": {
+    "nu": 1.0e-02,
+    "nu_type": "scalar",
+  },
+  "time_integration": {
+    "restart_index": 0,
+    "time_type": "cycle",
+    "time_end": "scalar",
+    "cycle_end": "scalar",
+    "dt": 1.0e-02
+  }
+}
