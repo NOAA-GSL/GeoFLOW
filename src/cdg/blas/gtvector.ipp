@@ -1205,14 +1205,14 @@ GTVector<T>::L1norm()
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : L2norm
-// DESC   : Computes L2 (RMS) norm
+// METHOD : Eucnorm
+// DESC   : Computes Euclidean (RMS) norm
 // ARGS   : none.
 // RETURNS: T norm
 //**********************************************************************************
 template<class T>
 T
-GTVector<T>::L2norm() 
+GTVector<T>::Eucnorm() 
 {
   GDOUBLE xnorm = 0.0;
   GLLONG j;
@@ -1222,7 +1222,7 @@ GTVector<T>::L2norm()
   }
   
   return static_cast<T>(sqrt(xnorm));
-} // end, L2norm
+} // end, Eucnorm
 
 
 //**********************************************************************************
