@@ -34,6 +34,8 @@ public:
         GTVector<GTVector<GSIZET>> 
                             &itype() { return itype_; }               // indices for all types
         GTVector<GSIZET>    &itype(GElemType i) { return itype_[i]; } // indices for type i    
+        GFTYPE               integrate(GTVector<GFTYPE> &u,
+                                       GTVector<GFTYPE> &tmp);        // spatial integration of global vector
         void                 print(GString fname, GBOOL bdof=FALSE);
         GSIZET               ndof();                                  // compute total number elem dof
         GSIZET               size() { return ndof(); }

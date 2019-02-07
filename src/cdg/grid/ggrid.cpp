@@ -12,6 +12,7 @@
 #include <limits>
 #include "gelem_base.hpp"
 #include "ggrid.hpp"
+#include "gcomm.hpp"
 
 
 //**********************************************************************************
@@ -527,7 +528,7 @@ GTVector<GFTYPE> &GGrid::Jac()
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : faceJac
-// DESC   : return global coord transform Jacobian for faces
+// DESC   : Return global coord transform Jacobian for faces
 // ARGS   : none
 // RETURNS: GTVector<GFTYPE> &
 //**********************************************************************************
@@ -542,7 +543,7 @@ GTVector<GFTYPE> &GGrid::faceJac()
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : faceNormal
-// DESC   : return global vector of normals at face nodes
+// DESC   : Return global vector of normals at face nodes
 // ARGS   : none
 // RETURNS: GTVector<GTVector<GFTYPE>> &
 //**********************************************************************************
@@ -677,6 +678,76 @@ void GGrid::find_min_dist()
 
 
 } // end of method find_min_dist
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : integrate
+// DESC   : Compute spatial integral of global input vector. Result 
+//          is a sum over all MPI tasks. NOTE: This method extracts weights
+//          from the elements, so don't use this method very often.
+// ARGS   : u  : 'global' integral argument
+//          tmp: tmp vector, same size as u
+// RETURNS: GFTYPE integral
+//**********************************************************************************
+GFTYPE GGrid::integrate(GTVector<GFTYPE> &u, GTVector<GFTYPE> &tmp)
+{
+  assert(bInitialized_ && "Object not inititaized");
+
+
+  GSIZET                       ibeg, iend; // beg, end indices for global array
+  GFTYPE                       xint, xgint;
+   GTVector<GINT>              N(GDIM);    // coord node sizes
+  GTVector<GTVector<GFTYPE>*>  W(GDIM);    // element weights
+
+  tmp = u;
+#if defined(_G_IS2D)
+  for ( GSIZET e=0; e<gelems_.size(); e++ ) {
+    ibeg  = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
+
+    for ( GSIZET k=0; k<GDIM; k++ ) {
+      W[k]= (*gelems_)[e]->gbasis(k)->getWeights();
+      N[j]    = (*gelems)[i]->size(j);
+    }
+    n = 0;
+    for ( GSIZET k=0; k<N[1]; k++ ) {
+      for ( GSIZET j=0; j<N[0]; j++,n++ ) {
+        tmp[n] = (*W[1])[k]*(*W[0])[j] * u[n];
+      }
+    }
+    // Restrict global data to local scope:
+    tmp.range(ibeg, iend);
+  } // end, element loop
+#elif defined(_G_IS3D)
+  for ( GSIZET e=0; e<gelems_.size(); e++ ) {
+    ibeg  = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
+
+    for ( GSIZET k=0; k<GDIM; k++ ) {
+      W[k]= (*gelems_)[e]->gbasis(k)->getWeights();
+      N[j]    = (*gelems)[i]->size(j);
+    }
+    n = 0;
+    for ( GSIZET k=0; k<N[2]; k++ ) {
+      for ( GSIZET j=0; j<N[1]; j++ ) {
+        for ( GSIZET i=0; i<N[0]; i++,n++ ) {
+          tmp[n] = (*W[2])[k]*(*W[1])[k]*(*W[0])[j] * u[n];
+        }
+      }
+    }
+    // Restrict global data to local scope:
+    tmp.range(ibeg, iend);
+  } // end, element loop
+#endif
+  tmp.range_reset(); 
+
+  // Multiply by Jacobian:
+  tmp_.pointProd(Jac_);
+  xint = tmp_.sum();  
+  GComm::Allreduce(&xint, &xgint, 1, T2GCDatatype<GFTYPE>() , GC_OP_SUM, comm_);
+
+  return xgint;
+
+} // end of method integrate
 
 
 
