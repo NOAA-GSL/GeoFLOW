@@ -28,6 +28,7 @@ public:
 
         void                do_typing(); // classify into types
         GElemList           &elems() { return gelems_; }              // get elem list
+        GSIZET               nelems() ( return gelems_.size(); }      // local num elems
         GTVector<GSIZET> 
                             &ntype() { return ntype_; }               // no. elems of each type
         GTVector<GTVector<GSIZET>> 
