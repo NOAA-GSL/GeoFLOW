@@ -1355,7 +1355,7 @@ void compute_grefderivsW(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &e
     GMTK::Dg2_X_D1(*Di[0], *W[1], u, etmp, *du[0]); 
     GMTK::D2_X_Dg1(*W[0], *Di[1], u, etmp, *du[1]); 
   }
-  u.range_reset()); // reset global vec to global range
+  u.range_reset(); // reset global vec to global range
   for ( GSIZET k=0; k<GDIM+1; k++ ) du[k]->range_reset();
 
 #elif defined(_G_IS3D)
