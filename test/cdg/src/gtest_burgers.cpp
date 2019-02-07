@@ -63,6 +63,7 @@ int main(int argc, char **argv)
     GINT   iopt;
     GINT   ilevel=0;// 2d ICOS refinement level
     GINT   np=1;    // elem 'order'
+    GINT   nstate=GDIM;  // number 'state' arrays
     GSISET maxSteps;
     GFTYPE radiusi=1, radiuso=2;
     GTVector<GINT> ne(3); // # elements in each direction in 3d
@@ -180,6 +181,16 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     GGrid *grid = GGridFactory(gridptree, gbasis, comm);
 
     GPTLstop("gen_grid");
+
+    // Create state and tmp space:
+    GTVector<GTVector<GFTYPE>*> utmp[2*GDIM+2];
+    GTVector<GTVector<GFTYPE>*> u;
+    
+    if      ( solver_traits.doheat   ) nstate = 1;
+    else if ( solver_traits.bpureadv ) nstate = GDIM + 1; // 1-state + GDIM  v-components
+    u.resize(nstate);
+    for ( GSIZET j=0; j<utmp.size(); j++ ) utmp[j] = new GTVector<GFTYPE>(grid->size());
+    for ( GSIZET j=0; j<u   .size(); j++ ) u   [j] = new GTVector<GFTYPE>(grid->size());
 
     // Create observer(s), equations, integrator:
     std::shared_ptr<EqnImpl> eqn_impl(new EqnImpl(*grid, u, solver_traits, utmp));
