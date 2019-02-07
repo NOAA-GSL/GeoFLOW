@@ -1,5 +1,5 @@
 //==================================================================================
-// Module       : grid_factory
+// Module       : ggrid_factory
 // Date         : 2/1/19 (DLR)
 // Description  : GeoFLOW grid factory object. 
 // Copyright    : Copyright 2019. Colorado State University. All rights reserved
