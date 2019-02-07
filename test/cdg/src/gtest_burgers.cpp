@@ -17,7 +17,6 @@
 #include <cassert>
 #include <random>
 #include "gcomm.hpp"
-#include "ggrid.hpp"
 #include "ggrid_factory.hpp"
 #include "ggfx.hpp"
 #include "gmorton_keygen.hpp"
@@ -28,11 +27,11 @@ using namespace geoflow::pdeint;
 
 
 template<
-typename StateType,
+typename StateType = GTVector<GTVectorGFTYPE>*>,
 typename ValueType = GFTYPE,
 typename DerivType = StateType,
 typename TimeType  = ValueType,
-typename JacoType  = NULLPTR
+typename JacoType  = NULLPTR,
 typename SizeType  = GSIZET
 >
 struct EquationTypes {
@@ -44,8 +43,6 @@ struct EquationTypes {
         using Size       = SizeType;
 };
 
-void init_grid() {
-};
 
 void compute_analytic(GGrid &grid, Time &t, State &uanalyt);
 
@@ -66,11 +63,9 @@ int main(int argc, char **argv)
     GINT   iopt;
     GINT   ilevel=0;// 2d ICOS refinement level
     GINT   errcode, gerrcode;
-    GINT   nlat=10, nlong=20;
     GINT   np=1;    // elem 'order'
     GFTYPE radiusi=1, radiuso=2;
     GTVector<GINT> ne(3); // # elements in each direction in 3d
-    GString spde; // pde equation being solved
     GString sgrid;// name of JSON grid object to use
     GC_COMM comm = GC_COMM_WORLD;
 
@@ -87,6 +82,7 @@ int main(int argc, char **argv)
     PropertyTree dissptree;   // dissipation props
     ptree.load("gburgers.jsn");
 
+    // Create other prop trees for various objects:
     np = ptree.getValue<GINT>("exp_prder");
     eqptree     = ptree.getPropertyTree("adv_equation_traits");
     sgrid       = ptree.getValue<GString>("grid_type");
@@ -133,6 +129,12 @@ int main(int argc, char **argv)
 
 #endif
 
+    // Overwrite prop tree traits based on command line args:
+    std::vector<GINT> stdne(ne.size());
+    for ( auto j=0; j<ne.size; j++ ) stdne.push_back(ne[j]);
+    gridptree.setArray("num_elems",stdne);
+    ptree.setValue("exp_order",np);
+
     errcode = 0;
 
     // Initialize comm:
@@ -160,10 +162,11 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     GGrid *grid = GGridFactory(gridptree, gbasis, comm);
 
     GPTLstop("gen_grid");
-
+/*
     // Create observer(s), equations, integrator:
     std::shared_ptr<EqnImpl> eqn_impl(new EqnImpl(wave_speed, grid));
     std::shared_ptr<EqnBase> eqn_base = eqn_impl;
+*/
 
     // Create the Integrator Implementation
     IntImpl::Traits traits;
