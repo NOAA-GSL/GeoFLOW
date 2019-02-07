@@ -44,7 +44,7 @@ struct EquationTypes {
 };
 
 
-void compute_analytic(GGrid &grid, Time &t, State &uanalyt);
+void compute_analytic(GGrid &grid, Time &t, const tbox::PropertyTree& ptree,  State &ua);
 
 int main(int argc, char **argv)
 {
@@ -62,8 +62,8 @@ int main(int argc, char **argv)
     GBOOL  bret;
     GINT   iopt;
     GINT   ilevel=0;// 2d ICOS refinement level
-    GINT   errcode, gerrcode;
     GINT   np=1;    // elem 'order'
+    GSISET maxSteps;
     GFTYPE radiusi=1, radiuso=2;
     GTVector<GINT> ne(3); // # elements in each direction in 3d
     GString sgrid;// name of JSON grid object to use
@@ -79,7 +79,9 @@ int main(int argc, char **argv)
     PropertyTree ptree;       // main param file structure
     PropertyTree eqptree;     // equation props
     PropertyTree gridptree;   // grid props
+    PropertyTree stepptree;   // stepper props
     PropertyTree dissptree;   // dissipation props
+    PropertyTree tintptree;   // time integration props
     ptree.load("gburgers.jsn");
 
     // Create other prop trees for various objects:
@@ -87,7 +89,9 @@ int main(int argc, char **argv)
     eqptree     = ptree.getPropertyTree("adv_equation_traits");
     sgrid       = ptree.getValue<GString>("grid_type");
     gridptree   = ptree.getPropertyTree(sgrid);
+    stepptree   = ptree.getPropertyTree("stepper_props");
     dissptree   = ptree.getPropertyTree("dissipation_traits");
+    tintptree   = ptree.getPropertyTree("time_integration");
     
 #if 1
 
@@ -135,7 +139,21 @@ int main(int argc, char **argv)
     gridptree.setArray("num_elems",stdne);
     ptree.setValue("exp_order",np);
 
-    errcode = 0;
+    // Set solver traits from prop tree:
+    GBurgers::Traits solver_traits;
+    solver_traits.doheat     = eqptree  .getValue("doheat");
+    solver_traits.bpureadv   = eqptree  .getValue("bpureadv");
+    solver_traits.bconserved = eqptree  .getValue("bconserved");
+    solver_traits.itorder    = stepptree.getValue("time_deriv_order");
+    solver_traits.inorder    = stepptree.getValue("extrap_order");
+    GTVector<GString> ssteppers;
+    for ( GSIZET j=0; j<GSTEPPER_MAX; j++ ) ssteppeers.push_back(sGStepperType[j]);
+    GSIZET itype; 
+    assert(ssteppers.contains(stepptree.getValue("stepping_method"),itype) 
+           && "Invalide stepping method in JSON file");
+    }
+    solver_traits.steptype   = static_case<GStepperType>(itype);
+    
 
     // Initialize comm:
     GComm::InitComm(&argc, &argv);
@@ -162,161 +180,77 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     GGrid *grid = GGridFactory(gridptree, gbasis, comm);
 
     GPTLstop("gen_grid");
-/*
+
     // Create observer(s), equations, integrator:
-    std::shared_ptr<EqnImpl> eqn_impl(new EqnImpl(wave_speed, grid));
+    std::shared_ptr<EqnImpl> eqn_impl(new EqnImpl(*grid, u, solver_traits, utmp));
     std::shared_ptr<EqnBase> eqn_base = eqn_impl;
-*/
+
 
     // Create the Integrator Implementation
-    IntImpl::Traits traits;
-    traits.cfl_min = 0;
-    traits.cfl_max = 9999;
-    traits.dt_min  = 0;
-    traits.dt_max  = 9999;
+    IntImpl::Traits int_traits;
+    int_traits.cfl_min = 0;
+    int_traits.cfl_max = 9999;
+    int_traits.dt_min  = 0;
+    int_traits.dt_max  = 9999;
 
-    traits.doheat  = ptree.
-
-/*
     std::shared_ptr<ObsImpl> obs_impl(new ObsImpl());
     std::shared_ptr<ObsBase> obs_base = obs_impl;
-*/
 
-    std::shared_ptr<IntImpl> int_impl(new IntImpl(eqn_base,obs_base,traits));
+    std::shared_ptr<IntImpl> int_impl(new IntImpl(eqn_base,obs_base,int_traits));
+    dt       = tintptree.getVaue("dt"); 
+    maxSteps = tintptree.getValue("cycle_end");
 
-
-
-    // Generate grid:
-    gen_icos.do_grid(grid, myrank);
-
-    GFTYPE gminsep, minsep = grid.minsep(); 
-    GFTYPE gmaxsep, maxsep = grid.maxsep(); 
-    GComm::Allreduce(&minsep, &gminsep, 1, T2GCDatatype<GFTYPE>() , GC_OP_MIN, comm);
-    GComm::Allreduce(&maxsep, &gmaxsep, 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm);
-    std::cout << "main: min grid sep=" << gminsep << std::endl;
-    std::cout << "main: max grid sep=" << gmaxsep << std::endl;
-
-    GTVector<GFTYPE> f(grid.ndof());
-    GTVector<GFTYPE> g(grid.ndof());
-    GTVector<GFTYPE> imult(grid.ndof());
-    GMass massop(grid);
-
-#if 0
-    // Generate interface node indices:
-    GTVector<GNODEID> glob_indices(grid.ndof());
-    GGFX ggfx;
-
-    GMorton_KeyGen<GNODEID,GFTYPE> gmorton;
-    GTPoint<GFTYPE> dX, porigin, P0;
-
-    
-    P0.x1= -radiusi; P0.x2=-radiusi; P0.x3=-radiusi;
-//  P1.x1=  radiusi; P1.x2= radiusi; P1.x3= radiusi;
-    dX   = 1.0e-5*gminsep;
-    gmorton.setIntegralLen(P0,dX);
-
-    GPTLstart("gen_morton_indices");
-    // NOTE: only need to find indices for boundary
-    //       nodes, and use elem bdy indirection in GGFX/DoOp, 
-    //       but for testing, we do:
-    gelems = &grid.elems();
-    GTVector<GTVector<GFTYPE>> *xnodes;
-    for ( GSIZET i=0; i<gelems->size(); i++ ) {
-      glob_indices.range((*gelems)[i]->igbeg(),(*gelems)[i]->igend()); // restrict to this range
-      xnodes = &(*gelems)[i]->xNodes();
-      gmorton.key(glob_indices, *xnodes);
-#if 0
-std::cout << "main: xNodes[" << i << "]=" << *xnodes << std::endl;
-std::cout << "main: glob_indices[" << i << "]=" << glob_indices << std::endl;
-#endif
+    GPTLstart("time_loop");
+    for( GSIZET i=0; i<maxSteps; i++ ){
+      eqn_base->step(t,dt,u);
+      t += dt;
     }
-    glob_indices.range(0,grid.ndof()-1); // must reset to full range
-    GPTLstop("gen_morton_indices");
+    GPTLststop("time_loop");
 
-    GPTLstart("ggfx_init");
-    // Compute connectivity map:
-    bret = ggfx.Init(glob_indices);
-    errcode += !bret ? 2 : 0;
-    GPTLstop("ggfx_init");
-
-    GPTLstart("ggfx_doop");
-    imult = 1.0;
-    bret = ggfx.DoOp<GFTYPE>(imult, GGFX_OP_SUM);
-    errcode += !bret ? 3 : 0;
-    GPTLstop("ggfx_doop");
-    
-    for ( GSIZET j=0; j<imult.size(); j++ ) imult[j] = 1.0/imult[j];
 #if 0
-    std::cout << "main: imult=" << imult << std::endl;
-#endif
-#endif
+    GTVector<GFTYPE> lerrnorm(3), gerrnorm(3);
+    compute_analytic(*grid, t, eqptree, ua);
+    for ( GSIZET j=0; j<u.size(); i++ ) {
+      *utmp[0] = *u[j] - *ua[j];
+       lerrnorm[0] = utmp[0]->L1norm (); // inf-norm
+       lerrnorm[1] = utmp[0]->Eucnorm(); // Euclidean-norm
+       lerrnorm[1] *= lerrnorm[1]; 
+       // Add spatial intregration for L2 computation
+    }
+    // Accumulate errors:
+    GComm::Allreduce(lerrnorm.data()  , gerrnorm.data()  , 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm);
+    GComm::Allreduce(lerrnorm.data()+1, gerrnorm.data()+1, 2, T2GCDatatype<GFTYPE>() , GC_OP_SUM, comm)
+   
+    GSIZET lnelems=grid->nelems();
+    GSIZET gnelems;
+    GComm::Allreduce(&lnelems, &gnelems, 1, T2GCDatatype<GSIZET>() , GC_OP_SUM, comm)
 
-    massop.init();
-
-    f = 1.0;
-    GPTLstart("massop_prod");
-    massop.opVec_prod(f,g);
-    GPTLstop("massop_prod");
-#if 0
-    std::cout << "main: mass_prod=" << g << std::endl;
-#endif
-    std::cout << "main: mass_prod_sum=" << g.sum() << std::endl;
-  
-#if 0
-    // Multiply f by inverse multiplicity:
-    g.pointProd(imult);
-#endif
-
-    GFTYPE integral=g.sum();
-    GFTYPE gintegral;
-    GComm::Allreduce(&integral, &gintegral, 1, T2GCDatatype<GFTYPE>() , GC_OP_SUM, comm);
-
+    // Print convergence data to file:
     std::ifstream itst;
     std::ofstream ios;
-    itst.open("mass_err.txt");
-    ios.open("mass_err.txt",std::ios_base::app);
+    itst.open(burgers_err.txt");
+    ios.open("burgers_err.txt",std::ios_base::app);
 
+    // Write header, if required:
     if ( itst.peek() == std::ofstream::traits_type::eof() ) {
-    #if defined(_G_IS2D)
-      ios << "# order_xy   level  area_computed  area_analytic   diff " << std::endl;
-    #elif defined(_G_IS3D)
-      ios << "# order_xyz  level  area_computed  area_analytic   diff " << std::endl;
-    #endif
+    ios << "# p  num_elems   L1_err   Eucl_err  L2_err" << std::endl;
     }
     itst.close();
 
-    GFTYPE aintegral;
-    #if defined(_G_IS2D)
-    aintegral = 4.0*PI*pow(radiusi,2.0);
-    std::cout << "main: integral=" << gintegral << "; area=" << aintegral << std::endl;
-    ios << np  << "  "  << "  " << ilevel 
-        << "  " << gintegral << "  " << aintegral << "  " << fabs(gintegral-aintegral) << std::endl;
-    #elif defined(_G_IS3D)
-    aintegral = 4.0*PI*pow(radiusi,3.0)/3.0;
-    std::cout << "main: integral=" << gintegral << "; volume=" << aintegral << std::endl;
-    ios << np  << " " <<  ilevel 
-        << " " << gintegral << " " << aintegral << " " << fabs(gintegral-aintegral) << std::endl;
-    #endif
+    ios << np  << "  "  << "  " << gnelems << "  "
+        << "  " << gerrnorm[0] << "  " << gerrnorm[1] << "  " << gerrnorm[2]
+        << std::endl;
     ios.close();
-    
 
-    // Accumulate errors:
-    GComm::Allreduce(&errcode, &gerrcode, 1, T2GCDatatype<GINT>() , GC_OP_MAX, comm);
-
+#endif
  
     GPTLpr_file("timing.txt");
     GPTLfinalize();
 
 
-term:
-    if ( gerrcode != 0 ) {
-      GPP(comm,serr << " Error: code=" << errcode);
-    }
-    else {
-      GPP(comm,serr << "     Success!");
-    }
-
     GComm::TermComm();
-    return(gerrcode);
+    if ( grid != NULLPTR ) delete grid;
+
+    return(0);
 
 } // end, main
