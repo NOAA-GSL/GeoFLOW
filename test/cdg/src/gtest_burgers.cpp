@@ -207,15 +207,16 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     }
     GPTLststop("time_loop");
 
-#if 0
+#if 1
     GTVector<GFTYPE> lerrnorm(3), gerrnorm(3);
     compute_analytic(*grid, t, eqptree, ua);
     for ( GSIZET j=0; j<u.size(); i++ ) {
       *utmp[0] = *u[j] - *ua[j];
-       lerrnorm[0] = utmp[0]->L1norm (); // inf-norm
-       lerrnorm[1] = utmp[0]->Eucnorm(); // Euclidean-norm
+       lerrnorm[0]  = utmp[0]->L1norm (); // inf-norm
+       lerrnorm[1]  = utmp[0]->Eucnorm(); // Euclidean-norm
        lerrnorm[1] *= lerrnorm[1]; 
-       // Add spatial intregration for L2 computation
+       lerrnorm[2]  = grid->integrate(*utmp[0],*utmp[1]) 
+                    / grid->integrate(*ua,*utmp[1]) ; // L2 error norm 
     }
     // Accumulate errors:
     GComm::Allreduce(lerrnorm.data()  , gerrnorm.data()  , 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm);
@@ -228,12 +229,12 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     // Print convergence data to file:
     std::ifstream itst;
     std::ofstream ios;
-    itst.open(burgers_err.txt");
+    itst.open("burgers_err.txt");
     ios.open("burgers_err.txt",std::ios_base::app);
 
     // Write header, if required:
     if ( itst.peek() == std::ofstream::traits_type::eof() ) {
-    ios << "# p  num_elems   L1_err   Eucl_err  L2_err" << std::endl;
+    ios << "# p  num_elems   L1_err   Eucl_err   L2_err" << std::endl;
     }
     itst.close();
 
@@ -246,7 +247,6 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
  
     GPTLpr_file("timing.txt");
     GPTLfinalize();
-
 
     GComm::TermComm();
     if ( grid != NULLPTR ) delete grid;
