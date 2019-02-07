@@ -207,7 +207,7 @@ int main(){
 
 	double inf_err = std::abs(u_init-u).max();
 	std::cout << "Max Error = " << inf_err << std::endl;
-	assert(inf_err < 1.0e-13);
+       assert(inf_err < 1.0e-13);
 
 	return 0;
 }
