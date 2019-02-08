@@ -44,7 +44,9 @@ struct EquationTypes {
 };
 
 
-void compute_analytic(GGrid &grid, Time &t, const tbox::PropertyTree& ptree,  State &ua);
+void compute_analytic(GGrid &grid, Time &t, const tbox::PropertyTree& ptree,  State &u0, State &ua);
+
+#include "init_pde.h"
 
 int main(int argc, char **argv)
 {
@@ -211,6 +213,9 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     dt       = tintptree.getVaue("dt"); 
     maxSteps = tintptree.getValue("cycle_end");
 
+    // Initialize state:
+    init_pde(*grid, t, eqptree, u);
+
     GPTLstart("time_loop");
     for( GSIZET i=0; i<maxSteps; i++ ){
       eqn_base->step(t,dt,u);
@@ -220,7 +225,7 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
 
 #if 1
     GTVector<GFTYPE> lerrnorm(3), gerrnorm(3);
-    compute_analytic(*grid, t, eqptree, ua);
+    compute_analytic(*grid, t, eqptree, u, ua);
     for ( GSIZET j=0; j<u.size(); i++ ) {
       *utmp[0] = *u[j] - *ua[j];
        lerrnorm[0]  = utmp[0]->L1norm (); // inf-norm
