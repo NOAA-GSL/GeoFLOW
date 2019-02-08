@@ -214,7 +214,8 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     maxSteps = tintptree.getValue("cycle_end");
 
     // Initialize state:
-    init_pde(*grid, t, eqptree, u);
+    GString sblock = ptree.getValue("init_block");
+    init_pde(*grid, t, eqptree, sblock, u);
 
     GPTLstart("time_loop");
     for( GSIZET i=0; i<maxSteps; i++ ){
