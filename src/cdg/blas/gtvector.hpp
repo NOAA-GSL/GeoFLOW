@@ -19,6 +19,7 @@
 #include <cstdlib>
 #include <limits>
 #include <iostream>
+#include <vector>
 #include "gindex.hpp"
 #include "cff_blas.h"
 
