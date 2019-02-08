@@ -323,6 +323,10 @@ void GGrid::init()
   // Have elements been set yet?
   assert(gelems_.size() > 0 && "Elements not set");
 
+  if      ( itype_[GE_2DEMBEDDED].size() > 0 ) gtype_ = GE_2DEMBEDDED;
+  else if ( itype_[GE_DEFORMED]  .size() > 0 ) gtype_ = GE_DEFORMED;
+  else if ( itype_[GE_REGULAR]   .size() > 0 ) gtype_ = GE_REGULAR;
+
   if ( itype_[GE_2DEMBEDDED].size() > 0
     || itype_  [GE_DEFORMED].size() > 0 ) {
     def_init();
