@@ -1,7 +1,15 @@
 { // JSON file for Burgers solver
   "exp_order": 2,
   "grid_type": "grid_box",
+  "init_block": "init_heat",
   "restart_index": 0,
+  "init_heat": {
+    "x0"   : 0.5,
+    "y0"   : 0.5,
+    "z0"   : 0.5,
+    "sigma": 0.05,
+    "u0"   : 1.0,
+  }
   "adv_equation_traits": {
     "doheat": TRUE,
     "bconserved": FALSE,
