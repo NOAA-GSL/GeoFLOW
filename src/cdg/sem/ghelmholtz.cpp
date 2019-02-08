@@ -44,7 +44,7 @@ massop_     (NULLPTR)
 {
   grid_ = &grid;
   p_ = new GTVector<GFTYPE>(1);
- *p_  1.0; // diffusion defaults to a scalar, with value 1
+ *p_ =  1.0; // diffusion defaults to a scalar, with value 1
 } // end of constructor method (1)
 
 
@@ -135,7 +135,7 @@ void GHelmholtz::def_prod(GTVector<GFTYPE> &u, GTVector<GFTYPE> &uo)
   for ( GSIZET i=0; i<GDIM; i++ ) gdu[i] = utmp_[i+GDIM];
 
   // Compute derivatives of u:
-  GMTK::compute_grefderivs(*grid_, u, etmp1_, utmp_); // utmp stores tensor-prod derivatives, Dj u
+  GMTK::compute_grefderivs(*grid_, u, etmp1_, FALSE, utmp_); // utmp stores tensor-prod derivatives, Dj u
 
   // Compute Gij (D^j u): 
   for ( GSIZET i=0; i<GDIM; i++ ) { 
@@ -148,7 +148,7 @@ void GHelmholtz::def_prod(GTVector<GFTYPE> &u, GTVector<GFTYPE> &uo)
 
   // utmp[GDIM+1], utmp[GDIM+2', uo now hold Ti = Gij D^j u, i = 0, GDIM-1
   // Now compute DT^j ( t^j ):
-  GMTK::compute_grefdiv(*grid_, gdu, etmp1_, uo, TRUE); // Compute 'divergence' with DT_j
+  GMTK::compute_grefdiv(*grid_, gdu, etmp1_, TRUE, uo); // Compute 'divergence' with DT_j
 
   // At this point, we have uo = L u
  
@@ -215,7 +215,7 @@ void GHelmholtz::embed_prod(GTVector<GFTYPE> &u, GTVector<GFTYPE> &uo)
   for ( GSIZET i=0; i<GDIM; i++ ) gdu[i] = utmp_[i+GDIM];
 
   // Compute derivatives of u:
-  GMTK::compute_grefderivs(*grid_, u, etmp1_, utmp_); // utmp stores tensor-prod derivatives, Dj u
+  GMTK::compute_grefderivs(*grid_, u, etmp1_, FALSE, utmp_); // utmp stores tensor-prod derivatives, Dj u
   
   // Compute Gij (D^j u): 
   for ( GSIZET i=0; i<GDIM; i++ ) { 
@@ -228,7 +228,7 @@ void GHelmholtz::embed_prod(GTVector<GFTYPE> &u, GTVector<GFTYPE> &uo)
 
   // {utmp[GDIM+1], utmp[GDIM+2], uo} now hold Ti = Gij D^j u, i = 0, GDIM-1
   // Now compute DT^j ( t^j ):
-  GMTK::compute_grefdiv(*grid_, gdu, etmp1_, uo, TRUE); // Compute 'divergence' with DT_j
+  GMTK::compute_grefdiv(*grid_, gdu, etmp1_, TRUE, uo); // Compute 'divergence' with DT_j
 
   // At this point, we have uo = L u
  
