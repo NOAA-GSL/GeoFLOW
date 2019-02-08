@@ -75,7 +75,7 @@ void GMass::init()
     init3d();
   #endif
 
-  if ( binverse_ ) {
+  if ( bdoinverse_ ) {
     for ( GSIZET j=0; j<mass_.size(); j++ ) {
       mass_[j] = 1.0 / mass_[j];
     }
