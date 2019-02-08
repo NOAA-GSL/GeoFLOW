@@ -41,8 +41,16 @@ class GGridIcos
 {
 
 public:
-                            GGridIcos(GFTYPE rad, GINT level, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GINT nprocs); // 2d constructor
-                            GGridIcos(GFTYPE radi, GFTYPE rado, GTVector<GINT> &ne, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GINT nprocs); // 3d constructor
+        // ICOS & sphere grid traits:
+        struct Traits {
+          GINT                ilevel;     // refine level if doing 2D ICOS
+          GFTYPE              radiusi;    // inner radius (or just radius if doing ICOS)
+          GFTYPE              radiuso;    // outer radius if doing 3D
+          GTVector<GBdyType>  bdyType(2); // global bdy types (inner outer surf in 3D only)
+        };
+
+                            GGridIcos(GGridIcos::Traits, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GINT nprocs); // 2d constructor
+                            GGridIcos(GGridIcos::Traits, GTVector<GINT> &ne, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GINT nprocs); // 3d constructor
                            ~GGridIcos();
 
         void                do_grid(GGrid &grid, GINT irank);             // compute grid for irank
@@ -107,6 +115,8 @@ GFTYPE                  radiuso_;       // outer radius (=radiusi in 2d)
 GINT                    nprocs_;        // no. MPI tasks
 GDD_base               *gdd_;           // domain decomposition/partitioning object
 GShapeFcn_linear       *lshapefcn_;     // linear shape func to compute 2d coords
+GTVector<GBdyType>      global_bdy_types_;  // global types for each surface (in 3D only)
+
 GTVector<GTriangle<GFTYPE>>    
                         tmesh_;         // array of final mesh triangles
 GTVector<GTPoint<GFTYPE>>

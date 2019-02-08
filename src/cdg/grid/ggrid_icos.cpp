@@ -27,20 +27,21 @@
 //          nprocs : no. MPI tasks
 // RETURNS: none
 //**********************************************************************************
-GGridIcos::GGridIcos(GFTYPE radius, GINT ilevel, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GINT nprocs) :
-ilevel_     (ilevel),
-ndim_            (2),
-radiusi_    (radius),
-radiuso_    (radius),
-nprocs_     (nprocs),
-gdd_       (NULLPTR),
-lshapefcn_ (NULLPTR),
-bdycallback_(NULLPTR)
+GGridIcos::GGridIcos(GGridIcos::Traits &traits, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GINT nprocs) :
+ilevel_      (traits.ilevel),
+ndim_                    (2),
+radiusi_    (traits.radiusi),
+radiuso_    (traits.radiuso),
+nprocs_             (nprocs),
+gdd_               (NULLPTR),
+lshapefcn_         (NULLPTR),
+bdycallback_       (NULLPTR)
 {
 
   gbasis_.resize(b.size());
   gbasis_ = b;
   lshapefcn_ = new GShapeFcn_linear();
+  global_bdy_types_ = traits.bdyTypes;
   init2d();
 } // end of constructor method (1)
 
