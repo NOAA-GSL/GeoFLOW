@@ -569,7 +569,7 @@ void GGrid::find_min_dist()
  
   GSIZET            Nx, Ny, Nz, nxy;
   GFTYPE            del, dr;
-  GTVector<GSIZET> *N, I(7);
+  GTVector<GINT>   *N, I(7);
   GTPoint<GFTYPE>  dx(3), p0(3), p1(3);
   GTVector<GTVector<GFTYPE>> *xn;
 
@@ -584,13 +584,13 @@ void GGrid::find_min_dist()
   if ( itype_[GE_2DEMBEDDED].size() > 0 ) {
     for ( auto e=0; e<gelems_.size(); e++ ) {
       dr = std::numeric_limits<GFTYPE>::max();
-      xn = &gelems_[e]->xNodes(0); 
+      xn = &gelems_[e]->xNodes(); 
       N  = &gelems_[e]->dim(); Nx = (*N)[0]; Ny = (*N)[1];
       for ( auto j=0; j<Ny; j++ ) { // loop over all subcells
         for ( auto i=0; i<Nx; i++ ) {
           I[0] = i+1+j*Nx; I[1] = i+j*Nx; I[2] = i+1+(j+1)*Nx;
-          for ( auto n=0; n<GDIM; n++ ) p0[n] = (*xn)[n][i+j*Nx;];
-          for ( auto l=0; l<GIM*(GDIM-1)+1; l++ ) {
+          for ( auto n=0; n<GDIM; n++ ) p0[n] = (*xn)[n][i+j*Nx];
+          for ( auto l=0; l<GDIM*(GDIM-1)+1; l++ ) {
             for ( auto n=0; n<GDIM+1; n++ ) p1[n] = (*xn)[n][I[l]];
             dx = p1 - p0;
             del   = dx.norm();
@@ -607,13 +607,13 @@ void GGrid::find_min_dist()
     if ( GDIM == 2 ) {
       for ( auto e=0; e<gelems_.size(); e++ ) {
         dr = std::numeric_limits<GFTYPE>::max();
-        xn = &gelems_[e]->xNodes(0); 
+        xn = &gelems_[e]->xNodes(); 
         N  = &gelems_[e]->dim(); Nx = (*N)[0]; Ny = (*N)[1];
         for ( auto j=0; j<Ny; j++ ) { // loop over all subcells
           for ( auto i=0; i<Nx; i++ ) {
             I[0] = i+1+j*Nx; I[1] = i+j*Nx; I[2] = i+1+(j+1)*Nx;
-            for ( auto n=0; n<GDIM; n++ ) p0[n] = (*xn)[n][i+j*Nx;];
-            for ( auto l=0; l<GIM*(GDIM-1)+1; l++ ) {
+            for ( auto n=0; n<GDIM; n++ ) p0[n] = (*xn)[n][i+j*Nx];
+            for ( auto l=0; l<GDIM*(GDIM-1)+1; l++ ) {
               for ( auto n=0; n<GDIM; n++ ) p1[n] = (*xn)[n][I[l]];
               dx = p1 - p0;
               del= dx.norm();
@@ -627,23 +627,24 @@ void GGrid::find_min_dist()
     else if ( GDIM == 3 ) {
       for ( auto e=0; e<gelems_.size(); e++ ) {
         dr = std::numeric_limits<GFTYPE>::max();
-        xn = &gelems_[e]->xNodes(0); 
+        xn = &gelems_[e]->xNodes(); 
         N  = &gelems_[e]->dim();
         Nx = (*N)[0]; Ny = (*N)[1]; Nz = (*N)[2]; nxy = Nx*Ny;
         for ( auto k=0; k<Nz-1; k++ ) { // loop over all subcells
           for ( auto j=0; j<Ny-1; j++ ) {
             for ( auto i=0; i<Nx-1; i++ ) {
-            I[0] = i+1+j*Nx+k*nxy; I[1] = i+j*Nx+k*nxy; I[2] = i+1+(j+1)*Nx+k*nxy;
-            I[3] = i+1+j*Nx+k*nxy; I[4] = i+j*Nx+k*nxy; I[5] = i+1+(j+1)*Nx+k*nxy; I[6] = i+j*Nx+k*nxy;
-            for ( auto n=0; n<GDIM; n++ ) p0[n] = (*xn)[n][i+j*Nx;];
-            for ( auto l=0; l<GIM*(GDIM-1)+1; l++ ) {
-              for ( auto n=0; n<GDIM; n++ ) p1[n] = (*xn)[n][I[l]];
-              dx = p1 - p0;
-              del= dx.norm();
-              if ( del > 0.0 ) dr = MIN(dr,del);
-            } // end, cell vertices
-          }
-        }
+              I[0] = i+1+j*Nx+k*nxy; I[1] = i+j*Nx+k*nxy; I[2] = i+1+(j+1)*Nx+k*nxy;
+              I[3] = i+1+j*Nx+k*nxy; I[4] = i+j*Nx+k*nxy; I[5] = i+1+(j+1)*Nx+k*nxy; I[6] = i+j*Nx+k*nxy;
+              for ( auto n=0; n<GDIM; n++ ) p0[n] = (*xn)[n][i+j*Nx];
+              for ( auto l=0; l<GDIM*(GDIM-1)+1; l++ ) {
+                for ( auto n=0; n<GDIM; n++ ) p1[n] = (*xn)[n][I[l]];
+                dx = p1 - p0;
+                del= dx.norm();
+                if ( del > 0.0 ) dr = MIN(dr,del);
+              } // end, cell vertices, l loop
+            } // end, i loop
+          } // end, j loop
+        } // end, k loop
         minnodedist_[e] = dr;
       } // end, element loop
     } // end of GDIM == 3 test
@@ -653,29 +654,26 @@ void GGrid::find_min_dist()
   if ( itype_[GE_REGULAR].size() > 0 ) {
     for ( auto e=0; e<gelems_.size(); e++ ) {
       dr = std::numeric_limits<GFTYPE>::max();
-      xn = &gelems_[e]->xNodes(0); 
+      xn = &gelems_[e]->xNodes(); 
       N  = &gelems_[e]->dim();
       for ( auto j=0; j<(*N)[0]-1; j++ ) { // x-direction
-        del = fabs((*xn)[j+1] - (*xn)[j]);
+        del = fabs((*xn)[0][j+1] - (*xn)[0][j]);
         if ( del > 0.0 ) dr = MIN(dr,del);
       }
-      xn= &gelems_[e]->xNodes(1); 
       for ( auto j=0; j<(*N)[1]-1; j++ ) { // y-direction
-        del = fabs((*xn)[(j+1)*(*N)[0]] - (*xn)[j*(*N)[0]]);
+        del = fabs((*xn)[1][(j+1)*(*N)[0]] - (*xn)[1][j*(*N)[0]]);
         if ( del > 0.0 ) dr = MIN(dr,del);
       }
       if ( GDIM > 2 ) { // z-direction
-        xn  = &gelems_[e]->xNodes(2); 
         nxy = (*N)[0] * (*N)[1];
         for ( auto j=0; j<(*N)[1]-1; j++ ) {
-          del = fabs((*xn)[(j+1)*nxy] - (*xn)[j*nxy]);
+          del = fabs((*xn)[2][(j+1)*nxy] - (*xn)[2][j*nxy]);
           if ( del > 0.0 ) dr = MIN(dr,del);
         }
       }
       minnodedist_[e] = dr;
     }
   } // end/ of GE_REGULAR test
-
 
 } // end of method find_min_dist
 
@@ -694,10 +692,10 @@ GFTYPE GGrid::integrate(GTVector<GFTYPE> &u, GTVector<GFTYPE> &tmp)
 {
   assert(bInitialized_ && "Object not inititaized");
 
-
   GSIZET                       ibeg, iend; // beg, end indices for global array
+  GSIZET                       n;
   GFTYPE                       xint, xgint;
-   GTVector<GINT>              N(GDIM);    // coord node sizes
+  GTVector<GINT>               N(GDIM);    // coord node sizes
   GTVector<GTVector<GFTYPE>*>  W(GDIM);    // element weights
 
   tmp = u;
@@ -706,8 +704,8 @@ GFTYPE GGrid::integrate(GTVector<GFTYPE> &u, GTVector<GFTYPE> &tmp)
     ibeg  = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
 
     for ( GSIZET k=0; k<GDIM; k++ ) {
-      W[k]= (*gelems_)[e]->gbasis(k)->getWeights();
-      N[j]    = (*gelems)[i]->size(j);
+      W[k] = gelems_[e]->gbasis(k)->getWeights();
+      N[k] = gelems_[e]->size(k);
     }
     n = 0;
     for ( GSIZET k=0; k<N[1]; k++ ) {
@@ -723,8 +721,8 @@ GFTYPE GGrid::integrate(GTVector<GFTYPE> &u, GTVector<GFTYPE> &tmp)
     ibeg  = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
 
     for ( GSIZET k=0; k<GDIM; k++ ) {
-      W[k]= (*gelems_)[e]->gbasis(k)->getWeights();
-      N[j]    = (*gelems)[i]->size(j);
+      W[k] = gelems_[e]->gbasis(k)->getWeights();
+      N[k] = gelems_[e]->size(k);
     }
     n = 0;
     for ( GSIZET k=0; k<N[2]; k++ ) {
@@ -741,8 +739,8 @@ GFTYPE GGrid::integrate(GTVector<GFTYPE> &u, GTVector<GFTYPE> &tmp)
   tmp.range_reset(); 
 
   // Multiply by Jacobian:
-  tmp_.pointProd(Jac_);
-  xint = tmp_.sum();  
+  tmp.pointProd(Jac_);
+  xint = tmp.sum();  
   GComm::Allreduce(&xint, &xgint, 1, T2GCDatatype<GFTYPE>() , GC_OP_SUM, comm_);
 
   return xgint;
