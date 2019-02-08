@@ -22,11 +22,19 @@
 
 typedef GTMatrix<GFTYPE> GFTMatrix;
 
+Traits
 class GGridBox 
 {
 
 public:
-                            GGridBox(GTPoint<GFTYPE> &P0, GTPoint<GFTYPE> &P1, GTVector<GINT> &ne, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GINT nprocs); // 2d, 3d constructor
+        // Box grid traits:
+        struct Traits {
+          GTPoint<GFTYPE>     P0(3);        // global lower point
+          GTPoint<GFTYPE>     P1(3);        // global upper point
+          GTVector<GBdyType>  bdyType(3);   // global bdy types
+        };
+
+                            GGridBox(GGridBox::Traits &traits, GTVector<GINT> &ne, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GINT nprocs); // 2d, 3d constructor
                            ~GGridBox();
 
         void                do_grid(GGrid &grid, GINT irank);             // compute grid for irank
@@ -52,6 +60,8 @@ friend  std::ostream&       operator<<(std::ostream&, GGridBox &);       // Outp
        
 
 private:
+         void               set_global_bdy_2d(GElem_base &);              // set 2d bdy info
+         void               set_global_bdy_3d(GElem_base &);              // set 3d bdy info
 
 GINT                    ndim_;          // grid dimensionality (2 or 3)
 GINT                    nprocs_;        // no. MPI tasks
@@ -66,6 +76,7 @@ GTVector<GNBasis<GCTYPE,GFTYPE>*>
 GTVector<GQuad<GFTYPE>> qmesh_;         // list of vertices for each 2d (quad) element
 GTVector<GHex<GFTYPE>>  hmesh_;         // list of vertices for each 3d (hex) element
 GTVector<GINT>          ne_;            // # elems in each coord direction in 3d
+GTVector<GBdyType>      global_bdy_types_;  // global types for each direction
 GTVector<GFTYPE>        Lbox_;          // length of box edges (x, y, [and z])
 std::function<void(GGrid&)>
                        *bdycallback_;   // callback object+method to set bdy conditions

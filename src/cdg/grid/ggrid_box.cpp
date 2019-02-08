@@ -18,14 +18,14 @@
 // DESC   : Instantiate with box lengths (x, y, z), directional basis, and
 //          domain decompoisition object. This generates a 2d or 3d grid
 //          depending on whether b.size = 2 or 3..
-// ARGS   : P0, P1 : diag opposite corners of box
+// ARGS   : traits : box grid traits
 //          ne     : no. elements in each Cartesian direction
 //          b      : vector of basis pointers. Number of elements in b is
 //                   what _must_ be in L, and ne.
 //          nprocs : no. MPI tasks
 // RETURNS: none
 //**********************************************************************************
-GGridBox::GGridBox(GTPoint<GFTYPE> &P0, GTPoint<GFTYPE> &P1, GTVector<GINT> &ne, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GINT nprocs) 
+GGridBox::GGridBox(GGridBox::Traits &traits, GTVector<GINT> &ne, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GINT nprocs) 
 :
 ndim_     (b.size()),
 nprocs_     (nprocs),
@@ -42,8 +42,10 @@ bdycallback_(NULLPTR)
   gbasis_ = b;
   Lbox_.resize(b.size());
   ne_.resize(b.size());
-  P0_ = P0;
-  P1_ = P1;
+  P0_ = traits.P0;
+  P1_ = traits.P1;
+  global_bdy_types_ = traits.bdyType;
+
   for ( GSIZET j=0; j<b.size(); j++ ) {
     Lbox_[j] = fabs(P1[j] - P0[j]);
     ne_  [j] = ne[j];
@@ -255,7 +257,7 @@ void GGridBox::do_grid(GGrid &grid, GINT irank)
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : do_grid2d
-// DESC   : Build 2d elemental grid. It's assumed that init3d has been called
+// DESC   : Build 2d element list. It's assumed that init3d has been called
 //          prior to entry, and that the qmesh_ has beed set. This arrays
 //          of hexagonal 3d elements provides for each hex its vertices in Cartesian
 //          coordinates. Also, the centroids of these hexes (in Cartesian coords)
@@ -277,6 +279,7 @@ void GGridBox::do_grid2d(GGrid &grid, GINT irank)
   GTVector<GINT>               iind;
   GTVector<GINT>               I(3);
   GTVector<GINT>              *bdy_ind;
+  GTVector<GBdyType>          *bdy_typ;
   GTVector<GINT>              *face_ind;
   GTVector<GFTYPE>             Ni;
   GElemList                   *gelems = &grid.elems();
@@ -304,7 +307,8 @@ void GGridBox::do_grid2d(GGrid &grid, GINT irank)
     xiNodes = &pelem->xiNodes(); // node ref interval data
     Ni.resize(pelem->nnodes()); // tensor product shape function
     bdy_ind = &pelem->bdy_indices(); // get bdy indices data member
-    bdy_ind->clear();
+    bdy_typ = &pelem->bdy_types  (); // get bdy types data member
+    bdy_ind->clear(); bdy_typ->clear();
     for ( GSIZET l=0; l<ndim_; l++ ) { // loop over element Cart coords
       (*xNodes)[l] = 0.0;
       for ( GSIZET m=0; m<pow(2,ndim_); m++ ) { // loop over verts given in Cart coords
@@ -326,8 +330,11 @@ void GGridBox::do_grid2d(GGrid &grid, GINT irank)
       for ( GSIZET k=0; k<face_ind->size(); k++ ) bdy_ind->push_back((*face_ind)[k]); 
     }
 
+
     gelems->push_back(pelem);
 
+    // Find global global interior and face start & stop indices represented 
+    // locally within element:
     nfnodes = 0;
     for ( GSIZET j=0; j<(*gelems)[i]->nfaces(); j++ )  // get # face nodes
       nfnodes += (*gelems)[i]->face_indices(j).size();
@@ -337,9 +344,14 @@ void GGridBox::do_grid2d(GGrid &grid, GINT irank)
     pelem->ifend() = fcurr+nfnodes-1;// end global face index
     icurr += pelem->nnodes();
     fcurr += nfnodes;
-  } // end of hex mesh loop
+  } // end of quad mesh loop
 
-  // If we have a callback function, set the boundary conditions here:
+  // Set global bdy types at each bdy_ind (this is a coarse 
+  // application; finer control may be exercised in callback):
+  set_global_bdy_2d(*pelem);
+
+  // Can set individual nodes and internal bdy conditions
+  // with callback here:
   if ( bdycallback_ != NULLPTR ) {
     (*bdycallback_)(grid);
   }
@@ -350,7 +362,20 @@ void GGridBox::do_grid2d(GGrid &grid, GINT irank)
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : do_grid3d
-// DESC   : Build d elemental grid. It's assumed that init3d has been called
+// DESC   : Set global bdy info from data set by traits
+// ARGS   : none
+// RETURNS: none.
+//**********************************************************************************
+void GGridBox::set_global_bdy_2d()
+{
+
+} // end, method set_global_bdy_2d
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : do_grid3d
+// DESC   : Build 3d element list. It's assumed that init3d has been called
 //          prior to entry, and that the bmesh_ has beed set. This arrays
 //          of hexagonal 3d elements provides for each hex its vertices in Cartesian
 //          coordinates. Also, the centroids of these hexes (in Cartesian coords)
@@ -440,7 +465,8 @@ void GGridBox::do_grid3d(GGrid &grid, GINT irank)
     fcurr += nfnodes;
   } // end of hex mesh loop
 
-  // If we have a callback function, set the boundary conditions here:
+  // Can set individual nodes and internal bdy conditions
+  // with callback here:
   if ( bdycallback_ != NULLPTR ) {
     (*bdycallback_)(grid);
   }
@@ -558,3 +584,151 @@ void GGridBox::reorderverts2d(GTVector<GTPoint<GFTYPE>> &uverts, GTVector<GSIZET
 } // end of method reorderverts2d
 
 
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : set_global_bdy_2d
+// DESC   : Set global boundary conditions in 2d
+//            NOTE: element node coordinate may change in this call!
+// ARGS   : pelem : Element under consideration
+// RETURNS: none.
+//**********************************************************************************
+void GGridBox::set_global_bdy_2d(GElem_base &pelem)
+{
+
+  GTVector<GINT>              *bdy_ind=&pelem.bdy_indices();
+  GTVector<GBdyType>          *bdy_typ=&pelem.bdy_types  ();
+  GTVector<GTVector<GFTYPE>>  *xNodes =&pelem.xNodes();
+
+  GSIZET ib;
+  if ( global_bdy_types_[0] == GBDY_PERIODIC ) { // check for periodicity in x
+    for ( GSIZET m=0; m<2; m++ ) { // for each x edge
+      face_ind = &pelem.dge_indices(2*m+1);
+      for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
+        ib = (*bdy_ind)[k];
+        if ( (*xNodes)[0][ib] == P0_.x1 || (*xNodes)[0][ib] == P1_.x1 ) 
+          bdy_typ->push_back( global_bdy_types_[0] );
+          // Set right x-coord equal to that on left-most bdy:
+          if ( (*xNodes)[0][ib] == P1_.x1 ) (*xNodes)[0][ib] = P0_.x1;
+      }
+    }
+  }
+  else {                                         // not x-periodic
+    for ( GSIZET m=0; m<2; m++ ) { // for each x edge
+      face_ind = &pelem.edge_indices(2*m+1);
+      for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
+        ib = (*bdy_ind)[k];
+        if ( (*xNodes)[0][ib] == P0_.x1 || (*xNodes)[0][ib] == P1_.x1 ) 
+          bdy_typ->push_back( global_bdy_types_[1] );
+      }
+    }
+  }
+
+  if ( global_bdy_types_[1] == GBDY_PERIODIC ) { // check for periodicity in y
+    for ( GSIZET m=0; m<2; m++ ) { // for each y edge
+      face_ind = &pelem.edge_indices(2*m);
+      for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
+        ib = (*bdy_ind)[k];
+        if ( (*xNodes)[1][ib] == P0_.x2 || (*xNodes)[1][ib] == P1_.x2 ) 
+          bdy_typ->push_back( global_bdy_types_[1] );
+          // Set top y-coord equal to that on bottom-most bdy:
+          if ( (*xNodes)[1][ib] == P1_.x2 ) (*xNodes)[1][ib] = P0_.x2;
+      }
+    }
+  }
+  else {                                         // not y-periodic
+    for ( GSIZET m=0; m<2; m++ ) { // for each y edge
+      face_ind = &pelem.edge_indices(2*m);
+      for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
+        ib = (*bdy_ind)[k];
+        if ( (*xNodes)[0][ib] == P0_.x2 || (*xNodes)[0][ib] == P1_.x2 ) 
+          bdy_typ->push_back( global_bdy_types_[1] );
+      }
+    }
+  }
+} // end, method set_global_bdy_2d
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : set_global_bdy_3d
+// DESC   : Set global boundary conditions in 3d
+//            NOTE: element node coordinate may change in this call!
+// ARGS   : pelem : Element under consideration
+// RETURNS: none.
+//**********************************************************************************
+void GGridBox::set_global_bdy_3d(GElem_base &pelem)
+{
+  GTVector<GINT>              *bdy_ind=&pelem.bdy_indices();
+  GTVector<GBdyType>          *bdy_typ=&pelem.bdy_types  ();
+  GTVector<GTVector<GFTYPE>>  *xNodes =&pelem.xNodes();
+
+  GSIZET ib;
+  if ( global_bdy_types_[0] == GBDY_PERIODIC ) { // check for periodicity in x
+    for ( GSIZET m=0; m<2; m++ ) { // for each x face
+      face_ind = &pelem.face_indices(2*m+1);
+      for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
+        ib = (*bdy_ind)[k];
+        if ( (*xNodes)[0][ib] == P0_.x1 || (*xNodes)[0][ib] == P1_.x1 ) 
+          bdy_typ->push_back( global_bdy_types_[0] );
+          // Set right x-coord equal to that on left-most bdy:
+          if ( (*xNodes)[0][ib] == P1_.x1 ) (*xNodes)[0][ib] = P0_.x1;
+      }
+    }
+  }
+  else {                                         // not x-periodic
+    for ( GSIZET m=0; m<2; m++ ) { // for each x face
+      face_ind = &pelem.face_indices(2*m+1);
+      for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
+        ib = (*bdy_ind)[k];
+        if ( (*xNodes)[0][ib] == P0_.x1 || (*xNodes)[0][ib] == P1_.x1 ) 
+          bdy_typ->push_back( global_bdy_types_[0] );
+      }
+    }
+  }
+
+  if ( global_bdy_types_[1] == GBDY_PERIODIC ) { // check for periodicity in y
+    for ( GSIZET m=0; m<2; m++ ) { // for each y face
+      face_ind = &pelem.face_indices(2*m);
+      for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
+        ib = (*bdy_ind)[k];
+        if ( (*xNodes)[1][ib] == P0_.x2 || (*xNodes)[1][ib] == P1_.x2 ) 
+          bdy_typ->push_back( global_bdy_types_[1] );
+          // Set top y-coord equal to that on bottom-most bdy:
+          if ( (*xNodes)[1][ib] == P1_.x2 ) (*xNodes)[1][ib] = P0_.x2;
+      }
+    }
+  }
+  else {                                         // not y-periodic
+    for ( GSIZET m=0; m<2; m++ ) { // for each y face
+      face_ind = &pelem.face_indices(2*m);
+      for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
+        ib = (*bdy_ind)[k];
+        if ( (*xNodes)[0][ib] == P0_.x2 || (*xNodes)[0][ib] == P1_.x2 ) 
+          bdy_typ->push_back( global_bdy_types_[1] );
+      }
+    }
+  }
+
+  if ( global_bdy_types_[1] == GBDY_PERIODIC ) { // check for periodicity in z
+    for ( GSIZET m=0; m<2; m++ ) { // for each z face
+      face_ind = &pelem.face_indices(m+4);
+      for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
+        ib = (*bdy_ind)[k];
+        if ( (*xNodes)[1][ib] == P0_.x3 || (*xNodes)[1][ib] == P1_.x3 ) 
+          bdy_typ->push_back( global_bdy_types_[2] );
+          // Set top z-coord equal to that on bottom-most bdy:
+          if ( (*xNodes)[1][ib] == P1_.x3 ) (*xNodes)[1][ib] = P0_.x3;
+      }
+    }
+  }
+  else {                                         // not z-periodic
+    for ( GSIZET m=0; m<2; m++ ) { // for each z face
+      face_ind = &pelem.face_indices(m+4);
+      for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
+        ib = (*bdy_ind)[k];
+        if ( (*xNodes)[0][ib] == P0_.x3 || (*xNodes)[0][ib] == P1_.x3 ) 
+          bdy_typ->push_back( global_bdy_types_[2] );
+      }
+    }
+  }
+} // end, method set_global_bdy_3d
