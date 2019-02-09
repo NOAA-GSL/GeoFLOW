@@ -132,7 +132,7 @@ GTVector<GHex<GFTYPE>>  hmesh_;         // list of vertices for each 3d (hex) el
 GTMatrix<GFTYPE>        fv0_;           // vertex list for base icosahedron
 GIMatrix                ifv0_;          // indices into fv0_ for each face of base icosahedron 
 GTVector<GINT>          ne_;            // # elems in each coord direction in 3d
-std::function<void(GGrid&)>
+std::function<void(GElemList &)>
                        *bdycallback_ ; // callback object+method to set bdy conditions
 
 };

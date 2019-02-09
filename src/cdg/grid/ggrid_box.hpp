@@ -76,7 +76,7 @@ GTVector<GHex<GFTYPE>>  hmesh_;         // list of vertices for each 3d (hex) el
 GTVector<GINT>          ne_;            // # elems in each coord direction in 3d
 GTVector<GBdyType>      global_bdy_types_;  // global types for each direction
 GTVector<GFTYPE>        Lbox_;          // length of box edges (x, y, [and z])
-std::function<void(GGrid&)>
+std::function<void(GElemList &)>
                        *bdycallback_;   // callback object+method to set bdy conditions
 
 };
