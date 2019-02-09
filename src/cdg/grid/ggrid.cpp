@@ -314,7 +314,6 @@ GFTYPE GGrid::maxlength()
 void GGrid::init()
 {
 
-
   // Restrict grid to a single element type:
   assert(ntype_.multiplicity(0) == GE_MAX-1
         && "Only a single element type allowed on grid");
@@ -337,6 +336,7 @@ void GGrid::init()
   }
 
   find_min_dist();
+  init_bc_info();
 
   bInitialized_ = TRUE;
 
@@ -428,7 +428,8 @@ void GGrid::reg_init()
    assert(gelems_.size() > 0 && "Elements not set");
 
    GSIZET nxy = GDIM;
-   GTMatrix<GTVector<GFTYPE>> rijtmp;
+   GTMatrix<GTVector<GFTYPE>>  rijtmp;
+   GTVector<GTVector<GFTYPE>> *xe;
 
    // Resize geometric quantities to global size:
    dXidX_.resize(nxy,1);
@@ -438,6 +439,9 @@ void GGrid::reg_init()
    }
    Jac_.resize(ndof());
    faceJac_.resize(nsurfdof());
+
+   xNodes_.resize(nxy);
+   for ( GSIZET j=0; j<nxy; j++ ) xNodes_[j].resize(ndof());
 
    // Resize surface-point-wise normals:
    faceNormal_.resize(nxy); // no. coords for each normal at each face point
@@ -450,7 +454,8 @@ void GGrid::reg_init()
    for ( GSIZET e=0; e<gelems_.size(); e++ ) {
      ibeg  = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
      ifbeg = gelems_[e]->ifbeg(); ifend = gelems_[e]->ifend();
-
+     xe    = &gelems_[e]_>xNodes();
+   
      // Restrict global data to local scope:
      for ( GSIZET j=0; j<nxy; j++ ) {
        faceNormal_[j].range(ifbeg, ifend); // set range for each coord, j
@@ -461,13 +466,22 @@ void GGrid::reg_init()
      Jac_.range(ibeg, iend);
      faceJac_.range(ifbeg, ifend);
 
+     // Set nodal Cart coords
+     for ( GSIZET j=0; j<nxy; j++ ) {
+       xNodes_[j].range(ibeg, iend);
+       xNodes_[j] = (*xe)[j];
+        // 0-out local xNodes; only global allowed now:
+       (*xe)[j].clear(); 
+     }
+
      // Set the geom/metric quantities:
      if ( GDIM == 2 ) {
        gelems_[e]->dogeom2d(rijtmp, dXidX_, Jac_, faceJac_, faceNormal_);
      } else if ( GDIM == 3 ) {
        gelems_[e]->dogeom3d(rijtmp, dXidX_, Jac_, faceJac_, faceNormal_);
      }
-     
+    
+      
    } // end, element loop
 
    // Reset global scope:
@@ -480,6 +494,7 @@ void GGrid::reg_init()
      }
    }
    Jac_.range_reset();
+   for ( GSIZET j=0; j<nxy; j++ ) xNodes_[j].range_reset();
    
 } // end of method reg_init
 
@@ -750,6 +765,46 @@ GFTYPE GGrid::integrate(GTVector<GFTYPE> &u, GTVector<GFTYPE> &tmp)
   return xgint;
 
 } // end of method integrate
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : init_bc_info
+// DESC   : Set global bdy condition data from the elements.
+// ARGS   : none
+// RETURNS: none.
+//**********************************************************************************
+GFTYPE GGrid::init_bc_info()
+{
+  GSIZET                       ibeg, iend; // beg, end indices for global array
+  GTVector<GINT>              *iebdy;  // domain bdy indices
+  GTVector<GBdyType>          *iebdyt; // domain bdy types
+
+  GSISET n = 0;
+  for ( GSIZET e=0; e<gelems_.size(); e++ ) {
+    igbdy = gelems_[e]->&bdy_indices(); 
+    n += igbdy->size();
+  } // end, element loop
+  
+  // Don't use push_back when using range method,
+  // tempting as it is:
+  igbdy_.resize(n); 
+  igbdytypes_.resize(n); 
+
+  for ( GSIZET e=0; e<gelems_.size(); e++ ) {
+    ibeg   = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
+    iebdy  = gelems_[e]->&bdy_indices(); 
+    iebdyt = gelems_[e]->&bdy_types(); 
+    igbdy_     . range(ibeg, iend);
+    igbdytypes_. range(ibeg, iend);
+    igbdy_      = *iebdy;
+    igbdytypes_ = *iebdyt;
+  } // end, element loop
+  igbdy_     . range_reset(); // reset global range of vector
+  igbdytypes_. range_reset();
+
+} // end of method init_bc_info
+
 
 
 
