@@ -524,58 +524,6 @@ void GGridBox::print(const GString &filename)
 } // end of method print
 
 
-
-//**********************************************************************************
-//**********************************************************************************
-// METHOD : reorderverts2d
-// DESC   : Reorder specified vertices to be consistent with
-//          shape functions
-// ARGS   : uverts : list of unordered vertices
-//          overts : array of ordered vertices, returned
-// RETURNS: none.
-//**********************************************************************************
-void GGridBox::reorderverts2d(GTVector<GTPoint<GFTYPE>> &uverts, GTVector<GSIZET> &isort, 
-                               GTVector<GTPoint<GFTYPE>> &overts)
-{
-  GString serr = "GGridBox::reorderverts2d: ";
-
-  assert(uverts.size() == 4 && "Incorrect number of vertices");
-
-
-  GTVector<GFTYPE> x(4);
-  GTVector<GSIZET> Ixy(4);
-
-
-  isort.resize(4);
-  for ( GSIZET i=0; i<uverts.size(); i++ ) { 
-    x[i] = uverts[i].x1;
-  }
-
-  x.sortincreasing(Ixy);
-
-  // Do 'left' -hand vertices:
-  if ( uverts[Ixy[0]].x2 < uverts[Ixy[1]].x2 ) {
-    isort[0] = Ixy[0];
-    isort[3] = Ixy[1];
-  } else {
-    isort[0] = Ixy[1];
-    isort[3] = Ixy[0];
-  }
-
-  // Do 'right' -hand vertices:
-  if ( uverts[Ixy[2]].x2 < uverts[Ixy[3]].x2 ) {
-    isort[1] = Ixy[2];
-    isort[2] = Ixy[3];
-  } else {
-    isort[1] = Ixy[3];
-    isort[2] = Ixy[2];
-  }
-
-  for ( GSIZET j=0; j<4; j++ ) overts[j] = uverts[isort[j]];
-  
-} // end of method reorderverts2d
-
-
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : set_global_bdy_2d
@@ -709,7 +657,7 @@ void GGridBox::set_global_bdy_3d(GElem_base &pelem)
         if ( (*xNodes)[1][ib] == P0_.x3 || (*xNodes)[1][ib] == P1_.x3 ) 
           bdy_typ->push_back( global_bdy_types_[2] );
           // Set top z-coord equal to that on bottom-most bdy:
-          if ( (*xNodes)[1][ib] == P1_.x3 ) (*xNodes)[1][ib] = P0_.x3;
+          if ( (*xNodes)[2][ib] == P1_.x3 ) (*xNodes)[2][ib] = P0_.x3;
       }
     }
   }

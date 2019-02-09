@@ -51,8 +51,6 @@ friend  std::ostream&       operator<<(std::ostream&, GGridBox &);       // Outp
 //protected:
          void               init2d();                                       // initialize base icosahedron for 2d grid
          void               init3d();                                       // initialize for 3d grid
-         void               reorderverts2d(GTVector<GTPoint<GFTYPE>> &, GTVector<GSIZET>&,
-                                           GTVector<GTPoint<GFTYPE>> &);    // make verts consis with shapefcns
 
 
          void               do_grid2d(GGrid &grid, GINT rank);            // do 2d grid
