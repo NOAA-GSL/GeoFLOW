@@ -770,7 +770,7 @@ GFTYPE GGrid::integrate(GTVector<GFTYPE> &u, GTVector<GFTYPE> &tmp)
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : init_bc_info
-// DESC   : Set global bdy condition data from the elements.
+// DESC   : Set global bdy condition data from the element bdy data.
 // ARGS   : none
 // RETURNS: none.
 //**********************************************************************************
@@ -782,26 +782,32 @@ GFTYPE GGrid::init_bc_info()
 
   GSISET n = 0;
   for ( GSIZET e=0; e<gelems_.size(); e++ ) {
-    igbdy = gelems_[e]->&bdy_indices(); 
-    n += igbdy->size();
+    igbdy  = gelems_[e]->&bdy_indices(); 
+    iebdyt = gelems_[e]->&bdy_types(); 
+    for ( GSIZET j=0; j<igbdy->size(); j++ ) {
+      // Don't count PERIODIC as a *real* bdy:
+      n += (*igbdyt)[j] == GBDY_PERIODIC ? 0 : 1;
+    }
   } // end, element loop
   
-  // Don't use push_back when using range method,
-  // tempting as it is:
+  // Fill global bdy data vectors. For this
+  // task, assume GBDY_PERIODIC bdys don't
+  // count as real bdys:
   igbdy_.resize(n); 
   igbdytypes_.resize(n); 
 
+  n = 0;
   for ( GSIZET e=0; e<gelems_.size(); e++ ) {
-    ibeg   = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
     iebdy  = gelems_[e]->&bdy_indices(); 
     iebdyt = gelems_[e]->&bdy_types(); 
-    igbdy_     . range(ibeg, iend);
-    igbdytypes_. range(ibeg, iend);
-    igbdy_      = *iebdy;
-    igbdytypes_ = *iebdyt;
+    for ( GSIZET j=0; j<igbdy->size(); j++ ) {
+      if ( (*igbdyt)[j] != GBDY_PERIODIC ) {
+        (*igbdy_)     [n] = (*igbdy) [j];
+        (*igbdytypes_)[n] = (*igbdyt)[j];
+        n++;
+      }
+    }
   } // end, element loop
-  igbdy_     . range_reset(); // reset global range of vector
-  igbdytypes_. range_reset();
 
 } // end of method init_bc_info
 
