@@ -143,6 +143,8 @@ inline  GTVector<GINT>     &edge_indices(GINT i){ return edge_indices_[i];}
 inline  GVVInt             &face_indices(){ return face_indices_;}
 inline  GTVector<GINT>     &face_indices(GINT i){ return face_indices_[i];}
 inline  GTVector<GINT>     &bdy_indices(){ return bdy_indices_;}
+inline  GTVector<GBdyType> &ibdy_types(){ return ibdy_types_;}
+inline  GTVector<GINT>     &ibdy_indices(){ return ibdy_indices_;}
 inline  GTVector<GBdyType> &bdy_types(){ return bdy_types_;}
 inline  GTVector<GFTYPE>   &mask(){ return mask_;}
 
@@ -229,8 +231,10 @@ GTVector<GVVFType>      faceNormal_;    // normal to face at each node point (2d
 GVVInt                  vert_indices_;  // all indices comprising vertices
 GVVInt                  edge_indices_;  // all indices comprising edges          
 GVVInt                  face_indices_;  // all indices comprising faces
-GIBuffer                bdy_indices_;   // bdy indices
-GTVector<GBdyType>      bdy_types_;     // bdy condition/type
+GIBuffer                bdy_indices_;   // global bdy indices
+GIBuffer                ibdy_indices_;  // internal bdy indices
+GTVector<GBdyType>      bdy_types_;     // global bdy condition/type
+GTVector<GBdyType>      ibdy_types_;    // internal bdy condition/type
 GTVector<GFTYPE>        mask_;          // mask storage (values 0 or 1)
 };
 
