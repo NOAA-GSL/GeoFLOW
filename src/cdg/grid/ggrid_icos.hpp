@@ -56,7 +56,7 @@ public:
         void                do_grid(GGrid &grid, GINT irank);             // compute grid for irank
         void                set_partitioner(GDD_base *d);                 // set and use GDD object
         void                set_bdy_callback(
-                            std::function<void(GGrid &)> &callback);     // set bdy-set callback
+                            std::function<void(GElemList &)> &callback);     // set bdy-set callback
 
         void                set_basis(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b);             // set element basis
         GTVector<GTriangle<GFTYPE>> 
@@ -107,6 +107,9 @@ friend  std::ostream&       operator<<(std::ostream&, GGridIcos &);       // Out
        
 
 private:
+         void               set_global_bdy_2d(GElem_base &);              // set 2d bdy info
+         void               set_global_bdy_3d(GElem_base &);              // set 3d bdy info
+
 
 GINT                    ilevel_;        // refinement level (>= 0)
 GINT                    ndim_;          // grid dimensionality (2 or 3)

@@ -40,7 +40,7 @@ public:
         void                do_grid(GGrid &grid, GINT irank);             // compute grid for irank
         void                set_partitioner(GDD_base *d);                 // set and use GDD object
         void                set_bdy_callback(
-                            std::function<void(GGrid &)> &callback);     // set bdy-set callback
+                            std::function<void(GElem:List &)> &callback);     // set bdy-set callback
         void                set_basis(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b);             // set element basis
 
         void                print(const GString &filename);              // print grid to file

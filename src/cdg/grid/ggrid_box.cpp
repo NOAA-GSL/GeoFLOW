@@ -333,6 +333,10 @@ void GGridBox::do_grid2d(GGrid &grid, GINT irank)
 
     gelems->push_back(pelem);
 
+    // Set global bdy types at each bdy_ind (this is a coarse 
+    // application; finer control may be exercised in callback):
+    set_global_bdy_2d(*pelem);
+
     // Find global global interior and face start & stop indices represented 
     // locally within element:
     nfnodes = 0;
@@ -346,30 +350,14 @@ void GGridBox::do_grid2d(GGrid &grid, GINT irank)
     fcurr += nfnodes;
   } // end of quad mesh loop
 
-  // Set global bdy types at each bdy_ind (this is a coarse 
-  // application; finer control may be exercised in callback):
-  set_global_bdy_2d(*pelem);
-
   // Can set individual nodes and internal bdy conditions
   // with callback here:
   if ( bdycallback_ != NULLPTR ) {
-    (*bdycallback_)(grid);
+    (*bdycallback_)(*gelems);
   }
 
 } // end of method do_grid2d
 
-
-//**********************************************************************************
-//**********************************************************************************
-// METHOD : do_grid3d
-// DESC   : Set global bdy info from data set by traits
-// ARGS   : none
-// RETURNS: none.
-//**********************************************************************************
-void GGridBox::set_global_bdy_2d()
-{
-
-} // end, method set_global_bdy_2d
 
 
 //**********************************************************************************
@@ -454,6 +442,10 @@ void GGridBox::do_grid3d(GGrid &grid, GINT irank)
     }
 
     gelems->push_back(pelem);
+    // Set global bdy types at each bdy_ind (this is a coarse 
+    // application; finer control may be exercised in callback):
+    set_global_bdy_3d(*pelem);
+
     nfnodes = 0;
     for ( GSIZET j=0; j<(*gelems)[i]->nfaces(); j++ )  // get # face nodes
       nfnodes += (*gelems)[i]->face_indices(j).size();
@@ -468,7 +460,7 @@ void GGridBox::do_grid3d(GGrid &grid, GINT irank)
   // Can set individual nodes and internal bdy conditions
   // with callback here:
   if ( bdycallback_ != NULLPTR ) {
-    (*bdycallback_)(grid);
+    (*bdycallback_)(*gelems);
   }
 
 } // end of method do_grid3d
@@ -482,7 +474,7 @@ void GGridBox::do_grid3d(GGrid &grid, GINT irank)
 //          callback: method name
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::set_bdy_callback(std::function<void(GGrid &)> &callback)
+void GGridBox::set_bdy_callback(std::function<void(GElemList &)> &callback)
 {
   bdycallback_  = &callback;
 } // end of method set_bdy_callback

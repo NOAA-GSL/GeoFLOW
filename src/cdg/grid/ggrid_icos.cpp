@@ -21,8 +21,11 @@
 // METHOD : Constructor method (1)
 // DESC   : Instantiate with radius, refinement level, directional basis, and
 //          domain decompoisition object. This generates a 2d grid.
-// ARGS   : radius: radius
-//          ilevel: refinement level. Level 0 is just the icos generator 
+// ARGS   : traits:
+//            ilevel  : GINT refinement level. Level 0 is just the icos generator 
+//            radiusi : GFTYPE radius
+//            radiuso : GFTYPE outer radius (not used here)
+//            bdyTypes: GTVector<GFTYPE>(2) (not used here)
 //          b     : vector of basis pointers, of size at least ndim=2
 //          nprocs : no. MPI tasks
 // RETURNS: none
@@ -31,7 +34,7 @@ GGridIcos::GGridIcos(GGridIcos::Traits &traits, GTVector<GNBasis<GCTYPE,GFTYPE>*
 ilevel_      (traits.ilevel),
 ndim_                    (2),
 radiusi_    (traits.radiusi),
-radiuso_    (traits.radiuso),
+radiuso_                 (0), // don't need this one
 nprocs_             (nprocs),
 gdd_               (NULLPTR),
 lshapefcn_         (NULLPTR),
@@ -41,7 +44,7 @@ bdycallback_       (NULLPTR)
   gbasis_.resize(b.size());
   gbasis_ = b;
   lshapefcn_ = new GShapeFcn_linear();
-  global_bdy_types_ = traits.bdyTypes;
+
   init2d();
 } // end of constructor method (1)
 
@@ -52,18 +55,20 @@ bdycallback_       (NULLPTR)
 // DESC   : Instantiate with iner/outer radii, refinement level, 
 //          directional basis, and domain decompoisition object. This generates 
 //          a 3d grid.
-// ARGS   : radiusi: inner radius
-//          radiuso: outer radius
+// ARGS   : traits:
+//            radiusi : GFTYPE inner radius
+//            radiuso : GFTYPE outer radius
+//            bdyTypes: GTVector<GFTYPE>(2)
 //          ne     : no. elements in each coord direction (r,theta,phi)=(r,lat,long)
 //          b      : vector of basis pointers, of size at least ndim=2. 
 //          nprocs : no. MPI tasks
 // RETURNS: none
 //**********************************************************************************
-GGridIcos::GGridIcos(GFTYPE radiusi, GFTYPE radiuso, GTVector<GINT> &ne, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GINT nprocs) :
+GGridIcos::GGridIcos(GGridIcos::Traits &traits, GTVector<GINT> &ne, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GINT nprocs) :
 ilevel_           (0),
 ndim_             (3),
-radiusi_    (radiusi),
-radiuso_    (radiuso),
+radiusi_    (traits.radiusi),
+radiuso_    (traits.radiuso),
 nprocs_      (nprocs),
 gdd_        (NULLPTR),
 lshapefcn_  (NULLPTR),
@@ -74,6 +79,10 @@ bdycallback_(NULLPTR)
   gbasis_ = b;
   lshapefcn_ = new GShapeFcn_linear();
   ne_     = ne;
+
+  global_bdy_types_ = traits.bdyTypes;
+  assert(!global_bdy_types_.contains(GBDY_PERIODIC) && "Invalid boundary type");
+
   init3d();
 } // end of constructor method (2)
 
@@ -549,6 +558,7 @@ void GGridIcos::do_grid2d(GGrid &grid, GINT irank)
       project2sphere(*xNodes, radiusi_);
       pelem->init(*xNodes);
       gelems->push_back(pelem);
+
       nfnodes = 0;
       for ( GSIZET j=0; j<(*gelems)[n]->nfaces(); j++ )  // get # face nodes
         nfnodes += (*gelems)[n]->face_indices(j).size();
@@ -558,8 +568,16 @@ void GGridIcos::do_grid2d(GGrid &grid, GINT irank)
       pelem->ifend() = fcurr+nfnodes-1; // end global face index
       icurr += pelem->nnodes();
       fcurr += nfnodes;
+
     } // end of element loop for this triangle
   } // end of triangle base mesh loop
+
+  // Can set individual nodes and internal bdy conditions
+  // with callback here:
+  if ( bdycallback_ != NULLPTR ) {
+    (*bdycallback_)(grid);
+  }
+
 
 } // end of method do_grid2d
 
@@ -637,6 +655,11 @@ void GGridIcos::do_grid3d(GGrid &grid, GINT irank)
     spherical2xyz(*xNodes); // convert nodal coords to Cartesian coords
     pelem->init(*xNodes);
     gelems->push_back(pelem);
+
+    // Set global bdy types at each bdy_ind (this is a coarse
+    // application; finer control may be exercised in callback):
+    set_global_bdy_3d(*pelem);
+
     nfnodes = 0;
     for ( GSIZET j=0; j<(*gelems)[n]->nfaces(); j++ )  // get # face nodes
       nfnodes += (*gelems)[n]->face_indices(j).size();
@@ -650,7 +673,7 @@ void GGridIcos::do_grid3d(GGrid &grid, GINT irank)
 
   // If we have a callback function, set the boundary conditions here:
   if ( bdycallback_ != NULLPTR ) {
-    (*bdycallback_)(grid);
+    (*bdycallback_)(*gelems);
   }
 
 } // end of method do_grid3d
@@ -664,7 +687,7 @@ void GGridIcos::do_grid3d(GGrid &grid, GINT irank)
 //          callback: method name
 // RETURNS: none.
 //**********************************************************************************
-void GGridIcos::set_bdy_callback(std::function<void(GGrid &)> &callback)
+void GGridIcos::set_bdy_callback(std::function<void(GElemList &)> &callback)
 {
   bdycallback_  = &callback;
 } // end of method set_bdy_callback
@@ -1156,3 +1179,43 @@ void GGridIcos::reorderverts2d(GTVector<GTPoint<GFTYPE>> &uverts, GTVector<GSIZE
 } // end of method reorderverts2d
 
 
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : set_global_bdy_3d
+// DESC   : Set global boundary conditions in 3d
+//            NOTE: element node coordinate may change in this call!
+// ARGS   : pelem : Element under consideration
+// RETURNS: none.
+//**********************************************************************************
+void GGridIcos::set_global_bdy_3d(GElem_base &pelem)
+{
+  GTVector<GINT>              *bdy_ind=&pelem.bdy_indices();
+  GTVector<GBdyType>          *bdy_typ=&pelem.bdy_types  ();
+  GTVector<GTVector<GFTYPE>>  *xNodes =&pelem.xNodes();
+
+  GSIZET ib;
+  GFTYPE x, y, z, r;
+  for ( GSIZET m=0; m<2; m++ ) { // for each x face
+    face_ind = &pelem.face_indices(2*m+1);
+    for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
+      ib = (*bdy_ind)[k];
+      x = (*xNodes)[0][ib]; y = (*xNodes)[1][ib]; z = (*xNodes)[2][ib];
+      r = sqrt( x*x + y*y + z*z );
+      if ( r == radiusi_  )
+        bdy_typ->push_back( global_bdy_types_[0] );
+    }
+  }
+
+  for ( GSIZET m=0; m<2; m++ ) { // for each y face
+    face_ind = &pelem.face_indices(2*m);
+    for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
+      ib = (*bdy_ind)[k];
+      x = (*xNodes)[0][ib]; y = (*xNodes)[1][ib]; z = (*xNodes)[2][ib];
+      r = sqrt( x*x + y*y + z*z );
+      if ( r == radiusi_  )
+        bdy_typ->push_back( global_bdy_types_[1] );
+    }
+  }
+
+} // end, method set_global_bdy_3d
