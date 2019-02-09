@@ -77,7 +77,12 @@ protected:
                                       Time &dt, State &uout);             // Take a step
         void                dt_impl(const Time &t, State &u, Time &dt);   // Get dt
         void                set_nu(GTVector<GFTYPE> &nu);                 // Set nu
-        void                apply_bc_impl();                              // Apply bdy conditions
+        void                apply_bc_impl(const Time &t, State &u, 
+                                          State &ub);                     // Apply bdy conditions
+       void                 set_bdy_callback(
+                            std::function<void(Time &t, State &u,
+                                          State &ub)> &callback)          // set bdy-update callback
+                              {bdy_update_callback_ = callback;}
 
 private:
 
@@ -116,6 +121,9 @@ private:
         GHelmholtz         *ghelm_;         // Helmholz and Laplacian op
         GpdV               *gpdv_;          // pdV op
 //      GFlux              *gflux_;         // flux op
+        std::function<void(Time &t, State &u, State &ub)>
+                           *bdy_update_callback_; // bdy update callback function
+
 
 };
 

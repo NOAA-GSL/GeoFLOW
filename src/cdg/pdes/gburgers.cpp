@@ -446,7 +446,36 @@ void GBurgers<TypePak>::set_nu(GTVector<GFTYPE> &nu)
 {
   assert(ghelm_ != NULLPTR && "Init must be called first");
   nu_ = &nu; // Not sure this class actually needs this. May be removed later
-  ghelm_->set_Lap_scalar(nu);
+  ghelm_->set_Lap_scalar(*nu_);
 
 } // end of method set_nu
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : apply_bc_impl
+// DESC   : Apply global domain boundary conditions, ub
+// RETURNS: none.
+//**********************************************************************************
+template<typename TypePack>
+void GBurgers<TypePak>::apply_bc_impl(const Time &t, State &u, State &ub)
+{
+  GTVector<GSIZET>   *igbdy     = &grid_->igbdy();
+//GTVector<GBdyType> *igbdytype = &grid_->igbdytypes();
+
+  // Use indirection to set the global field node values
+  // with domain boundary data. ub must be updated outside 
+  // of this method.
+
+  // NOTE: This is useful to set Dirichlet-type bcs only. 
+  // Neumann bcs type have to be set with the
+  // differential operators themselves
+ 
+  for ( GSISET k=0; k<u.size(); k++ ) {
+    for ( GSISET j=0; j<igbdy->size(); j++ ) {
+      u[k][(*igbdy)[j]] = ub[k][j];
+    } 
+  } 
+  
+} // end of method apply_bc_impl
 
