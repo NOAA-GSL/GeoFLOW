@@ -50,12 +50,18 @@ public:
         GTMatrix<GTVector<GFTYPE>>
                             &dXidX();                                 // global Rij = dXi^j/dX^i
         GTVector<GFTYPE>    &dXidX(GSIZET i,GSIZET j);                // Rij matrix element 
+        GTvector<GTVector<GFTYPE>>
+                            &xNodes() { return xNodes_; }             // get all nodes coords (Cart)
+        GTvector<GFTYPE>    &xNodes(GSIZET i) { return xNodes_[i]; }  // get all nodes coords (Cart)
+                            
 
         GTVector<GFTYPE>    &Jac();                                    // global Jacobian
         GTVector<GFTYPE>
                             &faceJac();                                // global face Jacobian
         GTVector<GTVector<GFTYPE>>
                             &faceNormal();                             // global face normals
+        GTVector<GSIZET>    &igbdy() { return igbdy_;}                 // global dom bdy indices into u
+        GTVector<GBdyType>  &igbdytypes() { return igbdytypes_; }      // global dom bdy types for each igbdy
 
 
 friend  std::ostream&        operator<<(std::ostream&, GGrid &);      // Output stream operator
@@ -69,6 +75,7 @@ protected:
 private:
          
 void                        find_min_dist(); 
+void                        init_bc_info(); 
 
 GBOOL                       bInitialized_;  // object initialized?
 GC_COMM                     comm_;          // communicator
@@ -76,11 +83,13 @@ GElemList                   gelems_;        // element list
 GTVector<GTVector<GSIZET>>  itype_;         // indices in elem list of each type
 GTVector<GSIZET>            ntype_;         // no. elems of each type on grid
 GTMatrix<GTVector<GFTYPE>>  dXidX_;         // matrix Rij = dXi^j/dX^i, global
+GTVector<GTVector<GFTYPE>>  xNodes_;        // Cart coords of all node points
 GTVector<GFTYPE>            Jac_;           // interior Jacobian, global
 GTVector<GFTYPE>            faceJac_;       // face Jacobian, global
 GTVector<GTVector<GFTYPE>>  faceNormal_;    // normal to face at each node point (2d & 3d), global
 GTVector<GFTYPE>            minnodedist_;   // min node length array (for each elem)
-
+GTVector<GSIZET>            igbdy_;         // index into global field indicating a domain bdy
+GTVector<GBdyType>          igbdytypes_;    // global domain bdy types for each igbdy index
 
 };
 
