@@ -460,7 +460,7 @@ void GBurgers<TypePak>::set_nu(GTVector<GFTYPE> &nu)
 template<typename TypePack>
 void GBurgers<TypePak>::apply_bc_impl(const Time &t, State &u, State &ub)
 {
-  GTVector<GSIZET>   *igbdy     = &grid_->igbdy();
+  GTVector<GINT>     *igbdy     = &grid_->igbdy();
 //GTVector<GBdyType> *igbdytype = &grid_->igbdytypes();
 
   // Use indirection to set the global field node values
