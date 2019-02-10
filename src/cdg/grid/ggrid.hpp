@@ -60,8 +60,8 @@ public:
                             &faceJac();                                // global face Jacobian
         GTVector<GTVector<GFTYPE>>
                             &faceNormal();                             // global face normals
-        GTVector<GSIZET>    &igbdy() { return igbdy_;}                 // global dom bdy indices into u
-        GTVector<GBdyType>  &igbdytypes() { return igbdytypes_; }      // global dom bdy types for each igbdy
+        GTVector<GTVector<GSIZET>>
+                            &igbdy() { return igbdy_;}                 // global dom bdy indices into u for eacb GBdyType
 
 
 friend  std::ostream&        operator<<(std::ostream&, GGrid &);      // Output stream operator
@@ -88,7 +88,7 @@ GTVector<GFTYPE>            Jac_;           // interior Jacobian, global
 GTVector<GFTYPE>            faceJac_;       // face Jacobian, global
 GTVector<GTVector<GFTYPE>>  faceNormal_;    // normal to face at each node point (2d & 3d), global
 GTVector<GFTYPE>            minnodedist_;   // min node length array (for each elem)
-GTVector<GSIZET>            igbdy_;         // index into global field indicating a domain bdy
+GTVector<GTVector<GSIZET>>  igbdy_;         // index into global field indicating a domain bdy
 GTVector<GBdyType>          igbdytypes_;    // global domain bdy types for each igbdy index
 
 };

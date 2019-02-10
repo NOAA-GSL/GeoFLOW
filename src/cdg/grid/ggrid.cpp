@@ -780,34 +780,41 @@ GFTYPE GGrid::init_bc_info()
   GTVector<GINT>              *iebdy;  // domain bdy indices
   GTVector<GBdyType>          *iebdyt; // domain bdy types
 
-  GSISET n = 0;
+  // Collect all element bdy types and indicection indices
+  // into global vectors (so we can use the vector 
+  // to do sorting):
+  GSIZET              nn=0; 
+  GSIZET                ig; 
+  GTVector <GBdyType> btmp; 
+  GTVector   <GSIZET> itmp; 
   for ( GSIZET e=0; e<gelems_.size(); e++ ) {
-    igbdy  = gelems_[e]->&bdy_indices(); 
-    iebdyt = gelems_[e]->&bdy_types(); 
-    for ( GSIZET j=0; j<igbdy->size(); j++ ) {
-      // Don't count PERIODIC as a *real* bdy:
-      n += (*igbdyt)[j] == GBDY_PERIODIC ? 0 : 1;
-    }
-  } // end, element loop
-  
-  // Fill global bdy data vectors. For this
-  // task, assume GBDY_PERIODIC bdys don't
-  // count as real bdys:
-  igbdy_.resize(n); 
-  igbdytypes_.resize(n); 
-
-  n = 0;
-  for ( GSIZET e=0; e<gelems_.size(); e++ ) {
+    ibeg   = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
     iebdy  = gelems_[e]->&bdy_indices(); 
     iebdyt = gelems_[e]->&bdy_types(); 
-    for ( GSIZET j=0; j<igbdy->size(); j++ ) {
-      if ( (*igbdyt)[j] != GBDY_PERIODIC ) {
-        (*igbdy_)     [n] = (*igbdy) [j];
-        (*igbdytypes_)[n] = (*igbdyt)[j];
-        n++;
-      }
+    for ( GSIZET j=0; j<iebdyt->size(); j++ ) {
+      ig = nn + (*iebdy)[j];
+      itmp.push_back(ig); // index in full global arrays
+      btmp.push_back((*iebdyt)[j]);
+      nn += gelems_[e]->nnodes();
     }
   } // end, element loop
+ 
+  // Now, create type-bins (one bin for each GBdyType), and
+  // for each type, set the indirection indices into global
+  // vectors that have that type:
+  GBdyType         itype;
+  GSIZET    *ind=NULLPTR;
+  GSIZET      nind, nw=0;
+  igbdy_.resize(GBDY_NONE); // set of bdy indices for each type
+  for ( GSIZET k=0; k<GBDY_NONE; k++ ) { // cycle over each bc type
+    itype = static_cast<GBdyType>(k);
+    nind = btmp.contains(itype, ind, nw);
+    igbdy_[k].resize(nind);
+    for ( GSIZET j=0; j<nind; j++ ) igbdy_[k][j] = itmp[ind[j]];
+    nind = 0;
+  } // end, element loop
+
+  if ( ind != NULLPTR ) delete [] ind;
 
 } // end of method init_bc_info
 
