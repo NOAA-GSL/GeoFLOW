@@ -45,6 +45,16 @@ bdycallback_(NULLPTR)
   P0_ = traits.P0;
   P1_ = traits.P1;
   global_bdy_types_ = traits.bdyType;
+  bPeriodic_.resize(3);
+  bPEriodic_ = FALSE;
+  if ( global_bdy_types_[1] == GBDY_PERIODIC
+    || global_bdy_types_[3] == GBDY_PERIODIC ) bPeriodic_[0] = TRUE;
+  if ( global_bdy_types_[0] == GBDY_PERIODIC
+    || global_bdy_types_[2] == GBDY_PERIODIC ) bPeriodic_[1] = TRUE;
+  
+  if ( GDIN==3 
+    && global_bdy_types_[1] == GBDY_PERIODIC
+    || global_bdy_types_[3] == GBDY_PERIODIC ) bPeriodic_[2] = TRUE;
 
   for ( GSIZET j=0; j<b.size(); j++ ) {
     Lbox_[j] = fabs(P1[j] - P0[j]);
@@ -540,13 +550,13 @@ void GGridBox::set_global_bdy_2d(GElem_base &pelem)
   GTVector<GTVector<GFTYPE>>  *xNodes =&pelem.xNodes();
 
   GSIZET ib;
-  if ( global_bdy_types_[0] == GBDY_PERIODIC ) { // check for periodicity in x
+  if ( bPeriodic_[0] == GBDY_PERIODIC ) { // check for periodicity in x
     for ( GSIZET m=0; m<2; m++ ) { // for each x edge
       face_ind = &pelem.dge_indices(2*m+1);
       for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
         ib = (*bdy_ind)[k];
         if ( (*xNodes)[0][ib] == P0_.x1 || (*xNodes)[0][ib] == P1_.x1 ) 
-          bdy_typ->push_back( global_bdy_types_[0] );
+          bdy_typ->push_back( GBDY_PERIODIC );
           // Set right x-coord equal to that on left-most bdy:
           if ( (*xNodes)[0][ib] == P1_.x1 ) (*xNodes)[0][ib] = P0_.x1;
       }
@@ -558,18 +568,18 @@ void GGridBox::set_global_bdy_2d(GElem_base &pelem)
       for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
         ib = (*bdy_ind)[k];
         if ( (*xNodes)[0][ib] == P0_.x1 || (*xNodes)[0][ib] == P1_.x1 ) 
-          bdy_typ->push_back( global_bdy_types_[1] );
+          bdy_typ->push_back( global_bdy_types_[2*m+1] );
       }
     }
   }
 
-  if ( global_bdy_types_[1] == GBDY_PERIODIC ) { // check for periodicity in y
+  if ( bPeriodic_[1] == GBDY_PERIODIC ) { // check for periodicity in y
     for ( GSIZET m=0; m<2; m++ ) { // for each y edge
       face_ind = &pelem.edge_indices(2*m);
       for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
         ib = (*bdy_ind)[k];
         if ( (*xNodes)[1][ib] == P0_.x2 || (*xNodes)[1][ib] == P1_.x2 ) 
-          bdy_typ->push_back( global_bdy_types_[1] );
+          bdy_typ->push_back( GBDY_PERIODIC );
           // Set top y-coord equal to that on bottom-most bdy:
           if ( (*xNodes)[1][ib] == P1_.x2 ) (*xNodes)[1][ib] = P0_.x2;
       }
@@ -581,7 +591,7 @@ void GGridBox::set_global_bdy_2d(GElem_base &pelem)
       for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
         ib = (*bdy_ind)[k];
         if ( (*xNodes)[0][ib] == P0_.x2 || (*xNodes)[0][ib] == P1_.x2 ) 
-          bdy_typ->push_back( global_bdy_types_[1] );
+          bdy_typ->push_back( global_bdy_types_[2*m] );
       }
     }
   }
@@ -603,13 +613,13 @@ void GGridBox::set_global_bdy_3d(GElem_base &pelem)
   GTVector<GTVector<GFTYPE>>  *xNodes =&pelem.xNodes();
 
   GSIZET ib;
-  if ( global_bdy_types_[0] == GBDY_PERIODIC ) { // check for periodicity in x
+  if ( bPeriodic_[0] == GBDY_PERIODIC ) { // check for periodicity in x
     for ( GSIZET m=0; m<2; m++ ) { // for each x face
       face_ind = &pelem.face_indices(2*m+1);
       for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
         ib = (*bdy_ind)[k];
         if ( (*xNodes)[0][ib] == P0_.x1 || (*xNodes)[0][ib] == P1_.x1 ) 
-          bdy_typ->push_back( global_bdy_types_[0] );
+          bdy_typ->push_back( GBDY_PERIODIC );
           // Set right x-coord equal to that on left-most bdy:
           if ( (*xNodes)[0][ib] == P1_.x1 ) (*xNodes)[0][ib] = P0_.x1;
       }
@@ -621,18 +631,18 @@ void GGridBox::set_global_bdy_3d(GElem_base &pelem)
       for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
         ib = (*bdy_ind)[k];
         if ( (*xNodes)[0][ib] == P0_.x1 || (*xNodes)[0][ib] == P1_.x1 ) 
-          bdy_typ->push_back( global_bdy_types_[0] );
+          bdy_typ->push_back( global_bdy_types_[2*m+1] );
       }
     }
   }
 
-  if ( global_bdy_types_[1] == GBDY_PERIODIC ) { // check for periodicity in y
+  if ( bPeriodic_[1] == GBDY_PERIODIC ) { // check for periodicity in y
     for ( GSIZET m=0; m<2; m++ ) { // for each y face
       face_ind = &pelem.face_indices(2*m);
       for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
         ib = (*bdy_ind)[k];
         if ( (*xNodes)[1][ib] == P0_.x2 || (*xNodes)[1][ib] == P1_.x2 ) 
-          bdy_typ->push_back( global_bdy_types_[1] );
+          bdy_typ->push_back( GBDY_PERIODIC );
           // Set top y-coord equal to that on bottom-most bdy:
           if ( (*xNodes)[1][ib] == P1_.x2 ) (*xNodes)[1][ib] = P0_.x2;
       }
@@ -644,18 +654,18 @@ void GGridBox::set_global_bdy_3d(GElem_base &pelem)
       for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
         ib = (*bdy_ind)[k];
         if ( (*xNodes)[0][ib] == P0_.x2 || (*xNodes)[0][ib] == P1_.x2 ) 
-          bdy_typ->push_back( global_bdy_types_[1] );
+          bdy_typ->push_back( global_bdy_types_[2*m] );
       }
     }
   }
 
-  if ( global_bdy_types_[1] == GBDY_PERIODIC ) { // check for periodicity in z
+  if ( bPeriodic_[1] == GBDY_PERIODIC ) { // check for periodicity in z
     for ( GSIZET m=0; m<2; m++ ) { // for each z face
       face_ind = &pelem.face_indices(m+4);
       for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
         ib = (*bdy_ind)[k];
         if ( (*xNodes)[1][ib] == P0_.x3 || (*xNodes)[1][ib] == P1_.x3 ) 
-          bdy_typ->push_back( global_bdy_types_[2] );
+          bdy_typ->push_back( GBDY_PERIODIC );
           // Set top z-coord equal to that on bottom-most bdy:
           if ( (*xNodes)[2][ib] == P1_.x3 ) (*xNodes)[2][ib] = P0_.x3;
       }
@@ -667,7 +677,7 @@ void GGridBox::set_global_bdy_3d(GElem_base &pelem)
       for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
         ib = (*bdy_ind)[k];
         if ( (*xNodes)[0][ib] == P0_.x3 || (*xNodes)[0][ib] == P1_.x3 ) 
-          bdy_typ->push_back( global_bdy_types_[2] );
+          bdy_typ->push_back( global_bdy_types_[m+4] );
       }
     }
   }

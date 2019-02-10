@@ -16,9 +16,12 @@
 
 class GGridFactory
 {
- public:
+  public:
 
 	static GGrid *build(const tbox::PropertyTree& ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis, GC_COMM comm);
+
+  private:
+        GBdyType      GGridFactory::str2bdytype(GString &stype);
 
 
 } // namespace geoflow

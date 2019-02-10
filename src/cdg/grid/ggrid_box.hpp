@@ -74,6 +74,7 @@ GTVector<GNBasis<GCTYPE,GFTYPE>*>
 GTVector<GQuad<GFTYPE>> qmesh_;         // list of vertices for each 2d (quad) element
 GTVector<GHex<GFTYPE>>  hmesh_;         // list of vertices for each 3d (hex) element
 GTVector<GINT>          ne_;            // # elems in each coord direction in 3d
+GTVector<GBOOL>         bPeriodic_;     // is periodic in x, y, or z?
 GTVector<GBdyType>      global_bdy_types_;  // global types for each direction
 GTVector<GFTYPE>        Lbox_;          // length of box edges (x, y, [and z])
 std::function<void(GElemList &)>
