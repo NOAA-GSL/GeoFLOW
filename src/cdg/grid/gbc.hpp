@@ -25,8 +25,7 @@ public:
                              GTVector<GTVector<GFTYPE>*> &ub);                 // entry function
       void                   set_dirichlet_callback(
                              std::function<void(GFTYPE &t, &u,
-                             GTVector<GTVector<GFTYPE>*> &ub)> &callback)          // set bdy-update callback
-                              {update_dirichlet_callback_ = callback;}
+                             GTVector<GTVector<GFTYPE>*> &ub)> &callback);// set bdy-update callback
 
 
 private:
