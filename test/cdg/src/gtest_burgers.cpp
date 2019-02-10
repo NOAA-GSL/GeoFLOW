@@ -43,8 +43,11 @@ struct EquationTypes {
         using Size       = SizeType;
 };
 
+GGrid                      *grid_ = NULLPTR;
+GTVector<GTVector<GFTYPE>*> ua_;
 
 void compute_analytic(GGrid &grid, Time &t, const tbox::PropertyTree& ptree,  State &u0, State &ua);
+void update_dirichlet(Time &t, State &u, State &ub);
 
 #include "init_pde.h"
 
@@ -95,6 +98,9 @@ int main(int argc, char **argv)
     stepptree   = ptree.getPropertyTree("stepper_props");
     dissptree   = ptree.getPropertyTree("dissipation_traits");
     tintptree   = ptree.getPropertyTree("time_integration");
+
+    bc_set_.resize(GBDY_NONE);
+    bc_set_ = FALSE;
     
 #if 1
 
@@ -180,7 +186,7 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     GPTLstart("gen_grid");
 
     // Create grid:
-    GGrid *grid = GGridFactory(gridptree, gbasis, comm);
+    *grid_ = GGridFactory(gridptree, gbasis, comm);
 
     GPTLstop("gen_grid");
 
@@ -191,13 +197,17 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     if      ( solver_traits.doheat   ) nstate = 1;
     else if ( solver_traits.bpureadv ) nstate = GDIM + 1; // 1-state + GDIM  v-components
     u.resize(nstate);
-    for ( GSIZET j=0; j<utmp.size(); j++ ) utmp[j] = new GTVector<GFTYPE>(grid->size());
-    for ( GSIZET j=0; j<u   .size(); j++ ) u   [j] = new GTVector<GFTYPE>(grid->size());
+    ua_.resize(nstate);
+    for ( GSIZET j=0; j<utmp.size(); j++ ) utmp[j] = new GTVector<GFTYPE>(grid_->size());
+    for ( GSIZET j=0; j<u   .size(); j++ ) u   [j] = new GTVector<GFTYPE>(grid_->size());
+    for ( GSIZET j=0; j<ua_ .size(); j++ ) ua  [j] = new GTVector<GFTYPE>(grid_->size());
 
     // Create observer(s), equations, integrator:
-    std::shared_ptr<EqnImpl> eqn_impl(new EqnImpl(*grid, u, solver_traits, utmp));
+    std::shared_ptr<EqnImpl> eqn_impl(new EqnImpl(*grid_, u, solver_traits, utmp));
     std::shared_ptr<EqnBase> eqn_base = eqn_impl;
 
+    // Set Dirichlet bdy state update function:
+    eqn_impl.set_bdy_callback(update_dirichlet);
 
     // Create the Integrator Implementation
     IntImpl::Traits int_traits;
@@ -215,7 +225,7 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
 
     // Initialize state:
     GString sblock = ptree.getValue("init_block");
-    init_pde(*grid, t, eqptree, sblock, u);
+    init_pde(*grid_, t, eqptree, sblock, u);
 
     GPTLstart("time_loop");
     for( GSIZET i=0; i<maxSteps; i++ ){
@@ -226,20 +236,20 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
 
 #if 1
     GTVector<GFTYPE> lerrnorm(3), gerrnorm(3);
-    compute_analytic(*grid, t, eqptree, u, ua);
+    compute_analytic(*grid_, t, eqptree, u, ua_);
     for ( GSIZET j=0; j<u.size(); i++ ) {
-      *utmp[0] = *u[j] - *ua[j];
+      *utmp[0] = *u[j] - *ua_[j];
        lerrnorm[0]  = utmp[0]->L1norm (); // inf-norm
        lerrnorm[1]  = utmp[0]->Eucnorm(); // Euclidean-norm
        lerrnorm[1] *= lerrnorm[1]; 
-       lerrnorm[2]  = grid->integrate(*utmp[0],*utmp[1]) 
-                    / grid->integrate(*ua,*utmp[1]) ; // L2 error norm 
+       lerrnorm[2]  = grid_->integrate(*utmp[0],*utmp[1]) 
+                    / grid_->integrate(*ua,*utmp[1]) ; // L2 error norm 
     }
     // Accumulate errors:
     GComm::Allreduce(lerrnorm.data()  , gerrnorm.data()  , 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm);
     GComm::Allreduce(lerrnorm.data()+1, gerrnorm.data()+1, 2, T2GCDatatype<GFTYPE>() , GC_OP_SUM, comm)
    
-    GSIZET lnelems=grid->nelems();
+    GSIZET lnelems=grid_->nelems();
     GSIZET gnelems;
     GComm::Allreduce(&lnelems, &gnelems, 1, T2GCDatatype<GSIZET>() , GC_OP_SUM, comm)
 
@@ -266,8 +276,33 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     GPTLfinalize();
 
     GComm::TermComm();
-    if ( grid != NULLPTR ) delete grid;
+    if ( grid_ != NULLPTR ) delete grid_;
 
     return(0);
 
 } // end, main
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : update_dirichlet
+// DESC   : update/set Dirichlet vectors, ub
+// ARGS   : t    : time
+//          u    : current state
+//          ub   : bdy vectors (one for each state element)
+// RETURNS: none.
+//**********************************************************************************
+void update_dirichlet(Time &t, State &u, State &ub);
+{
+  GTVector<GTVector<GSIZET>> *igbdy = &grid_->igbdy();
+
+  // ...GBDY_DIRICHLET:
+  // Set from State vector, ua_:
+  for ( GSIZET k=0; k<u.size(); k++ ) { 
+    for ( GSIZET j=0; j<(*igbdy)[GBDY_DIRICHLET].size(); j++ ) {
+      (*ub[k])[j] = ua_[k][(*igbdy)[GBDY_DIRICHLET][j]];
+    }
+  }
+
+} // end of method update_dirichlet
+
