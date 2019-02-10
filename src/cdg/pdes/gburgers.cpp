@@ -66,6 +66,7 @@ gadvect_              (NULLPTR),
 gmass_                (NULLPTR),
 gpdv_                 (NULLPTR),
 //gflux_                (NULLPTR),
+gbc_                  (NULLPTR),
 grid_                   (&grid)
 {
   static_assert(std::is_same<State,GTVector<GTVectorGFTYPE>>>::value,
@@ -78,6 +79,7 @@ grid_                   (&grid)
  
   assert(valid_types_.contains(isteptype_) && "Invalid stepper type"); 
 
+  gbc_ = new GBC(*grid_);
   utmp_.resize(tmp.size()); utmp_ = tmp;
   init(u, traits.iorder);
   
@@ -100,6 +102,7 @@ GBurgers<TypePak>::~GBurgers()
   if ( ghelm_   != NULLPTR ) delete ghelm_;
   if ( gadvect_ != NULLPTR ) delete gadvect_;
   if ( gpdv_    != NULLPTR ) delete gpdv_;
+  if ( gbc_     != NULLPTR ) delete gbc_;
 
 } // end, destructor
 
@@ -232,7 +235,7 @@ void GBurgers<TypePak>::dudt_impl(const Time &t, State &u, Time &dt, Derivative 
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GBurgers<TypePak>::step_impl(const Time &t, State &uin, Time &dt, Derivative &uout)
+void GBurgers<TypePak>::step_impl(const Time &t, State &uin, State &ub, Time &dt, Derivative &uout)
 {
 
   switch ( isteptype_ ) {
@@ -264,7 +267,7 @@ void GBurgers<TypePak>::step_impl(const Time &t, State &uin, Time &dt, Derivativ
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GBurgers<TypePak>::step_multistep(const Time &t, State &uin, Time &dt, Derivative &uout)
+void GBurgers<TypePak>::step_multistep(const Time &t, State &uin, State &ub, Time &dt, Derivative &uout)
 {
   assert(FALSE && "Multistep methods not yet available");
 
@@ -283,37 +286,40 @@ void GBurgers<TypePak>::step_multistep(const Time &t, State &uin, Time &dt, Deri
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GBurgers<TypePak>::step_exrk(const Time &t, State &uin, Time &dt, Derivative &uout)
+void GBurgers<TypePak>::step_exrk(const Time &t, State &uin, State&ub, Time &dt, Derivative &uout)
 {
 
   // If non-conservative, compute RHS from:
   //     du/dt = M^-1 ( -u.Grad u + nu nabla u ):
   // for each u
-  for ( auto k=0; k<u.size(); k++ ) {
-    gadvect_->apply(u[k], u, utmp_, dudt[k]);
-    ghelm_->opVec_prod(u[k],utmp_[0]);
+  for ( auto j=0; j<uin.size(); j++ ) *uout[j] = *uin[j];
+  for ( auto k=0; k<itorder_; k++ ) {
+    apply_bc_impl(t, uout, ub);
+    gexrk_->step(t, uout[k], dt, utmp_);
+    for ( auto j=0; j<uin.size(); j++ ) *uout[k] = *utmp_[k];
   }
-
 
 } // end of method step_exrk
 
 
 
-#if 0
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : set_bdy_callback
-// DESC   : Set the callback object and method pointers for setting bdy conditions
-// ARGS   : ptr2obj : pointer to object that hosts method callback
-//          callback: method name
+// DESC   : Set the callback object for updating Dirichlet 
+//          boundary state
+// ARGS   : 
 // RETURNS: none.
 //**********************************************************************************
+template<typename TypePack>
 void GBurgers<TypePak>::set_bdy_callback(std::function<void(GGrid &)> &callback)
 {
-  bdycallback_  = &callback;
-} // end of method set_bdy_callback
+  assert(gbc_ != NULLPTR && "Boundary operator not instantiated");
 
-#endif
+  bdy_update_callback_ = &callback;
+  gbc_->set_dirichlet_callback(bdy_update_callback_);
+  
+} // end of method set_bdy_callback
 
 
 //**********************************************************************************
@@ -339,8 +345,8 @@ void GBurgers<TypePak>::init(State &u)
   switch ( isteptype_ ) {
     case GSTEPPER_EXRK2:
     case GSTEPPER_EXRK4:
-      gextk_.setOrder(itorder_);
-      gextk_.setRHSfunction(this->dudt);
+      gexrk_.setOrder(itorder_);
+      gexrk_.setRHSfunction(this->dudt);
       break;
     case GSTEPPER_BDFAB:
       tcoeff_obj = new G_BDF(itorder_);
@@ -461,7 +467,6 @@ template<typename TypePack>
 void GBurgers<TypePak>::apply_bc_impl(const Time &t, State &u, State &ub)
 {
   GTVector<GINT>     *igbdy     = &grid_->igbdy();
-//GTVector<GBdyType> *igbdytype = &grid_->igbdytypes();
 
   // Use indirection to set the global field node values
   // with domain boundary data. ub must be updated outside 

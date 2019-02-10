@@ -35,6 +35,7 @@
 #include "equation_base.hpp"
 #include "gadvect.hpp"
 #include "ghelmholtz.hpp"
+#include "gbc.hpp"
 //#include "gflux.hpp"
 
 
@@ -73,7 +74,7 @@ public:
 
 protected:
         GBOOL               has_dt_impl() const {return FALSE;}           // Has dynamic dt?
-        GBOOL               step_impl(const Time &t, State &uin, 
+        GBOOL               step_impl(const Time &t, State &uin, State &ub,
                                       Time &dt, State &uout);             // Take a step
         void                dt_impl(const Time &t, State &u, Time &dt);   // Get dt
         void                set_nu(GTVector<GFTYPE> &nu);                 // Set nu
@@ -81,17 +82,16 @@ protected:
                                           State &ub);                     // Apply bdy conditions
        void                 set_bdy_callback(
                             std::function<void(Time &t, State &u,
-                                          State &ub)> &callback)          // set bdy-update callback
-                              {bdy_update_callback_ = callback;}
+                                          State &ub)> &callback);         // set bdy-update callback
 
 private:
 
         void                init(State &u, Traits &);      // initialize 
-        void                step_exrk  (const Time &t, State &uin,
+        void                step_exrk  (const Time &t, State &uin, State &ub,
                                         Time &dt, State &uout);
         void                dudt_impl  (const Time &t, State &u,
                                         Time &dt, State &dudt);
-        void                step_multistep(const Time &t, State &uin,
+        void                step_multistep(const Time &t, State &uin, State &ub,
                                            Time &dt, State &uout);
         void                cycle_keep(State &u);
        
@@ -121,6 +121,7 @@ private:
         GHelmholtz         *ghelm_;         // Helmholz and Laplacian op
         GpdV               *gpdv_;          // pdV op
 //      GFlux              *gflux_;         // flux op
+        GBC                *gbc_;           // bdy conditions operator
         std::function<void(Time &t, State &u, State &ub)>
                            *bdy_update_callback_; // bdy update callback function
 
