@@ -84,10 +84,11 @@ public:
 	 *
 	 * \param[in]     t  Current time of state u before taking step
 	 * \param[in]     dt Size of time step to take
+	 * \param[in]     ub Boundary conditions for u
 	 * \param[in,out] u  State of the system of equations
 	 */
-	void step(const Time& t, const Time& dt, State& u){
-		this->step_impl(t,dt,u);
+	void step(const Time& t, const Time& dt, State& u, State& ub){
+		this->step_impl(t,dt,ub,u);
 	}
 
 	/** Take one step from time t to time t + dt.
@@ -97,11 +98,12 @@ public:
 	 *
 	 * \param[in]  t     Current time of state u before taking step
 	 * \param[in]  uin   State of the system of equations at time t
+	 * \param[in]  ub    Boundary conditions for u
 	 * \param[in]  dt    Size of time step to take
 	 * \param[out] uout  New state of the system of equations at t + dt
 	 */
-	void step(const Time& t, const State& uin, const Time& dt, State& uout){
-		this->step_impl(t,uin,dt,uout);
+	void step(const Time& t, const State& uin, const State& ub, const Time& dt, State& uout){
+		this->step_impl(t,uin,ub,dt,uout);
 	}
 
 protected:
@@ -124,12 +126,12 @@ protected:
 	/**
 	 * Must be provided by implementation
 	 */
-	virtual void step_impl(const Time& t, const Time& dt, State& u) = 0;
+	virtual void step_impl(const Time& t, const Time& dt, const State& ub, State& u) = 0;
 
 	/**
 	 * Must be provided by implementation
 	 */
-	virtual void step_impl(const Time& t, const State& uin, const Time& dt, State& uout) = 0;
+	virtual void step_impl(const Time& t, const State& uin, const State& ub, const Time& dt, State& uout) = 0;
 };
 
 
