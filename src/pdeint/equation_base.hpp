@@ -88,7 +88,7 @@ public:
 	 * \param[in,out] u  State of the system of equations
 	 */
 	void step(const Time& t, const Time& dt, State& u, State& ub){
-		this->step_impl(t,dt,ub,u);
+		this->step_impl(t,dt,u,ub);
 	}
 
 	/** Take one step from time t to time t + dt.
@@ -126,7 +126,7 @@ protected:
 	/**
 	 * Must be provided by implementation
 	 */
-	virtual void step_impl(const Time& t, const Time& dt, const State& ub, State& u) = 0;
+	virtual void step_impl(const Time& t, const Time& dt, State& u, State& ub) = 0;
 
 	/**
 	 * Must be provided by implementation
