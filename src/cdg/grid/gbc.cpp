@@ -70,16 +70,18 @@ void GBC::update_bdy_state(GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u,
     }
   }
 
+  // ...GBDY_REFLECT:
+  if ( (*igbdy)[GBDY_REFLECT].size() > 0 ) {
+    do_reflective_bcs(*grid_, t, u, ub);
+  }
+
   // ...GBDY_DIRICHLET:
-  if ( update_dirichlet_callback_ !- NULLPTR) {
+  // (These are possibly time dependent, and are often
+  //  set with data outside the scope of the solvers)
+  if ( update_dirichlet_callback_ != NULLPTR) {
     update_dirichlet_callback_(t, u, ub);
   }
 
-  // ...GBDY_RELECT:
-  
-  if ( (*igbdy)[GBDY_DIRICHLET].size() > 0 ) {
-    do_reflective_bcs(*grid_, t, u, ub);
-  }
 
 } // end of update_bdy_state
 
@@ -98,7 +100,6 @@ void GBC::do_reflective_bcs(GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u,
 {
 
   assert(FALSE && "Reflective conditions not available");
-
 
 } // end of do_reflective_bcs
 
