@@ -1,9 +1,9 @@
 { // JSON file for Burgers solver
   "exp_order": 2,
   "grid_type": "grid_box",
-  "init_block": "init_heat",
+  "init_block": "init_lump",
   "restart_index": 0,
-  "init_heat": {
+  "init_lump": {
     "x0"   : 0.5,
     "y0"   : 0.5,
     "z0"   : 0.5,
