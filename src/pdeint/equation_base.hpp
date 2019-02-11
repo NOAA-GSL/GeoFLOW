@@ -63,6 +63,20 @@ public:
 		this->dt_impl(t,u,dt);
 	}
 
+	/**
+	 * Apply Boundary Condition.
+	 *
+	 * Apply the provided ub boundary condition to the state u.
+	 *
+	 * @param[in]     t  Current time of state u before taking step
+	 * @param[in,out] u  Is the state of the system of equations
+	 * @param[in]     ub Boundary condition values
+	 */
+	void apply_bc(const Time &t, State &u, State &ub){
+		this->apply_bc_impl(t,u,ub);
+	}
+
+
 	/** Take one step from time t to time t+dt.
 	 *
 	 * Take exactly one time step from t with current solution u to
@@ -101,6 +115,11 @@ protected:
 	 * Must be provided by implementation
 	 */
 	virtual void dt_impl(const Time& t, State& u, Time& dt) = 0;
+
+	/**
+	 * Must be provided by implementation
+	 */
+	virtual void apply_bc_impl(const Time &t, State &u, State &ub) = 0;
 
 	/**
 	 * Must be provided by implementation
