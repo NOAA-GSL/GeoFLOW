@@ -454,7 +454,7 @@ void GGrid::reg_init()
    for ( GSIZET e=0; e<gelems_.size(); e++ ) {
      ibeg  = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
      ifbeg = gelems_[e]->ifbeg(); ifend = gelems_[e]->ifend();
-     xe    = &gelems_[e]_>xNodes();
+     xe    = &gelems_[e]->xNodes();
    
      // Restrict global data to local scope:
      for ( GSIZET j=0; j<nxy; j++ ) {
@@ -774,7 +774,7 @@ GFTYPE GGrid::integrate(GTVector<GFTYPE> &u, GTVector<GFTYPE> &tmp)
 // ARGS   : none
 // RETURNS: none.
 //**********************************************************************************
-GFTYPE GGrid::init_bc_info()
+void GGrid::init_bc_info()
 {
   GSIZET                       ibeg, iend; // beg, end indices for global array
   GTVector<GINT>              *iebdy;  // domain bdy indices
@@ -789,8 +789,8 @@ GFTYPE GGrid::init_bc_info()
   GTVector   <GSIZET> itmp; 
   for ( GSIZET e=0; e<gelems_.size(); e++ ) {
     ibeg   = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
-    iebdy  = gelems_[e]->&bdy_indices(); 
-    iebdyt = gelems_[e]->&bdy_types(); 
+    iebdy  = &gelems_[e]->bdy_indices(); 
+    iebdyt = &gelems_[e]->bdy_types(); 
     for ( GSIZET j=0; j<iebdyt->size(); j++ ) {
       ig = nn + (*iebdy)[j];
       itmp.push_back(ig); // index in full global arrays

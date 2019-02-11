@@ -19,8 +19,7 @@
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : Constructor method (1)
-// DESC   : Instantiate with radius, refinement level, directional basis, and
-//          domain decompoisition object. This generates a 2d grid.
+// DESC   : Instantiate for 2d grid
 // ARGS   : traits:
 //            ilevel  : GINT refinement level. Level 0 is just the icos generator 
 //            radiusi : GFTYPE radius
@@ -52,9 +51,7 @@ bdycallback_       (NULLPTR)
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : Constructor method (2)
-// DESC   : Instantiate with iner/outer radii, refinement level, 
-//          directional basis, and domain decompoisition object. This generates 
-//          a 3d grid.
+// DESC   : Instantiate for 3d grid
 // ARGS   : traits:
 //            radiusi : GFTYPE inner radius
 //            radiuso : GFTYPE outer radius
@@ -575,7 +572,7 @@ void GGridIcos::do_grid2d(GGrid &grid, GINT irank)
   // Can set individual nodes and internal bdy conditions
   // with callback here:
   if ( bdycallback_ != NULLPTR ) {
-    (*bdycallback_)(grid);
+    (*bdycallback_)(*gelems);
   }
 
 
@@ -687,9 +684,9 @@ void GGridIcos::do_grid3d(GGrid &grid, GINT irank)
 //          callback: method name
 // RETURNS: none.
 //**********************************************************************************
-void GGridIcos::set_bdy_callback(std::function<void(GElemList &)> &callback)
+void GGridIcos::set_bdy_callback(std::function<void(GElemList &)> *callback)
 {
-  bdycallback_  = &callback;
+  bdycallback_  = callback;
 } // end of method set_bdy_callback
 
 

@@ -46,17 +46,17 @@ public:
           GINT                ilevel;     // refine level if doing 2D ICOS
           GFTYPE              radiusi;    // inner radius (or just radius if doing ICOS)
           GFTYPE              radiuso;    // outer radius if doing 3D
-          GTVector<GBdyType>  bdyType(2); // global bdy types (inner outer surf in 3D only)
+          GTVector<GBdyType>  bdyTypes  ; // global bdy types (inner outer surf in 3D only)
         };
 
-                            GGridIcos(GGridIcos::Traits, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GINT nprocs); // 2d constructor
-                            GGridIcos(GGridIcos::Traits, GTVector<GINT> &ne, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GINT nprocs); // 3d constructor
+                            GGridIcos(GGridIcos::Traits &, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GINT nprocs); // 2d constructor
+                            GGridIcos(GGridIcos::Traits &, GTVector<GINT> &ne, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GINT nprocs); // 3d constructor
                            ~GGridIcos();
 
         void                do_grid(GGrid &grid, GINT irank);             // compute grid for irank
         void                set_partitioner(GDD_base *d);                 // set and use GDD object
         void                set_bdy_callback(
-                            std::function<void(GElemList &)> &callback);     // set bdy-set callback
+                            std::function<void(GElemList &)> *callback);   // set bdy-set callback
 
         void                set_basis(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b);             // set element basis
         GTVector<GTriangle<GFTYPE>> 

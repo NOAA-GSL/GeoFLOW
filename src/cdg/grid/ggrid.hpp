@@ -50,9 +50,9 @@ public:
         GTMatrix<GTVector<GFTYPE>>
                             &dXidX();                                 // global Rij = dXi^j/dX^i
         GTVector<GFTYPE>    &dXidX(GSIZET i,GSIZET j);                // Rij matrix element 
-        GTvector<GTVector<GFTYPE>>
+        GTVector<GTVector<GFTYPE>>
                             &xNodes() { return xNodes_; }             // get all nodes coords (Cart)
-        GTvector<GFTYPE>    &xNodes(GSIZET i) { return xNodes_[i]; }  // get all nodes coords (Cart)
+        GTVector<GFTYPE>    &xNodes(GSIZET i) { return xNodes_[i]; }  // get all nodes coords (Cart)
                             
 
         GTVector<GFTYPE>    &Jac();                                    // global Jacobian
