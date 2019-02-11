@@ -78,6 +78,7 @@ void                        find_min_dist();
 void                        init_bc_info(); 
 
 GBOOL                       bInitialized_;  // object initialized?
+GElemType                   gtype_;         // element types comprising grid
 GC_COMM                     comm_;          // communicator
 GElemList                   gelems_;        // element list
 GTVector<GTVector<GSIZET>>  itype_;         // indices in elem list of each type
