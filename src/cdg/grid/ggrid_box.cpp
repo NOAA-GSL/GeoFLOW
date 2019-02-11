@@ -548,12 +548,13 @@ void GGridBox::set_global_bdy_2d(GElem_base &pelem)
   GTVector<GINT>              *bdy_ind=&pelem.bdy_indices();
   GTVector<GBdyType>          *bdy_typ=&pelem.bdy_types  ();
   GTVector<GTVector<GFTYPE>>  *xNodes =&pelem.xNodes();
+  GTVector<GTVector<GINT>>    *face_ind;
 
   GSIZET ib;
   if ( bPeriodic_[0] == GBDY_PERIODIC ) { // check for periodicity in x
     for ( GSIZET m=0; m<2; m++ ) { // for each x edge
-      face_ind = &pelem.dge_indices(2*m+1);
-      for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
+      face_ind = &pelem.edge_indices(2*m+1);
+      for ( GSIZET k=0; k<face_ind->size(); k++ ) { // for each face index
         ib = (*bdy_ind)[k];
         if ( (*xNodes)[0][ib] == P0_.x1 || (*xNodes)[0][ib] == P1_.x1 ) 
           bdy_typ->push_back( GBDY_PERIODIC );
