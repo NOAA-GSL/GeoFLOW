@@ -73,6 +73,8 @@ public:
         GBurgers &operator=(const Burgers &bu) = default;
 
 protected:
+        void                step_impl(const Time &t, State &uin, State &ub, 
+                                      Time &dt, Derivative &uout);        // Take a time step
         GBOOL               has_dt_impl() const {return FALSE;}           // Has dynamic dt?
         GBOOL               step_impl(const Time &t, State &uin, State &ub,
                                       Time &dt, State &uout);             // Take a step
