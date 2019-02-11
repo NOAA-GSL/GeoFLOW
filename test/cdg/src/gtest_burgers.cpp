@@ -46,10 +46,10 @@ struct EquationTypes {
 GGrid                      *grid_ = NULLPTR;
 GTVector<GTVector<GFTYPE>*> ua_;
 
-void compute_analytic(GGrid &grid, Time &t, const tbox::PropertyTree& ptree,  State &u0, State &ua);
+void compute_analytic(GGrid &grid, Time &t, const tbox::PropertyTree& ptree,  State &u);
 void update_dirichlet(Time &t, State &u, State &ub);
 
-#include "init_pde.h"
+//#include "init_pde.h"
 
 int main(int argc, char **argv)
 {
@@ -225,7 +225,7 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
 
     // Initialize state:
     GString sblock = ptree.getValue("init_block");
-    init_pde(*grid_, t, eqptree, sblock, u);
+    compute_analytic(*grid_, 0.0, eqptree, sblock, u);
 
     GPTLstart("time_loop");
     for( GSIZET i=0; i<maxSteps; i++ ){
@@ -236,7 +236,7 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
 
 #if 1
     GTVector<GFTYPE> lerrnorm(3), gerrnorm(3);
-    compute_analytic(*grid_, t, eqptree, u, ua_);
+    compute_analytic(*grid_, t, ptree, ua_);
     for ( GSIZET j=0; j<u.size(); i++ ) {
       *utmp[0] = *u[j] - *ua_[j];
        lerrnorm[0]  = utmp[0]->L1norm (); // inf-norm
@@ -306,3 +306,112 @@ void update_dirichlet(Time &t, State &u, State &ub);
 
 } // end of method update_dirichlet
 
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD: compute_periodic_heat_glump
+// DESC  : Compute solution to heat equation with GBDY_PERIODIC bcs,
+//         a Gaussian 'lump'. Must use box grid.
+// ARGS  : grid    : GGrid object
+//         t       : time
+//         ptree   : main property tree
+//         c       : adv velocity, is used, a = c(t) only
+//         ua      : return solution
+//**********************************************************************************
+void compute_periodic_heat_glump(GGrid &grid, Time &t, const tbox::PropertyTree& ptree,  State &c, State &ua);
+{
+  GBOOL            bAdd, bContin;
+  GINT             n;
+  GFTYPE           wsum, prod, argxp, argxm, da, eps=1e-18;
+  GFTYPE           nxy, sig0, ufact=1.0, u0;
+  GTVector<GFTYPE> xx(GDIM), si(GDIM), sig(GDIM);
+  GTPoint<GFTYPE>  r0(3);
+
+  PropertyTree heatptree = ptree.getPropertyTree("init_heat");
+
+  GTVector<GTVector<GFTYPE>> *xnodes = &grid_->xNodes();
+
+  assert(grid.gtype() == GE_REGULAR && "Invalid element types");
+
+  bAdd = FALSE; // add solution to existing ua
+
+  nxy = (*xnodes)[0].size(); // same size for x, y, z
+  
+  r0.x1 = heatptree.getValue("x0"); 
+  r0.x2 = heatptree.getValue("y0"); 
+  r0.x3 = heatptree.getValue("z0"); 
+  sig0  = heatptree.getValue("sigma"); 
+  u0    = heatptree.getValue("u0"); 
+
+  for ( k=0; k<GDIM; k++ ) {
+    sig[k] = sqrt(sig0*sig0 + 2.0*t*nu_[k]);
+    si [k] = 0.5/(sig[k]*sig[k]);
+  }
+  ufact = bAdd ? 1.0 : 0.0;
+
+  for ( GSIZET j=0; j<nxy; j++ ) {
+    for ( GSIZET i=0; i<GDIM; i++ ) xx[i] = (*xnodes)[i][j] = r0[i];
+
+    prod = 1.0;
+    for ( GSIZET k=0; k<GDIM; k++ ) {
+      wsum     = exp(-xx[k]*xx[k]*si[k]);
+      n       = 1;
+      bContin = TRUE;
+      while ( bContin ) {
+        argxp = -pow((xx[k]+n*gL_[k]),2.0)*si[k];
+        argxm = -pow((xx[k]-n*gL_[k]),2.0)*si[k];
+        da    =  exp(argxp) + exp(argxm);
+        wsum  += da;
+        bContin = da/wsum > eps;
+        n++;
+      }
+      prod *= wsum;
+    }
+    ua[j] = ufact*ua[j] + pow(sig0,2)/pow(sig[0],2)*prod;
+  }
+
+  
+} // end, compute_periodic_heat_glump
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD: compute_analytic
+// DESC  : Compute analytic solutions based on property tree
+// ARGS  : grid    : GGrid object
+//         t       : time
+//         ptree   : main property tree
+//         ua      : return solution
+//**********************************************************************************
+void compute_analytic(GGrid &grid, Time &t, const tbox::PropertyTree& ptree,  State &ua);
+{
+  PropertyTree advptree  = ptree.getPropertyTree("adv_equation_traits");
+  GBOOL doheat   = ptree.getValue("doheat");
+  GBOOL bpureadv = ptree.getValue("bpureadv");
+
+  GString      sblock = ptree.getValue("init_block"); // name of initialization block
+  PropertyTree blockptree = ptree.getPropertyTree(sblock); // sub-block of main ptree describing initialization type
+
+  
+  if ( doheat  ) {
+    
+    if ( sblock.compare("init_lump") == 0  ) {
+      compute_periodic_heat_glump(grid, t, ptree, c, ua);
+    }
+    else {
+      assert(FALSE && "Invalid heat equation initialization specified");
+    }
+    return;
+  } // end, heat equation inititilization types
+
+  // Inititialize for pure advection:
+  if ( bpureadv ) {
+    assert(FALSE && "Pure advection not allowed");
+    return;
+  }
+
+  // Inititialize for nonlinear advection:
+  assert(FALSE && "Nonlinear advection not allowed");
+
+
+
+} // end, compute_analytic
