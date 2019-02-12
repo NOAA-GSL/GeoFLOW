@@ -64,15 +64,15 @@ void GAdvect::apply(GTVector<GFTYPE> &p, GTVector<GTVector<GFTYPE>*> &u, GTVecto
 {
   assert(bInitialized_ && "Operator not initialized");
     
-  GSIZET nxy = grid_->itype(GE_2DEMBEDDED) > 0 > GDIM+1 : GDIM;
+  GSIZET nxy = grid_->gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
 
   assert(u.size() >= nxy && "Insufficient number of velocity components");
 
-  if ( grid_->itype(GE_REGULAR).size() > 0 ) {
+  if ( grid_->gtype() == GE_REGULAR ) {
     reg_prod(p, u, utmp, po);
   }
-  else if ( grid_->itype(GE_DEFORMED).size() > 0 
-         || grid_->itype(GE_2DEMBEDDED).size() > 0 ) {
+  else if ( grid_->gtype() == GE_DEFORMED 
+         || grid_->gtype() == GE_2DEMBEDDED ) {
     def_prod(p, u, utmp, po);
   }
 
@@ -112,20 +112,20 @@ void GAdvect::def_prod(GTVector<GFTYPE> &p, GTVector<GTVector<GFTYPE>*> &u, GTVe
 // and Rij derivative matrix computed in the element, dX^j/dX^i, which
 // doesn't include the weights or the Jacobian.
 
-  GTVector<GTVector<GFTYPE>> *dXidX = &grid_->dXidX(); // get Rij
+  GTMatrix<GTVector<GFTYPE>> *dXidX = &grid_->dXidX(); // get Rij
   GTVector<GFTYPE>           *Jac   = &grid_->Jac  (); // get J
 
   // Get derivatives with weights:
-  GMTK::compute_grefderivsW(*grid_, p, etmp1_, utmp); // utmp stores tensor-prod derivatives, Dj p
+  GMTK::compute_grefderivsW(*grid_, p, etmp1_, FALSE, utmp); // utmp stores tensor-prod derivatives, Dj p
 
-  GSIZET nxy = grid_->itype(GE_2DEMBEDDED) > 0 > GDIM+1 : GDIM;
+  GSIZET nxy = grid_->gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
 
   // Compute po += ui Rij (D^j p): 
   po = 0.0;
   for ( GSIZET j=0; j<nxy; j++ ) { 
     *utmp[nxy+1]=0.0;
-    for ( GSIZE i=0; i<nxy; i++ ) {
-      dXidX(i,j)=>->pointProd(*utmp[i],*utmp[nxy]); // Rij Dj p
+    for ( GSIZET i=0; i<nxy; i++ ) {
+      (*dXidX)(i,j).pointProd(*utmp[i],*utmp[nxy]); // Rij Dj p
       *utmp[nxy+1] += *utmp[nxy];
     }
     utmp[nxy+1]->pointProd(*Jac); // J Rij  Dj p
@@ -165,13 +165,13 @@ void GAdvect::reg_prod(GTVector<GFTYPE> &p, GTVector<GTVector<GFTYPE>*> &u, GTVe
 // as is the Jacobian. Weights are included in the derivatives:
 
   // Get derivatives with weights:
-  GMTK::compute_grefderivsW(*grid_, p, etmp1_, utmp); // utmp stores tensor-prod derivatives, Dj p
+  GMTK::compute_grefderivsW(*grid_, p, etmp1_, FALSE, utmp); // utmp stores tensor-prod derivatives, Dj p
 
   // Compute po += Rj uj D^j p): 
   po = 0.0;
   for ( GSIZET j=0; j<GDIM; j++ ) { 
     *utmp [j] *= (*G_[j])[0];   // remember, mass not included in G here
-    *utmp [j].pointProd(*u[j]); // do uj * (Gj * Dj p)
+     utmp [j]->pointProd(*u[j]); // do uj * (Gj * Dj p)
     po += *utmp[GDIM];
   }
 
@@ -191,11 +191,11 @@ void GAdvect::init()
   assert(grid_->ntype().multiplicity(0) == GE_MAX-1 
         && "Only a single element type allowed on grid");
 
-  if ( grid_->itype(GE_2DEMBEDDED).size() > 0 
-    || grid_->itype  (GE_DEFORMED).size() > 0 ) {
+  if ( grid_->gtype() == GE_2DEMBEDDED 
+    || grid_->gtype() == GE_DEFORMED ) {
     def_init();
   }
-  if ( grid_->itype(GE_REGULAR).size() > 0 ) {
+  if ( grid_->gtype() == GE_REGULAR ) {
     reg_init();
   }
 
@@ -214,8 +214,8 @@ void GAdvect::init()
 void GAdvect::def_init()
 {
 
-  if ( grid_->itype(GE_2DEMBEDDED).size() == 0 
-    && grid_->itype  (GE_DEFORMED).size() == 0 ) return;
+  if ( grid_->gtype() == GE_2DEMBEDDED 
+    || grid_->gtype() == GE_DEFORMED ) return;
 
 
   GTVector<GSIZET>             N(GDIM);
@@ -226,7 +226,7 @@ void GAdvect::def_init()
 
   // Compute 'metric' components:
   // Gi = [dxi/dx, deta/dy, dzeta/dz]; 
-  GSIZET nxy = grid_->itype(GE_2DEMBEDDED).size() > 0 ? GDIM+1: GDIM;
+  GSIZET nxy = grid_->gtype() == GE_2DEMBEDDED ? GDIM+1: GDIM;
   GSIZET ibeg, iend; // beg, end indices for global array
   G_ .resize(nxy);
   G_ = NULLPTR;
@@ -234,6 +234,8 @@ void GAdvect::def_init()
     G_ [j] = new GTVector<GFTYPE>(grid_->ndof());
   }
 
+  Jac   = &grid_->Jac();
+  dXidX = &grid_->dXidX();
 
   // Cycle through all elements; fill metric elements
   for ( GSIZET e=0; e<grid_->elems().size(); e++ ) {
@@ -245,8 +247,9 @@ void GAdvect::def_init()
       W[j]= (*gelems)[e]->gbasis(j)->getWeights();
       N[j]= (*gelems)[e]->size(j);
     }
-    Jac = &(*gelems)[e]->Jac();
-    dXidX = &(*gelems)[e]->dXidX();
+    Jac->range(ibeg, iend); // Restrict range of global vectors:
+    for ( GSIZET j=0; j<nxy; j++ )
+      for ( GSIZET i=0; i<nxy; i++ ) (*dXidX)(i,j).range(ibeg, iend);
 
 #if defined(_G_IS2D)
 
@@ -279,6 +282,11 @@ void GAdvect::def_init()
 #endif
   } // end, element list
 
+  // Reset ranges to global scope:
+  Jac->range_reset();
+  for ( GSIZET j=0; j<nxy; j++ )
+    for ( GSIZET i=0; i<nxy; i++ ) (*dXidX)(i,j).range_reset();
+
 } // end of method def_init
 
 
@@ -291,11 +299,12 @@ void GAdvect::def_init()
 //**********************************************************************************
 void GAdvect::reg_init()
 {
-  if ( grid_->itype(GE_REGULAR).size() <= 0 ) return; 
+  if ( grid_->gtype() != GE_REGULAR ) return; 
 
 
   GTVector<GSIZET>             N(GDIM);
-  GTMatrix<GTVector<GFTYPE>>  *dXidX;    // element-based dXi/dX matrix
+  GTMatrix<GTVector<GFTYPE>>  *dXidX;    // dXi/dX matrix
+  GTVector<GFTYPE>            *Jac;      // Jacobian  
   GElemList                   *gelems = &grid_->elems();
 
   // Compute 'metric' components:
@@ -317,8 +326,10 @@ void GAdvect::reg_init()
   //  G3 = dXi^3/dX^3 = 2 / L3
   // These values should already be set in dXidX data within each
   // element.
+  Jac   = &grid_->Jac();
+  dXidX = &grid_->dXidX();
 
-  GSIZET nxy = grid_->itype(GE_2DEMBEDDED).size() > 0 ? GDIM+1: GDIM;
+  GSIZET nxy = grid_->gtype() == GE_2DEMBEDDED ? GDIM+1: GDIM;
   GSIZET ibeg, iend; // beg, end indices for global array
   G_ .resize(nxy);
   G_ = NULLPTR;
@@ -329,12 +340,10 @@ void GAdvect::reg_init()
 
   // Cycle through all elements; fill metric elements
   for ( GSIZET e=0; e<grid_->elems().size(); e++ ) {
-    if ( (*gelems)[e]->elemtype() != GE_REGULAR ) continue;
 
-    dXidX = &(*gelems)[e]->dXidX();
 
     for ( GSIZET j=0; j<GDIM; j++ ) {
-      (*G_[j])[0] = (*dXidX)(j,0)[0];
+      (*G_[j])[0] = (*dXidX)(j,0)[0]*(*Jac)[0];
     }
   } // end, element list
 
