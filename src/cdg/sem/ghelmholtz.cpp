@@ -284,13 +284,13 @@ void GHelmholtz::reg_prod(GTVector<GFTYPE> &u, GTVector<GFTYPE> &uo)
   // M is mass matrix, and p, and q are Laplacian and Mass factors.
 
   // Compute weighted deriviatives of u:
-  GMTK::compute_grefderivsW(*grid_, u, etmp1_, utmp_); // utmp stores tensor-prod derivatives
+  GMTK::compute_grefderivsW(*grid_, u, etmp1_, FALSE, utmp_); // utmp stores tensor-prod derivatives
 
   // Multiply by (const) metric factors
   for ( GSIZET k=0; k<GDIM; k++ ) *utmp_[k] *= (*G_(k,0))[k];
 
   // Take 'divergence' with transpose(D):
-  GMTK::compute_grefdiv(*grid_, gdu, etmp1_, uo, TRUE); // Compute 'divergence' with DT_j
+  GMTK::compute_grefdiv(*grid_, gdu, etmp1_, TRUE, uo); // Compute 'divergence' with DT_j
 
   // Apply p parameter ('viscosity') if necessary to Laplacian:
   if ( p_ != NULLPTR ) {
