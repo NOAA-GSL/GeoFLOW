@@ -105,10 +105,15 @@ int main(int argc, char **argv)
 
     GPTLstart("gen_base_grid");
 
+    GGridIcos::Traits traits;
     #if defined(_G_IS2D)
-    GGridIcos gen_icos(radiusi, ilevel, gbasis, nprocs);
+    traits.radiusi = radiusi;
+    traits.ilevel= ilevel;
+    GGridIcos gen_icos(traits, gbasis, nprocs);
     #elif defined(_G_IS3D)
-    GGridIcos gen_icos(radiusi, radiuso, ne, gbasis, nprocs);
+    traits.radiusi = radiusi;
+    traits.radiuso = radius0;
+    GGridIcos gen_icos(traits, ne, gbasis, nprocs);
     #endif
 
     GPTLstop("gen_base_grid");
