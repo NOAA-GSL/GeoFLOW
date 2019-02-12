@@ -11,6 +11,7 @@
 #include <math.h>
 #include <iomanip>
 #include <typeinfo>
+#include <vector>
 #include "gtvector.hpp"
 
 
@@ -82,6 +83,10 @@ public:
 
   inline void  operator=(const GTPoint<T> &p)
   { eps_ = p.eps_; x1 = p.x1; x2 = p.x2; x3 = p.x3; x4 = p.x4;}
+
+  inline void  operator=(const std::vector<T> &p)
+  { for ( GINT j=0; j<gdim_; j++ ) px_[j] = p[j];
+    if ( gdim_>0) x1 = p[0]; if ( gdim_>1) x2 = p[1]; if (gdim_>2) x3 = p[2]; if ( gdim_>3) x4 = p[3];}
 
   inline GTPoint<T> &operator=(T f)
   { x1 = f;  x2 = f;  x3 = f;  x4 = f; return *this;}
