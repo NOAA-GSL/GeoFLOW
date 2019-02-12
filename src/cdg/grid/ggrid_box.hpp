@@ -30,7 +30,7 @@ public:
         struct Traits {
           GTPoint<GFTYPE>     P0;        // global lower point
           GTPoint<GFTYPE>     P1;        // global upper point
-          GTVector<GBdyType>  bdyType;   // global bdy types
+          GTVector<GBdyType>  bdyTypes;  // global bdy types
         };
 
                             GGridBox(GGridBox::Traits &traits, GTVector<GINT> &ne, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GINT nprocs); // 2d, 3d constructor

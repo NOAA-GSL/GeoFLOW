@@ -5,8 +5,8 @@
 // Copyright    : Copyright 2019. Colorado State University. All rights reserved
 // Derived From : none.
 //==================================================================================
-#if !defined(GGRID_FACTORY_HPP)
-#define GGRID_FACTORY_HPP 
+#if !defined(_GGRID_FACTORY_HPP)
+#define _GGRID_FACTORY_HPP 
 
 #include "tbox/property_tree.hpp"
 #include "gcomm.hpp"
@@ -18,14 +18,13 @@ class GGridFactory
 {
   public:
 
-	static GGrid *build(const tbox::PropertyTree& ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis, GC_COMM comm);
+	static GGrid *build(const geoflow::tbox::PropertyTree& ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis, GC_COMM comm);
 
   private:
-        GBdyType      GGridFactory::str2bdytype(GString &stype);
+        GBdyType      str2bdytype(GString &stype);
 
+}; // namespace geoflow
 
-} // namespace geoflow
+//#include "ggrid_factory.ipp"
 
-#include "integrator_factory.ipp"
-
-#endif /* SRC_PDEINT_INTEGRATOR_FACTORY_HPP_ */
+#endif 

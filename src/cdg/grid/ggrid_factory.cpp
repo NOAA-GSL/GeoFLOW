@@ -19,67 +19,69 @@
 //          comm  : GC_Comm object
 // RETURNS: GGrid object ptr
 //**********************************************************************************
-GGrid *GGridFactory::build(const tbox::PropertyTree& ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis, GC_COMM comm)
+GGrid *GGridFactory::build(const geoflow::tbox::PropertyTree& ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis, GC_COMM comm)
 {
 
   GINT myrank  = GComm::WorldRank(comm);
   GINT nprocs  = GComm::WorldSize(comm);
         
-  GString gname = ptree("grid_name");
+  GString gname = ptree.getValue<GString>("grid_name");
   
   GGrid  *grid = new GGrid(comm);
 
   GTVector<GBdyType> bdytype;
 
-  if      ( gname.compare("grid_icos") { // 2d ICOS grid
+  if      ( gname.compare("grid_icos") == 0 ) { // 2d ICOS grid
     assert(GDIM == 2 && "GDIM must be 3");
     bdytype.resize(2); bdytype = GBDY_NONE;
     GGridIcos::Traits icostraits;
-    icostraits.ilevel = ptree.getValue("ilevel");
-    icostraits.radius = ptree.getValue("radius");
-    icostraits.bdyType= bdytype;
+    icostraits.ilevel  = ptree.getValue<GINT>("ilevel");
+    icostraits.radiusi = ptree.getValue<GFTYPE>("radius");
+    icostraits.radiuso = icostraits.radiusi;
+    icostraits.bdyTypes= bdytype;
     GGridIcos gen_icos(icostraits, gbasis, nprocs);
     gen_icos.do_grid(*grid, myrank);
   }
-  else if ( gname.compare("grid_sphere") { // 3D grid build on ICOIS
+  else if ( gname.compare("grid_sphere") == 0 ) { // 3D grid build on ICOIS
     assert(GDIM == 3 && "GDIM must be 3");
     bdytype.resize(2);
-    bdytype[0] = str2bdytype(ptree.getValue("bdy_inner"));
-    bdytype[1] = str2bdytype(ptree.getValue("bdy_outer"));
+    bdytype[0] = ptree.getValue<GBdyType>("bdy_inner");
+    bdytype[1] = ptree.getValue<GBdyType>("bdy_outer");
     GGridIcos::Traits sphtraits;
-    sphtraits.radiusi = ptree.getValue("radiusi");
-    sphtraits.radiuso = ptree.getValue("radiuso");
-    icostraits.bdyType= bdytype;
-    GGridIcos gen_icos(icostraits, gbasis, nprocs);
-    std::vector<GINT> stdne = ptree.getArray("num_elems",0);
-    GTVector<GINT> ne = stdne;
+    sphtraits.radiusi = ptree.getValue<GFTYPE>("radiusi");
+    sphtraits.radiuso = ptree.getValue<GFTYPE>("radiuso");
+    sphtraits.bdyTypes= bdytype;
+    std::vector<GINT> stdne = ptree.getArray<GINT>("num_elems");
+    GTVector<GINT> ne(stdne.size());
+    ne = stdne;
     GGridIcos gen_icos(sphtraits, ne, gbasis, nprocs);
     gen_icos.do_grid(*grid, myrank);
   }
-  else if ( gname.compare("grid_box") { // 2- 3D Cart grid
+  else if ( gname.compare("grid_box") == 0 ) { // 2- 3D Cart grid
     bdytype.resize(2*GDIM);
-    bdytype[0] = str2bdytype(ptree.getValue("bdy_y_0"));
-    bdytype[1] = str2bdytype(ptree.getValue("bdy_x_1"));
-    bdytype[2] = str2bdytype(ptree.getValue("bdy_y_1"));
-    bdytype[3] = str2bdytype(ptree.getValue("bdy_x_0"));
-    if ( GDIMN == 3 ) {
-    bdytype[4] = str2bdytype(ptree.getValue("bdy_z_0"));
-    bdytype[5] = str2bdytype(ptree.getValue("bdy_z_1"));
+    bdytype[0] = ptree.getValue<GBdyType>("bdy_y_0");
+    bdytype[1] = ptree.getValue<GBdyType>("bdy_x_1");
+    bdytype[2] = ptree.getValue<GBdyType>("bdy_y_1");
+    bdytype[3] = ptree.getValue<GBdyType>("bdy_x_0");
+    if ( GDIM == 3 ) {
+    bdytype[4] = ptree.getValue<GBdyType>("bdy_z_0");
+    bdytype[5] = ptree.getValue<GBdyType>("bdy_z_1");
     }
-    std::vector<GFTYPE> xyz0   = ptree.getArray("xyz0",0);
-    std::vector<GFTYPE> delxyz = ptree.getArray("delxyz",0);
-    std::vector  <GINT> stdne  = ptree.getArray("num_elems",0);
-    GTVector     <GINT> ne     = stdne;
+    std::vector<GFTYPE> xyz0   = ptree.getArray<GFTYPE>("xyz0");
+    std::vector<GFTYPE> delxyz = ptree.getArray<GFTYPE>("delxyz");
+    std::vector  <GINT> stdne  = ptree.getArray<GINT>("num_elems");
+    GTVector<GINT> ne(stdne.size());
+    ne     = stdne;
     GGridBox::Traits boxtraits;
     GTPoint<GFTYPE> P0(3);  // start point, lower LHS diagonal
     GTPoint<GFTYPE> P1(3);  // end point, upper RHS diagonal 
     for ( GSIZET j=0; j<3; j++ ) {
       P0[j] = xyz0[j];
-      P1[j] = p0[j] + delxyz[j];
+      P1[j] = P0[j] + delxyz[j];
     }
     boxtraits.P0 = P0;
     boxtraits.P1 = P1;
-    boxtraits.bdyType= bdytype;
+    boxtraits.bdyTypes= bdytype;
     GGridBox gen_box(boxtraits, ne, gbasis, nprocs);
     gen_box.do_grid(*grid, myrank);
   }

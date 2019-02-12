@@ -42,7 +42,7 @@ bdycallback_(NULLPTR)
   ne_.resize(b.size());
   P0_ = traits.P0;
   P1_ = traits.P1;
-  global_bdy_types_ = traits.bdyType;
+  global_bdy_types_ = traits.bdyTypes;
   bPeriodic_.resize(3);
   bPeriodic_ = FALSE;
   assert(P0_.size() >= ndim_ && P1_.size() >= ndim_ && ne.size() >= b.size()
