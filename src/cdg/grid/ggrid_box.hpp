@@ -22,16 +22,15 @@
 
 typedef GTMatrix<GFTYPE> GFTMatrix;
 
-Traits
 class GGridBox 
 {
 
 public:
         // Box grid traits:
         struct Traits {
-          GTPoint<GFTYPE>     P0(3);        // global lower point
-          GTPoint<GFTYPE>     P1(3);        // global upper point
-          GTVector<GBdyType>  bdyType(3);   // global bdy types
+          GTPoint<GFTYPE>     P0;        // global lower point
+          GTPoint<GFTYPE>     P1;        // global upper point
+          GTVector<GBdyType>  bdyType;   // global bdy types
         };
 
                             GGridBox(GGridBox::Traits &traits, GTVector<GINT> &ne, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GINT nprocs); // 2d, 3d constructor
@@ -40,7 +39,7 @@ public:
         void                do_grid(GGrid &grid, GINT irank);             // compute grid for irank
         void                set_partitioner(GDD_base *d);                 // set and use GDD object
         void                set_bdy_callback(
-                            std::function<void(GElem:List &)> &callback);     // set bdy-set callback
+                            std::function<void(GElemList &)> &callback);     // set bdy-set callback
         void                set_basis(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b);             // set element basis
 
         void                print(const GString &filename);              // print grid to file

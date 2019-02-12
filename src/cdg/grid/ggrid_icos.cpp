@@ -1194,7 +1194,7 @@ void GGridIcos::set_global_bdy_3d(GElem_base &pelem)
   GSIZET ib;
   GFTYPE x, y, z, r;
   for ( GSIZET m=0; m<2; m++ ) { // for each radiusi face
-    for ( GSIZET k=0; k<face_ind->size(); k++ ) { // for each bdy index
+    for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
       ib = (*bdy_ind)[k];
       x = (*xNodes)[0][ib]; y = (*xNodes)[1][ib]; z = (*xNodes)[2][ib];
       r = sqrt( x*x + y*y + z*z );
@@ -1208,7 +1208,7 @@ void GGridIcos::set_global_bdy_3d(GElem_base &pelem)
       ib = (*bdy_ind)[k];
       x = (*xNodes)[0][ib]; y = (*xNodes)[1][ib]; z = (*xNodes)[2][ib];
       r = sqrt( x*x + y*y + z*z );
-      if ( r == radius0_  )
+      if ( r == radiuso_  )
         bdy_typ->push_back( global_bdy_types_[1] );
     }
   }

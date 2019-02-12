@@ -35,8 +35,6 @@ bdycallback_(NULLPTR)
 {
   assert((b.size() == 2 || b.size() == 3) 
         && "Basis has incorrect dimensionalilty");
-  assert(P0.size() >= ndim_ && P1.size() >= ndim_ && ne.size() >= b.size()
-        && "Grid length and/or element count arrays of insufficient size");
 
   gbasis_.resize(b.size());
   gbasis_ = b;
@@ -46,18 +44,20 @@ bdycallback_(NULLPTR)
   P1_ = traits.P1;
   global_bdy_types_ = traits.bdyType;
   bPeriodic_.resize(3);
-  bPEriodic_ = FALSE;
+  bPeriodic_ = FALSE;
+  assert(P0_.size() >= ndim_ && P1_.size() >= ndim_ && ne.size() >= b.size()
+        && "Grid length and/or element count arrays of insufficient size");
   if ( global_bdy_types_[1] == GBDY_PERIODIC
     || global_bdy_types_[3] == GBDY_PERIODIC ) bPeriodic_[0] = TRUE;
   if ( global_bdy_types_[0] == GBDY_PERIODIC
     || global_bdy_types_[2] == GBDY_PERIODIC ) bPeriodic_[1] = TRUE;
   
-  if ( GDIN==3 
+  if ( GDIM==3 
     && global_bdy_types_[1] == GBDY_PERIODIC
     || global_bdy_types_[3] == GBDY_PERIODIC ) bPeriodic_[2] = TRUE;
 
   for ( GSIZET j=0; j<b.size(); j++ ) {
-    Lbox_[j] = fabs(P1[j] - P0[j]);
+    Lbox_[j] = fabs(P1_[j] - P0_[j]);
     ne_  [j] = ne[j];
   }
 
@@ -345,7 +345,7 @@ void GGridBox::do_grid2d(GGrid &grid, GINT irank)
 
     // Set global bdy types at each bdy_ind (this is a coarse 
     // application; finer control may be exercised in callback):
-    set_global_bdytypes_2d_2d(*pelem);
+    set_global_bdytypes_2d(*pelem);
 
     // Find global global interior and face start & stop indices represented 
     // locally within element:
@@ -454,7 +454,7 @@ void GGridBox::do_grid3d(GGrid &grid, GINT irank)
     gelems->push_back(pelem);
     // Set global bdy types at each bdy_ind (this is a coarse 
     // application; finer control may be exercised in callback):
-    set_global_bdytypes_2d_3d(*pelem);
+    set_global_bdytypes_3d(*pelem);
 
     nfnodes = 0;
     for ( GSIZET j=0; j<(*gelems)[i]->nfaces(); j++ )  // get # face nodes
