@@ -22,14 +22,20 @@
                     ${GHOME}/sem/gshapefcn_hostd.cpp
                     ${GHOME}/sem/gmass.cpp
                     ${GHOME}/sem/ghelmholtz.cpp
-#                   ${GHOME}/sem/gpdv.cpp
+                    ${GHOME}/sem/gpdv.cpp
+                    ${GHOME}/sem/gadvect.cpp
     )
 
  set(CDG_GRID_SRC   ${GHOME}/grid/gdd_base.cpp
                     ${GHOME}/grid/ggrid.cpp
                     ${GHOME}/grid/ggrid_icos.cpp
                     ${GHOME}/grid/ggrid_box.cpp
+                    ${GHOME}/grid/ggrid_factory.cpp
     )
+
+#set(CDG_PDES_SRC   ${GHOME}/pdes/gbutcherrk.cpp
+#                   ${GHOME}/pdes/gexrk_stepper.cpp
+#   )
 
 
  set(CDG_UTILS_SRC  ${GHOME}/utils/gbitblock.cpp 

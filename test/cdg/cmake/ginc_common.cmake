@@ -19,6 +19,8 @@ set(CDG_INC
           ${GHOME}/sem
           ${GHOME}/utils
           ${GHOME}/grid
+          ${GHOME}/pdes
+          ${GHOME}/..
     )
 
 # Add preproc defs:

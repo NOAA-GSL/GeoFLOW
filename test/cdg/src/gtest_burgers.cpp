@@ -22,6 +22,7 @@
 #include "gmorton_keygen.hpp"
 #include "gburgers.hpp"
 #include "pdeint/equation_base.hpp"
+#include "tbox/property_tree.hpp"
 
 using namespace geoflow::pdeint;
 
