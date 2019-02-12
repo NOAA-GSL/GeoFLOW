@@ -345,7 +345,7 @@ void GGridBox::do_grid2d(GGrid &grid, GINT irank)
 
     // Set global bdy types at each bdy_ind (this is a coarse 
     // application; finer control may be exercised in callback):
-    set_global_bdy_2d(*pelem);
+    set_global_bdytypes_2d_2d(*pelem);
 
     // Find global global interior and face start & stop indices represented 
     // locally within element:
@@ -454,7 +454,7 @@ void GGridBox::do_grid3d(GGrid &grid, GINT irank)
     gelems->push_back(pelem);
     // Set global bdy types at each bdy_ind (this is a coarse 
     // application; finer control may be exercised in callback):
-    set_global_bdy_3d(*pelem);
+    set_global_bdytypes_2d_3d(*pelem);
 
     nfnodes = 0;
     for ( GSIZET j=0; j<(*gelems)[i]->nfaces(); j++ )  // get # face nodes
@@ -536,13 +536,15 @@ void GGridBox::print(const GString &filename)
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : set_global_bdy_2d
-// DESC   : Set global boundary conditions in 2d
-//            NOTE: element node coordinate may change in this call!
+// METHOD : set_global_bdytypes_2d
+// DESC   : Set global boundary condition types in 2d
+//            NOTE: element node coordinate may change in this call! Also,
+//                  bdy indices must already have been set prior to 
+//                  entry.
 // ARGS   : pelem : Element under consideration
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::set_global_bdy_2d(GElem_base &pelem)
+void GGridBox::set_global_bdytypes_2d(GElem_base &pelem)
 {
 
   GTVector<GINT>              *bdy_ind=&pelem.bdy_indices();
@@ -553,8 +555,7 @@ void GGridBox::set_global_bdy_2d(GElem_base &pelem)
   GSIZET ib;
   if ( bPeriodic_[0] == GBDY_PERIODIC ) { // check for periodicity in x
     for ( GSIZET m=0; m<2; m++ ) { // for each x edge
-      face_ind = &pelem.edge_indices(2*m+1);
-      for ( GSIZET k=0; k<face_ind->size(); k++ ) { // for each face index
+      for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each face index
         ib = (*bdy_ind)[k];
         if ( (*xNodes)[0][ib] == P0_.x1 || (*xNodes)[0][ib] == P1_.x1 ) 
           bdy_typ->push_back( GBDY_PERIODIC );
@@ -565,7 +566,6 @@ void GGridBox::set_global_bdy_2d(GElem_base &pelem)
   }
   else {                                         // not x-periodic
     for ( GSIZET m=0; m<2; m++ ) { // for each x edge
-      face_ind = &pelem.edge_indices(2*m+1);
       for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
         ib = (*bdy_ind)[k];
         if ( (*xNodes)[0][ib] == P0_.x1 || (*xNodes)[0][ib] == P1_.x1 ) 
@@ -576,7 +576,6 @@ void GGridBox::set_global_bdy_2d(GElem_base &pelem)
 
   if ( bPeriodic_[1] == GBDY_PERIODIC ) { // check for periodicity in y
     for ( GSIZET m=0; m<2; m++ ) { // for each y edge
-      face_ind = &pelem.edge_indices(2*m);
       for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
         ib = (*bdy_ind)[k];
         if ( (*xNodes)[1][ib] == P0_.x2 || (*xNodes)[1][ib] == P1_.x2 ) 
@@ -588,7 +587,6 @@ void GGridBox::set_global_bdy_2d(GElem_base &pelem)
   }
   else {                                         // not y-periodic
     for ( GSIZET m=0; m<2; m++ ) { // for each y edge
-      face_ind = &pelem.edge_indices(2*m);
       for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
         ib = (*bdy_ind)[k];
         if ( (*xNodes)[0][ib] == P0_.x2 || (*xNodes)[0][ib] == P1_.x2 ) 
@@ -596,20 +594,23 @@ void GGridBox::set_global_bdy_2d(GElem_base &pelem)
       }
     }
   }
-} // end, method set_global_bdy_2d
+} // end, method set_global_bdytypes_2d
 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : set_global_bdy_3d
+// METHOD : set_global_bdytypes_3d
 // DESC   : Set global boundary conditions in 3d
-//            NOTE: element node coordinate may change in this call!
+//            NOTE: element node coordinate may change in this call! Also,
+//                  bdy indices must already have been set prior to 
+//                  entry.
 // ARGS   : pelem : Element under consideration
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::set_global_bdy_3d(GElem_base &pelem)
+void GGridBox::set_global_bdytypes_3d(GElem_base &pelem)
 {
   GTVector<GINT>              *bdy_ind=&pelem.bdy_indices();
+  GTVector<GINT>              *face_ind=&pelem.bdy_indices();
   GTVector<GBdyType>          *bdy_typ=&pelem.bdy_types  ();
   GTVector<GTVector<GFTYPE>>  *xNodes =&pelem.xNodes();
 
@@ -617,7 +618,7 @@ void GGridBox::set_global_bdy_3d(GElem_base &pelem)
   if ( bPeriodic_[0] == GBDY_PERIODIC ) { // check for periodicity in x
     for ( GSIZET m=0; m<2; m++ ) { // for each x face
       face_ind = &pelem.face_indices(2*m+1);
-      for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
+      for ( GSIZET k=0; k<face_ind->size(); k++ ) { // for each bdy index
         ib = (*bdy_ind)[k];
         if ( (*xNodes)[0][ib] == P0_.x1 || (*xNodes)[0][ib] == P1_.x1 ) 
           bdy_typ->push_back( GBDY_PERIODIC );
@@ -629,7 +630,7 @@ void GGridBox::set_global_bdy_3d(GElem_base &pelem)
   else {                                         // not x-periodic
     for ( GSIZET m=0; m<2; m++ ) { // for each x face
       face_ind = &pelem.face_indices(2*m+1);
-      for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
+      for ( GSIZET k=0; k<face_ind->size(); k++ ) { // for each bdy index
         ib = (*bdy_ind)[k];
         if ( (*xNodes)[0][ib] == P0_.x1 || (*xNodes)[0][ib] == P1_.x1 ) 
           bdy_typ->push_back( global_bdy_types_[2*m+1] );
@@ -640,7 +641,7 @@ void GGridBox::set_global_bdy_3d(GElem_base &pelem)
   if ( bPeriodic_[1] == GBDY_PERIODIC ) { // check for periodicity in y
     for ( GSIZET m=0; m<2; m++ ) { // for each y face
       face_ind = &pelem.face_indices(2*m);
-      for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
+      for ( GSIZET k=0; k<face_ind->size(); k++ ) { // for each bdy index
         ib = (*bdy_ind)[k];
         if ( (*xNodes)[1][ib] == P0_.x2 || (*xNodes)[1][ib] == P1_.x2 ) 
           bdy_typ->push_back( GBDY_PERIODIC );
@@ -652,7 +653,7 @@ void GGridBox::set_global_bdy_3d(GElem_base &pelem)
   else {                                         // not y-periodic
     for ( GSIZET m=0; m<2; m++ ) { // for each y face
       face_ind = &pelem.face_indices(2*m);
-      for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
+      for ( GSIZET k=0; k<face_ind->size(); k++ ) { // for each bdy index
         ib = (*bdy_ind)[k];
         if ( (*xNodes)[0][ib] == P0_.x2 || (*xNodes)[0][ib] == P1_.x2 ) 
           bdy_typ->push_back( global_bdy_types_[2*m] );
@@ -663,7 +664,7 @@ void GGridBox::set_global_bdy_3d(GElem_base &pelem)
   if ( bPeriodic_[1] == GBDY_PERIODIC ) { // check for periodicity in z
     for ( GSIZET m=0; m<2; m++ ) { // for each z face
       face_ind = &pelem.face_indices(m+4);
-      for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
+      for ( GSIZET k=0; k<face_ind->size(); k++ ) { // for each bdy index
         ib = (*bdy_ind)[k];
         if ( (*xNodes)[1][ib] == P0_.x3 || (*xNodes)[1][ib] == P1_.x3 ) 
           bdy_typ->push_back( GBDY_PERIODIC );
@@ -675,11 +676,11 @@ void GGridBox::set_global_bdy_3d(GElem_base &pelem)
   else {                                         // not z-periodic
     for ( GSIZET m=0; m<2; m++ ) { // for each z face
       face_ind = &pelem.face_indices(m+4);
-      for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
+      for ( GSIZET k=0; k<face_ind->size(); k++ ) { // for each bdy index
         ib = (*bdy_ind)[k];
         if ( (*xNodes)[0][ib] == P0_.x3 || (*xNodes)[0][ib] == P1_.x3 ) 
           bdy_typ->push_back( global_bdy_types_[m+4] );
       }
     }
   }
-} // end, method set_global_bdy_3d
+} // end, method set_global_bdytypes_3d
