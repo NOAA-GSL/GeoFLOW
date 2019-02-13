@@ -27,6 +27,9 @@
 #include <stdlib.h>
 #include <memory.h>
 #include <math.h>
+#include "gab.hpp"
+#include "gext.hpp"
+#include "gbdf.hpp"
 #include "gburgers.hpp"
 
 
@@ -53,7 +56,7 @@
 // RETURNS: none
 //**********************************************************************************
 template<typename TypePack>
-GBurgers<TypePak>::GBurgers(GGrid &grid, State &u, Traits &traits, GTVector<GTVectorGFTYPE>*> &tmp) :
+GBurgers<TypePack>::GBurgers(GC_COMM &comm, GGrid &grid, State &u, GBurgers::Traits &traits, GTVector<GTVector<GFTYPE>*> &tmp) :
 doheat_         (traits.doheat),
 bpureadv_     (traits.bpureadv),
 bconserved_ (traits.bconserved),
@@ -67,9 +70,10 @@ gmass_                (NULLPTR),
 gpdv_                 (NULLPTR),
 //gflux_                (NULLPTR),
 gbc_                  (NULLPTR),
-grid_                   (&grid)
+grid_                   (&grid),
+comm_                   (&comm)
 {
-  static_assert(std::is_same<State,GTVector<GTVectorGFTYPE>>>::value,
+  static_assert(std::is_same<State,GTVector<GTVector<GFTYPE>>>::value,
                "State is of incorrect type"); 
   valid_types_.resize(4);
   valid_types_[0] = GSTEPPER_EXRK2;
@@ -94,7 +98,7 @@ grid_                   (&grid)
 // RETURNS: none
 //**********************************************************************************
 template<typename TypePack>
-GBurgers<TypePak>::~GBurgers()
+GBurgers<TypePack>::~GBurgers()
 {
   if ( gmass_   != NULLPTR ) delete gmass_;
   if ( gimass_  != NULLPTR ) delete gimass_;
@@ -118,13 +122,12 @@ GBurgers<TypePak>::~GBurgers()
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GBurgers<TypePak>::dt_impl(const Time &t, State &u, Time &dt)
+void GBurgers<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
 {
    GSIZET ibeg, iend;
    GFTYPE dtmin, umax;
-   GTVector<GFTYPE> *drmin;
-
-   drmin = &grid_->minnodedist();
+   GTVector<GFTYPE> *drmin  = &grid_->minnodedist();
+   GElemList        *gelems = &grid_->elems();
 
    // This is an estimate. The minimum length on each element,
    // computed in GGrid object is divided by the maximum of
@@ -134,22 +137,22 @@ void GBurgers<TypePak>::dt_impl(const Time &t, State &u, Time &dt)
 
    if ( bpureadv_ ) { // pure (linear) advection
      for ( auto k=1; k<u.size(); k++ ) { // each u
-       for ( auto e=0; e<gelems_.size(); e++ ) { // for each element
-         ibeg = gelems_[e]->igbeg(); iebd = gelems_[e]->igend();
+       for ( auto e=0; e<gelems->size(); e++ ) { // for each element
+         ibeg = (*gelems)[e]->igbeg(); iend = (*gelems)[e]->igend();
          u[k].range(ibeg, iend);
          umax = u[k].max();
-         dtmin = MIN(dtmin, (*drmin_)[e] / umax);
+         dtmin = MIN(dtmin, (*drmin)[e] / umax);
        }
        u[k].range_reset();
      }
    }
    else {             // nonlinear advection
      for ( auto k=0; k<u.size(); k++ ) { // each c
-       for ( auto e=0; e<gelems_.size(); e++ ) { // for each element
-         ibeg = gelems_[e]->igbeg(); iebd = gelems_[e]->igend();
+       for ( auto e=0; e<gelems->size(); e++ ) { // for each element
+         ibeg = (*gelems)[e]->igbeg(); iend = (*gelems)[e]->igend();
          u[k].range(ibeg, iend);
          umax = u[k].max();
-         dtmin = MIN(dtmin, (*drmin_)[e] / umax);
+         dtmin = MIN(dtmin, (*drmin)[e] / umax);
        }
        u[k].range_reset();
      }
@@ -176,7 +179,7 @@ void GBurgers<TypePak>::dt_impl(const Time &t, State &u, Time &dt)
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GBurgers<TypePak>::dudt_impl(const Time &t, State &u, Time &dt, Derivative &dudt)
+void GBurgers<TypePack>::dudt_impl(const Time &t, State &u, Time &dt, Derivative &dudt)
 {
   assert(!bconserved_ &&
          "conservation not yet supported"); 
@@ -209,14 +212,14 @@ void GBurgers<TypePak>::dudt_impl(const Time &t, State &u, Time &dt, Derivative 
     for ( auto j=0; j<u.size()-1; j++ ) c_[j] = u[j+1];
     gadvect_->apply(u[0], c_, utmp_, dudt[0]); // apply advection
     ghelm_->opVec_prod(u[0],utmp_[0]); // apply diffusion
-    utmp[0] -= dudt[0];
-    gimass_->opVec_prod(utmp_[0],dudt[k]); // apply M^-1
+    utmp_[0] -= dudt[0];
+    gimass_->opVec_prod(utmp_[0],dudt[0]); // apply M^-1
   }
   else {             // nonlinear advection
     for ( auto k=0; k<u.size(); k++ ) {
       gadvect_->apply(u[k], u, utmp_, dudt[k]);
       ghelm_->opVec_prod(u[k],utmp_[0]); // apply diffusion
-      utmp[0] += dudt[k];
+      utmp_[0] += dudt[k];
       gimass_->opVec_prod(utmp_[0],dudt[k]); // apply M^-1
     }
   }
@@ -235,7 +238,7 @@ void GBurgers<TypePak>::dudt_impl(const Time &t, State &u, Time &dt, Derivative 
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GBurgers<TypePak>::step_impl(const Time &t, State &uin, State &ub, Time &dt, Derivative &uout)
+void GBurgers<TypePack>::step_impl(const Time &t, State &uin, State &ub, Time &dt, Derivative &uout)
 {
 
   switch ( isteptype_ ) {
@@ -267,7 +270,7 @@ void GBurgers<TypePak>::step_impl(const Time &t, State &uin, State &ub, Time &dt
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GBurgers<TypePak>::step_multistep(const Time &t, State &uin, State &ub, Time &dt, Derivative &uout)
+void GBurgers<TypePack>::step_multistep(const Time &t, State &uin, State &ub, Time &dt, State &uout)
 {
   assert(FALSE && "Multistep methods not yet available");
 
@@ -286,7 +289,7 @@ void GBurgers<TypePak>::step_multistep(const Time &t, State &uin, State &ub, Tim
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GBurgers<TypePak>::step_exrk(const Time &t, State &uin, State&ub, Time &dt, Derivative &uout)
+void GBurgers<TypePack>::step_exrk(const Time &t, State &uin, State &ub, Time &dt, State &uout)
 {
 
   // If non-conservative, compute RHS from:
@@ -297,14 +300,14 @@ void GBurgers<TypePak>::step_exrk(const Time &t, State &uin, State&ub, Time &dt,
   GTVector<GTVector<GFTYPE>*> utmp1(utmp_.size()-itorder_-1);
   GTVector<GTVector<GFTYPE>*> utmp2(itorder_+1);
   for ( auto j=0; j<itorder_+1; j++ ) utmp2[j] = utmp_[j];
-  for ( auto j=0; j<utmp_.size-itorder_-1; j++ ) utmp1[j] = utmp_[itorder_+1+j];
+  for ( auto j=0; j<utmp_.size()-itorder_-1; j++ ) utmp1[j] = utmp_[itorder_+1+j];
 
 
   // Cycle over stages:
   for ( auto j=0; j<uin.size(); j++ ) *uout[j] = *uin[j];
   for ( auto k=0; k<itorder_; k++ ) {
     apply_bc_impl(t, uout, ub);
-    gexrk_->step(t, uout[k], dt, utmp1, utmp2);
+    gexrk_.step(t, uout[k], dt, utmp1, utmp2);
     for ( auto j=0; j<uin.size(); j++ ) *uout[k] = *utmp2[k];
   }
 
@@ -321,11 +324,12 @@ void GBurgers<TypePak>::step_exrk(const Time &t, State &uin, State&ub, Time &dt,
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GBurgers<TypePak>::set_bdy_callback(std::function<void(GGrid &)> &callback)
+void GBurgers<TypePack>::set_bdy_callback(std::function<void(Time &t, State &u,
+                                          State &ub)> *callback)
 {
   assert(gbc_ != NULLPTR && "Boundary operator not instantiated");
 
-  bdy_update_callback_ = &callback;
+  bdy_update_callback_ = callback;
   gbc_->set_dirichlet_callback(bdy_update_callback_);
   
 } // end of method set_bdy_callback
@@ -344,9 +348,9 @@ void GBurgers<TypePak>::set_bdy_callback(std::function<void(GGrid &)> &callback)
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GBurgers<TypePak>::init(State &u)
+void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
 {
-  GString serr = "GBurgers<TypePak>::init: ";
+  GString serr = "GBurgers<TypePack>::init: ";
 
   // Find multistep/multistage time stepping coefficients:
   GMultilevel_coeffs_base *tcoeff_obj; // time deriv coeffs
@@ -360,20 +364,20 @@ void GBurgers<TypePak>::init(State &u)
     case GSTEPPER_BDFAB:
       tcoeff_obj = new G_BDF(itorder_);
       acoeff_obj = new G_AB (inorder_);
-      tcoeffs_.resize(tcoeff_obj.getCoeffs().size());
-      acoeffs_.resize(acoeff_obj.getCoeffs().size());
+      tcoeffs_.resize(tcoeff_obj->getCoeffs().size());
+      acoeffs_.resize(acoeff_obj->getCoeffs().size());
       tcoeffs_ = tcoeff_obj; acoeffs_ = acoeff_obj;
       break;
     case GSTEPPER_BDFEXT:
       tcoeff_obj = new G_BDF(itorder_);
       acoeff_obj = new G_EXT(inorder_);
-      tcoeffs_.resize(tcoeff_obj.getCoeffs().size());
-      acoeffs_.resize(acoeff_obj.getCoeffs().size());
+      tcoeffs_.resize(tcoeff_obj->getCoeffs().size());
+      acoeffs_.resize(acoeff_obj->getCoeffs().size());
       tcoeffs_ = tcoeff_obj; acoeffs_ = acoeff_obj;
       break;
   }
   delete tcoeff_obj;
-  delete acoeff_obj'
+  delete acoeff_obj;
   
   // Instantiate spatial discretization operators:
   gmass_   = new GMass(*grid_);
@@ -395,14 +399,14 @@ void GBurgers<TypePak>::init(State &u)
     gpdv_  = new GpdV(*grid_,*gmass_);
 //  gflux_ = new GFlux(*grid_);
     assert( (gmass_   != NULLPTR
-          || ghelm_   != NULLPTR
-          || gpdv_    != NULLPTR) && "1 or more operators undefined");
+          && ghelm_   != NULLPTR
+          && gpdv_    != NULLPTR) && "1 or more operators undefined");
   }
   if ( !bconserved_ && !doheat_ ) {
     gadvect_ = new GAdvect(*grid_);
     assert( (gmass_   != NULLPTR
-          || ghelm_   != NULLPTR
-          || gaevect_ != NULLPTR) && "1 or more operators undefined");
+          && ghelm_   != NULLPTR
+          && gadvect_ != NULLPTR) && "1 or more operators undefined");
   }
 
   // If doing linear advection, set up a helper vector for
@@ -431,7 +435,7 @@ void GBurgers<TypePak>::init(State &u)
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GBurgers<TypePak>::cycle_keep(State &u)
+void GBurgers<TypePack>::cycle_keep(State &u)
 {
 
   // Make sure following index map contains the 
@@ -440,8 +444,8 @@ void GBurgers<TypePak>::cycle_keep(State &u)
   //   u_keep[1] <--> time level n-1
   //   u_keep[2] <--> time level n-2 ...
   u_keep_ .resize(itorder_);
-  for ( auto i=itorder_-1; i>=1; i-- ) u_keep[i] = u_keep[i+1];
-  u_keep[0] = u;
+  for ( auto i=itorder_-1; i>=1; i-- ) u_keep_[i] = u_keep_[i+1];
+  u_keep_[0] = u;
 
 } // end of method cycle_keep
 
@@ -457,7 +461,7 @@ void GBurgers<TypePak>::cycle_keep(State &u)
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GBurgers<TypePak>::set_nu(GTVector<GFTYPE> &nu)
+void GBurgers<TypePack>::set_nu(GTVector<GFTYPE> &nu)
 {
   assert(ghelm_ != NULLPTR && "Init must be called first");
   nu_ = &nu; // Not sure this class actually needs this. May be removed later
@@ -473,7 +477,7 @@ void GBurgers<TypePak>::set_nu(GTVector<GFTYPE> &nu)
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GBurgers<TypePak>::apply_bc_impl(const Time &t, State &u, State &ub)
+void GBurgers<TypePack>::apply_bc_impl(const Time &t, State &u, State &ub)
 {
   GTVector<GINT>     *igbdy     = &grid_->igbdy();
 
@@ -485,8 +489,8 @@ void GBurgers<TypePak>::apply_bc_impl(const Time &t, State &u, State &ub)
   // Neumann bcs type have to be set with the
   // differential operators themselves
  
-  for ( GSISET k=0; k<u.size(); k++ ) {
-    for ( GSISET j=0; j<igbdy->size(); j++ ) {
+  for ( GSIZET k=0; k<u.size(); k++ ) {
+    for ( GSIZET j=0; j<igbdy->size(); j++ ) {
       u[k][(*igbdy)[j]] = ub[k][j];
     } 
   } 

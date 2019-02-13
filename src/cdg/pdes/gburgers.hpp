@@ -32,21 +32,22 @@
 #include "gtvector.hpp"
 #include "gdd_base.hpp"
 #include "ggrid.hpp"
-#include "pdeint/equation_base.hpp"
+#include "gpdv.hpp"
+#include "gmass.hpp"
 #include "gadvect.hpp"
 #include "ghelmholtz.hpp"
 #include "gbc.hpp"
 //#include "gflux.hpp"
+#include "gexrk_stepper.hpp"
+#include "gbutcherrk.hpp"
+#include "pdeint/equation_base.hpp"
+
+using namespace geoflow::pdeint;
 
 
 template<typename TypePack>
-class GBurgers :: public EquationBase<TypePack>
+class GBurgers : public EquationBase<TypePack>
 {
-        static_assert(std::is_same<State,GTVector<GTVector<GFTYPE>*>>::value,
-               "State is of incorrect type");
-        static_assert(std::is_same<Derivative,GTVector<GTVector<GFTYPE>*>>::value,
-               "Derivative is of incorrect type");
-
 public:
         using Interface  = EquationBase<TypePack>;
         using State      = typename Interface::State;
@@ -55,6 +56,11 @@ public:
         using Time       = typename Interface::Time;
         using Jacobian   = typename Interface::Jacobian;
         using Size       = typename Interface::Size;
+
+        static_assert(std::is_same<State,GTVector<GTVector<GFTYPE>*>>::value,
+               "State is of incorrect type");
+        static_assert(std::is_same<Derivative,GTVector<GTVector<GFTYPE>*>>::value,
+               "Derivative is of incorrect type");
 
         // Burgers solver traits:
         struct Traits {
@@ -67,10 +73,10 @@ public:
         };
 
         GBurgers() = delete; 
-        GBurgers(GGrid &grid, State &u, Traits &traits, GTVector<GTVector<GFTYPE>*> &tmp);
+        GBurgers(GC_COMM &comm, GGrid &grid, State &u, GBurgers::Traits &traits, GTVector<GTVector<GFTYPE>*> &tmp);
        ~GBurgers();
         GBurgers(const GBurgers &bu) = default;
-        GBurgers &operator=(const Burgers &bu) = default;
+        GBurgers &operator=(const GBurgers &bu) = default;
 
 protected:
         void                step_impl(const Time &t, State &uin, State &ub, 
@@ -84,15 +90,15 @@ protected:
                                           State &ub);                     // Apply bdy conditions
        void                 set_bdy_callback(
                             std::function<void(Time &t, State &u,
-                                          State &ub)> &callback);         // set bdy-update callback
+                                          State &ub)> *callback);         // set bdy-update callback
 
 private:
 
-        void                init(State &u, Traits &);      // initialize 
+        void                init(State &u, GBurgers::Traits &);           // initialize 
         void                step_exrk  (const Time &t, State &uin, State &ub,
                                         Time &dt, State &uout);
         void                dudt_impl  (const Time &t, State &u,
-                                        Time &dt, State &dudt);
+                                        Time &dt, Derivative &dudt);
         void                step_multistep(const Time &t, State &uin, State &ub,
                                            Time &dt, State &uout);
         void                cycle_keep(State &u);
@@ -102,23 +108,25 @@ private:
         GBOOL               bpureadv_;      // do pure (linear) advection?
         GBOOL               bconserved_;    // use conservation form?
         GStepperType        isteptype_;     // stepper type
-        GINT                nsteps_         // num steps taken
+        GINT                nsteps_ ;       // num steps taken
         GINT                itorder_;       // time deriv order
         GINT                inorder_;       // nonlin term order
         GTVector<GFTYPE>    tcoeffs_;       // coeffs for time deriv
         GTVector<GFTYPE>    acoeffs_;       // coeffs for NL adv term
-        GButcherRK          butcher_;       // Butcher tableau for EXRK
+        GButcherRK<GFTYPE>  butcher_;       // Butcher tableau for EXRK
         GTVector<GTVector<GFLOAT>*>  
-                            tmp_;
+                            utmp_;
         GTVector<GTVector<GFLOAT>*>  
                             c_;             // linear velocity if bpureadv = TRUE
         GTVector<State>     u_keep_;        // state at prev. time levels
         GTVector<GStepperType>
                             valid_types_;   // valid stepping methods supported
         GTVector<GFTYPE>   *nu_   ;         // dissipoation
-        GExRKstepper        gexrk_;         // ExRK stepper, if needed
-        GMassop            *gmass_;         // mass op
-        GMassop            *gimass_;        // inverse mass op
+        GGrid              *grid_;          // GGrid object
+        GExRKStepper<GFTYPE>
+                            gexrk_;         // ExRK stepper, if needed
+        GMass              *gmass_;         // mass op
+        GMass              *gimass_;        // inverse mass op
         GAdvect            *gadvect_;       // advection op
         GHelmholtz         *ghelm_;         // Helmholz and Laplacian op
         GpdV               *gpdv_;          // pdV op
@@ -126,6 +134,7 @@ private:
         GBC                *gbc_;           // bdy conditions operator
         std::function<void(Time &t, State &u, State &ub)>
                            *bdy_update_callback_; // bdy update callback function
+        GC_COMM            *comm_;          // communicator
 
 
 };
