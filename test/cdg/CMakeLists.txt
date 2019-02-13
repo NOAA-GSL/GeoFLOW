@@ -92,8 +92,16 @@ set(GPTL_PATH
 #   /home/Duane.Rosenberg/lib/gptl-v5.4.4_intel_impi_theia
    )
 
+# BOOST path; may be changed in glocale.cmake:
+set(BOOST_PATH 
+    /scratch/duane.rosenberg/lib/boost_1_69_0_gcc
+   )
+
 set(CDG_COMMON_LIBS  
     ${GPTL_PATH}/lib/libgptl.a
+    ${BOOST_PATH}/lib/libboost_mpi.a
+    ${BOOST_PATH}/lib/libboost_serialization.a
+    ${BOOST_PATH}/lib/libboost_wserialization.a
    )
 
 if (HAVE_PAPI)
@@ -105,6 +113,7 @@ endif()
 
 set(CDG_COMMON_INC ${CDG_COMMON_INC}
     ${GPTL_PATH}/include
+    ${BOOST_PATH}/include
    )
 
 if (USE_MPI)
