@@ -81,9 +81,9 @@ void GButcherRK<T>::computeCoeffs()
 
   assert( (iorder_ == 2 || iorder_ == 4) && "Invalid RK order");
 
-  alpha_.resize(iorder_)
-  c_    .resize(iorder_)
-  beta_ .resize(iorder_,iorder_)
+  alpha_.resize(iorder_);
+  c_    .resize(iorder_);
+  beta_ .resize(iorder_,iorder_);
 
   alpha_ = 0.0; beta_ = 0.0; c_ = 0.0;
   if ( iorder_ == 2 ) {

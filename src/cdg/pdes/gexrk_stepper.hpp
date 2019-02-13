@@ -10,29 +10,32 @@
 
 #include "gtvector.hpp"
 #include "gtmatrix.hpp"
+#include "gbutcherrk.hpp"
 
 
-template class<typename T>
-class GExRKstepper
+template <typename T>
+class GExRKStepper
 {
 public:
-                           GExRKstepper();
-                           GExRKstepper(GSIZET iorder=4);
-                          ~GExRKstepper() = default;
-                           GExRKstepper(const GExRKstepper &a) = default;
-                           GExRKstepper &operator=(const GExRKstepper &bu) = default;
-                           setOrder(INT iorder);
-        void               setRHSfunction(std::function<void(const GFTYPE &t, 
-                                          GTVector<GTVector<GFTYPE>> &uin,
-                                          GFTYPE &dt, GTVector<GTVector<GFTYPE>> &dudt)> &callback)
+                           GExRKStepper();
+                           GExRKStepper(GSIZET iorder=4);
+                          ~GExRKStepper() = default;
+                           GExRKStepper(const GExRKStepper &a) = default;
+                           GExRKStepper &operator=(const GExRKStepper &bu) = default;
+        void               setOrder(GINT iorder);
+        void               setRHSfunction(std::function<void(const T &t, 
+                                          GTVector<GTVector<T>*> &uin,
+                                          T &dt, GTVector<GTVector<T>*> &dudt)> &callback)
                                           { rhs_callback_ = callback; }
-        void               step(const GFTYPE &t, GTVector<GTVector<GFTYPE>> &uin,
-                                GFTYPE &dt, GTVector<GTVector<GFTYPE>> &uout);
+        void               step(const T &t, GTVector<GTVector<T>*> &uin,
+                                T &dt, GTVector<GTVector<T>*> &tmp,
+                                       GTVector<GTVector<T>*> &uout);
 
 
 private:
 // Private data:
-         GButcherRK         butcher_;                         // Butcher tableau
+         GINT               iorder_;                          // no stages (not nec. 'order'!)
+         GButcherRK<T>      butcher_;                         // Butcher tableau
          std::function<void(const GFTYPE &t,                  // RHS callback function
                             GTVector<GTVector<GFTYPE>> &uin,
                             GFTYPE &dt, GTVector<GTVector<GFTYPE>> &dudt)>
