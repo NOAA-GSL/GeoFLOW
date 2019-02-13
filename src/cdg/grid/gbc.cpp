@@ -18,7 +18,7 @@
 GBC::GBC(GGrid &grid)
 :
 grid_                    (&grid), 
-set_dirichlet_callback_ (NULPTR)
+update_dirichlet_callback_ (NULLPTR)
 {
 } // end of constructor method (1)
 
@@ -79,7 +79,7 @@ void GBC::update_bdy_state(GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u,
   // (These are possibly time dependent, and are often
   //  set with data outside the scope of the solvers)
   if ( update_dirichlet_callback_ != NULLPTR) {
-    update_dirichlet_callback_(t, u, ub);
+    (*update_dirichlet_callback_)(t, u, ub);
   }
 
 
@@ -90,13 +90,14 @@ void GBC::update_bdy_state(GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u,
 //**********************************************************************************
 // METHOD : do_reflective_bcs
 // DESC   : Update reflective bdy vectors, ub
-// ARGS   : t    : time
+// ARGS   : grid : GGrid object
+//          t    : time
 //          u    : current state
 //          ub   : bdy vectors (one for each state element)
 // RETURNS: none.
 //**********************************************************************************
-void GBC::do_reflective_bcs(GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u,
-                           GTVector<GTVector<GFTYPE>*> &ub)
+void GBC::do_reflective_bcs(GGrid &grid, GFTYPE t, GTVector<GTVector<GFTYPE>*> &u,
+                            GTVector<GTVector<GFTYPE>*> &ub)
 {
 
   assert(FALSE && "Reflective conditions not available");
