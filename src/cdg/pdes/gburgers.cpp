@@ -353,8 +353,8 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
   GString serr = "GBurgers<TypePack>::init: ";
 
   // Find multistep/multistage time stepping coefficients:
-  GMultilevel_coeffs_base *tcoeff_obj; // time deriv coeffs
-  GMultilevel_coeffs_base *acoeff_obj; // adv op. coeffs
+  GMultilevel_coeffs_base<GFTYPE> *tcoeff_obj; // time deriv coeffs
+  GMultilevel_coeffs_base<GFTYPE> *acoeff_obj; // adv op. coeffs
   switch ( isteptype_ ) {
     case GSTEPPER_EXRK2:
     case GSTEPPER_EXRK4:
@@ -362,15 +362,15 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
       gexrk_.setRHSfunction(this->dudt);
       break;
     case GSTEPPER_BDFAB:
-      tcoeff_obj = new G_BDF(itorder_);
-      acoeff_obj = new G_AB (inorder_);
+      tcoeff_obj = new G_BDF<GFTYPE>(itorder_);
+      acoeff_obj = new G_AB<GFTYPE> (inorder_);
       tcoeffs_.resize(tcoeff_obj->getCoeffs().size());
       acoeffs_.resize(acoeff_obj->getCoeffs().size());
       tcoeffs_ = tcoeff_obj; acoeffs_ = acoeff_obj;
       break;
     case GSTEPPER_BDFEXT:
-      tcoeff_obj = new G_BDF(itorder_);
-      acoeff_obj = new G_EXT(inorder_);
+      tcoeff_obj = new G_BDF<GFTYPE>(itorder_);
+      acoeff_obj = new G_EXT<GFTYPE>(inorder_);
       tcoeffs_.resize(tcoeff_obj->getCoeffs().size());
       acoeffs_.resize(acoeff_obj->getCoeffs().size());
       tcoeffs_ = tcoeff_obj; acoeffs_ = acoeff_obj;
