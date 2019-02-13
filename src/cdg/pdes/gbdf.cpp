@@ -15,7 +15,8 @@
 // DESC   : Instantiate with truncation order + dt history vector
 // ARGS   : iorder: truncation order
 //**********************************************************************************
-G_BDF::G_BDF(GSIZET iorder, GTVector<GFTYPE> &dthist)
+template<typename T>
+G_BDF<T>::G_BDF(GSIZET iorder, GTVector<T> &dthist)
 :
 iorder_               (iorder),
 maxorder_             (4),
@@ -34,7 +35,8 @@ dthist_               (&dthist)
 // DESC   : 
 // ARGS   : 
 //**********************************************************************************
-G_BDF::~G_BDF()
+template<typename T>
+G_BDF<T>::~G_BDF()
 {
 }
 
@@ -44,7 +46,8 @@ G_BDF::~G_BDF()
 // DESC   : Default copy constructor
 // ARGS   : a: G_BDF object
 //**********************************************************************************
-G_BDF::G_BDF(const G_BDF &a)
+template<typename T>
+G_BDF<T>::G_BDF(const G_BDF &a)
 {
   iorder_   = a.iorder_;
   maxorder_ = a.maxorder_;
@@ -65,7 +68,8 @@ G_BDF::G_BDF(const G_BDF &a)
 // ARGUMENTS  : none.
 // RETURNS    : none.
 //**********************************************************************************
-void G_BDF::computeCoeffs()
+template<typename T>
+void G_BDF<T>::computeCoeffs()
 {
 
   assert(dthist_ != NULLPTR && dthist_->size() < iorder_  && "Invalid dt-history vector");

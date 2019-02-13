@@ -7,14 +7,15 @@
 // Copyright    : Copyright 2019. Colorado State University. All rights reserved
 // Derived From : none.
 //==================================================================================
-#if !defined(G_BDF_HPP)
-#define G_BDF_HPP
+#if !defined(_G_BDF_HPP)
+#define _G_BDF_HPP
 
-#include "gtvector.hpp"
-#include "multilev_coeffs.hpp"
+#include "gtmatrix.hpp"
+#include "gmultilev_coeffs_base.hpp"
 
 
-class G_BDF: public G_Multilevel_coeffs_base 
+template<typename T>
+class G_BDF: public GMultilevel_coeffs_base<T>
 {
 public:
                            G_BDF(GSIZET iorder=2);
@@ -24,7 +25,7 @@ public:
 private:
 // Private methods:
          void               computeCoeffs();
-         GTMatrix<GFTYPE>   c_bdf_;              // database of BDF coeffs
+         GTMatrix<T>        c_bdf_;              // database of BDF coeffs
 
 };
 #endif

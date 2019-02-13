@@ -7,14 +7,15 @@
 // Copyright    : Copyright 2019. Colorado State University. All rights reserved
 // Derived From : none.
 //==================================================================================
-#if !defined(G_AB_HPP)
-#define G_AB_HPP
+#if !defined(_G_AB_HPP)
+#define _G_AB_HPP
 
 #include "gtvector.hpp"
-#include "multilev_coeffs.hpp"
+#include "gmultilev_coeffs_base.hpp"
 
 
-class G_AB: public G_Multilevel_coeffs_base 
+template<typename T>
+class G_AB : public GMultilevel_coeffs_base<T>
 {
 public:
                            G_AB(GSIZET iorder=2);

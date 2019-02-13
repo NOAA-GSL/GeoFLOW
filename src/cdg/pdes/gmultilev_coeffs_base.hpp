@@ -11,6 +11,7 @@
 #include "gtvector.hpp"
 
 
+template<typename T>
 class GMultilevel_coeffs_base 
 {
 public:
@@ -18,13 +19,11 @@ public:
                            GMultilevel_coeffs_base(const GMultilevel_coeffs_base &a) = default;
                            virtual ~GMultilevel_coeffs_base() = default;
 
-         GTVector<GFTYPE>  &getCoeffs() { return coeffs_ ; }
-         GTVector<GFTYPE>  &getTimestepHistory() { return dthist_; }
+         GTVector<T>       &getCoeffs() { return coeffs_ ; }
+         GTVector<T>       &getTimestepHistory() { return *dthist_; }
 
-         friend ostream&    operator<<(ostream&, GMultilevel_coeffs_base &);                                  // Output stream operator
-
-         GFTYPE            &operator()(const GSIZET  i) { return coeffs_[i]; }
-         GFTYPE            &operator[](const GSIZET  i) { return coeffs_[i]; }
+         T                 &operator()(const GSIZET  i) { return coeffs_[i]; }
+         T                 &operator[](const GSIZET  i) { return coeffs_[i]; }
 
 
 private:
@@ -32,8 +31,8 @@ private:
 // Private data:
          GSIZET             iorder_;              // specified GMultilevel_coeffs_base order
          GSIZET             maxorder_;            // max GMultilevel_coeffs_base order allowed by class
-         GTVector<GFTYPE>   coeffs_;              // buffer of GMultilevel_coeffs_base coeffs
-         GTVector<GFTYPE>  *dthist_;              // timestep history pointer, managed outside of class
+         GTVector<T>        coeffs_;              // buffer of GMultilevel_coeffs_base coeffs
+         GTVector<T>       *dthist_;              // timestep history pointer, managed outside of class
 };
 #endif
 

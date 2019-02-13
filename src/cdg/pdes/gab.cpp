@@ -15,7 +15,8 @@
 // DESC   : Instantiate with truncation order + dt history vector
 // ARGS   : iorder: truncation order
 //**********************************************************************************
-G_AB::G_AB(GSIZET iorder, GTVector<GFTYPE> &dthist)
+template<typename T>
+G_AB<T>::G_AB(GSIZET iorder, GTVector<T> &dthist)
 :
 iorder_               (iorder),
 maxorder_             (3),
@@ -34,7 +35,8 @@ dthist_               (&dthist)
 // DESC   : 
 // ARGS   : 
 //**********************************************************************************
-G_AB::~G_AB()
+template<typename T>
+G_AB<T>::~G_AB()
 {
 }
 
@@ -44,7 +46,8 @@ G_AB::~G_AB()
 // DESC   : Default copy constructor
 // ARGS   : a: G_AB object
 //**********************************************************************************
-G_AB::G_AB(const G_AB &a)
+template<typename T>
+G_AB<T>::G_AB(const G_AB &a)
 {
   iorder_   = a.iorder_;
   maxorder_ = a.maxorder_;
@@ -65,12 +68,13 @@ G_AB::G_AB(const G_AB &a)
 // ARGUMENTS  : none.
 // RETURNS    : none.
 //**********************************************************************************
-void G_AB::computeCoeffs()
+template<typename T>
+void G_AB<T>::computeCoeffs()
 {
 
   assert(dthist_ != NULLPTR && dthist_->size() < iorder_  && "Invalid dt-history vector");
 
-  GFTYPE r1, r2, r3;
+  T r1, r2, r3;
   if      ( iorder_ == 1 ) {
     coeffs_[0] = 1.0;
   }

@@ -7,22 +7,20 @@
 // Copyright    : Copyright 2019. Colorado State University. All rights reserved
 // Derived From : none.
 //==================================================================================
-#if !defined(G_EXT_HPP)
-#define G_EXT_HPP
+#if !defined(_G_EXT_HPP)
+#define _G_EXT_HPP
 
 #include "gtvector.hpp"
-#include "multilev_coeffs.hpp"
+#include "gmultilev_coeffs_base.hpp"
 
 
-
-class G_EXT 
+template<typename T>
+class G_EXT : GMultilevel_coeffs_base<T>
 {
 public:
                            G_EXT(GSIZET iorder=2);
                           ~G_EXT();
                            G_EXT(const G_EXT &a);
-
-         friend ostream&    operator<<(ostream&, G_EXT &);                                  // Output stream operator
 
 
 
