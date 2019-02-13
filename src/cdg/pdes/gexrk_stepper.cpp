@@ -40,7 +40,7 @@ rhs_callback_         (NULLPTR)
 // ARGUMENTS  : t    : time, t^n, for state, uin=u^n
 //              uin  : initial (entry) state, u^n
 //              dt   : time step
-//              tmp  : tmp space. Must have at least M+1 vectors.
+//              tmp  : tmp space. Must have at least M+1 = iorder_+1 vectors.
 //              uout : updated state, n^n+1
 //               
 // RETURNS    : none.

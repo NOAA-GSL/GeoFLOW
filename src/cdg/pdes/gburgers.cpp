@@ -280,7 +280,7 @@ void GBurgers<TypePak>::step_multistep(const Time &t, State &uin, State &ub, Tim
 // METHOD : step_exrk
 // DESC   : Take a step using Explicit RK method
 // ARGS   : t   : time
-//          u   : state
+//          uin : input state;; must not be modified
 //          dt  : time step
 //          uout: updated state
 // RETURNS: none.
@@ -292,11 +292,20 @@ void GBurgers<TypePak>::step_exrk(const Time &t, State &uin, State&ub, Time &dt,
   // If non-conservative, compute RHS from:
   //     du/dt = M^-1 ( -u.Grad u + nu nabla u ):
   // for each u
+
+  // Set tmp arrays from member utmp_ data:
+  GTVector<GTVector<GFTYPE>*> utmp1(utmp_.size()-itorder_-1);
+  GTVector<GTVector<GFTYPE>*> utmp2(itorder_+1);
+  for ( auto j=0; j<itorder_+1; j++ ) utmp2[j] = utmp_[j];
+  for ( auto j=0; j<utmp_.size-itorder_-1; j++ ) utmp1[j] = utmp_[itorder_+1+j];
+
+
+  // Cycle over stages:
   for ( auto j=0; j<uin.size(); j++ ) *uout[j] = *uin[j];
   for ( auto k=0; k<itorder_; k++ ) {
     apply_bc_impl(t, uout, ub);
-    gexrk_->step(t, uout[k], dt, utmp_);
-    for ( auto j=0; j<uin.size(); j++ ) *uout[k] = *utmp_[k];
+    gexrk_->step(t, uout[k], dt, utmp1, utmp2);
+    for ( auto j=0; j<uin.size(); j++ ) *uout[k] = *utmp2[k];
   }
 
 } // end of method step_exrk
