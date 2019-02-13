@@ -33,9 +33,9 @@
                     ${GHOME}/grid/ggrid_factory.cpp
     )
 
-#set(CDG_PDES_SRC   ${GHOME}/pdes/gbutcherrk.cpp
-#                   ${GHOME}/pdes/gexrk_stepper.cpp
-#   )
+ set(CDG_PDES_SRC   ${GHOME}/pdes/gbutcherrk.cpp
+                    ${GHOME}/pdes/gexrk_stepper.cpp
+    )
 
 
  set(CDG_UTILS_SRC  ${GHOME}/utils/gbitblock.cpp 
@@ -49,6 +49,7 @@
                      ${CDG_COMM_SRC}
                      ${CDG_GRID_SRC}
                      ${CDG_SEM_SRC}
+                     ${CDG_PDES_SRC}
      )
 
 
