@@ -102,6 +102,7 @@ set(CDG_COMMON_LIBS
     ${BOOST_PATH}/lib/libboost_mpi.a
     ${BOOST_PATH}/lib/libboost_serialization.a
     ${BOOST_PATH}/lib/libboost_wserialization.a
+    ${BOOST_PATH}/lib/libboost_wserialization.a
    )
 
 if (HAVE_PAPI)

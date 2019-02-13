@@ -41,6 +41,17 @@
  set(CDG_UTILS_SRC  ${GHOME}/utils/gbitblock.cpp 
     )
 
+ set(GEOFLOW_TBOX_SRC ${GHOME}/../tbox/clock.cpp 
+                      ${GHOME}/../tbox/error_handler.cpp 
+                      ${GHOME}/../tbox/global_manager.cpp
+                      ${GHOME}/../tbox/input_manager.cpp
+                      ${GHOME}/../tbox/io_buffer.cpp
+                      ${GHOME}/../tbox/mpixx.cpp
+                      ${GHOME}/../tbox/pio.cpp
+                      ${GHOME}/../tbox/property_tree.cpp
+                      ${GHOME}/../tbox/tracer.cpp
+    )
+
 
 # Aggregate source into CDG_SRC used in CMakeLists.txt:
  list(APPEND CDG_SRC 
@@ -50,6 +61,7 @@
                      ${CDG_GRID_SRC}
                      ${CDG_SEM_SRC}
                      ${CDG_PDES_SRC}
+                     ${GEOFLOW_TBOX_SRC}
      )
 
 
