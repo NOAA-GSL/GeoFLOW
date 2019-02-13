@@ -32,7 +32,7 @@
 #include "gtvector.hpp"
 #include "gdd_base.hpp"
 #include "ggrid.hpp"
-#include "equation_base.hpp"
+#include "pdeint/equation_base.hpp"
 #include "gadvect.hpp"
 #include "ghelmholtz.hpp"
 #include "gbc.hpp"
