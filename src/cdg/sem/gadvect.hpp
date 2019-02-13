@@ -9,8 +9,8 @@
 // Derived From : none
 //==================================================================================
 
-#if !defined(_GLAPLACIANOP_HPP)
-#define _GLAPLACIANOP_HPP
+#if !defined(_GADVECTOP_HPP)
+#define _GADVECTOP_HPP
 #include "gtvector.hpp"
 #include "gnbasis.hpp"
 #include "ggrid.hpp"

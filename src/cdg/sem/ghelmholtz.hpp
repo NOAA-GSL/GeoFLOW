@@ -17,8 +17,8 @@
 // Derived From : GLinOp
 //==================================================================================
 
-#if !defined(_GLAPLACIANOP_HPP)
-#define _GLAPLACIANOP_HPP
+#if !defined(_GHELMHOLTZOP_HPP)
+#define _GHELMHOLTZOP_HPP
 #include "gtvector.hpp"
 #include "gnbasis.hpp"
 #include "ggrid.hpp"
