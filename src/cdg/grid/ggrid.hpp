@@ -15,6 +15,7 @@
 #include "gtmatrix.hpp"
 #include "gcomm.hpp"
 #include "gelem_base.hpp"
+#include "gcomm.hpp"
 
 
 typedef GTVector<GElem_base*> GElemList;
