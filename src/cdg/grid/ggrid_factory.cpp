@@ -45,8 +45,8 @@ GGrid *GGridFactory::build(const geoflow::tbox::PropertyTree& ptree, GTVector<GN
   else if ( gname.compare("grid_sphere") == 0 ) { // 3D grid build on ICOIS
     assert(GDIM == 3 && "GDIM must be 3");
     bdytype.resize(2);
-    bdytype[0] = ptree.getValue<GBdyType>("bdy_inner");
-    bdytype[1] = ptree.getValue<GBdyType>("bdy_outer");
+    bdytype[0] = str2bdytype(ptree.getValue<GString>("bdy_inner"));
+    bdytype[1] = str2bdytype(ptree.getValue<GString>("bdy_outer"));
     GGridIcos::Traits sphtraits;
     sphtraits.radiusi = ptree.getValue<GFTYPE>("radiusi");
     sphtraits.radiuso = ptree.getValue<GFTYPE>("radiuso");
@@ -59,13 +59,13 @@ GGrid *GGridFactory::build(const geoflow::tbox::PropertyTree& ptree, GTVector<GN
   }
   else if ( gname.compare("grid_box") == 0 ) { // 2- 3D Cart grid
     bdytype.resize(2*GDIM);
-    bdytype[0] = ptree.getValue<GBdyType>("bdy_y_0");
-    bdytype[1] = ptree.getValue<GBdyType>("bdy_x_1");
-    bdytype[2] = ptree.getValue<GBdyType>("bdy_y_1");
-    bdytype[3] = ptree.getValue<GBdyType>("bdy_x_0");
+    bdytype[0] = str2bdytype(ptree.getValue<GString>("bdy_y_0"));
+    bdytype[1] = str2bdytype(ptree.getValue<GString>("bdy_x_1"));
+    bdytype[2] = str2bdytype(ptree.getValue<GString>("bdy_y_1"));
+    bdytype[3] = str2bdytype(ptree.getValue<GString>("bdy_x_0"));
     if ( GDIM == 3 ) {
-    bdytype[4] = ptree.getValue<GBdyType>("bdy_z_0");
-    bdytype[5] = ptree.getValue<GBdyType>("bdy_z_1");
+    bdytype[4] = str2bdytype(ptree.getValue<GString>("bdy_z_0"));
+    bdytype[5] = str2bdytype(ptree.getValue<GString>("bdy_z_1"));
     }
     std::vector<GFTYPE> xyz0   = ptree.getArray<GFTYPE>("xyz0");
     std::vector<GFTYPE> delxyz = ptree.getArray<GFTYPE>("delxyz");
@@ -100,7 +100,7 @@ GGrid *GGridFactory::build(const geoflow::tbox::PropertyTree& ptree, GTVector<GN
 // ARGS   : stype: string type
 // RETURNS: GBdyType
 //**********************************************************************************
-GBdyType GGridFactory::str2bdytype(GString &stype)
+GBdyType GGridFactory::str2bdytype(const GString &stype)
 {
   GString s0;
   for ( auto j=0; j<GBDY_NONE; j++ ) {
