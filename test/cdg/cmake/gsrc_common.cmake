@@ -35,6 +35,7 @@
 
  set(CDG_PDES_SRC   ${GHOME}/pdes/gbutcherrk.cpp
                     ${GHOME}/pdes/gexrk_stepper.cpp
+                    ${GHOME}/pdes/gburgergexrk_steppers.cpp
     )
 
 
