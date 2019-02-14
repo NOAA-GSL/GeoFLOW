@@ -47,6 +47,7 @@ struct EquationTypes {
         using Size       = SizeType;
 };
 
+GGrid *grid_;
 GTVector<GTVector<GFTYPE>*> ua_;
 
 void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVector<GTVector<GFTYPE>*> &u);
@@ -60,17 +61,12 @@ int main(int argc, char **argv)
 
     // Get types used for equations and solver
 //  using MyTypes = EquationTypes<GTVector<GTVector<GFTYPE>*>>; // Define types used
-    using MyTypes = EquationTypes<GTVector<GTVector<GFTYPE>*>
-                                 ,GFTYPE
-                                 ,GTVector<GTVector<GFTYPE>*>
-                                 ,GFTYPE
-                                 ,GTVector<GTVector<GFTYPE>*>
-                                 ,GSIZET>; // Define types used
+    using MyTypes = EquationTypes<>; // Define types used
     using EqnBase = EquationBase<MyTypes>;                     // Equation Base Type
     using EqnImpl = GBurgers<MyTypes>;                         // Equation Implementa
     using ObsBase = ObserverBase<EqnBase>;                     // Observer Base Type
-    using ObsImpl = NullObserver<EqnBase>;                     // Observer Implementation Type
-    using IntImpl = Integrator<EqnBase>;                       // Integrator Implementation Type
+    using ObsImpl = NullObserver<EqnImpl>;                     // Observer Implementation Type
+    using IntImpl = Integrator<EqnImpl>;                       // Integrator Implementation Type
 
 
     GString serr ="main: ";
@@ -191,15 +187,13 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     }
     
     GPTLstart("gen_grid");
-
     // Create grid:
-    
-    GGrid *grid = GGridFactor::build(gridptree, gbasis, comm);
-
+    *grid_ = GGridFactory::build(gridptree, gbasis, comm);
     GPTLstop("gen_grid");
 
     GPTLstart("do_gather_op");
     // Initialize gather/scatter operator:
+    GGFX ggfx;
     init_ggfx(*grid, ggfx);
     GPTLstop("do_gather_op");
 
@@ -233,7 +227,7 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     std::shared_ptr<ObsImpl> obs_impl(new ObsImpl());
     std::shared_ptr<ObsBase> obs_base = obs_impl;
 
-    std::shared_ptr<IntImpl> int_impl(new IntImpl(eqn_base,obs_base,int_traits));
+//  std::shared_ptr<IntImpl> int_impl(new IntImpl(eqn_base,obs_base,int_traits));
     dt       = tintptree.getVaue("dt"); 
     maxSteps = tintptree.getValue<GSIZET>("cycle_end");
 
