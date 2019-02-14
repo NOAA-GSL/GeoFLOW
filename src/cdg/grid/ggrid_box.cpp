@@ -18,31 +18,50 @@
 // DESC   : Instantiate with box lengths (x, y, z), directional basis, and
 //          domain decompoisition object. This generates a 2d or 3d grid
 //          depending on whether b.size = 2 or 3..
-// ARGS   : traits : box grid traits
-//          ne     : no. elements in each Cartesian direction
+// ARGS   : ptree  : proptery tree
 //          b      : vector of basis pointers. Number of elements in b is
 //                   what _must_ be in L, and ne.
-//          nprocs : no. MPI tasks
+//          comm   : communicator
 // RETURNS: none
 //**********************************************************************************
-GGridBox::GGridBox(GGridBox::Traits &traits, GTVector<GINT> &ne, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GINT nprocs) 
+GGridBox::GGridBox(geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GC_COMM comm)
 :
-ndim_     (b.size()),
-nprocs_     (nprocs),
-gdd_       (NULLPTR),
-lshapefcn_ (NULLPTR),
-bdycallback_(NULLPTR)
+ndim_                     (GDIM),
+comm_                     (comm),
+nprocs_ (GComm::WorldSize(comm)),
+gdd_                   (NULLPTR),
+lshapefcn_             (NULLPTR),
+bdycallback_           (NULLPTR)
 {
-  assert((b.size() == 2 || b.size() == 3) 
+  assert((b.size() == GDIM ) 
         && "Basis has incorrect dimensionalilty");
 
-  gbasis_.resize(b.size());
+  gbasis_.resize(GDIM);
   gbasis_ = b;
-  Lbox_.resize(b.size());
-  ne_.resize(b.size());
-  P0_ = traits.P0;
-  P1_ = traits.P1;
-  global_bdy_types_ = traits.bdyTypes;
+  Lbox_.resize(GDIM);
+  ne_.resize(GDIM);
+
+  std::vector<GFTYPE> pt = ptree.getArray<GFTYPE>("xyz0");
+  P0_ = pt;
+  std::vector<GFTYPE> pt = ptree.getArray<GFTYPE>("delxyz");
+  GTPoint<GFTYPE> dP(3);
+  dP = pt;
+  P1_ = P0_ + dP;
+
+  GTVector<GBdyType> bdytype.resize(2*GDIM);
+  bdytype[0] = geoflow::str2bdytype(ptree.getValue<GString>("bdy_y_0"));
+  bdytype[1] = geoflow::str2bdytype(ptree.getValue<GString>("bdy_x_1"));
+  bdytype[2] = geoflow::str2bdytype(ptree.getValue<GString>("bdy_y_1"));
+  bdytype[3] = geoflow::str2bdytype(ptree.getValue<GString>("bdy_x_0"));
+  if ( GDIM == 3 ) {
+  bdytype[4] = geoflow::str2bdytype(ptree.getValue<GString>("bdy_z_0"));
+  bdytype[5] = geoflow::str2bdytype(ptree.getValue<GString>("bdy_z_1"));
+  }
+  global_bdy_types_ = bdytype;
+
+  ne         = ptree.getArray<GINT>("num_elems"));
+  ne_        = ne;
+
   bPeriodic_.resize(3);
   bPeriodic_ = FALSE;
   assert(P0_.size() >= ndim_ && P1_.size() >= ndim_ && ne.size() >= b.size()
@@ -62,10 +81,10 @@ bdycallback_(NULLPTR)
   }
 
   lshapefcn_ = new GShapeFcn_linear();
-  if ( gbasis_.size() == 2 ) {
+  if ( GDIM == 2 ) {
     init2d();
   }
-  else if ( Lbox_.size() == 3 ) {
+  else if ( GDIM == 3 ) {
     init3d();
   }
 } // end of constructor method (1)

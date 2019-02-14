@@ -24,6 +24,7 @@
 #include "gshapefcn_linear.hpp"
 #include "gshapefcn_embed.hpp"
 #include "polygon.h"
+#include "ggrid_impl_base.hpp"
 
 // GICOS_BASE refers to the refined, projected triangular
 //   'base' frame which are then partitioned into quad/hex elements
@@ -37,7 +38,7 @@ enum GCOORDSYST {GICOS_CART, GICOS_LATLONG};
 
 typedef GTMatrix<GFTYPE> GFTMatrix;
 
-class GGridIcos 
+class GGridIcos : GGrid_impl_base
 {
 
 public:
@@ -49,8 +50,11 @@ public:
           GTVector<GBdyType>  bdyTypes  ; // global bdy types (inner outer surf in 3D only)
         };
 
+                            GGrid_impl_base(geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GC_COMM comm)
+#if 0
                             GGridIcos(GGridIcos::Traits &, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GINT nprocs); // 2d constructor
                             GGridIcos(GGridIcos::Traits &, GTVector<GINT> &ne, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GINT nprocs); // 3d constructor
+#endif
                            ~GGridIcos();
 
         void                do_grid(GGrid &grid, GINT irank);             // compute grid for irank
@@ -69,7 +73,7 @@ public:
 friend  std::ostream&       operator<<(std::ostream&, GGridIcos &);       // Output stream operator
  
 
-//protected:
+  private:
          void               init2d();                                       // initialize base icosahedron for 2d grid
          void               init3d();                                       // initialize for 3d grid
          void               project2sphere(GTVector<GTriangle<GFTYPE>> &, 
@@ -118,6 +122,7 @@ GFTYPE                  radiuso_;       // outer radius (=radiusi in 2d)
 GINT                    nprocs_;        // no. MPI tasks
 GDD_base               *gdd_;           // domain decomposition/partitioning object
 GShapeFcn_linear       *lshapefcn_;     // linear shape func to compute 2d coords
+GC_Comm                 comm_;          // communicator
 GTVector<GBdyType>      global_bdy_types_;  // global types for each surface (in 3D only)
 
 GTVector<GTriangle<GFTYPE>>    

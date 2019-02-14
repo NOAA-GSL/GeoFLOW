@@ -33,7 +33,11 @@ public:
           GTVector<GBdyType>  bdyTypes;  // global bdy types
         };
 
+                            GGrid_impl_base(geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GC_COMM comm)
+
+#if 0
                             GGridBox(GGridBox::Traits &traits, GTVector<GINT> &ne, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GINT nprocs); // 2d, 3d constructor
+#endif
                            ~GGridBox();
 
         void                do_grid(GGrid &grid, GINT irank);             // compute grid for irank
@@ -47,7 +51,7 @@ public:
 friend  std::ostream&       operator<<(std::ostream&, GGridBox &);       // Output stream operator
  
 
-//protected:
+  private:
          void               init2d();                                       // initialize base icosahedron for 2d grid
          void               init3d();                                       // initialize for 3d grid
 
@@ -66,6 +70,7 @@ GDD_base               *gdd_;           // domain decomposition/partitioning obj
 GShapeFcn_linear       *lshapefcn_;     // linear shape func to compute 2d coords
 GTPoint<GFTYPE>         P0_;            // P0 = starting point of box origin
 GTPoint<GFTYPE>         P1_;            // P1 = diagonally-opposing box point
+GC_Comm                 comm_;          // communicator
 GTVector<GTPoint<GFTYPE>>
                         ftcentroids_;   // centroids of finest elements
 GTVector<GNBasis<GCTYPE,GFTYPE>*> 

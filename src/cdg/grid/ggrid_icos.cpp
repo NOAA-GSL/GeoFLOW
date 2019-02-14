@@ -20,68 +20,53 @@
 //**********************************************************************************
 // METHOD : Constructor method (1)
 // DESC   : Instantiate for 2d grid
-// ARGS   : traits:
-//            ilevel  : GINT refinement level. Level 0 is just the icos generator 
-//            radiusi : GFTYPE radius
-//            radiuso : GFTYPE outer radius (not used here)
-//            bdyTypes: GTVector<GFTYPE>(2) (not used here)
-//          b     : vector of basis pointers, of size at least ndim=2
-//          nprocs : no. MPI tasks
+// ARGS   : ptree: Property tree
+//          b     : vector of basis pointers, of size at least ndim=2.Determies 
+//                  dimensionality
+//          comm  : communicator
 // RETURNS: none
 //**********************************************************************************
-GGridIcos::GGridIcos(GGridIcos::Traits &traits, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GINT nprocs) :
-ilevel_      (traits.ilevel),
-ndim_                    (2),
-radiusi_    (traits.radiusi),
-radiuso_                 (0), // don't need this one
-nprocs_             (nprocs),
-gdd_               (NULLPTR),
-lshapefcn_         (NULLPTR),
-bdycallback_       (NULLPTR)
+GGridIcos::GGridIcos(geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GC_COMM comm)
+ilevel_                      (0),
+ndim_                     (GDIM),
+radiusi_                   (0.0),
+radiuso_                   (0.0), // don't need this one
+comm_                     (comm),
+nprocs_ (GComm::WorldSize(comm)),
+gdd_                   (NULLPTR),
+lshapefcn_             (NULLPTR),
+bdycallback_           (NULLPTR)
 {
+  assert(b.size() == GDIM && "Basis has incorrect dimensionality");
 
   gbasis_.resize(b.size());
   gbasis_ = b;
   lshapefcn_ = new GShapeFcn_linear();
+  ilevel_  = ptree.getValue<GINT>("ilevel");
+  radiusi_ = ptree.getValue<GFTYPE>("radiusi");
+  radiuso_ = ptree.getValue<GFTYPE>("radiuso");
+  
+  if ( ndim_ == 2 ) {
+    assert(GDIM == 2 && "GDIM must be 2");
+    init2d();
+  }
+  else {
+    assert(GDIM == 3 && "GDIM must be 3");
+    GTVector<GBdyType> bdytype(2);
+    std::vector <GINT> ne(3);
+    bdytype[0] = geoflow::str2bdytype(ptree.getValue<GString>("bdy_inner"));
+    bdytype[1] = geoflow::str2bdytype(ptree.getValue<GString>("bdy_outer"));
+    ne         = ptree.getArray<GINT>("num_elems"));
+    global_bdy_types_ = bdytype;
+    ne_     = ne;
+    init3d();
+  }
+  else {
+    assert(FALSE && "Invalid dimensionality");
+  }
 
-  init2d();
 } // end of constructor method (1)
 
-
-//**********************************************************************************
-//**********************************************************************************
-// METHOD : Constructor method (2)
-// DESC   : Instantiate for 3d grid
-// ARGS   : traits:
-//            radiusi : GFTYPE inner radius
-//            radiuso : GFTYPE outer radius
-//            bdyTypes: GTVector<GFTYPE>(2)
-//          ne     : no. elements in each coord direction (r,theta,phi)=(r,lat,long)
-//          b      : vector of basis pointers, of size at least ndim=2. 
-//          nprocs : no. MPI tasks
-// RETURNS: none
-//**********************************************************************************
-GGridIcos::GGridIcos(GGridIcos::Traits &traits, GTVector<GINT> &ne, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GINT nprocs) :
-ilevel_           (0),
-ndim_             (3),
-radiusi_    (traits.radiusi),
-radiuso_    (traits.radiuso),
-nprocs_      (nprocs),
-gdd_        (NULLPTR),
-lshapefcn_  (NULLPTR),
-bdycallback_(NULLPTR)
-{
-  assert(b.size() == 3 && "Insufficient number of bases");
-  gbasis_.resize(b.size());
-  gbasis_ = b;
-  lshapefcn_ = new GShapeFcn_linear();
-  ne_     = ne;
-
-  global_bdy_types_ = traits.bdyTypes;
-  assert(!global_bdy_types_.contains(GBDY_PERIODIC) && "Invalid boundary type");
-
-  init3d();
-} // end of constructor method (2)
 
 
 //**********************************************************************************
