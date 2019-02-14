@@ -29,6 +29,8 @@ public:
 virtual  void              key(KT id[], GTPoint<FT> point[], GINT  n)=0;             // Use GTPoint
 virtual  void              key(GTVector<KT> &id, GTVector<GTPoint<FT>> &point)=0;    // Use GTPoint
 virtual void               key(GTVector<KT> &id, GTVector<GTVector<FT>> &x)=0;        // Use GTVector for points
+virtual void               key(GTVector<KT> &id, GTVector<GTVector<FT>> &x,
+                               GTVector<GSIZET &ix)=0;                                // Use ix members of GTVector x for points
 
 
 private:

@@ -298,7 +298,7 @@ void GMorton_KeyGen<TK,TF>::key(GTVector<TK> &id, GTVector<GTPoint<TF>> &point)
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD     : key (2)
+// METHOD     : key (3)
 // DESCRIPTION: Computes Morton-ordered key
 //              GMORTON_TYPE is defined as follows:
 //              Let X = x7 x6 x5 x4 x3 x2 x1 x0  and
@@ -329,5 +329,43 @@ void GMorton_KeyGen<TK,TF>::key(GTVector<TK> &id, GTVector<GTVector<TF>> &x)
   }
 
 } // end of method key (3)
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD     : key (4)
+// DESCRIPTION: Computes Morton-ordered key
+//              GMORTON_TYPE is defined as follows:
+//              Let X = x7 x6 x5 x4 x3 x2 x1 x0  and
+//                  Y = y7 y6 y5 y4 y3 y2 y1 y0 
+//              be the X,Y values of a point, where x0, ... x7 represent the bits 
+//              0-7 of an 8-bit float, and the same for Y.
+//              Then GMORTON_INTERLEAVE means that the computed key will be
+//                  KEY = y7x7 y6x6 ... x2x2 y1x1 y0x0
+//              while for GMORTON_STACKED the key is s.t.:
+//                  KEY = y7y6y5...y2y1y0x7x6...x2x1x0.
+//              with an obvious extension to 3D
+// ARGUMENTS  : 
+//              id   : Array of length 'n' containing the resultant keys. This
+//                     must be allocated by caller and be of size 'n'.
+//              x    : Array of coordinates with each being a vector
+//              ix   : array of indices into x to provide indices, id. There 
+//                     will ix.size() indices provided in id
+//
+// RETURNS    : none.
+//**********************************************************************************
+template<typename TK, typename TF>
+void GMorton_KeyGen<TK,TF>::key(GTVector<TK> &id, GTVector<GTVector<TF>> &x, 
+                                GTVector<GSIZET> &ix)
+{
+  assert(id.size() == ix.size() && "GMorton_KeyGen::key(4): incompatible dimensions ");
+  GTPoint<TF> p(x.size());
+
+  for ( GSIZET j=0; j<ix.size(); j++ ) {
+    for ( GSIZET i=0; i<p.dim(); i++ ) p[i] = x[i][ix[j]];
+    key(&id[j], &p, 1);
+  }
+
+} // end of method key (4)
 
 

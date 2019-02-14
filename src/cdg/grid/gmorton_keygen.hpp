@@ -31,6 +31,8 @@ public:
          void              key(GTVector<TK> &id, GTVector<GTPoint<TF>> &point);     // Use GTPoint
          void              key(TK id[], GTPoint<TF> point[], GINT  n);              // Use GTPoint
          void              key(GTVector<TK> &id, GTVector<GTVector<TF>> &x);        // Use GTVector for points
+         void              key(GTVector<TK> &id, GTVector<GTVector<TF>> &x, 
+                           GTVector<GSIZET> &ix);                                   // Use ix elements of GTVector x for points
 
 
 private:
