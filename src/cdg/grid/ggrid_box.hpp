@@ -19,10 +19,11 @@
 #include "gshapefcn_linear.hpp"
 #include "polygon.h"
 #include "gtpoint.hpp"
+#include "ggrid.hpp"
 
 typedef GTMatrix<GFTYPE> GFTMatrix;
 
-class GGridBox 
+class GGridBox : public GGrid
 {
 
 public:
@@ -33,56 +34,46 @@ public:
           GTVector<GBdyType>  bdyTypes;  // global bdy types
         };
 
-                            GGrid_impl_base(geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GC_COMM comm)
+                            GGridBox(const geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GC_COMM &comm);
 
-#if 0
-                            GGridBox(GGridBox::Traits &traits, GTVector<GINT> &ne, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GINT nprocs); // 2d, 3d constructor
-#endif
                            ~GGridBox();
 
-        void                do_grid(GGrid &grid, GINT irank);             // compute grid for irank
-        void                set_partitioner(GDD_base *d);                 // set and use GDD object
-        void                set_bdy_callback(
-                            std::function<void(GElemList &)> &callback);     // set bdy-set callback
-        void                set_basis(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b);             // set element basis
+        void                do_grid();                                       // compute grid for irank
+        void                set_partitioner(GDD_base *d);                    // set and use GDD object
+        void                set_basis(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b); // set element basis
 
-        void                print(const GString &filename);              // print grid to file
+        void                print(const GString &filename);                  // print grid to file
 
-friend  std::ostream&       operator<<(std::ostream&, GGridBox &);       // Output stream operator
+friend  std::ostream&       operator<<(std::ostream&, GGridBox &);           // Output stream operator
  
 
-  private:
+private:
          void               init2d();                                       // initialize base icosahedron for 2d grid
          void               init3d();                                       // initialize for 3d grid
 
 
-         void               do_grid2d(GGrid &grid, GINT rank);            // do 2d grid
-         void               do_grid3d(GGrid &grid, GINT rank);            // do 3d grid
-       
+         void               do_grid2d(GINT rank);                           // do 2d grid
+         void               do_grid3d(GINT rank);                           // do 3d grid
+         void               set_global_bdytypes_2d(GElem_base &);           // set 2d bdy type info
+         void               set_global_bdytypes_3d(GElem_base &);           // set 3d bdy type info
 
-private:
-         void               set_global_bdytypes_2d(GElem_base &);         // set 2d bdy type info
-         void               set_global_bdytypes_3d(GElem_base &);         // set 3d bdy type info
-
-GINT                    ndim_;          // grid dimensionality (2 or 3)
-GINT                    nprocs_;        // no. MPI tasks
-GDD_base               *gdd_;           // domain decomposition/partitioning object
-GShapeFcn_linear       *lshapefcn_;     // linear shape func to compute 2d coords
-GTPoint<GFTYPE>         P0_;            // P0 = starting point of box origin
-GTPoint<GFTYPE>         P1_;            // P1 = diagonally-opposing box point
-GC_Comm                 comm_;          // communicator
-GTVector<GTPoint<GFTYPE>>
-                        ftcentroids_;   // centroids of finest elements
-GTVector<GNBasis<GCTYPE,GFTYPE>*> 
-                        gbasis_;        // directional bases
-GTVector<GQuad<GFTYPE>> qmesh_;         // list of vertices for each 2d (quad) element
-GTVector<GHex<GFTYPE>>  hmesh_;         // list of vertices for each 3d (hex) element
-GTVector<GINT>          ne_;            // # elems in each coord direction in 3d
-GTVector<GBOOL>         bPeriodic_;     // is periodic in x, y, or z?
-GTVector<GBdyType>      global_bdy_types_;  // global types for each direction
-GTVector<GFTYPE>        Lbox_;          // length of box edges (x, y, [and z])
-std::function<void(GElemList &)>
-                       *bdycallback_;   // callback object+method to set bdy conditions
+         GINT               ndim_;           // grid dimensionality (2 or 3)
+         GDD_base           *gdd_;           // domain decomposition/partitioning object
+         GShapeFcn_linear   *lshapefcn_;     // linear shape func to compute 2d coords
+         GTPoint<GFTYPE>     P0_;            // P0 = starting point of box origin
+         GTPoint<GFTYPE>     P1_;            // P1 = diagonally-opposing box point
+         GTVector<GTPoint<GFTYPE>>
+                             ftcentroids_;   // centroids of finest elements
+         GTVector<GNBasis<GCTYPE,GFTYPE>*> 
+                             gbasis_;        // directional bases
+         GTVector<GQuad<GFTYPE>> 
+                             qmesh_;         // list of vertices for each 2d (quad) element
+         GTVector<GHex<GFTYPE>>  
+                             hmesh_;         // list of vertices for each 3d (hex) element
+         GTVector<GINT>      ne_;            // # elems in each coord direction in 3d
+         GTVector<GBOOL>     bPeriodic_;     // is periodic in x, y, or z?
+         GTVector<GBdyType>  global_bdy_types_;  // global types for each direction
+         GTVector<GFTYPE>    Lbox_;          // length of box edges (x, y, [and z])
 
 };
 

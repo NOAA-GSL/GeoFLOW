@@ -1,6 +1,4 @@
 //==================================================================================
-// Module       : ggrid_icos
-// Date         : 8/31/18 (DLR)
 // Description  : Object defining a (global) icosahedral grid, that
 //                uses gnomonic projections to locate element vertices.
 // Copyright    : Copyright 2018. Colorado State University. All rights reserved
@@ -26,16 +24,14 @@
 //          comm  : communicator
 // RETURNS: none
 //**********************************************************************************
-GGridIcos::GGridIcos(geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GC_COMM comm)
+GGridIcos::GGridIcos(const geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GC_COMM &comm)
+:          GGrid(ptree, b, comm),
 ilevel_                      (0),
 ndim_                     (GDIM),
 radiusi_                   (0.0),
-radiuso_                   (0.0), // don't need this one
-comm_                     (comm),
-nprocs_ (GComm::WorldSize(comm)),
+radiuso_                   (0.0), // don't need this one in 2d
 gdd_                   (NULLPTR),
-lshapefcn_             (NULLPTR),
-bdycallback_           (NULLPTR)
+lshapefcn_             (NULLPTR)
 {
   assert(b.size() == GDIM && "Basis has incorrect dimensionality");
 
@@ -50,13 +46,13 @@ bdycallback_           (NULLPTR)
     assert(GDIM == 2 && "GDIM must be 2");
     init2d();
   }
-  else {
+  else if ( ndim_ == 3 ) {
     assert(GDIM == 3 && "GDIM must be 3");
     GTVector<GBdyType> bdytype(2);
-    std::vector <GINT> ne(3);
+    std::vector<GINT> ne(3);
     bdytype[0] = geoflow::str2bdytype(ptree.getValue<GString>("bdy_inner"));
     bdytype[1] = geoflow::str2bdytype(ptree.getValue<GString>("bdy_outer"));
-    ne         = ptree.getArray<GINT>("num_elems"));
+    ne         = ptree.getArray<GINT>("num_elems");
     global_bdy_types_ = bdytype;
     ne_     = ne;
     init3d();
@@ -118,22 +114,6 @@ void GGridIcos::set_partitioner(GDD_base *gdd)
   gdd_ = gdd;
 
 } // end of method set_partitioner
-
-
-//**********************************************************************************
-//**********************************************************************************
-// METHOD : set_basis 
-// DESC   : Set basis object for coord. direction, idir in (1, 2, 3)
-// ARGS   :
-// RETURNS: none
-//**********************************************************************************
-void GGridIcos::set_basis(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b)
-{
-  GString serr = "GridIcos::set_basis: ";
-
-  gbasis_.resize(b.size());
-  gbasis_ = b;
-} // end of method set_basis
 
 
 //**********************************************************************************
@@ -421,18 +401,18 @@ GGridIcos::lagvert(GTPoint<GFTYPE>&a, GTPoint<GFTYPE> &b, GTPoint<GFTYPE> &c,
 //**********************************************************************************
 // METHOD : do_grid
 // DESC   : Public entry point for grid computation
-// ARGS   : grid: GGrid object
+// ARGS   : 
 //          rank: MPI rank or partition id
 // RETURNS: none.
 //**********************************************************************************
-void GGridIcos::do_grid(GGrid &grid, GINT irank)
+void GGridIcos::do_grid()
 {
-  if ( ndim_ == 2 ) do_grid2d(grid, irank);
-  if ( ndim_ == 3 ) do_grid3d(grid, irank);
-  grid.do_typing();
+  if ( ndim_ == 2 ) do_grid2d(irank_);
+  if ( ndim_ == 3 ) do_grid3d(irank_);
+  do_typing();
 
   // Inititialized global grid quantities:
-  grid.init();
+  grid_init();
 
 } // end, method do_grid
 
@@ -445,14 +425,13 @@ void GGridIcos::do_grid(GGrid &grid, GINT irank)
 //          rank: MPI rank or partition id
 // RETURNS: none.
 //**********************************************************************************
-void GGridIcos::do_grid2d(GGrid &grid, GINT irank)
+void GGridIcos::do_grid2d(GINT irank)
 {
   GString           serr = "GridIcos::do_grid2d: ";
   GFTYPE            fact, xlatc, xlongc;
   GTVector<GFPoint> cverts(4), gverts(4), tverts(4);
   GTPoint<GFTYPE>   c(3), ct(3), v1(3), v2(3), v3(3); // 3d points
   GElem_base        *pelem;
-  GElemList         *gelems = &grid.elems();
   GTVector<GINT>    iind;
   GTVector<GINT>    I(1);
   GTVector<GFTYPE>  Ni;
@@ -539,11 +518,11 @@ void GGridIcos::do_grid2d(GGrid &grid, GINT irank)
       gnomonic2cart(xgtmp, radiusi_, xlatc, xlongc, *xNodes); //
       project2sphere(*xNodes, radiusi_);
       pelem->init(*xNodes);
-      gelems->push_back(pelem);
+      gelems_.push_back(pelem);
 
       nfnodes = 0;
-      for ( GSIZET j=0; j<(*gelems)[n]->nfaces(); j++ )  // get # face nodes
-        nfnodes += (*gelems)[n]->face_indices(j).size();
+      for ( GSIZET j=0; j<gelems_[n]->nfaces(); j++ )  // get # face nodes
+        nfnodes += gelems_[n]->face_indices(j).size();
       pelem->igbeg() = icurr;      // beginning global index
       pelem->igend() = icurr+pelem->nnodes()-1; // end global index
       pelem->ifbeg() = fcurr;
@@ -557,9 +536,8 @@ void GGridIcos::do_grid2d(GGrid &grid, GINT irank)
   // Can set individual nodes and internal bdy conditions
   // with callback here:
   if ( bdycallback_ != NULLPTR ) {
-    (*bdycallback_)(*gelems);
+    (*bdycallback_)(gelems_);
   }
-
 
 } // end of method do_grid2d
 
@@ -579,7 +557,7 @@ void GGridIcos::do_grid2d(GGrid &grid, GINT irank)
 //          rank: MPI rank or partition id
 // RETURNS: none.
 //**********************************************************************************
-void GGridIcos::do_grid3d(GGrid &grid, GINT irank)
+void GGridIcos::do_grid3d(GINT irank)
 {
   GString                      serr = "GridIcos::do_grid3d: ";
   GTVector<GINT>               iind;
@@ -587,7 +565,6 @@ void GGridIcos::do_grid3d(GGrid &grid, GINT irank)
   GTVector<GINT>              *bdy_ind;
   GTVector<GINT>              *face_ind;
   GTVector<GFTYPE>             Ni;
-  GElemList                   *gelems = &grid.elems();
   GElem_base                  *pelem;
   GTVector<GTVector<GFTYPE>>  *xNodes;
   GTVector<GTVector<GFTYPE>*> *xiNodes;
@@ -636,15 +613,15 @@ void GGridIcos::do_grid3d(GGrid &grid, GINT irank)
 
     spherical2xyz(*xNodes); // convert nodal coords to Cartesian coords
     pelem->init(*xNodes);
-    gelems->push_back(pelem);
+    gelems_.push_back(pelem);
 
     // Set global bdy types at each bdy_ind (this is a coarse
     // application; finer control may be exercised in callback):
     set_global_bdy_3d(*pelem);
 
     nfnodes = 0;
-    for ( GSIZET j=0; j<(*gelems)[n]->nfaces(); j++ )  // get # face nodes
-      nfnodes += (*gelems)[n]->face_indices(j).size();
+    for ( GSIZET j=0; j<gelems_[n]->nfaces(); j++ )  // get # face nodes
+      nfnodes += gelems_[n]->face_indices(j).size();
     pelem->igbeg() = icurr;      // beginning global index
     pelem->igend() = icurr + pelem->nnodes()-1; // end global index
     pelem->ifbeg() = fcurr;
@@ -655,25 +632,10 @@ void GGridIcos::do_grid3d(GGrid &grid, GINT irank)
 
   // If we have a callback function, set the boundary conditions here:
   if ( bdycallback_ != NULLPTR ) {
-    (*bdycallback_)(*gelems);
+    (*bdycallback_)(gelems_);
   }
 
 } // end of method do_grid3d
-
-
-//**********************************************************************************
-//**********************************************************************************
-// METHOD : set_bdy_callback
-// DESC   : Set the callback object and method pointers for setting bdy conditions
-// ARGS   : ptr2obj : pointer to object that hosts method callback
-//          callback: method name
-// RETURNS: none.
-//**********************************************************************************
-void GGridIcos::set_bdy_callback(std::function<void(GElemList &)> *callback)
-{
-  bdycallback_  = callback;
-} // end of method set_bdy_callback
-
 
 
 //**********************************************************************************

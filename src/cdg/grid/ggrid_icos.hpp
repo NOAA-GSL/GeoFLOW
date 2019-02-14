@@ -24,7 +24,6 @@
 #include "gshapefcn_linear.hpp"
 #include "gshapefcn_embed.hpp"
 #include "polygon.h"
-#include "ggrid_impl_base.hpp"
 
 // GICOS_BASE refers to the refined, projected triangular
 //   'base' frame which are then partitioned into quad/hex elements
@@ -38,9 +37,8 @@ enum GCOORDSYST {GICOS_CART, GICOS_LATLONG};
 
 typedef GTMatrix<GFTYPE> GFTMatrix;
 
-class GGridIcos : GGrid_impl_base
+class GGridIcos : public GGrid
 {
-
 public:
         // ICOS & sphere grid traits:
         struct Traits {
@@ -50,19 +48,13 @@ public:
           GTVector<GBdyType>  bdyTypes  ; // global bdy types (inner outer surf in 3D only)
         };
 
-                            GGrid_impl_base(geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GC_COMM comm)
+                            GGridIcos(const geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GC_COMM &comm);
 #if 0
-                            GGridIcos(GGridIcos::Traits &, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GINT nprocs); // 2d constructor
-                            GGridIcos(GGridIcos::Traits &, GTVector<GINT> &ne, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GINT nprocs); // 3d constructor
 #endif
                            ~GGridIcos();
 
-        void                do_grid(GGrid &grid, GINT irank);             // compute grid for irank
+        void                do_grid();                                    // compute grid for irank
         void                set_partitioner(GDD_base *d);                 // set and use GDD object
-        void                set_bdy_callback(
-                            std::function<void(GElemList &)> *callback);   // set bdy-set callback
-
-        void                set_basis(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b);             // set element basis
         GTVector<GTriangle<GFTYPE>> 
                            &get_tmesh(){ return tmesh_;}                  // get complete triang. mesh
         GTVector    <GHex<GFTYPE>> 
@@ -106,39 +98,36 @@ friend  std::ostream&       operator<<(std::ostream&, GGridIcos &);       // Out
                                     GTVector<GTPoint<GFTYPE>> &R1,
                                     GINT I, GTVector<GTPoint<GFTYPE>> &Rz);
 
-         void               do_grid2d(GGrid &grid, GINT rank);               // do 2d grid
-         void               do_grid3d(GGrid &grid, GINT rank);               // do 3d grid
        
 
 private:
-         void               set_global_bdy_2d(GElem_base &);              // set 2d bdy info
-         void               set_global_bdy_3d(GElem_base &);              // set 3d bdy info
+         void               do_grid2d(GINT rank);               // do 2d grid
+         void               do_grid3d(GINT rank);               // do 3d grid
+         void               set_global_bdy_2d(GElem_base &);    // set 2d bdy info
+         void               set_global_bdy_3d(GElem_base &);    // set 3d bdy info
 
 
-GINT                    ilevel_;        // refinement level (>= 0)
-GINT                    ndim_;          // grid dimensionality (2 or 3)
-GFTYPE                  radiusi_;       // inner radius
-GFTYPE                  radiuso_;       // outer radius (=radiusi in 2d)
-GINT                    nprocs_;        // no. MPI tasks
-GDD_base               *gdd_;           // domain decomposition/partitioning object
-GShapeFcn_linear       *lshapefcn_;     // linear shape func to compute 2d coords
-GC_Comm                 comm_;          // communicator
-GTVector<GBdyType>      global_bdy_types_;  // global types for each surface (in 3D only)
+         GINT               ilevel_;        // refinement level (>= 0)
+         GINT               ndim_;          // grid dimensionality (2 or 3)
+         GFTYPE             radiusi_;       // inner radius
+         GFTYPE             radiuso_;       // outer radius (=radiusi in 2d)
+         GDD_base          *gdd_;           // domain decomposition/partitioning object
+         GShapeFcn_linear  *lshapefcn_;     // linear shape func to compute 2d coords
+         GTVector<GBdyType> global_bdy_types_;  // global types for each surface (in 3D only)
 
-GTVector<GTriangle<GFTYPE>>    
-                        tmesh_;         // array of final mesh triangles
-GTVector<GTPoint<GFTYPE>>
-                        ftcentroids_ ;  // centroids of finest triangles/faces/ or hexes
-GTVector<GTriangle<GFTYPE>>     
-                        tbase_;         // array of base triangles
-GTVector<GNBasis<GCTYPE,GFTYPE>*> 
-                        gbasis_;        // directional bases
-GTVector<GHex<GFTYPE>>  hmesh_;         // list of vertices for each 3d (hex) element
-GTMatrix<GFTYPE>        fv0_;           // vertex list for base icosahedron
-GIMatrix                ifv0_;          // indices into fv0_ for each face of base icosahedron 
-GTVector<GINT>          ne_;            // # elems in each coord direction in 3d
-std::function<void(GElemList &)>
-                       *bdycallback_ ; // callback object+method to set bdy conditions
+         GTVector<GTriangle<GFTYPE>>    
+                            tmesh_;         // array of final mesh triangles
+         GTVector<GTPoint<GFTYPE>>
+                            ftcentroids_ ;  // centroids of finest triangles/faces/ or hexes
+         GTVector<GTriangle<GFTYPE>>     
+                             tbase_;        // array of base triangles
+         GTVector<GNBasis<GCTYPE,GFTYPE>*> 
+                             gbasis_;       // directional bases
+         GTVector<GHex<GFTYPE>>  
+                             hmesh_;        // list of vertices for each 3d (hex) element
+         GTMatrix<GFTYPE>    fv0_;          // vertex list for base icosahedron
+         GIMatrix            ifv0_;         // indices into fv0_ for each face of base icosahedron 
+         GTVector<GINT>      ne_;           // # elems in each coord direction in 3d
 
 };
 

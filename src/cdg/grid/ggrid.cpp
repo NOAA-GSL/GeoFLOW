@@ -19,13 +19,18 @@
 //**********************************************************************************
 // METHOD : Constructor method (1)
 // DESC   : Default constructor
-// ARGS   : comm: communicator
+// ARGS   : ptree: property tree
+//          b    : GNBasis
+//          comm : communicator
 // RETURNS: none
 //**********************************************************************************
-GGrid::GGrid(GC_COMM comm)
+GGrid::GGrid(const geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GC_COMM &comm)
 :
-bInitialized_  (FALSE),
-comm_          (comm)
+bInitialized_                   (FALSE),
+nprocs_        (GComm::WorldSize(comm)),
+irank_         (GComm::WorldRank(comm)),
+bdycallback_                  (NULLPTR),
+comm_                            (comm)
 {
 } // end of constructor method (1)
 
@@ -72,6 +77,36 @@ void GGrid::do_typing()
   if ( ind != NULLPTR ) delete [] ind;
 
 } // end of method do_typing
+
+
+#if 0
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : build
+// DESC   : Do build and return of GGrid object
+// ARGS   : ptree : property tree
+//          gbasis: basis object
+//          comm  : GC_Comm object
+// RETURNS: GGrid object ptr
+//**********************************************************************************
+GGrid *GGrid::build(const geoflow::tbox::PropertyTree& ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis, GC_COMM comm)
+{
+
+  GString gname = ptree.getValue<GString>("grid_name");
+
+  if      ( gname.compare  ("grid_icos") == 0   // 2d or 3d Icos grid
+      ||    gname.compare("grid_sphere") == 0 ) {
+    return new GGridIcos(ptree, gbasis, comm);
+  }
+  else if ( gname.compare("grid_box") == 0 ) { // 2d or 3D Cart grid
+    return new GGridBox(ptree, gbasis, comm);
+  }
+  else {
+    assert(FALSE && "Invalid PropertyTree grid specification");
+  }
+
+} // end, factory method build
+#endif
 
 
 //**********************************************************************************
@@ -305,13 +340,13 @@ GFTYPE GGrid::maxlength()
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : init
+// METHOD : grid_init
 // DESC   : Initialize global (metric) variables. All elements are assumed to be
 //          of the same type.
 // ARGS   : none
 // RETURNS: none
 //**********************************************************************************
-void GGrid::init()
+void GGrid::grid_init()
 {
 
   // Restrict grid to a single element type:
@@ -340,7 +375,7 @@ void GGrid::init()
 
   bInitialized_ = TRUE;
 
-} // end of method init
+} // end of method grid_init
 
 
 //**********************************************************************************

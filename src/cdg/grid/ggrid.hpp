@@ -11,11 +11,15 @@
 #define _GGRID_HPP 
 
 #include <iostream>
+#include "gcomm.hpp"
 #include "gtvector.hpp"
 #include "gtmatrix.hpp"
-#include "gcomm.hpp"
+#include "gnbasis.hpp"
 #include "gelem_base.hpp"
+#include "gdd_base.hpp"
+#include "ggrid.hpp"
 #include "gcomm.hpp"
+#include "tbox/property_tree.hpp"
 
 
 typedef GTVector<GElem_base*> GElemList;
@@ -24,10 +28,22 @@ typedef GTVector<GElem_base*> GElemList;
 class GGrid 
 {
 public:
-                             GGrid(GC_COMM comm);
-                            ~GGrid();
+                             GGrid() = delete;
+                             GGrid(const geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GC_COMM &comm);
 
-        void                do_typing(); // classify into types
+                            ~GGrid();
+//static                       GGrid *build(geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GC_COMM comm);
+
+virtual void                do_grid() = 0;                            // compute grid for irank
+virtual void                set_partitioner(GDD_base *d) = 0;         // set and use GDD object
+virtual void                set_bdy_callback(
+                            std::function<void(GElemList &)> *callback) 
+                            {bdycallback_ =  callback; }              // set bdy-set callback
+
+virtual void                print(const GString &filename){}          // print grid to file
+
+
+        void                 do_typing(); // classify into types
         GElemList           &elems() { return gelems_; }              // get elem list
         GSIZET               nelems() { return gelems_.size(); }      // local num elems
         GTVector<GSIZET> 
@@ -42,7 +58,7 @@ public:
         GSIZET               ndof();                                  // compute total number elem dof
         GSIZET               size() { return ndof(); }
         GSIZET               nsurfdof();                              // compute total number elem surf dof
-        void                 init();                                  // inititlize class
+        void                 grid_init();                             // initialize class
         GFTYPE               minlength();                             // find min elem length
         GFTYPE               maxlength();                             // find max elem length
         GTVector<GFTYPE>    &minnodedist()                            // find min node distance
@@ -70,28 +86,31 @@ friend  std::ostream&        operator<<(std::ostream&, GGrid &);      // Output 
 
 protected:
        
-        void                 def_init();                              // iniitialze deformed elems
-        void                 reg_init();                              // initialize regular elems
+        void                        def_init();                       // iniitialze deformed elems
+        void                        reg_init();                       // initialize regular elems
 
-private:
          
-void                        find_min_dist(); 
-void                        init_bc_info(); 
+        void                        find_min_dist(); 
+        void                        init_bc_info(); 
 
-GBOOL                       bInitialized_;  // object initialized?
-GElemType                   gtype_;         // element types comprising grid
-GC_COMM                     comm_;          // communicator
-GElemList                   gelems_;        // element list
-GTVector<GTVector<GSIZET>>  itype_;         // indices in elem list of each type
-GTVector<GSIZET>            ntype_;         // no. elems of each type on grid
-GTMatrix<GTVector<GFTYPE>>  dXidX_;         // matrix Rij = dXi^j/dX^i, global
-GTVector<GTVector<GFTYPE>>  xNodes_;        // Cart coords of all node points
-GTVector<GFTYPE>            Jac_;           // interior Jacobian, global
-GTVector<GFTYPE>            faceJac_;       // face Jacobian, global
-GTVector<GTVector<GFTYPE>>  faceNormal_;    // normal to face at each node point (2d & 3d), global
-GTVector<GFTYPE>            minnodedist_;   // min node length array (for each elem)
-GTVector<GTVector<GSIZET>>  igbdy_;         // index into global field indicating a domain bdy
-GTVector<GBdyType>          igbdytypes_;    // global domain bdy types for each igbdy index
+        GBOOL                       bInitialized_;  // object initialized?
+        GElemType                   gtype_;         // element types comprising grid
+        GINT                        irank_;         // MPI task id
+        GINT                        nprocs_;        // number of MPI tasks
+        GC_COMM                     comm_;          // communicator
+        GElemList                   gelems_;        // element list
+        GTVector<GTVector<GSIZET>>  itype_;         // indices in elem list of each type
+        GTVector<GSIZET>            ntype_;         // no. elems of each type on grid
+        GTMatrix<GTVector<GFTYPE>>  dXidX_;         // matrix Rij = dXi^j/dX^i, global
+        GTVector<GTVector<GFTYPE>>  xNodes_;        // Cart coords of all node points
+        GTVector<GFTYPE>            Jac_;           // interior Jacobian, global
+        GTVector<GFTYPE>            faceJac_;       // face Jacobian, global
+        GTVector<GTVector<GFTYPE>>  faceNormal_;    // normal to face at each node point (2d & 3d), global
+        GTVector<GFTYPE>            minnodedist_;   // min node length array (for each elem)
+        GTVector<GTVector<GSIZET>>  igbdy_;         // index into global field indicating a domain bdy
+        GTVector<GBdyType>          igbdytypes_;    // global domain bdy types for each igbdy index
+        std::function<void(GElemList &)> 
+                                   *bdycallback_;   // bdy callback function (e.g., for internal bdy types)
 
 };
 

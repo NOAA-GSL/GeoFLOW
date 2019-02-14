@@ -24,14 +24,11 @@
 //          comm   : communicator
 // RETURNS: none
 //**********************************************************************************
-GGridBox::GGridBox(geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GC_COMM comm)
-:
+GGridBox::GGridBox(const geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GC_COMM &comm)
+:          GGrid(ptree, b, comm),
 ndim_                     (GDIM),
-comm_                     (comm),
-nprocs_ (GComm::WorldSize(comm)),
 gdd_                   (NULLPTR),
-lshapefcn_             (NULLPTR),
-bdycallback_           (NULLPTR)
+lshapefcn_             (NULLPTR)
 {
   assert((b.size() == GDIM ) 
         && "Basis has incorrect dimensionalilty");
@@ -41,14 +38,17 @@ bdycallback_           (NULLPTR)
   Lbox_.resize(GDIM);
   ne_.resize(GDIM);
 
-  std::vector<GFTYPE> pt = ptree.getArray<GFTYPE>("xyz0");
-  P0_ = pt;
-  std::vector<GFTYPE> pt = ptree.getArray<GFTYPE>("delxyz");
+  std::vector<GFTYPE> spt;
+  std::vector  <GINT> ne;
+  spt = ptree.getArray<GFTYPE>("xyz0");
+  P0_ = spt;
+  spt = ptree.getArray<GFTYPE>("delxyz");
+
   GTPoint<GFTYPE> dP(3);
-  dP = pt;
+  dP  = spt;
   P1_ = P0_ + dP;
 
-  GTVector<GBdyType> bdytype.resize(2*GDIM);
+  GTVector<GBdyType> bdytype(2*GDIM);
   bdytype[0] = geoflow::str2bdytype(ptree.getValue<GString>("bdy_y_0"));
   bdytype[1] = geoflow::str2bdytype(ptree.getValue<GString>("bdy_x_1"));
   bdytype[2] = geoflow::str2bdytype(ptree.getValue<GString>("bdy_y_1"));
@@ -59,7 +59,7 @@ bdycallback_           (NULLPTR)
   }
   global_bdy_types_ = bdytype;
 
-  ne         = ptree.getArray<GINT>("num_elems"));
+  ne         = ptree.getArray<GINT>("num_elems");
   ne_        = ne;
 
   bPeriodic_.resize(3);
@@ -137,22 +137,6 @@ void GGridBox::set_partitioner(GDD_base *gdd)
   gdd_ = gdd;
 
 } // end of method set_partitioner
-
-
-//**********************************************************************************
-//**********************************************************************************
-// METHOD : set_basis 
-// DESC   : Set basis object for coord. direction, idir in (1, 2, 3)
-// ARGS   :
-// RETURNS: none
-//**********************************************************************************
-void GGridBox::set_basis(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b)
-{
-  GString serr = "GGridBox::set_basis: ";
-
-  gbasis_.resize(b.size());;
-  gbasis_ = b;
-} // end of method set_basis
 
 
 //**********************************************************************************
@@ -270,15 +254,14 @@ void GGridBox::init3d()
 //          rank: MPI rank or partition id
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::do_grid(GGrid &grid, GINT irank)
+void GGridBox::do_grid()
 {
-  if ( ndim_ == 2 ) do_grid2d(grid, irank);
-  if ( ndim_ == 3 ) do_grid3d(grid, irank);
-  grid.do_typing();
+  if ( ndim_ == 2 ) do_grid2d(irank_);
+  if ( ndim_ == 3 ) do_grid3d(irank_);
+  do_typing();
 
   // Inititialized global grid quantities:
-  grid.init();
-
+  grid_init();
 
 } // end, method do_grid
 
@@ -294,11 +277,11 @@ void GGridBox::do_grid(GGrid &grid, GINT irank)
 //          converted into sherical coordinates, and the GShapeFcn_linear
 //          will be used in spherical coords to compute the interior nodes. These
 //          will then be converted to Cartesian coords.
-// ARGS   : grid: GGrid object
+// ARGS   : 
 //          rank: MPI rank or partition id
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::do_grid2d(GGrid &grid, GINT irank)
+void GGridBox::do_grid2d(GINT irank)
 {
   assert(gbasis_.size()>0 && "Must set basis first");
   assert(ndim_ == 2 && "Dimension must be 2");
@@ -311,7 +294,6 @@ void GGridBox::do_grid2d(GGrid &grid, GINT irank)
   GTVector<GBdyType>          *bdy_typ;
   GTVector<GINT>              *face_ind;
   GTVector<GFTYPE>             Ni;
-  GElemList                   *gelems = &grid.elems();
   GElem_base                  *pelem;
   GTVector<GTVector<GFTYPE>>  *xNodes;
   GTVector<GTVector<GFTYPE>*> *xiNodes;
@@ -360,7 +342,7 @@ void GGridBox::do_grid2d(GGrid &grid, GINT irank)
     }
 
 
-    gelems->push_back(pelem);
+    gelems_.push_back(pelem);
 
     // Set global bdy types at each bdy_ind (this is a coarse 
     // application; finer control may be exercised in callback):
@@ -369,8 +351,8 @@ void GGridBox::do_grid2d(GGrid &grid, GINT irank)
     // Find global global interior and face start & stop indices represented 
     // locally within element:
     nfnodes = 0;
-    for ( GSIZET j=0; j<(*gelems)[i]->nfaces(); j++ )  // get # face nodes
-      nfnodes += (*gelems)[i]->face_indices(j).size();
+    for ( GSIZET j=0; j<gelems_[i]->nfaces(); j++ )  // get # face nodes
+      nfnodes += gelems_[i]->face_indices(j).size();
     pelem->igbeg() = icurr;      // beginning global index
     pelem->igend() = icurr + pelem->nnodes()-1; // end global index
     pelem->ifbeg() = fcurr;
@@ -382,7 +364,7 @@ void GGridBox::do_grid2d(GGrid &grid, GINT irank)
   // Can set individual nodes and internal bdy conditions
   // with callback here:
   if ( bdycallback_ != NULLPTR ) {
-    (*bdycallback_)(*gelems);
+    (*bdycallback_)(gelems_);
   }
 
 } // end of method do_grid2d
@@ -400,11 +382,11 @@ void GGridBox::do_grid2d(GGrid &grid, GINT irank)
 //          converted into sherical coordinates, and the GShapeFcn_linear
 //          will be used in spherical coords to compute the interior nodes. These
 //          will then be converted to Cartesian coords.
-// ARGS   : grid: GGrid object
+// ARGS   : 
 //          rank: MPI rank or partition id
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::do_grid3d(GGrid &grid, GINT irank)
+void GGridBox::do_grid3d(GINT irank)
 {
 
   assert(gbasis_.size()>0 && "Must set basis first");
@@ -417,7 +399,6 @@ void GGridBox::do_grid3d(GGrid &grid, GINT irank)
   GTVector<GINT>              *bdy_ind;
   GTVector<GINT>              *face_ind;
   GTVector<GFTYPE>             Ni;
-  GElemList                   *gelems = &grid.elems();
   GElem_base                  *pelem;
   GTVector<GTVector<GFTYPE>>  *xNodes;
   GTVector<GTVector<GFTYPE>*> *xiNodes;
@@ -429,7 +410,7 @@ void GGridBox::do_grid3d(GGrid &grid, GINT irank)
 
   // Get indirection indices to create elements
   // only for this task:
-  gdd_->doDD(ftcentroids_, irank, iind);
+  gdd_->doDD(ftcentroids_, irank_, iind);
 
   GSIZET i, n;
   GSIZET nfnodes;   // no. face indices
@@ -470,14 +451,14 @@ void GGridBox::do_grid3d(GGrid &grid, GINT irank)
       for ( GSIZET k=0; k<face_ind->size(); k++ ) bdy_ind->push_back((*face_ind)[k]); 
     }
 
-    gelems->push_back(pelem);
+    gelems_.push_back(pelem);
     // Set global bdy types at each bdy_ind (this is a coarse 
     // application; finer control may be exercised in callback):
     set_global_bdytypes_3d(*pelem);
 
     nfnodes = 0;
-    for ( GSIZET j=0; j<(*gelems)[i]->nfaces(); j++ )  // get # face nodes
-      nfnodes += (*gelems)[i]->face_indices(j).size();
+    for ( GSIZET j=0; j<gelems_[i]->nfaces(); j++ )  // get # face nodes
+      nfnodes += gelems_[i]->face_indices(j).size();
     pelem->igbeg() = icurr;      // beginning global index
     pelem->igend() = icurr + pelem->nnodes()-1; // end global index
     pelem->ifbeg() = fcurr;
@@ -489,25 +470,10 @@ void GGridBox::do_grid3d(GGrid &grid, GINT irank)
   // Can set individual nodes and internal bdy conditions
   // with callback here:
   if ( bdycallback_ != NULLPTR ) {
-    (*bdycallback_)(*gelems);
+    (*bdycallback_)(gelems_);
   }
 
 } // end of method do_grid3d
-
-
-//**********************************************************************************
-//**********************************************************************************
-// METHOD : set_bdy_callback
-// DESC   : Set the callback object and method pointers for setting bdy conditions
-// ARGS   : ptr2obj : pointer to object that hosts method callback
-//          callback: method name
-// RETURNS: none.
-//**********************************************************************************
-void GGridBox::set_bdy_callback(std::function<void(GElemList &)> &callback)
-{
-  bdycallback_  = &callback;
-} // end of method set_bdy_callback
-
 
 
 //**********************************************************************************
