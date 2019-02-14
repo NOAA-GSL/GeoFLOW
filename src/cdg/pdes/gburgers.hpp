@@ -113,6 +113,7 @@ private:
         GINT                inorder_;       // nonlin term order
         GTVector<GFTYPE>    tcoeffs_;       // coeffs for time deriv
         GTVector<GFTYPE>    acoeffs_;       // coeffs for NL adv term
+        GTVector<GFTYPE>    dthist_;        // coeffs for NL adv term
         GButcherRK<GFTYPE>  butcher_;       // Butcher tableau for EXRK
         GTVector<GTVector<GFLOAT>*>  
                             utmp_;

@@ -17,8 +17,13 @@
 template<typename T>
 class G_EXT : GMultilevel_coeffs_base<T>
 {
+         using GMultilevel_coeffs_base<T>::iorder_;
+         using GMultilevel_coeffs_base<T>::maxorder_;
+         using GMultilevel_coeffs_base<T>::coeffs_;
+         using GMultilevel_coeffs_base<T>::dthist_;
+
 public:
-                           G_EXT(GSIZET iorder=2);
+                           G_EXT(GINT iorder, GTVector<T> &dthist);
                           ~G_EXT();
                            G_EXT(const G_EXT &a);
 

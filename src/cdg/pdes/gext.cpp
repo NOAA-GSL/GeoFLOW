@@ -16,13 +16,12 @@
 // ARGS   : iorder: truncation order
 //**********************************************************************************
 template<typename T>
-G_EXT<T>::G_EXT(GSIZET iorder, GTVector<T> &dthist)
-:
-iorder_               (iorder),
-maxorder_             (3),
-dthist_               (&dthist)
+G_EXT<T>::G_EXT(GINT iorder, GTVector<T> &dthist)
+: GMultilevel_coeffs_base<T>(iorder, dthist)
 {
   assert(iorder_ >= 1 && iorder_ <= 3 && "Invalid AB order");
+
+  maxorder_ = 3;
   coeffs_.resize(iorder_);
   coeffs_ = 0.0;
   computeCoeffs();

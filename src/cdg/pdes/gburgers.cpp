@@ -362,15 +362,17 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
       gexrk_.setRHSfunction(this->dudt);
       break;
     case GSTEPPER_BDFAB:
-      tcoeff_obj = new G_BDF<GFTYPE>(itorder_);
-      acoeff_obj = new G_AB<GFTYPE> (inorder_);
+      dthist_.resize(MAX(itorder_,inorder_));
+      tcoeff_obj = new G_BDF<GFTYPE>(itorder_, dthist_);
+      acoeff_obj = new G_AB<GFTYPE> (inorder_, dthist_);
       tcoeffs_.resize(tcoeff_obj->getCoeffs().size());
       acoeffs_.resize(acoeff_obj->getCoeffs().size());
       tcoeffs_ = tcoeff_obj; acoeffs_ = acoeff_obj;
       break;
     case GSTEPPER_BDFEXT:
-      tcoeff_obj = new G_BDF<GFTYPE>(itorder_);
-      acoeff_obj = new G_EXT<GFTYPE>(inorder_);
+      dthist_.resize(MAX(itorder_,inorder_));
+      tcoeff_obj = new G_BDF<GFTYPE>(itorder_, dthist_);
+      acoeff_obj = new G_EXT<GFTYPE>(inorder_, dthist_);
       tcoeffs_.resize(tcoeff_obj->getCoeffs().size());
       acoeffs_.resize(acoeff_obj->getCoeffs().size());
       tcoeffs_ = tcoeff_obj; acoeffs_ = acoeff_obj;

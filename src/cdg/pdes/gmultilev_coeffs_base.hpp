@@ -15,7 +15,9 @@ template<typename T>
 class GMultilevel_coeffs_base 
 {
 public:
-                           GMultilevel_coeffs_base() = default;
+                           GMultilevel_coeffs_base() = delete;
+                           GMultilevel_coeffs_base(GINT iorder, GTVector<T> &dthist)
+                           { iorder_ = iorder; dthist_ = &dthist; }
                            GMultilevel_coeffs_base(const GMultilevel_coeffs_base &a) = default;
                            virtual ~GMultilevel_coeffs_base() = default;
 
@@ -26,11 +28,11 @@ public:
          T                 &operator[](const GSIZET  i) { return coeffs_[i]; }
 
 
-private:
+protected:
 
 // Private data:
-         GSIZET             iorder_;              // specified GMultilevel_coeffs_base order
-         GSIZET             maxorder_;            // max GMultilevel_coeffs_base order allowed by class
+         GINT               iorder_;              // specified GMultilevel_coeffs_base order
+         GINT               maxorder_;            // max GMultilevel_coeffs_base order allowed by class
          GTVector<T>        coeffs_;              // buffer of GMultilevel_coeffs_base coeffs
          GTVector<T>       *dthist_;              // timestep history pointer, managed outside of class
 };

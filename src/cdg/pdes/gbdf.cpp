@@ -16,13 +16,12 @@
 // ARGS   : iorder: truncation order
 //**********************************************************************************
 template<typename T>
-G_BDF<T>::G_BDF(GSIZET iorder, GTVector<T> &dthist)
-:
-iorder_               (iorder),
-maxorder_             (4),
-dthist_               (&dthist)
+G_BDF<T>::G_BDF(GINT iorder, GTVector<T> &dthist)
+: GMultilevel_coeffs_base<T>(iorder, dthist)
 {
   assert(iorder_ >= 1 && iorder_ <= 3 && "Invalid AB order");
+
+  maxorder_ = 3;
   coeffs_.resize(iorder_);
   coeffs_ = 0.0;
   computeCoeffs();
@@ -72,10 +71,10 @@ template<typename T>
 void G_BDF<T>::computeCoeffs()
 {
 
-  assert(dthist_ != NULLPTR && dthist_->size() < iorder_  && "Invalid dt-history vector");
+  assert(dthist_ != NULLPTR && dthist_->size() >= iorder_  && "Invalid dt-history vector");
 
-  bdf_mat_.resise(4,4);
-  bdf_mat_ = 0.0;
+  c_bdf_.resise(4,4);
+  c_bdf_ = 0.0;
 
   
   c_bdf_(0,0) =  1.0;
@@ -89,7 +88,7 @@ void G_BDF<T>::computeCoeffs()
   c_bdf_(3,2) =  4.0/3.0;
   c_bdf_(3,3) = -0.25;
 
-  for ( auto j=0; j<=iorder_; j++ ) coeffs_[j] = c_bdf_(iorder-1,j);
+  for ( auto j=0; j<=iorder_; j++ ) coeffs_[j] = c_bdf_(iorder_-1,j);
 
 
 } // end of method computeCoeffs

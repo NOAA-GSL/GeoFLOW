@@ -15,10 +15,15 @@
 
 
 template<typename T>
-class G_AB : public GMultilevel_coeffs_base<T>
+class G_AB : GMultilevel_coeffs_base<T>
 {
+         using GMultilevel_coeffs_base<T>::iorder_;
+         using GMultilevel_coeffs_base<T>::maxorder_;
+         using GMultilevel_coeffs_base<T>::coeffs_;
+         using GMultilevel_coeffs_base<T>::dthist_;
+
 public:
-                           G_AB(GSIZET iorder=2);
+                           G_AB(GINT iorder, GTVector<T> &dthist);
                           ~G_AB();
                            G_AB(const G_AB &a);
 
