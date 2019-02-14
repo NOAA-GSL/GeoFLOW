@@ -63,6 +63,20 @@ public:
 		this->dt_impl(t,u,dt);
 	}
 
+	/**
+	 * Apply Boundary Condition.
+	 *
+	 * Apply the provided ub boundary condition to the state u.
+	 *
+	 * @param[in]     t  Current time of state u before taking step
+	 * @param[in,out] u  Is the state of the system of equations
+	 * @param[in]     ub Boundary condition values
+	 */
+	void apply_bc(const Time &t, State &u, State &ub){
+		this->apply_bc_impl(t,u,ub);
+	}
+
+
 	/** Take one step from time t to time t+dt.
 	 *
 	 * Take exactly one time step from t with current solution u to
@@ -70,10 +84,11 @@ public:
 	 *
 	 * \param[in]     t  Current time of state u before taking step
 	 * \param[in]     dt Size of time step to take
+	 * \param[in]     ub Boundary conditions for u
 	 * \param[in,out] u  State of the system of equations
 	 */
-	void step(const Time& t, const Time& dt, State& u){
-		this->step_impl(t,dt,u);
+	void step(const Time& t, const Time& dt, State& u, State& ub){
+		this->step_impl(t,dt,u,ub);
 	}
 
 	/** Take one step from time t to time t + dt.
@@ -83,11 +98,12 @@ public:
 	 *
 	 * \param[in]  t     Current time of state u before taking step
 	 * \param[in]  uin   State of the system of equations at time t
+	 * \param[in]  ub    Boundary conditions for u
 	 * \param[in]  dt    Size of time step to take
 	 * \param[out] uout  New state of the system of equations at t + dt
 	 */
-	void step(const Time& t, const State& uin, const Time& dt, State& uout){
-		this->step_impl(t,uin,dt,uout);
+	void step(const Time& t, const State& uin, const State& ub, const Time& dt, State& uout){
+		this->step_impl(t,uin,ub,dt,uout);
 	}
 
 protected:
@@ -105,12 +121,17 @@ protected:
 	/**
 	 * Must be provided by implementation
 	 */
-	virtual void step_impl(const Time& t, const Time& dt, State& u) = 0;
+	virtual void apply_bc_impl(const Time &t, State &u, State &ub) = 0;
 
 	/**
 	 * Must be provided by implementation
 	 */
-	virtual void step_impl(const Time& t, const State& uin, const Time& dt, State& uout) = 0;
+	virtual void step_impl(const Time& t, const Time& dt, State& u, State& ub) = 0;
+
+	/**
+	 * Must be provided by implementation
+	 */
+	virtual void step_impl(const Time& t, const State& uin, const State& ub, const Time& dt, State& uout) = 0;
 };
 
 
