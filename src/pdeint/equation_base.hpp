@@ -83,12 +83,12 @@ public:
 	 * time t + dt and return new solution within u.
 	 *
 	 * \param[in]     t  Current time of state u before taking step
-	 * \param[in]     dt Size of time step to take
 	 * \param[in]     ub Boundary conditions for u
 	 * \param[in,out] u  State of the system of equations
+	 * \param[in]     dt Size of time step to take
 	 */
-	void step(const Time& t, const Time& dt, State& u, State& ub){
-		this->step_impl(t,dt,u,ub);
+	void step(const Time& t, State& u, State& ub, const Time &dt){
+		this->step_impl(t,u,ub,dt);
 	}
 
 	/** Take one step from time t to time t + dt.
@@ -126,7 +126,7 @@ protected:
 	/**
 	 * Must be provided by implementation
 	 */
-	virtual void step_impl(const Time& t, const Time& dt, State& u, State& ub) = 0;
+	virtual void step_impl(const Time& t, State& u, State& ub, const Time& dt) = 0;
 
 	/**
 	 * Must be provided by implementation
