@@ -73,7 +73,7 @@ gpdv_                 (NULLPTR),
 gbc_                  (NULLPTR),
 grid_                   (&grid),
 ggfx_                   (&ggfx),
-comm_         (&ggrx.getComm())
+comm_          (ggfx.getComm())
 {
   static_assert(std::is_same<State,GTVector<GTVector<GFTYPE>>>::value,
                "State is of incorrect type"); 
