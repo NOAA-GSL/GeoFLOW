@@ -7,8 +7,9 @@
 
  # Include only sources that contain main here:
  set(CDG_TEST_MAIN  
+                    ${GTHOME}/gtest_burgers.cpp
 #                   ${GTHOME}/gtest_mass.cpp
-                    ${GTHOME}/gtest_ggrid.cpp
+#                   ${GTHOME}/gtest_ggrid.cpp
 #                   ${GTHOME}/gtest_gmtk.cpp
 #                   ${GTHOME}/gtest_gll.cpp
 #                   ${GTHOME}/gtest_tmp.cpp

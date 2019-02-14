@@ -31,12 +31,15 @@
                     ${GHOME}/grid/ggrid_icos.cpp
                     ${GHOME}/grid/ggrid_box.cpp
                     ${GHOME}/grid/ggrid_factory.cpp
+                    ${GHOME}/grid/gbc.cpp
     )
 
  set(CDG_PDES_SRC   ${GHOME}/pdes/gbutcherrk.cpp
                     ${GHOME}/pdes/gexrk_stepper.cpp
-                    ${GHOME}/pdes/gbc.cpp
                     ${GHOME}/pdes/gburgers.cpp
+                    ${GHOME}/pdes/gab.cpp
+                    ${GHOME}/pdes/gbdf.cpp
+                    ${GHOME}/pdes/gext.cpp
     )
 
 
