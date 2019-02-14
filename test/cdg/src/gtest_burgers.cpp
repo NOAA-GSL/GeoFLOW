@@ -19,20 +19,24 @@
 #include "gcomm.hpp"
 #include "ggrid_factory.hpp"
 #include "ggfx.hpp"
+#include "gllbasis.hpp"
 #include "gmorton_keygen.hpp"
 #include "gburgers.hpp"
 #include "pdeint/equation_base.hpp"
+#include "pdeint/integrator.hpp"
+#include "pdeint/null_observer.hpp"
 #include "tbox/property_tree.hpp"
 
 using namespace geoflow::pdeint;
+using namespace geoflow::tbox;
 
 
 template<
-typename StateType = GTVector<GTVectorGFTYPE>*>,
+typename StateType = GTVector<GTVector<GFTYPE>*>,
 typename ValueType = GFTYPE,
 typename DerivType = StateType,
 typename TimeType  = ValueType,
-typename JacoType  = NULLPTR,
+typename JacoType  = StateType,
 typename SizeType  = GSIZET
 >
 struct EquationTypes {
@@ -44,11 +48,10 @@ struct EquationTypes {
         using Size       = SizeType;
 };
 
-GGrid                      *grid_ = NULLPTR;
 GTVector<GTVector<GFTYPE>*> ua_;
 
-void compute_analytic(GGrid &grid, Time &t, const tbox::PropertyTree& ptree,  State &u);
-void update_dirichlet(Time &t, State &u, State &ub);
+void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVector<GTVector<GFTYPE>*> &u);
+void update_dirichlet(GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u, GTVector<GTVector<GFTYPE>*> &ub);
 
 //#include "init_pde.h"
 
@@ -56,7 +59,13 @@ int main(int argc, char **argv)
 {
 
     // Get types used for equations and solver
-    using MyTypes = EquationTypes<GTVector<GTVectorGFTYPE>*>>; // Define types used
+//  using MyTypes = EquationTypes<GTVector<GTVector<GFTYPE>*>>; // Define types used
+    using MyTypes = EquationTypes<GTVector<GTVector<GFTYPE>*>
+                                 ,GFTYPE
+                                 ,GTVector<GTVector<GFTYPE>*>
+                                 ,GFTYPE
+                                 ,GTVector<GTVector<GFTYPE>*>
+                                 ,GSIZET>; // Define types used
     using EqnBase = EquationBase<MyTypes>;                     // Equation Base Type
     using EqnImpl = GBurgers<MyTypes>;                         // Equation Implementa
     using ObsBase = ObserverBase<EqnBase>;                     // Observer Base Type
@@ -70,7 +79,7 @@ int main(int argc, char **argv)
     GINT   ilevel=0;// 2d ICOS refinement level
     GINT   np=1;    // elem 'order'
     GINT   nstate=GDIM;  // number 'state' arrays
-    GSISET maxSteps;
+    GSIZET maxSteps;
     GFTYPE radiusi=1, radiuso=2;
     GTVector<GINT> ne(3); // # elements in each direction in 3d
     GString sgrid;// name of JSON grid object to use
@@ -89,7 +98,7 @@ int main(int argc, char **argv)
     PropertyTree stepptree;   // stepper props
     PropertyTree dissptree;   // dissipation props
     PropertyTree tintptree;   // time integration props
-    ptree.load("gburgers.jsn");
+    ptree.load_file("gburgers.jsn");
 
     // Create other prop trees for various objects:
     np = ptree.getValue<GINT>("exp_prder");
@@ -100,9 +109,6 @@ int main(int argc, char **argv)
     dissptree   = ptree.getPropertyTree("dissipation_traits");
     tintptree   = ptree.getPropertyTree("time_integration");
 
-    bc_set_.resize(GBDY_NONE);
-    bc_set_ = FALSE;
-    
 #if 1
 
     // Parse command line. ':' after char
@@ -145,24 +151,24 @@ int main(int argc, char **argv)
 
     // Overwrite prop tree traits based on command line args:
     std::vector<GINT> stdne(ne.size());
-    for ( auto j=0; j<ne.size; j++ ) stdne.push_back(ne[j]);
-    gridptree.setArray("num_elems",stdne);
-    ptree.setValue("exp_order",np);
+    for ( auto j=0; j<ne.size(); j++ ) stdne[j] = ne[j];
+    gridptree.setArray<GINT>("num_elems",stdne);
+    ptree.setValue<GINT>("exp_order",np);
 
     // Set solver traits from prop tree:
-    GBurgers::Traits solver_traits;
-    solver_traits.doheat     = eqptree  .getValue("doheat");
-    solver_traits.bpureadv   = eqptree  .getValue("bpureadv");
-    solver_traits.bconserved = eqptree  .getValue("bconserved");
-    solver_traits.itorder    = stepptree.getValue("time_deriv_order");
-    solver_traits.inorder    = stepptree.getValue("extrap_order");
+    GBurgers<MyTypes>::Traits solver_traits;
+    solver_traits.doheat     = eqptree  .getValue<GBOOL>("doheat");
+    solver_traits.bpureadv   = eqptree  .getValue<GBOOL>("bpureadv");
+    solver_traits.bconserved = eqptree  .getValue<GBOOL>("bconserved");
+    solver_traits.itorder    = stepptree.getValue <GINT>("time_deriv_order");
+    solver_traits.inorder    = stepptree.getValue <GINT>("extrap_order");
     GTVector<GString> ssteppers;
-    for ( GSIZET j=0; j<GSTEPPER_MAX; j++ ) ssteppeers.push_back(sGStepperType[j]);
+    for ( GSIZET j=0; j<GSTEPPER_MAX; j++ ) ssteppers.push_back(sGStepperType[j]);
     GSIZET itype; 
-    assert(ssteppers.contains(stepptree.getValue("stepping_method"),itype) 
+    assert(ssteppers.contains(stepptree.getValue<GString>("stepping_method"),itype) 
            && "Invalide stepping method in JSON file");
-    }
-    solver_traits.steptype   = static_case<GStepperType>(itype);
+    
+    solver_traits.steptype   = static_cast<GStepperType>(itype);
     
 
     // Initialize comm:
@@ -187,7 +193,8 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     GPTLstart("gen_grid");
 
     // Create grid:
-    *grid_ = GGridFactory(gridptree, gbasis, comm);
+    
+    GGrid *grid_ = GGridFactory::build(gridptree, gbasis, comm);
 
     GPTLstop("gen_grid");
 
@@ -222,10 +229,10 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
 
     std::shared_ptr<IntImpl> int_impl(new IntImpl(eqn_base,obs_base,int_traits));
     dt       = tintptree.getVaue("dt"); 
-    maxSteps = tintptree.getValue("cycle_end");
+    maxSteps = tintptree.getValue<GSIZET>("cycle_end");
 
     // Initialize state:
-    GString sblock = ptree.getValue("init_block");
+    GString sblock = ptree.getValue<GString>("init_block");
     compute_analytic(*grid_, 0.0, eqptree, sblock, u);
 
     GPTLstart("time_loop");
@@ -319,7 +326,7 @@ void update_dirichlet(Time &t, State &u, State &ub);
 //         ptree   : main property tree
 //         ua      : return solution
 //**********************************************************************************
-void compute_percircnwave_burgers(GGrid &grid, Time &t, const tbox::PropertyTree& ptree,  State &ua);
+void compute_percircnwave_burgers(GGrid &grid, Time &t, const PropertyTree& ptree,  State &ua);
 {
 
   assert(FALSE && "N-wave not ready yet");
@@ -384,7 +391,7 @@ void compute_percircnwave_burgers(GGrid &grid, Time &t, const tbox::PropertyTree
 //         ptree   : main property tree
 //         ua      : return solution
 //**********************************************************************************
-void compute_pergauss_adv(GGrid &grid, Time &t, const tbox::PropertyTree& ptree,  State &ua);
+void compute_pergauss_adv(GGrid &grid, Time &t, const PropertyTree& ptree,  State &ua);
 {
   GBOOL            bAdd, bContin;
   GINT             n;
@@ -409,11 +416,11 @@ void compute_pergauss_adv(GGrid &grid, Time &t, const tbox::PropertyTree& ptree,
 
   nxy = (*xnodes)[0].size(); // same size for x, y, z
   
-  r0.x1 = heatptree.getValue("x0"); 
-  r0.x2 = heatptree.getValue("y0"); 
-  r0.x3 = heatptree.getValue("z0"); 
-  sig0  = heatptree.getValue("sigma"); 
-  u0    = heatptree.getValue("u0"); 
+  r0.x1 = heatptree.getValue<GFTYPE>("x0"); 
+  r0.x2 = heatptree.getValue<GFTYPE>("y0"); 
+  r0.x3 = heatptree.getValue<GFTYPE>("z0"); 
+  sig0  = heatptree.getValue<GFTYPE>("sigma"); 
+  u0    = heatptree.getValue<GFTYPE>("u0"); 
 
   // Set adv velocity components:
   GTVector<GTVector<GFTYPE>*> c(GDIM);
@@ -464,7 +471,7 @@ void compute_pergauss_adv(GGrid &grid, Time &t, const tbox::PropertyTree& ptree,
 //         ptree   : main property tree
 //         ua      : return solution
 //**********************************************************************************
-void compute_pergauss_heat(GGrid &grid, Time &t, const tbox::PropertyTree& ptree,  State &ua);
+void compute_pergauss_heat(GGrid &grid, Time &t, const PropertyTree& ptree,  State &ua);
 {
   GBOOL            bAdd, bContin;
   GINT             n;
@@ -491,11 +498,11 @@ void compute_pergauss_heat(GGrid &grid, Time &t, const tbox::PropertyTree& ptree
 
   nxy = (*xnodes)[0].size(); // same size for x, y, z
   
-  r0.x1 = heatptree.getValue("x0"); 
-  r0.x2 = heatptree.getValue("y0"); 
-  r0.x3 = heatptree.getValue("z0"); 
-  sig0  = heatptree.getValue("sigma"); 
-  u0    = heatptree.getValue("u0"); 
+  r0.x1 = heatptree.getValue<GFTYPE>("x0"); 
+  r0.x2 = heatptree.getValue<GFTYPE>("y0"); 
+  r0.x3 = heatptree.getValue<GFTYPE>("z0"); 
+  sig0  = heatptree.getValue<GFTYPE>("sigma"); 
+  u0    = heatptree.getValue<GFTYPE>("u0"); 
 
   for ( k=0; k<GDIM; k++ ) {
     sig[k] = sqrt(sig0*sig0 + 2.0*t*nu_[k]);
@@ -537,13 +544,13 @@ void compute_pergauss_heat(GGrid &grid, Time &t, const tbox::PropertyTree& ptree
 //         ptree   : main property tree
 //         ua      : return solution
 //**********************************************************************************
-void compute_analytic(GGrid &grid, Time &t, const tbox::PropertyTree& ptree,  State &ua);
+void compute_analytic(GGrid &grid, Time &t, const PropertyTree& ptree,  State &ua);
 {
   PropertyTree advptree  = ptree.getPropertyTree("adv_equation_traits");
-  GBOOL doheat   = advptree.getValue("doheat");
-  GBOOL bpureadv = advptree.getValue("bpureadv");
+  GBOOL doheat   = advptree.getValue<GBOOL>("doheat");
+  GBOOL bpureadv = advptree.getValue<GBOOL>("bpureadv");
 
-  GString      sblock = ptree.getValue("init_block"); // name of initialization block
+  GString      sblock = ptree.getValue<GString>("init_block"); // name of initialization block
   PropertyTree blockptree = ptree.getPropertyTree(sblock); // sub-block of main ptree describing initialization type
 
   

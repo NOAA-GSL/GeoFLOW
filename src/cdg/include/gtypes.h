@@ -79,7 +79,8 @@ typedef std::string GString;
 
 // Miscellaneous defs:
 #if defined(__PGIC__) || defined(__GNUC__)
-  #define NULLPTR    NULL
+//#define NULLPTR    NULL
+  #define NULLPTR    nullptr
 #else
   #define NULLPTR    nullptr
 #endif
