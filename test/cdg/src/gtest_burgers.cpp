@@ -17,7 +17,6 @@
 #include <cassert>
 #include <random>
 #include "gcomm.hpp"
-#include "ggrid_factory.hpp"
 #include "ggfx.hpp"
 #include "gllbasis.hpp"
 #include "gmorton_keygen.hpp"
@@ -52,6 +51,7 @@ GTVector<GTVector<GFTYPE>*> ua_;
 
 void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVector<GTVector<GFTYPE>*> &u);
 void update_dirichlet(GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u, GTVector<GTVector<GFTYPE>*> &ub);
+void init_ggfx(GGrid &grid, GGFX &ggfx);
 
 //#include "init_pde.h"
 
@@ -194,9 +194,15 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
 
     // Create grid:
     
-    GGrid *grid_ = GGridFactory::build(gridptree, gbasis, comm);
+    GGrid *grid = GGridFactor::build(gridptree, gbasis, comm);
 
     GPTLstop("gen_grid");
+
+    GPTLstart("do_gather_op");
+    // Initialize gather/scatter operator:
+    init_ggfx(*grid, ggfx);
+    GPTLstop("do_gather_op");
+
 
     // Create state and tmp space:
     GTVector<GTVector<GFTYPE>*> utmp[2*GDIM+2];
@@ -211,7 +217,7 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     for ( GSIZET j=0; j<ua_ .size(); j++ ) ua  [j] = new GTVector<GFTYPE>(grid_->size());
 
     // Create observer(s), equations, integrator:
-    std::shared_ptr<EqnImpl> eqn_impl(new EqnImpl(*grid_, u, solver_traits, utmp));
+    std::shared_ptr<EqnImpl> eqn_impl(new EqnImpl(ggfx, *grid_, u, solver_traits, utmp));
     std::shared_ptr<EqnBase> eqn_base = eqn_impl;
 
     // Set Dirichlet bdy state update function:
@@ -587,3 +593,42 @@ void compute_analytic(GGrid &grid, Time &t, const PropertyTree& ptree,  State &u
   }
 
 } // end, compute_analytic
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD: init_ggfx
+// DESC  : Initialize gather scatter operator
+// ARGS  : grid    : GGrid object
+//         ggfx    : gather/scatter op, GGFX
+//**********************************************************************************
+void init_ggfx(GGrid &grid, GGFX &ggfx)
+{
+  GSIZET                         ibeg, iend;
+  GFTYPE                         delta;
+  GElemList                     *gelems;
+  GMorton_KeyGen<GNODEID,GFTYPE> gmorton;
+  GTPoint<GFTYPE>                dX, porigin, P0;
+  GTVector<GTVector<GINT>>      *face_ind
+  GTVector<GTVector<GFTYPE>>    *xnodes;
+
+  delta  = grid.minnodedist();
+  gelems = &grid.elems();
+  xnodes = &grid.xNodes();
+
+  // Integralize element boundary nodes:
+  gmorton.setIntegralLen(P0,dX);
+  for ( GSIZET i=0; i<gelems->size(); i++ ) {
+    ibeg = (*gelems)[i]->igbeg(); iend = (*gelems)[i]->igend();
+    face_ind = &(*gelems)[i]->face_indices();
+    glob_indices.range(ibeg, iend); // restrict to this range
+    for ( GSIZET j=0; j<xnodes->size(); j++ ) (*xnodes)[j].range(ibeg, iend);
+    gmorton.key(glob_indices, *xnodes, *face_ind);
+  }
+  glob_indices.range_reset(); // must reset to full range
+  for ( GSIZET j=0; j<xnodes->size(); j++ ) (*xnodes)[j].range_reset();
+
+  bret = ggfx.Init(glob_indices);
+  assert(bret && "Initialization of GGFX operator failed");
+
+} // end method init_ggfx
