@@ -36,11 +36,12 @@ public:
                       GGFX  &operator=(const GGFX &);
                    
 
-                      GBOOL Init(GNIDBuffer &glob_index);
-template<typename T>  GBOOL DoOp(T *&u, GSIZET nu,  GGFX_OP op);
-template<typename T>  GBOOL DoOp(GTVector<T> &u,  GGFX_OP op);
-template<typename T>  GBOOL DoOp(T *&u, GSIZET nu,  GSIZET *iind, GSIZET nind, GGFX_OP op);
-template<typename T>  GBOOL DoOp(GTVector<T> &u,  GSZBuffer &ind, GGFX_OP op);
+                      GBOOL    Init(GNIDBuffer &glob_index);
+template<typename T>  GBOOL    DoOp(T *&u, GSIZET nu,  GGFX_OP op);
+template<typename T>  GBOOL    DoOp(GTVector<T> &u,  GGFX_OP op);
+template<typename T>  GBOOL    DoOp(T *&u, GSIZET nu,  GSIZET *iind, GSIZET nind, GGFX_OP op);
+template<typename T>  GBOOL    DoOp(GTVector<T> &u,  GSZBuffer &ind, GGFX_OP op);
+                      GC_COMM  getComm() { return comm_; }
 
                       GDOUBLE GetTimes(GGFX_Timer_t type);
                       void ResetTimes();
