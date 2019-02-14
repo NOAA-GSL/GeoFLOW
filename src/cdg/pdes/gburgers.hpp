@@ -40,6 +40,7 @@
 //#include "gflux.hpp"
 #include "gexrk_stepper.hpp"
 #include "gbutcherrk.hpp"
+#include "ggfx.hpp"
 #include "pdeint/equation_base.hpp"
 
 using namespace geoflow::pdeint;
@@ -73,7 +74,7 @@ public:
         };
 
         GBurgers() = delete; 
-        GBurgers(GC_COMM &comm, GGrid &grid, State &u, GBurgers::Traits &traits, GTVector<GTVector<GFTYPE>*> &tmp);
+        GBurgers(GGFX &ggfx, GGrid &grid, State &u, GBurgers::Traits &traits, GTVector<GTVector<GFTYPE>*> &tmp);
        ~GBurgers();
         GBurgers(const GBurgers &bu) = default;
         GBurgers &operator=(const GBurgers &bu) = default;
@@ -136,6 +137,7 @@ private:
         std::function<void(Time &t, State &u, State &ub)>
                            *bdy_update_callback_; // bdy update callback function
         GC_COMM            *comm_;          // communicator
+        GGFX               *ggfx_;          // gather-scatter operator
 
 
 };

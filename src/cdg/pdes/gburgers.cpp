@@ -39,7 +39,8 @@
 // METHOD : Constructor method  (1)
 // DESC   : Instantiate with grid + state + tmp. Use for fully nonlinear
 //          Burgers equation, heat equation.
-// ARGS   : grid      : grid object
+// ARGS   : ggfx      : gather/scatter operator
+//          grid      : grid object
 //          u         : state (i.e., vector of GVectors)
 //          traits    :
 //            steptype  : stepper type
@@ -56,7 +57,7 @@
 // RETURNS: none
 //**********************************************************************************
 template<typename TypePack>
-GBurgers<TypePack>::GBurgers(GC_COMM &comm, GGrid &grid, State &u, GBurgers::Traits &traits, GTVector<GTVector<GFTYPE>*> &tmp) :
+GBurgers<TypePack>::GBurgers(GGFX &ggfx, GGrid &grid, State &u, GBurgers::Traits &traits, GTVector<GTVector<GFTYPE>*> &tmp) :
 doheat_         (traits.doheat),
 bpureadv_     (traits.bpureadv),
 bconserved_ (traits.bconserved),
@@ -71,7 +72,8 @@ gpdv_                 (NULLPTR),
 //gflux_                (NULLPTR),
 gbc_                  (NULLPTR),
 grid_                   (&grid),
-comm_                   (&comm)
+ggfx_                   (&ggfx),
+comm_         (&ggrx.getComm())
 {
   static_assert(std::is_same<State,GTVector<GTVector<GFTYPE>>>::value,
                "State is of incorrect type"); 
