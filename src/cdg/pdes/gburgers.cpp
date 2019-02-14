@@ -240,7 +240,7 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, State &u, Time &dt, Derivative
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GBurgers<TypePack>::step_impl(const Time &t, State &uin, State &ub, Time &dt, Derivative &uout)
+void GBurgers<TypePack>::step_impl(const Time &t, const State &uin, const State &ub, const Time &dt, State &uout)
 {
 
   switch ( isteptype_ ) {

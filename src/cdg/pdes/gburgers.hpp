@@ -81,10 +81,10 @@ public:
 
 protected:
         void                step_impl(const Time &t, State &uin, State &ub, 
-                                      Time &dt, Derivative &uout);        // Take a time step
+                                      const Time &dt);                    // Take a time step
+        void                step_impl(const Time &t, const State &uin, const State &ub,
+                                      const Time &dt, State &uout);       // Take a step
         GBOOL               has_dt_impl() const {return FALSE;}           // Has dynamic dt?
-        GBOOL               step_impl(const Time &t, State &uin, State &ub,
-                                      Time &dt, State &uout);             // Take a step
         void                dt_impl(const Time &t, State &u, Time &dt);   // Get dt
         void                set_nu(GTVector<GFTYPE> &nu);                 // Set nu
         void                apply_bc_impl(const Time &t, State &u, 
