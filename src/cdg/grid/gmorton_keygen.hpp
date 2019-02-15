@@ -17,6 +17,7 @@
 
 enum GMORTON_TYPE {GMORTON_INTERLEAVE=0, GMORTON_STACKED};
 
+// Template args: TK is type for the key; TF is the type for the float
 template<typename TK, typename TF> class GMorton_KeyGen: public GKeyGen<TK, TF>
 {
 public:
@@ -32,7 +33,7 @@ public:
          void              key(TK id[], GTPoint<TF> point[], GINT  n);              // Use GTPoint
          void              key(GTVector<TK> &id, GTVector<GTVector<TF>> &x);        // Use GTVector for points
          void              key(GTVector<TK> &id, GTVector<GTVector<TF>> &x, 
-                           GTVector<GSIZET> &ix);                                   // Use ix elements of GTVector x for points
+                           GTVector<GINT> &ix);                                     // Use ix elements of GTVector x for points
 
 
 private:

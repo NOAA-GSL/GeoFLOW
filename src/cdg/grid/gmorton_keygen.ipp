@@ -356,7 +356,7 @@ void GMorton_KeyGen<TK,TF>::key(GTVector<TK> &id, GTVector<GTVector<TF>> &x)
 //**********************************************************************************
 template<typename TK, typename TF>
 void GMorton_KeyGen<TK,TF>::key(GTVector<TK> &id, GTVector<GTVector<TF>> &x, 
-                                GTVector<GSIZET> &ix)
+                                GTVector<GINT> &ix)
 {
   assert(id.size() == ix.size() && "GMorton_KeyGen::key(4): incompatible dimensions ");
   GTPoint<TF> p(x.size());
