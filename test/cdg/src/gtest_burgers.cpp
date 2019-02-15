@@ -217,7 +217,10 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     std::shared_ptr<EqnBase> eqn_base = eqn_impl;
 
     // Set Dirichlet bdy state update function:
-    eqn_impl->set_bdy_callback(update_dirichlet);
+    std::function<void(const GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u, 
+                                        GTVector<GTVector<GFTYPE>*> &ub)>  
+        fcallback = update_dirichlet; // set tmp function with proper signature for...
+    eqn_impl->set_bdy_callback(fcallback);
 
     // Create the Integrator Implementation
 #if 0
@@ -492,11 +495,11 @@ void compute_pergauss_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
 
   assert(grid.gtype() == GE_REGULAR && "Invalid element types");
   
-  // Get periodicity length, L:
+  // Get periodicity length, gL:
   PropertyTree boxptree = ptree.getPropertyTree("grid_box");
   std::vector<GFTYPE> xyz0 = boxptree.getArray<GFTYPE>("xyz0");
   std::vector<GFTYPE> dxyz = boxptree.getArray<GFTYPE>("delxyz");
-  P0 = xyz0; r0 = dxyz; L = P0 + r0;
+  P0 = xyz0; r0 = dxyz; gL = P0 + r0;
   
 
   bAdd = FALSE; // add solution to existing ua
@@ -612,7 +615,7 @@ void init_ggfx(GGrid &grid, GGFX &ggfx)
   GTVector<GTVector<GINT>>      *face_ind;
   GTVector<GTVector<GFTYPE>>    *xnodes;
 
-  delta  = grid.minnodedist();
+  delta  = grid.minnodedist().min();
   gelems = &grid.elems();
   xnodes = &grid.xNodes();
   glob_indices.resize(grid.nsurfdof());
@@ -625,7 +628,8 @@ void init_ggfx(GGrid &grid, GGFX &ggfx)
     face_ind = &(*gelems)[i]->face_indices();
     glob_indices.range(ibeg, iend); // restrict to this range
     for ( GSIZET j=0; j<xnodes->size(); j++ ) (*xnodes)[j].range(ibeg, iend);
-    gmorton.key(glob_indices, *xnodes, *face_ind);
+    for ( GSIZET j=0; j<xnodes->size(); j++ ) 
+      gmorton.key(glob_indices, *xnodes, (*face_ind)[j]);
   }
   glob_indices.range_reset(); // must reset to full range
   for ( GSIZET j=0; j<xnodes->size(); j++ ) (*xnodes)[j].range_reset();
