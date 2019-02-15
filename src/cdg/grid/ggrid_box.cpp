@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <memory.h>
 #include <math.h>
+#include "geoflow.hpp"
 #include "ggrid_box.hpp"
 
 

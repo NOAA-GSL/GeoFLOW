@@ -9,6 +9,7 @@
 #include <memory.h>
 #include <math.h>
 #include <omp.h>
+#include "geoflow.hpp"
 #include "gelem_base.hpp"
 #include "ggrid_icos.hpp"
 
