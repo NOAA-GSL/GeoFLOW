@@ -57,7 +57,7 @@
 // RETURNS: none
 //**********************************************************************************
 template<typename TypePack>
-GBurgers<TypePack>::GBurgers(GGFX &ggfx, GGrid &grid, State &u, GBurgers::Traits &traits, GTVector<GTVector<GFTYPE>*> &tmp) :
+GBurgers<TypePack>::GBurgers(GGFX &ggfx, GGrid &grid, State &u, GBurgers<TypePack>::Traits &traits, GTVector<GTVector<GFTYPE>*> &tmp) :
 doheat_         (traits.doheat),
 bpureadv_     (traits.bpureadv),
 bconserved_ (traits.bconserved),
@@ -326,13 +326,12 @@ void GBurgers<TypePack>::step_exrk(const Time &t, State &uin, State &ub, Time &d
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GBurgers<TypePack>::set_bdy_callback(std::function<void(Time &t, State &u,
-                                          State &ub)> *callback)
+void GBurgers<TypePack>::set_bdy_callback(std::function<void(const Time &t, State &u,
+                                          State &ub)> &callback)
 {
   assert(gbc_ != NULLPTR && "Boundary operator not instantiated");
 
-  bdy_update_callback_ = callback;
-  gbc_->set_dirichlet_callback(bdy_update_callback_);
+  gbc_->set_dirichlet_callback(callback);
   
 } // end of method set_bdy_callback
 

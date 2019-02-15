@@ -51,6 +51,7 @@ class GBurgers : public EquationBase<TypePack>
 {
 public:
         using Interface  = EquationBase<TypePack>;
+        using Base       = Interface;
         using State      = typename Interface::State;
         using Value      = typename Interface::Value;
         using Derivative = typename Interface::Derivative;
@@ -74,7 +75,7 @@ public:
         };
 
         GBurgers() = delete; 
-        GBurgers(GGFX &ggfx, GGrid &grid, State &u, GBurgers::Traits &traits, GTVector<GTVector<GFTYPE>*> &tmp);
+        GBurgers(GGFX &ggfx, GGrid &grid, State &u, GBurgers<TypePack>::Traits &traits, GTVector<GTVector<GFTYPE>*> &tmp);
        ~GBurgers();
         GBurgers(const GBurgers &bu) = default;
         GBurgers &operator=(const GBurgers &bu) = default;
@@ -90,8 +91,8 @@ protected:
         void                apply_bc_impl(const Time &t, State &u, 
                                           State &ub);                     // Apply bdy conditions
        void                 set_bdy_callback(
-                            std::function<void(Time &t, State &u,
-                                          State &ub)> *callback);         // set bdy-update callback
+                            std::function<void(const Time &t, State &u,
+                                          State &ub)> &callback);         // set bdy-update callback
 
 private:
 
@@ -134,8 +135,6 @@ private:
         GpdV               *gpdv_;          // pdV op
 //      GFlux              *gflux_;         // flux op
         GBC                *gbc_;           // bdy conditions operator
-        std::function<void(Time &t, State &u, State &ub)>
-                           *bdy_update_callback_; // bdy update callback function
         GC_COMM            *comm_;          // communicator
         GGFX               *ggfx_;          // gather-scatter operator
 
