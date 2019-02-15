@@ -80,6 +80,11 @@ public:
         GBurgers(const GBurgers &bu) = default;
         GBurgers &operator=(const GBurgers &bu) = default;
 
+        void                 set_bdy_callback(
+                             std::function<void(const Time &t, State &u,
+                                           State &ub)> &callback);         // set bdy-update callback
+
+
 protected:
         void                step_impl(const Time &t, State &uin, State &ub, 
                                       const Time &dt);                    // Take a time step
@@ -90,10 +95,6 @@ protected:
         void                set_nu(GTVector<GFTYPE> &nu);                 // Set nu
         void                apply_bc_impl(const Time &t, State &u, 
                                           State &ub);                     // Apply bdy conditions
-       void                 set_bdy_callback(
-                            std::function<void(const Time &t, State &u,
-                                          State &ub)> &callback);         // set bdy-update callback
-
 private:
 
         void                init(State &u, GBurgers::Traits &);           // initialize 
