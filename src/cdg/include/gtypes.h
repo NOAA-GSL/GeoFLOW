@@ -11,7 +11,6 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
-#include <assert.h>
 
 // Following is a list of preprocessor variables that may be set:
 // _G_AUTO_CREATE_DEV : Auto-copy/create classes on device
@@ -209,24 +208,5 @@ const char * const sGStepperType[] =    {
 extern std::stringstream oss_global_;
 #define GPP(comm,a)    oss_global_ << a << std::endl; GComm::cout(comm,oss_global_.str().c_str()); oss_global_.str(std::string());
 
-namespace geoflow {
-//**********************************************************************************
-//**********************************************************************************
-// METHOD : str2bdytype
-// DESC   : Convert string to GBdyType
-// ARGS   : stype: string type
-// RETURNS: GBdyType
-//**********************************************************************************
-GBdyType str2bdytype(const GString &stype)
-{
-  GString s0;
-  for ( auto j=0; j<GBDY_NONE; j++ ) {
-    s0 = sGBdyType[j];
-    if ( stype.compare(s0) == 0 ) return static_cast<GBdyType>(j);
-  }
-  assert(FALSE && "Invalid boundary type");
-} // end, str2bdytype
-
-}
 
 #endif // _G_TYPES_DEF
