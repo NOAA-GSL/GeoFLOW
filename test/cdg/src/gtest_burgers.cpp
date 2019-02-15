@@ -21,6 +21,7 @@
 #include "gllbasis.hpp"
 #include "gmorton_keygen.hpp"
 #include "gburgers.hpp"
+#include "ggrid_factory.hpp"
 #include "pdeint/equation_base.hpp"
 #include "pdeint/integrator.hpp"
 #include "pdeint/null_observer.hpp"
@@ -49,9 +50,11 @@ struct EquationTypes {
 
 GGrid *grid_;
 GTVector<GTVector<GFTYPE>*> ua_;
+GTVector<GTVector<GFTYPE>*> ub_;
+GTVector<GFTYPE> nu_(3);
 
-void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVector<GTVector<GFTYPE>*> &u);
-void update_dirichlet(GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u, GTVector<GTVector<GFTYPE>*> &ub);
+void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVector<GTVector<GFTYPE>*> &u);
+void update_dirichlet(const GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u, GTVector<GTVector<GFTYPE>*> &ub);
 void init_ggfx(GGrid &grid, GGFX &ggfx);
 
 //#include "init_pde.h"
@@ -66,7 +69,7 @@ int main(int argc, char **argv)
     using EqnImpl = GBurgers<MyTypes>;                         // Equation Implementa
     using ObsBase = ObserverBase<EqnBase>;                     // Observer Base Type
     using ObsImpl = NullObserver<EqnImpl>;                     // Observer Implementation Type
-    using IntImpl = Integrator<EqnImpl>;                       // Integrator Implementation Type
+//  using IntImpl = Integrator<EqnImpl>;                       // Integrator Implementation Type
 
 
     GString serr ="main: ";
@@ -81,8 +84,6 @@ int main(int argc, char **argv)
     GString sgrid;// name of JSON grid object to use
     GC_COMM comm = GC_COMM_WORLD;
 
-    typename MyTypes::State u;
-    typename MyTypes::State uerr;
     typename MyTypes::Time  t  = 0;
     typename MyTypes::Time  dt = 0.1;
 
@@ -188,19 +189,20 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     
     GPTLstart("gen_grid");
     // Create grid:
-    *grid_ = GGridFactory::build(gridptree, gbasis, comm);
+    grid_ = GGridFactory::build(gridptree, gbasis, comm);
     GPTLstop("gen_grid");
 
     GPTLstart("do_gather_op");
     // Initialize gather/scatter operator:
     GGFX ggfx;
-    init_ggfx(*grid, ggfx);
+    init_ggfx(*grid_, ggfx);
     GPTLstop("do_gather_op");
 
 
     // Create state and tmp space:
-    GTVector<GTVector<GFTYPE>*> utmp[2*GDIM+2];
+    GTVector<GTVector<GFTYPE>*> utmp(2*GDIM+2);
     GTVector<GTVector<GFTYPE>*> u;
+    GTVector<GTVector<GFTYPE>*> ua;
     
     if      ( solver_traits.doheat   ) nstate = 1;
     else if ( solver_traits.bpureadv ) nstate = GDIM + 1; // 1-state + GDIM  v-components
@@ -215,51 +217,52 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     std::shared_ptr<EqnBase> eqn_base = eqn_impl;
 
     // Set Dirichlet bdy state update function:
-    eqn_impl.set_bdy_callback(update_dirichlet);
+    eqn_impl->set_bdy_callback(update_dirichlet);
 
     // Create the Integrator Implementation
+#if 0
     IntImpl::Traits int_traits;
     int_traits.cfl_min = 0;
     int_traits.cfl_max = 9999;
     int_traits.dt_min  = 0;
     int_traits.dt_max  = 9999;
+#endif
 
     std::shared_ptr<ObsImpl> obs_impl(new ObsImpl());
-    std::shared_ptr<ObsBase> obs_base = obs_impl;
+    std::shared_ptr<ObsBase> obs_base =  NULLPTR; //obs_impl;
 
 //  std::shared_ptr<IntImpl> int_impl(new IntImpl(eqn_base,obs_base,int_traits));
-    dt       = tintptree.getVaue("dt"); 
+    dt       = tintptree.getValue<GFTYPE>("dt"); 
     maxSteps = tintptree.getValue<GSIZET>("cycle_end");
 
     // Initialize state:
-    GString sblock = ptree.getValue<GString>("init_block");
-    compute_analytic(*grid_, 0.0, eqptree, sblock, u);
+    compute_analytic(*grid_, t, eqptree, u);
 
     GPTLstart("time_loop");
     for( GSIZET i=0; i<maxSteps; i++ ){
-      eqn_base->step(t,dt,u);
+      eqn_base->step(t,u,ub_,dt);
       t += dt;
     }
-    GPTLststop("time_loop");
+    GPTLstop("time_loop");
 
 #if 1
     GTVector<GFTYPE> lerrnorm(3), gerrnorm(3);
     compute_analytic(*grid_, t, ptree, ua_);
-    for ( GSIZET j=0; j<u.size(); i++ ) {
-      *utmp[0] = *u[j] - *ua_[j];
+    for ( GSIZET j=0; j<u.size(); j++ ) {
+      *(utmp[0]) = (*u[j]) - (*ua_[j]);
        lerrnorm[0]  = utmp[0]->L1norm (); // inf-norm
        lerrnorm[1]  = utmp[0]->Eucnorm(); // Euclidean-norm
        lerrnorm[1] *= lerrnorm[1]; 
-       lerrnorm[2]  = grid_->integrate(*utmp[0],*utmp[1]) 
-                    / grid_->integrate(*ua,*utmp[1]) ; // L2 error norm 
+       lerrnorm[2]  = grid_->integrate((*utmp[0]),(*utmp[1])) 
+                    / grid_->integrate((*ua_ [j]),(*utmp[1])) ; // L2 error norm 
     }
     // Accumulate errors:
     GComm::Allreduce(lerrnorm.data()  , gerrnorm.data()  , 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm);
-    GComm::Allreduce(lerrnorm.data()+1, gerrnorm.data()+1, 2, T2GCDatatype<GFTYPE>() , GC_OP_SUM, comm)
+    GComm::Allreduce(lerrnorm.data()+1, gerrnorm.data()+1, 2, T2GCDatatype<GFTYPE>() , GC_OP_SUM, comm);
    
     GSIZET lnelems=grid_->nelems();
     GSIZET gnelems;
-    GComm::Allreduce(&lnelems, &gnelems, 1, T2GCDatatype<GSIZET>() , GC_OP_SUM, comm)
+    GComm::Allreduce(&lnelems, &gnelems, 1, T2GCDatatype<GSIZET>() , GC_OP_SUM, comm);
 
     // Print convergence data to file:
     std::ifstream itst;
@@ -300,7 +303,7 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
 //          ub   : bdy vectors (one for each state element)
 // RETURNS: none.
 //**********************************************************************************
-void update_dirichlet(Time &t, State &u, State &ub);
+void update_dirichlet(const GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u, GTVector<GTVector<GFTYPE>*> &ub)
 {
   GTVector<GTVector<GSIZET>> *igbdy = &grid_->igbdy();
 
@@ -308,7 +311,7 @@ void update_dirichlet(Time &t, State &u, State &ub);
   // Set from State vector, ua_:
   for ( GSIZET k=0; k<u.size(); k++ ) { 
     for ( GSIZET j=0; j<(*igbdy)[GBDY_DIRICHLET].size(); j++ ) {
-      (*ub[k])[j] = ua_[k][(*igbdy)[GBDY_DIRICHLET][j]];
+      (*ub[k])[j] = (*ua_[k])[(*igbdy)[GBDY_DIRICHLET][j]];
     }
   }
 
@@ -326,7 +329,7 @@ void update_dirichlet(Time &t, State &u, State &ub);
 //         ptree   : main property tree
 //         ua      : return solution
 //**********************************************************************************
-void compute_percircnwave_burgers(GGrid &grid, Time &t, const PropertyTree& ptree,  State &ua);
+void compute_percircnwave_burgers(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVector<GTVector<GFTYPE>*> &ua)
 {
 
   assert(FALSE && "N-wave not ready yet");
@@ -336,7 +339,7 @@ void compute_percircnwave_burgers(GGrid &grid, Time &t, const PropertyTree& ptre
   GFTYPE           nxy, pint, sig0, ufact=1.0, u0;
   GFTYPE           K2;
   GTVector<GFTYPE> f(GDIM), K[GDIM], xx(GDIM), si(GDIM), sig(GDIM);
-  GTPoint<GFTYPE>  r0(3), P0(3), L(3);
+  GTPoint<GFTYPE>  r0(3), P0(3), gL(3);
 
   PropertyTree heatptree = ptree.getPropertyTree("init_lump");
 
@@ -344,18 +347,20 @@ void compute_percircnwave_burgers(GGrid &grid, Time &t, const PropertyTree& ptre
 
   assert(grid.gtype() == GE_REGULAR && "Invalid element types");
 
-  // Get periodicity length, L:
+  // Get periodicity length, gL:
   PropertyTree boxptree = ptree.getPropertyTree("grid_box");
-  std::vector<GFTYPE> xyz0 = boxptree.getArray("xyz0");
-  std::vector<GFTYPE> dxyz = boxptree.getArray("delxyz");
-  P0 = xyz0; r0 = dxyz; L = P0 + r0;
+  std::vector<GFTYPE> xyz0 = boxptree.getArray<GFTYPE>("xyz0");
+  std::vector<GFTYPE> dxyz = boxptree.getArray<GFTYPE>("delxyz");
+  P0 = xyz0; r0 = dxyz; gL = P0 + r0;
 
   nxy = (*xnodes)[0].size(); // same size for x, y, z
-  
+ 
+  assert(FALSE && "Periodized N-wave unavailable"); 
+#if 0
   for ( GSIZET j=0; j<nxy; j++ ) {
     for ( GSIZET i=0; i<GDIM; i++ ) {
-      f [i] = modf((*c[i])[j]*t/L[i],&pint);
-      xx[i] = (*xnodes)[i][j] - r0[i] - f[i]*L[i];
+      f [i] = modf((*c[i])[j]*t/gL[i],&pint);
+      xx[i] = (*xnodes)[i][j] - r0[i] - f[i]*gL[i];
 
     }
 
@@ -365,8 +370,8 @@ void compute_percircnwave_burgers(GGrid &grid, Time &t, const PropertyTree& ptre
       n       = 1;
       bContin = TRUE;
       while ( bContin ) {
-        argxp = -pow((xx[k]+n*gL_[k]),2.0)*si[k];
-        argxm = -pow((xx[k]-n*gL_[k]),2.0)*si[k];
+        argxp = -pow((xx[k]+n*gL[k]),2.0)*si[k];
+        argxm = -pow((xx[k]-n*gL[k]),2.0)*si[k];
         da    =  exp(argxp) + exp(argxm);
         wsum  += da;
         bContin = da/wsum > eps;
@@ -374,9 +379,9 @@ void compute_percircnwave_burgers(GGrid &grid, Time &t, const PropertyTree& ptre
       }
       prod *= wsum;
     }
-    ua[j] = ufact*ua[j] + u0*pow(sig0,2)/pow(sig[0],2)*prod;
+    (*ua[0])[j] = (*ua[0])[j]*ufact + u0*pow(sig0,2)/pow(sig[0],2)*prod;
   }
-
+#endif
   
 } // end, compute_percircnwave_burgers
 
@@ -391,14 +396,14 @@ void compute_percircnwave_burgers(GGrid &grid, Time &t, const PropertyTree& ptre
 //         ptree   : main property tree
 //         ua      : return solution
 //**********************************************************************************
-void compute_pergauss_adv(GGrid &grid, Time &t, const PropertyTree& ptree,  State &ua);
+void compute_pergauss_adv(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVector<GTVector<GFTYPE>*>  &ua)
 {
   GBOOL            bAdd, bContin;
   GINT             n;
   GFTYPE           wsum, prod, argxp, argxm, da, eps=1e-18;
   GFTYPE           nxy, pint, sig0, ufact=1.0, u0;
   GTVector<GFTYPE> f(GDIM), xx(GDIM), si(GDIM), sig(GDIM);
-  GTPoint<GFTYPE>  r0(3), P0(3), L(3);
+  GTPoint<GFTYPE>  r0(3), P0(3), gL(3);
 
   PropertyTree heatptree = ptree.getPropertyTree("init_lump");
 
@@ -406,11 +411,11 @@ void compute_pergauss_adv(GGrid &grid, Time &t, const PropertyTree& ptree,  Stat
 
   assert(grid.gtype() == GE_REGULAR && "Invalid element types");
 
-  // Get periodicity length, L:
+  // Get periodicity length, gL:
   PropertyTree boxptree = ptree.getPropertyTree("grid_box");
-  std::vector<GFTYPE> xyz0 = boxptree.getArray("xyz0");
-  std::vector<GFTYPE> dxyz = boxptree.getArray("delxyz");
-  P0 = xyz0; r0 = dxyz; L = P0 + r0;
+  std::vector<GFTYPE> xyz0 = boxptree.getArray<GFTYPE>("xyz0");
+  std::vector<GFTYPE> dxyz = boxptree.getArray<GFTYPE>("delxyz");
+  P0 = xyz0; r0 = dxyz; gL = P0 + r0;
 
   bAdd = FALSE; // add solution to existing ua
 
@@ -425,7 +430,7 @@ void compute_pergauss_adv(GGrid &grid, Time &t, const PropertyTree& ptree,  Stat
   // Set adv velocity components:
   GTVector<GTVector<GFTYPE>*> c(GDIM);
 
-  for ( k=0; k<GDIM; k++ ) {
+  for ( GSIZET k=0; k<GDIM; k++ ) {
     sig[k] = sqrt(sig0*sig0 + 2.0*t*nu_[k]);
     si [k] = 0.5/(sig[k]*sig[k]);
     c  [k] = ua[k+1];
@@ -434,8 +439,8 @@ void compute_pergauss_adv(GGrid &grid, Time &t, const PropertyTree& ptree,  Stat
 
   for ( GSIZET j=0; j<nxy; j++ ) {
     for ( GSIZET i=0; i<GDIM; i++ ) {
-      f [i] = modf((*c[i])[j]*t/L[i],&pint);
-      xx[i] = (*xnodes)[i][j] - r0[i] - f[i]*L[i];
+      f [i] = modf((*c[i])[j]*t/gL[i],&pint);
+      xx[i] = (*xnodes)[i][j] - r0[i] - f[i]*gL[i];
 
     }
 
@@ -445,8 +450,8 @@ void compute_pergauss_adv(GGrid &grid, Time &t, const PropertyTree& ptree,  Stat
       n       = 1;
       bContin = TRUE;
       while ( bContin ) {
-        argxp = -pow((xx[k]+n*gL_[k]),2.0)*si[k];
-        argxm = -pow((xx[k]-n*gL_[k]),2.0)*si[k];
+        argxp = -pow((xx[k]+n*gL[k]),2.0)*si[k];
+        argxm = -pow((xx[k]-n*gL[k]),2.0)*si[k];
         da    =  exp(argxp) + exp(argxm);
         wsum  += da;
         bContin = da/wsum > eps;
@@ -454,7 +459,7 @@ void compute_pergauss_adv(GGrid &grid, Time &t, const PropertyTree& ptree,  Stat
       }
       prod *= wsum;
     }
-    ua[j] = ufact*ua[j] + u0*pow(sig0,2)/pow(sig[0],2)*prod;
+    (*ua[0])[j] = (*ua[0])[j]*ufact + u0*pow(sig0,2)/pow(sig[0],2)*prod;
   }
 
   
@@ -471,14 +476,14 @@ void compute_pergauss_adv(GGrid &grid, Time &t, const PropertyTree& ptree,  Stat
 //         ptree   : main property tree
 //         ua      : return solution
 //**********************************************************************************
-void compute_pergauss_heat(GGrid &grid, Time &t, const PropertyTree& ptree,  State &ua);
+void compute_pergauss_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVector<GTVector<GFTYPE>*> &ua)
 {
   GBOOL            bAdd, bContin;
   GINT             n;
   GFTYPE           wsum, prod, argxp, argxm, da, eps=1e-18;
   GFTYPE           nxy, sig0, ufact=1.0, u0;
   GTVector<GFTYPE> xx(GDIM), si(GDIM), sig(GDIM);
-  GTPoint<GFTYPE>  r0(3), P0(3), L(3);
+  GTPoint<GFTYPE>  r0(3), P0(3), gL(3);
   std::vector<GFTYPE> svec;
 
   PropertyTree heatptree = ptree.getPropertyTree("init_lump");
@@ -489,8 +494,8 @@ void compute_pergauss_heat(GGrid &grid, Time &t, const PropertyTree& ptree,  Sta
   
   // Get periodicity length, L:
   PropertyTree boxptree = ptree.getPropertyTree("grid_box");
-  std::vector<GFTYPE> xyz0 = boxptree.getArray("xyz0");
-  std::vector<GFTYPE> dxyz = boxptree.getArray("delxyz");
+  std::vector<GFTYPE> xyz0 = boxptree.getArray<GFTYPE>("xyz0");
+  std::vector<GFTYPE> dxyz = boxptree.getArray<GFTYPE>("delxyz");
   P0 = xyz0; r0 = dxyz; L = P0 + r0;
   
 
@@ -504,7 +509,7 @@ void compute_pergauss_heat(GGrid &grid, Time &t, const PropertyTree& ptree,  Sta
   sig0  = heatptree.getValue<GFTYPE>("sigma"); 
   u0    = heatptree.getValue<GFTYPE>("u0"); 
 
-  for ( k=0; k<GDIM; k++ ) {
+  for ( GSIZET k=0; k<GDIM; k++ ) {
     sig[k] = sqrt(sig0*sig0 + 2.0*t*nu_[k]);
     si [k] = 0.5/(sig[k]*sig[k]);
   }
@@ -519,8 +524,8 @@ void compute_pergauss_heat(GGrid &grid, Time &t, const PropertyTree& ptree,  Sta
       n       = 1;
       bContin = TRUE;
       while ( bContin ) {
-        argxp = -pow((xx[k]+n*L[k]),2.0)*si[k];
-        argxm = -pow((xx[k]-n*L[k]),2.0)*si[k];
+        argxp = -pow((xx[k]+n*gL[k]),2.0)*si[k];
+        argxm = -pow((xx[k]-n*gL[k]),2.0)*si[k];
         da    =  exp(argxp) + exp(argxm);
         wsum  += da;
         bContin = da/wsum > eps;
@@ -528,7 +533,7 @@ void compute_pergauss_heat(GGrid &grid, Time &t, const PropertyTree& ptree,  Sta
       }
       prod *= wsum;
     }
-    ua[j] = ufact*ua[j] + u0*pow(sig0,2)/pow(sig[0],2)*prod;
+    (*ua[0])[j] = (*ua[0])[j]*ufact + u0*pow(sig0,2)/pow(sig[0],2)*prod;
   }
 
   
@@ -544,7 +549,7 @@ void compute_pergauss_heat(GGrid &grid, Time &t, const PropertyTree& ptree,  Sta
 //         ptree   : main property tree
 //         ua      : return solution
 //**********************************************************************************
-void compute_analytic(GGrid &grid, Time &t, const PropertyTree& ptree,  State &ua);
+void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVector<GTVector<GFTYPE>*>  &ua)
 {
   PropertyTree advptree  = ptree.getPropertyTree("adv_equation_traits");
   GBOOL doheat   = advptree.getValue<GBOOL>("doheat");
@@ -603,17 +608,20 @@ void init_ggfx(GGrid &grid, GGFX &ggfx)
   GElemList                     *gelems;
   GMorton_KeyGen<GNODEID,GFTYPE> gmorton;
   GTPoint<GFTYPE>                dX, porigin, P0;
-  GTVector<GTVector<GINT>>      *face_ind
+  GTVector<GNODEID>              glob_indices;
+  GTVector<GTVector<GINT>>      *face_ind;
   GTVector<GTVector<GFTYPE>>    *xnodes;
 
   delta  = grid.minnodedist();
   gelems = &grid.elems();
   xnodes = &grid.xNodes();
+  glob_indices.resize(grid.nsurfdof());
 
-  // Integralize element boundary nodes:
+  // Integralize element boundary nodes 
+  // using Morton indices:
   gmorton.setIntegralLen(P0,dX);
   for ( GSIZET i=0; i<gelems->size(); i++ ) {
-    ibeg = (*gelems)[i]->igbeg(); iend = (*gelems)[i]->igend();
+    ibeg = (*gelems)[i]->ifbeg(); iend = (*gelems)[i]->ifend();
     face_ind = &(*gelems)[i]->face_indices();
     glob_indices.range(ibeg, iend); // restrict to this range
     for ( GSIZET j=0; j<xnodes->size(); j++ ) (*xnodes)[j].range(ibeg, iend);
@@ -622,7 +630,8 @@ void init_ggfx(GGrid &grid, GGFX &ggfx)
   glob_indices.range_reset(); // must reset to full range
   for ( GSIZET j=0; j<xnodes->size(); j++ ) (*xnodes)[j].range_reset();
 
-  bret = ggfx.Init(glob_indices);
+  // Initialize gather/scatter operator:
+  GBOOL bret = ggfx.Init(glob_indices);
   assert(bret && "Initialization of GGFX operator failed");
 
 } // end method init_ggfx
