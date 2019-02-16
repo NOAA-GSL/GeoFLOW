@@ -17,8 +17,8 @@ template <typename T>
 class GExRKStepper
 {
 public:
-                           GExRKStepper();
-                           GExRKStepper(GSIZET iorder=4);
+                           GExRKStepper() = delete;
+                           GExRKStepper(GSIZET iorder);
                           ~GExRKStepper() = default;
                            GExRKStepper(const GExRKStepper &a) = default;
                            GExRKStepper &operator=(const GExRKStepper &bu) = default;
@@ -45,5 +45,8 @@ private:
                             *rhs_callback_;
 
 };
+
+#include "gexrk_stepper.ipp"
+
 #endif
 

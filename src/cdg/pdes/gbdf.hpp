@@ -34,5 +34,8 @@ private:
          GTMatrix<T>        c_bdf_;              // database of BDF coeffs
 
 };
+
+#include "gbdf.ipp"
+
 #endif
 

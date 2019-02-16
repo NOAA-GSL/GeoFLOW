@@ -32,5 +32,8 @@ private:
          void               computeCoeffs();
 
 };
+
+#include "gab.ipp"
+
 #endif
 

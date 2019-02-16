@@ -34,5 +34,8 @@ private:
          void               computeCoeffs();
 
 };
+
+#include "gext.ipp"
+
 #endif
 
