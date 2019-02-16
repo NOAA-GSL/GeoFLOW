@@ -1,5 +1,5 @@
 //==================================================================================
-// Module       : gext.hpp
+// Module       : gext.ipp
 // Date         : 1/28/19 (DLR)
 // Description  : Object computing multilevel coefficients for 
 //                an extrapolation scheme with variable timestep.
@@ -7,7 +7,6 @@
 // Copyright    : Copyright 2019. Colorado State University. All rights reserved
 // Derived From : none.
 //==================================================================================
-#include "gext.hpp"
 
 //**********************************************************************************
 //**********************************************************************************

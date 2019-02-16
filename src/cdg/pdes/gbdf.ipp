@@ -1,5 +1,5 @@
 //==================================================================================
-// Module       : gbdf.hpp
+// Module       : gbdf.ipp
 // Date         : 1/28/19 (DLR)
 // Description  : Object computing multilevel coefficients for 
 //                a Backwards Differencing Formula (BDF) scheme with 
@@ -7,7 +7,6 @@
 // Copyright    : Copyright 2019. Colorado State University. All rights reserved
 // Derived From : none.
 //==================================================================================
-#include "gbdf.hpp"
 
 //**********************************************************************************
 //**********************************************************************************
@@ -73,7 +72,7 @@ void G_BDF<T>::computeCoeffs()
 
   assert(dthist_ != NULLPTR && dthist_->size() >= iorder_  && "Invalid dt-history vector");
 
-  c_bdf_.resise(4,4);
+  c_bdf_.resize(4,4);
   c_bdf_ = 0.0;
 
   

@@ -1,5 +1,5 @@
 //==================================================================================
-// Module       : gab.hpp
+// Module       : gab.ipp
 // Date         : 1/28/19 (DLR)
 // Description  : Object computing multilevel coefficients for 
 //                and Adams-Bashforth scheme with variable timestep.
@@ -7,7 +7,6 @@
 // Copyright    : Copyright 2019. Colorado State University. All rights reserved
 // Derived From : none.
 //==================================================================================
-#include "gab.hpp"
 
 //**********************************************************************************
 //**********************************************************************************
