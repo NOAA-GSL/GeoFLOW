@@ -38,5 +38,8 @@ private:
          GTMatrix<T> beta_;  // stage coeffs
          GTVector<T> c_;     // stage weights
 };
+
+#include "gbutcherrk.hpp"
+
 #endif
 
