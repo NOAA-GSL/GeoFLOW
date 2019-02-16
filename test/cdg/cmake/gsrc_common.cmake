@@ -34,16 +34,17 @@
                     ${GHOME}/grid/ggrid_factory.cpp
     )
 
- set(CDG_PDES_SRC   ${GHOME}/pdes/gbutcherrk.cpp
-                    ${GHOME}/pdes/gexrk_stepper.cpp
-                    ${GHOME}/pdes/gburgers.cpp
-                    ${GHOME}/pdes/gab.cpp
-                    ${GHOME}/pdes/gbdf.cpp
-                    ${GHOME}/pdes/gext.cpp
-    )
+#set(CDG_PDES_SRC   ${GHOME}/pdes/gbutcherrk.cpp
+#                   ${GHOME}/pdes/gexrk_stepper.cpp
+#                   ${GHOME}/pdes/gburgers.cpp
+#                   ${GHOME}/pdes/gab.cpp
+#                   ${GHOME}/pdes/gbdf.cpp
+#                   ${GHOME}/pdes/gext.cpp
+#   )
 
 
  set(CDG_UTILS_SRC  ${GHOME}/utils/gbitblock.cpp 
+                    ${GHOME}/utils/geoflow.cpp
     )
 
  set(GEOFLOW_TBOX_SRC ${GHOME}/../tbox/clock.cpp 
