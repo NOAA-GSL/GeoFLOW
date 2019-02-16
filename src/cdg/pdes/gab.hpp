@@ -15,7 +15,7 @@
 
 
 template<typename T>
-class G_AB : GMultilevel_coeffs_base<T>
+class G_AB : public GMultilevel_coeffs_base<T>
 {
          using GMultilevel_coeffs_base<T>::iorder_;
          using GMultilevel_coeffs_base<T>::maxorder_;

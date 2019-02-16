@@ -23,12 +23,14 @@ public:
                            GExRKStepper(const GExRKStepper &a) = default;
                            GExRKStepper &operator=(const GExRKStepper &bu) = default;
         void               setOrder(GINT iorder);
-        void               setRHSfunction(std::function<void(const T &t, 
-                                          GTVector<GTVector<T>*> &uin,
-                                          T &dt, GTVector<GTVector<T>*> &dudt)> &callback)
+        void               setRHSfunction(std::function<void(
+                                          const T &t, 
+                                          const GTVector<GTVector<T>*> &uin,
+                                          const T &dt, 
+                                          GTVector<GTVector<T>*> &dudt)> *callback)
                                           { rhs_callback_ = callback; }
         void               step(const T &t, GTVector<GTVector<T>*> &uin,
-                                T &dt, GTVector<GTVector<T>*> &tmp,
+                                const T &dt, GTVector<GTVector<T>*> &tmp,
                                        GTVector<GTVector<T>*> &uout);
 
 
@@ -37,8 +39,9 @@ private:
          GINT               iorder_;                          // no stages (not nec. 'order'!)
          GButcherRK<T>      butcher_;                         // Butcher tableau
          std::function<void(const GFTYPE &t,                  // RHS callback function
-                            GTVector<GTVector<GFTYPE>> &uin,
-                            GFTYPE &dt, GTVector<GTVector<GFTYPE>> &dudt)>
+                            const GTVector<GTVector<GFTYPE>*> &uin,
+                            const GFTYPE &dt, 
+                            GTVector<GTVector<GFTYPE>*> &dudt)>
                             *rhs_callback_;
 
 };

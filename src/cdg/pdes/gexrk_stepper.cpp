@@ -47,7 +47,7 @@ rhs_callback_         (NULLPTR)
 //**********************************************************************************
 template<typename T>
 void GExRKStepper<T>::step(const T &t, GTVector<GTVector<T>*> &uin,
-                        T &dt, GTVector<GTVector<T>*> &tmp, 
+                        const T &dt, GTVector<GTVector<T>*> &tmp, 
                         GTVector<GTVector<T>*> &uout)
 {
   assert(rhs_callback_ != NULLPTR  && "RHS callback not set");

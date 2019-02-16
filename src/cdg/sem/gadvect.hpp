@@ -25,16 +25,16 @@ public:
                           GAdvect(const GAdvect &);
                          ~GAdvect();
 
-        void              apply(GTVector<GFTYPE> &p, GTVector<GTVector<GFTYPE>*> &u, 
+        void              apply(GTVector<GFTYPE> &p, const GTVector<GTVector<GFTYPE>*> &u, 
                                 GTVector<GTVector<GFTYPE>*> &utmp, GTVector<GFTYPE> &po);                       // Operator-field evaluation
         void              init();                                            // must call after all 'sets'
 
 private:
         void              def_init();
         void              reg_init();
-        void              def_prod(GTVector<GFTYPE> &p, GTVector<GTVector<GFTYPE>*> &u, 
+        void              def_prod(GTVector<GFTYPE> &p, const GTVector<GTVector<GFTYPE>*> &u, 
                                    GTVector<GTVector<GFTYPE>*> &utmp, GTVector<GFTYPE> &po);
-        void              reg_prod(GTVector<GFTYPE> &p, GTVector<GTVector<GFTYPE>*> &u, 
+        void              reg_prod(GTVector<GFTYPE> &p, const GTVector<GTVector<GFTYPE>*> &u, 
                                    GTVector<GTVector<GFTYPE>*> &utmp, GTVector<GFTYPE> &po);
 
         GBOOL                         bInitialized_;

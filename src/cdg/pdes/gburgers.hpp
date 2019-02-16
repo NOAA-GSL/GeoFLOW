@@ -29,9 +29,15 @@
 
 #include "gtypes.h"
 #include <functional>
+#include <stdlib.h>
+#include <memory.h>
+#include <math.h>
 #include "gtvector.hpp"
 #include "gdd_base.hpp"
 #include "ggrid.hpp"
+#include "gab.hpp"
+#include "gext.hpp"
+#include "gbdf.hpp"
 #include "gpdv.hpp"
 #include "gmass.hpp"
 #include "gadvect.hpp"
@@ -44,6 +50,9 @@
 #include "pdeint/equation_base.hpp"
 
 using namespace geoflow::pdeint;
+using namespace std;
+
+
 
 
 template<typename TypePack>
@@ -87,23 +96,23 @@ public:
 
 protected:
         void                step_impl(const Time &t, State &uin, State &ub, 
-                                      const Time &dt);                    // Take a time step
+                                      const Time &dt){};                  // Take a time step
         void                step_impl(const Time &t, const State &uin, const State &ub,
                                       const Time &dt, State &uout);       // Take a step
         GBOOL               has_dt_impl() const {return FALSE;}           // Has dynamic dt?
         void                dt_impl(const Time &t, State &u, Time &dt);   // Get dt
         void                set_nu(GTVector<GFTYPE> &nu);                 // Set nu
         void                apply_bc_impl(const Time &t, State &u, 
-                                          State &ub);                     // Apply bdy conditions
+                                          const State &ub);               // Apply bdy conditions
 private:
 
         void                init(State &u, GBurgers::Traits &);           // initialize 
-        void                step_exrk  (const Time &t, State &uin, State &ub,
-                                        Time &dt, State &uout);
-        void                dudt_impl  (const Time &t, State &u,
-                                        Time &dt, Derivative &dudt);
-        void                step_multistep(const Time &t, State &uin, State &ub,
-                                           Time &dt, State &uout);
+        void                step_exrk  (const Time &t, const State &uin, const State &ub,
+                                        const Time &dt, State &uout);
+        void                dudt_impl  (const Time &t, const State &u,
+                                        const Time &dt, Derivative &dudt);
+        void                step_multistep(const Time &t, const State &uin, const State &ub,
+                                           const Time &dt, State &uout);
         void                cycle_keep(State &u);
        
 
@@ -117,10 +126,9 @@ private:
         GTVector<GFTYPE>    tcoeffs_;       // coeffs for time deriv
         GTVector<GFTYPE>    acoeffs_;       // coeffs for NL adv term
         GTVector<GFTYPE>    dthist_;        // coeffs for NL adv term
-        GButcherRK<GFTYPE>  butcher_;       // Butcher tableau for EXRK
-        GTVector<GTVector<GFLOAT>*>  
+        GTVector<GTVector<GFTYPE>*>  
                             utmp_;
-        GTVector<GTVector<GFLOAT>*>  
+        GTVector<GTVector<GFTYPE>*>  
                             c_;             // linear velocity if bpureadv = TRUE
         GTVector<State>     u_keep_;        // state at prev. time levels
         GTVector<GStepperType>
@@ -128,7 +136,7 @@ private:
         GTVector<GFTYPE>   *nu_   ;         // dissipoation
         GGrid              *grid_;          // GGrid object
         GExRKStepper<GFTYPE>
-                            gexrk_;         // ExRK stepper, if needed
+                           *gexrk_;         // ExRK stepper, if needed
         GMass              *gmass_;         // mass op
         GMass              *gimass_;        // inverse mass op
         GAdvect            *gadvect_;       // advection op
@@ -136,10 +144,12 @@ private:
         GpdV               *gpdv_;          // pdV op
 //      GFlux              *gflux_;         // flux op
         GBC                *gbc_;           // bdy conditions operator
-        GC_COMM            *comm_;          // communicator
+        GC_COMM             comm_;          // communicator
         GGFX               *ggfx_;          // gather-scatter operator
 
 
 };
+
+#include "gburgers.ipp"
 
 #endif

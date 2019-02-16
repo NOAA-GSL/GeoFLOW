@@ -72,7 +72,7 @@ public:
 	 * @param[in,out] u  Is the state of the system of equations
 	 * @param[in]     ub Boundary condition values
 	 */
-	void apply_bc(const Time &t, State &u, State &ub){
+	void apply_bc(const Time &t, State &u, const State &ub){
 		this->apply_bc_impl(t,u,ub);
 	}
 
@@ -121,7 +121,7 @@ protected:
 	/**
 	 * Must be provided by implementation
 	 */
-	virtual void apply_bc_impl(const Time &t, State &u, State &ub) = 0;
+	virtual void apply_bc_impl(const Time &t, State &u, const State &ub) = 0;
 
 	/**
 	 * Must be provided by implementation

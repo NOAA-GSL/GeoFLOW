@@ -60,7 +60,7 @@ GAdvect::~GAdvect()
 //             
 // RETURNS:  none
 //**********************************************************************************
-void GAdvect::apply(GTVector<GFTYPE> &p, GTVector<GTVector<GFTYPE>*> &u, GTVector<GTVector<GFTYPE>*> &utmp, GTVector<GFTYPE> &po) 
+void GAdvect::apply(GTVector<GFTYPE> &p, const GTVector<GTVector<GFTYPE>*> &u, GTVector<GTVector<GFTYPE>*> &utmp, GTVector<GFTYPE> &po) 
 {
   assert(bInitialized_ && "Operator not initialized");
     
@@ -92,7 +92,7 @@ void GAdvect::apply(GTVector<GFTYPE> &p, GTVector<GTVector<GFTYPE>*> &u, GTVecto
 //             
 // RETURNS:  none
 //**********************************************************************************
-void GAdvect::def_prod(GTVector<GFTYPE> &p, GTVector<GTVector<GFTYPE>*> &u, GTVector<GTVector<GFTYPE>*> &utmp, GTVector<GFTYPE> &po) 
+void GAdvect::def_prod(GTVector<GFTYPE> &p, const GTVector<GTVector<GFTYPE>*> &u, GTVector<GTVector<GFTYPE>*> &utmp, GTVector<GFTYPE> &po) 
 {
   assert( utmp.size() >= GDIM+1
        && "Insufficient temp space specified");
@@ -148,7 +148,7 @@ void GAdvect::def_prod(GTVector<GFTYPE> &p, GTVector<GTVector<GFTYPE>*> &u, GTVe
 //             
 // RETURNS:  none
 //**********************************************************************************
-void GAdvect::reg_prod(GTVector<GFTYPE> &p, GTVector<GTVector<GFTYPE>*> &u, GTVector<GTVector<GFTYPE>*> &utmp, GTVector<GFTYPE> &po) 
+void GAdvect::reg_prod(GTVector<GFTYPE> &p, const GTVector<GTVector<GFTYPE>*> &u, GTVector<GTVector<GFTYPE>*> &utmp, GTVector<GFTYPE> &po) 
 {
 
   assert( utmp.size() >= GDIM+1
