@@ -31,7 +31,7 @@ using namespace geoflow::pdeint;
 using namespace geoflow::tbox;
 
 
-template<
+template< // default template arg types
 typename StateType = GTVector<GTVector<GFTYPE>*>,
 typename ValueType = GFTYPE,
 typename DerivType = StateType,
@@ -70,7 +70,6 @@ int main(int argc, char **argv)
     using ObsBase = ObserverBase<EqnBase>;                     // Observer Base Type
     using ObsImpl = NullObserver<EqnImpl>;                     // Observer Implementation Type
 //  using IntImpl = Integrator<EqnImpl>;                       // Integrator Implementation Type
-
 
     GString serr ="main: ";
     GBOOL  bret;
