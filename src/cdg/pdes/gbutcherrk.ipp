@@ -1,5 +1,5 @@
 //==================================================================================
-// Module       : gbutcherrk.hpp
+// Module       : gbutcherrk.ipp
 // Date         : 1/28/19 (DLR)
 // Description  : Object computing multistage Butcher tableau for
 //                explicit RK methods. 
@@ -19,7 +19,6 @@
 // Copyright    : Copyright 2019. Colorado State University. All rights reserved
 // Derived From : none.
 //==================================================================================
-#include "gbutcherrk.hpp"
 
 //**********************************************************************************
 //**********************************************************************************

@@ -1,11 +1,10 @@
 //==================================================================================
-// Module       : gexrk_stepper.hpp
+// Module       : gexrk_stepper.ipp
 // Date         : 1/28/19 (DLR)
 // Description  : Object representing an Explicit RK stepper of a specified order
 // Copyright    : Copyright 2019. Colorado State University. All rights reserved
 // Derived From : none.
 //==================================================================================
-#include "gexrk_stepper.hpp"
 
 //**********************************************************************************
 //**********************************************************************************
