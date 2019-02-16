@@ -18,7 +18,19 @@ GExRKStepper<T>::GExRKStepper(GSIZET iorder)
 iorder_               (iorder),
 rhs_callback_         (NULLPTR)
 {
-  butcher_.setOrder(iorder_);
+  butcher_ .setOrder(iorder_);
+} // end of constructor (1) method
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : Destructor method 
+// DESC   : 
+// ARGS   : 
+//**********************************************************************************
+template<typename T>
+GExRKStepper<T>::~GExRKStepper()
+{
 } // end of constructor (1) method
 
 
@@ -52,6 +64,7 @@ void GExRKStepper<T>::step(const T &t, GTVector<GTVector<T>*> &uin,
   assert(rhs_callback_ != NULLPTR  && "RHS callback not set");
 
   GSIZET       i, j, n;
+  GFTYPE       tt;
   GTVector<T> *u     = tmp[iorder_-1] ; 
   GTVector<T> *isum  = tmp[iorder_];    
   GTVector<T> *alpha = &butcher_.alpha();
@@ -59,10 +72,14 @@ void GExRKStepper<T>::step(const T &t, GTVector<GTVector<T>*> &uin,
   GTVector<T> *c     = &butcher_.c    ();
   
   
+  // copy uin to uout vector:
+  for ( n=0; n<uin.size(); n++ ) *uout[n] = *uin[n];
+  
+  tt   = t+(*alpha)[0]*dt;
+  (*rhs_callback_)( tt, uout, dt, tmp); // k_1 at stage 1
+  *isum = 0.0;
   for ( n=0; n<uin.size(); n++ ) { // for each state member
-     *uout[n] = *uin[n];
-    *isum = 0.0;
-    (*rhs_callback_)( t+(*alpha)[i]*dt, *u, dt, *tmp[0]); // k_1 at stage 1
+    *uout[n] = *uin[n];
     // Compute k_m:
     // k_m = RHS( t^n + alpha_m * dt, u^n + h Sum_j=1^M-1 beta_mj k_j ),
     for ( i=1; i<iorder_-1; i++ ) { // cycle thru remaining stages minus 1

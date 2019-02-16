@@ -19,7 +19,7 @@ class GExRKStepper
 public:
                            GExRKStepper() = delete;
                            GExRKStepper(GSIZET iorder);
-                          ~GExRKStepper() = default;
+                          ~GExRKStepper();
                            GExRKStepper(const GExRKStepper &a) = default;
                            GExRKStepper &operator=(const GExRKStepper &bu) = default;
         void               setOrder(GINT iorder);
