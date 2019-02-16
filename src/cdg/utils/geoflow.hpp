@@ -15,22 +15,7 @@
 namespace geoflow
 {
 
-//**********************************************************************************
-//**********************************************************************************
-// METHOD : str2bdytype
-// DESC   : Convert string to GBdyType
-// ARGS   : stype: string type
-// RETURNS: GBdyType
-//**********************************************************************************
-GBdyType str2bdytype(const GString &stype)
-{
-  GString s0;
-  for ( auto j=0; j<GBDY_NONE; j++ ) {
-    s0 = sGBdyType[j];
-    if ( stype.compare(s0) == 0 ) return static_cast<GBdyType>(j);
-  }
-  assert(FALSE && "Invalid boundary type");
-} // end, str2bdytype
+GBdyType str2bdytype(const GString &stype);
 
 } // end, namespace
 
