@@ -23,11 +23,11 @@ if   ( ${CMAKE_C_COMPILER_ID} STREQUAL "GNU")
 
   set(EXTRA_FLAGS "${OMP_FLAGS} ${INSTR_FLAGS}")
 
-  set(CMAKE_C_FLAGS_RELEASE "-O0 -finline-limit=2000 --param max-inline-insns-single=100000 -Winline ${EXTRA_FLAGS}")
-  set(CMAKE_C_FLAGS_DEBUG   "-g  -finline-limit=2000 --param max-inline-insns-single=100000 -Winline ${EXTRA_FLAGS}")
+  set(CMAKE_C_FLAGS_RELEASE "-O0 -std=c++11 -finline-limit=2000 --param max-inline-insns-single=100000 -Winline ${EXTRA_FLAGS}")
+  set(CMAKE_C_FLAGS_DEBUG   "-g  -std=c++11 -finline-limit=2000 --param max-inline-insns-single=100000 -Winline ${EXTRA_FLAGS}")
   set(CMAKE_C_FLAGS         ${CMAKE_C_FLAGS_RELEASE})
 
-  set(CMAKE_CXX_FLAGS_RELEASE "-O0  -finline-limit=2000 --param max-inline-insns-single=100000  -Winline ${EXTRA_FLAGS}")
+  set(CMAKE_CXX_FLAGS_RELEASE "-O0 -finline-limit=2000 --param max-inline-insns-single=100000  -Winline ${EXTRA_FLAGS}")
   set(CMAKE_CXX_FLAGS_DEBUG   "-g  -finline-limit=2000 --param max-inline-insns-single=100000 -Winline ${EXTRA_FLAGS}")
   set(CMAKE_CXX_FLAGS         ${CMAKE_CXX_FLAGS_RELEASE})
   use_cxx11()
