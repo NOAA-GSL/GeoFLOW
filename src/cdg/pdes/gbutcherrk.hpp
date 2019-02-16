@@ -18,14 +18,14 @@ class GButcherRK
 {
 public:
                            GButcherRK();
-                           GButcherRK(GSIZET iorder=4);
+                           GButcherRK(GSIZET iorder);
                           ~GButcherRK() = default;
                            GButcherRK(const GButcherRK &a) = default;
                            GButcherRK &operator=(const GButcherRK &bu) = default;
          void              setOrder(GINT iorder);
 
          GTVector<T>      &alpha() { return alpha_ ;}
-         GTVector<T>      &beta () { return beta_ ;}
+         GTMatrix<T>      &beta () { return beta_ ;}
          GTVector<T>      &c()     { return c_; }
 
 private:
