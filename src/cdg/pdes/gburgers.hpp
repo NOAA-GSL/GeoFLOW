@@ -89,9 +89,10 @@ public:
         GBurgers(const GBurgers &bu) = default;
         GBurgers &operator=(const GBurgers &bu) = default;
 
-        void                 set_bdy_callback(
+        void                 set_bdy_update_callback(
                              std::function<void(const Time &t, State &u,
-                                           State &ub)> &callback);         // set bdy-update callback
+                                           State &ub)> &callback) 
+                             { gbc_->set_update_callback(callback); }     // set bdy-update callback
 
 
 protected:

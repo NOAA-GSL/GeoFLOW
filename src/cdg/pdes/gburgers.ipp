@@ -301,42 +301,22 @@ void GBurgers<TypePack>::step_exrk(const Time &t, const State &uin, const State 
   //     du/dt = M^-1 ( -u.Grad u + nu nabla u ):
   // for each u
 
-  // Set tmp arrays from member utmp_ data:
-  GTVector<GTVector<GFTYPE>*> utmp1(utmp_.size()-itorder_-1);
+  // Set tmp arrays from member utmp_ data; 
+  // need NState*(nstages+1)+1 tmp vectors for RK stepper:
+  assert(utmp_.size()
+  GTVector<GTVector<GFTYPE>*> utmp(utmp_.size()-itorder_-1);
   GTVector<GTVector<GFTYPE>*> utmp2(itorder_+1);
   for ( auto j=0; j<itorder_+1; j++ ) utmp2[j] = utmp_[j];
   for ( auto j=0; j<utmp_.size()-itorder_-1; j++ ) utmp1[j] = utmp_[itorder_+1+j];
 
 
-  // Cycle over stages:
+  // GExRK steppers steps entire state over one dt:
   for ( auto j=0; j<uin.size(); j++ ) *uout[j] = *uin[j];
   for ( auto k=0; k<itorder_; k++ ) {
-    apply_bc_impl(t, uout, ub);
-    gexrk_->step(t, uout, dt, utmp1, utmp2);
-    for ( auto j=0; j<uin.size(); j++ ) *uout[k] = *utmp2[k];
+    gexrk_->step(t, uin, ub, dt, utmp1, uout);
   }
 
 } // end of method step_exrk
-
-
-
-//**********************************************************************************
-//**********************************************************************************
-// METHOD : set_bdy_callback
-// DESC   : Set the callback object for updating Dirichlet 
-//          boundary state
-// ARGS   : 
-// RETURNS: none.
-//**********************************************************************************
-template<typename TypePack>
-void GBurgers<TypePack>::set_bdy_callback(std::function<void(const Time &t, State &u,
-                                          State &ub)> &callback)
-{
-  assert(gbc_ != NULLPTR && "Boundary operator not instantiated");
-
-  gbc_->set_dirichlet_callback(callback);
-  
-} // end of method set_bdy_callback
 
 
 //**********************************************************************************
@@ -361,11 +341,16 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
   GMultilevel_coeffs_base<GFTYPE> *tcoeff_obj=NULLPTR; // time deriv coeffs
   GMultilevel_coeffs_base<GFTYPE> *acoeff_obj=NULLPTR; // adv op. coeffs
   auto rhs = std::bind(&GBurgers<TypePack>::dudt_impl, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+//void GBurgers<TypePack>::apply_bc_impl(const Time &t, State &u, const State &ub)
+  auto applybc = std::bind(&GBurgers<TypePack>::apply_bc_impl, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+  auto updatebc = std::bind(&GBC::update_bdy_state, gbc, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
   switch ( isteptype_ ) {
     case GSTEPPER_EXRK2:
     case GSTEPPER_EXRK4:
       gexrk_ = new GExRKStepper<GFTYPE>(itorder_);
 //    gexrk_->setRHSfunction(rhs);
+//    gexrk_->set_apply_bdy_callback(applybc);
+//    gexrk_->set_update_bdy_callback(updatebc);
       break;
     case GSTEPPER_BDFAB:
       dthist_.resize(MAX(itorder_,inorder_));

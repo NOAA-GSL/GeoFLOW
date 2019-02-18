@@ -10,15 +10,17 @@
 //**********************************************************************************
 // METHOD : Constructor method (1)
 // DESC   : Instantiate with truncation order/ # stages
-// ARGS   : iorder: truncation order
+// ARGS   : nstage: number stages not necessarily == truncation order
 //**********************************************************************************
 template<typename T>
-GExRKStepper<T>::GExRKStepper(GSIZET iorder)
+GExRKStepper<T>::GExRKStepper(GSIZET nstage)
 :
-iorder_               (iorder),
-rhs_callback_         (NULLPTR)
+nstage_               (nstage),
+rhs_callback_         (NULLPTR),
+bdy_update_callback_  (NULLPTR).
+bdy_apply_callback_   (NULLPTR)
 {
-  butcher_ .setOrder(iorder_);
+  butcher_ .setOrder(nstage_);
 } // end of constructor (1) method
 
 
@@ -44,56 +46,81 @@ GExRKStepper<T>::~GExRKStepper()
 //              the update is:
 //                 u(t^n+1) = u(t^n) + h Sum_i=1^M c_i k_i,
 //              where
-//                 k_m = RHS( t^n + alpha_m * dt, u^n + h Sum_j=1^M-1 beta_mj k_j ),
+//                 k_m = RHS( t^n + alpha_m * dt, u^n + dt Sum_j=1^M-1 beta_mj k_j ),
 //              and 
 //                 RHS = RHS(t, u).
 //
 // ARGUMENTS  : t    : time, t^n, for state, uin=u^n
 //              uin  : initial (entry) state, u^n
 //              dt   : time step
-//              tmp  : tmp space. Must have at least M+1 = iorder_+1 vectors.
+//              tmp  : tmp space. Must have at least NState*(M+1)+1 vectors,
+//                     where NState is the number of state vectors.
 //              uout : updated state, n^n+1
 //               
 // RETURNS    : none.
 //**********************************************************************************
 template<typename T>
 void GExRKStepper<T>::step(const T &t, GTVector<GTVector<T>*> &uin,
-                        const T &dt, GTVector<GTVector<T>*> &tmp, 
-                        GTVector<GTVector<T>*> &uout)
+                           GTVector<GTVector<T>*> &ub,  
+                           const T &dt, GTVector<GTVector<T>*> &tmp, 
+                           GTVector<GTVector<T>*> &uout)
 {
   assert(rhs_callback_ != NULLPTR  && "RHS callback not set");
 
   GSIZET       i, j, n;
   GFTYPE       tt;
-  GTVector<T> *u     = tmp[iorder_-1] ; 
-  GTVector<T> *isum  = tmp[iorder_];    
+  GTVector<T> *isum  ;
   GTVector<T> *alpha = &butcher_.alpha();
   GTMatrix<T> *beta  = &butcher_.beta ();
   GTVector<T> *c     = &butcher_.c    ();
   
-  
-  // copy uin to uout vector:
-  for ( n=0; n<uin.size(); n++ ) *uout[n] = *uin[n];
-  
-  tt   = t+(*alpha)[0]*dt;
-  (*rhs_callback_)( tt, uout, dt, tmp); // k_1 at stage 1
-  *isum = 0.0;
-  for ( n=0; n<uin.size(); n++ ) { // for each state member
-    *uout[n] = *uin[n];
-    // Compute k_m:
-    // k_m = RHS( t^n + alpha_m * dt, u^n + h Sum_j=1^M-1 beta_mj k_j ),
-    for ( i=1; i<iorder_-1; i++ ) { // cycle thru remaining stages minus 1
-      for ( j=0,*isum=0.0; j<i; j++ ) *isum += (*tmp[j]) * ( (*beta)(i,j)*dt ); 
-     *u    = uin[n] + (*isum);   
-        rhs_callback_( t+(*alpha)[i]*dt, *u, dt, *tmp[i]); // k_i at stage i
-       *uout[n] += (*tmp[i])*( (*c)[i]*dt ); // += dt * c_i * k_i
-    }
-    // Do contrib from final stage, M:
-    for ( j=0,*isum=0.0; j<i; j++ ) *isum += (*tmp[j]) * ( (*beta)(iorder_-1,j)*dt ); 
-    u = tmp[0]; *tmp[0] = uin[n] + (*isum);   
-    rhs_callback_( t+(*alpha)[i]*dt, *u, dt, *tmp[1]); // k_i at stage M
-   *uout[n] += (*tmp[1])*( (*c)[i]*dt ); // += dt * c_M * k_M
+  GTVector<GTVector<GTVector<T>*>> K(nstage_); // K for each stage (& all state members)
+  GTVector<GTVector<T>*> u(uin.size);   // tmp pointers of full state size
+  for ( j=0; j<uin.size(); j++ ) {
+    u   [j] = tmp[j];
+   *u   [j] = *uin[j]; // deep copy
+   *uout[j] = *uin[j];
   }
+  isum = tmp[uin.size()];
+  for ( j=0,n=0; j<nstage_; j++ ) 
+    for ( i=0; i<uin.size(); i++ ) 
+      K[j][i] = tmp[uin.size()+1+n];
+      n++;
+    }
+  }
+  
+  tt = t+(*alpha)[0]*dt;
+  if ( bdy_update_callback_ != NULLPTR ) (*bdy_update_callback_)(tt, u, ub); 
+  if ( bdy_apply_callback_  != NULLPTR ) (*bdy_apply_callback_ )(tt, u, ub); 
+  (*rhs_callback_)( tt, u, dt, K[0]); // k_1 at stage 1
+
+  for ( i=1; i<nstage_-1; i++ ) { // cycle thru remaining stages minus 1
+    // Compute k_m:
+    // k_m = RHS( t^n + alpha_m * dt, u^n + dt Sum_j=1^M-1 beta_mj k_j ),
+    tt = t+(*alpha)[i]*dt;
+    for ( n=0; n<uin.size(); n++ ) { // for each state member, u
+      for ( j=0,*isum=0.0; j<i; j++ ) *isum += (*K[j][n]) * ( (*beta)(i,j)*dt );
+     *u[n]  = (*uin[n]) + (*isum);
+    }
+    if ( bdy_update_callback_ != NULLPTR ) (*bdy_update_callback_)(tt, u, ub[n]); 
+    if ( bdy_apply_callback_  != NULLPTR ) (*bdy_apply_callback_ )(tt, u, ub[n]); 
+    rhs_callback_( tt, *u, dt, K[i]); // k_i at stage i
+    *uout[n] += (*K[i])*( (*c)[i]*dt ); // += dt * c_i * k_i
+   }
+
+   // Do contrib from final stage, M:
+   for ( n=0; n<uin.size(); n++ ) { // for each state member, u
+     for ( j=0,*isum=0.0; j<nstage_-1; j++ ) *isum += (*K[j][n]) * ( (*beta)(nstage_-1,j)*dt );
+     *u[n] = uin[n] + (*isum);
+   }
+   tt = t+(*alpha)[nstage_-1]*dt;
+   if ( bdy_update_callback_ != NULLPTR ) (*bdy_update_callback_)(tt, u, ub); 
+   if ( bdy_apply_callback_  != NULLPTR ) (*bdy_apply_callback_ )(tt, u, ub); 
+   rhs_callback_( tt, u, dt, K[0]); // k_M at stage M
+
+   for ( n=0; n<uin.size(); n++ ) { // for each state member, u
+    *uout[n] += (*K[0][n])*( (*c)[i]*dt ); // += dt * c_M * k_M
+   }
 
 } // end of method step
 
