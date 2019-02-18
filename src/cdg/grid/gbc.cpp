@@ -1,7 +1,7 @@
 //==================================================================================
 // Module       : gbc
 // Date         : 2/6/19 (DLR)
-// Description  : GeoFLOW CDG boundary condition object
+// Description  : GeoFLOW CDG boundary condition update object
 // Copyright    : Copyright 2019. Colorado State University. All rights reserved
 // Derived From : none.
 //==================================================================================

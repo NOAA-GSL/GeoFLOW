@@ -23,7 +23,7 @@ public:
 
       void                   update_bdy_state(GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u,        
                              GTVector<GTVector<GFTYPE>*> &ub);                 // entry function
-      void                   set_dirichlet_callback(
+      void                   set_update_callback(
                              std::function<void(const GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u,
                              GTVector<GTVector<GFTYPE>*> &ub)> &callback)
                              {update_dirichlet_callback_ = &callback; }         // set bdy-update callback
@@ -34,10 +34,10 @@ private:
                               GTVector<GTVector<GFTYPE>*> &u, 
                               GTVector<GTVector<GFTYPE>*> &ub); 
 
-        GGrid                  *grid_;                                // element list
+        GGrid                 *grid_;                                // element list
         std::function<void(const GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u, 
         GTVector<GTVector<GFTYPE>*> &ub)>
-                               *update_dirichlet_callback_;           // dirichlet bdy update callback function
+                              *update_dirichlet_callback_;           // dirichlet bdy update callback function
 
 };
 
