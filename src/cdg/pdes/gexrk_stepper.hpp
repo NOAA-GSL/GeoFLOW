@@ -18,6 +18,7 @@ template <typename T>
 class GExRKStepper
 {
 typedef GTVector<GTVector<T>*> State;
+typedef GTVector<T> StateElem;
 typedef T  Time;
 
 public:

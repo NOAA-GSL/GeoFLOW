@@ -72,7 +72,7 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &ub,
   GTMatrix<T> *beta  = &butcher_.beta ();
   GTVector<T> *c     = &butcher_.c    ();
   
-  GTVector<GTVector<GTVector<T>*>> K(nstage_); // K for each stage (& all state members)
+  GTVector<State> K(nstage_); // K for each stage (& all state members)
   State u(uin.size());   // tmp pointers of full state size
 
   // Set temp space:
