@@ -338,7 +338,7 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
     case GSTEPPER_EXRK2:
     case GSTEPPER_EXRK4:
       gexrk_ = new GExRKStepper<GFTYPE>(itorder_);
-//    gexrk_->setRHSfunction(rhs);
+      gexrk_->setRHSfunction(rhs);
 //    gexrk_->set_apply_bdy_callback(applybc);
 //    gexrk_->set_update_bdy_callback(updatebc);
       // Set 'helper' tmp arrays from main one, utmp_:
