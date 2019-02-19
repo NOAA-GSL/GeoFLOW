@@ -1415,8 +1415,11 @@ template<class T>
 GBOOL
 GTVector<T>::contains(T val, GSIZET &iwhere)
 {
-  assert(std::is_arithmetic<T>::value || std::is_arithmetic<T>::value || std::is_pointer<T>::value &&
+
+#if 0
+  assert(std::is_arithmetic<T>::value || std::is_string<T>::value || std::is_pointer<T>::value &&
     "Invalid template type: contains(T, GSIZET&)");
+#endif
 
   if ( this->data_ == NULLPTR ) return FALSE;
 
@@ -1449,8 +1452,10 @@ template<class T>
 GSIZET
 GTVector<T>::contains(T val, GSIZET *&iwhere, GSIZET &nw)
 {
+#if 0
   assert(std::is_arithmetic<T>::value || std::is_enum<T>::value || std::is_pointer<T>::value &&
     "Invalid template type: contains(T, GSIZET&)");
+#endif
 
   if ( this->data_ == NULLPTR ) return FALSE;
 
@@ -1493,8 +1498,10 @@ template<class T>
 GBOOL
 GTVector<T>::containsn(T val, GSIZET n, GSIZET &iwhere)
 {
+#if 0
   assert(std::is_arithmetic<T>::value || std::is_enum<T>::value || std::is_pointer<T>::value &&
     "Invalid template type: containsn(T, GSIZET, GSIZET&)");
+#endif
 
   if ( data_ == NULLPTR  ) return FALSE;
 
@@ -1523,8 +1530,10 @@ template<class T>
 GBOOL
 GTVector<T>::contains(T val)
 {
+#if 0
   assert(std::is_arithmetic<T>::value || std::is_enum<T>::value || std::is_pointer<T>::value &&
     "Invalid template type: contains(T)");
+#endif
 
   GSIZET nd;
 
@@ -1547,8 +1556,10 @@ template<class T>
 GBOOL
 GTVector<T>::containsn(T val, GSIZET n)
 {
+#if 0
   assert(std::is_arithmetic<T>::value || std::is_enum<T>::value || std::is_pointer<T>::value &&
     "Invalid template type: containsn(T, GSIZET)");
+#endif
 
   if ( data_ == NULLPTR ) return FALSE;
 
