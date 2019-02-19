@@ -219,7 +219,7 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     std::function<void(const GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u, 
                                         GTVector<GTVector<GFTYPE>*> &ub)>  
         fcallback = update_dirichlet; // set tmp function with proper signature for...
-    eqn_impl->set_bdy_callback(fcallback);
+    eqn_impl->set_bdy_update_callback(fcallback);
 
     // Create the Integrator Implementation
 #if 0

@@ -74,8 +74,8 @@ gbc_                  (NULLPTR),
 grid_                   (&grid),
 ggfx_                   (&ggfx)
 {
-  assert(std::is_same<State,GTVector<GTVector<GFTYPE>*>>::value,
-         "State is of incorrect type"); 
+  static_assert(std::is_same<State,GTVector<GTVector<GFTYPE>*>>::value,
+                "State is of incorrect type"); 
   assert(tmp.size() >= req_tmp_size() && "Insufficient tmp space provided");
 
   valid_types_.resize(4);
@@ -244,7 +244,7 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const Time &dt
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GBurgers<TypePack>::step_impl(const Time &t, const State &uin, const State &ub, const Time &dt, State &uout)
+void GBurgers<TypePack>::step_impl(const Time &t, const State &uin, State &ub, const Time &dt, State &uout)
 {
 
   switch ( isteptype_ ) {
@@ -277,7 +277,7 @@ void GBurgers<TypePack>::step_impl(const Time &t, const State &uin, const State 
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GBurgers<TypePack>::step_multistep(const Time &t, const State &uin, const State &ub, const Time &dt, State &uout)
+void GBurgers<TypePack>::step_multistep(const Time &t, const State &uin, State &ub, const Time &dt, State &uout)
 {
   assert(FALSE && "Multistep methods not yet available");
 
@@ -296,7 +296,7 @@ void GBurgers<TypePack>::step_multistep(const Time &t, const State &uin, const S
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GBurgers<TypePack>::step_exrk(const Time &t, const State &uin, const State &ub, const Time &dt, State &uout)
+void GBurgers<TypePack>::step_exrk(const Time &t, const State &uin, State &ub, const Time &dt, State &uout)
 {
 
   // If non-conservative, compute RHS from:
@@ -333,7 +333,7 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
   auto rhs = std::bind(&GBurgers<TypePack>::dudt_impl, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 //void GBurgers<TypePack>::apply_bc_impl(const Time &t, State &u, const State &ub)
   auto applybc = std::bind(&GBurgers<TypePack>::apply_bc_impl, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-  auto updatebc = std::bind(&GBC::update_bdy_state, gbc, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+  auto updatebc = std::bind(&GBC::update_bdy_state, gbc_, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
   switch ( isteptype_ ) {
     case GSTEPPER_EXRK2:
     case GSTEPPER_EXRK4:
@@ -341,6 +341,11 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
 //    gexrk_->setRHSfunction(rhs);
 //    gexrk_->set_apply_bdy_callback(applybc);
 //    gexrk_->set_update_bdy_callback(updatebc);
+      // Set 'helper' tmp arrays from main one, utmp_:
+      urktmp_ .resize(u.size()*(itorder_+1)+1);
+      urhstmp_.resize(utmp_.size()-urktmp_.size());
+      for ( GSIZET j=0; j<urktmp_ .size(); j++ ) urktmp_ [j] = utmp_[j];
+      for ( GSIZET j=0; j<urhstmp_.size(); j++ ) urhstmp_[j] = utmp_[urktmp_.size()+j];
       break;
     case GSTEPPER_BDFAB:
       dthist_.resize(MAX(itorder_,inorder_));
@@ -350,6 +355,8 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
       acoeffs_.resize(acoeff_obj->getCoeffs().size());
       tcoeffs_ = tcoeff_obj->getCoeffs(); 
       acoeffs_ = acoeff_obj->getCoeffs();
+      urhstmp_.resize(utmp_.size()-urktmp_.size());
+      for ( GSIZET j=0; j<utmp_.size(); j++ ) urhstmp_[j] = utmp_[j];
       break;
     case GSTEPPER_BDFEXT:
       dthist_.resize(MAX(itorder_,inorder_));
@@ -359,6 +366,8 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
       acoeffs_.resize(acoeff_obj->getCoeffs().size());
       tcoeffs_ = tcoeff_obj->getCoeffs(); 
       acoeffs_ = acoeff_obj->getCoeffs();
+      urhstmp_.resize(utmp_.size()-urktmp_.size());
+      for ( GSIZET j=0; j<utmp_.size(); j++ ) urhstmp_[j] = utmp_[j];
       break;
     default:
       assert(FALSE && "Invalid stepper type");
@@ -500,16 +509,8 @@ void GBurgers<TypePack>::apply_bc_impl(const Time &t, State &u, const State &ub)
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GBurgers<TypePack>::req_tmp_size)
+GINT GBurgers<TypePack>::req_tmp_size()
 {
-#if 0
-doheat_         (traits.doheat),
-bpureadv_     (traits.bpureadv),
-bconserved_ (traits.bconserved),
-isteptype_    (traits.steptype),
-nsteps_                     (0),
-itorder_       (traits.itorder),
-#endif
   GINT isize = 0;
   GINT nstate = 0;
  
@@ -520,6 +521,8 @@ itorder_       (traits.itorder),
   if ( isteptype_ == GSTEPPER_EXRK2 || isteptype_ == GSTEPPER_EXRK4 ) {
     isize += nstate * itorder_; 
   }
+
+  return isize;
   
 } // end of method req_tmp_size
 

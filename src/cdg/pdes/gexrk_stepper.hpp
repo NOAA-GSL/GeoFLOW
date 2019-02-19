@@ -24,12 +24,12 @@ public:
                            GExRKStepper &operator=(const GExRKStepper &bu) = default;
         void               setOrder(GINT nstage);
         void               set_apply_bdy_callback(
-                           std::function<void(const Time &t, State &u,
-                                         State &ub)> &callback)
+                           std::function<void(const GFTYPE &t, GTVector<GTVector<T>*> &u,
+                                         GTVector<GTVector<T>*> &ub)> *callback)
                                           { bdy_apply_callback_ = callback; }   // set bdy-application callback
         void               set_update_bdy_callback(
-                           std::function<void(const Time &t, State &u,
-                                         State &ub)> &callback)
+                           std::function<void(const GFTYPE &t, GTVector<GTVector<T>*> &u,
+                                         GTVector<GTVector<T>*> &ub)> *callback)
                                           { bdy_update_callback_ = callback; }   // set bdy-update callback
         void               setRHSfunction(std::function<void(
                                           const T &t, 
@@ -37,7 +37,7 @@ public:
                                           const T &dt, 
                                           GTVector<GTVector<T>*> &dudt)> *callback)
                                           { rhs_callback_ = callback; }          // RHS callback
-        void               step(const T &t, GTVector<GTVector<T>*> &uin,
+        void               step(const T &t, const GTVector<GTVector<T>*> &uin,
                                 GTVector<GTVector<T>*> &ub,
                                 const T &dt, GTVector<GTVector<T>*> &tmp,
                                 GTVector<GTVector<T>*> &uout);
