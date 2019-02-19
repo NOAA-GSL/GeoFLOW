@@ -60,10 +60,8 @@ GExRKStepper<T>::~GExRKStepper()
 // RETURNS    : none.
 //**********************************************************************************
 template<typename T>
-void GExRKStepper<T>::step(const T &t, const GTVector<GTVector<T>*> &uin,
-                           GTVector<GTVector<T>*> &ub,  
-                           const T &dt, GTVector<GTVector<T>*> &tmp, 
-                           GTVector<GTVector<T>*> &uout)
+void GExRKStepper<T>::step(const T &t, const State &uin, State &ub,  
+                           const T &dt, State &tmp, State &uout)
 {
   assert(rhs_callback_ != NULLPTR  && "RHS callback not set");
 
@@ -75,7 +73,7 @@ void GExRKStepper<T>::step(const T &t, const GTVector<GTVector<T>*> &uin,
   GTVector<T> *c     = &butcher_.c    ();
   
   GTVector<GTVector<GTVector<T>*>> K(nstage_); // K for each stage (& all state members)
-  GTVector<GTVector<T>*> u(uin.size());   // tmp pointers of full state size
+  State u(uin.size());   // tmp pointers of full state size
 
   // Set temp space:
   isum = tmp[uin.size()];
