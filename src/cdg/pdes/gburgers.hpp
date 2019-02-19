@@ -91,8 +91,9 @@ public:
 
         void                 set_bdy_update_callback(
                              std::function<void(const Time &t, State &u,
-                                           State &ub)> &callback) 
-                             { gbc_->set_update_callback(callback); }     // set bdy-update callback
+                                           State &ub)> *callback) 
+                             { update_bdy_callback_ = callback;
+                               gbc_->set_update_callback(callback); }     // set bdy-update callback
 
 
 protected:
@@ -152,6 +153,8 @@ private:
         GBC                *gbc_;           // bdy conditions operator
         GC_COMM             comm_;          // communicator
         GGFX               *ggfx_;          // gather-scatter operator
+        std::function<void(const Time &t, State &u,
+                           State &ub)> *update_bdy_callback_;
 
 
 };

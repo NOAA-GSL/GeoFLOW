@@ -330,17 +330,36 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
   // Find multistep/multistage time stepping coefficients:
   GMultilevel_coeffs_base<GFTYPE> *tcoeff_obj=NULLPTR; // time deriv coeffs
   GMultilevel_coeffs_base<GFTYPE> *acoeff_obj=NULLPTR; // adv op. coeffs
-  auto rhs = std::bind(&GBurgers<TypePack>::dudt_impl, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
-//void GBurgers<TypePack>::apply_bc_impl(const Time &t, State &u, const State &ub)
-  auto applybc = std::bind(&GBurgers<TypePack>::apply_bc_impl, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-  auto updatebc = std::bind(&GBC::update_bdy_state, gbc_, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+  std::function<void(const Time &t,                    // RHS callback function
+                     const State  &uin,
+                     const Time &dt,
+                     State &dudt)> rhs
+                  = [this](const Time &t,           
+                     const State  &uin, 
+                     const Time &dt,
+                     State &dudt){dudt_impl(t, uin, dt, dudt);}; 
+
+  std::function<void(const Time &t,                    // Bdy update callback function
+                     State  &uin, 
+                     State &ub)> updatebc 
+                  = [this](const Time &t,            
+                     State  &uin, 
+                     State &ub){(*update_bdy_callback_)(t, uin, ub);}; 
+
+  std::function<void(const Time &t,                    // Bdy apply callback function
+                     State  &uin, 
+                     State &ub)> applybc 
+                  = [this](const Time &t,              
+                     State  &uin, 
+                     State &ub){apply_bc_impl(t, uin, ub);}; 
+
   switch ( isteptype_ ) {
     case GSTEPPER_EXRK2:
     case GSTEPPER_EXRK4:
       gexrk_ = new GExRKStepper<GFTYPE>(itorder_);
-      gexrk_->setRHSfunction(rhs);
-//    gexrk_->set_apply_bdy_callback(applybc);
-//    gexrk_->set_update_bdy_callback(updatebc);
+      gexrk_->setRHSfunction(&rhs);
+      gexrk_->set_update_bdy_callback(&updatebc);
+      gexrk_->set_apply_bdy_callback(&applybc);
       // Set 'helper' tmp arrays from main one, utmp_:
       urktmp_ .resize(u.size()*(itorder_+1)+1);
       urhstmp_.resize(utmp_.size()-urktmp_.size());
