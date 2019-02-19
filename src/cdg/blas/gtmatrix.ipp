@@ -1134,8 +1134,8 @@ GSIZET  GTMatrix<T>::isamax(GSIZET n, T *sx, GSIZET incx)
 
   if( n <= 1 ) return( istmp );
   if( incx != 1 ) {
-    /* Code for increment not equal to 1. */
-    if( incx < 0 ) sx = sx + ((-n+1)*incx + 1);
+    // Code for increment not equal to 1. 
+//  if( incx < 0 ) sx = sx + ((-n+1)*incx + 1);
     istmp = 0;
     smax  = fabs( *sx );
     sx += incx;
@@ -1146,7 +1146,7 @@ GSIZET  GTMatrix<T>::isamax(GSIZET n, T *sx, GSIZET incx)
       }
     return( istmp );
   }
-  /* Code for increment equal to 1. */
+  // Code for increment equal to 1.
   istmp = 0;
   smax  = fabs(*sx);
   sx++;
