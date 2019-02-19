@@ -104,9 +104,9 @@ void GExRKStepper<T>::step(const T &t, const GTVector<GTVector<T>*> &uin,
       for ( j=0,*isum=0.0; j<i; j++ ) *isum += (*K[j][n]) * ( (*beta)(i,j)*dt );
      *u[n]  = (*uin[n]) + (*isum);
     }
-    if ( bdy_update_callback_ != NULLPTR ) (*bdy_update_callback_)(tt, u, ub[n]); 
-    if ( bdy_apply_callback_  != NULLPTR ) (*bdy_apply_callback_ )(tt, u, ub[n]); 
-    (*rhs_callback_)( tt, *u, dt, K[i]); // k_i at stage i
+    if ( bdy_update_callback_ != NULLPTR ) (*bdy_update_callback_)(tt, u, ub); 
+    if ( bdy_apply_callback_  != NULLPTR ) (*bdy_apply_callback_ )(tt, u, ub); 
+    (*rhs_callback_)( tt, u, dt, K[i]); // k_i at stage i
     *uout[n] += (*K[i][n])*( (*c)[i]*dt ); // += dt * c_i * k_i
    }
 
