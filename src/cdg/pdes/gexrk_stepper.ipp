@@ -60,8 +60,8 @@ GExRKStepper<T>::~GExRKStepper()
 // RETURNS    : none.
 //**********************************************************************************
 template<typename T>
-void GExRKStepper<T>::step(const T &t, const State &uin, State &ub,  
-                           const T &dt, State &tmp, State &uout)
+void GExRKStepper<T>::step(const Time &t, const State &uin, State &ub,  
+                           const Time &dt, State &tmp, State &uout)
 {
   assert(rhs_callback_ != NULLPTR  && "RHS callback not set");
 

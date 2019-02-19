@@ -12,12 +12,14 @@
 #include "gtmatrix.hpp"
 #include "gbutcherrk.hpp"
 
-#define GTVector<GTVector<T>*> State
 
 
 template <typename T>
 class GExRKStepper
 {
+typedef GTVector<GTVector<T>*> State;
+typedef T  Time;
+
 public:
                            GExRKStepper() = delete;
                            GExRKStepper(GSIZET nstage);
@@ -27,25 +29,25 @@ public:
         void               setOrder(GINT nstage);
 
         void               set_apply_bdy_callback(
-                           std::function<void(const T &t, State &u,
+                           std::function<void(const Time &t, State &u,
                                          State &ub)> *callback)
                                          { bdy_apply_callback_ = callback; }   // set bdy-application callback
 
         void               set_update_bdy_callback(
-                           std::function<void(const T &t, State &u,
+                           std::function<void(const Time &t, State &u,
                                          GTVector<GTVector<T>*> &ub)> *callback)
                                          { bdy_update_callback_ = callback; }   // set bdy-update callback
 
         void               setRHSfunction(std::function<void(
-                                          const T &t, 
+                                          const Time &t, 
                                           const State &uin,
-                                          const T &dt, 
+                                          const Time &dt, 
                                           State &dudt)> *callback)
                                           { rhs_callback_ = callback; }          // RHS callback
 
-        void               step(const T &t, const State &uin,
+        void               step(const Time &t, const State &uin,
                                 State &ub,
-                                const T &dt, State &tmp,
+                                const Time &dt, State &tmp,
                                 State &uout);
 
 
@@ -53,14 +55,14 @@ private:
 // Private data:
         GINT               nstage_;                          // no stages (not nec. 'order'!)
         GButcherRK<T>      butcher_;                         // Butcher tableau
-        std::function<void(const T &t,                  // RHS callback function
+        std::function<void(const Time &t,                    // RHS callback function
                            const State  &uin,
-                           const T &dt, 
+                           const Time &dt, 
                            State &dudt)>
                            *rhs_callback_;
-        std::function<void(const T &t, State &u, State &ub)>
+        std::function<void(const Time &t, State &u, State &ub)>
                            *bdy_update_callback_;            // bdy update callback
-        std::function<void(const T &t, State &u, State &ub)>
+        std::function<void(const Time &t, State &u, State &ub)>
                            *bdy_apply_callback_;             // bdy apply callback
 
 };
