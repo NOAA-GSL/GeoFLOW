@@ -39,7 +39,7 @@ private:
          GTVector<T> c_;     // stage weights
 };
 
-#include "gbutcherrk.hpp"
+#include "gbutcherrk.ipp"
 
 #endif
 
