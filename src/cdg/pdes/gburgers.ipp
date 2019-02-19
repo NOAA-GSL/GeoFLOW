@@ -74,8 +74,10 @@ gbc_                  (NULLPTR),
 grid_                   (&grid),
 ggfx_                   (&ggfx)
 {
-  static_assert(std::is_same<State,GTVector<GTVector<GFTYPE>*>>::value,
-               "State is of incorrect type"); 
+  assert(std::is_same<State,GTVector<GTVector<GFTYPE>*>>::value,
+         "State is of incorrect type"); 
+  assert(tmp.size() >= req_tmp_size() && "Insufficient tmp space provided");
+
   valid_types_.resize(4);
   valid_types_[0] = GSTEPPER_EXRK2;
   valid_types_[1] = GSTEPPER_EXRK4;
@@ -196,8 +198,8 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const Time &dt
   // Do heat equation RHS:
   if ( doheat_ ) {
     for ( auto k=0; k<u.size(); k++ ) {
-      ghelm_->opVec_prod(*u[k],*utmp_[0]); // apply diffusion
-      gimass_->opVec_prod(*utmp_[0],*dudt[k]); // apply M^-1
+      ghelm_->opVec_prod(*u[k],*urhstmp_[0]); // apply diffusion
+      gimass_->opVec_prod(*urhstmp_[0],*dudt[k]); // apply M^-1
     }
     return;
   }
@@ -216,14 +218,14 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const Time &dt
     gadvect_->apply(*u[0], c_, utmp_, *dudt[0]); // apply advection
     ghelm_->opVec_prod(*u[0],*utmp_[0]); // apply diffusion
     *utmp_[0] -= *dudt[0];
-    gimass_->opVec_prod(*utmp_[0],*dudt[0]); // apply M^-1
+    gimass_->opVec_prod(*urhstmp_[0],*dudt[0]); // apply M^-1
   }
   else {             // nonlinear advection
     for ( auto k=0; k<u.size(); k++ ) {
-      gadvect_->apply(*u[k], u, utmp_, *dudt[k]);
-      ghelm_->opVec_prod(*u[k],*utmp_[0]); // apply diffusion
-      *utmp_[0] += *dudt[k];
-      gimass_->opVec_prod(*utmp_[0],*dudt[k]); // apply M^-1
+      gadvect_->apply(*u[k], u, urhstmp_, *dudt[k]);
+      ghelm_->opVec_prod(*u[k],*urhstmp_[0]); // apply diffusion
+      *urhstmp_[0] += *dudt[k];
+      gimass_->opVec_prod(*urhstmp_[0],*dudt[k]); // apply M^-1
     }
   }
   
@@ -301,20 +303,8 @@ void GBurgers<TypePack>::step_exrk(const Time &t, const State &uin, const State 
   //     du/dt = M^-1 ( -u.Grad u + nu nabla u ):
   // for each u
 
-  // Set tmp arrays from member utmp_ data; 
-  // need NState*(nstages+1)+1 tmp vectors for RK stepper:
-  assert(utmp_.size()
-  GTVector<GTVector<GFTYPE>*> utmp(utmp_.size()-itorder_-1);
-  GTVector<GTVector<GFTYPE>*> utmp2(itorder_+1);
-  for ( auto j=0; j<itorder_+1; j++ ) utmp2[j] = utmp_[j];
-  for ( auto j=0; j<utmp_.size()-itorder_-1; j++ ) utmp1[j] = utmp_[itorder_+1+j];
-
-
   // GExRK steppers steps entire state over one dt:
-  for ( auto j=0; j<uin.size(); j++ ) *uout[j] = *uin[j];
-  for ( auto k=0; k<itorder_; k++ ) {
-    gexrk_->step(t, uin, ub, dt, utmp1, uout);
-  }
+  gexrk_->step(t, uin, ub, dt, urktmp_, uout);
 
 } // end of method step_exrk
 
@@ -502,4 +492,34 @@ void GBurgers<TypePack>::apply_bc_impl(const Time &t, State &u, const State &ub)
   } 
   
 } // end of method apply_bc_impl
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : req_tmp_size
+// DESC   : Find required tmp size on GLL grid
+// RETURNS: none.
+//**********************************************************************************
+template<typename TypePack>
+void GBurgers<TypePack>::req_tmp_size)
+{
+#if 0
+doheat_         (traits.doheat),
+bpureadv_     (traits.bpureadv),
+bconserved_ (traits.bconserved),
+isteptype_    (traits.steptype),
+nsteps_                     (0),
+itorder_       (traits.itorder),
+#endif
+  GINT isize = 0;
+  GINT nstate = 0;
+ 
+  isize  = 2*GDIM + 3;
+  nstate = GDIM;
+  if ( doheat_ || bpureadv_ ) nstate = 1;
+
+  if ( isteptype_ == GSTEPPER_EXRK2 || isteptype_ == GSTEPPER_EXRK4 ) {
+    isize += nstate * itorder_; 
+  }
+  
+} // end of method req_tmp_size
 

@@ -108,6 +108,7 @@ protected:
 private:
 
         void                init(State &u, GBurgers::Traits &);           // initialize 
+        GINT                req_tmp_size();                               // required tmp size
         void                step_exrk  (const Time &t, const State &uin, const State &ub,
                                         const Time &dt, State &uout);
         void                dudt_impl  (const Time &t, const State &u,
