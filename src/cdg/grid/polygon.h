@@ -21,12 +21,14 @@ GTPoint<T>   v3;
    v[0] = &v1; v[1] = &v2; v[2] = &v3; }
  ~GTriangle() {}
  void operator=(const GTriangle &t) { v=t.v; v1=t.v1; v2=t.v2; v3=t.v3; }
+ inline GTPoint<T> &operator[](const GINT i)
+  { return *v[i]; }
  void resize(GINT sz) { v1.resize(sz); v2.resize(sz); v3.resize(sz); }
 
  friend std::ostream &operator<<(std::ostream &os, GTriangle<T> &obj) {
    os << "{" << obj.v1;
    for ( GLONG j=1; j<3; j++ ) {
-     os << obj.v[j] << " ";
+     os << "; " << *(obj.v[j]);
    }
    os << "}" << std::endl;
    return os; } // end, operator<<
@@ -42,20 +44,22 @@ GTPoint<T>   v1;
 GTPoint<T>   v2;
 GTPoint<T>   v3;
 GTPoint<T>   v4;
- GQuad<T>() { v.resize(4); v1.resize(2); v2.resize(2); v3.resize(2);
- v4.resize(2); }
+ GQuad<T>() { v.resize(4); v1.resize(3); v2.resize(3); v3.resize(3);
+   v4.resize(3); v[0]=&v1; v[1]=&v2; v[2]=&v3; v[3]=&v4; }
  GQuad<T>(GINT dim) { v.resize(4); v1.resize(dim); v2.resize(dim); v3.resize(dim);
- v4.resize(dim); 
-   v[0]=&v1; v[1]=&v2; v[2]=&v3; v[3]=&v4; }
+   v4.resize(dim); v[0]=&v1; v[1]=&v2; v[2]=&v3; v[3]=&v4; }
  ~GQuad() {}
  void operator=(const GQuad &t) { v=t.v; v1=t.v1; v2=t.v2; v3=t.v3; v4=t.v4; }
+ inline GTPoint<T> &operator[](const GINT i)
+  { return *v[i]; }
+
  void resize(GINT sz) { v1.resize(sz); v2.resize(sz); v3.resize(sz);
       v4.resize(sz); }
 
  friend std::ostream &operator<<(std::ostream &os, GQuad<T> &obj) {
    os << "{" << obj.v1;
    for ( GLONG j=1; j<4; j++ ) {
-     os << obj.v[j] << " ";
+     os << "; " << *(obj.v[j]);
    }
    os << "}" << std::endl;
    return os; } // end, operator<<
@@ -92,7 +96,7 @@ GTPoint<T>   v8;
  friend std::ostream &operator<<(std::ostream &os, GHex<T> &obj) {
    os << "{" << obj.v1;
    for ( GLONG j=1; j<8; j++ ) {
-     os << obj.v[j] << " ";
+     os << "; " << *(obj.v[j]);
    }
    os << "}" << std::endl;
    return os; } // end, operator<<
