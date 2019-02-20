@@ -83,7 +83,7 @@ int main(int argc, char **argv)
     GINT   nstate=GDIM;  // number 'state' arrays
     GSIZET maxSteps;
     GFTYPE radiusi=1, radiuso=2;
-    GTVector<GINT> ne(3); // # elements in each direction in 3d
+    std::vector<GINT> ne(3); // # elements in each direction in 3d
     GString sgrid;// name of JSON grid object to use
     GC_COMM comm = GC_COMM_WORLD;
 
@@ -121,6 +121,8 @@ cout << "main: load_file done." << endl;
     dissptree   = ptree.getPropertyTree("dissipation_traits");
     tintptree   = ptree.getPropertyTree("time_integration");
 
+    ne          = gridptree.getArray<GINT>("num_elems");  // may be modified by command line
+
 #if 1
 
     // Parse command line. ':' after char
@@ -129,18 +131,23 @@ cout << "main: load_file done." << endl;
       switch (iopt) {
       case 'i': // get # elements in r/x
           ne[0] = atoi(optarg);
+          gridptree.setArray<GINT>("num_elems",ne);
           break;
       case 'j': // get # elements in lat/y
           ne[1] = atoi(optarg);
+          gridptree.setArray<GINT>("num_elems",ne);
           break;
       case 'k': // get # elements in long/z
           ne[2] = atoi(optarg);
+          gridptree.setArray<GINT>("num_elems",ne);
           break;
       case 'l': // # 2d refinement level
           ilevel = atoi(optarg);
+          gridptree.setValue<GINT>("ilevel",ilevel);
           break;
       case 'p': // get nodal exp order
           np = atoi(optarg);
+          ptree.setValue<GINT>("exp_order",np);
           break;
       case 'h': // help
           std::cout << "usage: " << std::endl <<
@@ -160,12 +167,6 @@ cout << "main: load_file done." << endl;
     }
 
 #endif
-
-    // Overwrite prop tree traits based on command line args:
-    std::vector<GINT> stdne(ne.size());
-    for ( auto j=0; j<ne.size(); j++ ) stdne[j] = ne[j];
-    gridptree.setArray<GINT>("num_elems",stdne);
-    ptree.setValue<GINT>("exp_order",np);
 
     // Set solver traits from prop tree:
     GBurgers<MyTypes>::Traits solver_traits;
@@ -201,6 +202,7 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     GPTLstart("gen_grid");
     // Create grid:
     grid_ = GGridFactory::build(gridptree, gbasis, comm);
+    grid_->do_grid();
     GPTLstop("gen_grid");
 
     GPTLstart("do_gather_op");
