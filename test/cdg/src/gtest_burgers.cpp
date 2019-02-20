@@ -100,20 +100,21 @@ int main(int argc, char **argv)
 
     // Read main prop tree; may ovewrite with
     // certain command line args:
-#if 0
-    PropertyTree ptree    = InputManager::getInputPropertyTree();       // main param file structure
-#else
-    PropertyTree ptree;
-#endif
+    PropertyTree ptree;       // main prop tree
     PropertyTree eqptree;     // equation props
     PropertyTree gridptree;   // grid props
     PropertyTree stepptree;   // stepper props
     PropertyTree dissptree;   // dissipation props
     PropertyTree tintptree;   // time integration props
-    // Create other prop trees for various objects:
+
 cout << "main: call load_file..." << endl;
+#if 0
+    ptree    = InputManager::getInputPropertyTree();       // main param file structure
+#else
     ptree.load_file("input.jsn");
+#endif
 cout << "main: load_file done." << endl;
+    // Create other prop trees for various objects:
     sgrid       = ptree.getValue<GString>("grid_type");
     np          = ptree.getValue<GINT>("exp_order");
     eqptree     = ptree.getPropertyTree("adv_equation_traits");
