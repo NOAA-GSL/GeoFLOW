@@ -941,7 +941,7 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
   GBOOL   pChk;        // check for positive-difiniteness
   GTVector<GFTYPE> dNi(nnodes);// shape function derivative
   GTVector<GFTYPE> tmp(nnodes);// tmp space
-  GTVector<GINT>   I(2);      // tensor produc index
+  GTVector<GINT>   I(2);       // tensor product index
 
   // Can have 'embedded' coords, so # Cartesian coordinates may be > GDIM;
   // but the total number of node points in each metrix element will 
@@ -949,11 +949,9 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
   GSIZET nxy = elemtype_ == GE_2DEMBEDDED ? GDIM+1: GDIM;
   if ( elemtype_ == GE_2DEMBEDDED ) {
     rij.resize(nxy,nxy);
-//  irij.resize(nxy,nxy);
     for ( l=0; l<nxy; l++ ) { // rij matrix element col
       for ( k=0; k<nxy; k++ ) { // rij matrix element row
         rij(k,l).resize(Ntot_);
-//      irij(k,l).resize(Ntot_);
         tmp  = 0.0;
         for ( j=0, n=0; j<gbasis_[1]->getOrder()+1; j++ ) { // evaluate gbasis at xi_ev
           for ( i=0; i<gbasis_[0]->getOrder()+1; i++, n++ ) { // evaluate gbasis at xi_ev
@@ -966,7 +964,6 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
       } // k-loop
     } // l-loop
   } else {  // dXi/dX are just constants for reg elements:
-//  irij.resize(nxy,1);
     for ( k=0; k<nxy; k++ ) { // rij matrix element col
 //    irij(k,0).bconstdata(TRUE);
       irij(k,0) = 2.0/L[k];
@@ -985,37 +982,12 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
 #else
   if ( elemtype_ == GE_2DEMBEDDED ) {
     det (rij, jac, pChk, NULLPTR, 0);
+    // Find inverse of rij:
+    inv(rij, jac, irij);
   }
   else if ( elemtype_ == GE_REGULAR ) {
 //  jac.bconstdata(TRUE);
     jac[0] = 0.25*L[0]*L[1];
-  }
-#endif
-
-  // Find inverse of rij:
-  inv(rij, jac, irij);
-
-#if 0
-  // gij moved to GHelmholtz operator, only place (so far) where
-  // they are required.
-  GTVector<GTVector<GFTYPE>*> W(GDIM);
-  for ( GSIZET j=0; j<GDIM; j++ ) {
-    W[j]= gbasis_[j]->getWeights();
-  }
-
-  // Create metric elements:
-  //   gij = Sum_k dxi^i/dx^k dxi^j/dx^k * Jac * W:
-  for ( j=0; j<nxy; j++ ) { // gij matrix element col
-    for ( i=0; i<nxy; i++ ) { // gij matrix element row
-       for ( k=0; k<nxy; k++ ) { 
-         for ( m=0, n=0; m<N[1]; m++ ) {
-           for ( l=0; l<N[0]; l++,n++ ) {
-             (*gij(i,j))[n] = irij(i,k)[n] * irij(j,k)[n]
-                            * (*W[0])[l] * (*W[1])[m] * jac[n];
-           }
-         }
-       }
-    }
   }
 #endif
 
@@ -1307,7 +1279,7 @@ void GElem_base::Jac_embed(GMVFType &G, GTVector<GFTYPE> &jac, GBOOL &pChk, GINT
 // DESC   : Compute in vectorized way the inverse of specified 
 //          (vectorized) matrix
 // ARGS   : 
-//          G    : matrix to find determinant of. Each element of G is assumed
+//          G    : matrix to find inverse of. Each element of G is assumed
 //                 to have the same length
 //          jac  : Jacobian of G (computed prior to entry)
 //          iG   : Inverse. Each element must have the same length
