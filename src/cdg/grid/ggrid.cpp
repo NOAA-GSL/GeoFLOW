@@ -448,7 +448,7 @@ void GGrid::def_init()
      }
    }
    Jac_.range_reset();
-   facJac_.range_reset();
+   faceJac_.range_reset();
    
 } // end of method def_init
 
@@ -509,7 +509,7 @@ void GGrid::reg_init()
      for ( GSIZET j=0; j<nxy; j++ ) {
        xNodes_[j].range(ibeg, iend);
        xNodes_[j] = (*xe)[j];
-        // 0-out local xNodes; only global allowed now:
+        // Zero-out local xNodes; only global allowed now:
        (*xe)[j].clear(); 
      }
 
