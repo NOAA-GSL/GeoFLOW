@@ -39,11 +39,12 @@ lshapefcn_             (NULLPTR)
   Lbox_.resize(GDIM);
   ne_.resize(GDIM);
 
-  std::vector<GFTYPE> spt;
-  std::vector  <GINT> ne;
+  std::vector<GFTYPE> spt(3); // tmp array
+  std::vector  <GINT> sne   ; // tmp array
   spt = ptree.getArray<GFTYPE>("xyz0");
   P0_ = spt;
   spt = ptree.getArray<GFTYPE>("delxyz");
+  sne = ptree.getArray<GINT>("num_elems");
 
   GTPoint<GFTYPE> dP(3);
   dP  = spt;
@@ -59,13 +60,12 @@ lshapefcn_             (NULLPTR)
   bdytype[5] = geoflow::str2bdytype(ptree.getValue<GString>("bdy_z_1"));
   }
   global_bdy_types_ = bdytype;
+std::cout << "GGrid:: global_bdy_types_=" << global_bdy_types_ << std::endl;
 
-  ne         = ptree.getArray<GINT>("num_elems");
-  ne_        = ne;
 
   bPeriodic_.resize(3);
   bPeriodic_ = FALSE;
-  assert(P0_.size() >= ndim_ && P1_.size() >= ndim_ && ne.size() >= b.size()
+  assert(P0_.size() >= ndim_ && P1_.size() >= ndim_ && ne_.size() >= b.size()
         && "Grid length and/or element count arrays of insufficient size");
   if ( global_bdy_types_[1] == GBDY_PERIODIC
     || global_bdy_types_[3] == GBDY_PERIODIC ) bPeriodic_[0] = TRUE;
@@ -76,10 +76,12 @@ lshapefcn_             (NULLPTR)
     && global_bdy_types_[1] == GBDY_PERIODIC
     || global_bdy_types_[3] == GBDY_PERIODIC ) bPeriodic_[2] = TRUE;
 
+  ne_.resize(b.size());
   for ( GSIZET j=0; j<b.size(); j++ ) {
     Lbox_[j] = fabs(P1_[j] - P0_[j]);
-    ne_  [j] = ne[j];
+    ne_  [j] = sne[j];
   }
+std::cout << "GGrid:: ne_=" << ne_ << std::endl;
 
   lshapefcn_ = new GShapeFcn_linear();
   if ( GDIM == 2 ) {
