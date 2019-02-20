@@ -27,11 +27,12 @@ int main(int argc, char* argv[]) {
 	GlobalManager::startup();
 
 	// Get Input PropertyTree
+	// - This is automatically filled during the call to GlobalManager::initialize()
+	// - Inside InputManager::initialize() is the logic for what files it expects to read
 	auto pt = InputManager::getInputPropertyTree();
 
 	auto keys = pt.getKeys();
 	assert( keys.size() == 9 );
-
 
 	assert( pt.isValue<int>("object_1")   == false );
 	assert( pt.isArray<int>("object_1")   == false );

@@ -4,5 +4,5 @@ enable_testing()
 
 # Add test executables
 add_subdirectory(tbox)
-#add_subdirectory(odeint)
+add_subdirectory(odeint)
 #add_subdirectory(pdeint)
