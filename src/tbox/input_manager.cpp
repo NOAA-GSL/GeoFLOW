@@ -32,12 +32,12 @@ void
 InputManager::loadInputFile(const std::string& file_name){
 	PropertyTree ptree_;
 	mpixx::communicator world;
-	if( world.rank() == 0 ){
+	//if( world.rank() == 0 ){
 		ptree_.load_file(file_name);
-	}
-	if(world.size() > 1){
-		mpixx::broadcast(world,ptree_,0);
-	}
+	//}
+	//if(world.size() > 1){
+	//	mpixx::broadcast(world,ptree_,0);
+	//}
 }
 
 } // namespace tbox

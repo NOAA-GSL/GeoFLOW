@@ -8,6 +8,7 @@
 set(test_tbox_files  
         enumerate.cpp
         indices.cpp
+        input_manager.cpp
 		mpixx.cpp
         property_tree.cpp
         range.cpp
