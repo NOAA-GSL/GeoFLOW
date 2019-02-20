@@ -108,11 +108,7 @@ int main(int argc, char **argv)
     PropertyTree tintptree;   // time integration props
 
 cout << "main: call load_file..." << endl;
-#if 0
     ptree    = InputManager::getInputPropertyTree();       // main param file structure
-#else
-    ptree.load_file("input.jsn");
-#endif
 cout << "main: load_file done." << endl;
     // Create other prop trees for various objects:
     sgrid       = ptree.getValue<GString>("grid_type");
@@ -637,6 +633,7 @@ void init_ggfx(GGrid &grid, GGFX &ggfx)
   GTVector<GTVector<GFTYPE>>    *xnodes;
 
   delta  = grid.minnodedist().min();
+  dX     = 0.5*delta;
   gelems = &grid.elems();
   xnodes = &grid.xNodes();
   glob_indices.resize(grid.nsurfdof());
