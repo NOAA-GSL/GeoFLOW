@@ -48,6 +48,7 @@
     )
 
  set(GEOFLOW_TBOX_SRC ${GHOME}/../tbox/clock.cpp 
+                      ${GHOME}/../tbox/command_line.cpp 
                       ${GHOME}/../tbox/error_handler.cpp 
                       ${GHOME}/../tbox/global_manager.cpp
                       ${GHOME}/../tbox/input_manager.cpp
