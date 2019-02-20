@@ -740,11 +740,6 @@ void GElem_base::build_elem2d()
     }
   }
 
-#if 0
-  // Compute metrics, Jacobians, etc:
-  dogeom2d(gbasis_, dXidX_, Jac_, faceJac_, edge_indices_);
-#endif
-  
   // Compute edge/face centroids:
   edgeCentroid_[0] = (xVertices_[0] + xVertices_[1]) * 0.5;
   edgeCentroid_[1] = (xVertices_[1] + xVertices_[2]) * 0.5;
@@ -899,11 +894,11 @@ void GElem_base::dogeom1d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
 // METHOD : dogeom2d
 // DESC   : Compute all geometry objects that depend on basis in 2d
 //          NOTE: no resizing here, as all return quantities may be
-//                global here, and simply restricted to its range
-//                of this element.
+//                global, and simply restricted to its range
+//                in this element.
 // ARGS   : 
-//          rij  : dx^j/dxi^i, computed here, but otherwise is temp space
-//                 that may be reallocated
+//          rij  : dx^j/dxi^i, computed here, but otherwise may be 
+//                 global temp space that MUST NOT be reallocated HERE!
 //          irij : dxi^j/dx^i matrix to be created; may be global
 //          jac  : Jacobian to be created ; gmay be lobal
 //          fjac : face Jacobians to be created; may be global 
@@ -947,7 +942,7 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
   // but the total number of node points in each metrix element will 
   // still be (h1-order+1) X (h2-order+1):
   GSIZET nxy = elemtype_ == GE_2DEMBEDDED ? GDIM+1: GDIM;
-  if ( elemtype_ == GE_2DEMBEDDED ) {
+  if ( elemtype_ == GE_2DEMBEDDED || elemtype_ == GE_DEFORMED ) {
     rij.resize(nxy,nxy);
     for ( l=0; l<nxy; l++ ) { // rij matrix element col
       for ( k=0; k<nxy; k++ ) { // rij matrix element row
@@ -963,9 +958,11 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
         rij(k,l) = tmp;
       } // k-loop
     } // l-loop
-  } else {  // dXi/dX are just constants for reg elements:
+  } else {  // dXi/dX are just constants for GE_REGULAR:
+    // Set only diagonal elements of rij, irij:
     for ( k=0; k<nxy; k++ ) { // rij matrix element col
 //    irij(k,0).bconstdata(TRUE);
+      rij (k,0) = 0.5*L[k]; 
       irij(k,0) = 2.0/L[k];
     } // k-loop
   }
@@ -980,14 +977,13 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
     det (rij, jac, pChk, NULLPTR, 0);
   }
 #else
-  if ( elemtype_ == GE_2DEMBEDDED ) {
+  if ( elemtype_ == GE_2DEMBEDDED || elemtype_ == GE_DEFORMED ) {
     det (rij, jac, pChk, NULLPTR, 0);
     // Find inverse of rij:
     inv(rij, jac, irij);
   }
   else if ( elemtype_ == GE_REGULAR ) {
-//  jac.bconstdata(TRUE);
-    jac[0] = 0.25*L[0]*L[1];
+    jac = 0.25*L[0]*L[1];
   }
 #endif
 
@@ -1003,10 +999,15 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
     for ( k=0; k<edge_indices_[j].size(); k++ ) 
       iedge[ntot++] = edge_indices_[j][k];
   }
-  det(rij, fjac, pChk, iedge.data(), iedge.size()); 
+  if ( elemtype_ == GE_2DEMBEDDED || elemtype_ == GE_DEFORMED ) {
+    det(rij, fjac, pChk, iedge.data(), iedge.size()); 
+  }
+  else if ( elemtype_ == GE_REGULAR ) {
+    fjac = jac[0];
+  } 
 
   // Compute edge/face normals: 
-  set_faceNormal2d(rij, faceNormal);
+    set_faceNormal2d(rij, faceNormal);
 
 } // end of method dogeom2d
 
@@ -1166,12 +1167,18 @@ void GElem_base::det(GMVFType &G, GTVector<GFTYPE> &detv, GBOOL &pChk, GINT *pin
 {
   GString serr = "GElem_base::det: ";
 
-  assert((G.size(1) == 2 && G.size(2) == 2) || 
-         (G.size(1) == 3 || G.size(2) == 3) && "Invalid matrix dimension");
+  assert( (G.size(1) == 2 && G.size(2) == 2)
+       || (G.size(1) == 3 && G.size(2) == 3) 
+       && "Invalid metric dimensions");
+    
 
-  // Compute det, and check Jacobian for being positive-definiteness:
+  // Compute det, and check Jacobian for being positive-definite:
+  GBOOL  bcol=FALSE, brow=FALSE;
   GSIZET n, k;
   pChk = TRUE;
+
+
+  // Compute full determinant:
   if ( G.size(1) == 2 ) { // 2x2 matrix:
     if ( pind != NULLPTR ) {
       for ( k=0; k<nind; k++ ) { // loop over desired indices only
@@ -1726,9 +1733,10 @@ void GElem_base::set_faceNormal2d(GTMatrix<GTVector<GFTYPE>> &rij, GTVector<GTVe
   // if embedded (and normalize; _x_ is vector Cartesian coord)
 
   GSIZET nxy = elemtype_ == GE_2DEMBEDDED ? GDIM+1 : GDIM;
-  GSIZET istart;
+  GSIZET istart, n;
 
   GFTYPE *fn[2*GDIM];   // faceNormal data pointers
+  GFTYPE xn;            // vector magnitude
   for ( GSIZET j=0; j<nxy; j++ ) fn[j] = faceNormal[j].data();
 
   if ( elemtype_ == GE_2DEMBEDDED ) { // embedded surfaces
@@ -1756,8 +1764,13 @@ void GElem_base::set_faceNormal2d(GTMatrix<GTVector<GFTYPE>> &rij, GTVector<GTVe
                              xNodes_       [0], xNodes_       [1], xNodes_           [2], 
                              edge_indices_ [3].data()            , edge_indices_[3].size(), 
                              fn[0]+istart     , fn[1]+istart     , fn[2]+istart           );
+    // Normalize:
+    for ( GSIZET j=0; j<faceNormal.size(); j++ ) { 
+      xn = sqrt( pow(faceNormal[0][j],2) + pow(faceNormal[1][j],2) );     
+      for ( GSIZET i=0; i<faceNormal.size(); i++ ) faceNormal[i][n] *= 1.0/xn;
+    }
   }
-  else { // non-embedded surfaces
+  else if ( elemtype_ == GE_DEFORMED ) { // non-embedded deformed surfaces
 
     // These must be computed in the given order:
     istart  = 0;
@@ -1780,6 +1793,31 @@ void GElem_base::set_faceNormal2d(GTMatrix<GTVector<GFTYPE>> &rij, GTVector<GTVe
     GMTK::cross_prod_k<GFTYPE>(rij         (0,1), rij         (1,1), 
                                edge_indices_ [3].data() , edge_indices_[3].size(), -1,
                                fn[0]+istart     , fn[1]+istart     ); 
+    // Normalize:
+    for ( GSIZET j=0; j<faceNormal.size(); j++ ) { 
+      xn = sqrt( pow(faceNormal[0][j],2) + pow(faceNormal[1][j],2) );     
+      for ( GSIZET i=0; i<faceNormal.size(); i++ ) faceNormal[i][n] *= 1.0/xn;
+    }
+    
+  }
+  else {                                 // regular edges
+    n = 0;
+    for ( GSIZET j=0; j<edge_indices_[0].size(); j++ ) { // edge 0
+      faceNormal[0][n] =  0.0; faceNormal[1][n] = -1.0;
+      n++;
+    }
+    for ( GSIZET j=0; j<edge_indices_[1].size(); j++ ) { // edge 1
+      faceNormal[0][n] =  1.0; faceNormal[1][n] =  0.0;
+      n++;
+    }
+    for ( GSIZET j=0; j<edge_indices_[2].size(); j++ ) { // edge 2
+      faceNormal[0][n] =  0.0; faceNormal[1][n] =  1.0;
+      n++;
+    }
+    for ( GSIZET j=0; j<edge_indices_[3].size(); j++ ) { // edge 3
+      faceNormal[0][n] = -1.0; faceNormal[1][n] =  0.0;
+      n++;
+    }
   }
   
 } // end of method set_faceNormal2d
@@ -1798,28 +1836,66 @@ void GElem_base::set_faceNormal3d(GTMatrix<GTVector<GFTYPE>> &rij, GTVector<GTVe
 {
   GString serr = "GElem_base::set_faceNormal3d: ";
 
-  GSIZET istart;
+  GSIZET istart, n;
 
   GFTYPE *fn[6]; // pointers to faceNormal data
+  GFTYPE xn;     // vector magnitude
   for ( GSIZET k=0; k<GDIM; k++ ) fn[k] = faceNormal[k].data();
 
-  // For each face, take cross prod of d_x_/dxi_1 X d_x_/dxi_2
-  // where xi1, and xi2 are the reference coords of the face:
-  istart = 0; // where to start in faceNormal; order matters!
-  for ( GSIZET k=0; k<4; k++ ) { // vertical faces
-    GMTK::cross_prod<GFTYPE>(rij           (0,k%2), rij         (1,k%2), rij             (2,k%2),
-                             rij             (0,2), rij           (1,2), rij               (2,2),
-                             face_indices_ [k].data()                  , face_indices_[k].size(), 
-                             fn[0]+istart         , fn[1]+istart       , fn[2]+istart          );
-    istart += face_indices_[k].size();
+  if ( elemtype_ == GE_DEFORMED ) { // deformed surfaces
+    // For each face, take cross prod of d_x_/dxi_1 X d_x_/dxi_2
+    // where xi1, and xi2 are the reference coords of the face:
+    istart = 0; // where to start in faceNormal; order matters!
+    for ( GSIZET k=0; k<4; k++ ) { // vertical faces
+      GMTK::cross_prod<GFTYPE>(rij           (0,k%2), rij         (1,k%2), rij             (2,k%2),
+                               rij             (0,2), rij           (1,2), rij               (2,2),
+                               face_indices_ [k].data()                  , face_indices_[k].size(), 
+                               fn[0]+istart         , fn[1]+istart       , fn[2]+istart          );
+      istart += face_indices_[k].size();
+    }
+    
+    for ( GSIZET k=4; k<6; k++ ) { // bottom, top faces
+      GMTK::cross_prod<GFTYPE>(rij             (0,0), rij           (1,0), rij               (2,0),
+                               rij             (0,1), rij           (1,1), rij               (2,1),
+                               face_indices_ [k].data()                  , face_indices_[k].size(), 
+                               fn[0]+istart         , fn[1]+istart       , fn[2]+istart          );
+      istart += face_indices_[k].size();
+    }
+
+    // Normalize:
+    for ( GSIZET j=0; j<faceNormal.size(); j++ ) { 
+      xn = sqrt( pow(faceNormal[0][j],2) + pow(faceNormal[1][j],2) 
+               + pow(faceNormal[2][j],2) );     
+      for ( GSIZET i=0; i<faceNormal.size(); i++ ) faceNormal[i][n] *= 1.0/xn;
+    }
   }
-  
-  for ( GSIZET k=4; k<6; k++ ) { // bottom, top faces
-    GMTK::cross_prod<GFTYPE>(rij             (0,0), rij           (1,0), rij               (2,0),
-                             rij             (0,1), rij           (1,1), rij               (2,1),
-                             face_indices_ [k].data()                  , face_indices_[k].size(), 
-                             fn[0]+istart         , fn[1]+istart       , fn[2]+istart          );
-    istart += face_indices_[k].size();
+  else if ( elemtype_ == GE_REGULAR) { // regular surfaces
+    n = 0;
+    for ( GSIZET j=0; j<face_indices_[0].size(); j++ ) { // face 0
+      faceNormal[0][n] =  0.0; faceNormal[1][n] = -1.0; faceNormal[2][n] =  0.0;
+      n++;
+    }
+    for ( GSIZET j=0; j<face_indices_[1].size(); j++ ) { // face 1
+      faceNormal[0][n] =  1.0; faceNormal[1][n] =  0.0; faceNormal[2][n] =  0.0;
+      n++;
+    }
+    for ( GSIZET j=0; j<face_indices_[2].size(); j++ ) { // face 2
+      faceNormal[0][n] =  0.0; faceNormal[1][n] =  1.0; faceNormal[2][n] =  0.0;
+      n++;
+    }
+    for ( GSIZET j=0; j<face_indices_[3].size(); j++ ) { // face 3
+      faceNormal[0][n] = -1.0; faceNormal[1][n] =  0.0; faceNormal[2][n] =  0.0;
+      n++;
+    }
+    for ( GSIZET j=0; j<face_indices_[4].size(); j++ ) { // face 4
+      faceNormal[0][n] =  0.0; faceNormal[1][n] =  0.0; faceNormal[2][n] = -1.0;
+      n++;
+    }
+    for ( GSIZET j=0; j<face_indices_[5].size(); j++ ) { // face 5
+      faceNormal[0][n] =  0.0; faceNormal[1][n] =  0.0; faceNormal[2][n] =  1.0;
+      n++;
+    }
+
   }
   
 } // end of method set_faceNormal3d
