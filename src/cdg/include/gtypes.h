@@ -190,6 +190,11 @@ const char * const sGStepperType[] =    {
   #define cot(a_rad)   (cos(a_rad)/sin(a_rad))
 #endif
 
+#if !defined FUZZYEQ
+#  define FUZZYEQ(x,y,eps) ( (y <= (x+eps)) && (y >= (x-eps)) ) 
+#endif
+
+
 // Misc. defs
 #define GMAX_ERROR_STRING 1024
 #define BITSPERBYTE        8
