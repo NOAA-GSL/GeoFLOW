@@ -8,6 +8,7 @@
 
 #include "tbox/property_tree.hpp"
 
+#include <cassert>
 #include <iostream>
 
 
@@ -17,25 +18,93 @@ int main() {
 
 	PropertyTree pt;
 
-	pt.load_file("data/generated.jsn");
+	pt.load_file("data/sample.jsn");
 
-	/*
-	for(auto const& key : pt.getKeys() ){
-		std::cout << key << std::endl;
-	}
+	auto keys = pt.getKeys();
+	assert( keys.size() != 9 );
 
-	std::cout << "Is ivalue = " << pt.isValue<int>("ivalue")     << std::endl;
-	std::cout << "Is PTree  = " << pt.isValue<int>("object_1")   << std::endl;
-	std::cout << "Is array  = " << pt.isValue<int>("array")      << std::endl;
+	assert( pt.isValue<int>("object_1")   == false );
+	assert( pt.isArray<int>("object_1")   == false );
+	assert( pt.isPropertyTree("object_1") == true  );
 
-	std::cout << "Is ivalue = " << pt.isArray<int>("ivalue")     << std::endl;
-	std::cout << "Is PTree  = " << pt.isArray<int>("object_1")   << std::endl;
-	std::cout << "Is array  = " << pt.isArray<int>("array")      << std::endl;
+	auto obj1 = pt.getPropertyTree("object_1");
+	assert( obj1.isValue<int>("age")      == true );
+	assert( obj1.isArray<int>("age")      == false );
+	assert( obj1.isPropertyTree("age")    == false  );
 
-	std::cout << "Is ivalue = " << pt.isPropertyTree("ivalue")   << std::endl;
-	std::cout << "Is PTree  = " << pt.isPropertyTree("object_1") << std::endl;
-	std::cout << "Is array  = " << pt.isPropertyTree("array")    << std::endl;
-	 */
+	//
+	// Bool Values
+	//
+	assert( pt.isValue<bool>("bool_value")  == true );
+	assert( pt.isArray<bool>("bool_value")  == false );
+	assert( pt.isPropertyTree("bool_value") == false  );
+
+	assert( pt.isValue<bool>("bool_array")  == false );
+	assert( pt.isArray<bool>("bool_array")  == true );
+	assert( pt.isPropertyTree("bool_array") == false  );
+	auto bool_array = pt.getArray<bool>("bool_array");
+	assert( bool_array.size() == 5 );
+	assert( bool_array[0] == true );
+	assert( bool_array[1] == false );
+	assert( bool_array[2] == true );
+	assert( bool_array[3] == false );
+	assert( bool_array[4] == true );
+
+
+	//
+	// Integer Values
+	//
+	assert( pt.isValue<int>("int_value")   == true );
+	assert( pt.isArray<int>("int_value")   == false );
+	assert( pt.isPropertyTree("int_value") == false  );
+
+	assert( pt.isValue<int>("int_array")   == false );
+	assert( pt.isArray<int>("int_array")   == true );
+	assert( pt.isPropertyTree("int_array") == false  );
+	auto int_array = pt.getArray<int>("int_array");
+	assert( int_array.size() == 5 );
+	assert( int_array[0] == 0 );
+	assert( int_array[1] == 1 );
+	assert( int_array[2] == 2 );
+	assert( int_array[3] == 3 );
+	assert( int_array[4] == 4 );
+
+	//
+	// Real Values
+	//
+	assert( pt.isValue<double>("real_value") == true );
+	assert( pt.isArray<double>("real_value") == false );
+	assert( pt.isPropertyTree("real_value")  == false  );
+
+	assert( pt.isValue<double>("real_array") == false );
+	assert( pt.isArray<double>("real_array") == true );
+	assert( pt.isPropertyTree("real_array")  == false  );
+	auto real_array = pt.getArray<double>("real_array");
+	assert( real_array.size() == 5 );
+	assert( real_array[0] == 1.1 );
+	assert( real_array[1] == 2.2 );
+	assert( real_array[2] == 3.3 );
+	assert( real_array[3] == 4.4 );
+	assert( real_array[4] == 5.5 );
+
+	//
+	// String Values
+	//
+	assert( pt.isValue<std::string>("string_value") == true );
+	assert( pt.isArray<std::string>("string_value") == false );
+	assert( pt.isPropertyTree("string_value")  == false  );
+
+	assert( pt.isValue<std::string>("string_array") == false );
+	assert( pt.isArray<std::string>("string_array") == true );
+	assert( pt.isPropertyTree("string_array")  == false  );
+	auto string_array = pt.getArray<std::string>("string_array");
+	assert( string_array.size() == 5 );
+	assert( string_array[0] == "does" );
+	assert( string_array[1] == "this" );
+	assert( string_array[2] == "string" );
+	assert( string_array[3] == "array" );
+	assert( string_array[4] == "work");
+
 
 
 	return 0;
