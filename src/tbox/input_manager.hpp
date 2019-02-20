@@ -70,6 +70,9 @@ public:
 	static PropertyTree getInputPropertyTree();
 
 
+	InputManager(const InputManager&)    = delete; // Don't allow copy
+	void operator=(const InputManager&)  = delete; // Don't allow assign
+
 private:
 
 	static PropertyTree ptree_;

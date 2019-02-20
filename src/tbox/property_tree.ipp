@@ -122,9 +122,10 @@ std::vector<T>
 PropertyTree::get_array_impl(const std::string& key) const{
 	ASSERT(key_is_array(key));
 	std::vector<T> result;
-	result.reserve(node_.get_child(key).size());
+	//result.reserve(node_.get_child(key).size());
 	for(auto const& kv_pair : node_.get_child(key)){
-		result.emplace_back(kv_pair.second.get<T>(""));
+		//result.emplace_back(kv_pair.second.get<T>(""));
+		result.push_back(kv_pair.second.get<T>(""));
 	}
 	return result;
 }

@@ -65,9 +65,10 @@ PropertyTree::keyExists(const std::string& key) const{
 std::vector<std::string>
 PropertyTree::getKeys() const{
 	std::vector<std::string> result;
-	result.reserve(node_.size());
+	//result.reserve(node_.size());
 	for(auto kv : node_){
-		result.emplace_back(kv.first);
+		//result.emplace_back(kv.first);
+		result.push_back(kv.first);
 	}
 	return result;
 }
