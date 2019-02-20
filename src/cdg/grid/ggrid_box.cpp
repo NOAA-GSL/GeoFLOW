@@ -40,11 +40,13 @@ lshapefcn_             (NULLPTR)
   ne_.resize(GDIM);
 
   std::vector<GFTYPE> spt(3); // tmp array
-  std::vector  <GINT> sne   ; // tmp array
+  std::vector  <int> sne   ; // tmp array
   spt = ptree.getArray<GFTYPE>("xyz0");
   P0_ = spt;
   spt = ptree.getArray<GFTYPE>("delxyz");
-  sne = ptree.getArray<GINT>("num_elems");
+  sne = ptree.getArray<int>("num_elems");
+  for ( int j=0; j<sne .size(); j++ ) std::cout << "GGrid: sne [" << j << "]=" << sne[j] << std::endl;
+
 
   GTPoint<GFTYPE> dP(3);
   dP  = spt;
