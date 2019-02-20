@@ -448,6 +448,7 @@ void GGrid::def_init()
      }
    }
    Jac_.range_reset();
+   facJac_.range_reset();
    
 } // end of method def_init
 
@@ -532,6 +533,7 @@ void GGrid::reg_init()
      }
    }
    Jac_.range_reset();
+   faceJac_.range_reset();
    for ( GSIZET j=0; j<nxy; j++ ) xNodes_[j].range_reset();
    
 } // end of method reg_init
