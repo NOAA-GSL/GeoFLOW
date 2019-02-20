@@ -1465,7 +1465,9 @@ GTVector<T>::contains(T val, GSIZET *&iwhere, GSIZET &nw)
     n += this->data_[i] == val ? 1 : 0;
   }
 
-  if ( n == 0 ) return 0;
+  if ( n == 0 ) {
+     return 0;
+  }
 
   if ( nw < n ) {
     if ( iwhere != NULLPTR ) delete [] iwhere;
