@@ -821,7 +821,7 @@ void GGrid::init_bc_info()
   GTVector<GBdyType>          *iebdyt; // domain bdy types
 
   // Collect all element bdy types and indicection indices
-  // into global vectors (so we can use the vector 
+  // into global vectors (so we can use the GTVector 
   // to do sorting):
   GSIZET              nn=0; 
   GSIZET                ig; 
@@ -829,7 +829,7 @@ void GGrid::init_bc_info()
   GTVector   <GSIZET> itmp; 
   for ( GSIZET e=0; e<gelems_.size(); e++ ) {
     ibeg   = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
-    iebdy  = &gelems_[e]->bdy_indices(); 
+    iebdy  = &gelems_[e]->bdy_indices(); // likely set in ggrid_icos/ggrid_box, etc
     iebdyt = &gelems_[e]->bdy_types(); 
     for ( GSIZET j=0; j<iebdyt->size(); j++ ) {
       ig = nn + (*iebdy)[j];

@@ -336,14 +336,18 @@ void GGridBox::do_grid2d(GINT irank)
 
     pelem->init(*xNodes);
 
-    // With edge/face centroids set, compute bdy_nodes:
+    // Compute global boundary nodes:
     for ( GSIZET j=0; j<2*ndim_; j++ ) { // cycle over all edges
       cent = pelem->edgeCentroid(j);
       if ( cent.x2 == P0_.x2 ) face_ind = &pelem->edge_indices(0);
       if ( cent.x1 == P1_.x1 ) face_ind = &pelem->edge_indices(1);
       if ( cent.x2 == P1_.x2 ) face_ind = &pelem->edge_indices(2);
       if ( cent.x1 == P0_.x1 ) face_ind = &pelem->edge_indices(3);
-      for ( GSIZET k=0; k<face_ind->size(); k++ ) bdy_ind->push_back((*face_ind)[k]); 
+      // ALso, don't allow indices to be repeated:
+      for ( GSIZET k=0; k<face_ind->size(); k++ ) {
+        if ( !bdy_ind->contains((*face_ind)[k]) )
+          bdy_ind->push_back((*face_ind)[k]); 
+      }
     }
 
 
@@ -453,7 +457,10 @@ void GGridBox::do_grid3d(GINT irank)
       if ( cent.x3 == P0_.x3 ) face_ind = &pelem->edge_indices(4);
       if ( cent.x3 == P1_.x3 ) face_ind = &pelem->edge_indices(5);
       face_ind = &pelem->face_indices(0);
-      for ( GSIZET k=0; k<face_ind->size(); k++ ) bdy_ind->push_back((*face_ind)[k]); 
+      for ( GSIZET k=0; k<face_ind->size(); k++ ) {
+        if ( !bdy_ind->contains((*face_ind)[k]) )
+          bdy_ind->push_back((*face_ind)[k]); 
+      }
     }
 
     gelems_.push_back(pelem);
