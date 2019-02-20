@@ -5,6 +5,7 @@
  *      Author: bryan.flynt
  */
 
+#include <algorithm>
 #include "tbox/assert.hpp"
 #include "tbox/command_line.hpp"
 
