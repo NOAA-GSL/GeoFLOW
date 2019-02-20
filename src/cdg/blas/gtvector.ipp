@@ -662,7 +662,7 @@ void  GTVector<T>::range(GSIZET ibeg, GSIZET iend)
 
   if ( bconstdata_ ) return;
 
-  assert(ibeg < iend && ibeg < iend && iend < n_ && "Invalid range specification");
+  assert(ibeg < iend && iend < n_ && "Invalid range specification");
 
   gindex_.beg() = ibeg;
   gindex_.end() = iend;
