@@ -64,18 +64,21 @@ void GGrid::do_typing()
 
   GSIZET *ind=NULLPTR;
   GSIZET  nd=0;
+  GSIZET  nfound;
   for ( GSIZET j=0; j<gelems_.size(); j++ ) itmp[j] = gelems_[j]->elemtype();
 
   itype_.resize(GE_MAX);
   ntype_.resize(GE_MAX);
   ntype_ = 0;
   for ( GSIZET j=0; j<GE_MAX; j++ ) {
-    itmp.contains(static_cast<GElemType>(j),ind,nd);
-    for ( GSIZET i=0; i<nd; i++ ) itype_[j].push_back(ind[i]);
-    ntype_[j] = nd;
+    nfound = itmp.contains(static_cast<GElemType>(j),ind,nd);
+    for ( GSIZET i=0; i<nfound; i++ ) itype_[j].push_back(ind[i]);
+    ntype_[j] = nfound;
   }
   if ( ind != NULLPTR ) delete [] ind;
 
+  // Do sanity check:
+  assert(ntype_.sum() == gelems_.size() && "Element typing failed");
 } // end of method do_typing
 
 
@@ -492,9 +495,9 @@ void GGrid::reg_init()
      xe    = &gelems_[e]->xNodes();
    
      // Restrict global data to local scope:
-     for ( GSIZET j=0; j<nxy; j++ ) {
+     for ( GSIZET j=0; j<dXidX_.size(2); j++ ) {
        faceNormal_[j].range(ifbeg, ifend); // set range for each coord, j
-       for ( GSIZET i=0; i<nxy; i++ )  {
+       for ( GSIZET i=0; i<dXidX_.size(1); i++ )  {
          dXidX_(i,j).range(ibeg, iend);
        }
      }
