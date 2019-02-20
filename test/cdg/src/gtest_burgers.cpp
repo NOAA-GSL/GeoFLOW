@@ -26,9 +26,13 @@
 #include "pdeint/integrator.hpp"
 #include "pdeint/null_observer.hpp"
 #include "tbox/property_tree.hpp"
+#include "tbox/mpixx.hpp"
+#include "tbox/global_manager.hpp"
+#include "tbox/input_manager.hpp"
 
 using namespace geoflow::pdeint;
 using namespace geoflow::tbox;
+using namespace std;
 
 
 template< // default template arg types
@@ -86,20 +90,32 @@ int main(int argc, char **argv)
     typename MyTypes::Time  t  = 0;
     typename MyTypes::Time  dt = 0.1;
 
-    // Read Burgers prop tree; may ovewrite with
+    // Initialize comm & global environment:
+    mpixx::environment env(argc,argv); // init GeoFLOW comm
+    mpixx::communicator world;
+    GlobalManager::initialize(argc,argv); 
+    GlobalManager::startup();
+    comm = world; // need this for solver(s) & grid
+
+
+    // Read main prop tree; may ovewrite with
     // certain command line args:
-    PropertyTree ptree;       // main param file structure
+//  PropertyTree ptree    = InputManager::getInputPropertyTree();       // main param file structure
+    PropertyTree ptree;
     PropertyTree eqptree;     // equation props
     PropertyTree gridptree;   // grid props
     PropertyTree stepptree;   // stepper props
     PropertyTree dissptree;   // dissipation props
     PropertyTree tintptree;   // time integration props
-    ptree.load_file("gburgers.jsn");
+cout << "main: call load_file..." << endl;
+//  ptree.load_file("/home/duane.rosenberg/GeoFLOW/test/cdg/data/gburgers.jsn");
+cout << "main: load_file done." << endl;
 
     // Create other prop trees for various objects:
-    np = ptree.getValue<GINT>("exp_prder");
-    eqptree     = ptree.getPropertyTree("adv_equation_traits");
+    ptree.load_file("input.jsn");
     sgrid       = ptree.getValue<GString>("grid_type");
+    np          = ptree.getValue<GINT>("exp_order");
+    eqptree     = ptree.getPropertyTree("adv_equation_traits");
     gridptree   = ptree.getPropertyTree(sgrid);
     stepptree   = ptree.getPropertyTree("stepper_props");
     dissptree   = ptree.getPropertyTree("dissipation_traits");
@@ -161,16 +177,12 @@ int main(int argc, char **argv)
     GTVector<GString> ssteppers;
     for ( GSIZET j=0; j<GSTEPPER_MAX; j++ ) ssteppers.push_back(sGStepperType[j]);
     GSIZET itype; 
-    assert(ssteppers.contains(stepptree.getValue<GString>("stepping_method"),itype) 
-           && "Invalide stepping method in JSON file");
+    GString stepmthd = stepptree.getValue<GString>("stepping_method");
+    GBOOL  bfound = ssteppers.contains(stepmthd,itype);
+    assert( bfound && "Invalide stepping method in JSON file");
     
     solver_traits.steptype   = static_cast<GStepperType>(itype);
     
-
-    // Initialize comm:
-    GComm::InitComm(&argc, &argv);
-    GINT myrank  = GComm::WorldRank();
-    GINT nprocs  = GComm::WorldSize();
 
     // Set GTPL options:
     GPTLsetoption (GPTLcpu, 1);
@@ -288,7 +300,9 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     GPTLpr_file("timing.txt");
     GPTLfinalize();
 
-    GComm::TermComm();
+//  GComm::TermComm();
+    GlobalManager::shutdown();
+    GlobalManager::finalize();
     if ( grid_ != NULLPTR ) delete grid_;
 
     return(0);
