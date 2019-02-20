@@ -45,7 +45,6 @@ lshapefcn_             (NULLPTR)
   P0_ = spt;
   spt = ptree.getArray<GFTYPE>("delxyz");
   sne = ptree.getArray<int>("num_elems");
-  for ( int j=0; j<sne .size(); j++ ) std::cout << "GGrid: sne [" << j << "]=" << sne[j] << std::endl;
 
 
   GTPoint<GFTYPE> dP(3);
@@ -62,7 +61,6 @@ lshapefcn_             (NULLPTR)
   bdytype[5] = geoflow::str2bdytype(ptree.getValue<GString>("bdy_z_1"));
   }
   global_bdy_types_ = bdytype;
-std::cout << "GGrid:: global_bdy_types_=" << global_bdy_types_ << std::endl;
 
 
   bPeriodic_.resize(3);
@@ -83,7 +81,6 @@ std::cout << "GGrid:: global_bdy_types_=" << global_bdy_types_ << std::endl;
     Lbox_[j] = fabs(P1_[j] - P0_[j]);
     ne_  [j] = sne[j];
   }
-std::cout << "GGrid:: ne_=" << ne_ << std::endl;
 
   lshapefcn_ = new GShapeFcn_linear();
   if ( GDIM == 2 ) {
@@ -182,11 +179,14 @@ void GGridBox::init2d()
   }
   
   // Compute centroids of all hexes ('cubes'):
-  GTPoint<GFTYPE> a(2);
-
+  GTPoint<GFTYPE> a(3);
   ftcentroids_.clear();
-  for ( GSIZET j=0; j<qmesh_.size(); j++ ) { // for each cube
-    for ( GSIZET k=0; k<qmesh_[j].v.size(); k++ ) a += *qmesh_[j].v[k];
+ 
+  a = 0.0;
+  for ( GSIZET j=0; j<qmesh_.size(); j++ ) { // for each quad polygon
+    std::cout << "GGridBox::init2d: qmesh[" << j << "]=" << qmesh_[j] << std::endl;
+    for ( GSIZET k=0; k<qmesh_[j].v.size(); k++ )
+       a += qmesh_[j][k];
     a *= (1.0/static_cast<GFTYPE>(qmesh_[j].v.size()));
     ftcentroids_.push_back(a);
   }
