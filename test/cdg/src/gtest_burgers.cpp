@@ -100,19 +100,20 @@ int main(int argc, char **argv)
 
     // Read main prop tree; may ovewrite with
     // certain command line args:
-//  PropertyTree ptree    = InputManager::getInputPropertyTree();       // main param file structure
+#if 0
+    PropertyTree ptree    = InputManager::getInputPropertyTree();       // main param file structure
+#else
     PropertyTree ptree;
+#endif
     PropertyTree eqptree;     // equation props
     PropertyTree gridptree;   // grid props
     PropertyTree stepptree;   // stepper props
     PropertyTree dissptree;   // dissipation props
     PropertyTree tintptree;   // time integration props
-cout << "main: call load_file..." << endl;
-//  ptree.load_file("/home/duane.rosenberg/GeoFLOW/test/cdg/data/gburgers.jsn");
-cout << "main: load_file done." << endl;
-
     // Create other prop trees for various objects:
+cout << "main: call load_file..." << endl;
     ptree.load_file("input.jsn");
+cout << "main: load_file done." << endl;
     sgrid       = ptree.getValue<GString>("grid_type");
     np          = ptree.getValue<GINT>("exp_order");
     eqptree     = ptree.getPropertyTree("adv_equation_traits");
@@ -126,18 +127,21 @@ cout << "main: load_file done." << endl;
 #if 1
 
     // Parse command line. ':' after char
-    // option indicates that it takes an argument:
-    while ((iopt = getopt(argc, argv, "i:j:k;l:o:p:h")) != -1) {
+    // option indicates that it takes an argument.
+    // Note: -i reserved for InputManager:
+    while ((iopt = getopt(argc, argv, "i:j:k:l:m:p:h")) != -1) {
       switch (iopt) {
-      case 'i': // get # elements in r/x
+      case 'i': // handled by InputManager
+          break;
+      case 'j': // get # elements in r/x
           ne[0] = atoi(optarg);
           gridptree.setArray<GINT>("num_elems",ne);
           break;
-      case 'j': // get # elements in lat/y
+      case 'k': // get # elements in lat/y
           ne[1] = atoi(optarg);
           gridptree.setArray<GINT>("num_elems",ne);
           break;
-      case 'k': // get # elements in long/z
+      case 'm': // get # elements in long/z
           ne[2] = atoi(optarg);
           gridptree.setArray<GINT>("num_elems",ne);
           break;
@@ -151,7 +155,8 @@ cout << "main: load_file done." << endl;
           break;
       case 'h': // help
           std::cout << "usage: " << std::endl <<
-          argv[0] << " [-h] [-i #Elems in r] [-j #Elems in lat]  [-k #Elems in long] [-l refine level] -p expansion order] [-q rad_inner] [-r rad_outer] " << std::endl;
+          argv[0] << " [-h] [-j #Elems in x/r] [-k #Elems in y/lat]  [-m #Elems in z/long] [-l refine level] -p expansion order] " << std::endl;
+          std::cout << "Note: Icos grid only requires refine level to specify number of elements. " << std::endl;
           exit(1); 
           break;
       case ':': // missing option argument
