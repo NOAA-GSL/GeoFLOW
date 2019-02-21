@@ -223,6 +223,7 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     else if ( solver_traits.bpureadv ) nstate = GDIM + 1; // 1-state + GDIM  v-components
     u.resize(nstate);
     ua_.resize(nstate);
+    ub_.resize(nstate);
     for ( GSIZET j=0; j<utmp.size(); j++ ) utmp[j] = new GTVector<GFTYPE>(grid_->size());
     for ( GSIZET j=0; j<u   .size(); j++ ) u   [j] = new GTVector<GFTYPE>(grid_->size());
     for ( GSIZET j=0; j<ua_ .size(); j++ ) ua  [j] = new GTVector<GFTYPE>(grid_->size());
@@ -642,7 +643,7 @@ void init_ggfx(GGrid &grid, GGFX &ggfx)
   // using Morton indices:
   gmorton.setIntegralLen(P0,dX);
   for ( GSIZET i=0; i<gelems->size(); i++ ) {
-    ibeg = (*gelems)[i]->ifbeg(); iend = (*gelems)[i]->ifend();
+    ibeg = (*gelems)[i]->igbeg(); iend = (*gelems)[i]->igend();
     face_ind = &(*gelems)[i]->face_indices();
     glob_indices.range(ibeg, iend); // restrict to this range
     for ( GSIZET j=0; j<xnodes->size(); j++ ) (*xnodes)[j].range(ibeg, iend);
