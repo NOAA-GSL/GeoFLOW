@@ -350,10 +350,11 @@ std::cout << "GGridBox::do_grid2d: cent[" << j << "]=" << cent  << std::endl;
       if ( FUZZYEQ(P1_.x1,cent.x1,eps) ) face_ind = &pelem->edge_indices(1);
       if ( FUZZYEQ(P1_.x2,cent.x2,eps) ) face_ind = &pelem->edge_indices(2);
       if ( FUZZYEQ(P0_.x1,cent.x1,eps) ) face_ind = &pelem->edge_indices(3);
-      // ALso, don't allow indices to be repeated:
+      // For now, we allow corner nodes to be repeated, since
+      // the normal vectors at the corners will depend on 
+      // which edge/face that corner belongs to:
       for ( GSIZET k=0; k<face_ind->size(); k++ ) {
-        if ( !bdy_ind->contains((*face_ind)[k]) )
-          bdy_ind->push_back((*face_ind)[k]); 
+        bdy_ind->push_back((*face_ind)[k]); 
       }
     }
 
@@ -468,8 +469,10 @@ void GGridBox::do_grid3d(GINT irank)
       if ( FUZZYEQ(P0_.x3,cent.x3,eps) ) face_ind = &pelem->edge_indices(4);
       if ( FUZZYEQ(P1_.x3,cent.x3,eps) ) face_ind = &pelem->edge_indices(5);
       face_ind = &pelem->face_indices(0);
+      // For now, we allow corner nodes to be repeated, since
+      // the normal vectors at the corners will depend on 
+      // which edge/face that corner belongs to:
       for ( GSIZET k=0; k<face_ind->size(); k++ ) {
-        if ( !bdy_ind->contains((*face_ind)[k]) )
           bdy_ind->push_back((*face_ind)[k]); 
       }
     }
