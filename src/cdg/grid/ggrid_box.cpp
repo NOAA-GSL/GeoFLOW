@@ -366,7 +366,6 @@ std::cout << "GGridBox::do_grid2d: bdy_ind=" << *bdy_ind << std::endl;
     // application; finer control may be exercised in callback):
     set_global_bdytypes_2d(*pelem);
 
-    GINT nd = static_cast<GINT>(pow(2.0,ndim_));
 
     // Find global global interior and face start & stop indices represented 
     // locally within element:
@@ -376,9 +375,9 @@ std::cout << "GGridBox::do_grid2d: bdy_ind=" << *bdy_ind << std::endl;
     pelem->igbeg() = icurr;      // beginning global index
     pelem->igend() = icurr + pelem->nnodes()-1; // end global index
     pelem->ifbeg() = fcurr;
-    pelem->ifend() = fcurr+nfnodes-nd-1;// end global face index
+    pelem->ifend() = fcurr+nfnodes-1;// end global face index
     icurr += pelem->nnodes();
-    fcurr += nfnodes-nd;
+    fcurr += nfnodes;
   } // end of quad mesh loop
 
   // Can set individual nodes and internal bdy conditions
@@ -482,17 +481,15 @@ void GGridBox::do_grid3d(GINT irank)
     // application; finer control may be exercised in callback):
     set_global_bdytypes_3d(*pelem);
 
-    GINT nd = static_cast<GINT>(pow(2.0,ndim_));
-
     nfnodes = 0;
     for ( GSIZET j=0; j<gelems_[i]->nfaces(); j++ )  // get # face nodes
       nfnodes += gelems_[i]->face_indices(j).size();
     pelem->igbeg() = icurr;      // beginning global index
     pelem->igend() = icurr + pelem->nnodes()-1; // end global index
     pelem->ifbeg() = fcurr;
-    pelem->ifend() = fcurr+nfnodes-nd-1; // end global face index
+    pelem->ifend() = fcurr+nfnodes-1; // end global face index
     icurr += pelem->nnodes();
-    fcurr += nfnodes-nd;
+    fcurr += nfnodes;
   } // end of hex mesh loop
 
   // Can set individual nodes and internal bdy conditions
