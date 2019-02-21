@@ -496,8 +496,10 @@ void GGrid::reg_init()
      xe    = &gelems_[e]->xNodes();
    
      // Restrict global data to local scope:
+     for ( GSIZET j=0; j<faceNormal_.size(); j++ ) {
+       faceNormal_[j].range(ifbeg, ifend); 
+     }
      for ( GSIZET j=0; j<dXidX_.size(2); j++ ) {
-       faceNormal_[j].range(ifbeg, ifend); // set range for each coord, j
        for ( GSIZET i=0; i<dXidX_.size(1); i++ )  {
          dXidX_(i,j).range(ibeg, iend);
        }
