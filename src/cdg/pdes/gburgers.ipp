@@ -324,8 +324,9 @@ void GBurgers<TypePack>::step_exrk(const Time &t, const State &uin, State &ub, c
 template<typename TypePack>
 void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
 {
-//using namespace std::placeholders; // for `_1`
   GString serr = "GBurgers<TypePack>::init: ";
+
+  GBOOL bmultilevel = FALSE;
 
   // Find multistep/multistage time stepping coefficients:
   GMultilevel_coeffs_base<GFTYPE> *tcoeff_obj=NULLPTR; // time deriv coeffs
@@ -376,6 +377,7 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
       acoeffs_ = acoeff_obj->getCoeffs();
       urhstmp_.resize(utmp_.size()-urktmp_.size());
       for ( GSIZET j=0; j<utmp_.size(); j++ ) urhstmp_[j] = utmp_[j];
+      bmultilevel = TRUE;
       break;
     case GSTEPPER_BDFEXT:
       dthist_.resize(MAX(itorder_,inorder_));
@@ -387,6 +389,7 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
       acoeffs_ = acoeff_obj->getCoeffs();
       urhstmp_.resize(utmp_.size()-urktmp_.size());
       for ( GSIZET j=0; j<utmp_.size(); j++ ) urhstmp_[j] = utmp_[j];
+      bmultilevel = TRUE;
       break;
     default:
       assert(FALSE && "Invalid stepper type");
@@ -433,9 +436,12 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
 
   // If doing a multi-step method, instantiate (deep) space for 
   // required time levels for state:
-  u_keep_ .resize(itorder_);
-  for ( auto i=0; i<itorder_-1; i++ ) { // for each time level
-    for ( auto j=0; j<u.size(); j++ ) u_keep_[i][j]->resize(u[j]->size());
+  if ( bmultilevel ) {
+    ukeep_ .resize(itorder_);
+    for ( auto i=0; i<itorder_-1; i++ ) { // for each time level
+      ukeep_[i].resize(u.size());
+      for ( auto j=0; j<u.size(); j++ ) ukeep_[i][j] = new GTVector<GFTYPE>(u[j]->size());
+    }
   }
 
 } // end of method init
@@ -455,12 +461,12 @@ void GBurgers<TypePack>::cycle_keep(State &u)
 
   // Make sure following index map contains the 
   // correct time level information:
-  //   u_keep[0] <--> time level n (most recent)
-  //   u_keep[1] <--> time level n-1
-  //   u_keep[2] <--> time level n-2 ...
-  u_keep_ .resize(itorder_);
-  for ( auto i=itorder_-1; i>=1; i-- ) u_keep_[i] = u_keep_[i+1];
-  u_keep_[0] = u;
+  //   ukeep[0] <--> time level n (most recent)
+  //   ukeep[1] <--> time level n-1
+  //   ukeep[2] <--> time level n-2 ...
+  ukeep_ .resize(itorder_);
+  for ( auto i=itorder_-1; i>=1; i-- ) ukeep_[i] = ukeep_[i+1];
+  ukeep_[0] = u;
 
 } // end of method cycle_keep
 

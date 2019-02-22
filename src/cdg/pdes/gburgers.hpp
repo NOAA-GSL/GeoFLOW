@@ -137,7 +137,7 @@ private:
                             urktmp_;        // helper arrays set from utmp
         GTVector<GTVector<GFTYPE>*>  
                             c_;             // linear velocity if bpureadv = TRUE
-        GTVector<State>     u_keep_;        // state at prev. time levels
+        GTVector<State>     ukeep_;         // state at prev. time levels
         GTVector<GStepperType>
                             valid_types_;   // valid stepping methods supported
         GTVector<GFTYPE>   *nu_   ;         // dissipoation
