@@ -535,7 +535,7 @@ void GHelmholtz::reg_init()
 //**********************************************************************************
 void GHelmholtz::set_Lap_scalar(GTVector<GFTYPE> &p)
 {
-  assert(p.size() >= grid_->ndof() 
+  assert(p.size() == 1 || p.size() >= grid_->ndof() 
        && "Viscosity parameter of insufficient size");
   
   if ( p_ != NULLPTR && bown_p_ ) delete p_;
