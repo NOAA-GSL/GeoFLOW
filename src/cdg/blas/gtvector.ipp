@@ -326,6 +326,7 @@ void GTVector<T>::resize(GSIZET nnew)
     n_ = nnew;
   }
   gindex_(nnew, nnew, ibeg, iend, istride, ipad);
+  gindex_keep_ = gindex_;
 
   #if defined(_G_AUTO_CREATE_DEV)
 //  #pragma acc enter data create( data_[0:n_-1] )
@@ -579,6 +580,7 @@ GTVector<T> &GTVector<T>::operator=(const GTVector<T> &obj)
     n_ = obj.capacity();
     data_ = new T [n_];
     gindex_(n_, n_, 0, n_-1, 1,  0);
+    gindex_keep_ = gindex_;
   }
 
   for ( GLLONG j=0; j<obj.capacity(); j++ ) {
@@ -612,6 +614,7 @@ GTVector<T> &GTVector<T>::operator=(const std::vector<T> &obj)
     n_ = obj.capacity();
     data_ = new T [n_];
     gindex_(n_, n_, 0, n_-1, 1,  0);
+    gindex_keep_ = gindex_;
   }
 
   for ( GLLONG j=0; j<obj.capacity(); j++ ) {
