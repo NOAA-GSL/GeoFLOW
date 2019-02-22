@@ -410,10 +410,6 @@ void GGridIcos::do_grid()
 {
   if ( ndim_ == 2 ) do_grid2d(irank_);
   if ( ndim_ == 3 ) do_grid3d(irank_);
-  do_typing();
-
-  // Inititialized global grid quantities:
-  grid_init();
 
 } // end, method do_grid
 

@@ -263,10 +263,6 @@ void GGridBox::do_grid()
 {
   if ( ndim_ == 2 ) do_grid2d(irank_);
   if ( ndim_ == 3 ) do_grid3d(irank_);
-  do_typing();
-
-  // Inititialized global grid quantities:
-  grid_init();
 
 } // end, method do_grid
 
@@ -340,12 +336,9 @@ std::cout << "GGridBox::do_grid2d: xNodes-" << *xNodes << std::endl;
 
     // With face/edge centroids computed, compute 
     // global boundary nodes:
-std::cout << "GGridBox::do_grid2d: P0_" << P0_  << std::endl;
-std::cout << "GGridBox::do_grid2d: P1_" << P1_  << std::endl;
     GFTYPE eps=100*std::numeric_limits<GFTYPE>::min();
     for ( GSIZET j=0; j<2*ndim_; j++ ) { // cycle over all edges
       cent = pelem->edgeCentroid(j);
-std::cout << "GGridBox::do_grid2d: cent[" << j << "]=" << cent  << std::endl;
       if ( FUZZYEQ(P0_.x2,cent.x2,eps) ) face_ind = &pelem->edge_indices(0);
       if ( FUZZYEQ(P1_.x1,cent.x1,eps) ) face_ind = &pelem->edge_indices(1);
       if ( FUZZYEQ(P1_.x2,cent.x2,eps) ) face_ind = &pelem->edge_indices(2);
@@ -357,8 +350,6 @@ std::cout << "GGridBox::do_grid2d: cent[" << j << "]=" << cent  << std::endl;
         bdy_ind->push_back((*face_ind)[k]); 
       }
     }
-
-std::cout << "GGridBox::do_grid2d: bdy_ind=" << *bdy_ind << std::endl;
 
     gelems_.push_back(pelem);
 

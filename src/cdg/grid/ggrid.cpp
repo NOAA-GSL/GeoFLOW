@@ -82,36 +82,6 @@ void GGrid::do_typing()
 } // end of method do_typing
 
 
-#if 0
-//**********************************************************************************
-//**********************************************************************************
-// METHOD : build
-// DESC   : Do build and return of GGrid object
-// ARGS   : ptree : property tree
-//          gbasis: basis object
-//          comm  : GC_Comm object
-// RETURNS: GGrid object ptr
-//**********************************************************************************
-GGrid *GGrid::build(const geoflow::tbox::PropertyTree& ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis, GC_COMM comm)
-{
-
-  GString gname = ptree.getValue<GString>("grid_name");
-
-  if      ( gname.compare  ("grid_icos") == 0   // 2d or 3d Icos grid
-      ||    gname.compare("grid_sphere") == 0 ) {
-    return new GGridIcos(ptree, gbasis, comm);
-  }
-  else if ( gname.compare("grid_box") == 0 ) { // 2d or 3D Cart grid
-    return new GGridBox(ptree, gbasis, comm);
-  }
-  else {
-    assert(FALSE && "Invalid PropertyTree grid specification");
-  }
-
-} // end, factory method build
-#endif
-
-
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : print
@@ -352,13 +322,16 @@ GFTYPE GGrid::maxlength()
 void GGrid::grid_init()
 {
 
+  do_grid(); // generate element list from derived class
+  do_typing(); // do element-typing check
+
+  // Have elements been set yet?
+  assert(gelems_.size() > 0 && "Elements not set");
+
   // Restrict grid to a single element type:
   assert(ntype_.multiplicity(0) == GE_MAX-1
         && "Only a single element type allowed on grid");
 
-
-  // Have elements been set yet?
-  assert(gelems_.size() > 0 && "Elements not set");
 
   if      ( itype_[GE_2DEMBEDDED].size() > 0 ) gtype_ = GE_2DEMBEDDED;
   else if ( itype_[GE_DEFORMED]  .size() > 0 ) gtype_ = GE_DEFORMED;

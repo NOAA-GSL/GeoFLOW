@@ -24,17 +24,21 @@ GGrid *GGridFactory::build(const geoflow::tbox::PropertyTree& ptree, GTVector<GN
 
   GString gname = ptree.getValue<GString>("grid_name");
 
+  GGrid *grid;
   if      ( gname.compare  ("grid_icos") == 0   // 2d or 3d Icos grid
       ||    gname.compare("grid_sphere") == 0 ) {
-    return new GGridIcos(ptree, gbasis, comm);
+    grid = new GGridIcos(ptree, gbasis, comm);
+    grid->grid_init();
   }
   else if ( gname.compare("grid_box") == 0 ) { // 2d or 3D Cart grid
-    return new GGridBox(ptree, gbasis, comm);
+    grid = new GGridBox(ptree, gbasis, comm);
+    grid->grid_init();
   }
   else {
     assert(FALSE && "Invalid PropertyTree grid specification");
   }
 
+  return grid;
 }
 
 

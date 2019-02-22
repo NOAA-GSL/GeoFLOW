@@ -43,6 +43,7 @@ virtual void                set_bdy_callback(
 virtual void                print(const GString &filename){}          // print grid to file
 
 
+        void                 grid_init();                             // initialize class
         void                 do_typing(); // classify into types
         GElemList           &elems() { return gelems_; }              // get elem list
         GSIZET               nelems() { return gelems_.size(); }      // local num elems
@@ -58,7 +59,6 @@ virtual void                print(const GString &filename){}          // print g
         GSIZET               ndof();                                  // compute total number elem dof
         GSIZET               size() { return ndof(); }
         GSIZET               nsurfdof();                              // compute total number elem surf dof
-        void                 grid_init();                             // initialize class
         GFTYPE               minlength();                             // find min elem length
         GFTYPE               maxlength();                             // find max elem length
         GTVector<GFTYPE>    &minnodedist()                            // find min node distance
