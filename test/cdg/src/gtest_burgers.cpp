@@ -53,8 +53,10 @@ struct EquationTypes {
 };
 
 GGrid *grid_;
+GTVector<GTVector<GFTYPE>*> u_;
 GTVector<GTVector<GFTYPE>*> ua_;
 GTVector<GTVector<GFTYPE>*> ub_;
+GTVector<GTVector<GFTYPE>*> utmp_;
 GTVector<GFTYPE> nu_(3);
 
 void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVector<GTVector<GFTYPE>*> &u);
@@ -171,12 +173,16 @@ cout << "main: load_file done." << endl;
 #endif
 
     // Set solver traits from prop tree:
+    GFTYPE nu_scalar;
     GBurgers<MyTypes>::Traits solver_traits;
     solver_traits.doheat     = eqptree  .getValue<GBOOL>("doheat");
     solver_traits.bpureadv   = eqptree  .getValue<GBOOL>("bpureadv");
     solver_traits.bconserved = eqptree  .getValue<GBOOL>("bconserved");
     solver_traits.itorder    = stepptree.getValue <GINT>("time_deriv_order");
     solver_traits.inorder    = stepptree.getValue <GINT>("extrap_order");
+    nu_scalar                = dissptree.getValue<GFTYPE>("nu");
+    nu_.resize(1); 
+    nu_[0] = nu_scalar; 
     GTVector<GString> ssteppers;
     for ( GSIZET j=0; j<GSTEPPER_MAX; j++ ) ssteppers.push_back(sGStepperType[j]);
     GSIZET itype; 
@@ -204,8 +210,8 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     GPTLstart("gen_grid");
     // Create grid:
     grid_ = GGridFactory::build(gridptree, gbasis, comm);
-    grid_->do_grid();
     GPTLstop("gen_grid");
+
 
     GPTLstart("do_gather_op");
     // Initialize gather/scatter operator:
@@ -215,20 +221,19 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
 
 
     // Create state and tmp space:
-    GTVector<GTVector<GFTYPE>*> utmp(12);
-    GTVector<GTVector<GFTYPE>*> u;
+    utmp_.resize(12);
     
     if      ( solver_traits.doheat   ) nstate = 1;
     else if ( solver_traits.bpureadv ) nstate = GDIM + 1; // 1-state + GDIM  v-components
-    u.resize(nstate);
+    u_.resize(nstate);
     ua_.resize(nstate);
     ub_.resize(nstate);
-    for ( GSIZET j=0; j<utmp.size(); j++ ) utmp[j] = new GTVector<GFTYPE>(grid_->size());
-    for ( GSIZET j=0; j<u   .size(); j++ ) u   [j] = new GTVector<GFTYPE>(grid_->size());
-    for ( GSIZET j=0; j<ua_ .size(); j++ ) ua_ [j] = new GTVector<GFTYPE>(grid_->size());
+    for ( GSIZET j=0; j<utmp_.size(); j++ ) utmp_[j] = new GTVector<GFTYPE>(grid_->size());
+    for ( GSIZET j=0; j<u_   .size(); j++ ) u_   [j] = new GTVector<GFTYPE>(grid_->size());
+    for ( GSIZET j=0; j<ua_  .size(); j++ ) ua_  [j] = new GTVector<GFTYPE>(grid_->size());
 
     // Create observer(s), equations, integrator:
-    std::shared_ptr<EqnImpl> eqn_impl(new EqnImpl(ggfx, *grid_, u, solver_traits, utmp));
+    std::shared_ptr<EqnImpl> eqn_impl(new EqnImpl(ggfx, *grid_, u_, solver_traits, utmp_));
     std::shared_ptr<EqnBase> eqn_base = eqn_impl;
 
     // Set Dirichlet bdy state update function:
@@ -236,6 +241,7 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
                                         GTVector<GTVector<GFTYPE>*> &ub)>  
         fcallback = update_dirichlet; // set tmp function with proper signature for...
     eqn_impl->set_bdy_update_callback(&fcallback);
+    eqn_impl->set_nu(nu_);
 
     // Create the Integrator Implementation
 #if 0
@@ -257,34 +263,41 @@ cout << "main: getting cycle_end..." << endl;
 cout << "main: getting integrator data done." << endl; 
 
     // Initialize state:
-cout << "main: computing analytic solution..." << endl; 
-    compute_analytic(*grid_, t, ptree, u);
-cout << "main: computing analytic done." << endl; 
+cout << "main: Initializing state..." << endl; 
+    compute_analytic(*grid_, t, ptree, u_);
+cout << "main: State initiallized." << endl; 
 
 cout << "main: entering time loop..." << endl; 
     GPTLstart("time_loop");
     for( GSIZET i=0; i<maxSteps; i++ ){
-      eqn_base->step(t,u,ub_,dt);
+      eqn_base->step(t,u_,ub_,dt);
       t += dt;
     }
     GPTLstop("time_loop");
 cout << "main: time-stepping done." << endl; 
 
+
 #if 1
-    // Compute analytic solution, do comparison:
-    GTVector<GFTYPE> lerrnorm(3), gerrnorm(3);
+    // Compute analytic solution, do comparisons:
+    GTVector<GFTYPE> lerrnorm(3), gerrnorm(3), maxerror(3);
+    maxerror = 0.0;
     compute_analytic(*grid_, t, ptree, ua_);
-    for ( GSIZET j=0; j<u.size(); j++ ) {
-      *(utmp[0]) = (*u[j]) - (*ua_[j]);
-       lerrnorm[0]  = utmp[0]->L1norm (); // inf-norm
-       lerrnorm[1]  = utmp[0]->Eucnorm(); // Euclidean-norm
-       lerrnorm[1] *= lerrnorm[1]; 
-       lerrnorm[2]  = grid_->integrate((*utmp[0]),(*utmp[1])) 
-                    / grid_->integrate((*ua_ [j]),(*utmp[1])) ; // L2 error norm 
+cout << "main: ua[0]=" << *ua_[0] << endl;
+cout << "main: u [0]=" << *u_ [0] << endl;
+    for ( GSIZET j=0; j<u_.size(); j++ ) { //local errors
+      *utmp_[0] = *u_[j] - *ua_[j];
+cout << "main: diff[" << j << "]=" << *utmp_[0] << endl;
+       lerrnorm[0]  = utmp_[0]->L1norm (); // inf-norm
+       lerrnorm[1]  = utmp_[0]->Eucnorm(); // Euclidean-norm
+       lerrnorm[1] *= lerrnorm[1]; // square it, so it can be added 
+       gerrnorm[2]  = grid_->integrate(*utmp_[0],*utmp_[1]) /
+                      grid_->integrate(*ua_  [j],*utmp_[1]) ; // Global L2 error norm 
+      // Accumulate to find global errors for this field:
+      GComm::Allreduce(lerrnorm.data()  , gerrnorm.data()  , 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm);
+      GComm::Allreduce(lerrnorm.data()+1, gerrnorm.data()+1, 1, T2GCDatatype<GFTYPE>() , GC_OP_SUM, comm);
+      // now find max errors of each type for each field:
+      for ( GSIZET i=0; i<3; i++ ) maxerror[i] = MAX(maxerror[i],gerrnorm[j]);
     }
-    // Accumulate errors:
-    GComm::Allreduce(lerrnorm.data()  , gerrnorm.data()  , 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm);
-    GComm::Allreduce(lerrnorm.data()+1, gerrnorm.data()+1, 2, T2GCDatatype<GFTYPE>() , GC_OP_SUM, comm);
    
     GSIZET lnelems=grid_->nelems();
     GSIZET gnelems;
@@ -303,7 +316,7 @@ cout << "main: time-stepping done." << endl;
     itst.close();
 
     ios << np  << "  "  << "  " << gnelems << "  "
-        << "  " << gerrnorm[0] << "  " << gerrnorm[1] << "  " << gerrnorm[2]
+        << "  " << maxerror[0] << "  " << maxerror[1] << "  " << maxerror[2]
         << std::endl;
     ios.close();
 
@@ -548,7 +561,7 @@ void compute_pergauss_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
 
     prod = 1.0;
     for ( GSIZET k=0; k<GDIM; k++ ) {
-      wsum     = exp(-xx[k]*xx[k]*si[k]);
+      wsum    = exp(-xx[k]*xx[k]*si[k]);
       n       = 1;
       bContin = TRUE;
       while ( bContin ) {
