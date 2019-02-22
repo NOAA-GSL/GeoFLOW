@@ -215,9 +215,8 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
 
 
     // Create state and tmp space:
-    GTVector<GTVector<GFTYPE>*> utmp(2*GDIM+2);
+    GTVector<GTVector<GFTYPE>*> utmp(12);
     GTVector<GTVector<GFTYPE>*> u;
-    GTVector<GTVector<GFTYPE>*> ua;
     
     if      ( solver_traits.doheat   ) nstate = 1;
     else if ( solver_traits.bpureadv ) nstate = GDIM + 1; // 1-state + GDIM  v-components
@@ -226,7 +225,7 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     ub_.resize(nstate);
     for ( GSIZET j=0; j<utmp.size(); j++ ) utmp[j] = new GTVector<GFTYPE>(grid_->size());
     for ( GSIZET j=0; j<u   .size(); j++ ) u   [j] = new GTVector<GFTYPE>(grid_->size());
-    for ( GSIZET j=0; j<ua_ .size(); j++ ) ua  [j] = new GTVector<GFTYPE>(grid_->size());
+    for ( GSIZET j=0; j<ua_ .size(); j++ ) ua_ [j] = new GTVector<GFTYPE>(grid_->size());
 
     // Create observer(s), equations, integrator:
     std::shared_ptr<EqnImpl> eqn_impl(new EqnImpl(ggfx, *grid_, u, solver_traits, utmp));
@@ -251,20 +250,28 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     std::shared_ptr<ObsBase> obs_base =  NULLPTR; //obs_impl;
 
 //  std::shared_ptr<IntImpl> int_impl(new IntImpl(eqn_base,obs_base,int_traits));
+cout << "main: getting dt..." << endl; 
     dt       = tintptree.getValue<GFTYPE>("dt"); 
+cout << "main: getting cycle_end..." << endl; 
     maxSteps = tintptree.getValue<GSIZET>("cycle_end");
+cout << "main: getting integrator data done." << endl; 
 
     // Initialize state:
-    compute_analytic(*grid_, t, eqptree, u);
+cout << "main: computing analytic solution..." << endl; 
+    compute_analytic(*grid_, t, ptree, u);
+cout << "main: computing analytic done." << endl; 
 
+cout << "main: entering time loop..." << endl; 
     GPTLstart("time_loop");
     for( GSIZET i=0; i<maxSteps; i++ ){
       eqn_base->step(t,u,ub_,dt);
       t += dt;
     }
     GPTLstop("time_loop");
+cout << "main: time-stepping done." << endl; 
 
 #if 1
+    // Compute analytic solution, do comparison:
     GTVector<GFTYPE> lerrnorm(3), gerrnorm(3);
     compute_analytic(*grid_, t, ptree, ua_);
     for ( GSIZET j=0; j<u.size(); j++ ) {
@@ -624,34 +631,21 @@ void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVecto
 //**********************************************************************************
 void init_ggfx(GGrid &grid, GGFX &ggfx)
 {
-  GSIZET                         ibeg, iend;
   GFTYPE                         delta;
-  GElemList                     *gelems;
   GMorton_KeyGen<GNODEID,GFTYPE> gmorton;
   GTPoint<GFTYPE>                dX, porigin, P0;
   GTVector<GNODEID>              glob_indices;
-  GTVector<GTVector<GINT>>      *face_ind;
   GTVector<GTVector<GFTYPE>>    *xnodes;
 
   delta  = grid.minnodedist().min();
   dX     = 0.5*delta;
-  gelems = &grid.elems();
   xnodes = &grid.xNodes();
-  glob_indices.resize(grid.nsurfdof());
+  glob_indices.resize(grid.ndof());
 
-  // Integralize element boundary nodes 
+  // Integralize *all* internal nodes
   // using Morton indices:
   gmorton.setIntegralLen(P0,dX);
-  for ( GSIZET i=0; i<gelems->size(); i++ ) {
-    ibeg = (*gelems)[i]->igbeg(); iend = (*gelems)[i]->igend();
-    face_ind = &(*gelems)[i]->face_indices();
-    glob_indices.range(ibeg, iend); // restrict to this range
-    for ( GSIZET j=0; j<xnodes->size(); j++ ) (*xnodes)[j].range(ibeg, iend);
-    for ( GSIZET j=0; j<xnodes->size(); j++ ) 
-      gmorton.key(glob_indices, *xnodes, (*face_ind)[j]);
-  }
-  glob_indices.range_reset(); // must reset to full range
-  for ( GSIZET j=0; j<xnodes->size(); j++ ) (*xnodes)[j].range_reset();
+  gmorton.key(glob_indices, *xnodes);
 
   // Initialize gather/scatter operator:
   GBOOL bret = ggfx.Init(glob_indices);
