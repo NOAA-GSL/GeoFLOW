@@ -419,7 +419,7 @@ void GGrid::def_init()
      ibeg  = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
      ifbeg = gelems_[e]->ifbeg(); ifend = gelems_[e]->ifend();
 
-     // Restrict global data to local scope:
+     // Restrict global arrays to local scope:
      for ( GSIZET j=0; j<nxy; j++ ) {
        faceNormal_[j].range(ifbeg, ifend); // set range for each coord, j
        for ( GSIZET i=0; i<nxy; i++ )  {
