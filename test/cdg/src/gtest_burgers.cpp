@@ -551,7 +551,7 @@ void compute_pergauss_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
   u0    = heatptree.getValue<GFTYPE>("u0"); 
 
   for ( GSIZET k=0; k<GDIM; k++ ) {
-    sig[k] = sqrt(sig0*sig0 + 2.0*t*nu_[k]);
+    sig[k] = sqrt(sig0*sig0 + 2.0*t*nu_[0]); // scalar viscosity only
     si [k] = 0.5/(sig[k]*sig[k]);
   }
   ufact = bAdd ? 1.0 : 0.0;
