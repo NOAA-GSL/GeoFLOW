@@ -1,0 +1,5 @@
+1. Apply FUZZYEQ to bdy location in ggrid_icos.cpp
+2. Handle Neumann bdy conditions: can same setup (use of ub) be used?
+3. Merge GComm with tbox
+4. Build more generic driver/main program for and PDE set
+5. Add constraint of field to sphere in embedded grid type case
