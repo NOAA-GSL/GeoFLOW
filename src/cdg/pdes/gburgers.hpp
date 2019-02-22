@@ -103,7 +103,7 @@ protected:
                                       const Time &dt, State &uout);       // Take a step
         GBOOL               has_dt_impl() const {return FALSE;}           // Has dynamic dt?
         void                dt_impl(const Time &t, State &u, Time &dt);   // Get dt
-        void                set_nu(GTVector<GFTYPE> &nu);                 // Set nu
+        void                set_nu(GTVector<GFTYPE> &nu);                 // Set nu/viscosity
         void                apply_bc_impl(const Time &t, State &u, 
                                           const State &ub);               // Apply bdy conditions
 private:
