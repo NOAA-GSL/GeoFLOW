@@ -47,13 +47,13 @@
     "bdy_z_1"   : "GBDY_NONE"
   },
   "dissipation_traits": {
-    "nu"      : 1.0e-02,
+    "nu"      : 1.0e-01,
     "nu_type" : "scalar"
   },
   "time_integration": {
     "time_type" : "cycle",
-    "time_end"  : 1.0,
-    "cycle_end" : 50,
+    "time_end"  : 10.0,
+    "cycle_end" : 500,
     "dt"        : 1.0e-02
   }
 
