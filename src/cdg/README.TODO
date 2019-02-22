@@ -1,5 +1,6 @@
-1. Apply FUZZYEQ to bdy location in ggrid_icos.cpp
+1. Apply FUZZYEQ to bdy location in ggrid_icos.cpp. 
 2. Handle Neumann bdy conditions: can same setup (use of ub) be used?
 3. Merge GComm with tbox
-4. Build more generic driver/main program for and PDE set
+4. Build more generic driver/main program for all time-dep PDE sets
 5. Add constraint of field to sphere in embedded grid type case
+6. Make sure face indices, bdy types are being handled properly in GGridIcos for 3D elems
