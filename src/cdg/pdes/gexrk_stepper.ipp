@@ -79,7 +79,7 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &ub,
   isum = tmp[uin.size()];
   for ( j=0,n=0; j<nstage_; j++ ) {
     for ( i=0; i<uin.size(); i++ )  {
-      K[j][i] = tmp[uin.size()+1+n];
+      K[j][i] = tmp[uin.size()+1+n]; // set K storage from tmp space
       n++;
     }
   }

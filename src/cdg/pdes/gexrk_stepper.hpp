@@ -29,6 +29,15 @@ public:
                            GExRKStepper &operator=(const GExRKStepper &bu) = default;
         void               setOrder(GINT nstage);
 
+        void               step(const Time &t, const State &uin,
+                                State &ub,
+                                const Time &dt, State &tmp,
+                                State &uout);
+
+        void               step(const Time &t, State &uin,
+                                State &ub,
+                                const Time &dt, State &tmp);
+
         void               set_apply_bdy_callback(
                            std::function<void(const Time &t, State &u,
                                          State &ub)> *callback)
@@ -45,11 +54,6 @@ public:
                                           const Time &dt, 
                                           State &dudt)> *callback)
                                           { rhs_callback_ = callback; }          // RHS callback
-
-        void               step(const Time &t, const State &uin,
-                                State &ub,
-                                const Time &dt, State &tmp,
-                                State &uout);
 
 
 private:

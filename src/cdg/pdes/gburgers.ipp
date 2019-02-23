@@ -235,6 +235,34 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const Time &dt
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : step_impl
+// DESC   : Step implementation method entry point
+// ARGS   : t   : time
+//          u   : state
+//          ub  : bdy vector
+//          dt  : time step
+// RETURNS: none.
+//**********************************************************************************
+template<typename TypePack>
+void GBurgers<TypePack>::step_impl(const Time &t, const State &uin, State &ub, const Time &dt)
+{
+
+  switch ( isteptype_ ) {
+    case GSTEPPER_EXRK2:
+    case GSTEPPER_EXRK4:
+      step_exrk(t, uin, ub, dt, uout);
+      break;
+    case GSTEPPER_BDFAB:
+    case GSTEPPER_BDFEXT:
+      step_multistep(t, uin, ub, dt, uout);
+      break;
+  }
+  
+} // end of method step_impl
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : step_impl
 // DESC   : Step implementation method  entry point
 // ARGS   : t   : time
 //          u   : state
@@ -290,7 +318,7 @@ void GBurgers<TypePack>::step_multistep(const Time &t, const State &uin, State &
 // METHOD : step_exrk
 // DESC   : Take a step using Explicit RK method
 // ARGS   : t   : time
-//          uin : input state;; must not be modified
+//          uin : input state; must not be modified
 //          dt  : time step
 //          uout: updated state
 // RETURNS: none.
@@ -305,6 +333,29 @@ void GBurgers<TypePack>::step_exrk(const Time &t, const State &uin, State &ub, c
 
   // GExRK steppers steps entire state over one dt:
   gexrk_->step(t, uin, ub, dt, urktmp_, uout);
+
+} // end of method step_exrk
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : step_exrk
+// DESC   : Take a step using Explicit RK method
+// ARGS   : t   : time
+//          uin : input state; is modified here
+//          dt  : time step
+// RETURNS: none.
+//**********************************************************************************
+template<typename TypePack>
+void GBurgers<TypePack>::step_exrk(const Time &t, State &uin, State &ub, const Time &dt)
+{
+
+  // If non-conservative, compute RHS from:
+  //     du/dt = M^-1 ( -u.Grad u + nu nabla u ):
+  // for each u
+
+  // GExRK steppers steps entire state over one dt:
+  gexrk_->step(t, uin, ub, dt, urktmp_);
 
 } // end of method step_exrk
 
