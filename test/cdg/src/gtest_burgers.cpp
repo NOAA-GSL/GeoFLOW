@@ -243,15 +243,7 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     eqn_impl->set_bdy_update_callback(&fcallback);
     eqn_impl->set_nu(nu_);
 
-    // Create the Integrator Implementation
-#if 0
-    IntImpl::Traits int_traits;
-    int_traits.cfl_min = 0;
-    int_traits.cfl_max = 9999;
-    int_traits.dt_min  = 0;
-    int_traits.dt_max  = 9999;
-#endif
-
+    // Create the observers: 
     std::shared_ptr<ObsImpl> obs_impl(new ObsImpl());
     std::shared_ptr<ObsBase> obs_base =  NULLPTR; //obs_impl;
 
