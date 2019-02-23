@@ -101,7 +101,7 @@ protected:
         void                step_impl(const Time &t, State &uin, State &ub, 
                                       const Time &dt);                    // Take a step
         void                step_impl(const Time &t, const State &uin, State &ub,
-                                      const Time &dt, State &uout);       // Take a step
+                                      const Time &dt, State &uout){};     // Take a step
         GBOOL               has_dt_impl() const {return FALSE;}           // Has dynamic dt?
         void                dt_impl(const Time &t, State &u, Time &dt);   // Get dt
         void                apply_bc_impl(const Time &t, State &u, 
@@ -110,12 +110,12 @@ private:
 
         void                init(State &u, GBurgers::Traits &);           // initialize 
         GINT                req_tmp_size();                               // required tmp size
-        void                step_exrk  (const Time &t, const State &uin, State &ub,
-                                        const Time &dt, State &uout);
         void                dudt_impl  (const Time &t, const State &u,
                                         const Time &dt, Derivative &dudt);
-        void                step_multistep(const Time &t, const State &uin, State &ub,
-                                           const Time &dt, State &uout);
+        void                step_exrk  (const Time &t, State &uin, State &ub,
+                                        const Time &dt);
+        void                step_multistep(const Time &t, State &uin, State &ub,
+                                           const Time &dt);
         void                cycle_keep(State &u);
        
 
@@ -131,6 +131,8 @@ private:
         GTVector<GFTYPE>    dthist_;        // coeffs for NL adv term
         GTVector<GTVector<GFTYPE>*>  
                             utmp_;
+        GTVector<GTVector<GFTYPE>*>  
+                            uold_;          // helper arrays set from utmp
         GTVector<GTVector<GFTYPE>*>  
                             urhstmp_;       // helper arrays set from utmp
         GTVector<GTVector<GFTYPE>*>  

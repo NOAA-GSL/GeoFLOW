@@ -243,46 +243,18 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const Time &dt
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GBurgers<TypePack>::step_impl(const Time &t, const State &uin, State &ub, const Time &dt)
+void GBurgers<TypePack>::step_impl(const Time &t, State &uin, State &ub, const Time &dt)
 {
 
+  for ( GSIZET j=0; j<uin.size(); j++ ) *uold_[j] = *uin[j];
   switch ( isteptype_ ) {
     case GSTEPPER_EXRK2:
     case GSTEPPER_EXRK4:
-      step_exrk(t, uin, ub, dt, uout);
+      step_exrk(t, uold_, ub, dt, uin);
       break;
     case GSTEPPER_BDFAB:
     case GSTEPPER_BDFEXT:
-      step_multistep(t, uin, ub, dt, uout);
-      break;
-  }
-  
-} // end of method step_impl
-
-
-//**********************************************************************************
-//**********************************************************************************
-// METHOD : step_impl
-// DESC   : Step implementation method  entry point
-// ARGS   : t   : time
-//          u   : state
-//          ub  : bdy vector
-//          dt  : time step
-//          uout: updated state
-// RETURNS: none.
-//**********************************************************************************
-template<typename TypePack>
-void GBurgers<TypePack>::step_impl(const Time &t, const State &uin, State &ub, const Time &dt, State &uout)
-{
-
-  switch ( isteptype_ ) {
-    case GSTEPPER_EXRK2:
-    case GSTEPPER_EXRK4:
-      step_exrk(t, uin, ub, dt, uout);
-      break;
-    case GSTEPPER_BDFAB:
-    case GSTEPPER_BDFEXT:
-      step_multistep(t, uin, ub, dt, uout);
+      step_multistep(t, uold_, ub, dt, uin);
       break;
   }
   
@@ -301,11 +273,10 @@ void GBurgers<TypePack>::step_impl(const Time &t, const State &uin, State &ub, c
 //          u   : state
 //          ub  : bdy vector
 //          dt  : time step
-//          uout: updated state
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GBurgers<TypePack>::step_multistep(const Time &t, const State &uin, State &ub, const Time &dt, State &uout)
+void GBurgers<TypePack>::step_multistep(const Time &t, State &uin, State &ub, const Time &dt)
 {
   assert(FALSE && "Multistep methods not yet available");
 
@@ -324,29 +295,6 @@ void GBurgers<TypePack>::step_multistep(const Time &t, const State &uin, State &
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GBurgers<TypePack>::step_exrk(const Time &t, const State &uin, State &ub, const Time &dt, State &uout)
-{
-
-  // If non-conservative, compute RHS from:
-  //     du/dt = M^-1 ( -u.Grad u + nu nabla u ):
-  // for each u
-
-  // GExRK steppers steps entire state over one dt:
-  gexrk_->step(t, uin, ub, dt, urktmp_, uout);
-
-} // end of method step_exrk
-
-
-//**********************************************************************************
-//**********************************************************************************
-// METHOD : step_exrk
-// DESC   : Take a step using Explicit RK method
-// ARGS   : t   : time
-//          uin : input state; is modified here
-//          dt  : time step
-// RETURNS: none.
-//**********************************************************************************
-template<typename TypePack>
 void GBurgers<TypePack>::step_exrk(const Time &t, State &uin, State &ub, const Time &dt)
 {
 
@@ -355,7 +303,7 @@ void GBurgers<TypePack>::step_exrk(const Time &t, State &uin, State &ub, const T
   // for each u
 
   // GExRK steppers steps entire state over one dt:
-  gexrk_->step(t, uin, ub, dt, urktmp_);
+  gexrk_->step(t, uin, ub, dt, urktmp_, uout);
 
 } // end of method step_exrk
 
@@ -377,7 +325,8 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
 {
   GString serr = "GBurgers<TypePack>::init: ";
 
-  GBOOL bmultilevel = FALSE;
+  GBOOL  bmultilevel = FALSE;
+  GSIZET nstate = uin.size();
 
   // Find multistep/multistage time stepping coefficients:
   GMultilevel_coeffs_base<GFTYPE> *tcoeff_obj=NULLPTR; // time deriv coeffs
@@ -413,10 +362,12 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
       gexrk_->set_update_bdy_callback(&updatebc);
       gexrk_->set_apply_bdy_callback(&applybc);
       // Set 'helper' tmp arrays from main one, utmp_:
-      urktmp_ .resize(u.size()*(itorder_+1)+1);
-      urhstmp_.resize(utmp_.size()-urktmp_.size());
-      for ( GSIZET j=0; j<urktmp_ .size(); j++ ) urktmp_ [j] = utmp_[j];
-      for ( GSIZET j=0; j<urhstmp_.size(); j++ ) urhstmp_[j] = utmp_[urktmp_.size()+j];
+      uold_   .resize(nstate); // solution at time level n
+      urktmp_ .resize(nstate*(itorder_+1)+1); // RK stepping work space
+      urhstmp_.resize(nstate-urktmp_.size()); // RK RHS work space
+      for ( GSIZET j=0; j<nstate; j++ ) uold_[j] = utmp_[j];
+      for ( GSIZET j=0; j<urktmp_ .size(); j++ ) urktmp_ [j] = utmp_[nstate+j];
+      for ( GSIZET j=0; j<urhstmp_.size(); j++ ) urhstmp_[j] = utmp_[nstate+urktmp_.size()+j];
       break;
     case GSTEPPER_BDFAB:
       dthist_.resize(MAX(itorder_,inorder_));
@@ -426,8 +377,8 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
       acoeffs_.resize(acoeff_obj->getCoeffs().size());
       tcoeffs_ = tcoeff_obj->getCoeffs(); 
       acoeffs_ = acoeff_obj->getCoeffs();
-      urhstmp_.resize(utmp_.size()-urktmp_.size());
-      for ( GSIZET j=0; j<utmp_.size(); j++ ) urhstmp_[j] = utmp_[j];
+      uold_   .resize(nstate); // solution at time level n
+      for ( GSIZET j=0; j<nstate; j++ ) uold_[j] = utmp_[j];
       bmultilevel = TRUE;
       break;
     case GSTEPPER_BDFEXT:
