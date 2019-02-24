@@ -11,9 +11,9 @@ cmake_minimum_required(VERSION 2.8)
 #   > cmake -DCMAKE_C_COMPILER=pgcc 
 # etc..  These 'sets' must be done before 'project'
 # is specified:
- set(CMAKE_C_COMPILER       mpicc)
- set(CMAKE_CXX_COMPILER     mpicxx)
- set(CMAKE_Fortran_COMPILER mpifort)
+ set(CMAKE_C_COMPILER       mpiicc)
+ set(CMAKE_CXX_COMPILER     mpiicpc)
+ set(CMAKE_Fortran_COMPILER mpiifort)
 
 # Following may be used to instrument entire code
 # using TAU:
@@ -82,28 +82,29 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/gcomp_options.cmake)
 # Define libs/paths to link to (used based on target);
 # may be changed in glocale.cmake:
 set(MPI_PATH 
-    /scratch/duane.rosenberg/lib/mpich-3.2_gcc
+#   /scratch/duane.rosenberg/lib/mpich-3.2_gcc
    )
 
 # GPTL path; may be changed in glocale.cmake:
 set(GPTL_PATH 
-    /home/duane.rosenberg/lib/gptl-v5.5_gcc
+#   /home/duane.rosenberg/lib/gptl-v5.5_gcc
 #   /home/Duane.Rosenberg/lib/gptl-v5.4.4_pgi_openmpi
-#   /home/Duane.Rosenberg/lib/gptl-v5.4.4_intel_impi_theia
+    /home/Duane.Rosenberg/lib/gptl-v5.4.4_intel_impi_theia
    )
 
 # BOOST path; may be changed in glocale.cmake:
-set(BOOST_PATH 
-    /scratch/duane.rosenberg/lib/boost_1_69_0_gcc
+set(BOOST_ROOT 
+#   /scratch/duane.rosenberg/lib/boost_1_69_0_gcc
+    /scratch3/BMC/gsd-hpcs/bflynt/opt/boost/boost_1_66_0
    )
 
 set(CDG_COMMON_LIBS  
     ${GPTL_PATH}/lib/libgptl.a
-    ${BOOST_PATH}/lib/libboost_chrono.a
-    ${BOOST_PATH}/lib/libboost_mpi.a
-    ${BOOST_PATH}/lib/libboost_serialization.a
-    ${BOOST_PATH}/lib/libboost_wserialization.a
-    ${BOOST_PATH}/lib/libboost_system.a
+    ${BOOST_ROOT}/lib/libboost_chrono.a
+    ${BOOST_ROOT}/lib/libboost_mpi.a
+    ${BOOST_ROOT}/lib/libboost_serialization.a
+    ${BOOST_ROOT}/lib/libboost_wserialization.a
+    ${BOOST_ROOT}/lib/libboost_system.a
    )
 
 if (HAVE_PAPI)
@@ -115,7 +116,7 @@ endif()
 
 set(CDG_COMMON_INC ${CDG_COMMON_INC}
     ${GPTL_PATH}/include
-    ${BOOST_PATH}/include
+    ${BOOST_ROOT}
    )
 
 if (USE_MPI)
