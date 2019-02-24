@@ -113,7 +113,7 @@ private:
         void                dudt_impl  (const Time &t, const State &u,
                                         const Time &dt, Derivative &dudt);
         void                step_exrk  (const Time &t, State &uin, State &ub,
-                                        const Time &dt);
+                                        const Time &dt, State &uout);
         void                step_multistep(const Time &t, State &uin, State &ub,
                                            const Time &dt);
         void                cycle_keep(State &u);
