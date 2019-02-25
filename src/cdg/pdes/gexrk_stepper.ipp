@@ -89,7 +89,8 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &ub,
    *u   [j] = *uin[j]; // deep copy
    *uout[j] = *uin[j];
   }
-  
+ 
+#if 0 
   tt = t+(*alpha)[0]*dt;
   if ( bupdatebc_ ) bdy_update_callback_(tt, u, ub); 
   if ( bapplybc_  ) bdy_apply_callback_ (tt, u, ub); 
@@ -124,7 +125,15 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &ub,
    for ( n=0; n<nstate; n++ ) { // for each state member, u
     *uout[n] += (*K_[0][n])*( (*c)[i]*dt ); // += dt * c_M * k_M
    }
-
+#else 
+  rhs_callback_(tt, u, dt, K_[0]); 
+   for ( n=0; n<nstate; n++ ) { // for each state member, u
+std::cout << " RHS[" << n << "]=" << *K_[0][n] << std::endl;
+    *uout[n] = (*uin[n]) + (*K_[0][n]) * dt; // Euler step
+    if ( ggfx_ != NULLPTR ) ggfx_->doOp(*uout[n], GGFX_OP_SMOOTH);
+   }
+  
+#endif
 } // end of method step (1)
 
 

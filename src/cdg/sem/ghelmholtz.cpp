@@ -24,6 +24,7 @@
 #include "gtmatrix.hpp"
 #include "gmtk.hpp"
 
+using namespace std;
 
 //**********************************************************************************
 //**********************************************************************************
@@ -231,6 +232,7 @@ void GHelmholtz::embed_prod(GTVector<GFTYPE> &u, GTVector<GFTYPE> &uo)
   // Now compute DT^j ( t^j ):
   GMTK::compute_grefdiv(*grid_, gdu, etmp1_, TRUE, uo); // Compute 'divergence' with DT_j
 
+
   // At this point, we have uo = L u
  
   // Apply p parameter ('viscosity') if necessary to Laplacian:
@@ -284,16 +286,20 @@ void GHelmholtz::reg_prod(GTVector<GFTYPE> &u, GTVector<GFTYPE> &uo)
   // M is mass matrix, and p, and q are Laplacian and Mass factors.
 
   // Re-arrange local temp space for divergence:
-  for ( GSIZET i=0; i<GDIM; i++ ) gdu[i] = utmp_[i+GDIM];
+  for ( GSIZET i=0; i<GDIM; i++ ) gdu[i] = utmp_[i];
 
   // Compute weighted deriviatives of u:
   GMTK::compute_grefderivsW(*grid_, u, etmp1_, FALSE, utmp_); // utmp stores tensor-prod derivatives
+cout << "GHelm::reg_prod: Dx u = " << *utmp_[0]  << endl;
+cout << "GHelm::reg_prod: Dy u = " << *utmp_[1]  << endl;
 
   // Multiply by (const) metric factors
   for ( GSIZET k=0; k<GDIM; k++ ) *utmp_[k] *= (*G_(k,0))[k];
 
   // Take 'divergence' with transpose(D):
   GMTK::compute_grefdiv(*grid_, gdu, etmp1_, TRUE, uo); // Compute 'divergence' with DT_j
+
+cout << "GHelm::reg_prod: Div u = " << uo << endl;
 
   // Apply p parameter ('viscosity') if necessary to Laplacian:
   if ( p_ != NULLPTR ) {

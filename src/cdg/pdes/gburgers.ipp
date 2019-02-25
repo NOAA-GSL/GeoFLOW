@@ -32,7 +32,7 @@
 #include "gbdf.hpp"
 #include "gexrk_stepper.hpp"
 
-
+using namespace std;
 
 //**********************************************************************************
 //**********************************************************************************
@@ -201,6 +201,7 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const Time &dt
   if ( doheat_ ) {
     for ( auto k=0; k<u.size(); k++ ) {
       ghelm_->opVec_prod(*u[k],*urhstmp_[0]); // apply diffusion
+      *urhstmp_[0] *= -1.0; // Lap op  is neg on RHS
       gimass_->opVec_prod(*urhstmp_[0],*dudt[k]); // apply M^-1
     }
     return;
@@ -219,14 +220,16 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const Time &dt
     for ( auto j=0; j<u.size()-1; j++ ) c_[j] = u[j+1];
     gadvect_->apply(*u[0], c_, utmp_, *dudt[0]); // apply advection
     ghelm_->opVec_prod(*u[0],*utmp_[0]); // apply diffusion
-    *utmp_[0] -= *dudt[0];
-    gimass_->opVec_prod(*urhstmp_[0],*dudt[0]); // apply M^-1
+    *utmp_[0] *= -1.0; // Lap op is negative on RHS
+    *utmp_[0] -= *dudt[0]; // subtract advection term
+    gimass_->opVec_prod(*utmp_[0],*dudt[0]); // apply M^-1
   }
   else {             // nonlinear advection
     for ( auto k=0; k<u.size(); k++ ) {
       gadvect_->apply(*u[k], u, urhstmp_, *dudt[k]);
       ghelm_->opVec_prod(*u[k],*urhstmp_[0]); // apply diffusion
-      *urhstmp_[0] += *dudt[k];
+      *utmp_[0] *= -1.0; // is negative on RHS
+      *urhstmp_[0] += *dudt[k]; // subtract nonlinear term
       gimass_->opVec_prod(*urhstmp_[0],*dudt[k]); // apply M^-1
     }
   }
@@ -358,6 +361,7 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
       if ( bupdatebc_ ) 
       gexrk_->set_update_bdy_callback(update_bdy_callback_);
       gexrk_->set_apply_bdy_callback(applybc);
+      gexrk_->set_ggfx(ggfx_);
       // Set 'helper' tmp arrays from main one, utmp_:
       uold_   .resize(nstate); // solution at time level n
       urktmp_ .resize(nstate*(itorder_+1)+1); // RK stepping work space
