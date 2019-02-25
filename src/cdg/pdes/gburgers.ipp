@@ -72,7 +72,8 @@ gpdv_                 (NULLPTR),
 //gflux_                (NULLPTR),
 gbc_                  (NULLPTR),
 grid_                   (&grid),
-ggfx_                   (&ggfx)
+ggfx_                   (&ggfx),
+update_bdy_callback_  (NULLPTR)
 {
   static_assert(std::is_same<State,GTVector<GTVector<GFTYPE>*>>::value,
                 "State is of incorrect type"); 
@@ -303,7 +304,7 @@ void GBurgers<TypePack>::step_exrk(const Time &t, State &uin, State &ub, const T
   // for each u
 
   // GExRK steppers steps entire state over one dt:
-  gexrk_->step(t, uin, ub, dt, uout);
+  gexrk_->step(t, uin, ub, dt, urktmp_, uout);
 
 } // end of method step_exrk
 
@@ -340,12 +341,17 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
                      const Time &dt,
                      State &dudt){dudt_impl(t, uin, dt, dudt);}; 
 
+#if 0
   std::function<void(const Time &t,                    // Bdy update callback function
                      State  &uin, 
-                     State &ub)> updatebc 
-                  = [this](const Time &t,            
-                     State  &uin, 
-                     State &ub){(*update_bdy_callback_)(t, uin, ub);}; 
+                     State &ub)> *updatebc = NULLPTR; 
+    
+  if ( update_bdy_callback_ != NULLPTR ) {     
+    *updatebc  = [this](const Time &t,            
+                 State  &uin, 
+                 State &ub){(*update_bdy_callback_)(t, uin, ub);}; 
+  }
+#endif
 
   std::function<void(const Time &t,                    // Bdy apply callback function
                      State  &uin, 
@@ -359,12 +365,12 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
     case GSTEPPER_EXRK4:
       gexrk_ = new GExRKStepper<GFTYPE>(itorder_);
       gexrk_->setRHSfunction(&rhs);
-      gexrk_->set_update_bdy_callback(&updatebc);
+      gexrk_->set_update_bdy_callback(update_bdy_callback_);
       gexrk_->set_apply_bdy_callback(&applybc);
       // Set 'helper' tmp arrays from main one, utmp_:
       uold_   .resize(nstate); // solution at time level n
       urktmp_ .resize(nstate*(itorder_+1)+1); // RK stepping work space
-      urhstmp_.resize(nstate-urktmp_.size()); // RK RHS work space
+      urhstmp_.resize(utmp_.size()-uold_.size()-urktmp_.size()); // RK RHS work space
       for ( GSIZET j=0; j<nstate; j++ ) uold_[j] = utmp_[j];
       for ( GSIZET j=0; j<urktmp_ .size(); j++ ) urktmp_ [j] = utmp_[nstate+j];
       for ( GSIZET j=0; j<urhstmp_.size(); j++ ) urhstmp_[j] = utmp_[nstate+urktmp_.size()+j];

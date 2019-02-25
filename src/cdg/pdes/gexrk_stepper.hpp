@@ -38,15 +38,15 @@ public:
                                 State &ub,
                                 const Time &dt, State &tmp);
 
+        void               set_update_bdy_callback(
+                           std::function<void(const Time &t, State &u,
+                                         GTVector<GTVector<T>*> &ub)> *callback)
+                                         { bdy_update_callback_ =  callback; }   // set bdy-update callback
         void               set_apply_bdy_callback(
                            std::function<void(const Time &t, State &u,
                                          State &ub)> *callback)
                                          { bdy_apply_callback_ = callback; }   // set bdy-application callback
 
-        void               set_update_bdy_callback(
-                           std::function<void(const Time &t, State &u,
-                                         GTVector<GTVector<T>*> &ub)> *callback)
-                                         { bdy_update_callback_ = callback; }   // set bdy-update callback
 
         void               setRHSfunction(std::function<void(
                                           const Time &t, 
@@ -57,9 +57,13 @@ public:
 
 
 private:
+// Private methods:
+        void               resize(GINT nstate);              // resize member data 
+
 // Private data:
         GINT               nstage_;                          // no stages (not nec. 'order'!)
         GButcherRK<T>      butcher_;                         // Butcher tableau
+        GTVector<State>    K_;                               // RK stage update vectors
         std::function<void(const Time &t,                    // RHS callback function
                            const State  &uin,
                            const Time &dt, 

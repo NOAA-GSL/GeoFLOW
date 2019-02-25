@@ -38,7 +38,7 @@ GExRKStepper<T>::~GExRKStepper()
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD     : step
+// METHOD     : step (1)
 // DESCRIPTION: Computes one RK step at specified timestep. Note: callback 
 //              to RHS-computation function must be set prior to entry.
 //
@@ -63,28 +63,29 @@ template<typename T>
 void GExRKStepper<T>::step(const Time &t, const State &uin, State &ub,  
                            const Time &dt, State &tmp, State &uout)
 {
-  assert(rhs_callback_ != NULLPTR  && "RHS callback not set");
+  assert(rhs_callback_ != NULLPTR  && "(1): RHS callback not set");
 
-  GSIZET       i, j, n;
+  GSIZET       i, j, n, nstate=uin.size();
   GFTYPE       tt;
   GTVector<T> *isum  ;
   GTVector<T> *alpha = &butcher_.alpha();
   GTMatrix<T> *beta  = &butcher_.beta ();
   GTVector<T> *c     = &butcher_.c    ();
   
-  GTVector<State> K(nstage_); // K for each stage (& all state members)
-  State u(uin.size());   // tmp pointers of full state size
+  State u(nstate);   // tmp pointers of full state size
+
+  resize(nstate);    // check if we need to resize K_
 
   // Set temp space:
-  isum = tmp[uin.size()];
+  isum = tmp[nstate];
   for ( j=0,n=0; j<nstage_; j++ ) {
-    for ( i=0; i<uin.size(); i++ )  {
-      K[j][i] = tmp[uin.size()+1+n]; // set K storage from tmp space
+    for ( i=0; i<nstate; i++ )  {
+      K_[j][i] = tmp[nstate+1+n]; // set K storage from tmp space
       n++;
     }
   }
-  for ( j=0; j<uin.size(); j++ ) {
-    u   [j] = tmp[j];
+  for ( j=0; j<nstate; j++ ) {
+    u   [j] =  tmp[j];
    *u   [j] = *uin[j]; // deep copy
    *uout[j] = *uin[j];
   }
@@ -92,42 +93,44 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &ub,
   tt = t+(*alpha)[0]*dt;
   if ( bdy_update_callback_ != NULLPTR ) (*bdy_update_callback_)(tt, u, ub); 
   if ( bdy_apply_callback_  != NULLPTR ) (*bdy_apply_callback_ )(tt, u, ub); 
-  (*rhs_callback_)( tt, u, dt, K[0]); // k_1 at stage 1
+  (*rhs_callback_)( tt, u, dt, K_[0]); // k_1 at stage 1
 
   for ( i=1; i<nstage_-1; i++ ) { // cycle thru remaining stages minus 1
     // Compute k_m:
     // k_m = RHS( t^n + alpha_m * dt, u^n + dt Sum_j=1^M-1 beta_mj k_j ),
     tt = t+(*alpha)[i]*dt;
-    for ( n=0; n<uin.size(); n++ ) { // for each state member, u
-      for ( j=0,*isum=0.0; j<i; j++ ) *isum += (*K[j][n]) * ( (*beta)(i,j)*dt );
+    for ( n=0; n<nstate; n++ ) { // for each state member, u
+      for ( j=0,*isum=0.0; j<i; j++ ) *isum += (*K_[j][n]) * ( (*beta)(i,j)*dt );
      *u[n]  = (*uin[n]) + (*isum);
     }
     if ( bdy_update_callback_ != NULLPTR ) (*bdy_update_callback_)(tt, u, ub); 
     if ( bdy_apply_callback_  != NULLPTR ) (*bdy_apply_callback_ )(tt, u, ub); 
-    (*rhs_callback_)( tt, u, dt, K[i]); // k_i at stage i
-    *uout[n] += (*K[i][n])*( (*c)[i]*dt ); // += dt * c_i * k_i
+    (*rhs_callback_)( tt, u, dt, K_[i]); // k_i at stage i
+    for ( n=0; n<nstate; n++ ) { // for each state member, u
+      *uout[n] += (*K_[i][n])*( (*c)[i]*dt ); // += dt * c_i * k_i
+    }
    }
 
    // Do contrib from final stage, M:
-   for ( n=0; n<uin.size(); n++ ) { // for each state member, u
-     for ( j=0,*isum=0.0; j<nstage_-1; j++ ) *isum += (*K[j][n]) * ( (*beta)(nstage_-1,j)*dt );
+   for ( n=0; n<nstate; n++ ) { // for each state member, u
+     for ( j=0,*isum=0.0; j<nstage_-1; j++ ) *isum += (*K_[j][n]) * ( (*beta)(nstage_-1,j)*dt );
      *u[n] = (*uin[n]) + (*isum);
    }
    tt = t+(*alpha)[nstage_-1]*dt;
    if ( bdy_update_callback_ != NULLPTR ) (*bdy_update_callback_)(tt, u, ub); 
    if ( bdy_apply_callback_  != NULLPTR ) (*bdy_apply_callback_ )(tt, u, ub); 
-   (*rhs_callback_)( tt, u, dt, K[0]); // k_M at stage M
+   (*rhs_callback_)( tt, u, dt, K_[0]); // k_M at stage M
 
-   for ( n=0; n<uin.size(); n++ ) { // for each state member, u
-    *uout[n] += (*K[0][n])*( (*c)[i]*dt ); // += dt * c_M * k_M
+   for ( n=0; n<nstate; n++ ) { // for each state member, u
+    *uout[n] += (*K_[0][n])*( (*c)[i]*dt ); // += dt * c_M * k_M
    }
 
-} // end of method step
+} // end of method step (1)
 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD     : step
+// METHOD     : step (2)
 // DESCRIPTION: Computes one RK step at specified timestep. Note: callback 
 //              to RHS-computation function must be set prior to entry.
 //              The input state is overwritten.
@@ -152,7 +155,7 @@ template<typename T>
 void GExRKStepper<T>::step(const Time &t, State &uin, State &ub,  
                            const Time &dt, State &tmp)
 {
-  assert(rhs_callback_ != NULLPTR  && "RHS callback not set");
+  assert(rhs_callback_ != NULLPTR  && "(2) RHS callback not set");
 
   GSIZET       i, j, n, nstate=uin.size();
   GFTYPE       tt;
@@ -161,20 +164,21 @@ void GExRKStepper<T>::step(const Time &t, State &uin, State &ub,
   GTMatrix<T> *beta  = &butcher_.beta ();
   GTVector<T> *c     = &butcher_.c    ();
   
-  GTVector<State> K(nstage_); // K for each stage (& all state members)
-  State u(uin.size());        // tmp pointers of full state size
-  State uout(uin.size());     // tmp pointers of full output state size
+  State u(nstate);        // tmp pointers of full state size
+  State uout(nstate);     // tmp pointers of full output state size
+
+  resize(nstate);         // check if we need to resize K_
 
   // Set temp space: 
   //  size(tmp) = [nstate, nstate, 1, nstate*nstate]:
   isum = tmp[2*nstate];
   for ( j=0,n=0; j<nstage_; j++ ) {
-    for ( i=0; i<uin.size(); i++ )  {
-      K[j][i] = tmp[2*nstate+1+n]; // set K storage from tmp space
+    for ( i=0; i<nstate; i++ )  {
+      K_[j][i] = tmp[2*nstate+1+n]; // set K storage from tmp space
       n++;
     }
   }
-  for ( j=0; j<uin.size(); j++ ) {
+  for ( j=0; j<nstate; j++ ) {
     u   [j] = tmp[j];
    *u   [j] = *uin[j]; // deep copy
     uout[j] = tmp[nstate+j];
@@ -184,41 +188,62 @@ void GExRKStepper<T>::step(const Time &t, State &uin, State &ub,
   tt = t+(*alpha)[0]*dt;
   if ( bdy_update_callback_ != NULLPTR ) (*bdy_update_callback_)(tt, u, ub); 
   if ( bdy_apply_callback_  != NULLPTR ) (*bdy_apply_callback_ )(tt, u, ub); 
-  (*rhs_callback_)( tt, u, dt, K[0]); // k_1 at stage 1
+  (*rhs_callback_)( tt, u, dt, K_[0]); // k_1 at stage 1
 
   for ( i=1; i<nstage_-1; i++ ) { // cycle thru remaining stages minus 1
     // Compute k_m:
     // k_m = RHS( t^n + alpha_m * dt, u^n + dt Sum_j=1^M-1 beta_mj k_j ),
     tt = t+(*alpha)[i]*dt;
-    for ( n=0; n<uin.size(); n++ ) { // for each state member, u
-      for ( j=0,*isum=0.0; j<i; j++ ) *isum += (*K[j][n]) * ( (*beta)(i,j)*dt );
+    for ( n=0; n<nstate; n++ ) { // for each state member, u
+      for ( j=0,*isum=0.0; j<i; j++ ) *isum += (*K_[j][n]) * ( (*beta)(i,j)*dt );
      *u[n]  = (*uin[n]) + (*isum);
     }
     if ( bdy_update_callback_ != NULLPTR ) (*bdy_update_callback_)(tt, u, ub); 
     if ( bdy_apply_callback_  != NULLPTR ) (*bdy_apply_callback_ )(tt, u, ub); 
-    (*rhs_callback_)( tt, u, dt, K[i]); // k_i at stage i
-    *uout[n] += (*K[i][n])*( (*c)[i]*dt ); // += dt * c_i * k_i
+    (*rhs_callback_)( tt, u, dt, K_[i]); // k_i at stage i
+    for ( n=0; n<nstate; n++ ) { // for each state member, u
+      *uout[n] += (*K_[i][n])*( (*c)[i]*dt ); // += dt * c_i * k_i
+    }
    }
 
    // Do contrib from final stage, M:
-   for ( n=0; n<uin.size(); n++ ) { // for each state member, u
-     for ( j=0,*isum=0.0; j<nstage_-1; j++ ) *isum += (*K[j][n]) * ( (*beta)(nstage_-1,j)*dt );
+   for ( n=0; n<nstate; n++ ) { // for each state member, u
+     for ( j=0,*isum=0.0; j<nstage_-1; j++ ) *isum += (*K_[j][n]) * ( (*beta)(nstage_-1,j)*dt );
      *u[n] = (*uin[n]) + (*isum);
    }
    tt = t+(*alpha)[nstage_-1]*dt;
    if ( bdy_update_callback_ != NULLPTR ) (*bdy_update_callback_)(tt, u, ub); 
    if ( bdy_apply_callback_  != NULLPTR ) (*bdy_apply_callback_ )(tt, u, ub); 
-   (*rhs_callback_)( tt, u, dt, K[0]); // k_M at stage M
+   (*rhs_callback_)( tt, u, dt, K_[0]); // k_M at stage M
 
-   for ( n=0; n<uin.size(); n++ ) { // for each state member, u
-    *uout[n] += (*K[0][n])*( (*c)[i]*dt ); // += dt * c_M * k_M
+   for ( n=0; n<nstate; n++ ) { // for each state member, u
+    *uout[n] += (*K_[0][n])*( (*c)[i]*dt ); // += dt * c_M * k_M
    }
 
   // deep copy tmp space to uin:
-  for ( j=0; j<uin.size(); j++ ) {
+  for ( j=0; j<nstate; j++ ) {
    *uin[j] = *uout[j]; 
   }
 
-} // end of method step
+} // end of method step (2)
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD     : resize
+// DESCRIPTION: Check if need to resize RK member data
+// ARGUMENTS  : nstate : no. state vectors in state
+// RETURNS    : none.
+//**********************************************************************************
+template<typename T>
+void GExRKStepper<T>::resize(GINT nstate)
+{
+  if ( K_.size() == 0 ) K_.resize(nstage_);
+
+  for ( GSIZET j=0; j<K_.size(); j++ ) {
+    if ( K_[j].size() < nstate ) K_[j].resize(nstate);
+  }
+
+} // end of method resize
 
 
