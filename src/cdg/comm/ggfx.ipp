@@ -16,7 +16,7 @@
 
 //************************************************************************************
 //************************************************************************************
-// METHOD : DoOp (1)
+// METHOD : doOp (1)
 // DESC   : Actually carries out the operation, op, on the elements
 //          of field, u, using the intialization from the call to Init.
 // ARGS   : u    : input field whose elements are to be combined. Must
@@ -27,35 +27,35 @@
 //          there is an error in the gather/scatter combination.
 //************************************************************************************
 template<typename T> 
-GBOOL GGFX::DoOp(T *&u, GSIZET nu,  GGFX_OP op)
+GBOOL GGFX::doOp(T *&u, GSIZET nu,  GGFX_OP op)
 {
   assert( std::is_arithmetic<T>::value && "Illegal template type");
 
   GINT      irank;
   GINT      i, j;
   GBOOL     bret=TRUE;
-  GString   serr = "GGFX::DoOp(1): ";
+  GString   serr = "GGFX::doOp(1): ";
 
 #if defined(GGFX_TRACE_OUTPUT)
-  GPP(comm_, serr << "Doing first LocalGS...");
+  GPP(comm_, serr << "Doing first localGS...");
 #endif
   
   // For each global index row in iOpL2LIndices, gather and
   // scatter data locally: get one operation for each of the
   // shared nodes; 
-  bret = LocalGS(u, nu, iOpL2LIndices_, nOpL2LIndices_, op);
+  bret = localGS(u, nu, iOpL2LIndices_, nOpL2LIndices_, op);
   if ( !bret ) {
-    std::cout << serr << "LocalGS (1) failed " << std::endl;
+    std::cout << serr << "localGS (1) failed " << std::endl;
     exit(1);
   }
   
 #if defined(GGFX_TRACE_OUTPUT)
-  GPP(comm_,serr << "First LocalGS done.");
+  GPP(comm_,serr << "First localGS done.");
 #endif
 
 #if defined(GGFX_TRACE_OUTPUT)
   GTVector<T> utmp(u,nu);
-  GPP(comm_,serr << "After LocalGS: u=" << utmp);
+  GPP(comm_,serr << "After localGS: u=" << utmp);
   GPP(comm_,serr << "iL2RIndices=" << iOpL2RIndices_);
 #endif
 
@@ -63,25 +63,25 @@ GBOOL GGFX::DoOp(T *&u, GSIZET nu,  GGFX_OP op)
   if ( nprocs_ == 1 ) bret = TRUE;
 
 #if defined(GGFX_TRACE_OUTPUT)
-  GPP(comm_,serr << "Doing Data_Exchange...");
+  GPP(comm_,serr << "Doing dataExchange...");
 #endif
 
 #if defined(GGFX_TRACE_OUTPUT)
-  GPP(comm_,serr << "Doing Data_Exchange");
+  GPP(comm_,serr << "Doing dataExchange");
 #endif
   // Perform a exchange of field data:
-  bret = Data_Exchange(u, nu);
+  bret = dataExchange(u, nu);
   if ( !bret ) {
-    std::cout << serr << "Data_Exchange failed " << std::endl;
+    std::cout << serr << "dataExchange.failed " << std::endl;
     exit(1);
   }
 #if defined(GGFX_TRACE_OUTPUT)
-  GPP(comm_,serr << "Data_Exchange done.");
+  GPP(comm_,serr << "dataExchange done.");
 #endif
 
-  bret = LocalGS(u, nu, iOpR2LIndices_, nOpR2LIndices_, op, recvBuff_.data().data());
+  bret = localGS(u, nu, iOpR2LIndices_, nOpR2LIndices_, op, recvBuff_.data().data());
   if ( !bret ) {
-    std::cout << serr << "LocalGS (2) failed " << std::endl;
+    std::cout << serr << "localGS (2) failed " << std::endl;
     exit(1);
   }
 
@@ -90,12 +90,12 @@ GBOOL GGFX::DoOp(T *&u, GSIZET nu,  GGFX_OP op)
 #endif
   return bret;
 
-} // end of method DoOp(1)
+} // end of method doOp(1)
 
 
 //************************************************************************************
 //************************************************************************************
-// METHOD : DoOp (1)
+// METHOD : doOp (1)
 // DESC   : Actually carries out the operation, op, on the elements
 //          of field, u, using the intialization from the call to Init.
 // ARGS   : u    : input field whose elements are to be combined. Must
@@ -105,18 +105,18 @@ GBOOL GGFX::DoOp(T *&u, GSIZET nu,  GGFX_OP op)
 //          there is an error in the gather/scatter combination.
 //************************************************************************************
 template<typename T>  
-GBOOL GGFX::DoOp(GTVector<T> &u, GGFX_OP op) 
+GBOOL GGFX::doOp(GTVector<T> &u, GGFX_OP op) 
 {
    GSIZET   nu = u.size();
    T       *uu = u.data();
-   return DoOp(uu, nu,  op);
+   return doOp(uu, nu,  op);
 
-} // end, method DoOp (1)
+} // end, method doOp (1)
 
 
 //************************************************************************************
 //************************************************************************************
-// METHOD : DoOp (2)
+// METHOD : doOp (2)
 // DESC   : Actually carries out the operation, op, on the elements
 //          of field, u, using the intialization from the call to Init.
 // ARGS   : u    : input field whose elements are to be combined. Can be 
@@ -131,30 +131,30 @@ GBOOL GGFX::DoOp(GTVector<T> &u, GGFX_OP op)
 // RETURNS: TRUE on success; else FALSE, if invalid operation requested, or if 
 //          there is an error in the gather/scatter combination.
 //************************************************************************************
-template<typename T> GBOOL GGFX::DoOp(T *&u, GSIZET nu,  GSIZET *iind, GSIZET nind, GGFX_OP op)
+template<typename T> GBOOL GGFX::doOp(T *&u, GSIZET nu,  GSIZET *iind, GSIZET nind, GGFX_OP op)
 {
   assert( std::is_arithmetic<T>::value && "Illegal template type");
 
   GINT      irank;
   GINT      i, j;
   GBOOL     bret=TRUE;
-  GString   serr = "GGFX::DoOp(2): ";
+  GString   serr = "GGFX::doOp(2): ";
 
 #if defined(GGFX_TRACE_OUTPUT)
-  std::cout << serr << "Doing first LocalGS..." << std::endl;
+  std::cout << serr << "Doing first localGS..." << std::endl;
 #endif
 
   // For each global index row in iOpL2LIndices, gather and
   // scatter data locally: get one operation for each of the
   // shared nodes; 
-  bret = LocalGS(u, nu, iind, nind, iOpL2LIndices_, nOpL2LIndices_, op);
+  bret = localGS(u, nu, iind, nind, iOpL2LIndices_, nOpL2LIndices_, op);
   if ( !bret ) {
-    std::cout << serr << "LocalGS (1) failed " << std::endl;
+    std::cout << serr << "localGS (1) failed " << std::endl;
     exit(1);
   }
   
 #if defined(GGFX_TRACE_OUTPUT)
-  std::cout << serr << "First LocalGS done ." << std::endl;
+  std::cout << serr << "First localGS done ." << std::endl;
 #endif
 
   // If no other tasks, return:
@@ -162,30 +162,30 @@ template<typename T> GBOOL GGFX::DoOp(T *&u, GSIZET nu,  GSIZET *iind, GSIZET ni
 
 
 #if defined(GGFX_TRACE_OUTPUT)
-  std::cout << serr << "Doing Data_Exchange..." << std::endl;
+  std::cout << serr << "Doing dataExchange..." << std::endl;
 #endif
 
   // Perform a exchange of field data:
-  bret = Data_Exchange(u, nu, iind, nind);
+  bret = dataExchange(u, nu, iind, nind);
   if ( !bret ) {
-    std::cout << serr << "Data_Exchange failed " << std::endl;
+    std::cout << serr << "dataExchange failed " << std::endl;
     exit(1);
   }
 #if defined(GGFX_TRACE_OUTPUT)
-  std::cout << serr << "Data_Exchange done ." << std::endl;
+  std::cout << serr << "dataExchange done ." << std::endl;
 #endif
 
 
 #if defined(GGFX_TRACE_OUTPUT)
-  std::cout << serr << "Doing second LocalGS..." << std::endl;
+  std::cout << serr << "Doing second localGS..." << std::endl;
 #endif
-  bret = LocalGS(u, nu, iind, nind, iOpL2RIndices_, nOpL2RIndices_, op, recvBuff_.data().data());
+  bret = localGS(u, nu, iind, nind, iOpL2RIndices_, nOpL2RIndices_, op, recvBuff_.data().data());
   if ( !bret ) {
-    std::cout << serr << "LocalGS (2) failed " << std::endl;
+    std::cout << serr << "localGS (2) failed " << std::endl;
     exit(1);
   }
 #if defined(GGFX_TRACE_OUTPUT)
-  std::cout << serr << "Second LocalGS done." << std::endl;
+  std::cout << serr << "Second localGS done." << std::endl;
 #endif
 
 #if defined(GGFX_TRACE_OUTPUT)
@@ -197,12 +197,12 @@ template<typename T> GBOOL GGFX::DoOp(T *&u, GSIZET nu,  GSIZET *iind, GSIZET ni
 #endif
   return bret;
 
-} // end of method DoOp(2)
+} // end of method doOp(2)
 
 
 //************************************************************************************
 //************************************************************************************
-// METHOD : DoOp (2)
+// METHOD : doOp (2)
 // DESC   : Actually carries out the operation, op, on the elements
 //          of field, u, using the intialization from the call to Init.
 // ARGS   : u    : input field whose elements are to be combined. Can be 
@@ -215,20 +215,20 @@ template<typename T> GBOOL GGFX::DoOp(T *&u, GSIZET nu,  GSIZET *iind, GSIZET ni
 //          there is an error in the gather/scatter combination.
 //************************************************************************************
 template<typename T>  
-GBOOL GGFX::DoOp (GTVector<T> &u,  GSZBuffer &ind, GGFX_OP op)
+GBOOL GGFX::doOp (GTVector<T> &u,  GSZBuffer &ind, GGFX_OP op)
 {
    GSIZET   nind = ind.size();
    GSIZET   iind = ind.data();
    GSIZET   nu = u.size();
    T       *uu = u.data();
-   return DoOp(uu, nu, iind, nind, op);
+   return doOp(uu, nu, iind, nind, op);
 
-} // end, method DoOp (2)
+} // end, method doOp (2)
 
 
 //************************************************************************************
 //*************************************************************************************
-// METHOD : LocalGS (1)
+// METHOD : localGS (1)
 // DESC   : Performs GGFX_OP (op) on the array of field values, u
 //          and scatters them to the same dof
 // ARGS   : u      : input field whose elements are to be combined. May
@@ -247,12 +247,12 @@ GBOOL GGFX::DoOp (GTVector<T> &u,  GSZBuffer &ind, GGFX_OP op)
 // RETURNS: TRUE on success; else FALSE
 //************************************************************************************
 template<typename T> 
-GBOOL GGFX::LocalGS(T *&qu, GSIZET nu, GSZMatrix &ilocal, GSZBuffer &nlocal, GGFX_OP op, GDOUBLE *qop)
+GBOOL GGFX::localGS(T *&qu, GSIZET nu, GSZMatrix &ilocal, GSZBuffer &nlocal, GGFX_OP op, GDOUBLE *qop)
 {
 
   assert( std::is_arithmetic<T>::value && "Illegal template type");
 
-  GString serr = "GGFX::LocalGS (1): ";
+  GString serr = "GGFX::localGS (1): ";
   T       res;
   GLLONG  i, j;
 
@@ -346,12 +346,12 @@ GBOOL GGFX::LocalGS(T *&qu, GSIZET nu, GSZMatrix &ilocal, GSZBuffer &nlocal, GGF
 
   return TRUE;
 
-} // end of method LocalGS (1)
+} // end of method localGS (1)
 
 
 //************************************************************************************
 //*************************************************************************************
-// METHOD : LocalGS (2)
+// METHOD : localGS (2)
 // DESC   : Performs GGFX_OP (op) on the array of field values, u,
 //          and scatters them to the same dof
 // ARGS   : u      : input field whose elements are to be combined. May
@@ -374,13 +374,13 @@ GBOOL GGFX::LocalGS(T *&qu, GSIZET nu, GSZMatrix &ilocal, GSZBuffer &nlocal, GGF
 // RETURNS: TRUE on success; else FALSE
 //************************************************************************************
 template<typename T> 
-GBOOL GGFX::LocalGS(T *&qu, GSIZET nu, GSIZET *&iind, GSIZET nind, 
+GBOOL GGFX::localGS(T *&qu, GSIZET nu, GSIZET *&iind, GSIZET nind, 
                     GSZMatrix &ilocal, GSZBuffer &nlocal,  GGFX_OP op, GDOUBLE *qop)
 {
 
   assert( std::is_arithmetic<T>::value && "Illegal template type");
 
-  GString serr = "GGFX::LocalGS (2): ";
+  GString serr = "GGFX::localGS (2): ";
   T       res;
   GLLONG  i, j;
 
@@ -473,12 +473,12 @@ GBOOL GGFX::LocalGS(T *&qu, GSIZET nu, GSIZET *&iind, GSIZET nind,
 
   return TRUE;
 
-} // end of method LocalGS (2)
+} // end of method localGS (2)
 
 
 //************************************************************************************
 //************************************************************************************
-// METHOD : Data_Exchange (1)
+// METHOD : dataExchange (1)
 // DESC   : Perform data exchange between procs by using asynchronous
 //              recvs...
 // ARGS   :
@@ -487,11 +487,11 @@ GBOOL GGFX::LocalGS(T *&qu, GSIZET nu, GSIZET *&iind, GSIZET nind,
 // RETURNS: TRUE on success; else FALSE
 //************************************************************************************
 template<typename T> 
-GBOOL GGFX::Data_Exchange(T *&u, GSIZET nu)
+GBOOL GGFX::dataExchange(T *&u, GSIZET nu)
 {
   assert( std::is_arithmetic<T>::value && "Illegal template type");
 
-  GString       serr = "GGFX::Data_Exchange (1): ";
+  GString       serr = "GGFX::dataExchange (1): ";
   GCommDatatype dtype=T2GCDatatype<GDOUBLE>();
   GINT          i, j;
   GBOOL         bret=TRUE;
@@ -523,12 +523,12 @@ GBOOL GGFX::Data_Exchange(T *&u, GSIZET nu)
 #endif
 
   return bret;
-} // end of Data_Exchange (1)
+} // end of dataExchange (1)
 
 
 //************************************************************************************
 //************************************************************************************
-// METHOD : Data_Exchange (2)
+// METHOD : dataExchange (2)
 // DESC   : Perform data exchange between procs by using asynchronous
 //              recvs...
 // ARGS   :
@@ -541,11 +541,11 @@ GBOOL GGFX::Data_Exchange(T *&u, GSIZET nu)
 // RETURNS: TRUE on success; else FALSE
 //************************************************************************************
 template<typename T> 
-GBOOL GGFX::Data_Exchange(T *&u, GSIZET nu, GSIZET *&iind, GSIZET nind)
+GBOOL GGFX::dataExchange(T *&u, GSIZET nu, GSIZET *&iind, GSIZET nind)
 {
   assert( std::is_arithmetic<T>::value && "Illegal template type");
 
-  GString       serr = "GGFX::Data_Exchange (2): ";
+  GString       serr = "GGFX::dataExchange (2): ";
   GCommDatatype dtype=T2GCDatatype<GDOUBLE>();
   GINT           i, j;
   GBOOL          bret=TRUE;
@@ -566,6 +566,6 @@ recvBuff_.set(-1);
 
 
   return bret;
-} // end of Data_Exchange (2)
+} // end of dataExchange (2)
 
 

@@ -36,47 +36,44 @@ public:
                       GGFX  &operator=(const GGFX &);
                    
 
-                      GBOOL    Init(GNIDBuffer &glob_index);
-template<typename T>  GBOOL    DoOp(T *&u, GSIZET nu,  GGFX_OP op);
-template<typename T>  GBOOL    DoOp(GTVector<T> &u,  GGFX_OP op);
-template<typename T>  GBOOL    DoOp(T *&u, GSIZET nu,  GSIZET *iind, GSIZET nind, GGFX_OP op);
-template<typename T>  GBOOL    DoOp(GTVector<T> &u,  GSZBuffer &ind, GGFX_OP op);
+                      GBOOL    init(GNIDBuffer &glob_index);
+template<typename T>  GBOOL    doOp(T *&u, GSIZET nu,  GGFX_OP op);
+template<typename T>  GBOOL    doOp(GTVector<T> &u,  GGFX_OP op);
+template<typename T>  GBOOL    doOp(T *&u, GSIZET nu,  GSIZET *iind, GSIZET nind, GGFX_OP op);
+template<typename T>  GBOOL    doOp(GTVector<T> &u,  GSZBuffer &ind, GGFX_OP op);
                       GC_COMM  getComm() { return comm_; }
 
-                      GDOUBLE GetTimes(GGFX_Timer_t type);
-                      void ResetTimes();
+                      GDOUBLE  getTimes(GGFX_Timer_t type);
+                      void     resetTimes();
 
 private:
 // Private methods:
  
 // Init-specific methods:
-                      GBOOL InitSort(GNIDBuffer  &glob_index, GIBuffer &iOpL2RTasks, 
+                      GBOOL initSort(GNIDBuffer  &glob_index, GIBuffer &iOpL2RTasks, 
                                     GSZMatrix &iOpL2RIndices, GSZBuffer &nOpL2RIndices,
                                     GSZMatrix &iOpR2LIndices, GSZBuffer &nOpR2LIndices,
                                     GSZMatrix &iOpL2LIndices, GSZBuffer &nOpL2LIndices);
-                      GBOOL BinSort(GNIDBuffer &glob_index   , GIMatrix    &gBinMat, 
+                      GBOOL binSort(GNIDBuffer &glob_index   , GIMatrix    &gBinMat, 
                                     GINT       &nlocfilledbins,
                                     GINT       &maxfilledbins, GINT       &maxbinmem,
                                     GNIDMatrix &gBinBdy      , GNIDBuffer &locwork);
-                      GBOOL DoSendRecvWork(GNIDBuffer &, GNIDMatrix &, GIBuffer &, GNIDMatrix &, GIBuffer &, GNIDMatrix &);
-                      GBOOL BinWorkFill(GNIDBuffer &, GNIDMatrix &, GNIDMatrix &, GIBuffer &);
-                      GBOOL CreateWorkBuffs(GIMatrix &, GINT, GIBuffer &, GNIDMatrix &, GIBuffer &, GNIDMatrix &);
-                      GBOOL DoCommonNodeSort(GNIDBuffer &, GNIDMatrix &, GIBuffer &, GIBuffer &, GNIDMatrix &);
-                      GBOOL ExtractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedNodes, GIBuffer &iOpL2RTasks, 
+                      GBOOL doSendRecvWork(GNIDBuffer &, GNIDMatrix &, GIBuffer &, GNIDMatrix &, GIBuffer &, GNIDMatrix &);
+                      GBOOL binWorkFill(GNIDBuffer &, GNIDMatrix &, GNIDMatrix &, GIBuffer &);
+                      GBOOL createWorkBuffs(GIMatrix &, GINT, GIBuffer &, GNIDMatrix &, GIBuffer &, GNIDMatrix &);
+                      GBOOL doCommonNodeSort(GNIDBuffer &, GNIDMatrix &, GIBuffer &, GIBuffer &, GNIDMatrix &);
+                      GBOOL extractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedNodes, GIBuffer &iOpL2RTasks, 
                                           GSZMatrix &iOpL2RIndices, GSZBuffer &nOpL2RIndices, 
                                           GSZMatrix &iOpR2LIndices, GSZBuffer &nOpR2LIndices, 
                                           GSZMatrix &iOpL2LIndices, GSZBuffer &nOpL2LIndices);
  
 
                      // DoOp-specific methods:
-template<typename T> GBOOL LocalGS(T *&u, GSIZET  nu, GSZMatrix  &ilocal, GSZBuffer &nlocal, GGFX_OP op, GDOUBLE *qop=NULLPTR);
-template<typename T> GBOOL LocalGS(T *&u, GSIZET  nu, GSIZET *&iind, GSIZET nind, GSZMatrix  &ilocal, GSZBuffer &nlocal, GGFX_OP op, GDOUBLE *qop=NULLPTR);
-template<typename T> GBOOL Data_Exchange(T *&u, GSIZET nu );
-template<typename T> GBOOL Data_Exchange(T *&send_data, GSIZET nu, GSIZET *&iind, GSIZET nind );
+template<typename T> GBOOL localGS(T *&u, GSIZET  nu, GSZMatrix  &ilocal, GSZBuffer &nlocal, GGFX_OP op, GDOUBLE *qop=NULLPTR);
+template<typename T> GBOOL localGS(T *&u, GSIZET  nu, GSIZET *&iind, GSIZET nind, GSZMatrix  &ilocal, GSZBuffer &nlocal, GGFX_OP op, GDOUBLE *qop=NULLPTR);
+template<typename T> GBOOL dataExchange(T *&u, GSIZET nu );
+template<typename T> GBOOL dataExchange(T *&send_data, GSIZET nu, GSIZET *&iind, GSIZET nind );
 
-
-// Misc utilities:
-                     void  DeleteDynamic();
 
 // Private data:
 GBOOL              bBinSorted_   ;  // have local nodes been bin-sorted?      
