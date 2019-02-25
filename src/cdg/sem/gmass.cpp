@@ -156,7 +156,12 @@ void GMass::init2d()
       }
     }
   }
-  mass_.pointProd(*Jac);
+  if ( Jac->size() > 1 ) {
+    mass_.pointProd(*Jac);
+  }
+  else {
+    if ( (*Jac)[0] != 1.0 ) mass_ *= (*Jac)[0];
+  }
 
 } // end of method init2d
 
