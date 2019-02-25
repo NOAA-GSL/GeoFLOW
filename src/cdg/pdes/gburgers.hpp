@@ -92,8 +92,8 @@ public:
         void                 set_nu(GTVector<GFTYPE> &nu);                // Set nu/viscosity
         void                 set_bdy_update_callback(
                              std::function<void(const Time &t, State &u,
-                                           State &ub)> *callback) 
-                             { update_bdy_callback_ = callback;
+                                           State &ub)> callback) 
+                             { update_bdy_callback_ = callback; bupdatebc_ = TRUE;
                                gbc_->set_update_callback(callback); }     // set bdy-update callback
 
 
@@ -122,6 +122,7 @@ private:
         GBOOL               doheat_;        // flag to do heat equation alone
         GBOOL               bpureadv_;      // do pure (linear) advection?
         GBOOL               bconserved_;    // use conservation form?
+        GBOOL               bupdatebc_;     // bdy update callback set?
         GStepperType        isteptype_;     // stepper type
         GINT                nsteps_ ;       // num steps taken
         GINT                itorder_;       // time deriv order
@@ -156,7 +157,7 @@ private:
         GC_COMM             comm_;          // communicator
         GGFX               *ggfx_;          // gather-scatter operator
         std::function<void(const Time &t, State &u,
-                           State &ub)> *update_bdy_callback_;
+                           State &ub)> update_bdy_callback_;
 
 
 };

@@ -61,6 +61,7 @@ GBurgers<TypePack>::GBurgers(GGFX &ggfx, GGrid &grid, State &u, GBurgers<TypePac
 doheat_         (traits.doheat),
 bpureadv_     (traits.bpureadv),
 bconserved_ (traits.bconserved),
+bupdatebc_              (FALSE),
 isteptype_    (traits.steptype),
 nsteps_                     (0),
 itorder_       (traits.itorder),
@@ -332,6 +333,7 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
   // Find multistep/multistage time stepping coefficients:
   GMultilevel_coeffs_base<GFTYPE> *tcoeff_obj=NULLPTR; // time deriv coeffs
   GMultilevel_coeffs_base<GFTYPE> *acoeff_obj=NULLPTR; // adv op. coeffs
+
   std::function<void(const Time &t,                    // RHS callback function
                      const State  &uin,
                      const Time &dt,
@@ -340,18 +342,6 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
                      const State  &uin, 
                      const Time &dt,
                      State &dudt){dudt_impl(t, uin, dt, dudt);}; 
-
-#if 0
-  std::function<void(const Time &t,                    // Bdy update callback function
-                     State  &uin, 
-                     State &ub)> *updatebc = NULLPTR; 
-    
-  if ( update_bdy_callback_ != NULLPTR ) {     
-    *updatebc  = [this](const Time &t,            
-                 State  &uin, 
-                 State &ub){(*update_bdy_callback_)(t, uin, ub);}; 
-  }
-#endif
 
   std::function<void(const Time &t,                    // Bdy apply callback function
                      State  &uin, 
@@ -364,9 +354,10 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
     case GSTEPPER_EXRK2:
     case GSTEPPER_EXRK4:
       gexrk_ = new GExRKStepper<GFTYPE>(itorder_);
-      gexrk_->setRHSfunction(&rhs);
+      gexrk_->setRHSfunction(rhs);
+      if ( bupdatebc_ ) 
       gexrk_->set_update_bdy_callback(update_bdy_callback_);
-      gexrk_->set_apply_bdy_callback(&applybc);
+      gexrk_->set_apply_bdy_callback(applybc);
       // Set 'helper' tmp arrays from main one, utmp_:
       uold_   .resize(nstate); // solution at time level n
       urktmp_ .resize(nstate*(itorder_+1)+1); // RK stepping work space
@@ -408,6 +399,7 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
   // Instantiate spatial discretization operators:
   gmass_   = new GMass(*grid_);
   ghelm_   = new GHelmholtz(*grid_);
+  ghelm_->set_tmp(urhstmp_);
   
   if ( isteptype_ ==  GSTEPPER_EXRK2 
     || isteptype_ == GSTEPPER_EXRK4 ) {
