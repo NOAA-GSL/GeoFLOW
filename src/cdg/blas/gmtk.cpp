@@ -1271,15 +1271,15 @@ void compute_grefderivs(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &et
     GMTK::D2_X_I1(*Di[1], u, N[0], N[1], *du[1]); 
   }
   u.range_reset(); // reset to global range
-  for ( GSIZET k=0; k<GDIM+1; k++ ) du[k]->range_reset();
+  for ( GSIZET k=0; k<GDIM; k++ ) du[k]->range_reset();
 
 #elif defined(_G_IS3D)
 
   for ( GSIZET e=0; e<grid.elems().size(); e++ ) {
     ibeg = (*gelems)[e]->igbeg(); iend = (*gelems)[e]->igend();
     u.range(ibeg, iend); // restrict global vecs to local range
-    for ( GSIZET k=0; k<GDIM+1; k++ ) du[k]->range(ibeg, iend);
-    for ( GSIZET k=0; k<GDIM  ; k++ ) N[k]= (*gelems)[e]->size(k);
+    for ( GSIZET k=0; k<GDIM; k++ ) du[k]->range(ibeg, iend);
+    for ( GSIZET k=0; k<GDIM; k++ ) N[k]= (*gelems)[e]->size(k);
     Di[0] = (*gelems)[e]->gbasis(0)->getDerivMatrix (dotrans); 
     Di[1] = (*gelems)[e]->gbasis(1)->getDerivMatrix(!dotrans); 
     Di[2] = (*gelems)[e]->gbasis(2)->getDerivMatrix(!dotrans); 
@@ -1288,7 +1288,7 @@ void compute_grefderivs(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &et
     GMTK::D3_X_I2_X_I1(*Di[2], u, N[0], N[1], N[2], *du[2]); 
   }
   u.range_reset(); // reset global vec to globalrange
-  for ( GSIZET k=0; k<GDIM+1; k++ ) du[k]->range_reset();
+  for ( GSIZET k=0; k<GDIM; k++ ) du[k]->range_reset();
 
 #endif
 
@@ -1356,14 +1356,14 @@ void compute_grefderivsW(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &e
     GMTK::D2_X_Dg1(*W[0], *Di[1], u, etmp, *du[1]); 
   }
   u.range_reset(); // reset global vec to global range
-  for ( GSIZET k=0; k<GDIM+1; k++ ) du[k]->range_reset();
+  for ( GSIZET k=0; k<GDIM; k++ ) du[k]->range_reset();
 
 #elif defined(_G_IS3D)
 
   for ( GSIZET e=0; e<grid.elems().size(); e++ ) {
     ibeg = (*gelems)[e]->igbeg(); iend = (*gelems)[e]->igend();
     u.range(ibeg, iend); // restrict global vecs to local range
-    for ( GSIZET k=0; k<GDIM+1; k++ ) du[k]->range(ibeg, iend);
+    for ( GSIZET k=0; k<GDIM; k++ ) du[k]->range(ibeg, iend);
     for ( GSIZET k=0; k<GDIM; k++ ) {
       N[k]= (*gelems)[e]->size(k);
       W[k]= (*gelems)[e]->gbasis(k)->getWeights();
@@ -1376,7 +1376,7 @@ void compute_grefderivsW(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &e
     GMTK::D3_X_Dg2_X_Dg1(*W [0], *W [1], *Di[2], u, N[0], N[1], N[2], etmp, *du[2]); 
   }
   u.range_reset(); // reset global vec to globalrange
-  for ( GSIZET k=0; k<GDIM+1; k++ ) du[k]->range_reset();
+  for ( GSIZET k=0; k<GDIM; k++ ) du[k]->range_reset();
 
 #endif
 
