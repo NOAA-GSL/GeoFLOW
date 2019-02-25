@@ -240,7 +240,7 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     std::function<void(const GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u, 
                                         GTVector<GTVector<GFTYPE>*> &ub)>  
         fcallback = update_dirichlet; // set tmp function with proper signature for...
-    eqn_impl->set_bdy_update_callback(&fcallback);
+    eqn_impl->set_bdy_update_callback(fcallback);
     eqn_impl->set_nu(nu_);
 
     // Create the observers: 
@@ -653,7 +653,7 @@ void init_ggfx(GGrid &grid, GGFX &ggfx)
   gmorton.key(glob_indices, *xnodes);
 
   // Initialize gather/scatter operator:
-  GBOOL bret = ggfx.Init(glob_indices);
+  GBOOL bret = ggfx.init(glob_indices);
   assert(bret && "Initialization of GGFX operator failed");
 
 } // end method init_ggfx
