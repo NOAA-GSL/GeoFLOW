@@ -15,10 +15,10 @@
 template<typename T>
 GExRKStepper<T>::GExRKStepper(GSIZET nstage)
 :
-nstage_               (nstage),
-rhs_callback_         (NULLPTR),
-bdy_update_callback_  (NULLPTR),
-bdy_apply_callback_   (NULLPTR)
+bRHS_                 (FALSE),
+bapplybc_             (FALSE),
+bupdatebc_            (FALSE),
+nstage_               (nstage)
 {
   butcher_ .setOrder(nstage_);
 } // end of constructor (1) method
@@ -63,7 +63,7 @@ template<typename T>
 void GExRKStepper<T>::step(const Time &t, const State &uin, State &ub,  
                            const Time &dt, State &tmp, State &uout)
 {
-  assert(rhs_callback_ != NULLPTR  && "(1): RHS callback not set");
+  assert(bRHS_  && "(1): RHS callback not set");
 
   GSIZET       i, j, n, nstate=uin.size();
   GFTYPE       tt;
@@ -91,9 +91,9 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &ub,
   }
   
   tt = t+(*alpha)[0]*dt;
-  if ( bdy_update_callback_ != NULLPTR ) (*bdy_update_callback_)(tt, u, ub); 
-  if ( bdy_apply_callback_  != NULLPTR ) (*bdy_apply_callback_ )(tt, u, ub); 
-  (*rhs_callback_)( tt, u, dt, K_[0]); // k_1 at stage 1
+  if ( bupdatebc_ ) bdy_update_callback_(tt, u, ub); 
+  if ( bapplybc_  ) bdy_apply_callback_ (tt, u, ub); 
+  rhs_callback_( tt, u, dt, K_[0]); // k_1 at stage 1
 
   for ( i=1; i<nstage_-1; i++ ) { // cycle thru remaining stages minus 1
     // Compute k_m:
@@ -103,9 +103,9 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &ub,
       for ( j=0,*isum=0.0; j<i; j++ ) *isum += (*K_[j][n]) * ( (*beta)(i,j)*dt );
      *u[n]  = (*uin[n]) + (*isum);
     }
-    if ( bdy_update_callback_ != NULLPTR ) (*bdy_update_callback_)(tt, u, ub); 
-    if ( bdy_apply_callback_  != NULLPTR ) (*bdy_apply_callback_ )(tt, u, ub); 
-    (*rhs_callback_)( tt, u, dt, K_[i]); // k_i at stage i
+    if ( bupdatebc_ ) bdy_update_callback_(tt, u, ub); 
+    if ( bapplybc_  ) bdy_apply_callback_ (tt, u, ub); 
+    rhs_callback_( tt, u, dt, K_[i]); // k_i at stage i
     for ( n=0; n<nstate; n++ ) { // for each state member, u
       *uout[n] += (*K_[i][n])*( (*c)[i]*dt ); // += dt * c_i * k_i
     }
@@ -117,9 +117,9 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &ub,
      *u[n] = (*uin[n]) + (*isum);
    }
    tt = t+(*alpha)[nstage_-1]*dt;
-   if ( bdy_update_callback_ != NULLPTR ) (*bdy_update_callback_)(tt, u, ub); 
-   if ( bdy_apply_callback_  != NULLPTR ) (*bdy_apply_callback_ )(tt, u, ub); 
-   (*rhs_callback_)( tt, u, dt, K_[0]); // k_M at stage M
+   if ( bupdatebc_ ) bdy_update_callback_(tt, u, ub); 
+   if ( bapplybc_  ) bdy_apply_callback_ (tt, u, ub); 
+   rhs_callback_( tt, u, dt, K_[0]); // k_M at stage M
 
    for ( n=0; n<nstate; n++ ) { // for each state member, u
     *uout[n] += (*K_[0][n])*( (*c)[i]*dt ); // += dt * c_M * k_M
@@ -155,7 +155,7 @@ template<typename T>
 void GExRKStepper<T>::step(const Time &t, State &uin, State &ub,  
                            const Time &dt, State &tmp)
 {
-  assert(rhs_callback_ != NULLPTR  && "(2) RHS callback not set");
+  assert(bRHS_  && "(2) RHS callback not set");
 
   GSIZET       i, j, n, nstate=uin.size();
   GFTYPE       tt;
@@ -186,9 +186,9 @@ void GExRKStepper<T>::step(const Time &t, State &uin, State &ub,
   }
   
   tt = t+(*alpha)[0]*dt;
-  if ( bdy_update_callback_ != NULLPTR ) (*bdy_update_callback_)(tt, u, ub); 
-  if ( bdy_apply_callback_  != NULLPTR ) (*bdy_apply_callback_ )(tt, u, ub); 
-  (*rhs_callback_)( tt, u, dt, K_[0]); // k_1 at stage 1
+  if ( bupdatebc_ ) bdy_update_callback_(tt, u, ub); 
+  if ( bapplybc_  ) bdy_apply_callback_ (tt, u, ub); 
+  rhs_callback_( tt, u, dt, K_[0]); // k_1 at stage 1
 
   for ( i=1; i<nstage_-1; i++ ) { // cycle thru remaining stages minus 1
     // Compute k_m:
@@ -198,9 +198,9 @@ void GExRKStepper<T>::step(const Time &t, State &uin, State &ub,
       for ( j=0,*isum=0.0; j<i; j++ ) *isum += (*K_[j][n]) * ( (*beta)(i,j)*dt );
      *u[n]  = (*uin[n]) + (*isum);
     }
-    if ( bdy_update_callback_ != NULLPTR ) (*bdy_update_callback_)(tt, u, ub); 
-    if ( bdy_apply_callback_  != NULLPTR ) (*bdy_apply_callback_ )(tt, u, ub); 
-    (*rhs_callback_)( tt, u, dt, K_[i]); // k_i at stage i
+    if ( bupdatebc_ ) bdy_update_callback_(tt, u, ub); 
+    if ( bapplybc_  ) bdy_apply_callback_ (tt, u, ub); 
+    rhs_callback_( tt, u, dt, K_[i]); // k_i at stage i
     for ( n=0; n<nstate; n++ ) { // for each state member, u
       *uout[n] += (*K_[i][n])*( (*c)[i]*dt ); // += dt * c_i * k_i
     }
@@ -212,9 +212,9 @@ void GExRKStepper<T>::step(const Time &t, State &uin, State &ub,
      *u[n] = (*uin[n]) + (*isum);
    }
    tt = t+(*alpha)[nstage_-1]*dt;
-   if ( bdy_update_callback_ != NULLPTR ) (*bdy_update_callback_)(tt, u, ub); 
-   if ( bdy_apply_callback_  != NULLPTR ) (*bdy_apply_callback_ )(tt, u, ub); 
-   (*rhs_callback_)( tt, u, dt, K_[0]); // k_M at stage M
+   if ( bupdatebc_ ) bdy_update_callback_(tt, u, ub); 
+   if ( bapplybc_  ) bdy_apply_callback_ (tt, u, ub); 
+   rhs_callback_( tt, u, dt, K_[0]); // k_M at stage M
 
    for ( n=0; n<nstate; n++ ) { // for each state member, u
     *uout[n] += (*K_[0][n])*( (*c)[i]*dt ); // += dt * c_M * k_M

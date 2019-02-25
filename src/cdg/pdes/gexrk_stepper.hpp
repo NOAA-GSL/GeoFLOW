@@ -38,22 +38,25 @@ public:
                                 State &ub,
                                 const Time &dt, State &tmp);
 
-        void               set_update_bdy_callback(
-                           std::function<void(const Time &t, State &u,
-                                         GTVector<GTVector<T>*> &ub)> *callback)
-                                         { bdy_update_callback_ =  callback; }   // set bdy-update callback
-        void               set_apply_bdy_callback(
-                           std::function<void(const Time &t, State &u,
-                                         State &ub)> *callback)
-                                         { bdy_apply_callback_ = callback; }   // set bdy-application callback
-
-
         void               setRHSfunction(std::function<void(
                                           const Time &t, 
                                           const State &uin,
                                           const Time &dt, 
-                                          State &dudt)> *callback)
-                                          { rhs_callback_ = callback; }          // RHS callback
+                                          State &dudt)> callback)
+                                          { rhs_callback_ = callback; 
+                                            bRHS_ = TRUE; }           // RHS callback, required
+
+        void               set_update_bdy_callback(
+                           std::function<void(const Time &t, State &u,
+                                         GTVector<GTVector<T>*> &ub)> callback)
+                                         { bdy_update_callback_ =  callback;
+                                           bupdatebc_ = TRUE; }       // set bdy-update callback
+        void               set_apply_bdy_callback(
+                           std::function<void(const Time &t, State &u,
+                                         State &ub)> callback)
+                                         { bdy_apply_callback_ = callback;
+                                           bapplybc_ = TRUE; }        // set bdy-application callback
+
 
 
 private:
@@ -61,18 +64,21 @@ private:
         void               resize(GINT nstate);              // resize member data 
 
 // Private data:
+        GBOOL              bRHS_;
+        GBOOL              bapplybc_;
+        GBOOL              bupdatebc_;
         GINT               nstage_;                          // no stages (not nec. 'order'!)
         GButcherRK<T>      butcher_;                         // Butcher tableau
         GTVector<State>    K_;                               // RK stage update vectors
-        std::function<void(const Time &t,                    // RHS callback function
+        std::function<void(const Time &t,                    
                            const State  &uin,
                            const Time &dt, 
                            State &dudt)>
-                           *rhs_callback_;
+                           rhs_callback_;                   // RHS callback function
         std::function<void(const Time &t, State &u, State &ub)>
-                           *bdy_update_callback_;            // bdy update callback
+                           bdy_update_callback_;            // bdy update callback
         std::function<void(const Time &t, State &u, State &ub)>
-                           *bdy_apply_callback_;             // bdy apply callback
+                           bdy_apply_callback_;             // bdy apply callback
 
 };
 
