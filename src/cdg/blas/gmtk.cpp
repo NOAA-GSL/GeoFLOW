@@ -1445,6 +1445,8 @@ void compute_grefdiv(GGrid &grid, GTVector<GTVector<GDOUBLE>*> &u, GTVector<GDOU
     divu += etmp;
     if ( bembedded ) divu += *u[2]; // D3 acts as I
   }
+  divu.range_reset();  // reset range to global scope
+  for ( GSIZET k=0; k<u.size(); k++ ) u[k]->range_reset(); 
 
 #elif defined(_G_IS3D)
 
@@ -1469,6 +1471,7 @@ void compute_grefdiv(GGrid &grid, GTVector<GTVector<GDOUBLE>*> &u, GTVector<GDOU
   for ( GSIZET k=0; k<u.size(); k++ ) u[k]->range_reset(); 
 
 #endif
+
 
 } // end, method compute_grefdiv
 
