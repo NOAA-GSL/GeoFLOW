@@ -34,7 +34,7 @@
 //**********************************************************************************
 GHelmholtz::GHelmholtz(GGrid &grid)
 : GLinOp(grid),
-bown_p_       (TRUE),
+bown_p_        (TRUE),
 bown_q_       (FALSE),
 bown_mass_    (FALSE),
 bcompute_helm_(FALSE),
@@ -45,6 +45,7 @@ massop_     (NULLPTR)
   grid_ = &grid;
   p_ = new GTVector<GFTYPE>(1);
  *p_ =  1.0; // diffusion defaults to a scalar, with value 1
+  init();
 } // end of constructor method (1)
 
 
@@ -235,7 +236,7 @@ void GHelmholtz::embed_prod(GTVector<GFTYPE> &u, GTVector<GFTYPE> &uo)
   // Apply p parameter ('viscosity') if necessary to Laplacian:
   if ( p_ != NULLPTR ) {
     if ( p_->size() >= grid_->ndof() ) uo.pointProd(*p_);
-    else uo *= (*p_)[0];
+    else if ( (*p_)[0] != 1.0 )  uo *= (*p_)[0];
   }
 
   // Apply Mass operator and q parameter if necessary:
@@ -256,7 +257,7 @@ void GHelmholtz::embed_prod(GTVector<GFTYPE> &u, GTVector<GFTYPE> &uo)
 // METHOD : reg_prod
 // DESC   : Compute application of this operator to input vector for 
 //          GE_REGULAR elements
-//          NOTE: must have GDIM utmp_ vectors set via set_tmp method
+//          NOTE: must have at least GDIM utmp_ vectors set via set_tmp method
 // ARGS   : u  : input vector
 //          uo : output (result) vector
 //             
@@ -268,8 +269,7 @@ void GHelmholtz::reg_prod(GTVector<GFTYPE> &u, GTVector<GFTYPE> &uo)
   assert( utmp_.size() >= GDIM
        && "Insufficient temp space specified");
 
-  GSIZET ibeg, iend;
-  GTMatrix<GFTYPE> *D1d;   // element-based 1d derivative operators
+  GSIZET            ibeg, iend;
   GTVector<GTVector<GFTYPE>*> gdu(GDIM);
   GElemList        *gelems=&grid_->elems();
   GElem_base       *elem;
@@ -283,6 +283,9 @@ void GHelmholtz::reg_prod(GTVector<GFTYPE> &u, GTVector<GFTYPE> &uo)
   // and W is just the mass matrix (with the Jacobian included);
   // M is mass matrix, and p, and q are Laplacian and Mass factors.
 
+  // Re-arrange local temp space for divergence:
+  for ( GSIZET i=0; i<GDIM; i++ ) gdu[i] = utmp_[i+GDIM];
+
   // Compute weighted deriviatives of u:
   GMTK::compute_grefderivsW(*grid_, u, etmp1_, FALSE, utmp_); // utmp stores tensor-prod derivatives
 
@@ -295,7 +298,7 @@ void GHelmholtz::reg_prod(GTVector<GFTYPE> &u, GTVector<GFTYPE> &uo)
   // Apply p parameter ('viscosity') if necessary to Laplacian:
   if ( p_ != NULLPTR ) {
     if ( p_->size() >= grid_->ndof() ) uo.pointProd(*p_);
-    else uo *= (*p_)[0];
+    else if ( (*p_)[0] != 1.0 )  uo *= (*p_)[0];
   }
 
   // Apply Mass operator and q parameter if necessary:
@@ -440,8 +443,8 @@ void GHelmholtz::def_init()
 
   // Reset ranges to global scope:
   Jac->range_reset();
-  for ( GSIZET j=0; j<nxy; j++ ) 
-    for ( GSIZET i=0; i<nxy; i++ ) (*dXidX)(i,j).range_reset();
+  for ( GSIZET j=0; j<dXidX->size(2); j++ ) 
+    for ( GSIZET i=0; i<dXidX->size(1); i++ ) (*dXidX)(i,j).range_reset();
 
 } // end of method def_init
 
@@ -449,15 +452,14 @@ void GHelmholtz::def_init()
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : reg_init
-// DESC   : Compute metric components for regular elements.
+// DESC   : Compute metric components for regular elements. Mass matrix may be 
+//          instantiated here if it hasn't already been set.
 // ARGS   : none
 // RETURNS: none
 //**********************************************************************************
 void GHelmholtz::reg_init()
 {
   if ( grid_->itype(GE_REGULAR).size() <= 0 ) return; 
-
-  assert(massop_ != NULLPTR && "Mass matrix not set!");
 
   GTVector<GSIZET>             N(GDIM);
   GTVector<GTVector<GFTYPE>*>  W(GDIM);  // element-based weights
@@ -511,15 +513,10 @@ void GHelmholtz::reg_init()
     }
   }
 
-  if ( massop_ == NULLPTR ) {
-    massop_ = new GMass(*grid_);
-    bown_mass_ = TRUE;
-  }
-
   // Reset range to global scope:
   Jac->range_reset();
-  for ( GSIZET j=0; j<nxy; j++ ) 
-    for ( GSIZET i=0; i<nxy; i++ ) (*dXidX)(i,j).range_reset();
+  for ( GSIZET j=0; j<dXidX->size(2); j++ ) 
+    for ( GSIZET i=0; i<dXidX->size(1); i++ ) (*dXidX)(i,j).range_reset();
 
 } // end of method reg_init
 
@@ -583,6 +580,8 @@ void GHelmholtz::set_mass(GMass &m)
 
   if ( massop_ != NULL  && bown_mass_ ) delete massop_;
 
+  
+  if ( bown_mass_ && massop_ != NULLPTR ) delete massop_;
   massop_ = &m;
   bown_mass_ = FALSE;
   bcompute_helm_ = TRUE;
