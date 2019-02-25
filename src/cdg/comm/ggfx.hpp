@@ -23,7 +23,7 @@ enum GGFX_Timer_t {GGFXTR_OP, GGFXTR_EXCH, GGFXTR_LCOMB, GGFXTR_GCOMB, GGFXTR_GC
 // GGFX reduction operation defs:
 #if !defined(GGFX_OP_DEF)
 #define GGFX_OP_DEF
-enum GGFX_OP {GGFX_OP_SUM=0, GGFX_OP_PROD, GGFX_OP_MAX, GGFX_OP_MIN, GGFX_OP_ASSIGN};
+enum GGFX_OP {GGFX_OP_SUM=0, GGFX_OP_PROD, GGFX_OP_MAX, GGFX_OP_MIN, GGFX_OP_SMOOTH};
 #endif
 
 
@@ -68,16 +68,19 @@ private:
                                           GSZMatrix &iOpL2LIndices, GSZBuffer &nOpL2LIndices);
  
 
-                     // DoOp-specific methods:
+                     // doOp-specific methods:
 template<typename T> GBOOL localGS(T *&u, GSIZET  nu, GSZMatrix  &ilocal, GSZBuffer &nlocal, GGFX_OP op, GDOUBLE *qop=NULLPTR);
 template<typename T> GBOOL localGS(T *&u, GSIZET  nu, GSIZET *&iind, GSIZET nind, GSZMatrix  &ilocal, GSZBuffer &nlocal, GGFX_OP op, GDOUBLE *qop=NULLPTR);
 template<typename T> GBOOL dataExchange(T *&u, GSIZET nu );
 template<typename T> GBOOL dataExchange(T *&send_data, GSIZET nu, GSIZET *&iind, GSIZET nind );
 
+                     // misc. methods:
+                     void initMult(); // initialize multiplicity for smoothing
 
 // Private data:
 GBOOL              bBinSorted_   ;  // have local nodes been bin-sorted?      
 GBOOL              bInit_        ;  // has operator initialization occurred?
+GBOOL              bMultReq_     ;  // is (inverse) multiplicity required (e.g. for smoothing)?
 GC_COMM            comm_         ;  // communicator
 GINT               nprocs_       ;  // number of tasks/ranks
 GINT               rank_         ;  // this rank
@@ -94,6 +97,7 @@ GSZMatrix          iOpL2LIndices_;  // matrix with local indices pointing to sha
 GSZBuffer          nOpL2LIndices_;  // number valid columns in each row of iOpLoIndices_
 GDMatrix           sendBuff_     ;  // send buffer
 GDMatrix           recvBuff_     ;  // recv buffer
+GFVector           imult_        ;  // inverse of multiplicity matrix (for H1-smoothing)
 
 // Timer data:
 GDVector           timer_data_   ;  // cumlative times for each timer

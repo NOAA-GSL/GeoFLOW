@@ -94,6 +94,8 @@ GBOOL GGFX::init(GNIDBuffer &glob_index)
   GBOOL      bret;
   GString   serr = "GGFX::init: ";
 
+  nglob_index_ = glob_index.size();
+
   // Get node id dynamic range:
   GNODEID lmax = glob_index.max();
   GComm::Allreduce(&lmax, &maxNodeVal_, 1, T2GCDatatype<GNODEID>(), GC_OP_MAX, comm_);
@@ -1016,6 +1018,31 @@ GBOOL GGFX::extractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedData, GIBu
   return bret; 
 
 } // end, method extractOpData
+
+
+//************************************************************************************
+//************************************************************************************
+// METHOD     : initMult
+// DESCRIPTION: initialize for smoothing
+// ARGUMENTS  : 
+// RETURNS    : 
+//************************************************************************************
+void GGFX::initMult()
+{
+  GFVector mult(nglob_index_);
+
+  mult = 1.0;
+
+  // Do DSS sum to find multiplicity:
+  doOp<GFLOAT>(mult, GGFX_OP_SUM);
+
+  // Compute 1/mult:
+  imult_.resize(mult.size());
+  for ( GSIZET j=0; j<imult_.size(); j++ ) {
+    imult_[j] = 1.0/mult[j];
+  }
+
+} // end of method initMult
 
 
 

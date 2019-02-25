@@ -340,6 +340,30 @@ GBOOL GGFX::localGS(T *&qu, GSIZET nu, GSZMatrix &ilocal, GSZBuffer &nlocal, GGF
         }
       }
       break;
+    case GGFX_OP_SMOOTH:
+      if ( imult_.size() <= 0 ) initMult();
+      if ( qop == NULLPTR ) {
+        for ( j=0; j<ilocal.size(2); j++ ) {
+          res = 0.0;
+          for ( i=0; i<nlocal[j]; i++ ) { // do gather
+             res += qu[ilocal(i,j)];
+          }
+          for ( i=0; i<nlocal[j]; i++ ) { // do scatter
+             qu[ilocal(i,j)] = res*imult_[ilocal(i,j)];
+          }
+        }
+      }
+      else {
+        for ( j=0; j<ilocal.size(2); j++ ) {
+          for ( i=0; i<nlocal[j]; i++ ) { // do scatter
+             qu[ilocal(i,j)] += qop[j];
+          }
+          for ( i=0; i<nlocal[j]; i++ ) { // do H1-smoothing
+             qu[ilocal(i,j)] *= imult_[j];
+          }
+        }
+      }
+      break;
     default:
       return FALSE;
   }
@@ -463,6 +487,30 @@ GBOOL GGFX::localGS(T *&qu, GSIZET nu, GSIZET *&iind, GSIZET nind,
         for ( j=0; j<ilocal.size(2); j++ ) {
           for ( i=0; i<nlocal[j]; i++ ) {
              qu[iind[ilocal(i,j)]] = MAX(qu[iind[ilocal(i,j)]],qop[j]);
+          }
+        }
+      }
+      break;
+    case GGFX_OP_SMOOTH:
+      if ( imult_.size() <= 0 ) initMult();
+      if ( qop == NULLPTR ) {
+        for ( j=0; j<ilocal.size(2); j++ ) {
+          res = 0.0;
+          for ( i=0; i<nlocal[j]; i++ ) { // do gather
+             res += qu[iind[ilocal(i,j)]];
+          }
+          for ( i=0; i<nlocal[j]; i++ ) { // do scatter
+             qu[iind[ilocal(i,j)]] = res*imult_[ilocal(i,j)];
+          }
+        }
+      }
+      else {
+        for ( j=0; j<ilocal.size(2); j++ ) {
+          for ( i=0; i<nlocal[j]; i++ ) { // do scatter
+             qu[iind[ilocal(i,j)]] += qop[j];
+          }
+          for ( i=0; i<nlocal[j]; i++ ) { // do H1-smoothing
+             qu[iind[ilocal(i,j)]] *= imult_[j];
           }
         }
       }
