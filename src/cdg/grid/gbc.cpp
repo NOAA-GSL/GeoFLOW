@@ -17,8 +17,8 @@
 //**********************************************************************************
 GBC::GBC(GGrid &grid)
 :
-grid_                    (&grid), 
-update_dirichlet_callback_ (NULLPTR)
+bupdatebc_               (FALSE),
+grid_                    (&grid)
 {
 } // end of constructor method (1)
 
@@ -78,8 +78,8 @@ void GBC::update_bdy_state(GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u,
   // ...GBDY_DIRICHLET:
   // (These are possibly time dependent, and are often
   //  set with data outside the scope of the solvers)
-  if ( update_dirichlet_callback_ != NULLPTR) {
-    (*update_dirichlet_callback_)(t, u, ub);
+  if ( bupdatebc_ ) {
+    update_dirichlet_callback_(t, u, ub);
   }
 
 
