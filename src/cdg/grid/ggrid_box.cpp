@@ -11,7 +11,7 @@
 #include "geoflow.hpp"
 #include "ggrid_box.hpp"
 
-
+using namespace std;
 
 //**********************************************************************************
 //**********************************************************************************
@@ -330,8 +330,6 @@ void GGridBox::do_grid2d(GINT irank)
       }
     }
 
-std::cout << "GGridBox::do_grid2d: qmesh =" << qmesh_ << std::endl;
-std::cout << "GGridBox::do_grid2d: xNodes-" << *xNodes << std::endl;
     pelem->init(*xNodes);
 
     // With face/edge centroids computed, compute 
@@ -553,18 +551,21 @@ void GGridBox::set_global_bdytypes_2d(GElem_base &pelem)
   GTVector<GTVector<GFTYPE>>  *xNodes =&pelem.xNodes();
   GTVector<GTVector<GINT>>    *face_ind;
 
+cout << "GGridBox::set_global_bdytypes_2d: bdy_ind=" << *bdy_ind << endl;  
+
   GSIZET ib;
   GFTYPE eps=100*std::numeric_limits<GFTYPE>::min();
   GTVector<GINT> bset; // array of points that have been assigned a bdy condition
-  if ( bPeriodic_[0] == GBDY_PERIODIC ) { // check for periodicity in x
+  if ( bPeriodic_[0] ) { // check for periodicity in x
     for ( GSIZET m=0; m<2; m++ ) { // for each x edge
       for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each face index
         ib = (*bdy_ind)[k];
-        if ( !bset.contains(ib)
-          && (FUZZYEQ(P0_.x1,(*xNodes)[0][ib],eps) 
+        if ( (FUZZYEQ(P0_.x1,(*xNodes)[0][ib],eps) 
           ||  FUZZYEQ(P1_.x1,(*xNodes)[0][ib],eps)) ) {
-          bdy_typ->push_back( GBDY_PERIODIC );
-          bset.push_back(ib);  
+          if ( !bset.contains(ib) )  {
+            bset.push_back(ib);  
+            bdy_typ->push_back( GBDY_PERIODIC );
+          }
           // Set right x-coord equal to that on left-most bdy:
           if ( FUZZYEQ(P1_.x1,(*xNodes)[0][ib],eps) ) (*xNodes)[0][ib] = P0_.x1;
         }
@@ -575,25 +576,27 @@ void GGridBox::set_global_bdytypes_2d(GElem_base &pelem)
     for ( GSIZET m=0; m<2; m++ ) { // for each x edge
       for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
         ib = (*bdy_ind)[k];
-        if ( !bset.contains(ib)
-         && (FUZZYEQ(P0_.x1,(*xNodes)[0][ib],eps) 
+        if ( (FUZZYEQ(P0_.x1,(*xNodes)[0][ib],eps) 
          ||  FUZZYEQ(P1_.x1,(*xNodes)[0][ib],eps)) ) {
-          bdy_typ->push_back( global_bdy_types_[2*m+1] );
-          bset.push_back(ib);  
+          if ( !bset.contains(ib) ) {
+            bset.push_back(ib);  
+            bdy_typ->push_back( global_bdy_types_[2*m+1] );
+          }
         }
       }
     }
   }
 
-  if ( bPeriodic_[1] == GBDY_PERIODIC ) { // check for periodicity in y
+  if ( bPeriodic_[1] ) { // check for periodicity in y
     for ( GSIZET m=0; m<2; m++ ) { // for each y edge
       for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
         ib = (*bdy_ind)[k];
-        if ( !bset.contains(ib)
-         && (FUZZYEQ(P0_.x2,(*xNodes)[1][ib],eps) 
+        if ( (FUZZYEQ(P0_.x2,(*xNodes)[1][ib],eps) 
          ||  FUZZYEQ(P1_.x2,(*xNodes)[1][ib],eps)) ) {
-          bdy_typ->push_back( GBDY_PERIODIC );
-          bset.push_back(ib);  
+          if ( !bset.contains(ib) ) {
+            bset.push_back(ib);  
+            bdy_typ->push_back( GBDY_PERIODIC );
+          }
           // Set top y-coord equal to that on bottom-most bdy:
           if ( FUZZYEQ(P1_.x2,(*xNodes)[1][ib],eps) ) (*xNodes)[1][ib] = P0_.x2;
         }
@@ -604,11 +607,12 @@ void GGridBox::set_global_bdytypes_2d(GElem_base &pelem)
     for ( GSIZET m=0; m<2; m++ ) { // for each y edge
       for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
         ib = (*bdy_ind)[k];
-        if ( !bset.contains(ib)
-         && (FUZZYEQ(P0_.x2,(*xNodes)[1][ib],eps) 
+        if ( (FUZZYEQ(P0_.x2,(*xNodes)[1][ib],eps) 
          ||  FUZZYEQ(P1_.x2,(*xNodes)[1][ib],eps)) ) {
-          bdy_typ->push_back( global_bdy_types_[2*m] );
-          bset.push_back(ib);  
+          if ( !bset.contains(ib) ) {
+            bset.push_back(ib);  
+            bdy_typ->push_back( global_bdy_types_[2*m] );
+          }
         }
       }
     }
@@ -638,16 +642,17 @@ void GGridBox::set_global_bdytypes_3d(GElem_base &pelem)
   GSIZET ib;
   GFTYPE eps=100*std::numeric_limits<GFTYPE>::min();
   GTVector<GINT> bset; // array of points that have been assigned a bdy condition
-  if ( bPeriodic_[0] == GBDY_PERIODIC ) { // check for periodicity in x
+  if ( bPeriodic_[0] ) { // check for periodicity in x
     for ( GSIZET m=0; m<2; m++ ) { // for each x face
       face_ind = &pelem.face_indices(2*m+1);
       for ( GSIZET k=0; k<face_ind->size(); k++ ) { // for each bdy index
         ib = (*bdy_ind)[k];
-        if ( !bset.contains(ib)
-         && (FUZZYEQ(P0_.x1,(*xNodes)[0][ib],eps) 
-         ||  FUZZYEQ(P1_.x1,(*xNodes)[0][ib],eps)) ) {
-          bdy_typ->push_back( GBDY_PERIODIC );
-          bset.push_back(ib);
+        if ( (FUZZYEQ(P0_.x1,(*xNodes)[0][ib],eps) 
+         ||   FUZZYEQ(P1_.x1,(*xNodes)[0][ib],eps)) ) {
+          if ( !bset.contains(ib) ) {
+            bdy_typ->push_back( GBDY_PERIODIC );
+            bset.push_back(ib);
+          }
           // Set right x-coord equal to that on left-most bdy:
           if ( FUZZYEQ(P1_.x1,(*xNodes)[0][ib],eps) ) (*xNodes)[0][ib] = P0_.x1;
         }
@@ -659,27 +664,28 @@ void GGridBox::set_global_bdytypes_3d(GElem_base &pelem)
       face_ind = &pelem.face_indices(2*m+1);
       for ( GSIZET k=0; k<face_ind->size(); k++ ) { // for each bdy index
         ib = (*bdy_ind)[k];
-        if ( !bset.contains(ib)
-         && (FUZZYEQ(P0_.x1,(*xNodes)[0][ib],eps) 
-         ||  FUZZYEQ(P1_.x1,(*xNodes)[0][ib],eps)) ) {
-          bdy_typ->push_back( global_bdy_types_[2*m+1] );
-          bset.push_back(ib);
-
+        if ( (FUZZYEQ(P0_.x1,(*xNodes)[0][ib],eps) 
+         ||   FUZZYEQ(P1_.x1,(*xNodes)[0][ib],eps)) ) {
+          if ( !bset.contains(ib) ) {
+            bdy_typ->push_back( global_bdy_types_[2*m+1] );
+            bset.push_back(ib);
+          }
         }
       }
     }
   }
 
-  if ( bPeriodic_[1] == GBDY_PERIODIC ) { // check for periodicity in y
+  if ( bPeriodic_[1] ) { // check for periodicity in y
     for ( GSIZET m=0; m<2; m++ ) { // for each y face
       face_ind = &pelem.face_indices(2*m);
       for ( GSIZET k=0; k<face_ind->size(); k++ ) { // for each bdy index
         ib = (*bdy_ind)[k];
-        if ( !bset.contains(ib)
-         && (FUZZYEQ(P0_.x2,(*xNodes)[1][ib],eps) 
-         ||  FUZZYEQ(P1_.x2,(*xNodes)[1][ib],eps)) ) {
-          bdy_typ->push_back( GBDY_PERIODIC );
-          bset.push_back(ib);
+        if ( (FUZZYEQ(P0_.x2,(*xNodes)[1][ib],eps) 
+         ||   FUZZYEQ(P1_.x2,(*xNodes)[1][ib],eps)) ) {
+          if ( !bset.contains(ib) ) {
+            bdy_typ->push_back( GBDY_PERIODIC );
+            bset.push_back(ib);
+          }
           // Set top y-coord equal to that on bottom-most bdy:
           if ( FUZZYEQ(P1_.x2,(*xNodes)[1][ib],eps) ) (*xNodes)[1][ib] = P0_.x2;
         }
@@ -691,26 +697,28 @@ void GGridBox::set_global_bdytypes_3d(GElem_base &pelem)
       face_ind = &pelem.face_indices(2*m);
       for ( GSIZET k=0; k<face_ind->size(); k++ ) { // for each bdy index
         ib = (*bdy_ind)[k];
-        if ( !bset.contains(ib)
-         && (FUZZYEQ(P0_.x2,(*xNodes)[1][ib],eps) 
-         ||  FUZZYEQ(P1_.x2,(*xNodes)[1][ib],eps)) ) {
-          bdy_typ->push_back( global_bdy_types_[2*m] );
-          bset.push_back(ib);
+        if ( (FUZZYEQ(P0_.x2,(*xNodes)[1][ib],eps) 
+         ||   FUZZYEQ(P1_.x2,(*xNodes)[1][ib],eps)) ) {
+          if ( !bset.contains(ib) ) {
+            bdy_typ->push_back( global_bdy_types_[2*m] );
+            bset.push_back(ib);
+          }
         }
       }
     }
   }
 
-  if ( bPeriodic_[1] == GBDY_PERIODIC ) { // check for periodicity in z
+  if ( bPeriodic_[1] ) { // check for periodicity in z
     for ( GSIZET m=0; m<2; m++ ) { // for each z face
       face_ind = &pelem.face_indices(m+4);
       for ( GSIZET k=0; k<face_ind->size(); k++ ) { // for each bdy index
         ib = (*bdy_ind)[k];
-        if ( !bset.contains(ib)
-         && (FUZZYEQ(P0_.x3,(*xNodes)[2][ib],eps) 
-         ||  FUZZYEQ(P1_.x3,(*xNodes)[2][ib],eps)) ) {
-          bdy_typ->push_back( GBDY_PERIODIC );
-          bset.push_back(ib);
+        if ( (FUZZYEQ(P0_.x3,(*xNodes)[2][ib],eps) 
+         ||   FUZZYEQ(P1_.x3,(*xNodes)[2][ib],eps)) ) {
+          if ( !bset.contains(ib) ) {
+            bdy_typ->push_back( GBDY_PERIODIC );
+            bset.push_back(ib);
+          }
           // Set top z-coord equal to that on bottom-most bdy:
           if ( FUZZYEQ(P1_.x3,(*xNodes)[2][ib],eps) ) (*xNodes)[2][ib] = P0_.x3;
         }
@@ -722,11 +730,12 @@ void GGridBox::set_global_bdytypes_3d(GElem_base &pelem)
       face_ind = &pelem.face_indices(m+4);
       for ( GSIZET k=0; k<face_ind->size(); k++ ) { // for each bdy index
         ib = (*bdy_ind)[k];
-        if ( !bset.contains(ib)
-          && (FUZZYEQ(P0_.x3,(*xNodes)[2][ib],eps) 
+        if ( (FUZZYEQ(P0_.x3,(*xNodes)[2][ib],eps) 
           ||  FUZZYEQ(P1_.x3,(*xNodes)[2][ib],eps)) ) {
-          bdy_typ->push_back( global_bdy_types_[m+4] );
-          bset.push_back(ib);
+          if ( !bset.contains(ib) ) {
+            bdy_typ->push_back( global_bdy_types_[m+4] );
+            bset.push_back(ib);
+          }
         }
       }
     }
