@@ -290,6 +290,8 @@ cout << "main: diff[" << j << "]=" << *utmp_[0] << endl;
       // now find max errors of each type for each field:
       for ( GSIZET i=0; i<3; i++ ) maxerror[i] = MAX(maxerror[i],gerrnorm[j]);
     }
+
+    cout << "main: maxerror = " << maxerror << endl;
    
     GSIZET lnelems=grid_->nelems();
     GSIZET gnelems;
