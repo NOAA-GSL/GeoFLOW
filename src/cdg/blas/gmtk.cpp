@@ -1143,7 +1143,7 @@ void compute_grefderiv(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &etm
   GSIZET               ibeg, iend; // beg, end indices for global array
   GTVector<GSIZET>     N(GDIM);
   GTMatrix<GDOUBLE>   *Di;         // element-based 1d derivative operators
-  GElemList            *gelems = &grid.elems();
+  GElemList           *gelems = &grid.elems();
 
 #if defined(_G_IS2D)
   switch (idir) {
