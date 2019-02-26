@@ -53,6 +53,8 @@ virtual void                print(const GString &filename){}          // print g
                             &itype() { return itype_; }               // indices for all types
         GTVector<GSIZET>    &itype(GElemType i) { return itype_[i]; } // indices for type i    
         GElemType            gtype() { return gtype_; }               // get unique elem type on grid       
+        void                 deriv(GTVector<GFTYPE> &u, GINT idir, GTVector<GFTYPE> &tmp,
+                                   GTVector<GFTYPE> &du );            // derivative of global vector
         GFTYPE               integrate(GTVector<GFTYPE> &u,
                                        GTVector<GFTYPE> &tmp);        // spatial integration of global vector
         void                 print(GString fname, GBOOL bdof=FALSE);
@@ -99,6 +101,7 @@ protected:
         GINT                        nprocs_;        // number of MPI tasks
         GC_COMM                     comm_;          // communicator
         GElemList                   gelems_;        // element list
+        GTVector<GFTYPE>            etmp_;          // elem-level tmp vector
         GTVector<GTVector<GSIZET>>  itype_;         // indices in elem list of each type
         GTVector<GSIZET>            ntype_;         // no. elems of each type on grid
         GTMatrix<GTVector<GFTYPE>>  dXidX_;         // matrix Rij = dXi^j/dX^i, global

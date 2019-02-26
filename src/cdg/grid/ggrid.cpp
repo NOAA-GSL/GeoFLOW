@@ -784,6 +784,42 @@ GFTYPE GGrid::integrate(GTVector<GFTYPE> &u, GTVector<GFTYPE> &tmp)
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD : deriv
+// DESC   : Compute spatial derivative of u in direction idir, and
+//          return in du.
+// ARGS   : u   : 'global' integral argument
+//          idir: coord wrt which to take derivative (1, 2, or 3)
+//          utmp: tmp vector of same size as u
+//          du  : derivtive, returned
+// RETURNS: none.
+//**********************************************************************************
+void GGrid::deriv(GTVector<GFTYPE> &u, GINT idir, GTVector<GFTYPE> &utmp, 
+                  GTVector<GFTYPE> &du)
+{
+  assert(bInitialized_ && "Object not inititaized");
+
+  GTMatrix<GTVector<GFTYPE>> *dXidX = &this->dXidX();
+
+  // du/dx_idir = Sum_j=[1:N] dxi_j/dx_idir D_j u:
+  GINT nxy = this->gtype() == GE_2DEMBEDDED ? GDIM + 1 : GDIM;
+  if ( this->gtype() == GE_REGULAR ) {
+    GMTK::compute_grefderiv(*this, u, etmp_, idir, FALSE, du); // D_idir u
+    du *= (*dXidX)(idir-1,0)[0]; // is constant
+  }
+  else {  // compute dXi_j/dX_idir D^j u:
+    du = 0.0;
+    for ( GSIZET j=0; j<GDIM; j++ ) {
+      GMTK::compute_grefderiv(*this, u, etmp_, j, FALSE, utmp); // D_ri u
+      utmp.pointProd((*dXidX)(idir-1, j));
+      du += utmp; 
+    }
+  }
+    
+} // end of method deriv
+
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD : init_bc_info
 // DESC   : Set global bdy condition data from the element bdy data.
 // ARGS   : none
