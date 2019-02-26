@@ -199,6 +199,13 @@ cout << "main: du[" << j << "]=" << *du[j] << endl;
     GSIZET lnelems=grid_->nelems();
     GSIZET gnelems;
     GComm::Allreduce(&lnelems, &gnelems, 1, T2GCDatatype<GSIZET>() , GC_OP_SUM, comm);
+    return( maxerror.max()  > 10*std::numeric_limits<GFTYPE>::epsilon());
+    if ( maxerr.max() > 10*std::numeric_limits<GFTYPE>::epsilon() ) {
+      std::cout << "main: -------------------------------------derivative FAILED" << std::endl;
+      errcode = 1;
+    } else {
+      std::cout << "main: -------------------------------------derivative OK" << std::endl;
+    }
 
     // Print convergence data to file:
     std::ifstream itst;
