@@ -22,8 +22,8 @@
 //**********************************************************************************
 GMass::GMass(GGrid &grid, GBOOL bdoinverse)
 : GLinOp(grid),
-bdoinverse_      (FALSE),
-bmasslumped_      (TRUE)
+bdoinverse_  (bdoinverse),
+bmasslumped_       (TRUE)
 {
   grid_ = &grid;
   init();
