@@ -294,7 +294,7 @@ cout << "GHelm::reg_prod: Dx u = " << *utmp_[0]  << endl;
 cout << "GHelm::reg_prod: Dy u = " << *utmp_[1]  << endl;
 
   // Multiply by (const) metric factors
-  for ( GSIZET k=0; k<GDIM; k++ ) *utmp_[k] *= (*G_(k,0))[k];
+  for ( GSIZET k=0; k<GDIM; k++ ) *utmp_[k] *= (*G_(k,0))[0];
 
   // Take 'divergence' with transpose(D):
   GMTK::compute_grefdiv(*grid_, gdu, etmp1_, TRUE, uo); // Compute 'divergence' with DT_j
