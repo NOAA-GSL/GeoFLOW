@@ -55,7 +55,7 @@ GExRKStepper<T>::~GExRKStepper()
 //              dt   : time step
 //              tmp  : tmp space. Must have at least NState*(M+1)+1 vectors,
 //                     where NState is the number of state vectors.
-//              uout : updated state, n^n+1
+//              uout : updated state, at t^n+1
 //               
 // RETURNS    : none.
 //**********************************************************************************
