@@ -12,6 +12,7 @@
 #include "gtmatrix.hpp"
 #include "ggrid.hpp"
 
+using namespace std;
 
 //#if !defined(_GMTK_GLOBAL_DATA)
 //  #define _GMTK_GLOBAL_DATA
@@ -293,7 +294,7 @@ void D2_X_I1<GDOUBLE>(GTMatrix<GDOUBLE> &D2T,
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : D2_X_Dg (double)
+// METHOD : D2_X_Dg1 (double)
 // DESC   : Apply tensor product operator to vector:
 //            y = D2 X diag(D1) u
 //          where Dg  is the 1-direction's operator expressed as a vector, and D2
@@ -328,16 +329,12 @@ void D2_X_Dg1<GDOUBLE>(GTVector<GDOUBLE> &Dg1, GTMatrix<GDOUBLE> &D2T, GTVector<
 
   // Compute y = D2_X_Dg u as: y = (D2_X_I)(I_X_Dg) U,
   //  where U is u considered in matrix form:
-
-  // Resize tmp only if its current size is less than required:
   tmp.resizem(N1*N21);
+  // y = D2_X_I1 * tmp == TMP D2T (in mat form):
+  dmxm(tmp.data(), u.data(), &N1, &N21, D2T.data().data(), &N21, &N22, &szMatCache_);
 
   // tmp = I2_X_D1 * u == D1 U (in mat form):
-  dDmxm(tmp.data(), Dg1.data(), &N1, u.data(), &N1, &N21, &szMatCache_);
-
-  // y = D2_X_I1 * tmp == TMP D2T (in mat form):
-  dmxm(y.data(), tmp.data(), &N1, &N21, D2T.data().data(), &N21, &N22, &szMatCache_);
-
+  dDmxm(y.data(), Dg1.data(), &N1, tmp.data(), &N1, &N21, &szMatCache_);
 
 } // end of method D2_X_Dg1
 
@@ -1336,7 +1333,7 @@ void compute_grefderivsW(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &e
        && "Insufficient number of derivatives specified");
   
 
-  GSIZET                       ibeg, iend; // beg, end indices for global array
+  GSIZET                        ibeg, iend; // beg, end indices for global array
   GTVector<GSIZET>              N(GDIM);
   GTVector<GTVector<GDOUBLE>*>  W(GDIM);    // element weights
   GTVector<GTMatrix<GDOUBLE>*>  Di(GDIM);   // element-based 1d derivative operators
@@ -1352,8 +1349,8 @@ void compute_grefderivsW(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &e
     for ( GSIZET k=0; k<GDIM; k++ ) W[k]= (*gelems)[e]->gbasis(k)->getWeights();
     Di[0] = (*gelems)[e]->gbasis(0)->getDerivMatrix (dotrans);
     Di[1] = (*gelems)[e]->gbasis(1)->getDerivMatrix(!dotrans);
-    GMTK::Dg2_X_D1(*Di[0], *W[1], u, etmp, *du[0]); 
-    GMTK::D2_X_Dg1(*W[0], *Di[1], u, etmp, *du[1]); 
+    GMTK::Dg2_X_D1(*Di[0], *W [1], u, etmp, *du[0]); 
+    GMTK::D2_X_Dg1(*W [0], *Di[1], u, etmp, *du[1]); 
   }
   u.range_reset(); // reset global vec to global range
   for ( GSIZET k=0; k<GDIM; k++ ) du[k]->range_reset();
@@ -1422,12 +1419,13 @@ void compute_grefdiv(GGrid &grid, GTVector<GTVector<GDOUBLE>*> &u, GTVector<GDOU
   GTVector<GTMatrix<GDOUBLE>*> Di(GDIM);   // element-based 1d derivative operators
   GElemList                   *gelems = &grid.elems();
 
-  bembedded=grid.itype(GE_DEFORMED).size() > 0 && GDIM == 2;
+  bembedded = grid.gtype() == GE_2DEMBEDDED;
   assert(( (bembedded && u.size()==3) 
         || (!bembedded&& u.size()==GDIM) )
        && "Insufficient number of vector field components provided");
 
   divu = 0.0;
+
 #if defined(_G_IS2D)
 
   for ( GSIZET e=0; e<grid.elems().size(); e++ ) {
@@ -1444,6 +1442,12 @@ void compute_grefdiv(GGrid &grid, GTVector<GTVector<GDOUBLE>*> &u, GTVector<GDOU
     GMTK::D2_X_I1(*Di[1], *u[1], N[0], N[1], etmp); // D2 u2
     divu += etmp;
     if ( bembedded ) divu += *u[2]; // D3 acts as I
+#if 0
+    Di[0] = (*gelems)[e]->gbasis(0)->getDerivMatrix (dotrans);
+    Di[1] = (*gelems)[e]->gbasis(1)->getDerivMatrix(!dotrans);
+    GMTK::I2_X_D1(*Di[0], u, N[0], N[1], *du[0]); 
+    GMTK::D2_X_I1(*Di[1], u, N[0], N[1], *du[1]); 
+#endif
   }
   divu.range_reset();  // reset range to global scope
   for ( GSIZET k=0; k<u.size(); k++ ) u[k]->range_reset(); 
