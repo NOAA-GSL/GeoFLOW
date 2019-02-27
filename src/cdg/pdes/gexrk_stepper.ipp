@@ -95,6 +95,9 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &ub,
   if ( bupdatebc_ ) bdy_update_callback_(tt, u, ub); 
   if ( bapplybc_  ) bdy_apply_callback_ (tt, u, ub); 
   rhs_callback_( tt, u, dt, K_[0]); // k_1 at stage 1
+  for ( n=0; n<nstate; n++ ) { // for each state member, u
+    if ( ggfx_ != NULLPTR ) ggfx_->doOp(*K_[0][n], GGFX_OP_SMOOTH);
+  }
 
   for ( i=1; i<nstage_-1; i++ ) { // cycle thru remaining stages minus 1
     // Compute k_m:
@@ -108,6 +111,7 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &ub,
     if ( bapplybc_  ) bdy_apply_callback_ (tt, u, ub); 
     rhs_callback_( tt, u, dt, K_[i]); // k_i at stage i
     for ( n=0; n<nstate; n++ ) { // for each state member, u
+      if ( ggfx_ != NULLPTR ) ggfx_->doOp(*K_[i][n], GGFX_OP_SMOOTH);
       *uout[n] += (*K_[i][n])*( (*c)[i]*dt ); // += dt * c_i * k_i
     }
    }
@@ -123,6 +127,7 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &ub,
    rhs_callback_( tt, u, dt, K_[0]); // k_M at stage M
 
    for ( n=0; n<nstate; n++ ) { // for each state member, u
+    if ( ggfx_ != NULLPTR ) ggfx_->doOp(*K_[0][n], GGFX_OP_SMOOTH);
     *uout[n] += (*K_[0][n])*( (*c)[i]*dt ); // += dt * c_M * k_M
    }
 #else 
