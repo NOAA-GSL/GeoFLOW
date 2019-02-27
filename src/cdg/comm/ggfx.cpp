@@ -14,6 +14,7 @@
 #include "ggfx.hpp"
 #include "gcomm.hpp"
  
+using namespace std;
 
 //************************************************************************************
 //************************************************************************************
@@ -1035,6 +1036,8 @@ void GGFX::initMult()
 
   // Do DSS sum to find multiplicity:
   doOp<GFLOAT>(mult, GGFX_OP_SUM);
+
+cout << "GGFX::initMult: mult = " << mult << endl;
 
   // Compute 1/mult:
   imult_.resize(mult.size());
