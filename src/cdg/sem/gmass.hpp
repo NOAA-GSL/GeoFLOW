@@ -22,7 +22,8 @@ public:
                           GMass(const GMass &);
                          ~GMass();
 
-        void              opVec_prod(GTVector<GFTYPE> &in, GTVector<GFTYPE> &out); // Operator-vector product
+        void              opVec_prod(GTVector<GFTYPE> &in, GTVector<GFTYPE> &out,
+                                     GTVector<GTVector<GFTYPE>*> &utmp );          // Operator-vector product
 //      void              do_mass_lumping(GBOOL bml);                              // Set mass lumping flag
         void              init();
 

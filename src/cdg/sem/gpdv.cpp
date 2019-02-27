@@ -159,7 +159,7 @@ void GpdV::reg_prod(GTVector<GFTYPE> &p, GTVector<GTVector<GFTYPE>*> &u, GTVecto
   po.pointProd(p,*utmp[0]);
 
   // apply mass:
-  massop_->opVec_prod(*utmp[0], po);
+  massop_->opVec_prod(*utmp[0], po, utmp); // last arg is unused
 
 } // end of method reg_prod
 

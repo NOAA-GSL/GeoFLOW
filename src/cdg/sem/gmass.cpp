@@ -214,10 +214,11 @@ void GMass::init3d()
 // DESC   : Compute application of this operator to input vector.
 // ARGS   : input : input vector
 //          output: output (result) vector
+//          utmp  : required tmp space. Not used here.
 //             
 // RETURNS:  none
 //**********************************************************************************
-void GMass::opVec_prod(GTVector<GFTYPE> &input, GTVector<GFTYPE> &output) 
+void GMass::opVec_prod(GTVector<GFTYPE> &input, GTVector<GFTYPE> &output, GTVector<GTVector<GFTYPE>*> &utmp) 
 {
 
   mass_.pointProd(input, output);
