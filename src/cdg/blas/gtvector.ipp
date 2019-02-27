@@ -1240,8 +1240,8 @@ template<class T>
 GSIZET
 GTVector<T>::multiplicity(T val)
 {
-  assert(std::is_arithmetic<T>::value || std::is_arithmetic<T>::value || std::is_pointer<T>::value &&
-    "Invalid template type: multiplicity(T)");
+//assert(std::is_arithmetic<T>::value || std::is_arithmetic<T>::value || std::is_pointer<T>::value &&
+//  "Invalid template type: multiplicity(T)");
 
   GSIZET mult=0;
   for ( GLLONG i=this->gindex_.beg(); i<=this->gindex_.end(); i+=this->gindex_.stride() ) {
@@ -1271,8 +1271,8 @@ template<class T>
 GSIZET
 GTVector<T>::multiplicity(T val, GSIZET *&index, GSIZET &n)
 {
-  assert(std::is_arithmetic<T>::value || std::is_arithmetic<T>::value || std::is_pointer<T>::value &&
-    "Invalid template type: multiplicity(T,GSIZET*,GSIZET&)");
+//assert(std::is_arithmetic<T>::value || std::is_arithmetic<T>::value || std::is_pointer<T>::value &&
+//  "Invalid template type: multiplicity(T,GSIZET*,GSIZET&)");
 
   GLLONG  m=0;
   GSIZET mult=0;
@@ -1312,9 +1312,8 @@ template<class T>
 GSIZET
 GTVector<T>::multiplicity_floor(T val, T floor)
 {
-
-  assert(std::is_arithmetic<T>::value || std::is_arithmetic<T>::value &&
-    "Invalid template type: multiplicity_floor(T,T)");
+//assert(std::is_arithmetic<T>::value || std::is_arithmetic<T>::value &&
+//  "Invalid template type: multiplicity_floor(T,T)");
 
   GSIZET mult=0;
 
@@ -1345,8 +1344,8 @@ template<class T>
 GSIZET
 GTVector<T>::multiplicity_floor(T val, GSIZET *&index, GSIZET &n, T floor)
 {
-  assert(std::is_arithmetic<T>::value || std::is_arithmetic<T>::value &&
-    "Invalid template type: multiplicity_floor(T,GSIZET *,GSIZE&,T)");
+//assert(std::is_arithmetic<T>::value || std::is_arithmetic<T>::value &&
+//  "Invalid template type: multiplicity_floor(T,GSIZET *,GSIZE&,T)");
 
   GLLONG  m=0;
   GSIZET mult=0;
@@ -1386,8 +1385,8 @@ template<class T>
 GSIZET
 GTVector<T>::multiplicity_ceil(T val, T ceil)
 {
-  assert(std::is_arithmetic<T>::value || std::is_arithmetic<T>::value &&
-    "Invalid template type: multiplicity_ceil(T,T)");
+//assert(std::is_arithmetic<T>::value || std::is_arithmetic<T>::value &&
+//  "Invalid template type: multiplicity_ceil(T,T)");
 
   GSIZET index, mult=1;
 
