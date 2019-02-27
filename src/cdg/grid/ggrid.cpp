@@ -14,6 +14,7 @@
 #include "ggrid.hpp"
 #include "gcomm.hpp"
 
+using namespace std;
 
 //**********************************************************************************
 //**********************************************************************************
@@ -29,6 +30,7 @@ GGrid::GGrid(const geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,G
 bInitialized_                   (FALSE),
 nprocs_        (GComm::WorldSize(comm)),
 irank_         (GComm::WorldRank(comm)),
+minnodedist_   (std::numeric_limits<GFTYPE>::max()),
 bdycallback_                  (NULLPTR),
 comm_                            (comm)
 {
@@ -346,7 +348,7 @@ void GGrid::grid_init()
     reg_init();
   }
 
-  find_min_dist();
+  minnodedist_ = find_min_dist();
   init_bc_info();
 
   bInitialized_ = TRUE;
@@ -480,11 +482,11 @@ void GGrid::reg_init()
      Jac_.range(ibeg, iend);
      faceJac_.range(ifbeg, ifend);
 
-     // Set nodal Cart coords
+     // Set global nodal Cart coords from element coords:
      for ( GSIZET j=0; j<nxy; j++ ) {
        xNodes_[j].range(ibeg, iend);
        xNodes_[j] = (*xe)[j];
-        // Zero-out local xNodes; only global allowed now:
+        // Zero-out local xe; only global allowed now:
        (*xe)[j].clear(); 
      }
 
@@ -510,6 +512,10 @@ void GGrid::reg_init()
    Jac_.range_reset();
    faceJac_.range_reset();
    for ( GSIZET j=0; j<nxy; j++ ) xNodes_[j].range_reset();
+
+
+   for ( GSIZET j=0; j<nxy; j++ ) 
+     cout << "GGrid::reg_init: xNodes_[" << j << "j]=" << xNodes_[j] << endl;
    
 } // end of method reg_init
 
@@ -591,123 +597,45 @@ GTVector<GTVector<GFTYPE>> &GGrid::faceNormal()
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : find_min_dist
-// DESC   : Compute min node distance for each element
+// DESC   : Compute min inter-node distance for grid
+//          NOTE: this method isn't recommended for regular
+//                use, as it's slow.
 // ARGS   : none
 // RETURNS: none
 //**********************************************************************************
-void GGrid::find_min_dist()
+GFTYPE GGrid::find_min_dist()
 {
   assert(gelems_.size() > 0 && "Elements not set");
 
   
  
-  GSIZET            Nx, Ny, Nz, nxy;
-  GFTYPE            del, dr;
-  GTVector<GINT>   *N, I(7);
   GTPoint<GFTYPE>  dx(3), p0(3), p1(3);
-  GTVector<GTVector<GFTYPE>> *xn;
 
-  // Find min node distance for each elem. 
+  // Find min node distance on grid:
   dx[2] = 0.0;
   p0[2] = 0.0;
   p1[2] = 0.0;
 
-  minnodedist_.resize(gelems_.size()); // one dr for each elem
+  GFTYPE xmin = std::numeric_limits<GFTYPE>::max();
+  GFTYPE xgmin;
 
-  // For GE_2DEMBEDDED grids:
-  if ( itype_[GE_2DEMBEDDED].size() > 0 ) {
-    for ( auto e=0; e<gelems_.size(); e++ ) {
-      dr = std::numeric_limits<GFTYPE>::max();
-      xn = &gelems_[e]->xNodes(); 
-      N  = &gelems_[e]->dim(); Nx = (*N)[0]; Ny = (*N)[1];
-      for ( auto j=0; j<Ny; j++ ) { // loop over all subcells
-        for ( auto i=0; i<Nx; i++ ) {
-          I[0] = i+1+j*Nx; I[1] = i+j*Nx; I[2] = i+1+(j+1)*Nx;
-          for ( auto n=0; n<GDIM; n++ ) p0[n] = (*xn)[n][i+j*Nx];
-          for ( auto l=0; l<GDIM*(GDIM-1)+1; l++ ) {
-            for ( auto n=0; n<GDIM+1; n++ ) p1[n] = (*xn)[n][I[l]];
-            dx = p1 - p0;
-            del   = dx.norm();
-            if ( del > 0.0 ) dr = MIN(dr,del);
-          } // end, cell vertices
-        }
-      }
-      minnodedist_[e] = dr;
-    } // end, elem loop
-  } 
 
-  // For GE_DEFROMED grids:
-  if ( itype_[GE_DEFORMED].size() > 0  ) {
-    if ( GDIM == 2 ) {
-      for ( auto e=0; e<gelems_.size(); e++ ) {
-        dr = std::numeric_limits<GFTYPE>::max();
-        xn = &gelems_[e]->xNodes(); 
-        N  = &gelems_[e]->dim(); Nx = (*N)[0]; Ny = (*N)[1];
-        for ( auto j=0; j<Ny; j++ ) { // loop over all subcells
-          for ( auto i=0; i<Nx; i++ ) {
-            I[0] = i+1+j*Nx; I[1] = i+j*Nx; I[2] = i+1+(j+1)*Nx;
-            for ( auto n=0; n<GDIM; n++ ) p0[n] = (*xn)[n][i+j*Nx];
-            for ( auto l=0; l<GDIM*(GDIM-1)+1; l++ ) {
-              for ( auto n=0; n<GDIM; n++ ) p1[n] = (*xn)[n][I[l]];
-              dx = p1 - p0;
-              del= dx.norm();
-              if ( del > 0.0 ) dr = MIN(dr,del);
-            } // end, cell vertices
-          }
-        }
-        minnodedist_[e] = dr;
-      } // end, elem loop
+  // Get grid dimension:
+  GINT nxy = gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
+
+  // Cycle over all node points and find min distance:
+  // NOTE: this isn't fast....
+  for ( GSIZET j=0; j<xNodes_[0].size()-1; j++ ) {
+    for ( GSIZET i=0; i<nxy; i++ ) {
+      p0[i] = xNodes_[i][j];
+      p1[i] = xNodes_[i][j+1];
     }
-    else if ( GDIM == 3 ) {
-      for ( auto e=0; e<gelems_.size(); e++ ) {
-        dr = std::numeric_limits<GFTYPE>::max();
-        xn = &gelems_[e]->xNodes(); 
-        N  = &gelems_[e]->dim();
-        Nx = (*N)[0]; Ny = (*N)[1]; Nz = (*N)[2]; nxy = Nx*Ny;
-        for ( auto k=0; k<Nz-1; k++ ) { // loop over all subcells
-          for ( auto j=0; j<Ny-1; j++ ) {
-            for ( auto i=0; i<Nx-1; i++ ) {
-              I[0] = i+1+j*Nx+k*nxy; I[1] = i+j*Nx+k*nxy; I[2] = i+1+(j+1)*Nx+k*nxy;
-              I[3] = i+1+j*Nx+k*nxy; I[4] = i+j*Nx+k*nxy; I[5] = i+1+(j+1)*Nx+k*nxy; I[6] = i+j*Nx+k*nxy;
-              for ( auto n=0; n<GDIM; n++ ) p0[n] = (*xn)[n][i+j*Nx];
-              for ( auto l=0; l<GDIM*(GDIM-1)+1; l++ ) {
-                for ( auto n=0; n<GDIM; n++ ) p1[n] = (*xn)[n][I[l]];
-                dx = p1 - p0;
-                del= dx.norm();
-                if ( del > 0.0 ) dr = MIN(dr,del);
-              } // end, cell vertices, l loop
-            } // end, i loop
-          } // end, j loop
-        } // end, k loop
-        minnodedist_[e] = dr;
-      } // end, element loop
-    } // end of GDIM == 3 test
-  } // end/ of GE_DEFORMED test
+    dx = p1 - p0; 
+    if ( dx.norm() > 0.0 ) xmin = MIN(xmin, dx.norm()); 
+  }
 
-  // For GE_REGULAR grids:
-  if ( itype_[GE_REGULAR].size() > 0 ) {
-    for ( auto e=0; e<gelems_.size(); e++ ) {
-      dr = std::numeric_limits<GFTYPE>::max();
-      xn = &gelems_[e]->xNodes(); 
-      N  = &gelems_[e]->dim();
-      for ( auto j=0; j<(*N)[0]-1; j++ ) { // x-direction
-        del = fabs((*xn)[0][j+1] - (*xn)[0][j]);
-        if ( del > 0.0 ) dr = MIN(dr,del);
-      }
-      for ( auto j=0; j<(*N)[1]-1; j++ ) { // y-direction
-        del = fabs((*xn)[1][(j+1)*(*N)[0]] - (*xn)[1][j*(*N)[0]]);
-        if ( del > 0.0 ) dr = MIN(dr,del);
-      }
-      if ( GDIM > 2 ) { // z-direction
-        nxy = (*N)[0] * (*N)[1];
-        for ( auto j=0; j<(*N)[1]-1; j++ ) {
-          del = fabs((*xn)[2][(j+1)*nxy] - (*xn)[2][j*nxy]);
-          if ( del > 0.0 ) dr = MIN(dr,del);
-        }
-      }
-      minnodedist_[e] = dr;
-    }
-  } // end/ of GE_REGULAR test
+  GComm::Allreduce(&xmin, &xgmin, 1, T2GCDatatype<GFTYPE>() , GC_OP_MIN, comm_);
+  return xgmin;
 
 } // end of method find_min_dist
 

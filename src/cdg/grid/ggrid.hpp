@@ -63,9 +63,8 @@ virtual void                print(const GString &filename){}          // print g
         GSIZET               nsurfdof();                              // compute total number elem surf dof
         GFTYPE               minlength();                             // find min elem length
         GFTYPE               maxlength();                             // find max elem length
-        GTVector<GFTYPE>    &minnodedist()                            // find min node distance
-                            {return minnodedist_; }
-
+        GFTYPE               minnodedist()         
+                             {return minnodedist_;}                   // find min node distance
         GTMatrix<GTVector<GFTYPE>>
                             &dXidX();                                 // global Rij = dXi^j/dX^i
         GTVector<GFTYPE>    &dXidX(GSIZET i,GSIZET j);                // Rij matrix element 
@@ -92,7 +91,7 @@ protected:
         void                        reg_init();                       // initialize regular elems
 
          
-        void                        find_min_dist(); 
+        GFTYPE                      find_min_dist(); 
         void                        init_bc_info(); 
 
         GBOOL                       bInitialized_;  // object initialized?
@@ -109,7 +108,7 @@ protected:
         GTVector<GFTYPE>            Jac_;           // interior Jacobian, global
         GTVector<GFTYPE>            faceJac_;       // face Jacobian, global
         GTVector<GTVector<GFTYPE>>  faceNormal_;    // normal to face at each node point (2d & 3d), global
-        GTVector<GFTYPE>            minnodedist_;   // min node length array (for each elem)
+        GFTYPE                      minnodedist_;   // min node length array (for each elem)
         GTVector<GTVector<GSIZET>>  igbdy_;         // index into global field indicating a domain bdy
         GTVector<GBdyType>          igbdytypes_;    // global domain bdy types for each igbdy index
         std::function<void(GElemList &)> 
