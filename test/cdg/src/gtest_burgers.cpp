@@ -259,6 +259,7 @@ cout << "main: Initializing state..." << endl;
     compute_analytic(*grid_, t, ptree, u_);
 cout << "main: State initiallized." << endl; 
 
+cout << "main: u(t=0)=" << *u_[0] << endl;
 cout << "main: entering time loop..." << endl; 
     GPTLstart("time_loop");
     for( GSIZET i=0; i<maxSteps; i++ ){
@@ -644,8 +645,8 @@ void init_ggfx(GGrid &grid, GGFX &ggfx)
   GTVector<GNODEID>              glob_indices;
   GTVector<GTVector<GFTYPE>>    *xnodes;
 
-  delta  = grid.minnodedist().min();
-  dX     = 0.5*delta;
+  delta  = grid.minnodedist();
+  dX     = 0.2*delta;
   xnodes = &grid.xNodes();
   glob_indices.resize(grid.ndof());
 
@@ -653,6 +654,8 @@ void init_ggfx(GGrid &grid, GGFX &ggfx)
   // using Morton indices:
   gmorton.setIntegralLen(P0,dX);
   gmorton.key(glob_indices, *xnodes);
+
+cout << "init_ggfx: glob_indices=" << glob_indices << endl;
 
   // Initialize gather/scatter operator:
   GBOOL bret = ggfx.init(glob_indices);
