@@ -559,6 +559,75 @@ void compute_poly_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVec
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD: compute_dirgauss_heat
+// DESC  : Compute solution to heat equation with GBDY_DIRICHLET bcs,
+//         a Gaussian 'lump'. Must use box grid.
+// ARGS  : grid    : GGrid object
+//         t       : time
+//         ptree   : main property tree
+//         ua      : return solution
+//**********************************************************************************
+void compute_dirgauss_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVector<GTVector<GFTYPE>*> &ua)
+{
+  GINT             n;
+  GFTYPE           wsum, prod, argxp, argxm, da, eps=1e-18;
+  GFTYPE           nxy, sig0, ufact=1.0, u0;
+  GTVector<GFTYPE> xx(GDIM), si(GDIM), sig(GDIM);
+  GTPoint<GFTYPE>  r0(3), P0(3);
+  std::vector<GFTYPE> svec;
+
+  PropertyTree heatptree = ptree.getPropertyTree("init_lump");
+  PropertyTree boxptree  = ptree.getPropertyTree("grid_box");
+
+  GTVector<GTVector<GFTYPE>> *xnodes = &grid_->xNodes();
+
+  assert(grid.gtype() == GE_REGULAR && "Invalid element types");
+  
+  // Check bdy conditioins:
+  GTVector<GString> bc(6);
+  bc[0] = boxptree.getValue<GString>("bdy_x_0");
+  bc[1] = boxptree.getValue<GString>("bdy_x_1");
+  bc[2] = boxptree.getValue<GString>("bdy_y_0");
+  bc[3] = boxptree.getValue<GString>("bdy_y_1");
+  bc[4] = boxptree.getValue<GString>("bdy_z_0");
+  bc[5] = boxptree.getValue<GString>("bdy_z_1");
+  assert(bc.multiplicity("GBDY_DIRICHLET") >= 2*GDIM 
+      && "Periodic boundaries must be set on all boundaries");
+
+
+  nxy = (*xnodes)[0].size(); // same size for x, y, z
+  
+  r0.x1 = heatptree.getValue<GFTYPE>("x0"); 
+  r0.x2 = heatptree.getValue<GFTYPE>("y0"); 
+  r0.x3 = heatptree.getValue<GFTYPE>("z0"); 
+  sig0  = heatptree.getValue<GFTYPE>("sigma"); 
+  u0    = heatptree.getValue<GFTYPE>("u0"); 
+
+  for ( GSIZET k=0; k<GDIM; k++ ) {
+    sig[k] = sqrt(sig0*sig0 + 2.0*t*nu_[0]); // scalar viscosity only
+    si [k] = 0.5/(sig[k]*sig[k]);
+  }
+
+  for ( GSIZET j=0; j<nxy; j++ ) {
+    for ( GSIZET i=0; i<GDIM; i++ ) xx[i] = (*xnodes)[i][j] - r0[i];
+
+    prod = 1.0;
+    for ( GSIZET k=0; k<GDIM; k++ ) {
+      wsum    = exp(-xx[k]*xx[k]*si[k]);
+      n       = 1;
+      argxp = -pow(xx[k],2.0)*si[k];
+      da    =  exp(argxp);
+     (*ua[0])[j] = u0*pow(sig0,2)/pow(sig[0],2)*da;
+    }
+  }
+
+  
+} // end, compute_dirgauss_heat
+
+
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD: compute_pergauss_heat
 // DESC  : Compute solution to heat equation with GBDY_PERIODIC bcs,
 //         a Gaussian 'lump'. Must use box grid.
@@ -587,8 +656,18 @@ void compute_pergauss_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
   PropertyTree boxptree = ptree.getPropertyTree("grid_box");
   std::vector<GFTYPE> xyz0 = boxptree.getArray<GFTYPE>("xyz0");
   std::vector<GFTYPE> dxyz = boxptree.getArray<GFTYPE>("delxyz");
+  GTVector<GBdyType> bc(6);
   P0 = xyz0; r0 = dxyz; gL = P0 + r0;
   
+  GTVector<GString> bc(6);
+  bc[0] = boxptree.getValue<GString>("bdy_x_0");
+  bc[1] = boxptree.getValue<GString>("bdy_x_1");
+  bc[2] = boxptree.getValue<GString>("bdy_y_0");
+  bc[3] = boxptree.getValue<GString>("bdy_y_1");
+  bc[4] = boxptree.getValue<GString>("bdy_z_0");
+  bc[5] = boxptree.getValue<GString>("bdy_z_1");
+  assert(bc.multiplicity("GBDY_PERIODIC") == 2*GDIM 
+      && "Periodic boundaries must be set on all boundaries");
 
   bAdd = FALSE; // add solution to existing ua
 
@@ -647,13 +726,18 @@ void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVecto
   GBOOL bpureadv = advptree.getValue<GBOOL>("bpureadv");
 
   GString      sblock = ptree.getValue<GString>("init_block"); // name of initialization block
+  GString      sbcs   = ptree.getValue<GString>("bdy_conditions"); // name of initialization block
   PropertyTree blockptree = ptree.getPropertyTree(sblock); // sub-block of main ptree describing initialization type
 
   
   if ( doheat  ) {
     
     if ( sblock == "init_lump" ) {
+      if ( sbcs == "PERIODIC" ) {
       compute_pergauss_heat(grid, t, ptree, ua);
+      } else { // is DIRICHLET
+      compute_dirgauss_heat(grid, t, ptree, ua);
+      }
     }
     else if ( sblock == "poly_test"  ) {
       compute_poly_heat(grid, t, ptree, ua);
