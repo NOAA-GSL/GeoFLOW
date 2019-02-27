@@ -198,11 +198,12 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const Time &dt
   // which this method is called.
 
   // Do heat equation RHS:
+  //     du/dt = nu nabla^2 u 
   if ( doheat_ ) {
     for ( auto k=0; k<u.size(); k++ ) {
-      ghelm_->opVec_prod(*u[k],*urhstmp_[0]); // apply diffusion
-     *urhstmp_[0] *= -1.0; // Lap op  is neg on RHS
-      gimass_->opVec_prod(*urhstmp_[0],*dudt[k]); // apply M^-1
+      ghelm_->opVec_prod(*u[k],*urhstmp_[0], uoptmp_); // apply diffusion
+     *urhstmp_[0] *= -1.0; // weak Lap op is neg on RHS
+      gimass_->opVec_prod(*urhstmp_[0],*dudt[k], uoptmp_); // apply M^-1
     }
     return;
   }
@@ -219,18 +220,18 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const Time &dt
     //           the remainder should be the adv. velocity components: 
     for ( auto j=0; j<u.size()-1; j++ ) c_[j] = u[j+1];
     gadvect_->apply(*u[0], c_, utmp_, *dudt[0]); // apply advection
-    ghelm_->opVec_prod(*u[0],*utmp_[0]); // apply diffusion
+    ghelm_->opVec_prod(*u[0],*utmp_[0],uoptmp_); // apply diffusion
     *utmp_[0] *= -1.0; // Lap op is negative on RHS
     *utmp_[0] -= *dudt[0]; // subtract advection term
-    gimass_->opVec_prod(*utmp_[0],*dudt[0]); // apply M^-1
+    gimass_->opVec_prod(*utmp_[0],*dudt[0], uoptmp_); // apply M^-1
   }
   else {             // nonlinear advection
     for ( auto k=0; k<u.size(); k++ ) {
       gadvect_->apply(*u[k], u, urhstmp_, *dudt[k]);
-      ghelm_->opVec_prod(*u[k],*urhstmp_[0]); // apply diffusion
+      ghelm_->opVec_prod(*u[k],*urhstmp_[0], uoptmp_); // apply diffusion
       *utmp_[0] *= -1.0; // is negative on RHS
       *urhstmp_[0] += *dudt[k]; // subtract nonlinear term
-      gimass_->opVec_prod(*urhstmp_[0],*dudt[k]); // apply M^-1
+      gimass_->opVec_prod(*urhstmp_[0],*dudt[k], uoptmp_); // apply M^-1
     }
   }
   
@@ -362,13 +363,16 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
       gexrk_->set_update_bdy_callback(update_bdy_callback_);
       gexrk_->set_apply_bdy_callback(applybc);
       gexrk_->set_ggfx(ggfx_);
-      // Set 'helper' tmp arrays from main one, utmp_:
+      // Set 'helper' tmp arrays from main one, utmp_, so that
+      // we're sure there's no overlap:
       uold_   .resize(nstate); // solution at time level n
       urktmp_ .resize(nstate*(itorder_+1)+1); // RK stepping work space
-      urhstmp_.resize(utmp_.size()-uold_.size()-urktmp_.size()); // RK RHS work space
+      urhstmp_.resize(1); // work space for RHS
+      uoptmp_ .resize(utmp_.size()-uold_.size()-urktmp_.size()-urhstmp_.size()); // RHS operator work space
       for ( GSIZET j=0; j<nstate; j++ ) uold_[j] = utmp_[j];
       for ( GSIZET j=0; j<urktmp_ .size(); j++ ) urktmp_ [j] = utmp_[nstate+j];
       for ( GSIZET j=0; j<urhstmp_.size(); j++ ) urhstmp_[j] = utmp_[nstate+urktmp_.size()+j];
+      for ( GSIZET j=0; j<uoptmp_.size(); j++ ) uoptmp_[j] = utmp_[nstate+urktmp_.size()+urhstmp_.size()+j];
       break;
     case GSTEPPER_BDFAB:
       dthist_.resize(MAX(itorder_,inorder_));
@@ -403,7 +407,6 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
   // Instantiate spatial discretization operators:
   gmass_   = new GMass(*grid_);
   ghelm_   = new GHelmholtz(*grid_);
-  ghelm_->set_tmp(urhstmp_);
   
   if ( isteptype_ ==  GSTEPPER_EXRK2 
     || isteptype_ == GSTEPPER_EXRK4 ) {

@@ -137,6 +137,8 @@ private:
         GTVector<GTVector<GFTYPE>*>  
                             urhstmp_;       // helper arrays set from utmp
         GTVector<GTVector<GFTYPE>*>  
+                            uoptmp_;        // helper arrays set from utmp
+        GTVector<GTVector<GFTYPE>*>  
                             urktmp_;        // helper arrays set from utmp
         GTVector<GTVector<GFTYPE>*>  
                             c_;             // linear velocity if bpureadv = TRUE
