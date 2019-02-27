@@ -579,12 +579,12 @@ GTVector<T> &GTVector<T>::operator=(const GTVector<T> &obj)
   if ( data_ == NULLPTR ) {
     n_ = obj.capacity();
     data_ = new T [n_];
-    gindex_(n_, n_, 0, n_-1, 1,  0);
+    gindex_ = obj.gindex_;
     gindex_keep_ = gindex_;
   }
 
-  for ( GLLONG j=0; j<obj.capacity(); j++ ) {
-    data_[j] = obj[j];
+  for ( GLLONG j=gindex_.beg(); j<=gindex_.end(); j++ ) {
+    data_[j] = obj[j-gindex_.beg()];
   }
 
   #if defined(_G_AUTO_UPDATE_DEV)
@@ -617,8 +617,8 @@ GTVector<T> &GTVector<T>::operator=(const std::vector<T> &obj)
     gindex_keep_ = gindex_;
   }
 
-  for ( GLLONG j=0; j<obj.capacity(); j++ ) {
-    data_[j] = obj[j];
+  for ( GLLONG j=gindex_.beg(); j<=gindex_.end(); j++ ) {
+    data_[j] = obj[j-gindex_.beg()];
   }
 
   #if defined(_G_AUTO_UPDATE_DEV)
