@@ -126,11 +126,12 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &ub,
     *uout[n] += (*K_[0][n])*( (*c)[i]*dt ); // += dt * c_M * k_M
    }
 #else 
-  rhs_callback_(tt, u, dt, K_[0]); 
+   tt = t;
+   rhs_callback_(tt, uin, dt, K_[0]); 
    for ( n=0; n<nstate; n++ ) { // for each state member, u
-std::cout << " RHS[" << n << "]=" << *K_[0][n] << std::endl;
+std::cout << "GExRK::step: RHS[" << n << "]=" << *K_[0][n] << std::endl;
+    if ( ggfx_ != NULLPTR ) ggfx_->doOp(*K_[0][n], GGFX_OP_SMOOTH);
     *uout[n] = (*uin[n]) + (*K_[0][n]) * dt; // Euler step
-    if ( ggfx_ != NULLPTR ) ggfx_->doOp(*uout[n], GGFX_OP_SMOOTH);
    }
   
 #endif
