@@ -1100,7 +1100,7 @@ while(1){};
 
   GLLONG j; 
   for ( j=this->gindex_.beg(); j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
-    ret[j] = this->data_[j] * obj[j];
+    ret[j] = this->data_[j-gindex_.beg()] * obj[j-gindex_.beg()];
   }
 
 } // end, pointProd (1)
@@ -1127,7 +1127,7 @@ while(1){};
 
   GLLONG j;
   for ( j=this->gindex_.beg(); j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
-    data_[j] *= obj[j];
+    data_[j] *= obj[j-gindex_.beg()];
   }
 
 } // end, pointProd (2)
