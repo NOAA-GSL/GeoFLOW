@@ -504,6 +504,61 @@ void compute_pergauss_adv(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GT
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD: compute_poly_heat
+// DESC  : Compute solution to heat equation with arb. bcs,
+//         a polynomial, to test Helmholtz op. Must use box grid.
+// ARGS  : grid    : GGrid object
+//         t       : time
+//         ptree   : main property tree
+//         ua      : return solution
+//**********************************************************************************
+void compute_poly_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVector<GTVector<GFTYPE>*> &ua)
+{
+  assert(grid.gtype() == GE_REGULAR && "Invalid element types");
+
+  GINT             n;
+  GFTYPE           nxy;
+  GTVector<GFTYPE> xx(GDIM);
+
+  PropertyTree heatptree = ptree.getPropertyTree("poly_test");
+
+  GTVector<GTVector<GFTYPE>> *xnodes = &grid_->xNodes();
+  GFTYPE p   = heatptree.getValue<GFTYPE>("xpoly"); 
+  GFTYPE q   = heatptree.getValue<GFTYPE>("ypoly"); 
+  GFTYPE u0  = heatptree.getValue<GFTYPE>("u0"); 
+
+  assert(p>=0 && q >= 0 && "poly_test: Invalid exponent");
+  
+  nxy = (*xnodes)[0].size(); // same size for x, y, z
+
+  if ( t == 0 ) {
+    for ( GSIZET j=0; j<nxy; j++ ) {
+      for ( GSIZET i=0; i<GDIM; i++ ) xx[i] = (*xnodes)[i][j];
+      (*ua[0])[j] = u0*pow(xx[0],p)*pow(xx[1],q);
+    }
+  } 
+  else {
+    for ( GSIZET j=0; j<nxy; j++ ) {
+      for ( GSIZET i=0; i<GDIM; i++ ) xx[i] = (*xnodes)[i][j];
+      if ( p == 0 && q > 0 ) {
+        (*ua[0])[j] = u0*q*(q-1)*pow(xx[0],p  )*pow(xx[1],q-1);
+      }
+      else if ( p > 0 && q == 0 ) {
+        (*ua[0])[j] = u0*p*(p-1)*pow(xx[0],p-2)*pow(xx[1],q);
+      }  
+      else {
+        (*ua[0])[j] = u0*( p*(p-1)*pow(xx[0],p-2)*pow(xx[1],q  )
+                         + q*(q-1)*pow(xx[0],p  )*pow(xx[1],q-1) );
+      }
+    }
+  }
+
+  
+} // end, compute_poly_heat
+
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD: compute_pergauss_heat
 // DESC  : Compute solution to heat equation with GBDY_PERIODIC bcs,
 //         a Gaussian 'lump'. Must use box grid.
@@ -597,8 +652,11 @@ void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVecto
   
   if ( doheat  ) {
     
-    if ( sblock.compare("init_lump") == 0  ) {
+    if ( sblock == "init_lump" ) {
       compute_pergauss_heat(grid, t, ptree, ua);
+    }
+    else if ( sblock == "poly_test"  ) {
+      compute_poly_heat(grid, t, ptree, ua);
     }
     else {
       assert(FALSE && "Invalid heat equation initialization specified");
@@ -610,7 +668,7 @@ void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVecto
 
   // Inititialize for pure advection:
   if ( bpureadv ) {
-    if ( sblock.compare("init_lump") == 0  ) {
+    if ( sblock == "init_lump"  ) {
       compute_pergauss_adv(grid, t, ptree, ua);
     }
     else {
@@ -620,7 +678,7 @@ void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVecto
   }
 
   // Inititialize for nonlinear advection:
-  if ( sblock.compare("init_lump") == 0  ) {
+  if ( sblock == "init_lump" ) {
     compute_percircnwave_burgers(grid, t, ptree, ua);
   }
   else {
