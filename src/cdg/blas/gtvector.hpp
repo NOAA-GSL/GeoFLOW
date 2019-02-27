@@ -216,8 +216,9 @@ inline    T operator[](const GSIZET i) const {
 //
 template<typename T>
 std::ostream &operator<<(std::ostream &os, GTVector<T> &obj) {
-  for ( GLONG j=0; j < obj.size(); j++ ) {
-    os << obj[j] << " ";
+  os << obj[0] << " ";
+  for ( GLONG j=0; j<obj.size(); j++ ) {
+    os << " " << obj[j];
   }
   return os;
 };
