@@ -133,8 +133,8 @@ void GBurgers<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
 {
    GSIZET ibeg, iend;
    GFTYPE dtmin, umax;
-   GTVector<GFTYPE> *drmin  = &grid_->minnodedist();
-   GElemList        *gelems = &grid_->elems();
+   GFTYPE        drmin  = grid_->minnodedist();
+   GElemList    *gelems = &grid_->elems();
 
    // This is an estimate. The minimum length on each element,
    // computed in GGrid object is divided by the maximum of
@@ -148,7 +148,7 @@ void GBurgers<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
          ibeg = (*gelems)[e]->igbeg(); iend = (*gelems)[e]->igend();
          u[k]->range(ibeg, iend);
          umax = u[k]->max();
-         dtmin = MIN(dtmin, (*drmin)[e] / umax);
+         dtmin = MIN(dtmin, drmin / umax);
        }
        u[k]->range_reset();
      }
@@ -159,7 +159,7 @@ void GBurgers<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
          ibeg = (*gelems)[e]->igbeg(); iend = (*gelems)[e]->igend();
          u[k]->range(ibeg, iend);
          umax = u[k]->max();
-         dtmin = MIN(dtmin, (*drmin)[e] / umax);
+         dtmin = MIN(dtmin, drmin / umax);
        }
        u[k]->range_reset();
      }
@@ -201,7 +201,7 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const Time &dt
   if ( doheat_ ) {
     for ( auto k=0; k<u.size(); k++ ) {
       ghelm_->opVec_prod(*u[k],*urhstmp_[0]); // apply diffusion
-      *urhstmp_[0] *= -1.0; // Lap op  is neg on RHS
+     *urhstmp_[0] *= -1.0; // Lap op  is neg on RHS
       gimass_->opVec_prod(*urhstmp_[0],*dudt[k]); // apply M^-1
     }
     return;
@@ -251,10 +251,10 @@ template<typename TypePack>
 void GBurgers<TypePack>::step_impl(const Time &t, State &uin, State &ub, const Time &dt)
 {
 
-  for ( GSIZET j=0; j<uin.size(); j++ ) *uold_[j] = *uin[j];
   switch ( isteptype_ ) {
     case GSTEPPER_EXRK2:
     case GSTEPPER_EXRK4:
+      for ( GSIZET j=0; j<uin.size(); j++ ) *uold_[j] = *uin[j];
       step_exrk(t, uold_, ub, dt, uin);
       break;
     case GSTEPPER_BDFAB:
