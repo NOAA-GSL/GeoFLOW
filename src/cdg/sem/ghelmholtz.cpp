@@ -289,23 +289,27 @@ void GHelmholtz::reg_prod(GTVector<GFTYPE> &u, GTVector<GFTYPE> &uo)
   for ( GSIZET i=0; i<GDIM; i++ ) gdu[i] = utmp_[i];
 
   // Compute weighted deriviatives of u:
-  GMTK::compute_grefderivsW(*grid_, u, etmp1_, FALSE, utmp_); // utmp stores tensor-prod derivatives
+  GMTK::compute_grefderivsW(*grid_, u, etmp1_, FALSE, gdu); // utmp stores tensor-prod derivatives
 cout << "GHelm::reg_prod: Dx u = " << *utmp_[0]  << endl;
 cout << "GHelm::reg_prod: Dy u = " << *utmp_[1]  << endl;
+cout << "GHelm::reg_prod: G(0,0) = " << *G_(0,0)  << endl;
+cout << "GHelm::reg_prod: G(1,1) = " << *G_(1,0)  << endl;
 
   // Multiply by (const) metric factors
-  for ( GSIZET k=0; k<GDIM; k++ ) *utmp_[k] *= (*G_(k,0))[0];
-
-  // Take 'divergence' with transpose(D):
-  GMTK::compute_grefdiv(*grid_, gdu, etmp1_, TRUE, uo); // Compute 'divergence' with DT_j
-
-cout << "GHelm::reg_prod: Div u = " << uo << endl;
+  for ( GSIZET k=0; k<GDIM; k++ ) {
+    gdu[k]->pointProd(*G_(k,0));
+  }
 
   // Apply p parameter ('viscosity') if necessary to Laplacian:
   if ( p_ != NULLPTR ) {
     if ( p_->size() >= grid_->ndof() ) uo.pointProd(*p_);
     else if ( (*p_)[0] != 1.0 )  uo *= (*p_)[0];
   }
+
+  // Take 'divergence' with transpose(D):
+  GMTK::compute_grefdiv(*grid_, gdu, etmp1_, TRUE, uo); // Compute 'divergence' with DT_j
+
+cout << "GHelm::reg_prod: Div u = " << uo << endl;
 
   // Apply Mass operator and q parameter if necessary:
   if ( bcompute_helm_ ) {
@@ -359,6 +363,8 @@ void GHelmholtz::def_init()
   if ( grid_->itype(GE_2DEMBEDDED).size() == 0 
     && grid_->itype  (GE_DEFORMED).size() == 0 ) return;
 
+  if ( grid_->gtype() != GE_2DEMBEDDED
+    && grid_->gtype() != GE_DEFORMED ) return; 
 
   GTVector<GSIZET>             N(GDIM);
   GTMatrix<GTVector<GFTYPE>>  *dXidX;    // element-based dXi/dX matrix
@@ -372,7 +378,7 @@ void GHelmholtz::def_init()
   // Metric is symmetric, so we use pointers to 
   // ensure repeated elements aren't duplicated
   // in memory. Each element points to a vector:
-  GSIZET nxy = grid_->itype(GE_2DEMBEDDED).size()>0 ? GDIM+1: GDIM;
+  GSIZET nxy = grid_->gtype() == GE_2DEMBEDDED ? GDIM+1: GDIM;
   GSIZET ibeg, iend; // beg, end indices for global array
   G_ .resize(nxy,nxy);
   G_ = NULLPTR;
@@ -465,7 +471,7 @@ void GHelmholtz::def_init()
 //**********************************************************************************
 void GHelmholtz::reg_init()
 {
-  if ( grid_->itype(GE_REGULAR).size() <= 0 ) return; 
+  if ( grid_->gtype() != GE_REGULAR ) return; 
 
   GTVector<GSIZET>             N(GDIM);
   GTVector<GTVector<GFTYPE>*>  W(GDIM);  // element-based weights
@@ -486,43 +492,28 @@ void GHelmholtz::reg_init()
   //
   // For reg elems, we have
   // 
-  //    Jac = L1 L2 L3/8 and
+  //    Jac = L1 L2 L3/8 (3d) or L1 L2 / 4 (2d)
   //  G11 = (dXi_1/dx)^2 = 4 / L1^2
   //  G22 = (dXi_2/dy)^2 = 4 / L2^2
   //  G33 = (dXi_3/dz)^2 = 4 / L3^2
 
-  GSIZET nxy = grid_->itype(GE_2DEMBEDDED).size()>0 ? GDIM+1: GDIM;
+  Jac   = &grid_->Jac();
+  dXidX = &grid_->dXidX();
+
+  GSIZET nxy = grid_->gtype() == GE_2DEMBEDDED ? GDIM+1: GDIM;
   GSIZET ibeg, iend; // beg, end indices for global array
   G_ .resize(nxy,1);
   G_ = NULLPTR;
   for ( GSIZET j=0; j<nxy; j++ ) {
-    G_ (j,0) = new GTVector<GFTYPE>(1);
-    G_ (j,0)->bconstdata(TRUE); // treat as constant; any access returns constant
+    G_ (j,0) = new GTVector<GFTYPE>(grid_->ndof());
   }
 
-
-
-  // Cycle through all elements; fill metric elements
-  Jac   = &grid_->Jac();
-  dXidX = &grid_->dXidX();
-  for ( GSIZET e=0; e<grid_->elems().size(); e++ ) {
-    if ( (*gelems)[e]->elemtype() != GE_REGULAR ) continue;
-
-    ibeg = (*gelems)[e]->igbeg(); iend = (*gelems)[e]->igend();
-    Jac->range(ibeg, ibeg);
-    for ( GSIZET i=0; i<nxy; i++ ) (*dXidX)(i,0).range(ibeg, ibeg);
-
-
-    for ( GSIZET j=0; j<GDIM; j++ ) {
-      (*G_(j,0))[0] = (*dXidX)(j,0)[0] * (*dXidX)(j,0)[0];
-      (*G_(j,0)) *= (*Jac)[0];
+  for ( GSIZET j=0; j<GDIM; j++ ) {
+    for ( GSIZET i=0; i<(*G_(j,0)).size(); i++ ) {  
+      (*G_(j,0))[i] = (*dXidX)(j,0)[i] * (*dXidX)(j,0)[i] * (*Jac)[i];
     }
   }
 
-  // Reset range to global scope:
-  Jac->range_reset();
-  for ( GSIZET j=0; j<dXidX->size(2); j++ ) 
-    for ( GSIZET i=0; i<dXidX->size(1); i++ ) (*dXidX)(i,j).range_reset();
 
 } // end of method reg_init
 
