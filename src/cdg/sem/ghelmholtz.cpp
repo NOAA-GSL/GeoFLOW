@@ -297,7 +297,7 @@ void GHelmholtz::reg_prod(GTVector<GFTYPE> &u, GTVector<GFTYPE> &uo,
   for ( GSIZET i=0; i<GDIM; i++ ) gdu[i] = utmp[i];
 
   // Compute weighted deriviatives of u:
-  GMTK::compute_grefderivs(*grid_, u, etmp1_, FALSE, gdu); // utmp stores tensor-prod derivatives
+  GMTK::compute_grefderivsW(*grid_, u, etmp1_, FALSE, gdu); // utmp stores tensor-prod derivatives
 
   // Multiply by (const) metric factors, possibly x-dependent 
   // 'viscosity':
@@ -316,8 +316,7 @@ cout << "GHelm::reg_prod: G(0,0) = " << *G_(0,0)  << endl;
 cout << "GHelm::reg_prod: G(1,1) = " << *G_(1,0)  << endl;
 
   // Take 'divergence' with transpose(D):
-  GMTK::compute_grefdiv(*grid_, gdu, etmp1_, FALSE, uo); // Compute 'divergence' with DT_j
-
+  GMTK::compute_grefdiv(*grid_, gdu, etmp1_, TRUE, uo); // Compute 'divergence' with DT_j
 
 
 cout << "GHelm::reg_prod: Div u = " << uo << endl;
