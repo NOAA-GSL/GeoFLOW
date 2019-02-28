@@ -6,6 +6,8 @@
 // Derived From : none.
 //==================================================================================
 
+using namespace std;
+
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : Constructor method (1)
@@ -132,14 +134,17 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &ub,
    }
 #else 
    tt = t;
+cout << "GExRK::step: (0) ub=" << *ub[0] << endl;
    if ( bupdatebc_ ) bdy_update_callback_(tt, u, ub); 
+cout << "GExRK::step: (1) ub=" << *ub[0] << endl;
+
    if ( bapplybc_  ) bdy_apply_callback_ (tt, u, ub); 
    rhs_callback_(tt, uin, dt, K_[0]); 
    for ( n=0; n<nstate; n++ ) { // for each state member, u
 std::cout << "GExRK::step: RHS[" << n << "]=" << *K_[0][n] << std::endl;
-    if ( ggfx_ != NULLPTR ) ggfx_->doOp(*K_[0][n], GGFX_OP_SMOOTH);
-//  *uout[n] = (*uin[n]) + (*K_[0][n]) * dt; // Euler step
-    *uout[n] = (*K_[0][n]);
+//  if ( ggfx_ != NULLPTR ) ggfx_->doOp(*K_[0][n], GGFX_OP_SMOOTH);
+//  *uout[n] = (*K_[0][n]);
+    *uout[n] = (*uin[n]) + (*K_[0][n]) * dt; // Euler step
    }
   
 #endif
