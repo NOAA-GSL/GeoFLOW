@@ -58,6 +58,7 @@ GTVector<GTVector<GFTYPE>*> ua_;
 GTVector<GTVector<GFTYPE>*> ub_;
 GTVector<GTVector<GFTYPE>*> utmp_;
 GTVector<GFTYPE> nu_(3);
+PropertyTree ptree;       // main prop tree
 
 void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVector<GTVector<GFTYPE>*> &u);
 void update_dirichlet(const GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u, GTVector<GTVector<GFTYPE>*> &ub);
@@ -102,7 +103,6 @@ int main(int argc, char **argv)
 
     // Read main prop tree; may ovewrite with
     // certain command line args:
-    PropertyTree ptree;       // main prop tree
     PropertyTree eqptree;     // equation props
     PropertyTree gridptree;   // grid props
     PropertyTree stepptree;   // stepper props
@@ -342,7 +342,13 @@ cout << "main: diff[" << j << "]=" << *utmp_[0] << endl;
 //**********************************************************************************
 void update_dirichlet(const GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u, GTVector<GTVector<GFTYPE>*> &ub)
 {
+
+  GFTYPE tt = t;
   GTVector<GTVector<GSIZET>> *igbdy = &grid_->igbdy();
+  
+  // If bc is time dependent, update it here.
+  // Note: grid_ ptree, and ua_ are global:
+  compute_analytic(*grid_, tt, ptree,  ua_);
 
   // ...GBDY_DIRICHLET:
   // Set from State vector, ua_:
@@ -529,6 +535,8 @@ void compute_poly_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVec
   GFTYPE u0  = heatptree.getValue<GFTYPE>("u0"); 
 
   assert(p>=0 && q >= 0 && "poly_test: Invalid exponent");
+
+  cout << "poly_test: p=" << p << " q=" << q << endl;
   
   nxy = (*xnodes)[0].size(); // same size for x, y, z
 
@@ -542,14 +550,14 @@ void compute_poly_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVec
     for ( GSIZET j=0; j<nxy; j++ ) {
       for ( GSIZET i=0; i<GDIM; i++ ) xx[i] = (*xnodes)[i][j];
       if ( p == 0 && q > 0 ) {
-        (*ua[0])[j] = u0*q*(q-1)*pow(xx[0],p  )*pow(xx[1],q-1);
+        (*ua[0])[j] = u0*q*(q-1)*pow(xx[0],p  )*pow(xx[1],q-2);
       }
       else if ( p > 0 && q == 0 ) {
         (*ua[0])[j] = u0*p*(p-1)*pow(xx[0],p-2)*pow(xx[1],q);
       }  
       else {
         (*ua[0])[j] = u0*( p*(p-1)*pow(xx[0],p-2)*pow(xx[1],q  )
-                         + q*(q-1)*pow(xx[0],p  )*pow(xx[1],q-1) );
+                         + q*(q-1)*pow(xx[0],p  )*pow(xx[1],q-2) );
       }
     }
     *ua[0] *= -1.0;
@@ -594,7 +602,7 @@ void compute_dirgauss_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
   bc[4] = boxptree.getValue<GString>("bdy_z_0");
   bc[5] = boxptree.getValue<GString>("bdy_z_1");
   assert(bc.multiplicity("GBDY_DIRICHLET") >= 2*GDIM 
-      && "Periodic boundaries must be set on all boundaries");
+      && "Dirichlet boundaries must be set on all boundaries");
 
 
   nxy = (*xnodes)[0].size(); // same size for x, y, z
