@@ -128,7 +128,7 @@ GTMatrix<T>      LegMatrix_;
 // Data evaluated at the TE type:
 GTVector<TE>     xiNodesEv_;
 GTVector<TE>     weightsEv_;
-GTVector<TE>     iweights_;
+GTVector<TE>     iweightsEv_;
 GTMatrix<TE>     dPhiEv_;
 GTMatrix<TE>     dPhiTEv_;
 GTMatrix<TE>     stiffMatrixEv_;

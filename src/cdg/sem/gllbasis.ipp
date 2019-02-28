@@ -345,6 +345,7 @@ GBOOL GLLBasis<T,TE>::resize(GINT  newOrder)
   //  resize weights_:
   weights_.resize(Np_+1);
   weightsEv_.resize(Np_+1);
+  iweightsEv_.resize(Np_+1);
 
   //  resize Pn_:
   Pn_.resize(Np_+1);
