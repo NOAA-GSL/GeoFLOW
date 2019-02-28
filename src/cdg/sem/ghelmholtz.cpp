@@ -498,7 +498,6 @@ void GHelmholtz::reg_init()
 
   GTVector<GSIZET>             N(GDIM);
   GTVector<GTVector<GFTYPE>*>  W(GDIM);  // element-based weights
-  GTVector<GFTYPE>            *Jac;
   GTMatrix<GTVector<GFTYPE>>  *dXidX;    // element-based dXi/dX matrix
   GElemList                   *gelems = &grid_->elems();
 
@@ -506,8 +505,7 @@ void GHelmholtz::reg_init()
   // G = Sum_k dxi^i/dx^k dxi^j/dx^k 
   // Note: weights & Jac not included here, so mass matrix
   //       must be set prior to entry, or created here. Mass 
-  //       is multiplied in the reg_prod method, to save
-  //       some memory.
+  //       is multiplied in the reg_prod method
   // For regular elements, Gij = 0 for i!= j, and
   // Are constant for i=j. So we make the valid
   // metric components constant vectors, and
@@ -523,7 +521,6 @@ void GHelmholtz::reg_init()
   // Metric elements dXi_j/dX*i should already have
   // been computed with the grid.
   
-  Jac   = &grid_->Jac();
   dXidX = &grid_->dXidX();
 
   GSIZET nxy = grid_->gtype() == GE_2DEMBEDDED ? GDIM+1: GDIM;
