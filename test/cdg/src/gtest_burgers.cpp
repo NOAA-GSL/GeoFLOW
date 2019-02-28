@@ -231,6 +231,7 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     for ( GSIZET j=0; j<utmp_.size(); j++ ) utmp_[j] = new GTVector<GFTYPE>(grid_->size());
     for ( GSIZET j=0; j<u_   .size(); j++ ) u_   [j] = new GTVector<GFTYPE>(grid_->size());
     for ( GSIZET j=0; j<ua_  .size(); j++ ) ua_  [j] = new GTVector<GFTYPE>(grid_->size());
+    for ( GSIZET j=0; j<ub_  .size(); j++ ) ub_  [j] = new GTVector<GFTYPE>(grid_->nsurfdof());
 
     // Create observer(s), equations, integrator:
     std::shared_ptr<EqnImpl> eqn_impl(new EqnImpl(ggfx, *grid_, u_, solver_traits, utmp_));
@@ -551,6 +552,7 @@ void compute_poly_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVec
                          + q*(q-1)*pow(xx[0],p  )*pow(xx[1],q-1) );
       }
     }
+    *ua[0] *= -1.0;
   }
 
   
@@ -656,7 +658,6 @@ void compute_pergauss_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
   PropertyTree boxptree = ptree.getPropertyTree("grid_box");
   std::vector<GFTYPE> xyz0 = boxptree.getArray<GFTYPE>("xyz0");
   std::vector<GFTYPE> dxyz = boxptree.getArray<GFTYPE>("delxyz");
-  GTVector<GBdyType> bc(6);
   P0 = xyz0; r0 = dxyz; gL = P0 + r0;
   
   GTVector<GString> bc(6);
