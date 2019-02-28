@@ -294,9 +294,9 @@ void GHelmholtz::reg_prod(GTVector<GFTYPE> &u,
   // p L u = W ( W^-1 D1T G11 W  D1 + W^-1 D2T G22 W D2 + W^-1 D3T G33 W D3 )u,
   // and
   //   D1 = I_X_I_X_Dx u ; D2 = I_X_Dy_X_I u; D2 = Dz_X_I_X_I u
-  // and W is just the mass matrix (with the Jacobian included);
-  // M is mass matrix, and p, and q are Laplacian and Mass factors that
-  // may be position dependent.
+  // and M is just the mass matrix and p, and q are Laplacian and Mass factors that
+  // may be position dependent. Here, W are the 1d mass weights, and M is the GDIM-d
+  // tensor product form.
 
   // Re-arrange local temp space for divergence:
   for ( GSIZET i=0; i<GDIM; i++ ) gdu[i] = utmp[i];
@@ -308,7 +308,7 @@ void GHelmholtz::reg_prod(GTVector<GFTYPE> &u,
   GMTK::compute_grefderivs(*grid_, u, etmp1_, FALSE, gdu); // utmp stores tensor-prod derivatives
 #endif
 
-  // Multiply by (const) metric factors, possibly x-dependent 
+  // Multiply by (element-size const) metric factors, possibly x-dependent 
   // 'viscosity':
   for ( GSIZET k=0; k<GDIM; k++ ) {
     gdu[k]->pointProd(*G_(k,0));
@@ -323,11 +323,12 @@ cout << "GHelm::reg_prod: Dx u = " << *gdu[0]  << endl;
 cout << "GHelm::reg_prod: Dy u = " << *gdu[1]  << endl;
 cout << "GHelm::reg_prod: G(0,0) = " << *G_(0,0)  << endl;
 cout << "GHelm::reg_prod: G(1,1) = " << *G_(1,0)  << endl;
-
+GTVector<GFTYPE> *Jac=  &grid_->Jac();
+cout << "GHelm::reg_prod: Jac = " << *Jac  << endl;
   // Take 'divergence' with transpose(D):
-  GMTK::compute_grefdivW(*grid_, gdu, etmp1_, TRUE, uo); // Compute 'divergence' with DT_j
+  GMTK::compute_grefdivW(*grid_, gdu, etmp1_, FALSE, uo); // Compute 'divergence' with W^-1 D_j
 
-  // Apply mass operator:
+  // Apply mass operatori (includes Jacobian):
   *gdu[0] = uo;
   massop_->opVec_prod(*gdu[0], gdu, uo); // final array does nothing
 
@@ -515,10 +516,13 @@ void GHelmholtz::reg_init()
   // For reg elems, we have
   // 
   //    Jac = L1 L2 L3/8 (3d) or L1 L2 / 4 (2d)
-  //  G11 = (dXi_1/dx)^2 = 4 / L1^2
-  //  G22 = (dXi_2/dy)^2 = 4 / L2^2
-  //  G33 = (dXi_3/dz)^2 = 4 / L3^2
-
+  //  G11 = (dXi_1/dx)^2 = 4 / L1^2 (2d, 3d)
+  //  G22 = (dXi_2/dy)^2 = 4 / L2^2 (2d, 3d)
+  //  G33 = (dXi_3/dz)^2 = 4 / L3^2 (2d, 3d)
+  // 
+  // Metric elements dXi_j/dX*i should already have
+  // been computed with the grid.
+  
   Jac   = &grid_->Jac();
   dXidX = &grid_->dXidX();
 
@@ -530,15 +534,15 @@ void GHelmholtz::reg_init()
     G_ (j,0) = new GTVector<GFTYPE>(grid_->ndof());
   }
 
+  // Don't include Jacobian in this quantity for reg elements:
   for ( GSIZET j=0; j<GDIM; j++ ) {
     for ( GSIZET i=0; i<(*G_(j,0)).size(); i++ ) {  
-      (*G_(j,0))[i] = (*dXidX)(j,0)[i] * (*dXidX)(j,0)[i] * (*Jac)[i];
+      (*G_(j,0))[i] = (*dXidX)(j,0)[i] * (*dXidX)(j,0)[i];
     }
   }
 
   massop_ = new GMass(*grid_);
   bown_mass_ = TRUE;
-
 
 } // end of method reg_init
 
@@ -583,6 +587,7 @@ void GHelmholtz::set_mass_scalar(GTVector<GFTYPE> &q)
 
   q_ = &q;
   bown_q_ = FALSE;
+  bcompute_helm_ = TRUE;
 
 } // end of method set_mass_scalar
 
@@ -601,12 +606,10 @@ void GHelmholtz::set_mass(GMass &m)
 {
 
   if ( massop_ != NULL  && bown_mass_ ) delete massop_;
-
   
   if ( bown_mass_ && massop_ != NULLPTR ) delete massop_;
   massop_ = &m;
   bown_mass_ = FALSE;
-  bcompute_helm_ = TRUE;
 
 } // end of method set_mass
 
