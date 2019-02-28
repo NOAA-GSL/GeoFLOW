@@ -774,8 +774,8 @@ void GGrid::init_bc_info()
       ig = nn + (*iebdy)[j];
       itmp.push_back(ig); // index in full global arrays
       btmp.push_back((*iebdyt)[j]);
-      nn += gelems_[e]->nnodes();
     }
+    nn += gelems_[e]->nnodes();
   } // end, element loop
  
   // Now, create type-bins (one bin for each GBdyType), and

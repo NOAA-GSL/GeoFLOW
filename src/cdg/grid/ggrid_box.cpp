@@ -46,7 +46,6 @@ lshapefcn_             (NULLPTR)
   spt = ptree.getArray<GFTYPE>("delxyz");
   sne = ptree.getArray<int>("num_elems");
 
-
   GTPoint<GFTYPE> dP(3);
   dP  = spt;
   P1_ = P0_ + dP;
