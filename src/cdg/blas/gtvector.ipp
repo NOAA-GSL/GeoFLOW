@@ -1187,7 +1187,7 @@ GTVector<T>::sum()
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : L1norm
-// DESC   : Computes infinity (max) norm
+// DESC   : Computes L1 norm
 // ARGS   : none.
 // RETURNS: T norm
 //**********************************************************************************
@@ -1199,11 +1199,33 @@ GTVector<T>::L1norm()
   GLLONG j;
 
   for ( j=this->gindex_.beg(), xnorm=0; j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
-    xnorm = MAX(xnorm,fabs(this->data_[j]));
+    xnorm += fabs(this->data_[j]);
   }
 
   return xnorm;
 } // end,L1norm 
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : infnorm
+// DESC   : Computes infinity (max) norm
+// ARGS   : none.
+// RETURNS: T norm
+//**********************************************************************************
+template<class T>
+T
+GTVector<T>::infnorm() 
+{
+  T      xnorm = std::numeric_limits<T>::min();
+  GLLONG j;
+
+  for ( j=this->gindex_.beg(), xnorm=0; j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
+    xnorm = MAX(xnorm,fabs(this->data_[j]));
+  }
+
+  return xnorm;
+} // end, infnorm 
 
 
 //**********************************************************************************

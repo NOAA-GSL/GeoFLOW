@@ -139,6 +139,8 @@ inline    T operator[](const GSIZET i) const {
     #pragma acc routine vector
     T L1norm();
     #pragma acc routine vector
+    T infnorm();
+    #pragma acc routine vector
     T Eucnorm();
     #pragma acc routine vector
     GBOOL contains(T val);     // Buffer contains val?
