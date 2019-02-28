@@ -33,7 +33,9 @@ public:
                           GHelmholtz(const GHelmholtz &);
                          ~GHelmholtz();
 
-        void              opVec_prod(GTVector<GFTYPE> &in, GTVector<GFTYPE> &out, GTVector<GTVector<GFTYPE>*> &utmp); // Operator-vector product
+        void              opVec_prod(GTVector<GFTYPE> &in, 
+                                     GTVector<GTVector<GFTYPE>*> &utmp,
+                                     GTVector<GFTYPE> &out);                  // Operator-vector product 
         void              set_Lap_scalar(GTVector<GFTYPE> &p);                // Scalar multipliying Laplacian
         void              set_mass_scalar(GTVector<GFTYPE> &q);               // Scalar multiplying Mass
         void              set_mass(GMass &m);                                 // Set mass op
@@ -44,12 +46,15 @@ public:
 private:
         void              def_init();
         void              reg_init();
-        void              def_prod(GTVector<GFTYPE> &in, GTVector<GFTYPE> &out,
-                                   GTVector<GTVector<GFTYPE>*> &utmp);
-        void              reg_prod(GTVector<GFTYPE> &in, GTVector<GFTYPE> &out,
-                                   GTVector<GTVector<GFTYPE>*> &utmp);
-        void              embed_prod(GTVector<GFTYPE> &in, GTVector<GFTYPE> &out,
-                                   GTVector<GTVector<GFTYPE>*> &utmp);
+        void              def_prod(GTVector<GFTYPE> &in, 
+                                   GTVector<GTVector<GFTYPE>*> &utmp,
+                                   GTVector<GFTYPE> &out);
+        void              reg_prod(GTVector<GFTYPE> &in, 
+                                   GTVector<GTVector<GFTYPE>*> &utmp,
+                                   GTVector<GFTYPE> &out);
+        void              embed_prod(GTVector<GFTYPE> &in, 
+                                     GTVector<GTVector<GFTYPE>*> &utmp,
+                                     GTVector<GFTYPE> &out);
         void              compute_refderivs(GTVector<GFTYPE> &, 
                                             GTVector<GTVector<GFTYPE>*> &, GBOOL btrans=FALSE);
         void              compute_refderivsW(GTVector<GFTYPE> &, 

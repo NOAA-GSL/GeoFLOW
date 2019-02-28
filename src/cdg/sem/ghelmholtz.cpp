@@ -81,19 +81,20 @@ GHelmholtz::~GHelmholtz()
 //             
 // RETURNS:  none
 //**********************************************************************************
-void GHelmholtz::opVec_prod(GTVector<GFTYPE> &u, GTVector<GFTYPE> &uo,
-                             GTVector<GTVector<GFTYPE>*> &utmp) 
+void GHelmholtz::opVec_prod(GTVector<GFTYPE> &u, 
+                            GTVector<GTVector<GFTYPE>*> &utmp,
+                            GTVector<GFTYPE> &uo)
 {
   assert(bInitialized_ && "Operator not initialized");
     
   if ( grid_->itype(GE_REGULAR).size() > 0 ) {
-    reg_prod(u, uo, utmp);
+    reg_prod(u, utmp, uo);
   }
   else if ( grid_->itype(GE_DEFORMED).size() > 0 ) {
-    def_prod(u, uo, utmp);
+    def_prod(u, utmp, uo);
   }
   if ( grid_->itype(GE_2DEMBEDDED).size() > 0 ) {
-     embed_prod(u, uo, utmp);
+     embed_prod(u, utmp, uo);
   }
 
 } // end of method opVec_prod
@@ -111,8 +112,9 @@ void GHelmholtz::opVec_prod(GTVector<GFTYPE> &u, GTVector<GFTYPE> &uo,
 //             
 // RETURNS:  none
 //**********************************************************************************
-void GHelmholtz::def_prod(GTVector<GFTYPE> &u, GTVector<GFTYPE> &uo, 
-                          GTVector<GTVector<GFTYPE>*> &utmp) 
+void GHelmholtz::def_prod(GTVector<GFTYPE> &u, 
+                          GTVector<GTVector<GFTYPE>*> &utmp,
+                          GTVector<GFTYPE> &uo)
 {
   assert( utmp.size() >= GDIM+3
        && "Insufficient temp space specified");
@@ -166,7 +168,7 @@ void GHelmholtz::def_prod(GTVector<GFTYPE> &u, GTVector<GFTYPE> &uo,
 
   // Apply Mass operator and q parameter if necessary:
   if ( bcompute_helm_ ) {
-    massop_->opVec_prod(u, *utmp[0], utmp);
+    massop_->opVec_prod(u, utmp, *utmp[0]);
     if ( q_ != NULLPTR ) {
       if ( q_->size() >= grid_->ndof() ) utmp[0]->pointProd(*q_);
       if ( (*q_)[0] != 1.0)             *utmp[0] *= (*q_)[0];
@@ -189,8 +191,9 @@ void GHelmholtz::def_prod(GTVector<GFTYPE> &u, GTVector<GFTYPE> &uo,
 //             
 // RETURNS:  none
 //**********************************************************************************
-void GHelmholtz::embed_prod(GTVector<GFTYPE> &u, GTVector<GFTYPE> &uo, 
-                            GTVector<GTVector<GFTYPE>*> &utmp) 
+void GHelmholtz::embed_prod(GTVector<GFTYPE> &u, 
+                            GTVector<GTVector<GFTYPE>*> &utmp,
+                            GTVector<GFTYPE> &uo)
 {
   assert( GDIM == 2 && utmp.size() >= GDIM+3
        && "Insufficient temp space specified");
@@ -249,7 +252,7 @@ void GHelmholtz::embed_prod(GTVector<GFTYPE> &u, GTVector<GFTYPE> &uo,
 
   // Apply Mass operator and q parameter if necessary:
   if ( bcompute_helm_ ) {
-    massop_->opVec_prod(u, *utmp[0], utmp); // final arg unused
+    massop_->opVec_prod(u, utmp, *utmp[0]); // final arg unused
     if ( q_ != NULLPTR ) {
       if ( q_->size() >= grid_->ndof() ) utmp[0]->pointProd(*q_);
       if ( (*q_)[0] != 1.0)              *utmp[0] *= (*q_)[0];
@@ -267,13 +270,14 @@ void GHelmholtz::embed_prod(GTVector<GFTYPE> &u, GTVector<GFTYPE> &uo,
 //          GE_REGULAR elements
 //          NOTE: must have at least GDIM utmp vectors set via set_tmp method
 // ARGS   : u  : input vector
-//          uo : output (result) vector
 //          utmp: tmp space
+//          uo : output (result) vector
 //             
 // RETURNS:  none
 //**********************************************************************************
-void GHelmholtz::reg_prod(GTVector<GFTYPE> &u, GTVector<GFTYPE> &uo,
-                          GTVector<GTVector<GFTYPE>*> &utmp) 
+void GHelmholtz::reg_prod(GTVector<GFTYPE> &u, 
+                          GTVector<GTVector<GFTYPE>*> &utmp,
+                          GTVector<GFTYPE> &uo)
 {
 
   assert( utmp.size() >= GDIM
@@ -287,17 +291,22 @@ void GHelmholtz::reg_prod(GTVector<GFTYPE> &u, GTVector<GFTYPE> &uo,
   // Compute:
   //   uo = ( p L + q M ) u
   // where
-  // p L u = W ( D1T G11 D1 + D2T G22 D2 + D3T G33 D3 )u,
+  // p L u = W ( W^-1 D1T G11 W  D1 + W^-1 D2T G22 W D2 + W^-1 D3T G33 W D3 )u,
   // and
   //   D1 = I_X_I_X_Dx u ; D2 = I_X_Dy_X_I u; D2 = Dz_X_I_X_I u
   // and W is just the mass matrix (with the Jacobian included);
-  // M is mass matrix, and p, and q are Laplacian and Mass factors.
+  // M is mass matrix, and p, and q are Laplacian and Mass factors that
+  // may be position dependent.
 
   // Re-arrange local temp space for divergence:
   for ( GSIZET i=0; i<GDIM; i++ ) gdu[i] = utmp[i];
 
   // Compute weighted deriviatives of u:
+#if 1
   GMTK::compute_grefderivsW(*grid_, u, etmp1_, FALSE, gdu); // utmp stores tensor-prod derivatives
+#else
+  GMTK::compute_grefderivs(*grid_, u, etmp1_, FALSE, gdu); // utmp stores tensor-prod derivatives
+#endif
 
   // Multiply by (const) metric factors, possibly x-dependent 
   // 'viscosity':
@@ -316,17 +325,20 @@ cout << "GHelm::reg_prod: G(0,0) = " << *G_(0,0)  << endl;
 cout << "GHelm::reg_prod: G(1,1) = " << *G_(1,0)  << endl;
 
   // Take 'divergence' with transpose(D):
-  GMTK::compute_grefdiv(*grid_, gdu, etmp1_, TRUE, uo); // Compute 'divergence' with DT_j
+  GMTK::compute_grefdivW(*grid_, gdu, etmp1_, TRUE, uo); // Compute 'divergence' with DT_j
 
+  // Apply mass operator:
+  *gdu[0] = uo;
+  massop_->opVec_prod(*gdu[0], gdu, uo); // final array does nothing
 
 cout << "GHelm::reg_prod: Div u = " << uo << endl;
 
   // Apply Mass operator and q parameter if necessary:
   if ( bcompute_helm_ ) {
-    massop_->opVec_prod(u, *utmp[0], utmp); // final arg unused
+    massop_->opVec_prod(u, utmp, *utmp[0]); // final arg unused
     if ( q_ != NULLPTR ) {
       if ( q_->size() >= grid_->ndof() ) utmp[0]->pointProd(*q_);
-      if ( (*q_)[0] != 1.0)              *utmp[0] *= (*q_)[0];
+      if ( (*q_)[0] != 1.0)             *utmp[0] *= (*q_)[0];
     }
     uo += *utmp[0];
   }
@@ -523,6 +535,9 @@ void GHelmholtz::reg_init()
       (*G_(j,0))[i] = (*dXidX)(j,0)[i] * (*dXidX)(j,0)[i] * (*Jac)[i];
     }
   }
+
+  massop_ = new GMass(*grid_);
+  bown_mass_ = TRUE;
 
 
 } // end of method reg_init

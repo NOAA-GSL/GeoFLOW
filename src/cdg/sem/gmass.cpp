@@ -218,7 +218,8 @@ void GMass::init3d()
 //             
 // RETURNS:  none
 //**********************************************************************************
-void GMass::opVec_prod(GTVector<GFTYPE> &input, GTVector<GFTYPE> &output, GTVector<GTVector<GFTYPE>*> &utmp) 
+void GMass::opVec_prod(GTVector<GFTYPE> &input, GTVector<GTVector<GFTYPE>*> &utmp, 
+                       GTVector<GFTYPE> &output)
 {
 
   mass_.pointProd(input, output);

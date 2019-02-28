@@ -20,8 +20,10 @@ public:
                           GLinOp(const GLinOp &op) { grid_=op.grid_; } ;
                          ~GLinOp(){};
 
-virtual void              opVec_prod(GTVector<GFTYPE> &in, GTVector<GFTYPE> &out,
-                                     GTVector<GTVector<GFTYPE>*> &utmp)=0; // Operator-vector product
+virtual void              opVec_prod(GTVector<GFTYPE> &in, 
+                                     GTVector<GTVector<GFTYPE>*> &utmp, 
+                                     GTVector<GFTYPE> &out)=0; // Operator-vector product
+
 virtual void              init()=0; // Init after all sets, before use
 
 protected:
