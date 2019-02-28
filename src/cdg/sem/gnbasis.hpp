@@ -48,6 +48,9 @@ virtual  GTVector<TE>    *getWeights()=0;
 virtual  TE              *getWeights(TE *ret, GINT num)=0;
 virtual  void             getWeights(GTVector<TE> &ret)=0;
 
+virtual  GTVector<TE>    *getiWeights()=0;
+virtual  void             getiWeights(GTVector<TE> &ret)=0;
+
 virtual  GTMatrix<T>     *getStiffMatrixComp()=0;
 virtual  GTMatrix<TE>    *getStiffMatrix()=0;
 virtual  void             getStiffMatrix(GTMatrix<TE> &ret)=0;

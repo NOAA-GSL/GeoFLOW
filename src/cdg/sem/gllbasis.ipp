@@ -709,6 +709,7 @@ GBOOL GLLBasis<T,TE>::init()
   // Copy computated data to the 'evaluated' structures:
   getXiNodes(xiNodesEv_);
   getWeights(weightsEv_);
+  getiWeights(iweightsEv_);
   getStiffMatrix(stiffMatrixEv_);
   getDerivMatrix(dPhiEv_,FALSE);
   getDerivMatrix(dPhiTEv_,TRUE);
@@ -833,7 +834,7 @@ GTVector<T> *GLLBasis<T,TE>::getWeightsComp()
 //************************************************************************************
 //************************************************************************************
 // METHOD : getWeights
-// DESC   : Get GTVector<TE> member data vector _evaluation_ weighters 
+// DESC   : Get GTVector<TE> member data vector _evaluation_ weights
 // ARGS   : none
 // RETURNS: pointer to GTVector member data
 //************************************************************************************
@@ -861,9 +862,8 @@ TE *GLLBasis<T,TE>::getWeights(TE *ret, GINT  num)
     exit(1);
   }
 
-  GINT  i;
 
-  for ( i=0; i<weights_.size(); i++ )
+  for ( GINT  i=0; i<weights_.size(); i++ )
     ret[i] = static_cast<TE>(weights_[i]);
 
   return ret;
@@ -883,6 +883,38 @@ void GLLBasis<T,TE>::getWeights(GTVector<TE> &ret)
   getWeights(ret.data(), ret.size());
 
 } // end of method getWeights (3)
+
+
+//************************************************************************************
+//************************************************************************************
+// METHOD : getiWeights (1)
+// DESC   : Get GTVector<TE> member data pointer to  vector _evaluation_ 
+//          inverse weights 
+// ARGS   : none
+// RETURNS: pointer to GTVector member data
+//************************************************************************************
+template<typename T, typename TE>
+GTVector<TE> *GLLBasis<T,TE>::getiWeights()
+{
+  return &iweightsEv_;
+} // end of method getiWeights (1) 
+
+
+//************************************************************************************
+//************************************************************************************
+// METHOD : getiWeights (2)
+// DESC   : Get deep copy of inverse weights in specified return object
+// ARGS   : ret : GTVector<TE> array
+// RETURNS: pointer to ret GTVector
+//************************************************************************************
+template<typename T, typename TE>
+void GLLBasis<T,TE>::getiWeights(GTVector<TE> &ret)
+{
+
+  for ( GINT  i=0; i<weights_.size(); i++ )
+    ret[i] = 1.0 / static_cast<TE>(weights_[i]);
+
+} // end of method getiWeights (2)
 
 
 //************************************************************************************

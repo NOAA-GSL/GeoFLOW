@@ -60,6 +60,9 @@ virtual  GTVector<TE>    *getWeights();
 virtual  TE              *getWeights(TE *ret, GINT  num);
 virtual  void             getWeights(GTVector<TE> &ret);
 
+virtual  GTVector<TE>    *getiWeights();
+virtual  void             getiWeights(GTVector<TE> &ret);
+
 virtual  GTMatrix<T>     *getStiffMatrixComp();
 virtual  GTMatrix<TE>    *getStiffMatrix();
 virtual  void             getStiffMatrix(GTMatrix<TE> &ret);
@@ -125,6 +128,7 @@ GTMatrix<T>      LegMatrix_;
 // Data evaluated at the TE type:
 GTVector<TE>     xiNodesEv_;
 GTVector<TE>     weightsEv_;
+GTVector<TE>     iweights_;
 GTMatrix<TE>     dPhiEv_;
 GTMatrix<TE>     dPhiTEv_;
 GTMatrix<TE>     stiffMatrixEv_;
