@@ -89,12 +89,14 @@ public:
         GBurgers(const GBurgers &bu) = default;
         GBurgers &operator=(const GBurgers &bu) = default;
 
-        void                 set_nu(GTVector<GFTYPE> &nu);                // Set nu/viscosity
+        void                 set_nu(GTVector<GFTYPE> &nu);                  // Set nu/viscosity
         void                 set_bdy_update_callback(
                              std::function<void(const Time &t, State &u,
                                            State &ub)> callback) 
                              { update_bdy_callback_ = callback; bupdatebc_ = TRUE;
-                               gbc_->set_update_callback(callback); }     // set bdy-update callback
+                               if ( gbc_ != NULLPTR ) gbc_->set_update_callback(callback); 
+                               if ( gexrk_ != NULLPTR ) 
+                                 gexrk_->set_update_bdy_callback(callback);} // set bdy-update callback
 
 
 protected:
