@@ -168,7 +168,7 @@ void GGridBox::init2d()
   GTPoint<GFTYPE> dv(2);     // delta-point
   for ( GSIZET j=0; j<ne_[1]; j++ ) { 
     for ( GSIZET i=0; i<ne_[0]; i++ ) { 
-      v0.x1 = i*dx.x1; v0.x2 = j*dx.x2; 
+      v0.x1 = P0_.x1+i*dx.x1; v0.x2 = P0_.x2+j*dx.x2; 
       qmesh_[n].v1 = v0;
       dv.x1 = dx.x1 ; dv.x2 = 0.0  ;   qmesh_[n].v2 = v0 + dv;
       dv.x1 = dx.x1 ; dv.x2 = dx.x2;   qmesh_[n].v3 = v0 + dv;
@@ -222,7 +222,7 @@ void GGridBox::init3d()
   for ( GSIZET k=0; k<ne_[2]; k++ ) { 
     for ( GSIZET j=0; j<ne_[1]; j++ ) { 
       for ( GSIZET i=0; i<ne_[0]; i++ ) { 
-        v0.x1 = i*dx.x1; v0.x2 = j*dx.x2; v0.x3 = k*dx.x3; 
+        v0.x1 = P0_.x1+i*dx.x1; v0.x2 = P0_.x2+j*dx.x2; v0.x2 = P0_.x3+k*dx.x3; 
         hmesh_[n].v1 = v0;
         dv.x1 = dx.x1 ; dv.x2 = 0.0  ; dv.x3 = 0.0   ;  hmesh_[n].v2 = v0 + dv;
         dv.x1 = dx.x1 ; dv.x2 = dx.x2; dv.x3 = 0.0   ;  hmesh_[n].v3 = v0 + dv;
