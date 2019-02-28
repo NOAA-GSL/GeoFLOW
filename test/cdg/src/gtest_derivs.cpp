@@ -175,23 +175,23 @@ int main(int argc, char **argv)
 
 #if 1
     // Compute analytic solution, do comparisons:
-    GTVector<GFTYPE> lerrnorm(3), gerrnorm(3), maxerror(3);
+    GTVector<GFTYPE> lnorm(3), gnorm(3), maxerror(3);
     maxerror = 0.0;
     for ( GSIZET j=0; j<du.size(); j++ ) { //local errors
 cout << "main: da[" << j << "]=" << *da[j] << endl;
 cout << "main: du[" << j << "]=" << *du[j] << endl;
       *utmp[0] = *du[j] - *da[j];
-       lerrnorm[0]  = utmp[0]->L1norm (); // inf-norm
-       lerrnorm[1]  = utmp[0]->Eucnorm(); // Euclidean-norm
-       lerrnorm[1] *= lerrnorm[1]; // square it, so it can be added 
-       gerrnorm[2]  = grid_->integrate(*utmp[0],*utmp[1]) /
+       lnorm[0]  = utmp[0]->L1norm (); // inf-norm
+       lnorm[1]  = utmp[0]->Eucnorm(); // Euclidean-norm
+       lnorm[1] *= lnorm[1]; // square it, so it can be added 
+       gnorm[2]  = grid_->integrate(*utmp[0],*utmp[1]) /
                       grid_->integrate(*da  [j],*utmp[1]) ; // Global L2 error norm 
       // Accumulate to find global errors for this field:
-      GComm::Allreduce(lerrnorm.data()  , gerrnorm.data()  , 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm);
-      GComm::Allreduce(lerrnorm.data()+1, gerrnorm.data()+1, 1, T2GCDatatype<GFTYPE>() , GC_OP_SUM, comm);
-      gerrnorm[1] = sqrt(gerrnorm[1]);
+      GComm::Allreduce(lnorm.data()  , gnorm.data()  , 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm);
+      GComm::Allreduce(lnorm.data()+1, gnorm.data()+1, 1, T2GCDatatype<GFTYPE>() , GC_OP_SUM, comm);
+      gnorm[1] = sqrt(gnorm[1]);
       // now find max errors of each type for each field:
-      for ( GSIZET i=0; i<3; i++ ) maxerror[i] = MAX(maxerror[i],gerrnorm[j]);
+      for ( GSIZET i=0; i<3; i++ ) maxerror[i] = MAX(maxerror[i],gnorm[j]);
     }
 
     cout << "main: maxerror = " << maxerror << endl;

@@ -273,24 +273,29 @@ cout << "main: time-stepping done." << endl;
 
 #if 1
     // Compute analytic solution, do comparisons:
-    GTVector<GFTYPE> lnorm(4), gnorm(4), maxerror(3);
+    GFTYPE nnorm, tt;
+    GTVector<GFTYPE> lnorm(3), gnorm(3), maxerror(3);
     maxerror = 0.0;
-    compute_analytic(*grid_, t, ptree, ua_);
+    
+    
 cout << "main: ua[0]=" << *ua_[0] << endl;
 cout << "main: u [0]=" << *u_ [0] << endl;
     for ( GSIZET j=0; j<u_.size(); j++ ) { //local errors
+      tt = 0.0;
+      compute_analytic(*grid_, tt, ptree, ua_);
+      nnorm = grid_->integrate(*ua_  [0],*utmp_[0]) ; // L2 norm of analyt soln at t=0
+      compute_analytic(*grid_, t, ptree, ua_); // analyt soln at t
       *utmp_[0] = *u_[j] - *ua_[j];
 cout << "main: diff[" << j << "]=" << *utmp_[0] << endl;
-       lnorm   [0]  = ua_[0]->infnorm (); // inf-norm of ua
-       lnorm   [1]  = utmp_[0]->infnorm (); // inf-norm
-       lnorm   [2]  = utmp_[0]->Eucnorm(); // Euclidean-norm
-       lnorm   [2] *= lnorm[2]; // square it, so it can be added 
-       gnorm   [3]  = grid_->integrate(*utmp_[0],*utmp_[1]) ;
-                //    grid_->integrate(*ua_  [j],*utmp_[1]) ; // Global L2 error norm 
+       lnorm   [0]  = utmp_[0]->infnorm (); // inf-norm
+       lnorm   [1]  = utmp_[0]->Eucnorm(); // Euclidean-norm
+       lnorm   [1] *= lnorm[2]; // square it, so it can be added 
+       gnorm   [2]  = grid_->integrate(*utmp_[0],*utmp_[1]) ;
       // Accumulate to find global errors for this field:
-      GComm::Allreduce(lnorm.data()  , gnorm.data()  , 2, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm);
-      GComm::Allreduce(lnorm.data()+2, gnorm.data()+2, 1, T2GCDatatype<GFTYPE>() , GC_OP_SUM, comm);
-      for ( GSIZET i=2; i<=3; i++ ) gnorm[i] /=  gnorm[0];
+      GComm::Allreduce(lnorm.data()  , gnorm.data()  , 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm);
+      GComm::Allreduce(lnorm.data()+1, gnorm.data()+1, 1, T2GCDatatype<GFTYPE>() , GC_OP_SUM, comm);
+      gnorm[1] = sqrt(gnorm[1]); // find Euclidean norm
+      for ( GSIZET i=0; i<3; i++ ) gnorm[i] /=  nnorm;
       // now find max errors of each type for each field:
       for ( GSIZET i=0; i<3; i++ ) maxerror[i] = MAX(maxerror[i],gnorm[i+1]);
     }
