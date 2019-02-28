@@ -201,9 +201,9 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const Time &dt
   //     du/dt = nu nabla^2 u 
   if ( doheat_ ) {
     for ( auto k=0; k<u.size(); k++ ) {
-      ghelm_->opVec_prod(*u[k],*urhstmp_[0], uoptmp_); // apply diffusion
+      ghelm_->opVec_prod(*u[k], uoptmp_, *urhstmp_[0]); // apply diffusion
      *urhstmp_[0] *= -1.0; // weak Lap op is neg on RHS
-      gimass_->opVec_prod(*urhstmp_[0],*dudt[k], uoptmp_); // apply M^-1
+      gimass_->opVec_prod(*urhstmp_[0], uoptmp_, *dudt[k]); // apply M^-1
     }
     return;
   }
@@ -220,18 +220,18 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const Time &dt
     //           the remainder should be the adv. velocity components: 
     for ( auto j=0; j<u.size()-1; j++ ) c_[j] = u[j+1];
     gadvect_->apply(*u[0], c_, utmp_, *dudt[0]); // apply advection
-    ghelm_->opVec_prod(*u[0],*utmp_[0],uoptmp_); // apply diffusion
+    ghelm_->opVec_prod(*u[0], uoptmp_, *utmp_[0]); // apply diffusion
     *utmp_[0] *= -1.0; // Lap op is negative on RHS
     *utmp_[0] -= *dudt[0]; // subtract advection term
-    gimass_->opVec_prod(*utmp_[0],*dudt[0], uoptmp_); // apply M^-1
+    gimass_->opVec_prod(*utmp_[0], uoptmp_, *dudt[0]); // apply M^-1
   }
   else {             // nonlinear advection
     for ( auto k=0; k<u.size(); k++ ) {
       gadvect_->apply(*u[k], u, urhstmp_, *dudt[k]);
-      ghelm_->opVec_prod(*u[k],*urhstmp_[0], uoptmp_); // apply diffusion
+      ghelm_->opVec_prod(*u[k], uoptmp_, *urhstmp_[0]); // apply diffusion
       *utmp_[0] *= -1.0; // is negative on RHS
       *urhstmp_[0] += *dudt[k]; // subtract nonlinear term
-      gimass_->opVec_prod(*urhstmp_[0],*dudt[k], uoptmp_); // apply M^-1
+      gimass_->opVec_prod(*urhstmp_[0], uoptmp_, *dudt[k]); // apply M^-1
     }
   }
   
@@ -525,9 +525,10 @@ void GBurgers<TypePack>::apply_bc_impl(const Time &t, State &u, const State &ub)
      ||  itype == GBDY_OUTFLOW
      ||  itype == GBDY_SPONGE 
      ||  itype == GBDY_NONE   ) continue;
+cout << "GBurgers::apply_bc_impl: igbdy=" << (*igbdy)[0] << endl;
     for ( GSIZET k=0; k<u.size(); k++ ) { // for each state component
       for ( GSIZET j=0; j<(*igbdy)[m].size(); j++ ) { // set Dirichlet-like value
-        u[k][(*igbdy)[m][j]] = ub[k][j];
+        (*u[k])[(*igbdy)[m][j]] = (*ub[k])[j];
       } 
     } 
   } 
