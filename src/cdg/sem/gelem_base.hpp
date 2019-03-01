@@ -81,11 +81,14 @@ virtual GBOOL               differentiateWeak(GTVector<GFTYPE> &dv, GTVector<GFT
         void                set_rootid(GINT id){rootid_ = id;}
         void                resize(GTVector<GINT> &);
 
-inline  GSIZET             &igbeg(){ return igbeg_;};
-inline  GSIZET             &igend(){ return igend_;};
-inline  GSIZET             &ifbeg(){ return ifbeg_;};
-inline  GSIZET             &ifend(){ return ifend_;};
-inline  GINT                nnodes(){ return Ntot_;} 
+inline  GSIZET             &igbeg(){ return igbeg_;} // vol beg index 
+inline  GSIZET             &igend(){ return igend_;} // vol end index
+inline  GSIZET             &ibbeg(){ return ibbeg_;} // bdy beg index
+inline  GSIZET             &ibend(){ return ibend_;} // bdy end index
+inline  GSIZET             &ifbeg(){ return ifbeg_;} // face beg index
+inline  GSIZET             &ifend(){ return ifend_;} // face end index
+inline  GINT                nnodes(){ return Ntot_;} // no. vol nodes
+inline  GINT                nfnodes(){ return Nftot_;} // no. face nodes 
 inline  GTVector<GINT>     &dim(){ return N_;} 
 inline  GINT                dim(GINT i){ return N_[i];} 
 inline  GTVector<GINT>     &size(){ return N_;} 
@@ -148,9 +151,9 @@ inline  GTVector<GINT>     &ibdy_indices(){ return ibdy_indices_;}
 inline  GTVector<GBdyType> &bdy_types(){ return bdy_types_;}
 inline  GTVector<GFTYPE>   &mask(){ return mask_;}
 
-virtual void                dogeom1d (GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFTYPE>> &irij, GTVector<GFTYPE> &jac, GTVector<GFTYPE> &facejac, GTVector<GTVector<GFTYPE>> &faceNormal); 
-virtual void                dogeom2d (GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFTYPE>> &irij, GTVector<GFTYPE> &jac, GTVector<GFTYPE> &facejac, GTVector<GTVector<GFTYPE>> &faceNormal); 
-virtual void                dogeom3d (GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFTYPE>> &irij, GTVector<GFTYPE> &jac, GTVector<GFTYPE> &facejac, GTVector<GTVector<GFTYPE>> &faceNormal); 
+virtual void                dogeom1d (GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFTYPE>> &irij, GTVector<GFTYPE> &jac, GTVector<GFTYPE> &facejac, GTVector<GTVector<GFTYPE>> &faceNormal, GTVector<GTVector<GFTYPE>> &bdyNormal); 
+virtual void                dogeom2d (GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFTYPE>> &irij, GTVector<GFTYPE> &jac, GTVector<GFTYPE> &facejac, GTVector<GTVector<GFTYPE>> &faceNormal, GTVector<GTVector<GFTYPE>> &bdyNormal); 
+virtual void                dogeom3d (GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFTYPE>> &irij, GTVector<GFTYPE> &jac, GTVector<GFTYPE> &facejac, GTVector<GTVector<GFTYPE>> &faceNormal, GTVector<GTVector<GFTYPE>> &bdyNormal); 
 
 friend std::ostream&        operator<<(std::ostream&, GElem_base &);    // Output stream operator
  
@@ -176,14 +179,17 @@ virtual void                get_indirect3d(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b,
         void                det(GMVFType &gij, GTVector<GFTYPE> &det, GBOOL &pChk, GINT *ind, GINT nind);
 virtual void                Jac_embed(GMVFType &G, GTVector<GFTYPE> &jac, GBOOL &pChk, GINT *pind, GINT nind);
         void                inv(GMVFType &G, const GTVector<GFTYPE> &jac, GMVFType &iG);
-        void                set_faceNormal2d(GTMatrix<GTVector<GFTYPE>> &rij, GTVector<GTVector<GFTYPE>> &faceNormal);
-        void                set_faceNormal3d(GTMatrix<GTVector<GFTYPE>> &rij, GTVector<GTVector<GFTYPE>> &faceNormal);
+        void                set_bdyNormal2d(GTMatrix<GTVector<GFTYPE>> &rij, GTVector<GINT> &iind, GTVector<GTVector<GFTYPE>> &bdyNormal);
+        void                set_bdyNormal3d(GTMatrix<GTVector<GFTYPE>> &rij, GTVector<GINT> &iind, GTVector<GTVector<GFTYPE>> &bdyNormal);
                                         
 
 GINT                    Ntot_;          // total no. node points in element
+GINT                    Nftot_;         // total no. face node points in element
 GTVector<GINT>          N_;             // no. _nodes_ in each direction
 GSIZET                  igbeg_;         // holds starting global index 
 GSIZET                  igend_;         // holds ending global index
+GSIZET                  ibbeg_;         // holds starting global bdy node index 
+GSIZET                  ibend_;         // holds ending global bdy node index
 GSIZET                  ifbeg_;         // holds starting global face node index 
 GSIZET                  ifend_;         // holds ending global face node index
 GBOOL                   bInitialized_;  // element initialized?
@@ -224,7 +230,7 @@ GTMatrix<GTVector<GFTYPE>>
                         dXidX_;         // dxi_i/dx_k 
 GTVector<GFTYPE>        Jac_;           // volume Jacobian |Gij|
 GVVFType                faceJac_;       // face Jaobians |Gij| on edges
-GTVector<GVVFType>      faceNormal_;    // normal to face at each node point (2d & 3d)
+GTVector<GVVFType>      bdyNormal_;    // normal to face at each node point (2d & 3d)
 #endif
 
 // Indirection indices:
