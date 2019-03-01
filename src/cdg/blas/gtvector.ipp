@@ -1208,28 +1208,6 @@ GTVector<T>::L1norm()
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : infnorm
-// DESC   : Computes infinity (max) norm
-// ARGS   : none.
-// RETURNS: T norm
-//**********************************************************************************
-template<class T>
-T
-GTVector<T>::infnorm() 
-{
-  T      xnorm = std::numeric_limits<T>::min();
-  GLLONG j;
-
-  for ( j=this->gindex_.beg(), xnorm=0; j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
-    xnorm = MAX(xnorm,fabs(this->data_[j]));
-  }
-
-  return xnorm;
-} // end, infnorm 
-
-
-//**********************************************************************************
-//**********************************************************************************
 // METHOD : Eucnorm
 // DESC   : Computes Euclidean (RMS) norm
 // ARGS   : none.

@@ -139,7 +139,7 @@ inline    T operator[](const GSIZET i) const {
     #pragma acc routine vector
     T L1norm();
     #pragma acc routine vector
-    T infnorm();
+    T infnorm() {return max();}
     #pragma acc routine vector
     T Eucnorm();
     #pragma acc routine vector
