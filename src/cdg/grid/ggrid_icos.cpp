@@ -605,7 +605,11 @@ void GGridIcos::do_grid3d(GINT irank)
     // ... need to check only vertex 0 for this:
     if ( hmesh_[i].v[0]->x1 == radiusi_ || hmesh_[i].v[0]->x1 == radiuso_ ) { 
       face_ind = &pelem->face_indices(0);
-      for ( GSIZET k=0; k<face_ind->size(); k++ ) bdy_ind->push_back((*face_ind)[k]); 
+      for ( GSIZET k=0; k<face_ind->size(); k++ ) {
+        // Do not allow face indices to be repeated in bdy list:
+        if ( !bdy_ind->contains((*face_ind)[k]) ) 
+          bdy_ind->push_back((*face_ind)[k]); 
+      }
     }
 
     spherical2xyz(*xNodes); // convert nodal coords to Cartesian coords

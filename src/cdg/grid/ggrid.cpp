@@ -205,21 +205,20 @@ GSIZET GGrid::ndof()
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : nsurfdof
-// DESC   : Find number of surface dof in grid
+// DESC   : Find number of surface dof in grid. These will include
+//          global domain boundary _and_ may also include embedded
+//          boundary surface nodes.
 // ARGS   : none
 // RETURNS: GSIZET number surface dof
 //**********************************************************************************
 GSIZET GGrid::nsurfdof()
 {
-   assert(gelems_.size() > 0 && "Elements not set");
+   // Use unique boundary indices to compute
+   // number surface dof. This list, unlike element
+   // face indices, may conatin embedded booundary 
+   // surfaces too:
 
-   GSIZET Ntot=0;
-   for ( GSIZET i=0; i<gelems_.size(); i++ ) {
-      for ( GSIZET j=0; j<gelems_[i]->nfaces(); j++ ) 
-        Ntot += gelems_[i]->face_indices(j).size();
-   }
-
-   return Ntot;
+   return igbdy_.size();
 } // end of method nsurfdof
 
 
@@ -339,6 +338,7 @@ void GGrid::grid_init()
   else if ( itype_[GE_DEFORMED]  .size() > 0 ) gtype_ = GE_DEFORMED;
   else if ( itype_[GE_REGULAR]   .size() > 0 ) gtype_ = GE_REGULAR;
 
+  init_bc_info();
   if ( itype_[GE_2DEMBEDDED].size() > 0
     || itype_  [GE_DEFORMED].size() > 0 ) {
     def_init();
@@ -349,7 +349,6 @@ void GGrid::grid_init()
   }
 
   minnodedist_ = find_min_dist();
-  init_bc_info();
 
   bInitialized_ = TRUE;
 
@@ -768,10 +767,13 @@ void GGrid::init_bc_info()
   GTVector   <GSIZET> itmp; 
   for ( GSIZET e=0; e<gelems_.size(); e++ ) {
     ibeg   = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
-    iebdy  = &gelems_[e]->bdy_indices(); // likely set in ggrid_icos/ggrid_box, etc
+    iebdy  = &gelems_[e]->bdy_indices(); // set in ggrid_icos/ggrid_box, etc
     iebdyt = &gelems_[e]->bdy_types(); 
-    for ( GSIZET j=0; j<iebdyt->size(); j++ ) {
+cout << "GGrid::init_bc_info: local bdy indices:" << *iebdy << endl;
+cout << "GGrid::init_bc_info: local bdy types  :" << *iebdyt << endl;
+    for ( GSIZET j=0; j<iebdy->size(); j++ ) {
       ig = nn + (*iebdy)[j];
+cout << "GGrid::init_bc_info: global bdy index:" << ig << endl;
       itmp.push_back(ig); // index in full global arrays
       btmp.push_back((*iebdyt)[j]);
     }
@@ -792,6 +794,7 @@ void GGrid::init_bc_info()
     for ( GSIZET j=0; j<nind; j++ ) igbdy_[k][j] = itmp[ind[j]];
     nind = 0;
   } // end, element loop
+cout << "GGrid::init_bc_info: global bdy indices:" << igbdy_ << endl;
 
   if ( ind != NULLPTR ) delete [] ind;
 
