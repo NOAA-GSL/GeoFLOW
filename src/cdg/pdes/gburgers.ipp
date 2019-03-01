@@ -513,7 +513,8 @@ void GBurgers<TypePack>::apply_bc_impl(const Time &t, State &u, const State &ub)
 
   // NOTE: This is useful to set Dirichlet-type bcs only. 
   // Neumann bcs type have to be set with the
-  // differential operators themselves
+  // differential operators themselves, though the node
+  // points in the operators may still be set from ub
  
   GBdyType itype; 
   for ( GSIZET m=0; m<igbdy->size(); m++ ) { // for each type of bdy in gtypes.h
@@ -523,7 +524,6 @@ void GBurgers<TypePack>::apply_bc_impl(const Time &t, State &u, const State &ub)
      ||  itype == GBDY_OUTFLOW
      ||  itype == GBDY_SPONGE 
      ||  itype == GBDY_NONE   ) continue;
-cout << "GBurgers::apply_bc_impl: igbdy=" << (*igbdy)[0] << endl;
     for ( GSIZET k=0; k<u.size(); k++ ) { // for each state component
       for ( GSIZET j=0; j<(*igbdy)[m].size(); j++ ) { // set Dirichlet-like value
         (*u[k])[(*igbdy)[m][j]] = (*ub[k])[j];
