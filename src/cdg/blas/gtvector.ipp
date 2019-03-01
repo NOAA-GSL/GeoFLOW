@@ -1186,28 +1186,6 @@ GTVector<T>::sum()
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : L1norm
-// DESC   : Computes L1 norm
-// ARGS   : none.
-// RETURNS: T norm
-//**********************************************************************************
-template<class T>
-T
-GTVector<T>::L1norm() 
-{
-  T      xnorm = std::numeric_limits<T>::min();
-  GLLONG j;
-
-  for ( j=this->gindex_.beg(), xnorm=0; j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
-    xnorm += fabs(this->data_[j]);
-  }
-
-  return xnorm;
-} // end,L1norm 
-
-
-//**********************************************************************************
-//**********************************************************************************
 // METHOD : Eucnorm
 // DESC   : Computes Euclidean (RMS) norm
 // ARGS   : none.
