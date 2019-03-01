@@ -60,7 +60,8 @@ virtual void                print(const GString &filename){}          // print g
         void                 print(GString fname, GBOOL bdof=FALSE);
         GSIZET               ndof();                                  // compute total number elem dof
         GSIZET               size() { return ndof(); }
-        GSIZET               nsurfdof();                              // compute total number elem surf dof
+        GSIZET               nfacedof();                              // compute total number elem face dof
+        GSIZET               nbdydof();                               // compute total number elem bdy dof
         GFTYPE               minlength();                             // find min elem length
         GFTYPE               maxlength();                             // find max elem length
         GFTYPE               minnodedist()         
@@ -78,6 +79,10 @@ virtual void                print(const GString &filename){}          // print g
                             &faceJac();                                // global face Jacobian
         GTVector<GTVector<GFTYPE>>
                             &faceNormal();                             // global face normals
+        GTVector<GTVector<GSIZET>>
+                            &igface() { return igface_;}               // global dom face indices into u for each elem face index
+        GTVector<GTVector<GFTYPE>>
+                            &bdyNormal();                              // global bdy normals
         GTVector<GTVector<GSIZET>>
                             &igbdy() { return igbdy_;}                 // global dom bdy indices into u for eacb GBdyType
 
@@ -107,7 +112,9 @@ protected:
         GTVector<GTVector<GFTYPE>>  xNodes_;        // Cart coords of all node points
         GTVector<GFTYPE>            Jac_;           // interior Jacobian, global
         GTVector<GFTYPE>            faceJac_;       // face Jacobian, global
-        GTVector<GTVector<GFTYPE>>  faceNormal_;    // normal to face at each node point (2d & 3d), global
+        GTVector<GTVector<GFTYPE>>  faceNormal_;    // normal to eleme faces each face node point (2d & 3d), global
+        GTVector<GTVector<GSIZET>>  igface_;        // index into global field indicating elem face node
+        GTVector<GTVector<GFTYPE>>  bdyNormal_;     // normal to surface at each bdy node point (2d & 3d), global
         GFTYPE                      minnodedist_;   // min node length array (for each elem)
         GTVector<GTVector<GSIZET>>  igbdy_;         // index into global field indicating a domain bdy
         GTVector<GBdyType>          igbdytypes_;    // global domain bdy types for each igbdy index
