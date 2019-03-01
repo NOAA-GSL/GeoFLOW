@@ -1186,6 +1186,28 @@ GTVector<T>::sum()
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD : infnorm
+// DESC   : Computes infinity (max)
+// ARGS   : none.
+// RETURNS: T norm
+//**********************************************************************************
+template<class T>
+T
+GTVector<T>::infnorm() 
+{
+  GDOUBLE xnorm;
+  GLLONG j;
+
+  for ( j=this->gindex_.beg(), xnorm=0; j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
+    xnorm = MAX(xnorm,fabs(this->data_[j]));
+  }
+  
+  return static_cast<T>(xnorm);
+} // end, infnorm
+
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD : Eucnorm
 // DESC   : Computes Euclidean (RMS) norm
 // ARGS   : none.
@@ -1195,7 +1217,7 @@ template<class T>
 T
 GTVector<T>::Eucnorm() 
 {
-  GDOUBLE xnorm = 0.0;
+  GDOUBLE xnorm;
   GLLONG j;
 
   for ( j=this->gindex_.beg(), xnorm=0; j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
