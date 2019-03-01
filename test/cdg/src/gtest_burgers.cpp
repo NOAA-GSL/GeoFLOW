@@ -273,31 +273,38 @@ cout << "main: time-stepping done." << endl;
 
 #if 1
     // Compute analytic solution, do comparisons:
-    GFTYPE nnorm, tt;
+    GFTYPE tt;
     GTVector<GFTYPE> lnorm(3), gnorm(3), maxerror(3);
+    GTVector<GFTYPE> nnorm(ua_.size());
+    
     maxerror = 0.0;
     
-    
-cout << "main: ua[0]=" << *ua_[0] << endl;
-cout << "main: u [0]=" << *u_ [0] << endl;
+    tt = 0.0;
+    compute_analytic(*grid_, tt, ptree, ua_); // analyt soln at t=0
     for ( GSIZET j=0; j<u_.size(); j++ ) { //local errors
-      tt = 0.0;
-      compute_analytic(*grid_, tt, ptree, ua_);
-      nnorm = grid_->integrate(*ua_  [0],*utmp_[0]) ; // L2 norm of analyt soln at t=0
-      compute_analytic(*grid_, t, ptree, ua_); // analyt soln at t
+      for ( GSIZET i=0; i<ua_[0]->size(); i++ ) (*ua_[0])[i] = pow((*ua_[0])[i],2);
+      nnorm[j] = grid_->integrate(*ua_  [0],*utmp_[0]) ; // L2 norm of analyt soln at t=0
+cout << "main: ua(t=0)[" << j << "]=" << *ua_[j] << endl;
+cout << "main: nnorm[" << j << "]=" << nnorm[j] << endl;
+    }
+    
+    compute_analytic(*grid_, t, ptree, ua_); // analyt soln at t
+    for ( GSIZET j=0; j<u_.size(); j++ ) { //local errors
+cout << "main: u [0]=" << *u_ [j] << endl;
+cout << "main: ua(t)=" << *ua_[j] << endl;
       *utmp_[0] = *u_[j] - *ua_[j];
 cout << "main: diff[" << j << "]=" << *utmp_[0] << endl;
+      for ( GSIZET i=0; i<utmp_[1]->size(); i++ ) (*utmp_[1])[i] = fabs((*utmp_[0])[i]);
+      for ( GSIZET i=0; i<utmp_[1]->size(); i++ ) (*utmp_[2])[i] = pow((*utmp_[0])[i],2);
+
        lnorm   [0]  = utmp_[0]->infnorm (); // inf-norm
-       lnorm   [1]  = utmp_[0]->Eucnorm(); // Euclidean-norm
-       lnorm   [1] *= lnorm[2]; // square it, so it can be added 
-       gnorm   [2]  = grid_->integrate(*utmp_[0],*utmp_[1]) ;
+       gnorm   [1]  = grid_->integrate(*utmp_[1],*utmp_[0])/sqrt(nnorm[j]) ; // L1-norm
+       gnorm   [2]  = grid_->integrate(*utmp_[2],*utmp_[0])/nnorm[j] ; // L2-norm
       // Accumulate to find global errors for this field:
       GComm::Allreduce(lnorm.data()  , gnorm.data()  , 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm);
-      GComm::Allreduce(lnorm.data()+1, gnorm.data()+1, 1, T2GCDatatype<GFTYPE>() , GC_OP_SUM, comm);
-      gnorm[1] = sqrt(gnorm[1]); // find Euclidean norm
-      for ( GSIZET i=0; i<3; i++ ) gnorm[i] /=  nnorm;
+      gnorm[2] =  sqrt(gnorm[2]/nnorm[j]);
       // now find max errors of each type for each field:
-      for ( GSIZET i=0; i<3; i++ ) maxerror[i] = MAX(maxerror[i],gnorm[i+1]);
+      for ( GSIZET i=0; i<3; i++ ) maxerror[i] = MAX(maxerror[i],fabs(gnorm[i]));
     }
 
     cout << "main: maxerror = " << maxerror << endl;
@@ -314,7 +321,7 @@ cout << "main: diff[" << j << "]=" << *utmp_[0] << endl;
 
     // Write header, if required:
     if ( itst.peek() == std::ofstream::traits_type::eof() ) {
-    ios << "# p  num_elems   L1_err   Eucl_err   L2_err" << std::endl;
+    ios << "# p     num_elems      inf_err     L1_err      L2_err" << std::endl;
     }
     itst.close();
 
@@ -518,64 +525,6 @@ void compute_pergauss_adv(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GT
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD: compute_poly_heat
-// DESC  : Compute solution to heat equation with arb. bcs,
-//         a polynomial, to test Helmholtz op. Must use box grid.
-// ARGS  : grid    : GGrid object
-//         t       : time
-//         ptree   : main property tree
-//         ua      : return solution
-//**********************************************************************************
-void compute_poly_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVector<GTVector<GFTYPE>*> &ua)
-{
-  assert(grid.gtype() == GE_REGULAR && "Invalid element types");
-
-  GINT             n;
-  GFTYPE           nxy;
-  GTVector<GFTYPE> xx(GDIM);
-
-  PropertyTree heatptree = ptree.getPropertyTree("poly_test");
-
-  GTVector<GTVector<GFTYPE>> *xnodes = &grid_->xNodes();
-  GFTYPE p   = heatptree.getValue<GFTYPE>("xpoly"); 
-  GFTYPE q   = heatptree.getValue<GFTYPE>("ypoly"); 
-  GFTYPE u0  = heatptree.getValue<GFTYPE>("u0"); 
-
-  assert(p>=0 && q >= 0 && "poly_test: Invalid exponent");
-
-  cout << "poly_test: p=" << p << " q=" << q << endl;
-  
-  nxy = (*xnodes)[0].size(); // same size for x, y, z
-
-  if ( t == 0 ) {
-    for ( GSIZET j=0; j<nxy; j++ ) {
-      for ( GSIZET i=0; i<GDIM; i++ ) xx[i] = (*xnodes)[i][j];
-      (*ua[0])[j] = u0*pow(xx[0],p)*pow(xx[1],q);
-    }
-  } 
-  else {
-    for ( GSIZET j=0; j<nxy; j++ ) {
-      for ( GSIZET i=0; i<GDIM; i++ ) xx[i] = (*xnodes)[i][j];
-      if ( p == 0 && q > 0 ) {
-        (*ua[0])[j] = u0*q*(q-1)*pow(xx[0],p  )*pow(xx[1],q-2);
-      }
-      else if ( p > 0 && q == 0 ) {
-        (*ua[0])[j] = u0*p*(p-1)*pow(xx[0],p-2)*pow(xx[1],q);
-      }  
-      else {
-        (*ua[0])[j] = u0*( p*(p-1)*pow(xx[0],p-2)*pow(xx[1],q  )
-                         + q*(q-1)*pow(xx[0],p  )*pow(xx[1],q-2) );
-      }
-    }
-    *ua[0] *= -1.0;
-  }
-
-  
-} // end, compute_poly_heat
-
-
-//**********************************************************************************
-//**********************************************************************************
 // METHOD: compute_dirgauss_heat
 // DESC  : Compute solution to heat equation with GBDY_DIRICHLET bcs,
 //         a Gaussian 'lump'. Must use box grid.
@@ -682,7 +631,7 @@ void compute_pergauss_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
   bc[3] = boxptree.getValue<GString>("bdy_y_1");
   bc[4] = boxptree.getValue<GString>("bdy_z_0");
   bc[5] = boxptree.getValue<GString>("bdy_z_1");
-  assert(bc.multiplicity("GBDY_PERIODIC") == 2*GDIM 
+  assert(bc.multiplicity("GBDY_PERIODIC") >= 2*GDIM 
       && "Periodic boundaries must be set on all boundaries");
 
   bAdd = FALSE; // add solution to existing ua
@@ -754,9 +703,6 @@ void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVecto
       } else { // is DIRICHLET
       compute_dirgauss_heat(grid, t, ptree, ua);
       }
-    }
-    else if ( sblock == "poly_test"  ) {
-      compute_poly_heat(grid, t, ptree, ua);
     }
     else {
       assert(FALSE && "Invalid heat equation initialization specified");
