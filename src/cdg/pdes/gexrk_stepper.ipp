@@ -92,7 +92,7 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &ub,
    *uout[j] = *uin[j];
   }
  
-#if 0 
+#if 1 
   tt = t+(*alpha)[0]*dt;
   if ( bupdatebc_ ) bdy_update_callback_(tt, u, ub); 
   if ( bapplybc_  ) bdy_apply_callback_ (tt, u, ub); 
