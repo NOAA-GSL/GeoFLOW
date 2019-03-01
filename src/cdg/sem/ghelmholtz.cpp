@@ -154,24 +154,25 @@ void GHelmholtz::def_prod(GTVector<GFTYPE> &u,
     }
   }
 
+  // Apply p parameter ('viscosity') if necessary to Laplacian:
+  if ( p_ != NULLPTR ) {
+    if ( p_->size() >= grid_->ndof() ) uo.pointProd(*p_);
+    else if ( (*p_)[0] != 1.0 ) uo *= (*p_)[0];
+  }
+
   // utmp[GDIM+1], utmp[GDIM+2', uo now hold Ti = Gij D^j u, i = 0, GDIM-1
   // Now compute DT^j ( t^j ):
   GMTK::compute_grefdiv(*grid_, gdu, etmp1_, TRUE, uo); // Compute 'divergence' with DT_j
 
   // At this point, we have uo = L u
  
-  // Apply p parameter ('viscosity') if necessary to Laplacian:
-  if ( p_ != NULLPTR ) {
-    if ( p_->size() >= grid_->ndof() ) uo.pointProd(*p_);
-    else uo *= (*p_)[0];
-  }
 
   // Apply Mass operator and q parameter if necessary:
   if ( bcompute_helm_ ) {
     massop_->opVec_prod(u, utmp, *utmp[0]);
     if ( q_ != NULLPTR ) {
       if ( q_->size() >= grid_->ndof() ) utmp[0]->pointProd(*q_);
-      if ( (*q_)[0] != 1.0)             *utmp[0] *= (*q_)[0];
+      else if ( (*q_)[0] != 1.0)        *utmp[0] *= (*q_)[0];
     }
     uo += *utmp[0];
   }
@@ -237,25 +238,26 @@ void GHelmholtz::embed_prod(GTVector<GFTYPE> &u,
     }
   }
 
-  // {utmp[GDIM+1], utmp[GDIM+2], uo} now hold Ti = Gij D^j u, i = 0, GDIM-1
-  // Now compute DT^j ( t^j ):
-  GMTK::compute_grefdiv(*grid_, gdu, etmp1_, TRUE, uo); // Compute 'divergence' with DT_j
-
-
-  // At this point, we have uo = L u
- 
   // Apply p parameter ('viscosity') if necessary to Laplacian:
   if ( p_ != NULLPTR ) {
     if ( p_->size() >= grid_->ndof() ) uo.pointProd(*p_);
     else if ( (*p_)[0] != 1.0 )  uo *= (*p_)[0];
   }
 
+  // {utmp[GDIM+1], utmp[GDIM+2], uo} now hold Ti = p Gij D^j u, i = 0, GDIM-1
+  // Now compute DT^j ( t^j ):
+  GMTK::compute_grefdiv(*grid_, gdu, etmp1_, TRUE, uo); // Compute 'divergence' with DT_j
+
+
+  // At this point, we have uo = L u
+ 
+
   // Apply Mass operator and q parameter if necessary:
   if ( bcompute_helm_ ) {
     massop_->opVec_prod(u, utmp, *utmp[0]); // final arg unused
     if ( q_ != NULLPTR ) {
       if ( q_->size() >= grid_->ndof() ) utmp[0]->pointProd(*q_);
-      if ( (*q_)[0] != 1.0)              *utmp[0] *= (*q_)[0];
+      else if ( (*q_)[0] != 1.0)        *utmp[0] *= (*q_)[0];
     }
     uo += *utmp[0];
   }
@@ -319,27 +321,19 @@ void GHelmholtz::reg_prod(GTVector<GFTYPE> &u,
     }
   }
 
-cout << "GHelm::reg_prod: Dx u = " << *gdu[0]  << endl;
-cout << "GHelm::reg_prod: Dy u = " << *gdu[1]  << endl;
-cout << "GHelm::reg_prod: G(0,0) = " << *G_(0,0)  << endl;
-cout << "GHelm::reg_prod: G(1,1) = " << *G_(1,0)  << endl;
-GTVector<GFTYPE> *Jac=  &grid_->Jac();
-cout << "GHelm::reg_prod: Jac = " << *Jac  << endl;
-  // Take 'divergence' with transpose(D):
+  // Take 'divergence' with D:
   GMTK::compute_grefdivW(*grid_, gdu, etmp1_, FALSE, uo); // Compute 'divergence' with W^-1 D_j
 
-  // Apply mass operatori (includes Jacobian):
+  // Apply mass operator (includes Jacobian already):
   *gdu[0] = uo;
   massop_->opVec_prod(*gdu[0], gdu, uo); // final array does nothing
-
-cout << "GHelm::reg_prod: Div u = " << uo << endl;
 
   // Apply Mass operator and q parameter if necessary:
   if ( bcompute_helm_ ) {
     massop_->opVec_prod(u, utmp, *utmp[0]); // final arg unused
     if ( q_ != NULLPTR ) {
       if ( q_->size() >= grid_->ndof() ) utmp[0]->pointProd(*q_);
-      if ( (*q_)[0] != 1.0)             *utmp[0] *= (*q_)[0];
+      else if ( (*q_)[0] != 1.0)        *utmp[0] *= (*q_)[0];
     }
     uo += *utmp[0];
   }
