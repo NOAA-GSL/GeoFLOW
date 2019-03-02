@@ -583,8 +583,9 @@ void compute_dirgauss_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
       n       = 1;
       argxp = -pow(xx[k],2.0)*si[k];
       da    =  exp(argxp);
-     (*ua[0])[j] = u0*pow(sig0,2)/pow(sig[0],2)*da;
+      prod *= da;
     }
+   (*ua[0])[j] = u0*pow(sig0,2)/pow(sig[0],2)*prod;
   }
 
   
