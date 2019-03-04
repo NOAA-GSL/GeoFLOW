@@ -8,6 +8,7 @@
 #include "tbox/assert.hpp"
 #include "tbox/command_line.hpp"
 
+#include <algorithm>
 
 namespace geoflow {
 namespace tbox {
