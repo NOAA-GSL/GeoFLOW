@@ -199,7 +199,6 @@ cout << "main: du[" << j << "]=" << *du[j] << endl;
     GSIZET lnelems=grid_->nelems();
     GSIZET gnelems;
     GComm::Allreduce(&lnelems, &gnelems, 1, T2GCDatatype<GSIZET>() , GC_OP_SUM, comm);
-    return( maxerror.max()  > 10*std::numeric_limits<GFTYPE>::epsilon());
     if ( maxerror.max() > 10*std::numeric_limits<GFTYPE>::epsilon() ) {
       std::cout << "main: -------------------------------------derivative FAILED" << std::endl;
       errcode = 1;
