@@ -231,7 +231,7 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     for ( GSIZET j=0; j<utmp_.size(); j++ ) utmp_[j] = new GTVector<GFTYPE>(grid_->size());
     for ( GSIZET j=0; j<u_   .size(); j++ ) u_   [j] = new GTVector<GFTYPE>(grid_->size());
     for ( GSIZET j=0; j<ua_  .size(); j++ ) ua_  [j] = new GTVector<GFTYPE>(grid_->size());
-    for ( GSIZET j=0; j<ub_  .size(); j++ ) ub_  [j] = new GTVector<GFTYPE>(grid_->nsurfdof());
+    for ( GSIZET j=0; j<ub_  .size(); j++ ) ub_  [j] = new GTVector<GFTYPE>(grid_->nbdydof());
 
     // Create observer(s), equations, integrator:
     std::shared_ptr<EqnImpl> eqn_impl(new EqnImpl(ggfx, *grid_, u_, solver_traits, utmp_));
@@ -362,8 +362,9 @@ void update_dirichlet(const GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u, GTVector<
   
   // If bc is time dependent, update it here.
   // Note: grid_ ptree, and ua_ are global:
-  if ( (*igbdy)[GBDY_DIRICHLET].size() > 0 )
+  if ( (*igbdy)[GBDY_DIRICHLET].size() > 0 ) {
     compute_analytic(*grid_, tt, ptree,  ua_);
+  }
 
   // ...GBDY_DIRICHLET:
   // Set from State vector, ua_:
@@ -536,10 +537,9 @@ void compute_pergauss_adv(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GT
 //**********************************************************************************
 void compute_dirgauss_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVector<GTVector<GFTYPE>*> &ua)
 {
-  GINT             n;
-  GFTYPE           wsum, prod, argxp, argxm, da, eps=1e-18;
-  GFTYPE           nxy, sig0, ufact=1.0, u0;
-  GTVector<GFTYPE> xx(GDIM), si(GDIM), sig(GDIM);
+  GFTYPE           argxp; 
+  GFTYPE           nxy, sig0, u0;
+  GTVector<GFTYPE> xx(GDIM), si(GDIM), sig(GDIM), ufact(GDIM);
   GTPoint<GFTYPE>  r0(3), P0(3);
   std::vector<GFTYPE> svec;
 
@@ -570,25 +570,22 @@ void compute_dirgauss_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
   sig0  = heatptree.getValue<GFTYPE>("sigma"); 
   u0    = heatptree.getValue<GFTYPE>("u0"); 
 
+  // Account for case where nu is anisotropic (for later, maybe):
   for ( GSIZET k=0; k<GDIM; k++ ) {
     sig[k] = sqrt(sig0*sig0 + 2.0*t*nu_[0]); // scalar viscosity only
-    si [k] = 0.5/(sig[k]*sig[k]);
+    si [k] = 1.0/(sig[k]*sig[k]);
+    ufact[k] = u0*pow(sig0,2)/pow(sig[0],2);
   }
 
+  // Ok, return to assumption of isotropic nu: 
   for ( GSIZET j=0; j<nxy; j++ ) {
     for ( GSIZET i=0; i<GDIM; i++ ) xx[i] = (*xnodes)[i][j] - r0[i];
-
-    prod = 1.0;
-    for ( GSIZET k=0; k<GDIM; k++ ) {
-      wsum    = exp(-xx[k]*xx[k]*si[k]);
-      n       = 1;
-      argxp = -pow(xx[k],2.0)*si[k];
-      da    =  exp(argxp);
-      prod *= da;
-    }
-   (*ua[0])[j] = u0*pow(sig0,2)/pow(sig[0],2)*prod;
+    argxp = 0.0;
+    for ( GSIZET i=0; i<GDIM; i++ ) argxp += -0.5*pow(xx[i],2.0)*si[i];
+   (*ua[0])[j] = ufact[0]*exp(argxp);
   }
 
+  cout << "compute_dirgauss_heat: ua=" << *ua[0] << endl;
   
 } // end, compute_dirgauss_heat
 
@@ -648,6 +645,7 @@ void compute_pergauss_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
 
   for ( GSIZET k=0; k<GDIM; k++ ) {
     sig[k] = sqrt(sig0*sig0 + 2.0*t*nu_[0]); // scalar viscosity only
+//  si [k] = 0.5/(sig[k]*sig[k]);
     si [k] = 0.5/(sig[k]*sig[k]);
   }
   ufact = bAdd ? 1.0 : 0.0;
