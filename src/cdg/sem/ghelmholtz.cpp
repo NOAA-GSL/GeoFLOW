@@ -328,12 +328,11 @@ void GHelmholtz::reg_prod(GTVector<GFTYPE> &u,
   *gdu[0] = uo;
   massop_->opVec_prod(*gdu[0], gdu, uo); // tmp array does nothing
 
-  // Apply Mass operator and q parameter if necessary:
+  // Apply q parameter if necessary:
   if ( bcompute_helm_ ) {
-    massop_->opVec_prod(u, utmp, *utmp[0]); // 2nd arg unused
     if ( q_ != NULLPTR ) {
-      if ( q_->size() >= grid_->ndof() ) utmp[0]->pointProd(*q_);
-      else if ( (*q_)[0] != 1.0)        *utmp[0] *= (*q_)[0];
+      if ( q_->size() >= grid_->ndof() ) uo[0]->pointProd(*q_);
+      else if ( (*q_)[0] != 1.0)        *uo[0] *= (*q_)[0];
     }
     uo += *utmp[0];
   }
