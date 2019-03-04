@@ -297,9 +297,9 @@ cout << "main: diff[" << j << "]=" << *utmp_[0] << endl;
       for ( GSIZET i=0; i<utmp_[1]->size(); i++ ) (*utmp_[1])[i] = fabs((*utmp_[0])[i]);
       for ( GSIZET i=0; i<utmp_[1]->size(); i++ ) (*utmp_[2])[i] = pow((*utmp_[0])[i],2);
 
-       lnorm   [0]  = utmp_[0]->infnorm (); // inf-norm
-       gnorm   [1]  = grid_->integrate(*utmp_[1],*utmp_[0])/sqrt(nnorm[j]) ; // L1-norm
-       gnorm   [2]  = grid_->integrate(*utmp_[2],*utmp_[0])/nnorm[j] ; // L2-norm
+      lnorm   [0]  = utmp_[0]->infnorm (); // inf-norm
+      gnorm   [1]  = grid_->integrate(*utmp_[1],*utmp_[0])/sqrt(nnorm[j]) ; // L1-norm
+      gnorm   [2]  = grid_->integrate(*utmp_[2],*utmp_[0])/nnorm[j] ; // L2-norm
       // Accumulate to find global errors for this field:
       GComm::Allreduce(lnorm.data()  , gnorm.data()  , 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm);
       gnorm[2] =  sqrt(gnorm[2]/nnorm[j]);
