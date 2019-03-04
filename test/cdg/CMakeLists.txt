@@ -95,7 +95,7 @@ set(GPTL_PATH
 # BOOST path; may be changed in glocale.cmake:
 set(BOOST_ROOT 
 #   /scratch/duane.rosenberg/lib/boost_1_69_0_gcc
-    /scratch3/BMC/gsd-hpcs/bflynt/opt/boost/boost_1_66_0
+    /home/Duane.Rosenberg/lib/boost_1_66_0_intel
    )
 
 set(CDG_COMMON_LIBS  
@@ -116,7 +116,7 @@ endif()
 
 set(CDG_COMMON_INC ${CDG_COMMON_INC}
     ${GPTL_PATH}/include
-    ${BOOST_ROOT}
+    ${BOOST_ROOT}/include
    )
 
 if (USE_MPI)
