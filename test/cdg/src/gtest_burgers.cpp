@@ -362,7 +362,8 @@ void update_dirichlet(const GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u, GTVector<
   
   // If bc is time dependent, update it here.
   // Note: grid_ ptree, and ua_ are global:
-  compute_analytic(*grid_, tt, ptree,  ua_);
+  if ( (*igbdy)[GBDY_DIRICHLET].size() > 0 )
+    compute_analytic(*grid_, tt, ptree,  ua_);
 
   // ...GBDY_DIRICHLET:
   // Set from State vector, ua_:
