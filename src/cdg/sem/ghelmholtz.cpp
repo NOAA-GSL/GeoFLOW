@@ -87,13 +87,13 @@ void GHelmholtz::opVec_prod(GTVector<GFTYPE> &u,
 {
   assert(bInitialized_ && "Operator not initialized");
     
-  if ( grid_->itype(GE_REGULAR).size() > 0 ) {
+  if ( grid_->igtype() == GE_REGULAR) ) {
     reg_prod(u, utmp, uo);
   }
-  else if ( grid_->itype(GE_DEFORMED).size() > 0 ) {
+  else if ( grid_->gtype() == GE_DEFORMED ) {
     def_prod(u, utmp, uo);
   }
-  if ( grid_->itype(GE_2DEMBEDDED).size() > 0 ) {
+  if ( grid_->gtype() == GE_2DEMBEDDED ) {
      embed_prod(u, utmp, uo);
   }
 
@@ -328,11 +328,12 @@ void GHelmholtz::reg_prod(GTVector<GFTYPE> &u,
   *gdu[0] = uo;
   massop_->opVec_prod(*gdu[0], gdu, uo); // tmp array does nothing
 
-  // Apply q parameter if necessary:
+  // Add q X mass operator if necessary:
   if ( bcompute_helm_ ) {
     if ( q_ != NULLPTR ) {
-      if ( q_->size() >= grid_->ndof() ) uo.pointProd(*q_);
-      else if ( (*q_)[0] != 1.0)         uo *= (*q_)[0];
+      massop_->opVec_prod(u, gdu, *utmp[0]);
+      if ( q_->size() >= grid_->ndof() ) *utmp[0].pointProd(*q_);
+      else if ( (*q_)[0] != 1.0)         *utmp[0] *= (*q_)[0];
     }
     uo += *utmp[0];
   }
