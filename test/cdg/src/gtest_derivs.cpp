@@ -39,7 +39,7 @@ int main(int argc, char **argv)
 
     GString serr ="main: ";
     GBOOL  bret;
-    GINT   iopt;
+    GINT   errcode, iopt;
     GINT   ilevel=0;// 2d ICOS refinement level
     GINT   np=1;    // elem 'order'
     GINT   nstate=GDIM;  // number 'state' arrays
@@ -154,6 +154,7 @@ int main(int argc, char **argv)
     for ( GSIZET j=0; j<da  .size(); j++ ) da  [j] = new GTVector<GFTYPE>(grid_->size());
 
     // Initialize u:
+    GFTYPE p=4, q=2;
     GFTYPE x, y, z;
     GTVector<GFTYPE> etmp1;
     GTVector<GTVector<GFTYPE>> *xnodes = &grid_->xNodes();   
@@ -162,9 +163,9 @@ int main(int argc, char **argv)
       x = (*xnodes)[0][j];
       y = (*xnodes)[1][j];
       if ( xnodes->size() > 2 ) z = (*xnodes)[2][j];
-      (*u [0])[j] = x*y*y;
-      (*da[0])[j] = y*y;
-      (*da[1])[j] = 2*x*y;
+      (*u [0])[j] = pow(x,p)*pow(y,q);
+      (*da[0])[j] = p*pow(x,p-1)*pow(y,q);;
+      (*da[1])[j] = q*pow(x,p),pow(y,q-1);
       if ( GDIM > 2 ) (*da[2])[j] = 0.0;
     }
     GMTK::compute_grefderivs(*grid_, *u[0], etmp1, FALSE, du);
@@ -175,23 +176,22 @@ int main(int argc, char **argv)
 
 #if 1
     // Compute analytic solution, do comparisons:
+    GFTYPE           nnorm;
     GTVector<GFTYPE> lnorm(3), gnorm(3), maxerror(3);
     maxerror = 0.0;
     for ( GSIZET j=0; j<du.size(); j++ ) { //local errors
 cout << "main: da[" << j << "]=" << *da[j] << endl;
 cout << "main: du[" << j << "]=" << *du[j] << endl;
       *utmp[0] = *du[j] - *da[j];
-       lnorm[0]  = utmp[0]->L1norm (); // inf-norm
-       lnorm[1]  = utmp[0]->Eucnorm(); // Euclidean-norm
-       lnorm[1] *= lnorm[1]; // square it, so it can be added 
-       gnorm[2]  = grid_->integrate(*utmp[0],*utmp[1]) /
-                      grid_->integrate(*da  [j],*utmp[1]) ; // Global L2 error norm 
+       for ( GSIZET i=0; i<du[0]->size(); i++ ) (*utmp[0])[i] = pow((*da[0])[i],2); 
+       nnorm  = grid_->integrate(*utmp[0],*utmp[1]);
+       for ( GSIZET i=0; i<du[0]->size(); i++ ) (*utmp[0])[i] = pow((*utmp[0])[i],2); 
+       gnorm[0]  = grid_->integrate(*utmp[0],*utmp[1]);
       // Accumulate to find global errors for this field:
-      GComm::Allreduce(lnorm.data()  , gnorm.data()  , 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm);
-      GComm::Allreduce(lnorm.data()+1, gnorm.data()+1, 1, T2GCDatatype<GFTYPE>() , GC_OP_SUM, comm);
-      gnorm[1] = sqrt(gnorm[1]);
+      GComm::Allreduce(lnorm.data()  , gnorm.data()  , 1, T2GCDatatype<GFTYPE>() , GC_OP_SUM, comm);
+      gnorm[0] /= nnorm;
       // now find max errors of each type for each field:
-      for ( GSIZET i=0; i<3; i++ ) maxerror[i] = MAX(maxerror[i],gnorm[j]);
+      for ( GSIZET i=0; i<1; i++ ) maxerror[i] = MAX(maxerror[i],gnorm[j]);
     }
 
     cout << "main: maxerror = " << maxerror << endl;
@@ -200,11 +200,12 @@ cout << "main: du[" << j << "]=" << *du[j] << endl;
     GSIZET gnelems;
     GComm::Allreduce(&lnelems, &gnelems, 1, T2GCDatatype<GSIZET>() , GC_OP_SUM, comm);
     return( maxerror.max()  > 10*std::numeric_limits<GFTYPE>::epsilon());
-    if ( maxerr.max() > 10*std::numeric_limits<GFTYPE>::epsilon() ) {
+    if ( maxerror.max() > 10*std::numeric_limits<GFTYPE>::epsilon() ) {
       std::cout << "main: -------------------------------------derivative FAILED" << std::endl;
       errcode = 1;
     } else {
       std::cout << "main: -------------------------------------derivative OK" << std::endl;
+      errcode = 0;
     }
 
     // Print convergence data to file:
@@ -232,7 +233,7 @@ cout << "main: du[" << j << "]=" << *du[j] << endl;
     GComm::TermComm();
     if ( grid_ != NULLPTR ) delete grid_;
 
-    return( maxerror.max()  > 10*std::numeric_limits<GFTYPE>::epsilon());
+    return( errcode );
 
 } // end, main
 
@@ -252,7 +253,7 @@ void init_ggfx(GGrid &grid, GGFX &ggfx)
   GTVector<GNODEID>              glob_indices;
   GTVector<GTVector<GFTYPE>>    *xnodes;
 
-  delta  = grid.minnodedist().min();
+  delta  = grid.minnodedist();
   dX     = 0.5*delta;
   xnodes = &grid.xNodes();
   glob_indices.resize(grid.ndof());
