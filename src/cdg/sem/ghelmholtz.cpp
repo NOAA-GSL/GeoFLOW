@@ -328,7 +328,7 @@ void GHelmholtz::reg_prod(GTVector<GFTYPE> &u,
   *gdu[0] = uo;
   massop_->opVec_prod(*gdu[0], gdu, uo); // tmp array does nothing
 
-  // Add q X mass operator if necessary:
+  // Add q X mass operator (this really defines the Helmholtz op)  if necessary:
   if ( bcompute_helm_ ) {
     if ( q_ != NULLPTR ) {
       massop_->opVec_prod(u, gdu, *utmp[0]);
