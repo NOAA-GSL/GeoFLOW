@@ -331,8 +331,8 @@ void GHelmholtz::reg_prod(GTVector<GFTYPE> &u,
   // Apply q parameter if necessary:
   if ( bcompute_helm_ ) {
     if ( q_ != NULLPTR ) {
-      if ( q_->size() >= grid_->ndof() ) uo[0]->pointProd(*q_);
-      else if ( (*q_)[0] != 1.0)        *uo[0] *= (*q_)[0];
+      if ( q_->size() >= grid_->ndof() ) uo.pointProd(*q_);
+      else if ( (*q_)[0] != 1.0)         uo *= (*q_)[0];
     }
     uo += *utmp[0];
   }
