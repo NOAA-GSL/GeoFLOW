@@ -92,7 +92,7 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &ub,
    *uout[j] = *uin[j];
   }
  
-#if 1 
+#if 0 
   tt = t+(*alpha)[0]*dt;
   if ( bupdatebc_ ) bdy_update_callback_(tt, u, ub); 
   if ( bapplybc_  ) bdy_apply_callback_ (tt, u, ub); 
@@ -145,6 +145,7 @@ cout << "GExRK::step: after ub: u=" << *u[0] << endl;
    if ( ggfx_ != NULLPTR ) {
      for ( n=0; n<nstate; n++ )
         ggfx_->doOp(*u[n], GGFX_OP_SMOOTH);
+cout << "GExRK::step: after H1-smoothing: u=" << *u[0] << endl;
    }
 
    rhs_callback_(tt, u, dt, K_[0]); 
