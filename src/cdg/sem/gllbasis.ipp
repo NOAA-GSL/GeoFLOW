@@ -710,7 +710,7 @@ GBOOL GLLBasis<T,TE>::init()
   // Copy computated data to the 'evaluated' structures:
   getXiNodes(xiNodesEv_);
   getWeights(weightsEv_);
-  getiWeights(iweightsEv_);
+  getiWeights(iweightsEv_); // computes inverse and casts
   getStiffMatrix(stiffMatrixEv_);
   getDerivMatrix(dPhiEv_,FALSE);
   getDerivMatrix(dPhiTEv_,TRUE);
@@ -719,7 +719,7 @@ GBOOL GLLBasis<T,TE>::init()
 
   return TRUE;
 
-} // end of method solve
+} // end of method init
 
 
 //************************************************************************************
