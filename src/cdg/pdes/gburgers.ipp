@@ -193,7 +193,7 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const Time &dt
 
   // NOTE:
   // Make sure that, in init(), Helmholtz op is using only
-  // (mass isn't being used) weak Laplacian, or there will 
+  // weak Laplacian (q * mass isn't being used), or there will 
   // be problems. This is required for explicit schemes, for
   // which this method is called.
 
@@ -202,7 +202,7 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const Time &dt
   if ( doheat_ ) {
     for ( auto k=0; k<u.size(); k++ ) {
       ghelm_->opVec_prod(*u[k], uoptmp_, *urhstmp_[0]); // apply diffusion
-     *urhstmp_[0] *= -1.0; // weak Lap op is neg on RHS
+//   *urhstmp_[0] *= -1.0; // weak Lap op is neg on RHS
       gimass_->opVec_prod(*urhstmp_[0], uoptmp_, *dudt[k]); // apply M^-1
     }
     return;
@@ -211,9 +211,8 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const Time &dt
   // Do linear/nonlinear advection + dissipation RHS:
 
   // If non-conservative, compute RHS from:
-  //     du/dt = -u.Grad u + nu nabla^2 u 
-  // for each u
-
+  //     du/dt = -c(u).Grad u + nu nabla^2 u 
+  // for each u, where c may be indep of u (pure advection):
 
   if ( bpureadv_ ) { // pure linear advection
     // Remember: only the first element of u is the variable;
@@ -308,7 +307,7 @@ void GBurgers<TypePack>::step_exrk(const Time &t, State &uin, State &ub, const T
   //     du/dt = M^-1 ( -u.Grad u + nu nabla u ):
   // for each u
 
-  // GExRK steppers steps entire state over one dt:
+  // GExRK stepper steps entire state over one dt:
   gexrk_->step(t, uin, ub, dt, urktmp_, uout);
 
 } // end of method step_exrk
