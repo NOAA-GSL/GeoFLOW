@@ -768,7 +768,7 @@ void GGrid::deriv(GTVector<GFTYPE> &u, GINT idir, GTVector<GFTYPE> &utmp,
   GINT nxy = this->gtype() == GE_2DEMBEDDED ? GDIM + 1 : GDIM;
   if ( this->gtype() == GE_REGULAR ) {
     GMTK::compute_grefderiv(*this, u, etmp_, idir, FALSE, du); // D_idir u
-    du *= (*dXidX)(idir-1,0)[0]; // is constant
+    du.pointProd((*dXidX)(idir-1, 0));
   }
   else {  // compute dXi_j/dX_idir D^j u:
     du = 0.0;
