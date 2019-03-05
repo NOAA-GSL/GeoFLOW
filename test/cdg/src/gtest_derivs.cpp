@@ -199,7 +199,7 @@ cout << "main: du[" << j << "]=" << *du[j] << endl;
       // Accumulate to find global errors for this field:
       GComm::Allreduce(lnorm.data()  , gnorm.data()  , 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm);
       // now find max errors of each type for each field:
-      for ( GSIZET i=0; i<3; i++ ) maxerror[i] = MAX(maxerror[i],gnorm[j]);
+      for ( GSIZET i=0; i<1; i++ ) maxerror[i] = MAX(maxerror[i],gnorm[j]);
     }
 
     cout << "main: maxerror = " << maxerror << endl;
@@ -207,7 +207,6 @@ cout << "main: du[" << j << "]=" << *du[j] << endl;
     GSIZET lnelems=grid_->nelems();
     GSIZET gnelems;
     GComm::Allreduce(&lnelems, &gnelems, 1, T2GCDatatype<GSIZET>() , GC_OP_SUM, comm);
-    return( maxerror.max()  > 10*std::numeric_limits<GFTYPE>::epsilon());
     if ( maxerror.max() > 10*std::numeric_limits<GFTYPE>::epsilon() ) {
       std::cout << "main: -------------------------------------derivative FAILED" << std::endl;
       errcode = 1;
@@ -241,7 +240,7 @@ cout << "main: du[" << j << "]=" << *du[j] << endl;
     GComm::TermComm();
     if ( grid_ != NULLPTR ) delete grid_;
 
-    return( maxerror.max()  > 10*std::numeric_limits<GFTYPE>::epsilon());
+    return( errcode );
 
 } // end, main
 
