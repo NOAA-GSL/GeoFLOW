@@ -154,42 +154,50 @@ int main(int argc, char **argv)
     for ( GSIZET j=0; j<da  .size(); j++ ) da  [j] = new GTVector<GFTYPE>(grid_->size());
 
     // Initialize u:
-    GFTYPE x, y, z;
+    GFTYPE p=2, q=0, r=0;
+    GFTYPE x, y, z=1.0;
     GTVector<GFTYPE> etmp1;
     GTVector<GTVector<GFTYPE>> *xnodes = &grid_->xNodes();   
     GSIZET nxy = nxy = (*xnodes)[0].size();
     for ( GSIZET j=0; j<nxy; j++ ) {
       x = (*xnodes)[0][j];
       y = (*xnodes)[1][j];
+      if ( GDIM > 2 ) z = (*xnodes)[2][j];
       if ( xnodes->size() > 2 ) z = (*xnodes)[2][j];
-      (*u [0])[j] = x*y*y;
-      (*da[0])[j] = y*y;
-      (*da[1])[j] = 2*x*y;
-      if ( GDIM > 2 ) (*da[2])[j] = 0.0;
+      (*u [0])[j] = pow(x,p)*pow(y,q)*pow(z,r);
+      (*da[0])[j] = p==0 ? 0.0 : p*pow(x,p-1)*pow(y,q)*pow(z,r);
+      (*da[1])[j] = q==0 ? 0.0 : q*pow(x,p)*pow(y,q-1)*pow(z,r);
+      if ( GDIM > 2 ) (*da[2])[j] = r==0 ? 0.0 : r*pow(x,p)*pow(y,q)*pow(z,r-1);
     }
+#if 0
     GMTK::compute_grefderivs(*grid_, *u[0], etmp1, FALSE, du);
+#else
     for ( GSIZET j=0; j<GDIM; j++ ) {
       grid_->deriv(*u[0], j+1, *utmp[0], *du[j]);
     }
+#endif
 
 
 #if 1
     // Compute analytic solution, do comparisons:
+    GFTYPE           nnorm;
     GTVector<GFTYPE> lnorm(3), gnorm(3), maxerror(3);
     maxerror = 0.0;
-    for ( GSIZET j=0; j<du.size(); j++ ) { //local errors
+    for ( GSIZET j=0; j<1; j++ ) { //local errors
+      for ( GSIZET i=0; i<da[j]->size(); i++ ) (*utmp[0])[i] = pow((*da[j])[i],2);
+      nnorm = grid_->integrate(*utmp[0], *utmp[1]);
+cout << "main: nnorm=" << nnorm << endl;
 cout << "main: da[" << j << "]=" << *da[j] << endl;
 cout << "main: du[" << j << "]=" << *du[j] << endl;
       *utmp[0] = *du[j] - *da[j];
-       lnorm[0]  = utmp[0]->infnorm (); // inf-norm
-       lnorm[1]  = utmp[0]->Eucnorm(); // Euclidean-norm
-       lnorm[1] *= lnorm[1]; // square it, so it can be added 
-       gnorm[2]  = grid_->integrate(*utmp[0],*utmp[1]) /
-                      grid_->integrate(*da  [j],*utmp[1]) ; // Global L2 error norm 
+      for ( GSIZET i=0; i<da[j]->size(); i++ ) (*utmp[1])[i] = fabs((*utmp[0])[i]);
+      for ( GSIZET i=0; i<da[j]->size(); i++ ) (*utmp[2])[i] = pow((*utmp[0])[i],2);
+      lnorm[0]  = utmp[0]->infnorm (); // inf-norm
+      gnorm[1]  = grid_->integrate(*utmp[1],*utmp[0])/sqrt(nnorm);
+      gnorm[2]  = sqrt(grid_->integrate(*utmp[2],*utmp[0])/nnorm);
+       
       // Accumulate to find global errors for this field:
       GComm::Allreduce(lnorm.data()  , gnorm.data()  , 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm);
-      GComm::Allreduce(lnorm.data()+1, gnorm.data()+1, 1, T2GCDatatype<GFTYPE>() , GC_OP_SUM, comm);
-      gnorm[1] = sqrt(gnorm[1]);
       // now find max errors of each type for each field:
       for ( GSIZET i=0; i<3; i++ ) maxerror[i] = MAX(maxerror[i],gnorm[j]);
     }
@@ -205,6 +213,7 @@ cout << "main: du[" << j << "]=" << *du[j] << endl;
       errcode = 1;
     } else {
       std::cout << "main: -------------------------------------derivative OK" << std::endl;
+      errcode = 0;
     }
 
     // Print convergence data to file:
@@ -215,7 +224,7 @@ cout << "main: du[" << j << "]=" << *du[j] << endl;
 
     // Write header, if required:
     if ( itst.peek() == std::ofstream::traits_type::eof() ) {
-    ios << "# p  num_elems   L1_err   Eucl_err   L2_err" << std::endl;
+    ios << "# p  num_elems   inf_err   L1_err   L2_err" << std::endl;
     }
     itst.close();
 
