@@ -198,7 +198,8 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const Time &dt
   // which this method is called.
 
   // Do heat equation RHS:
-  //     du/dt = nu nabla^2 u 
+  //     du/dt = nu nabla^2 u -->
+  //     du/dt = -nu L u (in descrete form) 
   if ( doheat_ ) {
     for ( auto k=0; k<u.size(); k++ ) {
       ghelm_->opVec_prod(*u[k], uoptmp_, *urhstmp_[0]); // apply diffusion
