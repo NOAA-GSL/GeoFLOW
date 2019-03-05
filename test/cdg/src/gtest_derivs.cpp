@@ -39,7 +39,7 @@ int main(int argc, char **argv)
 
     GString serr ="main: ";
     GBOOL  bret;
-    GINT   iopt;
+    GINT   errcode, iopt;
     GINT   ilevel=0;// 2d ICOS refinement level
     GINT   np=1;    // elem 'order'
     GINT   nstate=GDIM;  // number 'state' arrays
@@ -181,7 +181,7 @@ int main(int argc, char **argv)
 cout << "main: da[" << j << "]=" << *da[j] << endl;
 cout << "main: du[" << j << "]=" << *du[j] << endl;
       *utmp[0] = *du[j] - *da[j];
-       lnorm[0]  = utmp[0]->L1norm (); // inf-norm
+       lnorm[0]  = utmp[0]->infnorm (); // inf-norm
        lnorm[1]  = utmp[0]->Eucnorm(); // Euclidean-norm
        lnorm[1] *= lnorm[1]; // square it, so it can be added 
        gnorm[2]  = grid_->integrate(*utmp[0],*utmp[1]) /
@@ -200,7 +200,7 @@ cout << "main: du[" << j << "]=" << *du[j] << endl;
     GSIZET gnelems;
     GComm::Allreduce(&lnelems, &gnelems, 1, T2GCDatatype<GSIZET>() , GC_OP_SUM, comm);
     return( maxerror.max()  > 10*std::numeric_limits<GFTYPE>::epsilon());
-    if ( maxerr.max() > 10*std::numeric_limits<GFTYPE>::epsilon() ) {
+    if ( maxerror.max() > 10*std::numeric_limits<GFTYPE>::epsilon() ) {
       std::cout << "main: -------------------------------------derivative FAILED" << std::endl;
       errcode = 1;
     } else {
@@ -252,7 +252,7 @@ void init_ggfx(GGrid &grid, GGFX &ggfx)
   GTVector<GNODEID>              glob_indices;
   GTVector<GTVector<GFTYPE>>    *xnodes;
 
-  delta  = grid.minnodedist().min();
+  delta  = grid.minnodedist();
   dX     = 0.5*delta;
   xnodes = &grid.xNodes();
   glob_indices.resize(grid.ndof());
