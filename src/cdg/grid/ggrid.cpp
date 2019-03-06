@@ -696,10 +696,16 @@ GFTYPE GGrid::integrate(GTVector<GFTYPE> &u, GTVector<GFTYPE> &tmp)
   GTVector<GINT>               N(GDIM);    // coord node sizes
   GTVector<GTVector<GFTYPE>*>  W(GDIM);    // element weights
 
-  tmp = u;
+  // NOTE: We could instantiate a mass matrix, but this would
+  //       require computing a new GDIM-operator each time
+  //       integration is required or setting it.
 #if defined(_G_IS2D)
   for ( GSIZET e=0; e<gelems_.size(); e++ ) {
     ibeg  = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
+
+    // Restrict global data to local scope:
+    tmp.range(ibeg, iend);
+    u.range(ibeg, iend);
 
     for ( GSIZET k=0; k<GDIM; k++ ) {
       W[k] = gelems_[e]->gbasis(k)->getWeights();
@@ -707,16 +713,19 @@ GFTYPE GGrid::integrate(GTVector<GFTYPE> &u, GTVector<GFTYPE> &tmp)
     }
     n = 0;
     for ( GSIZET k=0; k<N[1]; k++ ) {
-      for ( GSIZET j=0; j<N[0]; j++,n++ ) {
+      for ( GSIZET j=0; j<N[0]; j++ ) {
         tmp[n] = (*W[1])[k]*(*W[0])[j] * u[n];
+        n++;
       }
     }
-    // Restrict global data to local scope:
-    tmp.range(ibeg, iend);
   } // end, element loop
 #elif defined(_G_IS3D)
   for ( GSIZET e=0; e<gelems_.size(); e++ ) {
     ibeg  = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
+
+    // Restrict global data to local scope:
+    tmp.range(ibeg, iend);
+    u.range(ibeg, iend);
 
     for ( GSIZET k=0; k<GDIM; k++ ) {
       W[k] = gelems_[e]->gbasis(k)->getWeights();
@@ -725,16 +734,16 @@ GFTYPE GGrid::integrate(GTVector<GFTYPE> &u, GTVector<GFTYPE> &tmp)
     n = 0;
     for ( GSIZET k=0; k<N[2]; k++ ) {
       for ( GSIZET j=0; j<N[1]; j++ ) {
-        for ( GSIZET i=0; i<N[0]; i++,n++ ) {
-          tmp[n] = (*W[2])[k]*(*W[1])[k]*(*W[0])[j] * u[n];
+        for ( GSIZET i=0; i<N[0]; i++ ) {
+          tmp[n] = (*W[2])[k]*(*W[1])[j]*(*W[0])[i] * u[n];
+          n++;
         }
       }
     }
-    // Restrict global data to local scope:
-    tmp.range(ibeg, iend);
   } // end, element loop
 #endif
   tmp.range_reset(); 
+  u.range_reset(); 
 
   // Multiply by Jacobian:
   tmp.pointProd(Jac_);
@@ -773,7 +782,7 @@ void GGrid::deriv(GTVector<GFTYPE> &u, GINT idir, GTVector<GFTYPE> &utmp,
   else {  // compute dXi_j/dX_idir D^j u:
     du = 0.0;
     for ( GSIZET j=0; j<GDIM; j++ ) {
-      GMTK::compute_grefderiv(*this, u, etmp_, j, FALSE, utmp); // D_ri u
+      GMTK::compute_grefderiv(*this, u, etmp_, j+1, FALSE, utmp); // D_ri u
       utmp.pointProd((*dXidX)(idir-1, j));
       du += utmp; 
     }
