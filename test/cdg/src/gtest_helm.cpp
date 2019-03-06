@@ -200,21 +200,39 @@ int main(int argc, char **argv)
     GFTYPE y0=P0.x2, y1=P0.x2+dP.x2;
     GFTYPE z0=P0.x3, z1=P0.x3+dP.x3;
     if ( GDIM == 2 ) {
-      da_int = p/(q+1)*(pow(x1,p-1)-pow(x0,p-1)) * (pow(y1,q+1)-pow(y0,q+1)) 
-             + q/(p+1)*(pow(x1,p+1)-pow(x0,p+1)) * (pow(y1,q-1)-pow(y0,q-1));
+      if ( p == 0.0 ) {
+        da_int = q/(p+1)*(pow(x1,p+1)-pow(x0,p+1)) * (pow(y1,q-1)-pow(y0,q-1));
+      } else if ( q == 0.0 ) {
+        da_int = p/(q+1)*(pow(x1,p-1)-pow(x0,p-1)) * (pow(y1,q+1)-pow(y0,q+1));
+      } else {
+        da_int = p/(q+1)*(pow(x1,p-1)-pow(x0,p-1)) * (pow(y1,q+1)-pow(y0,q+1)) 
+               + q/(p+1)*(pow(x1,p+1)-pow(x0,p+1)) * (pow(y1,q-1)-pow(y0,q-1));
+      }
     } else if ( GDIM == 3 ){
-      da_int = p/((q+1)*(r+1))*(pow(x1,p-1)-pow(x0,p-1)) * (pow(y1,q+1)-pow(y0,q+1)) * (pow(z1,r+1)-pow(z0,r+1)) 
-             + q/((p+1)*(r+1))*(pow(x1,p+1)-pow(x0,p+1)) * (pow(y1,q-1)-pow(y0,q-1)) * (pow(z1,r+1)-pow(z0,r+1)) 
-             + r/((p+1)*(q+1))*(pow(x1,p+1)-pow(x0,p+1)) * (pow(y1,q+1)-pow(y0,q+1)) * (pow(z1,r-1)-pow(z0,r-1));
+      if ( p == 0.0 ) {
+        da_int = q/((p+1)*(r+1))*(pow(x1,p+1)-pow(x0,p+1)) * (pow(y1,q-1)-pow(y0,q-1)) * (pow(z1,r+1)-pow(z0,r+1)) 
+               + r/((p+1)*(q+1))*(pow(x1,p+1)-pow(x0,p+1)) * (pow(y1,q+1)-pow(y0,q+1)) * (pow(z1,r-1)-pow(z0,r-1));
+      } else if ( q == 0.0 ) {
+        da_int = p/((q+1)*(r+1))*(pow(x1,p-1)-pow(x0,p-1)) * (pow(y1,q+1)-pow(y0,q+1)) * (pow(z1,r+1)-pow(z0,r+1)) 
+               + r/((p+1)*(q+1))*(pow(x1,p+1)-pow(x0,p+1)) * (pow(y1,q+1)-pow(y0,q+1)) * (pow(z1,r-1)-pow(z0,r-1));
+      } else if ( r == 0.0 ) {
+        da_int = p/((q+1)*(r+1))*(pow(x1,p-1)-pow(x0,p-1)) * (pow(y1,q+1)-pow(y0,q+1)) * (pow(z1,r+1)-pow(z0,r+1)) 
+               + q/((p+1)*(r+1))*(pow(x1,p+1)-pow(x0,p+1)) * (pow(y1,q-1)-pow(y0,q-1)) * (pow(z1,r+1)-pow(z0,r+1)) ;
+      } else {
+        da_int = p/((q+1)*(r+1))*(pow(x1,p-1)-pow(x0,p-1)) * (pow(y1,q+1)-pow(y0,q+1)) * (pow(z1,r+1)-pow(z0,r+1)) 
+               + q/((p+1)*(r+1))*(pow(x1,p+1)-pow(x0,p+1)) * (pow(y1,q-1)-pow(y0,q-1)) * (pow(z1,r+1)-pow(z0,r+1)) 
+               + r/((p+1)*(q+1))*(pow(x1,p+1)-pow(x0,p+1)) * (pow(y1,q+1)-pow(y0,q+1)) * (pow(z1,r-1)-pow(z0,r-1));
+      }
     }
 
     // Compute numerical integral of Laplacian:
+    GFTYPE eps=10.0*std::numeric_limits<GFTYPE>::epsilon();
     GTVector<GFTYPE> lnorm(1), gnorm(1);
     lnorm[0] = du[0]->sum();
     GComm::Allreduce(lnorm.data()  , gnorm.data()  , 1, T2GCDatatype<GFTYPE>() , GC_OP_SUM, comm);
     cout << "main: analyt_int=" << da_int << " comp_int=" << gnorm[0] << endl;
 
-    err = (da_int-gnorm[0])/da_int;
+    err = (da_int-gnorm[0])/(da_int+eps);
     cout << "main: .................error=" << err << endl;
     
 
