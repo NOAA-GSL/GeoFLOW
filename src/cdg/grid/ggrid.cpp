@@ -548,10 +548,6 @@ void GGrid::reg_init()
    Jac_.range_reset();
    faceJac_.range_reset();
    for ( GSIZET j=0; j<nxy; j++ ) xNodes_[j].range_reset();
-
-
-   for ( GSIZET j=0; j<nxy; j++ ) 
-     cout << "GGrid::reg_init: xNodes_[" << j << "j]=" << xNodes_[j] << endl;
    
 } // end of method reg_init
 
@@ -818,11 +814,8 @@ void GGrid::init_bc_info()
     iebdy  = &gelems_[e]->bdy_indices();  // set in child class
     ieface = &gelems_[e]->face_indices(); // set in child class
     iebdyt = &gelems_[e]->bdy_types();    // set in child class
-cout << "GGrid::init_bc_info: local bdy indices:" << *iebdy << endl;
-cout << "GGrid::init_bc_info: local bdy types  :" << *iebdyt << endl;
     for ( GSIZET j=0; j<iebdy->size(); j++ ) { // elem bdys (if any)
       ig = nn + (*iebdy)[j];
-cout << "GGrid::init_bc_info: global bdy index:" << ig << endl;
       itmp.push_back(ig); // index in global arrays
       btmp.push_back((*iebdyt)[j]);
     }
@@ -849,7 +842,6 @@ cout << "GGrid::init_bc_info: global bdy index:" << ig << endl;
     for ( GSIZET j=0; j<nind; j++ ) igbdy_[k][j] = itmp[ind[j]];
     nind = 0;
   } // end, element loop
-cout << "GGrid::init_bc_info: global bdy indices:" << igbdy_ << endl;
 
   if ( ind != NULLPTR ) delete [] ind;
 
