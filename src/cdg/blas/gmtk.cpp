@@ -234,7 +234,7 @@ void Dg2_X_D1<GDOUBLE>(GTMatrix<GDOUBLE> &D1, GTVector<GDOUBLE> &Dg2, GTVector<G
 
   N11 = D1.size(1);
   N12 = D1.size(2);
-  N2   = Dg2.size();
+  N2  = Dg2.size();
   #if defined(_G_BOUNDS_CHK)
   if ( !(u.size() >= N11*N2 && y.size() >= N11*N2) ) {
     std::cout << "GMTK::Dg_X_D1" << "incompatible size" << std::endl;
