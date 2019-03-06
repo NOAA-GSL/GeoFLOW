@@ -1086,12 +1086,12 @@ void GLLBasis<T,TE>::getDerivMatrixW(GTMatrix<TE> &ret, GBOOL bTranspose)
   if ( bTranspose ) {
     for ( GINT i=0; i<dPhi_.size(1); i++ ) 
       for ( GINT j=0; j<dPhi_.size(2); j++ ) 
-        ret(i,j) = static_cast<TE>(weights_[i]*dPhiT_(i,j));
+        ret(i,j) = static_cast<TE>(dPhiT_(i,j)*weights_[j]);
   } 
   else {
     for ( GINT i=0; i<dPhi_.size(1); i++ ) 
       for ( GINT j=0; j<dPhi_.size(2); j++ ) 
-        ret(i,j) = static_cast<TE>(weights_[i]*dPhi_(i,j));
+        ret(i,j) = static_cast<TE>(dPhi_(i,j)*weights_[i]);
   }
   
 } // end of method getDerivMatrixW (2)
@@ -1128,7 +1128,7 @@ void GLLBasis<T,TE>::getDerivMatrixiW(GTMatrix<TE> &ret, GBOOL bTranspose)
   if ( bTranspose ) {
     for ( GINT i=0; i<dPhi_.size(1); i++ ) 
       for ( GINT j=0; j<dPhi_.size(2); j++ ) 
-        ret(i,j) = static_cast<TE>(dPhiT_(i,j)/weights_[i]);
+        ret(i,j) = static_cast<TE>(dPhiT_(i,j)/weights_[j]);
   } 
   else {
     for ( GINT i=0; i<dPhi_.size(1); i++ ) 
