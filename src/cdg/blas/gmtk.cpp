@@ -1414,7 +1414,7 @@ void compute_grefdiv(GGrid &grid, GTVector<GTVector<GDOUBLE>*> &u, GTVector<GDOU
 
   GBOOL                        bembedded;
   GSIZET                       ibeg, iend; // beg, end indices for global array
-  GTVector<GTVector<GDOUBLE>*> iW(GDIM);   // element 1/weights
+  GTVector<GTVector<GDOUBLE>*> W(GDIM);    // element 1/weights
   GTVector<GSIZET>             N(GDIM);
   GTVector<GTMatrix<GDOUBLE>*> Di(GDIM);   // element-based 1d derivative operators
   GElemList                   *gelems = &grid.elems();
@@ -1434,7 +1434,6 @@ void compute_grefdiv(GGrid &grid, GTVector<GTVector<GDOUBLE>*> &u, GTVector<GDOU
     divu.range(ibeg,iend); 
     for ( GSIZET k=0; k<u.size(); k++ ) u[k]->range(ibeg, iend); 
     for ( GSIZET k=0; k<GDIM; k++ ) N[k]= (*gelems)[e]->size(k);
-    for ( GSIZET k=0; k<GDIM; k++ ) iW[k]= (*gelems)[e]->gbasis(k)->getiWeights();
     Di[0] = (*gelems)[e]->gbasis(0)->getDerivMatrix (dotrans);
     Di[1] = (*gelems)[e]->gbasis(1)->getDerivMatrix(!dotrans);
     etmp.resizem((*gelems)[e]->nnodes());
@@ -1454,7 +1453,6 @@ void compute_grefdiv(GGrid &grid, GTVector<GTVector<GDOUBLE>*> &u, GTVector<GDOU
     divu.range(ibeg,iend); 
     for ( GSIZET k=0; k<u.size(); k++ ) u[k]->range(ibeg, iend); 
     for ( GSIZET k=0; k<GDIM; k++ ) N[k]= (*gelems)[e]->size(k);
-    for ( GSIZET k=0; k<GDIM; k++ ) iW[k]= (*gelems)[e]->gbasis(k)->getiWeights();
     etmp.resizem((*gelems)[e]->nnodes());
     Di[0] = (*gelems)[e]->gbasis(0)->getDerivMatrix (dotrans); 
     Di[1] = (*gelems)[e]->gbasis(1)->getDerivMatrix(!dotrans); 
