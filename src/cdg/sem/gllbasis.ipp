@@ -716,12 +716,12 @@ GBOOL GLLBasis<T,TE>::init()
   getWeights(weightsEv_);
   getiWeights(iweightsEv_); // computes inverse and cast
   getStiffMatrix(stiffMatrixEv_);
-  getDerivMatrix(dPhiEv_,FALSE);
-  getDerivMatrix(dPhiTEv_,TRUE);
-  getDerivMatrixW(dPhiWEv_,FALSE); // Diag(W)*D
-  getDerivMatrixW(dPhiWTEv_,TRUE); // Diag(W)*D^T
-  getDerivMatrixiW(dPhiiWEv_,FALSE); // Diag(W^-1)*D
-  getDerivMatrixiW(dPhiiWTEv_,TRUE); // Diag(W^-1)*D^T
+  getDerivMatrix(dPhiEv_,FALSE);     //  D
+  getDerivMatrix(dPhiTEv_,TRUE);     //  D^T
+  getDerivMatrixW(dPhiWEv_,FALSE);   //  Diag(W)*D
+  getDerivMatrixW(dPhiWTEv_,TRUE);   // (Diag(W)*D)^T
+  getDerivMatrixiW(dPhiiWEv_,FALSE); //  Diag(W^-1)*D
+  getDerivMatrixiW(dPhiiWTEv_,TRUE); // (Diag(W^-1)*D)^T
 
   bInit_ = TRUE;
 
