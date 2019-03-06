@@ -14,11 +14,13 @@
 #include "gtmatrix.hpp"
 
 // 2 template args: T is the type used for computations; 
-// TE, for evaluations (deep copies, etc.)
+// TE, for evaluations (deep copies, etc.). Must
+// have sizeof(T) >= sizeof(TE).
 template<typename T, typename TE> 
 class GNBasis
 {
         static_assert(std::is_floating_point<T>::value,"Illegal template type");
+        static_assert(sizeof(T)>=sizeof(TE),"Invalid computational template type");
 
 public:
 
