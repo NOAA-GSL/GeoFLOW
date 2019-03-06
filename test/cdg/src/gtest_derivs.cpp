@@ -166,7 +166,7 @@ int main(int argc, char **argv)
 
     // Initialize u: set p, q, r exponents
     // (Can set up to read from input file):
-    GFTYPE p=0, q=1, r=0; 
+    GFTYPE p=6, q=6, r=0; 
     GFTYPE x, y, z=1.0;
     GTVector<GFTYPE> etmp1;
     GTVector<GTVector<GFTYPE>> *xnodes = &grid_->xNodes();   
@@ -233,8 +233,10 @@ int main(int argc, char **argv)
       du[j]->pointProd(*jac);
       ftmp = du[j]->sum();
       GComm::Allreduce(&ftmp  , du_int.data()+j , 1, T2GCDatatype<GFTYPE>() , GC_OP_SUM, comm);
-      cout << "main: error da_int[" << j << "]=" << da_int[j] 
-           <<            " du_int[" << j << "]=" << du_int[j] << endl;
+      maxerror[j] = fabs(da_int[j] - du_int[j]) / (da_int[j]+1.0e-15);
+      cout << "main: da_int[" << j << "]=" << da_int[j] 
+           <<      " du_int[" << j << "]=" << du_int[j] << endl;
+      cout << "main: error da_int-du_int[" << j << "]=" << maxerror[j] << endl;
 #else
 //   *utmp[0] = *du[j]; 
 //    mass.opVec_prod(*utmp[0],utmp,*du[j]);

@@ -172,60 +172,49 @@ int main(int argc, char **argv)
     GTVector<GTVector<GFTYPE>> *xnodes = &grid_->xNodes();   
     GSIZET nxy = (*xnodes)[0].size();
 
+    assert( p>=0 && q>=0 && r >=0 && "Exponents must be >=0");
 
+    // Initialize field, u = x^p y^q z^r;
+    // Also, initialize collocated analytic Lap u:
     if ( GDIM < 3 ) r = 0;
     for ( GSIZET j=0; j<nxy; j++ ) {
-      x = (*xnodes)[0][j];
-      y = (*xnodes)[1][j];
-      if ( GDIM == 3 ) z = (*xnodes)[2][j];
-      if ( xnodes->size() > 2 ) z = (*xnodes)[2][j];
+      x = (*xnodes)[0][j] == 0.0 ? 1.0 : (*xnodes)[0][j];
+      y = (*xnodes)[1][j] == 0.0 ? 1.0 : (*xnodes)[1][j];
+      if ( GDIM == 3 ) z = (*xnodes)[2][j] == 0.0 ? 1.1 : (*xnodes)[2][j];
       (*u [0])[j] = pow(x,p)*pow(y,q)*pow(z,r);
-      if      ( p> 0 && q<=0 && r<=0 ) (*da[0])[j] = p*(p-1)*pow(x,p-2);
-      else if ( p<=0 && q> 0 && r<=0 ) (*da[0])[j] = q*(q-1)*pow(y,q-2);
-      else if ( p<=0 && q<=0 && r> 0 ) (*da[0])[j] = r*(r-1)*pow(z,r-2);
-      else                     (*da[0])[j] = p*(p-1)*pow(x,p-2) 
-                                           + q*(q-1)*pow(y,q-2);
-                                           + r*(r-1)*pow(z,r-2);
+      (*da[0])[j] = 0.0;
+      if ( p> 0 ) (*da[0])[j] += p*(p-1)*pow(x,p-2)*pow(y,q)*pow(z,r);
+      if ( q> 0 ) (*da[0])[j] += q*(q-1)*pow(x,p)*pow(y,q-2)*pow(z,r);
+      if ( r> 0 ) (*da[0])[j] += r*(r-1)*pow(x,p)*pow(y,q)*pow(z,r-2);
     }
 
-    helm.opVec_prod(*u[0], utmp, *du[0]);
-//  mass.opVec_prod(*utmp[nt-1], utmp, *du[0]);
+    helm.opVec_prod(*u [0], utmp, *du[0]);
 
     cout << "main: u =" << *u[0] << endl;
     cout << "main: Hu=" << *du[0] << endl;
 
     // Compute analytic integral of Laplacian acting on u:
     GFTYPE da_int, err;
+#if 1
     GFTYPE x0=P0.x1, x1=P0.x1+dP.x1;
     GFTYPE y0=P0.x2, y1=P0.x2+dP.x2;
     GFTYPE z0=P0.x3, z1=P0.x3+dP.x3;
+    da_int = 0.0;
     if ( GDIM == 2 ) {
-      if ( p == 0.0 ) {
-        da_int = q/(p+1)*(pow(x1,p+1)-pow(x0,p+1)) * (pow(y1,q-1)-pow(y0,q-1));
-      } else if ( q == 0.0 ) {
-        da_int = p/(q+1)*(pow(x1,p-1)-pow(x0,p-1)) * (pow(y1,q+1)-pow(y0,q+1));
-      } else {
-        da_int = p/(q+1)*(pow(x1,p-1)-pow(x0,p-1)) * (pow(y1,q+1)-pow(y0,q+1)) 
-               + q/(p+1)*(pow(x1,p+1)-pow(x0,p+1)) * (pow(y1,q-1)-pow(y0,q-1));
-      }
+      if ( p>0 ) da_int += p/(q+1)*(pow(x1,p-1)-pow(x0,p-1)) * (pow(y1,q+1)-pow(y0,q+1));
+      if ( q>0 ) da_int += q/(p+1)*(pow(x1,p+1)-pow(x0,p+1)) * (pow(y1,q-1)-pow(y0,q-1));
     } else if ( GDIM == 3 ){
-      if ( p == 0.0 ) {
-        da_int = q/((p+1)*(r+1))*(pow(x1,p+1)-pow(x0,p+1)) * (pow(y1,q-1)-pow(y0,q-1)) * (pow(z1,r+1)-pow(z0,r+1)) 
-               + r/((p+1)*(q+1))*(pow(x1,p+1)-pow(x0,p+1)) * (pow(y1,q+1)-pow(y0,q+1)) * (pow(z1,r-1)-pow(z0,r-1));
-      } else if ( q == 0.0 ) {
-        da_int = p/((q+1)*(r+1))*(pow(x1,p-1)-pow(x0,p-1)) * (pow(y1,q+1)-pow(y0,q+1)) * (pow(z1,r+1)-pow(z0,r+1)) 
-               + r/((p+1)*(q+1))*(pow(x1,p+1)-pow(x0,p+1)) * (pow(y1,q+1)-pow(y0,q+1)) * (pow(z1,r-1)-pow(z0,r-1));
-      } else if ( r == 0.0 ) {
-        da_int = p/((q+1)*(r+1))*(pow(x1,p-1)-pow(x0,p-1)) * (pow(y1,q+1)-pow(y0,q+1)) * (pow(z1,r+1)-pow(z0,r+1)) 
-               + q/((p+1)*(r+1))*(pow(x1,p+1)-pow(x0,p+1)) * (pow(y1,q-1)-pow(y0,q-1)) * (pow(z1,r+1)-pow(z0,r+1)) ;
-      } else {
-        da_int = p/((q+1)*(r+1))*(pow(x1,p-1)-pow(x0,p-1)) * (pow(y1,q+1)-pow(y0,q+1)) * (pow(z1,r+1)-pow(z0,r+1)) 
-               + q/((p+1)*(r+1))*(pow(x1,p+1)-pow(x0,p+1)) * (pow(y1,q-1)-pow(y0,q-1)) * (pow(z1,r+1)-pow(z0,r+1)) 
-               + r/((p+1)*(q+1))*(pow(x1,p+1)-pow(x0,p+1)) * (pow(y1,q+1)-pow(y0,q+1)) * (pow(z1,r-1)-pow(z0,r-1));
-      }
+      if ( p>0 ) da_int += q/((p+1)*(r+1))*(pow(x1,p+1)-pow(x0,p+1)) * (pow(y1,q-1)-pow(y0,q-1)) * (pow(z1,r+1)-pow(z0,r+1));
+      if ( q>0 ) da_int += q/((p+1)*(r+1))*(pow(x1,p+1)-pow(x0,p+1)) * (pow(y1,q-1)-pow(y0,q-1)) * (pow(z1,r+1)-pow(z0,r+1));
+      if ( r>0 ) da_int += r/((p+1)*(q+1))*(pow(x1,p+1)-pow(x0,p+1)) * (pow(y1,q+1)-pow(y0,q+1)) * (pow(z1,r-1)-pow(z0,r-1));
     }
+#else
+    // Semi-analytic integral of collocated Laplacian u:
+    da_int = grid_->integrate(*da[0],*utmp[0]);
+#endif
 
-    // Compute numerical integral of Laplacian:
+    // Compute numerical integral of (weak) Laplacian 
+    // (Already contains mass and Jacobian):
     GFTYPE eps=10.0*std::numeric_limits<GFTYPE>::epsilon();
     GTVector<GFTYPE> lnorm(1), gnorm(1);
     lnorm[0] = du[0]->sum();
