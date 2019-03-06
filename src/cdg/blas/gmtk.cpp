@@ -1351,8 +1351,8 @@ void compute_grefderivsW(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &e
     GMTK::Dg2_X_D1(*Di[0], *W [1], u, etmp, *du[0]); 
     GMTK::D2_X_Dg1(*W [0], *Di[1], u, etmp, *du[1]); 
   }
-  for ( GSIZET k=0; k<GDIM; k++ ) du[k]->range_reset();
   u.range_reset(); // reset global vec to global range
+  for ( GSIZET k=0; k<GDIM; k++ ) du[k]->range_reset();
 
 #elif defined(_G_IS3D)
 
@@ -1479,16 +1479,16 @@ void compute_grefdiv(GGrid &grid, GTVector<GTVector<GDOUBLE>*> &u, GTVector<GDOU
 // METHOD : compute_grefdiviW
 // DESC   : Compute tensor product 'weighted divergence' of input fields in ref space
 //          for grid:
-//             Div u = [iW_X_iW_X_ iWDx    |u1|
-//                      iW_X_iWDy_X_iW   . |u2|
-//                      iWDz_X_iW_X_iW]    |u3|
+//             Div u = [iM_X_iM_X_ iWDx    |u1|
+//                      iM_X_iMDy_X_iM   . |u2|
+//                      iMDz_X_iM_X_iM]    |u3|
 //          or
 //     
-//             Div u = [iW_X_iW_X_iW DxT)    |u1|
-//                      iW_X_iW DyT)_X_iW .  |u2|
-//                      iW DzT)_X_iW_X_iW]   |u3|
+//             Div u = [iM_X_iM_X_iM DxT)    |u1|
+//                      iM_X_iM DyT)_X_iM .  |u2|
+//                      iM DzT)_X_iM_X_iM]   |u3|
 //          where Dx(T), Dy(T), Dz(T) are 1d derivative objects from basis functions,
-//          and iW are the 1d inverse weights     
+//          and iM are the 1d inverse weights     
 // ARGS   : 
 //          grid   : GGrid object 
 //          u      : input vector field whose divergence we want, allocated globally 
@@ -1534,8 +1534,8 @@ void compute_grefdiviW(GGrid &grid, GTVector<GTVector<GDOUBLE>*> &u, GTVector<GD
     Di[0] = (*gelems)[e]->gbasis(0)->getDerivMatrixiW (dotrans);
     Di[1] = (*gelems)[e]->gbasis(1)->getDerivMatrixiW(!dotrans);
     etmp.resizem((*gelems)[e]->nnodes());
-    GMTK::Dg2_X_D1(*Di[0], *iW[1], *u[0], etmp, divu); // W^-1 D1 u1
-    GMTK::D2_X_Dg1(*iW[0], *Di[1], *u[1], etmp, *u[0]); // W^^-1 D2 u2
+    GMTK::Dg2_X_D1(*Di[0], *iW[1], *u[0], etmp, divu); // W X W^-1 D1 u1
+    GMTK::D2_X_Dg1(*iW[0], *Di[1], *u[1], etmp, *u[0]); // W^^-1 D2 X W u2
     divu += *u[0];
     if ( bembedded ) divu += *u[2]; // D3 acts as I
 #if 0
