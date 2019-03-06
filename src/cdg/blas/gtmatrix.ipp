@@ -279,7 +279,25 @@ void  GTMatrix<T>::operator=(T m)
       data_[i] = m; 
   }
 
-} // end = operator
+} // end = operator (2)
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : operator = (3)
+// DESC   : Set diagonal of matrix. Must be a square matrix
+// ARGS   : from scalar vector, representing diagonal
+// RETURNS: none
+//**********************************************************************************
+template<class T> 
+void  GTMatrix<T>::operator=(const GTVector<T> &v)
+{
+  assert(n1_ == n2_ && "Matrix is not square");
+
+  GSIZET   i;
+
+  for ( i=0; i<n1_; i++ )  (*this)(i,i) = v[i];
+
+} // end = operator(3)
 
 
 //**********************************************************************************

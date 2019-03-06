@@ -51,6 +51,7 @@ public:
 
          GTMatrix<T>       &operator=(const GTMatrix<T> &) ;
          void               operator=(T);
+         void               operator=(const GTVector<T> &);
          void               operator+=(GTMatrix<T> &);
          void               operator-=(GTMatrix<T> &);
          void               operator+=(T);
