@@ -57,7 +57,11 @@ virtual  void             getStiffMatrix(GTMatrix<TE> &ret)=0;
 
 virtual  GTMatrix<T>     *getDerivMatrixComp(GBOOL btrans=FALSE)=0;
 virtual  GTMatrix<TE>    *getDerivMatrix(GBOOL btrans=FALSE)=0;
+virtual  GTMatrix<TE>    *getDerivMatrixW(GBOOL btrans=FALSE)=0;
+virtual  GTMatrix<TE>    *getDerivMatrixiW(GBOOL btrans=FALSE)=0;
 virtual  void             getDerivMatrix(GTMatrix<TE> &ret, GBOOL btrans=FALSE)=0;
+virtual  void             getDerivMatrixW(GTMatrix<TE> &ret, GBOOL btrans=FALSE)=0;
+virtual  void             getDerivMatrixiW(GTMatrix<TE> &ret, GBOOL btrans=FALSE)=0;
 
 virtual  void             getLegMatrix(GTMatrix<TE> &ret)=0;
 

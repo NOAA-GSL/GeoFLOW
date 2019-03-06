@@ -69,7 +69,11 @@ virtual  void             getStiffMatrix(GTMatrix<TE> &ret);
 
 virtual  GTMatrix<T>     *getDerivMatrixComp(GBOOL btranspose=FALSE);
 virtual  GTMatrix<TE>    *getDerivMatrix(GBOOL btranspose=FALSE);
+virtual  GTMatrix<TE>    *getDerivMatrixW(GBOOL btranspose=FALSE);
+virtual  GTMatrix<TE>    *getDerivMatrixiW(GBOOL btranspose=FALSE);
 virtual  void             getDerivMatrix(GTMatrix<TE> &ret, GBOOL btranspose=FALSE);
+virtual  void             getDerivMatrixW(GTMatrix<TE> &ret, GBOOL btranspose=FALSE);
+virtual  void             getDerivMatrixiW(GTMatrix<TE> &ret, GBOOL btranspose=FALSE);
 
 virtual  void             getLegMatrix(GTMatrix<TE> &ret);
 
@@ -131,6 +135,10 @@ GTVector<TE>     weightsEv_;
 GTVector<TE>     iweightsEv_;
 GTMatrix<TE>     dPhiEv_;
 GTMatrix<TE>     dPhiTEv_;
+GTMatrix<TE>     dPhiWEv_;
+GTMatrix<TE>     dPhiWTEv_;
+GTMatrix<TE>     dPhiiWEv_;
+GTMatrix<TE>     dPhiiWTEv_;
 GTMatrix<TE>     stiffMatrixEv_;
 
 };

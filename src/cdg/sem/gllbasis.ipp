@@ -710,10 +710,14 @@ GBOOL GLLBasis<T,TE>::init()
   // Copy computated data to the 'evaluated' structures:
   getXiNodes(xiNodesEv_);
   getWeights(weightsEv_);
-  getiWeights(iweightsEv_); // computes inverse and casts
+  getiWeights(iweightsEv_); // computes inverse and cast
   getStiffMatrix(stiffMatrixEv_);
   getDerivMatrix(dPhiEv_,FALSE);
   getDerivMatrix(dPhiTEv_,TRUE);
+  getDerivMatrixW(dPhiWEv_,FALSE); // Diag(W)*D
+  getDerivMatrixW(dPhiWTEv_,TRUE); // Diag(W)*D^T
+  getDerivMatrixiW(dPhiiWEv_,FALSE); // Diag(W^-1)*D
+  getDerivMatrixiW(dPhiiWTEv_,TRUE); // Diag(W^-1)*D^T
 
   bInit_ = TRUE;
 
@@ -1021,7 +1025,7 @@ GTMatrix<TE> *GLLBasis<T,TE>::getDerivMatrix(GBOOL bTranspose)
 
 //************************************************************************************
 //************************************************************************************
-// METHOD : getDerivMatrix (1)
+// METHOD : getDerivMatrix (2)
 // DESC   : Get deep copy of deriv matrix in specified return object
 // ARGS   : ret: GTMatrix to return data
 //          bTranspose: flag to get transpose (TRUE); else, not
@@ -1043,7 +1047,92 @@ void GLLBasis<T,TE>::getDerivMatrix(GTMatrix<TE> &ret, GBOOL bTranspose)
         ret(i,j) = static_cast<TE>(dPhi_(i,j));
   }
   
-} // end of method getDerivMatrix
+} // end of method getDerivMatrix (2)
+
+
+//************************************************************************************
+//************************************************************************************
+// METHOD : getDerivMatrixW (1)
+// DESC   : Get W X derivative matrix member data
+// ARGS   : bTranspose: TRUE==>return transpose; else don't
+// RETURNS: pointer to member data GTMatrix
+//************************************************************************************
+template<typename T, typename TE>
+GTMatrix<TE> *GLLBasis<T,TE>::getDerivMatrixW(GBOOL bTranspose)
+{
+  if ( bTranspose ) return &dPhiWTEv_;
+  else              return &dPhiWEv_;
+} // end of method getDerivMatrixW (1)
+
+
+
+//************************************************************************************
+//************************************************************************************
+// METHOD : getDerivMatrixW (2)
+// DESC   : Get deep copy of W X deriv matrix in specified return object
+// ARGS   : ret: GTMatrix to return data
+//          bTranspose: flag to get transpose (TRUE); else, not
+// RETURNS: pointer to ret GTMatrix on success; else NULLPTR
+//************************************************************************************
+template<typename T, typename TE>
+void GLLBasis<T,TE>::getDerivMatrixW(GTMatrix<TE> &ret, GBOOL bTranspose)
+{
+  if ( ret.size(1) < dPhi_.size(1) || ret.size(2) < dPhi_.size(2) ) return ;
+
+  if ( bTranspose ) {
+    for ( GINT i=0; i<dPhi_.size(1); i++ ) 
+      for ( GINT j=0; j<dPhi_.size(2); j++ ) 
+        ret(i,j) = static_cast<TE>(weights_[i]*dPhiT_(i,j));
+  } 
+  else {
+    for ( GINT i=0; i<dPhi_.size(1); i++ ) 
+      for ( GINT j=0; j<dPhi_.size(2); j++ ) 
+        ret(i,j) = static_cast<TE>(weights_[i]*dPhi_(i,j));
+  }
+  
+} // end of method getDerivMatrixW (2)
+
+
+//************************************************************************************
+//************************************************************************************
+// METHOD : getDerivMatrixiW (1)
+// DESC   : Get W^-1 X derivative matrix member data
+// ARGS   : bTranspose: TRUE==>return transpose; else don't
+// RETURNS: pointer to member data GTMatrix
+//************************************************************************************
+template<typename T, typename TE>
+GTMatrix<TE> *GLLBasis<T,TE>::getDerivMatrixiW(GBOOL bTranspose)
+{
+  if ( bTranspose ) return &dPhiiWTEv_;
+  else              return &dPhiiWEv_;
+} // end of method getDerivMatrixiW (1)
+
+
+//************************************************************************************
+//************************************************************************************
+// METHOD : getDerivMatrixiW (2)
+// DESC   : Get deep copy of W^-1  X deriv matrix in specified return object
+// ARGS   : ret: GTMatrix to return data
+//          bTranspose: flag to get transpose (TRUE); else, not
+// RETURNS: pointer to ret GTMatrix on success; else NULLPTR
+//************************************************************************************
+template<typename T, typename TE>
+void GLLBasis<T,TE>::getDerivMatrixiW(GTMatrix<TE> &ret, GBOOL bTranspose)
+{
+  if ( ret.size(1) < dPhi_.size(1) || ret.size(2) < dPhi_.size(2) ) return ;
+
+  if ( bTranspose ) {
+    for ( GINT i=0; i<dPhi_.size(1); i++ ) 
+      for ( GINT j=0; j<dPhi_.size(2); j++ ) 
+        ret(i,j) = static_cast<TE>(dPhiT_(i,j)/weights_[i]);
+  } 
+  else {
+    for ( GINT i=0; i<dPhi_.size(1); i++ ) 
+      for ( GINT j=0; j<dPhi_.size(2); j++ ) 
+        ret(i,j) = static_cast<TE>(dPhi_(i,j)/weights_[i]);
+  }
+  
+} // end of method getDerivMatrixiW (2)
 
 
 //************************************************************************************
