@@ -1340,20 +1340,19 @@ void compute_grefderivsW(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &e
   GElemList                    *gelems = &grid.elems();
 
 #if defined(_G_IS2D)
-
   for ( GSIZET e=0; e<grid.elems().size(); e++ ) {
     ibeg = (*gelems)[e]->igbeg(); iend = (*gelems)[e]->igend();
     u.range(ibeg, iend); // restrict global vecs to local range
     for ( GSIZET k=0; k<GDIM; k++ ) du[k]->range(ibeg, iend);
     for ( GSIZET k=0; k<GDIM; k++ ) N[k]= (*gelems)[e]->size(k);
     for ( GSIZET k=0; k<GDIM; k++ ) W[k]= (*gelems)[e]->gbasis(k)->getWeights();
-    Di[0] = (*gelems)[e]->gbasis(0)->getDerivMatrix (dotrans);
-    Di[1] = (*gelems)[e]->gbasis(1)->getDerivMatrix(!dotrans);
+    Di[0] = (*gelems)[e]->gbasis(0)->getDerivMatrixW (dotrans);
+    Di[1] = (*gelems)[e]->gbasis(1)->getDerivMatrixW(!dotrans);
     GMTK::Dg2_X_D1(*Di[0], *W [1], u, etmp, *du[0]); 
     GMTK::D2_X_Dg1(*W [0], *Di[1], u, etmp, *du[1]); 
   }
-  u.range_reset(); // reset global vec to global range
   for ( GSIZET k=0; k<GDIM; k++ ) du[k]->range_reset();
+  u.range_reset(); // reset global vec to global range
 
 #elif defined(_G_IS3D)
 
@@ -1365,9 +1364,9 @@ void compute_grefderivsW(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &e
       N[k]= (*gelems)[e]->size(k);
       W[k]= (*gelems)[e]->gbasis(k)->getWeights();
     }
-    Di[0] = (*gelems)[e]->gbasis(0)->getDerivMatrix (dotrans); 
-    Di[1] = (*gelems)[e]->gbasis(1)->getDerivMatrix(!dotrans); 
-    Di[2] = (*gelems)[e]->gbasis(2)->getDerivMatrix(!dotrans); 
+    Di[0] = (*gelems)[e]->gbasis(0)->getDerivMatrixW (dotrans); 
+    Di[1] = (*gelems)[e]->gbasis(1)->getDerivMatrixW(!dotrans); 
+    Di[2] = (*gelems)[e]->gbasis(2)->getDerivMatrixW(!dotrans); 
     GMTK::Dg3_X_Dg2_X_D1(*Di[0], *W [1], *W [2], u, N[0], N[1], N[2], etmp, *du[0]); 
     GMTK::Dg3_X_D2_X_Dg1(*W [0], *Di[1], *W [2], u, N[0], N[1], N[2], etmp, *du[1]); 
     GMTK::D3_X_Dg2_X_Dg1(*W [0], *W [1], *Di[2], u, N[0], N[1], N[2], etmp, *du[2]); 
@@ -1479,17 +1478,17 @@ void compute_grefdiv(GGrid &grid, GTVector<GTVector<GDOUBLE>*> &u, GTVector<GDOU
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : compute_grefdivW
+// METHOD : compute_grefdiviW
 // DESC   : Compute tensor product 'weighted divergence' of input fields in ref space
 //          for grid:
-//             Div u = [I_X_I_X_ iWDx    |u1|
-//                      I_X_iWDy_X_I   . |u2|
-//                      iWDz_X_I_X_I]    |u3|
+//             Div u = [iW_X_iW_X_ iWDx    |u1|
+//                      iW_X_iWDy_X_iW   . |u2|
+//                      iWDz_X_iW_X_iW]    |u3|
 //          or
 //     
-//             Div u = [I_X_I_X_iW DxT)    |u1|
-//                      I_X_iW DyT)_X_I .  |u2|
-//                      iW DzT)_X_I_X_I]   |u3|
+//             Div u = [iW_X_iW_X_iW DxT)    |u1|
+//                      iW_X_iW DyT)_X_iW .  |u2|
+//                      iW DzT)_X_iW_X_iW]   |u3|
 //          where Dx(T), Dy(T), Dz(T) are 1d derivative objects from basis functions,
 //          and iW are the 1d inverse weights     
 // ARGS   : 
@@ -1507,7 +1506,7 @@ void compute_grefdiv(GGrid &grid, GTVector<GTVector<GDOUBLE>*> &u, GTVector<GDOU
 // RETURNS:  none
 //**********************************************************************************
 template<>
-void compute_grefdivW(GGrid &grid, GTVector<GTVector<GDOUBLE>*> &u, GTVector<GDOUBLE> &etmp,
+void compute_grefdiviW(GGrid &grid, GTVector<GTVector<GDOUBLE>*> &u, GTVector<GDOUBLE> &etmp,
                      GBOOL dotrans, GTVector<GDOUBLE> &divu)
 {
 
@@ -1534,8 +1533,8 @@ void compute_grefdivW(GGrid &grid, GTVector<GTVector<GDOUBLE>*> &u, GTVector<GDO
     for ( GSIZET k=0; k<u.size(); k++ ) u[k]->range(ibeg, iend); 
     for ( GSIZET k=0; k<GDIM; k++ ) N[k]= (*gelems)[e]->size(k);
     for ( GSIZET k=0; k<GDIM; k++ ) iW[k]= (*gelems)[e]->gbasis(k)->getiWeights();
-    Di[0] = (*gelems)[e]->gbasis(0)->getDerivMatrix (dotrans);
-    Di[1] = (*gelems)[e]->gbasis(1)->getDerivMatrix(!dotrans);
+    Di[0] = (*gelems)[e]->gbasis(0)->getDerivMatrixiW (dotrans);
+    Di[1] = (*gelems)[e]->gbasis(1)->getDerivMatrixiW(!dotrans);
     etmp.resizem((*gelems)[e]->nnodes());
     GMTK::Dg2_X_D1(*Di[0], *iW[1], *u[0], etmp, divu); // W^-1 D1 u1
     GMTK::D2_X_Dg1(*iW[0], *Di[1], *u[1], etmp, *u[0]); // W^^-1 D2 u2
@@ -1560,9 +1559,9 @@ void compute_grefdivW(GGrid &grid, GTVector<GTVector<GDOUBLE>*> &u, GTVector<GDO
     for ( GSIZET k=0; k<GDIM; k++ ) N[k]= (*gelems)[e]->size(k);
     for ( GSIZET k=0; k<GDIM; k++ ) iW[k]= (*gelems)[e]->gbasis(k)->getiWeights();
     etmp.resizem((*gelems)[e]->nnodes());
-    Di[0] = (*gelems)[e]->gbasis(0)->getDerivMatrix (dotrans); 
-    Di[1] = (*gelems)[e]->gbasis(1)->getDerivMatrix(!dotrans); 
-    Di[2] = (*gelems)[e]->gbasis(1)->getDerivMatrix(!dotrans); 
+    Di[0] = (*gelems)[e]->gbasis(0)->getDerivMatrixiW (dotrans); 
+    Di[1] = (*gelems)[e]->gbasis(1)->getDerivMatrixiW(!dotrans); 
+    Di[2] = (*gelems)[e]->gbasis(1)->getDerivMatrixiW(!dotrans); 
 
     GMTK::Dg3_X_Dg2_X_D1(*Di[0], *iW [1], *iW [2], *u[0], N[0], N[1], N[2], etmp, divu); 
     divu += etmp;
@@ -1577,7 +1576,7 @@ void compute_grefdivW(GGrid &grid, GTVector<GTVector<GDOUBLE>*> &u, GTVector<GDO
 #endif
 
 
-} // end, method compute_grefdivW
+} // end, method compute_grefdiviW
 
 
 

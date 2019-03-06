@@ -327,7 +327,7 @@ void normalize_euclidean(GTVector<GTVector<T>*> &x, GINT *iind, GINT nind)
   void    compute_grefdiv(GGrid &grid, GTVector<GTVector<T>*> &u, GTVector<T> &etmp,
                           GBOOL btrans, GTVector<T> &divu);
   template<typename T>  
-  void    compute_grefdivW(GGrid &grid, GTVector<GTVector<T>*> &u, GTVector<T> &etmp,
+  void    compute_grefdiviW(GGrid &grid, GTVector<GTVector<T>*> &u, GTVector<T> &etmp,
                            GBOOL btrans, GTVector<T> &divu);
 
 
