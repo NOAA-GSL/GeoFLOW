@@ -323,9 +323,9 @@ void GHelmholtz::reg_prod(GTVector<GFTYPE> &u,
 
   // Take 'divergence' with D:
 #if 0
-  GMTK::compute_grefdivW(*grid_, gdu, etmp1_, FALSE, uo); // Compute 'divergence' with W^-1 D_j
+  GMTK::compute_grefdiviW(*grid_, gdu, etmp1_, FALSE, uo); // Compute 'divergence' with W^-1 D_j
 #else
-  GMTK::compute_grefdiv (*grid_, gdu, etmp1_, FALSE, uo); // Compute 'divergence' with W^-1 D_j
+  GMTK::compute_grefdiv  (*grid_, gdu, etmp1_, FALSE, uo); // Compute 'divergence' with W^-1 D_j
 #endif
 
   // Apply mass operator (includes Jacobian already):
