@@ -361,6 +361,10 @@ GBOOL GLLBasis<T,TE>::resize(GINT  newOrder)
   dPhiT_ .resize(Np_+1,Np_+1);
   dPhiEv_ .resize(Np_+1,Np_+1);
   dPhiTEv_.resize(Np_+1,Np_+1);
+  dPhiWEv_ .resize(Np_+1,Np_+1);
+  dPhiWTEv_ .resize(Np_+1,Np_+1);
+  dPhiiWEv_ .resize(Np_+1,Np_+1);
+  dPhiiWTEv_ .resize(Np_+1,Np_+1);
 
   //  resize stiffMatrix_:
   stiffMatrix_  .resize(Np_+1,Np_+1);
