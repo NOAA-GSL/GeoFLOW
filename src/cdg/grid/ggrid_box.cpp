@@ -351,7 +351,6 @@ void GGridBox::do_grid2d(GINT irank)
       // normal vectors at the 'corner' nodes:
       for ( GSIZET k=0; face_ind != NULLPTR && k<face_ind->size(); k++ ) {
         if ( !bdy_ind->contains((*face_ind)[k]) ) {
-cout << "GGridBox::do_grid2d: push back: " << (*face_ind)[k] << endl; 
           bdy_ind->push_back((*face_ind)[k]); 
           bdy_typ->push_back(GBDY_NONE); 
         }
@@ -576,8 +575,6 @@ void GGridBox::set_global_bdytypes_2d(GElem_base &pelem)
   GTVector<GBdyType>          *bdy_typ=&pelem.bdy_types  ();
   GTVector<GTVector<GFTYPE>>  *xNodes =&pelem.xNodes();
   GTVector<GTVector<GINT>>    *face_ind;
-
-cout << "GGridBox::set_global_bdytypes_2d: bdy_ind=" << *bdy_ind << endl;  
 
   GSIZET ib;
   GFTYPE eps=100*std::numeric_limits<GFTYPE>::min();
