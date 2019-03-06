@@ -303,11 +303,11 @@ void GHelmholtz::reg_prod(GTVector<GFTYPE> &u,
   // Re-arrange local temp space for divergence:
   for ( GSIZET i=0; i<GDIM; i++ ) gdu[i] = utmp[i];
 
-  // Compute weighted deriviatives of u:
-#if 1
+  // Compute deriviatives of u:
+#if 0
   GMTK::compute_grefderivsW(*grid_, u, etmp1_, FALSE, gdu); // utmp stores tensor-prod derivatives
 #else
-  GMTK::compute_grefderivs(*grid_, u, etmp1_, FALSE, gdu); // utmp stores tensor-prod derivatives
+  GMTK::compute_grefderivs (*grid_, u, etmp1_, FALSE, gdu); // utmp stores tensor-prod derivatives
 #endif
 
   // Multiply by (element-size const) metric factors, possibly x-dependent 
@@ -322,7 +322,11 @@ void GHelmholtz::reg_prod(GTVector<GFTYPE> &u,
   }
 
   // Take 'divergence' with D:
+#if 0
   GMTK::compute_grefdivW(*grid_, gdu, etmp1_, FALSE, uo); // Compute 'divergence' with W^-1 D_j
+#else
+  GMTK::compute_grefdiv (*grid_, gdu, etmp1_, FALSE, uo); // Compute 'divergence' with W^-1 D_j
+#endif
 
   // Apply mass operator (includes Jacobian already):
   *gdu[0] = uo;
