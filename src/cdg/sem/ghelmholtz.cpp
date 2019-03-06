@@ -161,7 +161,7 @@ void GHelmholtz::def_prod(GTVector<GFTYPE> &u,
   }
 
   // utmp[GDIM+1], utmp[GDIM+2', uo now hold Ti = Gij D^j u, i = 0, GDIM-1
-  // Now compute DT^j ( t^j ):
+  // Now compute DT^j ( T^j ):
   GMTK::compute_grefdiv(*grid_, gdu, etmp1_, TRUE, uo); // Compute 'divergence' with DT_j
 
   // At this point, we have uo = L u
@@ -254,7 +254,7 @@ void GHelmholtz::embed_prod(GTVector<GFTYPE> &u,
 
   // Apply Mass operator and q parameter if necessary:
   if ( bcompute_helm_ ) {
-    massop_->opVec_prod(u, utmp, *utmp[0]); // final arg unused
+    massop_->opVec_prod(u, utmp, *utmp[0]); // middle arg unused
     if ( q_ != NULLPTR ) {
       if ( q_->size() >= grid_->ndof() ) utmp[0]->pointProd(*q_);
       else if ( (*q_)[0] != 1.0)        *utmp[0] *= (*q_)[0];
@@ -270,7 +270,7 @@ void GHelmholtz::embed_prod(GTVector<GFTYPE> &u,
 // METHOD : reg_prod
 // DESC   : Compute application of this operator to input vector for 
 //          GE_REGULAR elements
-//          NOTE: must have at least GDIM utmp vectors set via set_tmp method
+//          NOTE: must have at least GDIM utmp vectors
 // ARGS   : u  : input vector
 //          utmp: tmp space
 //          uo : output (result) vector
@@ -293,7 +293,7 @@ void GHelmholtz::reg_prod(GTVector<GFTYPE> &u,
   // Compute:
   //   uo = ( p L + q M ) u
   // where
-  // p L u = W ( W^-1 D1T G11 W  D1 + W^-1 D2T G22 W D2 + W^-1 D3T G33 W D3 )u,
+  // p L u = W ( W^-1 D1T p G11 W  D1 + W^-1 D2T p G22 W D2 + W^-1 D3T p G33 W D3 )u,
   // and
   //   D1 = I_X_I_X_Dx u ; D2 = I_X_Dy_X_I u; D2 = Dz_X_I_X_I u
   // and M is just the mass matrix and p, and q are Laplacian and Mass factors that
@@ -321,14 +321,14 @@ void GHelmholtz::reg_prod(GTVector<GFTYPE> &u,
     }
   }
 
-  // Take 'divergence' with D:
+  // Take 'divergence' with D^T:
 #if 0
   GMTK::compute_grefdiviW(*grid_, gdu, etmp1_, FALSE, uo); // Compute 'divergence' with W^-1 D_j
 #else
   GMTK::compute_grefdiv  (*grid_, gdu, etmp1_, FALSE, uo); // Compute 'divergence' with W^-1 D_j
 #endif
 
-  // Apply mass operator (includes Jacobian already):
+  // Apply mass operator (includes Jacobian):
   *gdu[0] = uo;
   massop_->opVec_prod(*gdu[0], gdu, uo); // tmp array does nothing
 
@@ -536,7 +536,7 @@ void GHelmholtz::reg_init()
     }
   }
 
-  massop_ = new GMass(*grid_);
+  massop_ = new GMass(*grid_, FALSE); // not inverse
   bown_mass_ = TRUE;
 
 } // end of method reg_init
