@@ -145,7 +145,7 @@ void GHelmholtz::def_prod(GTVector<GFTYPE> &u,
   // Compute derivatives of u:
   GMTK::compute_grefderivs(*grid_, u, etmp1_, FALSE, utmp); // utmp stores tensor-prod derivatives, Dj u
 
-  // Compute Gij (D^j u): 
+  // Compute Gij (D^j u). Recall, Gij contain mass: 
   for ( GSIZET i=0; i<GDIM; i++ ) { 
     *utmp[GDIM+i] = 0.0;
     for ( GSIZET j=0; j<GDIM; j++ ) {
@@ -229,7 +229,7 @@ void GHelmholtz::embed_prod(GTVector<GFTYPE> &u,
   // Compute derivatives of u:
   GMTK::compute_grefderivs(*grid_, u, etmp1_, FALSE, utmp); // utmp stores tensor-prod derivatives, Dj u
   
-  // Compute Gij (D^j u): 
+  // Compute Gij (D^j u). Recall, Gij contain mass: 
   for ( GSIZET i=0; i<GDIM; i++ ) { 
     *utmp[GDIM+i] = 0.0;
     for ( GSIZET j=0; j<GDIM; j++ ) {
@@ -304,14 +304,10 @@ void GHelmholtz::reg_prod(GTVector<GFTYPE> &u,
   for ( GSIZET i=0; i<GDIM; i++ ) gdu[i] = utmp[i];
 
   // Compute deriviatives of u:
-#if 0
-  GMTK::compute_grefderivsW(*grid_, u, etmp1_, FALSE, gdu); // utmp stores tensor-prod derivatives
-#else
   GMTK::compute_grefderivs (*grid_, u, etmp1_, FALSE, gdu); // utmp stores tensor-prod derivatives
-#endif
 
   // Multiply by (element-size const) metric factors, possibly x-dependent 
-  // 'viscosity':
+  // 'viscosity', and mass:
   for ( GSIZET k=0; k<GDIM; k++ ) {
     gdu[k]->pointProd(*G_(k,0));
     // Apply p parameter ('viscosity') if necessary to Laplacian:
@@ -319,18 +315,13 @@ void GHelmholtz::reg_prod(GTVector<GFTYPE> &u,
       if ( p_->size() >= grid_->ndof() ) gdu[k]->pointProd(*p_);
       else if ( (*p_)[0] != 1.0 )  *gdu[k] *= (*p_)[0];
     }
+    massop_->opVec_prod(*gdu[k], gdu, uo); // tmp array does nothing
+    *gdu[k] = uo;
   }
 
-  // Apply mass operator (includes Jacobian):
-  *gdu[0] = uo;
-  massop_->opVec_prod(*gdu[0], gdu, uo); // tmp array does nothing
-
   // Take 'divergence' with D^T:
-#if 0
-  GMTK::compute_grefdiviW(*grid_, gdu, etmp1_, FALSE, uo); // Compute 'divergence' with W^-1 D_j
-#else
-  GMTK::compute_grefdiv  (*grid_, gdu, etmp1_, FALSE, uo); // Compute 'divergence' with W^-1 D_j
-#endif
+  GMTK::compute_grefdiv  (*grid_, gdu, etmp1_, TRUE, uo); // Compute 'divergence' with W^-1 D_j
+
 
   // Add q X mass operator (this really defines the Helmholtz op)  if necessary:
   if ( bcompute_helm_ ) {
