@@ -203,7 +203,7 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const Time &dt
   if ( doheat_ ) {
     for ( auto k=0; k<u.size(); k++ ) {
       ghelm_->opVec_prod(*u[k], uoptmp_, *urhstmp_[0]); // apply diffusion
-//   *urhstmp_[0] *= -1.0; // weak Lap op is neg on RHS
+     *urhstmp_[0] *= -1.0; // weak Lap op is neg on RHS
       gimass_->opVec_prod(*urhstmp_[0], uoptmp_, *dudt[k]); // apply M^-1
     }
     return;
