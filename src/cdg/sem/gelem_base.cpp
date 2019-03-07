@@ -1025,13 +1025,14 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
 
   // Compute edge/face normals: 
     // First, linearize face indices:
-cout << "GElem_base::dogeom2d: rij=" << rij << endl;
    
   GTVector<GINT> itmp;
   for ( j=0; j<face_indices_.size(); j++ )
     for ( k=0; k<face_indices_[j].size(); k++ ) itmp.push_back(face_indices_[j][k]);
   set_bdyNormal2d(rij, itmp, faceNormal);
-  set_bdyNormal2d(rij, bdy_indices_, bdyNormal);
+
+  if ( bdy_indices_.size() > 0 )  // there may not be bdy indices
+    set_bdyNormal2d(rij, bdy_indices_, bdyNormal);
 
 } // end of method dogeom2d
 
@@ -1150,7 +1151,8 @@ void GElem_base::dogeom3d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
   for ( j=0; j<face_indices_.size(); j++ )
     for ( k=0; k<face_indices_[j].size(); k++ ) itmp.push_back(face_indices_[j][k]);
   set_bdyNormal2d(rij, itmp, faceNormal);
-  set_bdyNormal3d(rij, bdy_indices_, bdyNormal);
+  if ( bdy_indices_.size() > 0 )  // there may not be bdy indices
+    set_bdyNormal3d(rij, bdy_indices_, bdyNormal);
 
 } // end of method dogeom3d
 
