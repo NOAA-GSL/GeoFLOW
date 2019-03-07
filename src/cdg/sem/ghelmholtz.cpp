@@ -160,7 +160,6 @@ void GHelmholtz::def_prod(GTVector<GFTYPE> &u,
     else if ( (*p_)[0] != 1.0 ) uo *= (*p_)[0];
   }
 
-  // utmp[GDIM+1], utmp[GDIM+2', uo now hold Ti = Gij D^j u, i = 0, GDIM-1
   // Now compute DT^j ( T^j ):
   GMTK::compute_grefdiv(*grid_, gdu, etmp1_, TRUE, uo); // Compute 'divergence' with DT_j
 
