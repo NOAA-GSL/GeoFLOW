@@ -321,16 +321,16 @@ void GHelmholtz::reg_prod(GTVector<GFTYPE> &u,
     }
   }
 
+  // Apply mass operator (includes Jacobian):
+  *gdu[0] = uo;
+  massop_->opVec_prod(*gdu[0], gdu, uo); // tmp array does nothing
+
   // Take 'divergence' with D^T:
 #if 0
   GMTK::compute_grefdiviW(*grid_, gdu, etmp1_, FALSE, uo); // Compute 'divergence' with W^-1 D_j
 #else
   GMTK::compute_grefdiv  (*grid_, gdu, etmp1_, FALSE, uo); // Compute 'divergence' with W^-1 D_j
 #endif
-
-  // Apply mass operator (includes Jacobian):
-  *gdu[0] = uo;
-  massop_->opVec_prod(*gdu[0], gdu, uo); // tmp array does nothing
 
   // Add q X mass operator (this really defines the Helmholtz op)  if necessary:
   if ( bcompute_helm_ ) {
