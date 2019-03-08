@@ -1037,13 +1037,15 @@ void GGFX::initMult()
   // Do DSS sum to find multiplicity:
   doOp<GFLOAT>(mult, GGFX_OP_SUM);
 
-cout << "GGFX::initMult: mult = " << mult << endl;
 
   // Compute 1/mult:
   imult_.resize(mult.size());
   for ( GSIZET j=0; j<imult_.size(); j++ ) {
     imult_[j] = 1.0/mult[j];
   }
+
+cout << "GGFX::initMult: mult = " << mult << endl;
+cout << "GGFX::initMult: imult = " << imult_ << endl;
 
 } // end of method initMult
 
