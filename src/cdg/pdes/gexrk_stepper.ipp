@@ -20,7 +20,8 @@ GExRKStepper<T>::GExRKStepper(GSIZET nstage)
 bRHS_                 (FALSE),
 bapplybc_             (FALSE),
 bupdatebc_            (FALSE),
-nstage_               (nstage)
+nstage_               (nstage),
+ggfx_                 (NULLPTR)
 {
   butcher_ .setOrder(nstage_);
 } // end of constructor (1) method
