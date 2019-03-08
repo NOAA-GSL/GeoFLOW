@@ -264,6 +264,7 @@ cout << "main: u(t=0)=" << *u_[0] << endl;
 cout << "main: entering time loop..." << endl; 
     GPTLstart("time_loop");
     for( GSIZET i=0; i<maxSteps; i++ ){
+cout << "main: ub=" << *ub_[0] << endl; 
       eqn_base->step(t,u_,ub_,dt);
       t += dt;
     }
@@ -585,8 +586,6 @@ void compute_dirgauss_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
    (*ua[0])[j] = ufact[0]*exp(argxp);
   }
 
-  cout << "compute_dirgauss_heat: ua=" << *ua[0] << endl;
-  
 } // end, compute_dirgauss_heat
 
 
