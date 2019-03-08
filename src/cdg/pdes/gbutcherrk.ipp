@@ -61,7 +61,9 @@ void GButcherRK<T>::setOrder(GINT iorder)
 {
   iorder_ = iorder;
 
-  assert( (iorder_ == 2 || iorder_ == 4) && "Invalid RK order");
+  assert( (iorder_ >= 1 && iorder_ <= 4) 
+        && "Invalid RK order");
+
   computeCoeffs();
 
 } // end of method computeCoeffs
@@ -78,28 +80,44 @@ template<typename T>
 void GButcherRK<T>::computeCoeffs()
 {
 
-  assert( (iorder_ == 2 || iorder_ == 4) && "Invalid RK order");
+  assert( (iorder_ >= 1 && iorder_ <= 4 ) 
+        && "Invalid RK order");
 
   alpha_.resize(iorder_);
   c_    .resize(iorder_);
   beta_ .resize(iorder_,iorder_);
 
   alpha_ = 0.0; beta_ = 0.0; c_ = 0.0;
+
+  if ( iorder_ == 1 ) {
+    alpha_[0] = 0;   c_[0] = 1.0;
+    return;
+  }
+
+  if ( iorder_ == 3 ) {
+    alpha_[0] = 0      ; c_[0] = 0.25;
+    alpha_[1] = 1.0/3.0; c_[1] = 0.0;
+    alpha_[2] = 2.0/3.0; c_[2] = 0.75;
+    beta_(1,0) = 1.0/3.0;
+                          beta_(2,1) = 2.0/3.0;
+    return;
+  }
+  
   if ( iorder_ == 2 ) {
-     alpha_[0] = 0;   c_[0] = 0.0;
-     alpha_[1] = 0.5; c_[1] = 1.0;
-     beta_(1,0) = 0.5;
+    alpha_[0] = 0;   c_[0] = 0.5;
+    alpha_[1] = 1.0; c_[1] = 0.5;
+    beta_(1,0) = 1.0;
     return;
   }
   
   if ( iorder_ == 4 ) {
-     alpha_[0] = 0;   c_[0] = 1.0/6.0;
-     alpha_[1] = 0.5; c_[1] = 1.0/3.0;
-     alpha_[2] = 0.5; c_[2] = 1.0/3.0;
-     alpha_[3] = 1.0; c_[2] = 1.0/6.0;
-     beta_(1,0) = 0.5;
-                       beta_(2,1) = 0.5;
-                                          beta_(3,2) = 1.0;
+    alpha_[0] = 0;   c_[0] = 1.0/6.0;
+    alpha_[1] = 0.5; c_[1] = 1.0/3.0;
+    alpha_[2] = 0.5; c_[2] = 1.0/3.0;
+    alpha_[3] = 1.0; c_[3] = 1.0/6.0;
+    beta_(1,0) = 0.5;
+                      beta_(2,1) = 0.5;
+                                         beta_(3,2) = 1.0;
     return;
   }
   
