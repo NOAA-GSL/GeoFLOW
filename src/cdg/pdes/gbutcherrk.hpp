@@ -34,8 +34,8 @@ private:
 
 // Private data:
          GINT        iorder_; // 'order' or number of stages (not nec. the same thing!)
-         GTVector<T> alpha_; // time coeffs
-         GTMatrix<T> beta_;  // stage coeffs
+         GTVector<T> alpha_; // time coeffs/nodes
+         GTMatrix<T> beta_;  // RK matrix
          GTVector<T> c_;     // stage weights
 };
 
