@@ -136,23 +136,22 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &ub,
     *uout[n] += (*K_[0][n])*( (*c)[i]*dt ); // += dt * c_M * k_M
    }
 #else 
-   tt = t;
+   tt = t+dt;
    if ( bupdatebc_ ) bdy_update_callback_(tt, u, ub); 
 
-cout << "GExRK::step: before ub: u=" << *u[0] << endl;
+cout << "GExRK::step: ub=" << *ub[0] << endl;
    if ( bapplybc_  ) bdy_apply_callback_ (tt, u, ub); 
-cout << "GExRK::step: after ub: u=" << *u[0] << endl;
    if ( ggfx_ != NULLPTR ) {
+cout << "GExRK::step: before H1-smoothing: u=" << *u[0] << endl;
      for ( n=0; n<nstate; n++ )
         ggfx_->doOp(*u[n], GGFX_OP_SMOOTH);
 cout << "GExRK::step: after H1-smoothing: u=" << *u[0] << endl;
    }
 
-   rhs_callback_(tt, u, dt, K_[0]); 
+   rhs_callback_(t, u, dt, K_[0]); 
    for ( n=0; n<nstate; n++ ) { // for each state member, u
 std::cout << "GExRK::step: RHS[" << n << "]=" << *K_[0][n] << std::endl;
     *uout[n] = (*uin[n]) + (*K_[0][n]) * dt; // Euler step
-     tt = t+dt;
      if ( bupdatebc_ ) bdy_update_callback_(tt, u, ub); 
      if ( bapplybc_  ) bdy_apply_callback_ (tt, uout, ub); 
    }
