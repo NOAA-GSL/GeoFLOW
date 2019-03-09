@@ -257,6 +257,7 @@ cout << "main: getting integrator data done." << endl;
 
     // Initialize state:
 cout << "main: Initializing state..." << endl; 
+    t = 0.0;
     compute_analytic(*grid_, t, ptree, u_);
 cout << "main: State initiallized." << endl; 
 
