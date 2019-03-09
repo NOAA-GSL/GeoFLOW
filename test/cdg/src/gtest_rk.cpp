@@ -16,17 +16,13 @@
 #include <cstdlib>
 #include <cassert>
 #include <random>
-#include "gexrl_stepper.hpp"
+#include "gexrk_stepper.hpp"
 
-using namespace geoflow::tbox;
-using namespace std;
-
-typedef State GTVector<GTVector<GFTYPE>*>;
-typedef Time  GFTYPE;
+typedef GTVector<GTVector<GFTYPE>*> State;
+typedef GFTYPE Time;
 
 GFTYPE omega=1.0;
 
-void init_ggfx(GGrid &grid, GGFX &ggfx);
 void update_dirichlet(const Time &t, State &u, State &ub);
 void dudt(const Time &t, const State &u,
           const Time &dt, State &dudt);
@@ -38,18 +34,18 @@ int main(int argc, char **argv)
     GString serr ="main: ";
     GINT    errcode, iopt;
     GINT    nstate=GDIM;  // number 'state' arrays
-    GSIZET  nstage=2, maxSteps=100;
-    GFTYPE  dt=1.0e-2, t, maxerror;
+    GSIZET  nstage=2, maxSteps=1;
+    GFTYPE  dt=1.0e-2, t, t0=0.0, tmax=3.14159, maxerror;
 
-    /r option indicates that it takes an argument.
+    // : option indicates that it takes an argument.
     // Note: -i reserved for InputManager:
-    while ((iopt = getopt(argc, argv, "d:m:n:w:h")) != -1) {
+    while ((iopt = getopt(argc, argv, "d:t:n:w:h")) != -1) {
       switch (iopt) {
       case 'd': // set dt
           dt = atof(optarg);
           break;
-      case 'm': // set max timesteps
-          maxSteps = atoi(optarg);
+      case 't': // set max time
+          tmax = atof(optarg);
           break;
       case 'n': // set no. RK stages
           nstage = atoi(optarg);
@@ -59,7 +55,7 @@ int main(int argc, char **argv)
           break;
       case 'h': // help
           std::cout << "usage: " << std::endl <<
-          argv[0] << " [-h] [-d dt] [-m maxSteps] [-n #stages] [-w omega]" << std::endl;
+          argv[0] << " [-h] [-d dt] [-t max time] [-n #stages] [-w omega]" << std::endl;
           exit(1); 
           break;
       case ':': // missing option argument
@@ -75,56 +71,72 @@ int main(int argc, char **argv)
     }
 
     // Create GExRK object:
-    GExRK gexrk(nstage);
+    GExRKStepper<GFTYPE> gexrk(nstage);
 
    std::function<void(const Time &t,                    // RHS callback function
                        const State  &uin,
                        const Time &dt,
-                       State &dudt)> rhs
-                    = [this](const Time &t,
-                       const State  &uin,
-                       const Time &dt,
-                       State &dudt){dudt_impl(t, uin, dt, dudt);};
+                       State &dudt)> rhs = dudt;
 
     gexrk.setRHSfunction(rhs);
     
 
     // Create state and tmp space:
-    GFTYPE tmax = maxSteps*dt;
-    GTVector<GTVector<GFTYPE>*> utmp(4);
+    maxSteps = static_cast<GSIZET>((tmax - t0)/dt);
     GTVector<GTVector<GFTYPE>*> u   (1);
     GTVector<GTVector<GFTYPE>*> uout(1);
     GTVector<GTVector<GFTYPE>*> ua  (1);
+    GTVector<GTVector<GFTYPE>*> ub  (1);
+    GTVector<GTVector<GFTYPE>*> utmp(u.size()*nstage+1);
     
     for ( GSIZET j=0; j<utmp.size(); j++ ) utmp[j] = new GTVector<GFTYPE>(1);
     for ( GSIZET j=0; j<u   .size(); j++ ) u   [j] = new GTVector<GFTYPE>(1);
-    for ( GSIZET j=0; j<du  .size(); j++ ) du  [j] = new GTVector<GFTYPE>(1);
-    for ( GSIZET j=0; j<da  .size(); j++ ) da  [j] = new GTVector<GFTYPE>(1);
+    for ( GSIZET j=0; j<uout.size(); j++ ) uout[j] = new GTVector<GFTYPE>(1);
+    for ( GSIZET j=0; j<ua  .size(); j++ ) ua  [j] = new GTVector<GFTYPE>(1);
+    for ( GSIZET j=0; j<ub  .size(); j++ ) ub  [j] = new GTVector<GFTYPE>(1);
 
     // Find solution to 
-    // du/dt = sin(omega t); 
-    ua[0] = -(cos(omega*tmax) - cos(0));
-    u [0] = 0.0;
+    // du/dt = sin(omega t) at tmax: 
+    *ua[0] = -(cos(omega*tmax) - cos(omega*t0))/omega;
+    *u [0] = 0.0; // initialize numerical soln
 
+    t = t0;
     for ( GSIZET k=0; k<maxSteps; k++ ) {
-      gexrk.step(u, ub, dt, utmp, uout);
-      u = uout;
+      gexrk.step(t, u, ub, dt, utmp, uout);
+      *u[0] = *uout[0];
       t += dt;
     }
 
-    maxerror = fabs(ua[0]-u[0])/ua[0];
-    cout << "main: error ua=" << ua 
-         <<            " u =" << u << endl;
+    maxerror = fabs((*ua[0])[0]-(*u[0])[0])/(*ua[0])[0];
+    cout << "main: ua=" << *ua[0] << ";  u =" << *u[0] << endl;
    
+    cout << "main: relative error=" << maxerror << endl;
+    cout << "main: maxSteps      =" << maxSteps << endl;
+
     if ( maxerror > 10*std::numeric_limits<GFTYPE>::epsilon() ) {
-      std::cout << "main: -------------------------------------derivative FAILED" << std::endl;
+      std::cout << "main: -------------------------------------RK stepper FAILED" << std::endl;
       errcode = 1;
     } else {
-      std::cout << "main: -------------------------------------derivative OK" << std::endl;
+      std::cout << "main: -------------------------------------RK stepper OK" << std::endl;
       errcode = 0;
     }
 
-    return( errcode );
+    // Print convergence data to file:
+    std::ifstream itst;
+    std::ofstream ios;
+    itst.open("rk_err.txt");
+    ios.open("rk_err.txt",std::ios_base::app);
+
+    // Write header, if required:
+    if ( itst.peek() == std::ofstream::traits_type::eof() ) {
+    ios << "# nstages     dt     tmax     err  " << std::endl;
+    }
+    itst.close();
+
+    ios << nstage << "  "  <<  dt  << "  " << tmax << "  "  << maxerror  << endl;
+    ios.close();
+
+    return(errcode);
 
 } // end, main
 
@@ -136,8 +148,8 @@ int main(int argc, char **argv)
 // ARGS  : 
 //**********************************************************************************
 void dudt(const Time &t, const State &u,
-          const Time &dt, State &dudt);
+          const Time &dt, State &dudt)
 {
-  dudt[0] = sin(omega * t); 
+  (*dudt[0])[0] = sin(omega * t); 
 
 } // end method dudt
