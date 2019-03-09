@@ -279,13 +279,18 @@ cout << "main: time-stepping done." << endl;
     GTVector<GFTYPE> nnorm(ua_.size());
     
     maxerror = 0.0;
-    
+    lnorm    = 0.0;  
+    nnorm    = 1.0;
+  
     tt = 0.0;
     compute_analytic(*grid_, tt, ptree, ua_); // analyt soln at t=0
     for ( GSIZET j=0; j<u_.size(); j++ ) { //local errors
-      for ( GSIZET i=0; i<ua_[0]->size(); i++ ) (*ua_[0])[i] = pow((*ua_[0])[i],2);
-      nnorm[j] = grid_->integrate(*ua_  [0],*utmp_[0]) ; // L2 norm of analyt soln at t=0
+      for ( GSIZET i=0; i<ua_[j]->size(); i++ ) lnorm[0] = MAX(lnorm[0],fabs((*ua_[j])[i]));
+ //   nnorm[j] = grid_->integrate(*ua_  [j],*utmp_[0]) ; // L2 norm of analyt soln at t=0
+//    GComm::Allreduce(lnorm.data()  , nnorm.data()  , 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm);
 cout << "main: ua(t=0)[" << j << "]=" << *ua_[j] << endl;
+cout << "main: ua(t=0)[" << j << "]_max=" << ua_[j]->max() << endl;
+cout << "main: ua(t=0)[" << j << "]_min=" << ua_[j]->min() << endl;
 cout << "main: nnorm[" << j << "]=" << nnorm[j] << endl;
     }
     
