@@ -81,10 +81,9 @@ update_bdy_callback_  (NULLPTR)
   assert(tmp.size() >= req_tmp_size() && "Insufficient tmp space provided");
 
   valid_types_.resize(4);
-  valid_types_[0] = GSTEPPER_EXRK2;
-  valid_types_[1] = GSTEPPER_EXRK4;
-  valid_types_[2] = GSTEPPER_BDFAB;
-  valid_types_[3] = GSTEPPER_BDFEXT;
+  valid_types_[0] = GSTEPPER_EXRK;
+  valid_types_[1] = GSTEPPER_BDFAB;
+  valid_types_[2] = GSTEPPER_BDFEXT;
  
   comm_ = ggfx_->getComm();
   assert(valid_types_.contains(isteptype_) && "Invalid stepper type"); 
@@ -253,8 +252,7 @@ void GBurgers<TypePack>::step_impl(const Time &t, State &uin, State &ub, const T
 {
 
   switch ( isteptype_ ) {
-    case GSTEPPER_EXRK2:
-    case GSTEPPER_EXRK4:
+    case GSTEPPER_EXRK:
       for ( GSIZET j=0; j<uin.size(); j++ ) *uold_[j] = *uin[j];
       step_exrk(t, uold_, ub, dt, uin);
       break;
@@ -355,8 +353,7 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
                      State &ub){apply_bc_impl(t, uin, ub);}; 
 
   switch ( isteptype_ ) {
-    case GSTEPPER_EXRK2:
-    case GSTEPPER_EXRK4:
+    case GSTEPPER_EXRK:
       gexrk_ = new GExRKStepper<GFTYPE>(itorder_);
       gexrk_->setRHSfunction(rhs);
       gexrk_->set_apply_bdy_callback(applybc);
@@ -406,8 +403,7 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
   gmass_   = new GMass(*grid_);
   ghelm_   = new GHelmholtz(*grid_);
   
-  if ( isteptype_ ==  GSTEPPER_EXRK2 
-    || isteptype_ == GSTEPPER_EXRK4 ) {
+  if ( isteptype_ ==  GSTEPPER_EXRK ) {
     gimass_ = new GMass(*grid_, TRUE); // create inverse of mass
   }
 
@@ -549,7 +545,7 @@ GINT GBurgers<TypePack>::req_tmp_size()
   nstate = GDIM;
   if ( doheat_ || bpureadv_ ) nstate = 1;
 
-  if ( isteptype_ == GSTEPPER_EXRK2 || isteptype_ == GSTEPPER_EXRK4 ) {
+  if ( isteptype_ == GSTEPPER_EXRK ) {
     isize += nstate * itorder_; 
   }
 
