@@ -309,9 +309,7 @@ void GHelmholtz::reg_prod(GTVector<GFTYPE> &u,
   // Multiply by (element-size const) metric factors, possibly x-dependent 
   // 'viscosity', and mass:
    GTVector<GFTYPE> *Jac = &grid_->Jac();
-cout << "GHelmholtz::reg_prod: Jac=(" << *Jac  << endl;
   for ( GSIZET k=0; k<GDIM; k++ ) {
-cout << "GHelmholtz::reg_prod: G(" << k << ",0)=" << *G_(k,0) << endl;
     gdu[k]->pointProd(*G_(k,0));
     // Apply p parameter ('viscosity') if necessary to Laplacian:
     if ( p_ != NULLPTR ) {
