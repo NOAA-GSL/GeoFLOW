@@ -61,8 +61,6 @@ lshapefcn_             (NULLPTR)
   }
   global_bdy_types_ = bdytype;
 
-cout << "GGridBox::GGridBox: global_bdy_types_=" << global_bdy_types_ << endl;
-
 
   bPeriodic_.resize(3);
   bPeriodic_ = FALSE;
@@ -356,6 +354,8 @@ void GGridBox::do_grid2d(GINT irank)
         }
       }
     }
+
+cout << "GGrdBox::do_grid2d: bdy_ind=" << *bdy_ind << endl;
 
     gelems_.push_back(pelem);
 
