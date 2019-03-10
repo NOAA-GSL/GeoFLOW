@@ -157,13 +157,13 @@ void GAdvect::reg_prod(GTVector<GFTYPE> &p, const GTVector<GTVector<GFTYPE>*> &u
        && "Insufficient temp space specified");
 
 // Must compute:
-//    po = u . Grad p = W (G1 u1 D1 + G2 u2 D2 + G3 u3 D3 ) p
+//    po = u . Grad p = W J (G1 u1 D1 + G2 u2 D2 + G3 u3 D3 ) p
 //
 // where
 //    D1u = (I_X_I_X_Dx)u; D2u = (I_X_Dy_X_I)u; D3u = (Dz_X_I_X_I)u
-// and Gj are the 'metric' terms computed in the element, dXi^j/dX^j
-// that include the weights and Jacobian. For regular elements, 
-// Gj contain the Jacobians:
+// and Gj are the 'metric' terms computed for the grid, dXi^j/dX^j.
+// For regular elements, these are diagnonal, and we include in G_j
+// Jacobians and weights:
 
 
   // Get derivatives with weights:
@@ -173,11 +173,8 @@ void GAdvect::reg_prod(GTVector<GFTYPE> &p, const GTVector<GTVector<GFTYPE>*> &u
   // Compute po += Gj uj D^j p): 
   po = 0.0;
   for ( GSIZET j=0; j<GDIM; j++ ) { 
-    utmp [j]->pointProd(*G_[j]);   // remember, mass not included in G here
-cout << "GAdvect::reg_prod: (1) utmp[" << j << "]=" << *utmp[j] << endl;
-cout << "GAdvect::reg_prod: u[" << j << "]=" << *u[j] << endl;
-     utmp [j]->pointProd(*u[j]); // do uj * (Gj * Dj p)
-cout << "GAdvect::reg_prod: (2) utmp[" << j << "]=" << *utmp[j] << endl;
+    utmp [j]->pointProd(*G_[j]);   // remember, mass & Jac included in G
+    utmp [j]->pointProd(*u[j]); // do uj * (Gj * Dj p)
     po += *utmp[j];
   }
 
