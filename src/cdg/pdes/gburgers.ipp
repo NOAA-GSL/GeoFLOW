@@ -331,6 +331,7 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
 
   GBOOL  bmultilevel = FALSE;
   GSIZET nstate = u.size();
+  GINT   nop;
 
   // Find multistep/multistage time stepping coefficients:
   GMultilevel_coeffs_base<GFTYPE> *tcoeff_obj=NULLPTR; // time deriv coeffs
@@ -363,7 +364,9 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
       uold_   .resize(nstate); // solution at time level n
       urktmp_ .resize(nstate*(itorder_+1)+1); // RK stepping work space
       urhstmp_.resize(1); // work space for RHS
-      uoptmp_ .resize(utmp_.size()-uold_.size()-urktmp_.size()-urhstmp_.size()); // RHS operator work space
+      nop = utmp_.size()-uold_.size()-urktmp_.size()-urhstmp_.size();
+      assert(nop > 0 && "Invalid operation tmp array specification");
+      uoptmp_ .resize(nop); // RHS operator work space
       for ( GSIZET j=0; j<nstate; j++ ) uold_[j] = utmp_[j];
       for ( GSIZET j=0; j<urktmp_ .size(); j++ ) urktmp_ [j] = utmp_[nstate+j];
       for ( GSIZET j=0; j<urhstmp_.size(); j++ ) urhstmp_[j] = utmp_[nstate+urktmp_.size()+j];
