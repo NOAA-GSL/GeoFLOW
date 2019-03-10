@@ -25,10 +25,11 @@ public:
         void              opVec_prod(GTVector<GFTYPE> &in, 
                                      GTVector<GTVector<GFTYPE>*> &utmp,
                                      GTVector<GFTYPE> &out);                       // Operator-vector product
+        GTVector<GFTYPE>  *data() { return &mass_; }
 //      void              do_mass_lumping(GBOOL bml);                              // Set mass lumping flag
-        void              init();
 
 private:
+        void              init();
         void              init1d();
         void              init2d();
         void              init3d();
