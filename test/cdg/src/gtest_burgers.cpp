@@ -9,6 +9,7 @@
 #include "gexec.h"
 #include "gtypes.h"
 #include <stdio.h>
+#include <math.h>
 #include <unistd.h>
 #include <iostream>
 #include <gptl.h>
@@ -221,10 +222,10 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
 
 
     // Create state and tmp space:
-    utmp_.resize(12);
     
     if      ( solver_traits.doheat   ) nstate = 1;
     else if ( solver_traits.bpureadv ) nstate = GDIM + 1; // 1-state + GDIM  v-components
+    utmp_.resize(16);
     u_.resize(nstate);
     ua_.resize(nstate);
     ub_.resize(nstate);
@@ -265,7 +266,6 @@ cout << "main: u(t=0)=" << *u_[0] << endl;
 cout << "main: entering time loop..." << endl; 
     GPTLstart("time_loop");
     for( GSIZET i=0; i<maxSteps; i++ ){
-cout << "main: ub=" << *ub_[0] << endl; 
       eqn_base->step(t,u_,ub_,dt);
       t += dt;
     }
@@ -292,6 +292,8 @@ cout << "main: time-stepping done." << endl;
 cout << "main: ua(t=0)[" << j << "]=" << *ua_[j] << endl;
 cout << "main: ua(t=0)[" << j << "]_max=" << ua_[j]->max() << endl;
 cout << "main: ua(t=0)[" << j << "]_min=" << ua_[j]->min() << endl;
+cout << "main: u (t)[" << j << "]_max=" << u_[j]->max() << endl;
+cout << "main: u (t)[" << j << "]_min=" << u_[j]->min() << endl;
 cout << "main: nnorm[" << j << "]=" << nnorm[j] << endl;
     }
     
@@ -464,10 +466,10 @@ void compute_percircnwave_burgers(GGrid &grid, GFTYPE &t, const PropertyTree& pt
 //**********************************************************************************
 void compute_pergauss_adv(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVector<GTVector<GFTYPE>*>  &ua)
 {
-  GBOOL            bAdd, bContin;
+  GBOOL            bContin;
   GINT             n;
-  GFTYPE           wsum, prod, argxp, argxm, da, eps=1e-18;
-  GFTYPE           nxy, pint, sig0, ufact=1.0, u0;
+  GFTYPE           wsum, prod, argxp, argxm, da, eps;
+  GFTYPE           nxy, pint, sig0, u0;
   GTVector<GFTYPE> f(GDIM), xx(GDIM), si(GDIM), sig(GDIM);
   GTPoint<GFTYPE>  r0(3), P0(3), gL(3);
 
@@ -477,13 +479,13 @@ void compute_pergauss_adv(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GT
 
   assert(grid.gtype() == GE_REGULAR && "Invalid element types");
 
+  eps = 10.0*std::numeric_limits<GFTYPE>::epsilon();
+
   // Get periodicity length, gL:
   PropertyTree boxptree = ptree.getPropertyTree("grid_box");
   std::vector<GFTYPE> xyz0 = boxptree.getArray<GFTYPE>("xyz0");
   std::vector<GFTYPE> dxyz = boxptree.getArray<GFTYPE>("delxyz");
   P0 = xyz0; r0 = dxyz; gL = P0 + r0;
-
-  bAdd = FALSE; // add solution to existing ua
 
   nxy = (*xnodes)[0].size(); // same size for x, y, z
   
@@ -493,15 +495,22 @@ void compute_pergauss_adv(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GT
   sig0  = heatptree.getValue<GFTYPE>("sigma"); 
   u0    = heatptree.getValue<GFTYPE>("u0"); 
 
-  // Set adv velocity components:
+  // Set adv velocity components. Note:
+  // First state elem is the scalar solution, and
+  // the remainder are the velocity components:
   GTVector<GTVector<GFTYPE>*> c(GDIM);
 
   for ( GSIZET k=0; k<GDIM; k++ ) {
-    sig[k] = sqrt(sig0*sig0 + 2.0*t*nu_[k]);
+    sig[k] = sqrt(sig0*sig0 + 2.0*t*nu_[0]);
     si [k] = 0.5/(sig[k]*sig[k]);
-    c  [k] = ua[k+1];
+    c  [k] = ua[k+1]; // velocity components
   }
-  ufact = bAdd ? 1.0 : 0.0;
+
+  // Set velocity here:
+  *c[0]  = 1.0;
+  *c[1]  = 1.0;
+  if ( GDIM > 2 ) *c[2]  = 1.0;
+
 
   for ( GSIZET j=0; j<nxy; j++ ) {
     for ( GSIZET i=0; i<GDIM; i++ ) {
@@ -525,7 +534,7 @@ void compute_pergauss_adv(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GT
       }
       prod *= wsum;
     }
-    (*ua[0])[j] = (*ua[0])[j]*ufact + u0*pow(sig0,2)/pow(sig[0],2)*prod;
+    (*ua[0])[j] = u0*pow(sig0,2)/pow(sig[0],2)*prod;
   }
 
   
@@ -580,7 +589,7 @@ void compute_dirgauss_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
   // Account for case where nu is anisotropic (for later, maybe):
   for ( GSIZET k=0; k<GDIM; k++ ) {
     sig[k] = sqrt(sig0*sig0 + 2.0*t*nu_[0]); // scalar viscosity only
-    si [k] = 1.0/(sig[k]*sig[k]);
+    si [k] = 0.5/(sig[k]*sig[k]);
     ufact[k] = u0*pow(sig0,2)/pow(sig[0],2);
   }
 
@@ -588,7 +597,7 @@ void compute_dirgauss_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
   for ( GSIZET j=0; j<nxy; j++ ) {
     for ( GSIZET i=0; i<GDIM; i++ ) xx[i] = (*xnodes)[i][j] - r0[i];
     argxp = 0.0;
-    for ( GSIZET i=0; i<GDIM; i++ ) argxp += -0.5*pow(xx[i],2.0)*si[i];
+    for ( GSIZET i=0; i<GDIM; i++ ) argxp += -pow(xx[i],2.0)*si[i];
    (*ua[0])[j] = ufact[0]*exp(argxp);
   }
 
@@ -608,10 +617,10 @@ void compute_dirgauss_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
 //**********************************************************************************
 void compute_pergauss_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVector<GTVector<GFTYPE>*> &ua)
 {
-  GBOOL            bAdd, bContin;
+  GBOOL            bContin;
   GINT             n;
-  GFTYPE           wsum, prod, argxp, argxm, da, eps=1e-18;
-  GFTYPE           nxy, sig0, ufact=1.0, u0;
+  GFTYPE           wsum, prod, argxp, argxm, da, eps;
+  GFTYPE           nxy, sig0, u0;
   GTVector<GFTYPE> xx(GDIM), si(GDIM), sig(GDIM);
   GTPoint<GFTYPE>  r0(3), P0(3), gL(3);
   std::vector<GFTYPE> svec;
@@ -622,6 +631,8 @@ void compute_pergauss_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
 
   assert(grid.gtype() == GE_REGULAR && "Invalid element types");
   
+  eps = 10.0*std::numeric_limits<GFTYPE>::epsilon();
+
   // Get periodicity length, gL:
   PropertyTree boxptree = ptree.getPropertyTree("grid_box");
   std::vector<GFTYPE> xyz0 = boxptree.getArray<GFTYPE>("xyz0");
@@ -638,8 +649,6 @@ void compute_pergauss_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
   assert(bc.multiplicity("GBDY_PERIODIC") >= 2*GDIM 
       && "Periodic boundaries must be set on all boundaries");
 
-  bAdd = FALSE; // add solution to existing ua
-
   nxy = (*xnodes)[0].size(); // same size for x, y, z
   
   r0.x1 = heatptree.getValue<GFTYPE>("x0"); 
@@ -653,7 +662,6 @@ void compute_pergauss_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
 //  si [k] = 0.5/(sig[k]*sig[k]);
     si [k] = 0.5/(sig[k]*sig[k]);
   }
-  ufact = bAdd ? 1.0 : 0.0;
 
   for ( GSIZET j=0; j<nxy; j++ ) {
     for ( GSIZET i=0; i<GDIM; i++ ) xx[i] = (*xnodes)[i][j] - r0[i];
@@ -673,7 +681,11 @@ void compute_pergauss_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
       }
       prod *= wsum;
     }
-    (*ua[0])[j] = (*ua[0])[j]*ufact + u0*pow(sig0,2)/pow(sig[0],2)*prod;
+    (*ua[0])[j] = u0*pow(sig0,2)/pow(sig[0],2)*prod;
+    if ( std::isnan((*ua[0])[j]) ) {
+      cout << "compute_pergauss_heat: NaN at j=" << j << endl;
+      while ( TRUE ) {};
+    }
   }
 
   
