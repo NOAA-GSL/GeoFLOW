@@ -133,6 +133,8 @@ private:
         GTVector<GFTYPE>    acoeffs_;       // coeffs for NL adv term
         GTVector<GFTYPE>    dthist_;        // coeffs for NL adv term
         GTVector<GTVector<GFTYPE>*>  
+                            uevolve_;       // helper array to specify evolved sstate components
+        GTVector<GTVector<GFTYPE>*>  
                             utmp_;
         GTVector<GTVector<GFTYPE>*>  
                             uold_;          // helper arrays set from utmp

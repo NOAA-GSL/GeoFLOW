@@ -215,7 +215,7 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const Time &dt
   // for each u, where c may be indep of u (pure advection):
 
   if ( bpureadv_ ) { // pure linear advection
-    // Remember: only the first element of u is the variable;
+    // Remember: only the first element of u is evolved;
     //           the remainder should be the adv. velocity components: 
     for ( auto j=0; j<u.size()-1; j++ ) c_[j] = u[j+1];
     gadvect_->apply(*u[0], c_, utmp_, *dudt[0]); // apply advection
@@ -242,7 +242,10 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const Time &dt
 // METHOD : step_impl
 // DESC   : Step implementation method entry point
 // ARGS   : t   : time
-//          u   : state
+//          uin : input state, modified on output with update
+//                If doing pure advection, this state contains the *unevolved*
+//                advection velocities, which must be separated from the 
+//                single evolved state variable.
 //          ub  : bdy vector
 //          dt  : time step
 // RETURNS: none.
@@ -251,14 +254,23 @@ template<typename TypePack>
 void GBurgers<TypePack>::step_impl(const Time &t, State &uin, State &ub, const Time &dt)
 {
 
+  // Set evolved state vars from input state:
+  if ( bpureadv_ ) {
+    for ( GSIZET j=0; j<c_.size(); j++ ) c_ [j] = uin[1+j];
+    uevolve_[0] = uin[0];
+  }
+  else {
+    for ( GSIZET j=0; j<uin.size(); j++ ) uevolve_ [j] = uin[j];
+  }
+
   switch ( isteptype_ ) {
     case GSTEPPER_EXRK:
-      for ( GSIZET j=0; j<uin.size(); j++ ) *uold_[j] = *uin[j];
-      step_exrk(t, uold_, ub, dt, uin);
+      for ( GSIZET j=0; j<uevolve_.size(); j++ ) *uold_[j] = *uevolve_[j];
+      step_exrk(t, uold_, ub, dt, uevolve_);
       break;
     case GSTEPPER_BDFAB:
     case GSTEPPER_BDFEXT:
-      step_multistep(t, uin, ub, dt);
+      step_multistep(t, uevolve_, ub, dt);
       break;
   }
   
@@ -330,12 +342,20 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
   GString serr = "GBurgers<TypePack>::init: ";
 
   GBOOL  bmultilevel = FALSE;
-  GSIZET nstate = u.size();
+  GSIZET nstate = bpureadv_ ? 1 : u.size();
   GINT   nop;
 
   // Find multistep/multistage time stepping coefficients:
   GMultilevel_coeffs_base<GFTYPE> *tcoeff_obj=NULLPTR; // time deriv coeffs
   GMultilevel_coeffs_base<GFTYPE> *acoeff_obj=NULLPTR; // adv op. coeffs
+
+  // If doing pure advection, set advection 
+  // components from input state vector, so
+  // allocate size:
+  if ( bpureadv_ ) {
+    c_.resize(GDIM);    // adevective vel components
+    uevolve_.resize(1); // state var to evolve
+  }
 
   std::function<void(const Time &t,                    // RHS callback function
                      const State  &uin,
@@ -434,8 +454,7 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
   // If doing linear advection, set up a helper vector for
   // linear velocity:
   if ( bpureadv_ ) { 
-    c_.resize(u.size()-1);
-    for ( auto j=0; j<c_.size(); j++ ) c_[j] = u[j+1];
+    c_.resize(GDIM);
   }
 
   // If doing a multi-step method, instantiate (deep) space for 
