@@ -10,6 +10,7 @@
 #include <memory>
 #include <cmath>
 #include <limits>
+#include <gptl.h>
 #include "gelem_base.hpp"
 #include "ggrid.hpp"
 #include "gcomm.hpp"
@@ -339,8 +340,13 @@ GFTYPE GGrid::maxlength()
 void GGrid::grid_init()
 {
 
+  GPTLstart("GGrid::grid_init: do_grid");
   do_grid(); // generate element list from derived class
+  GPTLstop("GGrid::grid_init: do_grid");
+
+  GPTLstart("GGrid::grid_init: do_typing");
   do_typing(); // do element-typing check
+  GPTLstop("GGrid::grid_init: do_typing");
 
   // Have elements been set yet?
   assert(gelems_.size() > 0 && "Elements not set");
@@ -354,19 +360,27 @@ void GGrid::grid_init()
   else if ( itype_[GE_DEFORMED]  .size() > 0 ) gtype_ = GE_DEFORMED;
   else if ( itype_[GE_REGULAR]   .size() > 0 ) gtype_ = GE_REGULAR;
 
+  GPTLstart("GGrid::grid_init: init_bc_info");
   // All element bdy/face data should have been set by now:
   init_bc_info();
+  GPTLstop("GGrid::grid_init: init_bc_info");
 
+  GPTLstart("GGrid::grid_init: def_init");
   if ( itype_[GE_2DEMBEDDED].size() > 0
     || itype_  [GE_DEFORMED].size() > 0 ) {
     def_init();
   }
+  GPTLstop("GGrid::grid_init: def_init");
 
+  GPTLstart("GGrid::grid_init: reg_init");
   if ( itype_[GE_REGULAR].size() > 0 ) {
     reg_init();
   }
+  GPTLstop("GGrid::grid_init: reg_init");
 
+  GPTLstart("GGrid::grid_init: find_min_dist");
   minnodedist_ = find_min_dist();
+  GPTLstop("GGrid::grid_init: find_min_dist");
 
   bInitialized_ = TRUE;
 
@@ -805,24 +819,50 @@ void GGrid::init_bc_info()
   // Collect all element bdy types and indicection indices
   // into global vectors (so we can use the GTVector 
   // to do sorting):
-  GSIZET              nn=0; 
+  GSIZET        m, n, nn=0; 
   GSIZET                ig; 
   GTVector <GBdyType> btmp; 
   GTVector   <GSIZET> itmp; 
-  for ( GSIZET e=0; e<gelems_.size(); e++ ) {
+
+  // Set some array sizes. Note: we could use
+  // push_back, but this is slow:
+  n = 0;
+  for ( GSIZET e=0; e<gelems_.size(); e++ ) { // get global # bdy indices and types
+    iebdy  = &gelems_[e]->bdy_indices();  // set in child class
+    n += iebdy->size();
+  }
+  itmp.resize(n);
+  btmp.resize(n);
+
+  n = 0;
+  for ( GSIZET e=0; e<gelems_.size(); e++ ) { // get global # face nodes
+    ieface = &gelems_[e]->face_indices(); // set in child class
+    for ( GSIZET j=0; j<ieface->size(); j++ ) { // elem faces
+      for ( GSIZET k=0; k<(*ieface)[j].size(); k++) n++; 
+    }
+  }
+  igface_.resize(n);
+
+  nn = 0; // global reference index
+  n  = 0;
+  m  = 0;
+  for ( GSIZET e=0; e<gelems_.size(); e++ ) { // get global bdy ind and types
     ibeg   = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
     iebdy  = &gelems_[e]->bdy_indices();  // set in child class
     ieface = &gelems_[e]->face_indices(); // set in child class
     iebdyt = &gelems_[e]->bdy_types();    // set in child class
     for ( GSIZET j=0; j<iebdy->size(); j++ ) { // elem bdys (if any)
       ig = nn + (*iebdy)[j];
-      itmp.push_back(ig); // index in global arrays
-      btmp.push_back((*iebdyt)[j]);
+      itmp[n] = ig; // index in global arrays
+      btmp[n] = (*iebdyt)[j];
+      n++;
     }
-    for ( GSIZET j=0; j<ieface->size(); j++ ) { // elem faces
+
+    for ( GSIZET j=0; j<ieface->size(); j++ ) { // get global elem face node idices
       for ( GSIZET k=0; k<(*ieface)[j].size(); k++ ) {
         ig = nn + (*ieface)[j][k];
-        igface_.push_back(ig);
+        igface_[m] = ig;
+        m++;
       }
     }
     nn += gelems_[e]->nnodes();
