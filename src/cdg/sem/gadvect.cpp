@@ -30,6 +30,7 @@ GAdvect::GAdvect(GGrid &grid)
 bInitialized_   (FALSE),
 grid_           (&grid)
 {
+  init();
 } // end of constructor method (1)
 
 
