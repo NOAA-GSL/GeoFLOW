@@ -15,8 +15,9 @@
 #include "gadvect.hpp"
 #include "gtmatrix.hpp"
 #include "gmtk.hpp"
+#include "gmass.hpp"
 
-
+using namespace std;
 
 //**********************************************************************************
 //**********************************************************************************
@@ -156,24 +157,28 @@ void GAdvect::reg_prod(GTVector<GFTYPE> &p, const GTVector<GTVector<GFTYPE>*> &u
        && "Insufficient temp space specified");
 
 // Must compute:
-//    po = u . Grad p = W J (G1 u1 D1 + G2 u2 D2 + G3 u3 D3 ) p
+//    po = u . Grad p = W (G1 u1 D1 + G2 u2 D2 + G3 u3 D3 ) p
 //
 // where
 //    D1u = (I_X_I_X_Dx)u; D2u = (I_X_Dy_X_I)u; D3u = (Dz_X_I_X_I)u
 // and Gj are the 'metric' terms computed in the element, dXi^j/dX^j
 // that include the weights and Jacobian. For regular elements, 
-// Gj are constant in each direction (but not necessarily all equal), 
-// as is the Jacobian. Weights are included in the derivatives:
+// Gj contain the Jacobians:
+
 
   // Get derivatives with weights:
-  GMTK::compute_grefderivsW(*grid_, p, etmp1_, FALSE, utmp); // utmp stores tensor-prod derivatives, Dj p
+  GMTK::compute_grefderivs(*grid_, p, etmp1_, FALSE, utmp); // utmp stores tensor-prod derivatives, W Dj p
 
-  // Compute po += Rj uj D^j p): 
+
+  // Compute po += Gj uj D^j p): 
   po = 0.0;
   for ( GSIZET j=0; j<GDIM; j++ ) { 
-    *utmp [j] *= (*G_[j])[0];   // remember, mass not included in G here
+    utmp [j]->pointProd(*G_[j]);   // remember, mass not included in G here
+cout << "GAdvect::reg_prod: (1) utmp[" << j << "]=" << *utmp[j] << endl;
+cout << "GAdvect::reg_prod: u[" << j << "]=" << *u[j] << endl;
      utmp [j]->pointProd(*u[j]); // do uj * (Gj * Dj p)
-    po += *utmp[GDIM];
+cout << "GAdvect::reg_prod: (2) utmp[" << j << "]=" << *utmp[j] << endl;
+    po += *utmp[j];
   }
 
 } // end of method reg_prod
@@ -305,8 +310,9 @@ void GAdvect::reg_init()
 
   GTVector<GSIZET>             N(GDIM);
   GTMatrix<GTVector<GFTYPE>>  *dXidX;    // dXi/dX matrix
-  GTVector<GFTYPE>            *Jac;      // Jacobian  
   GElemList                   *gelems = &grid_->elems();
+  GTVector<GFTYPE>            *Jac;      // element-based Jacobian
+  GMass                        mass(*grid_);
 
   // Compute 'metric' components:
   // Gi = [dxi/dx, deta/dy, dzeta/dz]; 
@@ -325,28 +331,24 @@ void GAdvect::reg_init()
   //  G1 = dXi^1/dX^1 = 2 / L1
   //  G2 = dXi^2/dX^2 = 2 / L2
   //  G3 = dXi^3/dX^3 = 2 / L3
-  // These values should already be set in dXidX data within each
-  // element.
+  // These values should already be set in grid object
   Jac   = &grid_->Jac();
   dXidX = &grid_->dXidX();
 
-  GSIZET nxy = grid_->gtype() == GE_2DEMBEDDED ? GDIM+1: GDIM;
+  GSIZET nxy = GDIM;
   GSIZET ibeg, iend; // beg, end indices for global array
   G_ .resize(nxy);
   G_ = NULLPTR;
   for ( GSIZET j=0; j<nxy; j++ ) {
-    G_ [j] = new GTVector<GFTYPE>(1);
-    G_ [j]->bconstdata(TRUE); // treat as constant; any access returns constant
+    G_ [j] = new GTVector<GFTYPE>(grid_->ndof());
   }
 
-  // Cycle through all elements; fill metric elements
-  for ( GSIZET e=0; e<grid_->elems().size(); e++ ) {
-
-
-    for ( GSIZET j=0; j<GDIM; j++ ) {
-      (*G_[j])[0] = (*dXidX)(j,0)[0]*(*Jac)[0];
-    }
-  } // end, element list
+  // Set G_, and include Jacobian:
+  for ( GSIZET j=0; j<GDIM; j++ ) {
+   *G_[j] = (*dXidX)(j,0);
+    G_[j]->pointProd(*Jac);
+    G_[j]->pointProd(*(mass.data()));
+  }
 
 
 } // end of method reg_init
