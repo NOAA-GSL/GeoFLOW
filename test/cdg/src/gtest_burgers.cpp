@@ -55,6 +55,7 @@ struct EquationTypes {
 
 GGrid *grid_;
 GTVector<GTVector<GFTYPE>*> u_;
+GTVector<GTVector<GFTYPE>*> c_;
 GTVector<GTVector<GFTYPE>*> ua_;
 GTVector<GTVector<GFTYPE>*> ub_;
 GTVector<GTVector<GFTYPE>*> utmp_;
@@ -85,6 +86,7 @@ int main(int argc, char **argv)
     GINT   ilevel=0;// 2d ICOS refinement level
     GINT   np=1;    // elem 'order'
     GINT   nstate=GDIM;  // number 'state' arrays
+    GINT   nsolve=GDIM;  // number *solved* 'state' arrays
     GSIZET maxSteps;
     GFTYPE radiusi=1, radiuso=2;
     std::vector<GINT> ne(3); // # elements in each direction in 3d
@@ -223,16 +225,18 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
 
     // Create state and tmp space:
     
-    if      ( solver_traits.doheat   ) nstate = 1;
-    else if ( solver_traits.bpureadv ) nstate = GDIM + 1; // 1-state + GDIM  v-components
-    utmp_.resize(16);
+    if      ( solver_traits.doheat   ) { nstate =  nsolve = 1; } 
+    else if ( solver_traits.bpureadv ) { nstate = GDIM + 1; nsolve = 1;} // 1-state + GDIM  v-components
+    utmp_.resize(24);
     u_.resize(nstate);
-    ua_.resize(nstate);
-    ub_.resize(nstate);
+    ua_.resize(nsolve);
+    ub_.resize(nsolve);
+    c_ .resize(GDIM);
     for ( GSIZET j=0; j<utmp_.size(); j++ ) utmp_[j] = new GTVector<GFTYPE>(grid_->size());
     for ( GSIZET j=0; j<u_   .size(); j++ ) u_   [j] = new GTVector<GFTYPE>(grid_->size());
     for ( GSIZET j=0; j<ua_  .size(); j++ ) ua_  [j] = new GTVector<GFTYPE>(grid_->size());
     for ( GSIZET j=0; j<ub_  .size(); j++ ) ub_  [j] = new GTVector<GFTYPE>(grid_->nbdydof());
+    for ( GSIZET j=0; j<c_   .size(); j++ ) c_   [j] = u_[j+1];
 
     // Create observer(s), equations, integrator:
     std::shared_ptr<EqnImpl> eqn_impl(new EqnImpl(ggfx, *grid_, u_, solver_traits, utmp_));
@@ -277,7 +281,7 @@ cout << "main: time-stepping done." << endl;
     // Compute analytic solution, do comparisons:
     GFTYPE tt;
     GTVector<GFTYPE> lnorm(3), gnorm(3), maxerror(3);
-    GTVector<GFTYPE> nnorm(ua_.size());
+    GTVector<GFTYPE> nnorm(nsolve);
     
     maxerror = 0.0;
     lnorm    = 0.0;  
@@ -285,7 +289,7 @@ cout << "main: time-stepping done." << endl;
   
     tt = 0.0;
     compute_analytic(*grid_, tt, ptree, ua_); // analyt soln at t=0
-    for ( GSIZET j=0; j<u_.size(); j++ ) { //local errors
+    for ( GSIZET j=0; j<nsolve; j++ ) { //local errors
       for ( GSIZET i=0; i<ua_[j]->size(); i++ ) lnorm[0] = MAX(lnorm[0],fabs((*ua_[j])[i]));
  //   nnorm[j] = grid_->integrate(*ua_  [j],*utmp_[0]) ; // L2 norm of analyt soln at t=0
 //    GComm::Allreduce(lnorm.data()  , nnorm.data()  , 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm);
@@ -298,7 +302,7 @@ cout << "main: nnorm[" << j << "]=" << nnorm[j] << endl;
     }
     
     compute_analytic(*grid_, t, ptree, ua_); // analyt soln at t
-    for ( GSIZET j=0; j<u_.size(); j++ ) { //local errors
+    for ( GSIZET j=0; j<nsolve; j++ ) { //local errors
 cout << "main: u [0]=" << *u_ [j] << endl;
 cout << "main: ua(t)=" << *ua_[j] << endl;
       *utmp_[0] = *u_[j] - *ua_[j];
@@ -377,7 +381,7 @@ void update_dirichlet(const GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u, GTVector<
 
   // ...GBDY_DIRICHLET:
   // Set from State vector, ua_:
-  for ( GSIZET k=0; k<u.size(); k++ ) { 
+  for ( GSIZET k=0; k<ua_.size(); k++ ) { 
     for ( GSIZET j=0; j<(*igbdy)[GBDY_DIRICHLET].size(); j++ ) {
       (*ub[k])[j] = (*ua_[k])[(*igbdy)[GBDY_DIRICHLET][j]];
     }
@@ -498,25 +502,24 @@ void compute_pergauss_adv(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GT
   // Set adv velocity components. Note:
   // First state elem is the scalar solution, and
   // the remainder are the velocity components:
-  GTVector<GTVector<GFTYPE>*> c(GDIM);
 
-  for ( GSIZET k=0; k<GDIM; k++ ) {
-    sig[k] = sqrt(sig0*sig0 + 2.0*t*nu_[0]);
-    si [k] = 0.5/(sig[k]*sig[k]);
-    c  [k] = ua[k+1]; // velocity components
+  for ( GSIZET j=0; j<GDIM; j++ ) {
+    sig[j] = sqrt(sig0*sig0 + 2.0*t*nu_[0]);
+    si [j] = 0.5/(sig[j]*sig[j]);
   }
 
-  // Set velocity here:
-  *c[0]  = 1.0;
-  *c[1]  = 1.0;
-  if ( GDIM > 2 ) *c[2]  = 1.0;
+  // Set velocity here. These point 
+  // to components of u_:
+  *c_[0]  = 1.0;
+  *c_[1]  = 0.0;
+  if ( GDIM > 2 ) *c_[2]  = 0.0;
 
 
   for ( GSIZET j=0; j<nxy; j++ ) {
-    for ( GSIZET i=0; i<GDIM; i++ ) {
-      f [i] = modf((*c[i])[j]*t/gL[i],&pint);
-      xx[i] = (*xnodes)[i][j] - r0[i] - f[i]*gL[i];
 
+    for ( GSIZET k=0; k<GDIM; k++ ) {
+      f [k] = modf((*c_[k])[j]*t/gL[k],&pint);
+      xx[k] = (*xnodes)[k][j] - r0[k] - f[k]*gL[k];
     }
 
     prod = 1.0;
@@ -535,6 +538,7 @@ void compute_pergauss_adv(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GT
       prod *= wsum;
     }
     (*ua[0])[j] = u0*pow(sig0,2)/pow(sig[0],2)*prod;
+
   }
 
   
