@@ -1045,7 +1045,6 @@ void GGFX::initMult()
   }
 
 cout << "GGFX::initMult: mult = " << mult << endl;
-cout << "GGFX::initMult: imult = " << imult_ << endl;
 
 } // end of method initMult
 
