@@ -185,7 +185,7 @@ cout << "main: load_file done." << endl;
     solver_traits.inorder    = stepptree.getValue <GINT>("extrap_order");
     nu_scalar                = dissptree.getValue<GFTYPE>("nu");
     nu_.resize(1); 
-    nu_[0] = nu_scalar; 
+    nu_ = nu_scalar; 
     GTVector<GString> ssteppers;
     for ( GSIZET j=0; j<GSTEPPER_MAX; j++ ) ssteppers.push_back(sGStepperType[j]);
     GSIZET itype; 
@@ -266,20 +266,19 @@ cout << "main: Initializing state..." << endl;
     t = 0.0;
     compute_analytic(*grid_, t, ptree, u_);
 cout << "main: State initiallized." << endl; 
-
 cout << "main: u(t=0)=" << *u_[0] << endl;
-cout << "main: entering time loop..." << endl; 
+
     GPTLstart("time_loop");
     for( GSIZET i=0; i<maxSteps; i++ ){
       eqn_base->step(t,u_,ub_,dt);
       t += dt;
     }
     GPTLstop("time_loop");
-cout << "main: time-stepping done." << endl; 
 
 
 #if 1
     // Compute analytic solution, do comparisons:
+    GSIZET iwhere, iwherea;
     GFTYPE tt;
     GTVector<GFTYPE> lnorm(3), gnorm(3), maxerror(3);
     GTVector<GFTYPE> nnorm(nsolve);
@@ -294,20 +293,27 @@ cout << "main: time-stepping done." << endl;
       for ( GSIZET i=0; i<ua_[j]->size(); i++ ) lnorm[0] = MAX(lnorm[0],fabs((*ua_[j])[i]));
  //   nnorm[j] = grid_->integrate(*ua_  [j],*utmp_[0]) ; // L2 norm of analyt soln at t=0
 //    GComm::Allreduce(lnorm.data()  , nnorm.data()  , 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm);
+      ua_[j]->maxp(iwherea);
+      u_ [j]->maxp(iwhere);
 cout << "main: ua(t=0)[" << j << "]=" << *ua_[j] << endl;
 cout << "main: ua(t=0)[" << j << "]_max=" << ua_[j]->max() << endl;
+cout << "main: ua(t=0)[" << j << "]_maxp=" << iwherea << endl;
 cout << "main: ua(t=0)[" << j << "]_min=" << ua_[j]->min() << endl;
 cout << "main: u (t)[" << j << "]_max=" << u_[j]->max() << endl;
+cout << "main: u (t)[" << j << "]_maxp=" << iwhere << endl;
 cout << "main: u (t)[" << j << "]_min=" << u_[j]->min() << endl;
 cout << "main: nnorm[" << j << "]=" << nnorm[j] << endl;
     }
     
     compute_analytic(*grid_, t, ptree, ua_); // analyt soln at t
     for ( GSIZET j=0; j<nsolve; j++ ) { //local errors
-cout << "main: u [0]=" << *u_ [j] << endl;
-cout << "main: ua(t)=" << *ua_[j] << endl;
+      ua_[j]->maxp(iwherea);
+      u_ [j]->maxp(iwhere);
+cout << "main: u [t=" << t << "]=" << *u_ [ j] << endl;
+cout << "main: ua[t=" << t << "]=" << *ua_ [j] << endl;
+cout << "main: maxp(u)=" << iwhere << " maxp(ua)=" << iwherea << endl;
       *utmp_[0] = *u_[j] - *ua_[j];
-cout << "main: diff[" << j << "]=" << *utmp_[0] << endl;
+cout << "main: u - ua[" << j << "]=" << *utmp_[0] << endl;
       for ( GSIZET i=0; i<utmp_[1]->size(); i++ ) (*utmp_[1])[i] = fabs((*utmp_[0])[i]);
       for ( GSIZET i=0; i<utmp_[1]->size(); i++ ) (*utmp_[2])[i] = pow((*utmp_[0])[i],2);
 
@@ -415,13 +421,13 @@ void compute_percircnwave_burgers(GGrid &grid, GFTYPE &t, const PropertyTree& pt
   GTPoint<GFTYPE>  r0(3), P0(3), gL(3);
 
   PropertyTree heatptree = ptree.getPropertyTree("init_lump");
+  PropertyTree boxptree = ptree.getPropertyTree("grid_box");
 
   GTVector<GTVector<GFTYPE>> *xnodes = &grid_->xNodes();
 
   assert(grid.gtype() == GE_REGULAR && "Invalid element types");
 
   // Get periodicity length, gL:
-  PropertyTree boxptree = ptree.getPropertyTree("grid_box");
   std::vector<GFTYPE> xyz0 = boxptree.getArray<GFTYPE>("xyz0");
   std::vector<GFTYPE> dxyz = boxptree.getArray<GFTYPE>("delxyz");
   P0 = xyz0; r0 = dxyz; gL = P0 + r0;
@@ -461,6 +467,75 @@ void compute_percircnwave_burgers(GGrid &grid, GFTYPE &t, const PropertyTree& pt
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD: compute_dirgauss_adv
+// DESC  : Compute solution to pure advection equation with 
+//         GBDY_DIRICHLET bcs, a Gaussian 'lump'. Must use box grid.
+// ARGS  : grid    : GGrid object
+//         t       : time
+//         ptree   : main property tree
+//         ua      : return solution
+//**********************************************************************************
+void compute_dirgauss_adv(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVector<GTVector<GFTYPE>*>  &ua)
+{
+  GBOOL            bContin;
+  GINT             n;
+  GFTYPE           argxp; 
+  GFTYPE           nxy, sig0, u0;
+  GTVector<GFTYPE> xx(GDIM), si(GDIM), sig(GDIM), ufact(GDIM);
+  GTPoint<GFTYPE>  r0(3), P0(3);
+
+  PropertyTree heatptree = ptree.getPropertyTree("init_lump");
+  PropertyTree boxptree = ptree.getPropertyTree("grid_box");
+
+  GTVector<GTVector<GFTYPE>> *xnodes = &grid_->xNodes();
+
+  assert(grid.gtype() == GE_REGULAR && "Invalid element types");
+
+  // Check bdy conditioins:
+  GTVector<GString> bc(6);
+  bc[0] = boxptree.getValue<GString>("bdy_x_0");
+  bc[1] = boxptree.getValue<GString>("bdy_x_1");
+  bc[2] = boxptree.getValue<GString>("bdy_y_0");
+  bc[3] = boxptree.getValue<GString>("bdy_y_1");
+  bc[4] = boxptree.getValue<GString>("bdy_z_0");
+  bc[5] = boxptree.getValue<GString>("bdy_z_1");
+  assert(bc.multiplicity("GBDY_DIRICHLET") >= 2*GDIM 
+      && "Dirichlet boundaries must be set on all boundaries");
+
+  nxy = (*xnodes)[0].size(); // same size for x, y, z
+  
+  r0.x1 = heatptree.getValue<GFTYPE>("x0"); 
+  r0.x2 = heatptree.getValue<GFTYPE>("y0"); 
+  r0.x3 = heatptree.getValue<GFTYPE>("z0"); 
+  sig0  = heatptree.getValue<GFTYPE>("sigma"); 
+  u0    = heatptree.getValue<GFTYPE>("u0"); 
+
+  // Set velocity here. May be a function of time.
+  // These point to components of state u_:
+  *c_[0]  = 1.0;
+  *c_[1]  = 0.0;
+  if ( GDIM > 2 ) *c_[2]  = 0.0;
+
+  // Prepare for case where sig is anisotropic (for later, maybe):
+  for ( GSIZET k=0; k<GDIM; k++ ) {
+    sig  [k] = sqrt(sig0*sig0 + 2.0*t*nu_[0]); // scalar viscosity only
+    si   [k] = 0.5/(sig[k]*sig[k]);
+    ufact[k] = u0*pow(sig0,2)/pow(sig[k],2);
+  }
+
+  // Ok, return to assumption of isotropic nu: 
+  for ( GSIZET j=0; j<nxy; j++ ) {
+    for ( GSIZET i=0; i<GDIM; i++ ) xx[i] = (*xnodes)[i][j] - r0[i] - (*c_[i])[j]*t;
+    argxp = 0.0;
+    for ( GSIZET i=0; i<GDIM; i++ ) argxp += -pow(xx[i],2.0)*si[i];
+   (*ua[0])[j] = ufact[0]*exp(argxp);
+  }
+  
+} // end, compute_dirgauss_adv
+
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD: compute_pergauss_adv
 // DESC  : Compute solution to pure advection equation with 
 //         GBDY_PERIODIC bcs, a Gaussian 'lump'. Must use box grid.
@@ -479,6 +554,7 @@ void compute_pergauss_adv(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GT
   GTPoint<GFTYPE>  r0(3), P0(3), gL(3);
 
   PropertyTree heatptree = ptree.getPropertyTree("init_lump");
+  PropertyTree boxptree = ptree.getPropertyTree("grid_box");
 
   GTVector<GTVector<GFTYPE>> *xnodes = &grid_->xNodes();
 
@@ -487,10 +563,19 @@ void compute_pergauss_adv(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GT
   eps = 10.0*std::numeric_limits<GFTYPE>::epsilon();
 
   // Get periodicity length, gL:
-  PropertyTree boxptree = ptree.getPropertyTree("grid_box");
   std::vector<GFTYPE> xyz0 = boxptree.getArray<GFTYPE>("xyz0");
   std::vector<GFTYPE> dxyz = boxptree.getArray<GFTYPE>("delxyz");
   P0 = xyz0; r0 = dxyz; gL = P0 + r0;
+
+  GTVector<GString> bc(6);
+  bc[0] = boxptree.getValue<GString>("bdy_x_0");
+  bc[1] = boxptree.getValue<GString>("bdy_x_1");
+  bc[2] = boxptree.getValue<GString>("bdy_y_0");
+  bc[3] = boxptree.getValue<GString>("bdy_y_1");
+  bc[4] = boxptree.getValue<GString>("bdy_z_0");
+  bc[5] = boxptree.getValue<GString>("bdy_z_1");
+  assert(bc.multiplicity("GBDY_PERIODIC") >= 2*GDIM
+      && "Periodic boundaries must be set on all boundaries");
 
   nxy = (*xnodes)[0].size(); // same size for x, y, z
   
@@ -509,8 +594,8 @@ void compute_pergauss_adv(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GT
     si [j] = 0.5/(sig[j]*sig[j]);
   }
 
-  // Set velocity here. These point 
-  // to components of state u_:
+  // Set velocity here. May be a function of time.
+  // These point to components of state u_:
   *c_[0]  = 1.0;
   *c_[1]  = 0.0;
   if ( GDIM > 2 ) *c_[2]  = 0.0;
@@ -525,14 +610,14 @@ void compute_pergauss_adv(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GT
 
     prod = 1.0;
     for ( GSIZET k=0; k<GDIM; k++ ) {
-      wsum     = exp(-xx[k]*xx[k]*si[k]);
+      wsum    = exp(-xx[k]*xx[k]*si[k]);
       n       = 1;
       bContin = TRUE;
       while ( bContin ) {
-        argxp = -pow((xx[k]+n*gL[k]),2.0)*si[k];
-        argxm = -pow((xx[k]-n*gL[k]),2.0)*si[k];
-        da    =  exp(argxp) + exp(argxm);
-        wsum  += da;
+        argxp   = -pow((xx[k]+n*gL[k]),2.0)*si[k];
+        argxm   = -pow((xx[k]-n*gL[k]),2.0)*si[k];
+        da      = exp(argxp + argxm);
+        wsum   += da;
         bContin = da/wsum > eps;
         n++;
       }
@@ -591,7 +676,7 @@ void compute_dirgauss_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
   sig0  = heatptree.getValue<GFTYPE>("sigma"); 
   u0    = heatptree.getValue<GFTYPE>("u0"); 
 
-  // Account for case where nu is anisotropic (for later, maybe):
+  // Prepare for case where sig is anisotropic (for later, maybe):
   for ( GSIZET k=0; k<GDIM; k++ ) {
     sig[k] = sqrt(sig0*sig0 + 2.0*t*nu_[0]); // scalar viscosity only
     si [k] = 0.5/(sig[k]*sig[k]);
@@ -664,7 +749,6 @@ void compute_pergauss_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
 
   for ( GSIZET k=0; k<GDIM; k++ ) {
     sig[k] = sqrt(sig0*sig0 + 2.0*t*nu_[0]); // scalar viscosity only
-//  si [k] = 0.5/(sig[k]*sig[k]);
     si [k] = 0.5/(sig[k]*sig[k]);
   }
 
@@ -679,7 +763,7 @@ void compute_pergauss_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
       while ( bContin ) {
         argxp = -pow((xx[k]+n*gL[k]),2.0)*si[k];
         argxm = -pow((xx[k]-n*gL[k]),2.0)*si[k];
-        da    =  exp(argxp) + exp(argxm);
+        da    =  exp(argxp + argxm);
         wsum  += da;
         bContin = da/wsum > eps;
         n++;
@@ -737,7 +821,11 @@ void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVecto
   // Inititialize for pure advection:
   if ( bpureadv ) {
     if ( sblock == "init_lump"  ) {
+      if ( sbcs == "PERIODIC" ) {
       compute_pergauss_adv(grid, t, ptree, ua);
+      } else { // is DIRICHLET
+      compute_dirgauss_adv(grid, t, ptree, ua);
+      }
     }
     else {
       assert(FALSE && "Invalid pure adv equation initialization specified");
