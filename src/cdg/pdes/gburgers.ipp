@@ -79,6 +79,7 @@ update_bdy_callback_  (NULLPTR)
   static_assert(std::is_same<State,GTVector<GTVector<GFTYPE>*>>::value,
                 "State is of incorrect type"); 
   assert(tmp.size() >= req_tmp_size() && "Insufficient tmp space provided");
+  assert(doheat_ != bpureadv_ && "Invalid PDE configuration");
 
   valid_types_.resize(4);
   valid_types_[0] = GSTEPPER_EXRK;
@@ -215,21 +216,20 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const Time &dt
   // for each u, where c may be indep of u (pure advection):
 
   if ( bpureadv_ ) { // pure linear advection
-    // Remember: only the first element of u is evolved;
-    //           the remainder should be the adv. velocity components: 
-    for ( auto j=0; j<u.size()-1; j++ ) c_[j] = u[j+1];
-    gadvect_->apply(*u[0], c_, utmp_, *dudt[0]); // apply advection
-    ghelm_->opVec_prod(*u[0], uoptmp_, *utmp_[0]); // apply diffusion
-    *utmp_[0] *= -1.0; // Lap op is negative on RHS
-    *utmp_[0] -= *dudt[0]; // subtract advection term
-    gimass_->opVec_prod(*utmp_[0], uoptmp_, *dudt[0]); // apply M^-1
+    // Remember: adv. velocity, c_ should already be set in
+    //           main entry point, step_impl() method:
+    gadvect_->apply   (*u[0], c_ , uoptmp_, *dudt[0]); // apply advection
+    ghelm_->opVec_prod(*u[0], uoptmp_, *urhstmp_[0]); // apply diffusion
+   *urhstmp_[0] *= -1.0; // Lap op is negative on RHS
+   *urhstmp_[0] -= *dudt[0]; // subtract advection term
+    gimass_->opVec_prod(*urhstmp_[0], uoptmp_, *dudt[0]); // apply M^-1
   }
   else {             // nonlinear advection
-    for ( auto k=0; k<u.size(); k++ ) {
-      gadvect_->apply(*u[k], u, urhstmp_, *dudt[k]);
+    for ( auto k=0; k<GDIM; k++ ) {
+      gadvect_->apply(*u[k], u, uoptmp_, *dudt[k]);     // apply advection
       ghelm_->opVec_prod(*u[k], uoptmp_, *urhstmp_[0]); // apply diffusion
-      *utmp_[0] *= -1.0; // is negative on RHS
-      *urhstmp_[0] += *dudt[k]; // subtract nonlinear term
+     *urhstmp_[0] *= -1.0; // is negative on RHS
+     *urhstmp_[0] -= *dudt[k]; // subtract nonlinear term
       gimass_->opVec_prod(*urhstmp_[0], uoptmp_, *dudt[k]); // apply M^-1
     }
   }
