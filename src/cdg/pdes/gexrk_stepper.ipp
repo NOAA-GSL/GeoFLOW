@@ -142,7 +142,7 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &ub,
    }
 
    tt = t+dt;
-   if ( bupdatebc_ ) bdy_update_callback_(tt, u, ub); 
+   if ( bupdatebc_ ) bdy_update_callback_(tt, uout, ub); 
    if ( bapplybc_  ) bdy_apply_callback_ (tt, uout, ub); 
    if ( ggfx_ != NULLPTR ) {
      for ( n=0; n<nstate; n++ ) { // for each state member, uouyt
@@ -253,7 +253,7 @@ void GExRKStepper<T>::step(const Time &t, State &uin, State &ub,
    }
 
    tt = t+dt;
-   if ( bupdatebc_ ) bdy_update_callback_(tt, u, ub); 
+   if ( bupdatebc_ ) bdy_update_callback_(tt, uout, ub); 
    if ( bapplybc_  ) bdy_apply_callback_ (tt, uout, ub); 
    if ( ggfx_ != NULLPTR ) {
      for ( n=0; n<nstate; n++ ) { // for each state member, uouyt
