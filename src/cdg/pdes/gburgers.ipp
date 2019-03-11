@@ -218,10 +218,10 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const Time &dt
   if ( bpureadv_ ) { // pure linear advection
     // Remember: adv. velocity, c_ should already be set in
     //           main entry point, step_impl() method:
-    gadvect_->apply   (*u[0], c_ , uoptmp_, *dudt[0]); // apply advection
     ghelm_->opVec_prod(*u[0], uoptmp_, *urhstmp_[0]); // apply diffusion
+    gadvect_->apply   (*u[0], c_ , uoptmp_, *dudt[0]); // apply advection
    *urhstmp_[0] *= -1.0; // Lap op is negative on RHS
-   *urhstmp_[0] -= *dudt[0]; // subtract advection term
+   *urhstmp_[0] -= (*dudt[0]); // subtract advection term
     gimass_->opVec_prod(*urhstmp_[0], uoptmp_, *dudt[0]); // apply M^-1
   }
   else {             // nonlinear advection
@@ -256,7 +256,7 @@ void GBurgers<TypePack>::step_impl(const Time &t, State &uin, State &ub, const T
 
   // Set evolved state vars from input state:
   if ( bpureadv_ ) {
-    for ( GSIZET j=0; j<c_.size(); j++ ) c_ [j] = uin[1+j];
+    for ( GSIZET j=0; j<c_.size(); j++ ) c_ [j] = uin[j+1];
     uevolve_[0] = uin[0];
   }
   else {
