@@ -236,6 +236,7 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     for ( GSIZET j=0; j<u_   .size(); j++ ) u_   [j] = new GTVector<GFTYPE>(grid_->size());
     for ( GSIZET j=0; j<ua_  .size(); j++ ) ua_  [j] = new GTVector<GFTYPE>(grid_->size());
     for ( GSIZET j=0; j<ub_  .size(); j++ ) ub_  [j] = new GTVector<GFTYPE>(grid_->nbdydof());
+    if ( solver_traits.bpureadv ) 
     for ( GSIZET j=0; j<c_   .size(); j++ ) c_   [j] = u_[j+1];
 
     // Create observer(s), equations, integrator:
@@ -509,7 +510,7 @@ void compute_pergauss_adv(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GT
   }
 
   // Set velocity here. These point 
-  // to components of u_:
+  // to components of state u_:
   *c_[0]  = 1.0;
   *c_[1]  = 0.0;
   if ( GDIM > 2 ) *c_[2]  = 0.0;
