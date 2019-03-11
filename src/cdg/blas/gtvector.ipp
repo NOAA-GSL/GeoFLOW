@@ -1014,6 +1014,31 @@ GTVector<T>::maxn(GSIZET n)
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD : maxp
+// DESC   : Find max of vector, and its position related to gindex_.beg()
+// ARGS   : iwhere: index of max, returned
+// RETURNS: T-type max
+//**********************************************************************************
+template<class T>
+T
+GTVector<T>::maxp(GSIZET &iwhere)
+{
+  T fm = std::numeric_limits<T>::min();
+
+  for ( GLLONG j=this->gindex_.beg(); j<this->gindex_.end() && j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
+    if ( this->data_[j] > fm ) {
+      iwhere = j;
+      fm = this->data_[j];
+    }
+  }
+ 
+  return fm;
+
+} // end maxp
+
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD : max
 // DESC   : Find max of all members
 // ARGS   : none.
