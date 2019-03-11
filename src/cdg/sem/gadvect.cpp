@@ -142,7 +142,7 @@ void GAdvect::def_prod(GTVector<GFTYPE> &p, const GTVector<GTVector<GFTYPE>*> &u
 // METHOD : reg_prod
 // DESC   : Compute application of this operator to input vector for 
 //          GE_REGULAR elements
-//          NOTE: must have GDIM+1 utmp vectors set via call
+//          NOTE: must have GDIM utmp vectors allocated
 // ARGS   : p   : input vector (global)
 //          u   : input vector field (global)
 //          utmp: temp arrays
@@ -153,7 +153,7 @@ void GAdvect::def_prod(GTVector<GFTYPE> &p, const GTVector<GTVector<GFTYPE>*> &u
 void GAdvect::reg_prod(GTVector<GFTYPE> &p, const GTVector<GTVector<GFTYPE>*> &u, GTVector<GTVector<GFTYPE>*> &utmp, GTVector<GFTYPE> &po) 
 {
 
-  assert( utmp.size() >= GDIM+1
+  assert( utmp.size() >= GDIM
        && "Insufficient temp space specified");
 
 // Must compute:
@@ -165,15 +165,13 @@ void GAdvect::reg_prod(GTVector<GFTYPE> &p, const GTVector<GTVector<GFTYPE>*> &u
 // For regular elements, these are diagnonal, and we include in G_j
 // Jacobians and weights:
 
-
-  // Get derivatives with weights:
-  GMTK::compute_grefderivs(*grid_, p, etmp1_, FALSE, utmp); // utmp stores tensor-prod derivatives, W Dj p
-
+  // Get reference derivatives:
+//GMTK::compute_grefderivs(*grid_, p, etmp1_, FALSE, utmp); // utmp stores tensor-prod derivatives, Dj p
 
   // Compute po += Gj uj D^j p): 
   po = 0.0;
   for ( GSIZET j=0; j<GDIM; j++ ) { 
-    utmp [j]->pointProd(*G_[j]);   // remember, mass & Jac included in G
+    utmp [j]->pointProd(*G_[j]);// remember, mass & Jac included in G
     utmp [j]->pointProd(*u[j]); // do uj * (Gj * Dj p)
     po += *utmp[j];
   }
@@ -307,8 +305,7 @@ void GAdvect::reg_init()
 
   GTVector<GSIZET>             N(GDIM);
   GTMatrix<GTVector<GFTYPE>>  *dXidX;    // dXi/dX matrix
-  GElemList                   *gelems = &grid_->elems();
-  GTVector<GFTYPE>            *Jac;      // element-based Jacobian
+  GTVector<GFTYPE>            *Jac;      // Jacobian
   GMass                        mass(*grid_);
 
   // Compute 'metric' components:
@@ -340,7 +337,7 @@ void GAdvect::reg_init()
     G_ [j] = new GTVector<GFTYPE>(grid_->ndof());
   }
 
-  // Set G_, and include Jacobian:
+  // Set G_, and include Jacobian & mass:
   for ( GSIZET j=0; j<GDIM; j++ ) {
    *G_[j] = (*dXidX)(j,0);
     G_[j]->pointProd(*Jac);
