@@ -352,6 +352,7 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
   // If doing pure advection, set advection 
   // components from input state vector, so
   // allocate size:
+  uevolve_.resize(u.size()); 
   if ( bpureadv_ ) {
     c_.resize(GDIM);    // adevective vel components
     uevolve_.resize(1); // state var to evolve
