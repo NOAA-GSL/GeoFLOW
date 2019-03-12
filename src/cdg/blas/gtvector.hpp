@@ -145,6 +145,10 @@ inline    T operator[](const GSIZET i) const {
     #pragma acc routine vector
     T Eucnorm();
     #pragma acc routine vector
+    void pow(GINT p);
+    #pragma acc routine vector
+    void abs();
+    #pragma acc routine vector
     GBOOL contains(T val);     // Buffer contains val?
     #pragma acc routine vector
     GSIZET contains(T val, GSIZET *&iwhere, GSIZET &nw);

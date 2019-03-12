@@ -1282,6 +1282,50 @@ GTVector<T>::Eucnorm()
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD : pow
+// DESC   : Raise vector elems to power p, and modify array contents
+// ARGS   : p: power
+// RETURNS: none
+//**********************************************************************************
+template<class T>
+void
+GTVector<T>::pow(const GINT p)
+{
+  assert(std::is_arithmetic<T>::value && "Requires arithmetic template parameter");
+  GDOUBLE tmp;
+  GLLONG j;
+  for ( j=this->gindex_.beg(); j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
+    tmp = std::pow(static_cast<GDOUBLE>(data_[j]),p);
+    data_[j] = static_cast<T>(tmp);
+  }
+
+} // end, pow
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : abs
+// DESC   : Replace each elem with absolute value
+// ARGS   : none
+// RETURNS: none
+//**********************************************************************************
+template<class T>
+void
+GTVector<T>::abs()
+{
+  assert(std::is_arithmetic<T>::value && "Requires arithmetic template parameter");
+  GDOUBLE tmp;
+  GLLONG j;
+  for ( j=this->gindex_.beg(); j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
+    tmp = sqrt( std::pow(static_cast<GDOUBLE>(data_[j]),2) );
+    data_[j] = static_cast<T>(tmp);
+  }
+
+} // end, abs
+
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD : multiplicity
 // DESC   : Gets multiplicity of specified value
 // ARGS   : val : type T
