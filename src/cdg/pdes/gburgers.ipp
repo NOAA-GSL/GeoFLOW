@@ -388,10 +388,10 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
       nop = utmp_.size()-uold_.size()-urktmp_.size()-urhstmp_.size();
       assert(nop > 0 && "Invalid operation tmp array specification");
       uoptmp_ .resize(nop); // RHS operator work space
-      for ( GSIZET j=0; j<nstate; j++ ) uold_[j] = utmp_[j];
+      for ( GSIZET j=0; j<nstate         ; j++ ) uold_   [j] = utmp_[j];
       for ( GSIZET j=0; j<urktmp_ .size(); j++ ) urktmp_ [j] = utmp_[nstate+j];
       for ( GSIZET j=0; j<urhstmp_.size(); j++ ) urhstmp_[j] = utmp_[nstate+urktmp_.size()+j];
-      for ( GSIZET j=0; j<uoptmp_.size(); j++ ) uoptmp_[j] = utmp_[nstate+urktmp_.size()+urhstmp_.size()+j];
+      for ( GSIZET j=0; j<uoptmp_ .size(); j++ ) uoptmp_ [j] = utmp_[nstate+urktmp_.size()+urhstmp_.size()+j];
       break;
     case GSTEPPER_BDFAB:
       dthist_.resize(MAX(itorder_,inorder_));
