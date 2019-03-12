@@ -1761,7 +1761,7 @@ void GElem_base::set_bdyNormal2d(GTMatrix<GTVector<GFTYPE>> &rij, GTVector<GINT>
     // Normalize:
     for ( GSIZET j=0; j<bdyNormal.size(); j++ ) { 
       xn = sqrt( pow(bdyNormal[0][j],2) + pow(bdyNormal[1][j],2) );     
-      for ( GSIZET i=0; i<bdyNormal.size(); i++ ) bdyNormal[i][n] *= 1.0/xn;
+      for ( GSIZET i=0; i<bdyNormal.size(); i++ ) bdyNormal[i][j] *= 1.0/xn;
     }
   }
   else if ( elemtype_ == GE_DEFORMED 
@@ -1776,7 +1776,7 @@ void GElem_base::set_bdyNormal2d(GTMatrix<GTVector<GFTYPE>> &rij, GTVector<GINT>
     // Normalize:
     for ( GSIZET j=0; j<bdyNormal.size(); j++ ) { 
       xn = sqrt( pow(bdyNormal[0][j],2) + pow(bdyNormal[1][j],2) );     
-      for ( GSIZET i=0; i<bdyNormal.size(); i++ ) bdyNormal[i][n] *= 1.0/xn;
+      for ( GSIZET i=0; i<bdyNormal.size(); i++ ) bdyNormal[i][j] *= 1.0/xn;
     }
     
   }
@@ -1802,7 +1802,7 @@ void GElem_base::set_bdyNormal3d(GTMatrix<GTVector<GFTYPE>> &rij, GTVector<GINT>
   assert(bdyNormal[0].size() == iind.size() 
       && "Number of normal vectors must equal number of bdy indices"); 
 
-  GSIZET k, n;
+  GSIZET k;
 
   GFTYPE xn;     // vector magnitude
 
@@ -1823,7 +1823,7 @@ void GElem_base::set_bdyNormal3d(GTMatrix<GTVector<GFTYPE>> &rij, GTVector<GINT>
     for ( GSIZET j=0; j<bdyNormal.size(); j++ ) { 
       xn = sqrt( pow(bdyNormal[0][j],2) + pow(bdyNormal[1][j],2) 
                + pow(bdyNormal[2][j],2) );     
-      for ( GSIZET i=0; i<bdyNormal.size(); i++ ) bdyNormal[i][n] *= 1.0/xn;
+      for ( GSIZET i=0; i<bdyNormal.size(); i++ ) bdyNormal[i][j] *= 1.0/xn;
     }
   }
   
