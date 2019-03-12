@@ -20,7 +20,7 @@
 using namespace geoflow::tbox;
 using namespace std;
 
-typedef GTVector<GTVector<T>*> State;
-typedef GTVector<T> StateElem;
+typedef GTVector<GTVector<GFTYPE>*> State;
+typedef GTVector<GFTYPE> StateElem;
 
-int gio(GGrid &grid, State &u, GTVector<GString> &svars, GComm comm, GBOOL &bgridprinted);
+int gio(GGrid &grid, State &u, GSIZET tindex, GTVector<GString> &svars, GC_COMM comm, GBOOL &bgridprinted);

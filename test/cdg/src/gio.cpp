@@ -7,7 +7,7 @@
 //==================================================================================
 #include "gio.h"
 
-int gio(GGrid &grid, State &u, GTVector<GString> &svars, GComm comm, GBOOL &bgridprinted)
+int gio(GGrid &grid, State &u, GSIZET tindex, GTVector<GString> &svars, GC_COMM comm, GBOOL &bgridprinted)
 {
 
     GString serr ="gio: ";
@@ -21,19 +21,19 @@ int gio(GGrid &grid, State &u, GTVector<GString> &svars, GComm comm, GBOOL &bgri
     GINT           dim = GDIM;
     GSIZET         nelems = grid.nelems();
     GTVector<GINT> porder(GDIM);
+    GTVector<GTVector<GFTYPE>> *xnodes = &grid.xNodes();
     GElemList     *elems = &grid.elems();
-    for ( auto j=0; j<xnodes->size(); j++ ) porder[j] = (*elems)[0].order(j);
+    for ( auto j=0; j<xnodes->size(); j++ ) porder[j] = (*elems)[0]->order(j);
    
 
     // Print convergence data to file:
     FILE *fp;
-    GTVector<GTVector<GFTYPE>> *xnodes = &grid.xnodes();
-    GString sx(3) = {"xgrid", "ygrid", "zgrid"};
+    GString sx[3] = {"xgrid", "ygrid", "zgrid"};
 
     // Print grid, if not printed already:
     if ( !bgridprinted ) {
       for ( auto j=0; j<xnodes->size(); j++ ) {
-        sprintf(fname, "%s.%04d.out", sx[j], myrank);
+        sprintf(fname, "%s.%04d.out", sx[j].c_str(),  myrank);
         fp = fopen(fname,"wb");
         // write header: dim, numelems, poly_order:
         fwrite(&dim         , sizeof(GINT)  ,    1, fp);
@@ -47,7 +47,7 @@ int gio(GGrid &grid, State &u, GTVector<GString> &svars, GComm comm, GBOOL &bgri
     }
 
     for ( auto j=0; j<xnodes->size(); j++ ) {
-      sprintf(fname, "%s.%04d.out", svars[j], myrank);
+      sprintf(fname, "%s.%06d.%04d.out", svars[j].c_str(), tindex, myrank);
       fp = fopen(fname,"wb");
       // write header: dim, numelems, poly_order:
       fwrite(&dim         , sizeof(GINT)  ,    1, fp);
