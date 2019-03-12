@@ -328,7 +328,7 @@ void GBurgers<TypePack>::step_exrk(const Time &t, State &uin, State &ub, const T
 //**********************************************************************************
 // METHOD : init
 // DESC   : Initialize equation object
-// ARGS   : u     : State variable
+// ARGS   : u     : State variable, with full state specification
 //          iorder: time stepping trunction order vector. If using an explicit 
 //                  scheme, only the first vector member is used. If using
 //                  semi-implicit schemes, the first slot is for the time 
