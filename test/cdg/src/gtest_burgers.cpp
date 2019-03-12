@@ -30,6 +30,7 @@
 #include "tbox/mpixx.hpp"
 #include "tbox/global_manager.hpp"
 #include "tbox/input_manager.hpp"
+#include "gio.h"
 
 using namespace geoflow::pdeint;
 using namespace geoflow::tbox;
@@ -82,6 +83,7 @@ int main(int argc, char **argv)
 
     GString serr ="main: ";
     GBOOL  bret;
+    GBOOL  bgridwritten=FALSE;
     GINT   iopt;
     GINT   ilevel=0;// 2d ICOS refinement level
     GINT   np=1;    // elem 'order'
@@ -274,7 +276,16 @@ cout << "main: u(t=0)=" << *u_[0] << endl;
       t += dt;
     }
     GPTLstop("time_loop");
-
+    
+    // Write binary output:
+    char stmp[1024];
+    GTVector<GString> svars;
+    svars.resize(u_.size());
+    for ( auto j=0; j<svars.size(); j++ ) {
+      sprintf(stmp, "u%d", j+1);
+      svars[j] = stmp;
+    }
+    gio(*grid_, u_, maxSteps, svars, comm, bgridwritten);
 
 #if 1
     // Compute analytic solution, do comparisons:
@@ -871,3 +882,6 @@ cout << "init_ggfx: glob_indices=" << glob_indices << endl;
   assert(bret && "Initialization of GGFX operator failed");
 
 } // end method init_ggfx
+
+
+
