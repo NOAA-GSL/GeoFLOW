@@ -82,10 +82,10 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &ub,
   
   h = dt ; 
 
-  // Set temp space:
+  // Set temp space, initialize iteration:
   for ( n=0; n<nstate; n++ ) {
     u   [n] =  tmp[n];
-   *uout[n] = *uin[n];
+   *uout[n] = *uin[n]; // deep copy 
   }
   isum = tmp[nstate];
   for ( j=0,n=0; j<nstage_-1; j++ ) {
