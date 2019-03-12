@@ -29,6 +29,7 @@
 
  # Include misc other sources:
  set(CDG_TEST_SRC_MISC ${GTHOME}/ftest_binding.f90
+                       ${GTHOME}/gio.cpp
     )
 
  # Fill main source list (don't include CDG_TEST_MAIN):
