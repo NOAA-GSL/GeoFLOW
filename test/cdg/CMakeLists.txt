@@ -11,9 +11,9 @@ cmake_minimum_required(VERSION 2.8)
 #   > cmake -DCMAKE_C_COMPILER=pgcc 
 # etc..  These 'sets' must be done before 'project'
 # is specified:
- set(CMAKE_C_COMPILER       mpicc)
- set(CMAKE_CXX_COMPILER     mpicxx)
- set(CMAKE_Fortran_COMPILER mpifort)
+ set(CMAKE_C_COMPILER       mpiicc)
+ set(CMAKE_CXX_COMPILER     mpiicpc)
+ set(CMAKE_Fortran_COMPILER mpiifort)
 
 # Following may be used to instrument entire code
 # using TAU:
@@ -87,15 +87,22 @@ set(MPI_PATH
 
 # GPTL path; may be changed in glocale.cmake:
 set(GPTL_PATH 
-    /home/duane.rosenberg/lib/gptl-v5.5_gcc
+#   /home/duane.rosenberg/lib/gptl-v5.5_gcc
 #   /home/Duane.Rosenberg/lib/gptl-v5.4.4_pgi_openmpi
-#   /home/Duane.Rosenberg/lib/gptl-v5.4.4_intel_impi_theia
+    /home/Duane.Rosenberg/lib/gptl-v5.4.4_intel_impi_theia
    )
+
+set(Boost_DEBUG OFF)                          # Enable debug output from FIND_PACKAGE
+set(Boost_NO_SYSTEM_PATHS ON)       # Do not search system paths before BOOST_ROOT
+set(Boost_USE_STATIC_LIBS ON)           # Static link to Boost libraries
+set(Boost_USE_STATIC_RUNTIME OFF)  # Use Boost static linked to C++ runtime
+set(Boost_USE_MULTITHREADED OFF)   # Use Boost multi-threaded code
+#FIND_PACKAGE(Boost 1.65.0 COMPONENTS mpi serialization REQUIRED)
 
 # BOOST path; may be changed in glocale.cmake:
 set(BOOST_ROOT 
-    /scratch/duane.rosenberg/lib/boost_1_69_0_gcc
-#   /home/Duane.Rosenberg/lib/boost_1_66_0_intel
+#   /scratch/duane.rosenberg/lib/boost_1_69_0_gcc
+    /home/Duane.Rosenberg/lib/boost_1_69_0_intel_18.1
    )
 
 set(CDG_COMMON_LIBS  
@@ -121,7 +128,7 @@ set(CDG_COMMON_INC ${CDG_COMMON_INC}
 
 if (USE_MPI)
   set(CDG_COMMON_LIBS ${CDG_COMMON_LIBS}
-      ${MPI_PATH}/lib/libmpi.a
+#     ${MPI_PATH}/lib/libmpi.a
      )
 set(CDG_COMMON_INC ${CDG_COMMON_INC}
     ${MPI_PATH}/include
