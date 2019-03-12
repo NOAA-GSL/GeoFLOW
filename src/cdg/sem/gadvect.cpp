@@ -166,7 +166,7 @@ void GAdvect::reg_prod(GTVector<GFTYPE> &p, const GTVector<GTVector<GFTYPE>*> &u
 // Jacobians and weights:
 
   // Get reference derivatives:
-//GMTK::compute_grefderivs(*grid_, p, etmp1_, FALSE, utmp); // utmp stores tensor-prod derivatives, Dj p
+  GMTK::compute_grefderivs(*grid_, p, etmp1_, FALSE, utmp); // utmp stores tensor-prod derivatives, Dj p
 
   // Compute po += Gj uj D^j p): 
   po = 0.0;
