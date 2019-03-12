@@ -270,7 +270,7 @@ cout << "main: u(t=0)=" << *u_[0] << endl;
 
     GPTLstart("time_loop");
     for( GSIZET i=0; i<maxSteps; i++ ){
-      eqn_base->step(t,u_,ub_,dt);
+      eqn_base->step(t, u_, ub_, dt);
       t += dt;
     }
     GPTLstop("time_loop");
@@ -310,9 +310,8 @@ cout << "main: imax(u)=" << u_[j]->imax() << " imax(ua)=" << ua_[j]->imax() << e
 cout << "main: max (u)=" << u_[j]->max() << " max (ua)=" << ua_[j]->max() << endl;
       *utmp_[0] = *u_[j] - *ua_[j];
 cout << "main: u - ua[" << j << "]=" << *utmp_[0] << endl;
-      for ( GSIZET i=0; i<utmp_[1]->size(); i++ ) (*utmp_[1])[i] = fabs((*utmp_[0])[i]);
-      for ( GSIZET i=0; i<utmp_[1]->size(); i++ ) (*utmp_[2])[i] = pow((*utmp_[0])[i],2);
-
+      *utmp_[1] = *utmp_[0]; utmp_[1]->abs();
+      *utmp_[2] = *utmp_[0]; utmp_[1]->pow(2);
       lnorm   [0]  = utmp_[0]->infnorm (); // inf-norm
       gnorm   [1]  = grid_->integrate(*utmp_[1],*utmp_[0])/sqrt(nnorm[j]) ; // L1-norm
       gnorm   [2]  = grid_->integrate(*utmp_[2],*utmp_[0])/nnorm[j] ; // L2-norm
