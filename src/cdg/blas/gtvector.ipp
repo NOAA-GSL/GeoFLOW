@@ -1015,24 +1015,25 @@ GTVector<T>::maxn(GSIZET n)
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : maxp
-// DESC   : Find max of vector, and its position related to gindex_.beg()
-// ARGS   : iwhere: index of max, returned
-// RETURNS: T-type max
+// DESC   : Find position of max of vector
+// ARGS   : none.
+// RETURNS: GSIZET position of max
 //**********************************************************************************
 template<class T>
-T
-GTVector<T>::maxp(GSIZET &iwhere)
+GSIZET
+GTVector<T>::maxp()
 {
+  GSIZET imax;
   T fm = std::numeric_limits<T>::min();
 
   for ( GLLONG j=this->gindex_.beg(); j<this->gindex_.end() && j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
     if ( this->data_[j] > fm ) {
-      iwhere = j;
+      imax= j;
       fm = this->data_[j];
     }
   }
  
-  return fm;
+  return imax;
 
 } // end maxp
 
@@ -1079,6 +1080,32 @@ GTVector<T>::minn(GSIZET n)
   return fm;
 
 } // end minn
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : minp
+// DESC   : Find position of min of vector
+// ARGS   : none.
+// RETURNS: GSIZET position of min
+//**********************************************************************************
+template<class T>
+GSIZET
+GTVector<T>::minp()
+{
+  GSIZET imin;
+  T fm = std::numeric_limits<T>::max();
+
+  for ( GLLONG j=this->gindex_.beg(); j<this->gindex_.end() && j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
+    if ( this->data_[j] < fm ) {
+      imin= j;
+      fm = this->data_[j];
+    }
+  }
+
+  return imin;
+
+} // end minp
 
 
 //**********************************************************************************
