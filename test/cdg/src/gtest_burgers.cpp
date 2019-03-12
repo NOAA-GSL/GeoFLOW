@@ -294,10 +294,10 @@ cout << "main: u(t=0)=" << *u_[0] << endl;
 //    GComm::Allreduce(lnorm.data()  , nnorm.data()  , 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm);
 cout << "main: ua(t=0)[" << j << "]=" << *ua_[j] << endl;
 cout << "main: ua(t=0)[" << j << "]_max=" << ua_[j]->max() << endl;
-cout << "main: ua(t=0)[" << j << "]_maxp=" << ua_[j]->maxp() << endl;
+cout << "main: ua(t=0)[" << j << "]_imax=" << ua_[j]->imax() << endl;
 cout << "main: ua(t=0)[" << j << "]_min=" << ua_[j]->min() << endl;
 cout << "main: u (t=" << t << ")[" << j << "]_max=" << u_[j]->max() << endl;
-cout << "main: u (t=" << t << ")[" << j << "]_maxp=" << u_[j]->maxp() << endl;
+cout << "main: u (t=" << t << ")[" << j << "]_imax=" << u_[j]->imax() << endl;
 cout << "main: u (t)[" << j << "]_min=" << u_[j]->min() << endl;
 cout << "main: nnorm[" << j << "]=" << nnorm[j] << endl;
     }
@@ -306,7 +306,7 @@ cout << "main: nnorm[" << j << "]=" << nnorm[j] << endl;
     for ( GSIZET j=0; j<nsolve; j++ ) { //local errors
 cout << "main: u [t=" << t << "]=" << *u_ [ j] << endl;
 cout << "main: ua[t=" << t << "]=" << *ua_ [j] << endl;
-cout << "main: maxp(u)=" << u_[j]->maxp() << " maxp(ua)=" << ua_[j]->maxp() << endl;
+cout << "main: imax(u)=" << u_[j]->imax() << " imax(ua)=" << ua_[j]->imax() << endl;
 cout << "main: max (u)=" << u_[j]->max() << " max (ua)=" << ua_[j]->max() << endl;
       *utmp_[0] = *u_[j] - *ua_[j];
 cout << "main: u - ua[" << j << "]=" << *utmp_[0] << endl;
