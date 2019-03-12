@@ -1014,14 +1014,14 @@ GTVector<T>::maxn(GSIZET n)
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : maxp
+// METHOD : imax
 // DESC   : Find position of max of vector
 // ARGS   : none.
 // RETURNS: GSIZET position of max
 //**********************************************************************************
 template<class T>
 GSIZET
-GTVector<T>::maxp()
+GTVector<T>::imax()
 {
   GSIZET imax;
   T fm = std::numeric_limits<T>::min();
@@ -1035,7 +1035,7 @@ GTVector<T>::maxp()
  
   return imax;
 
-} // end maxp
+} // end imax
 
 
 //**********************************************************************************
@@ -1084,14 +1084,14 @@ GTVector<T>::minn(GSIZET n)
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : minp
+// METHOD : imin
 // DESC   : Find position of min of vector
 // ARGS   : none.
 // RETURNS: GSIZET position of min
 //**********************************************************************************
 template<class T>
 GSIZET
-GTVector<T>::minp()
+GTVector<T>::imin()
 {
   GSIZET imin;
   T fm = std::numeric_limits<T>::max();
@@ -1105,7 +1105,7 @@ GTVector<T>::minp()
 
   return imin;
 
-} // end minp
+} // end imin
 
 
 //**********************************************************************************
