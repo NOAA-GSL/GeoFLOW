@@ -278,7 +278,6 @@ cout << "main: u(t=0)=" << *u_[0] << endl;
 
 #if 1
     // Compute analytic solution, do comparisons:
-    GSIZET iwhere, iwherea;
     GFTYPE tt;
     GTVector<GFTYPE> lnorm(3), gnorm(3), maxerror(3);
     GTVector<GFTYPE> nnorm(nsolve);
@@ -293,25 +292,22 @@ cout << "main: u(t=0)=" << *u_[0] << endl;
       for ( GSIZET i=0; i<ua_[j]->size(); i++ ) lnorm[0] = MAX(lnorm[0],fabs((*ua_[j])[i]));
  //   nnorm[j] = grid_->integrate(*ua_  [j],*utmp_[0]) ; // L2 norm of analyt soln at t=0
 //    GComm::Allreduce(lnorm.data()  , nnorm.data()  , 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm);
-      ua_[j]->maxp(iwherea);
-      u_ [j]->maxp(iwhere);
 cout << "main: ua(t=0)[" << j << "]=" << *ua_[j] << endl;
 cout << "main: ua(t=0)[" << j << "]_max=" << ua_[j]->max() << endl;
-cout << "main: ua(t=0)[" << j << "]_maxp=" << iwherea << endl;
+cout << "main: ua(t=0)[" << j << "]_maxp=" << ua_[j]->maxp() << endl;
 cout << "main: ua(t=0)[" << j << "]_min=" << ua_[j]->min() << endl;
-cout << "main: u (t)[" << j << "]_max=" << u_[j]->max() << endl;
-cout << "main: u (t)[" << j << "]_maxp=" << iwhere << endl;
+cout << "main: u (t=" << t << ")[" << j << "]_max=" << u_[j]->max() << endl;
+cout << "main: u (t=" << t << ")[" << j << "]_maxp=" << u_[j]->maxp() << endl;
 cout << "main: u (t)[" << j << "]_min=" << u_[j]->min() << endl;
 cout << "main: nnorm[" << j << "]=" << nnorm[j] << endl;
     }
     
     compute_analytic(*grid_, t, ptree, ua_); // analyt soln at t
     for ( GSIZET j=0; j<nsolve; j++ ) { //local errors
-      ua_[j]->maxp(iwherea);
-      u_ [j]->maxp(iwhere);
 cout << "main: u [t=" << t << "]=" << *u_ [ j] << endl;
 cout << "main: ua[t=" << t << "]=" << *ua_ [j] << endl;
-cout << "main: maxp(u)=" << iwhere << " maxp(ua)=" << iwherea << endl;
+cout << "main: maxp(u)=" << u_[j]->maxp() << " maxp(ua)=" << ua_[j]->maxp() << endl;
+cout << "main: max (u)=" << u_[j]->max() << " max (ua)=" << ua_[j]->max() << endl;
       *utmp_[0] = *u_[j] - *ua_[j];
 cout << "main: u - ua[" << j << "]=" << *utmp_[0] << endl;
       for ( GSIZET i=0; i<utmp_[1]->size(); i++ ) (*utmp_[1])[i] = fabs((*utmp_[0])[i]);
