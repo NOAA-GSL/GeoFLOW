@@ -94,6 +94,8 @@ int main(int argc, char **argv)
     GFTYPE radiusi=1, radiuso=2;
     std::vector<GINT> ne(3); // # elements in each direction in 3d
     GString sgrid;// name of JSON grid object to use
+    GTVector<GString> svars, savars;
+    char stmp[1024];
     GC_COMM comm = GC_COMM_WORLD;
 
     typename MyTypes::Time  t  = 0;
@@ -270,12 +272,15 @@ cout << "main: getting integrator data done." << endl;
 cout << "main: Initializing state..." << endl; 
     t = 0.0;
     compute_analytic(*grid_, t, ptree, u_);
+    for ( auto j=0; j<u_.size(); j++ ) {
+      sprintf(stmp, "u%d", j+1);
+      svars.push_back(stmp);
+      sprintf(stmp, "ua%d", j+1);
+      savars.push_back(stmp);
+    }
+    gio(*grid_, u_, 1, 0, svars, comm, bgridwritten);
 cout << "main: State initiallized." << endl; 
 cout << "main: u(t=0)=" << *u_[0] << endl;
-
-    char stmp[1024];
-    GTVector<GString> svars;
-    svars.resize(u_.size());
 
     GPTLstart("time_loop");
     for( GSIZET i=0; i<maxSteps; i++ ){
@@ -285,11 +290,6 @@ cout << "main: u(t=0)=" << *u_[0] << endl;
     GPTLstop("time_loop");
     
     // Write binary output:
-    svars.resize(u_.size());
-    for ( auto j=0; j<svars.size(); j++ ) {
-      sprintf(stmp, "u%d", j+1);
-      svars[j] = stmp;
-    }
     gio(*grid_, u_, u_.size(), maxSteps, svars, comm, bgridwritten);
 
 #if 1
@@ -306,36 +306,29 @@ cout << "main: u(t=0)=" << *u_[0] << endl;
     compute_analytic(*grid_, tt, ptree, ua_); // analyt soln at t=0
     for ( GSIZET j=0; j<nsolve; j++ ) { //local errors
       for ( GSIZET i=0; i<ua_[j]->size(); i++ ) lnorm[0] = MAX(lnorm[0],fabs((*ua_[j])[i]));
- //   nnorm[j] = grid_->integrate(*ua_  [j],*utmp_[0]) ; // L2 norm of analyt soln at t=0
-//    GComm::Allreduce(lnorm.data()  , nnorm.data()  , 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm);
-cout << "main: ua(t=0)[" << j << "]=" << *ua_[j] << endl;
+      nnorm[j] = grid_->integrate(*ua_  [j],*utmp_[0]) ; // L2 norm of analyt soln at t=0
+      GComm::Allreduce(lnorm.data()  , nnorm.data()  , 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm);
 cout << "main: ua(t=0)[" << j << "]_max=" << ua_[j]->max() << endl;
 cout << "main: ua(t=0)[" << j << "]_imax=" << ua_[j]->imax() << endl;
-cout << "main: ua(t=0)[" << j << "]_min=" << ua_[j]->min() << endl;
 cout << "main: u (t=" << t << ")[" << j << "]_max=" << u_[j]->max() << endl;
 cout << "main: u (t=" << t << ")[" << j << "]_imax=" << u_[j]->imax() << endl;
-cout << "main: u (t)[" << j << "]_min=" << u_[j]->min() << endl;
 cout << "main: nnorm[" << j << "]=" << nnorm[j] << endl;
     }
     
     compute_analytic(*grid_, t, ptree, ua_); // analyt soln at t
-    for ( auto j=0; j<svars.size(); j++ ) {
-      sprintf(stmp, "u%da", j+1);
-      svars[j] = stmp;
-    }
-    gio(*grid_, ua_, ua_.size(),  maxSteps, svars, comm, bgridwritten);
+    gio(*grid_, ua_, ua_.size(),  maxSteps, savars, comm, bgridwritten);
     for ( GSIZET j=0; j<nsolve; j++ ) { //local errors
 cout << "main: u [t=" << t << "]=" << *u_ [ j] << endl;
 cout << "main: ua[t=" << t << "]=" << *ua_ [j] << endl;
 cout << "main: imax(u)=" << u_[j]->imax() << " imax(ua)=" << ua_[j]->imax() << endl;
 cout << "main: max (u)=" << u_[j]->max() << " max (ua)=" << ua_[j]->max() << endl;
       *utmp_[0] = *u_[j] - *ua_[j];
-cout << "main: u - ua[" << j << "]=" << *utmp_[0] << endl;
+cout << "main: diff=u-ua[" << j << "]=" << *utmp_[0] << endl;
       *utmp_[1] = *utmp_[0]; utmp_[1]->abs();
-      *utmp_[2] = *utmp_[0]; utmp_[1]->pow(2);
+      *utmp_[2] = *utmp_[0]; utmp_[2]->pow(2);
       lnorm   [0]  = utmp_[0]->infnorm (); // inf-norm
       gnorm   [1]  = grid_->integrate(*utmp_[1],*utmp_[0])/sqrt(nnorm[j]) ; // L1-norm
-      gnorm   [2]  = grid_->integrate(*utmp_[2],*utmp_[0])/nnorm[j] ; // L2-norm
+      gnorm   [2]  = grid_->integrate(*utmp_[2],*utmp_[0]) ; // L2-norm
       // Accumulate to find global errors for this field:
       GComm::Allreduce(lnorm.data()  , gnorm.data()  , 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm);
       gnorm[2] =  sqrt(gnorm[2]/nnorm[j]);
@@ -565,7 +558,7 @@ void compute_pergauss_adv(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GT
   GBOOL            bContin;
   GINT             n;
   GSIZET           i, j, k;
-  GFTYPE           argxp, argxm, psum, sum, eps;
+  GFTYPE           argxp, argxm, psum, prod, sum, eps;
   GFTYPE           nxy, pint, sig0, u0;
   GTVector<GFTYPE> f(GDIM), xx(GDIM), si(GDIM), sig(GDIM);
   GTPoint<GFTYPE>  r0(3), P0(3), gL(3);
@@ -577,7 +570,7 @@ void compute_pergauss_adv(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GT
 
   assert(grid.gtype() == GE_REGULAR && "Invalid element types");
 
-  eps = 10.0*std::numeric_limits<GFTYPE>::epsilon();
+  eps = std::numeric_limits<GFTYPE>::epsilon();
 
   // Get periodicity length, gL:
   std::vector<GFTYPE> xyz0 = boxptree.getArray<GFTYPE>("xyz0");
@@ -621,27 +614,30 @@ void compute_pergauss_adv(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GT
 
     for ( k=0, argxp=0.0; k<GDIM; k++ ) {
       f [k]  = modf((*c_[k])[j]*t/gL[k],&pint);
-//    f [k]  = (*c_[k])[j]*t/gL[k];
       xx[k]  = (*xnodes)[k][j] - r0[k] - f[k]*gL[k];
       argxp += -xx[k]*xx[k]*si[k];
     }
 
     sum  = exp(argxp);
 
-    n       = 1;
-    bContin = TRUE;
-    while ( bContin ) {
-      argxp = argxm = 0.0;
-      for ( k=0; k<GDIM; k++ ) {
-        argxp   += -pow((xx[k]+n*gL[k]),2.0)*si[k];
-        argxm   += -pow((xx[k]-n*gL[k]),2.0)*si[k];
+    prod = 1.0;
+    for ( k=0; k<GDIM; k++ ) {
+      n       = 1;
+      bContin = TRUE;
+      while ( bContin ) {
+        argxp = argxm = 0.0;
+        for ( k=0; k<GDIM; k++ ) {
+          argxp   += -pow((xx[k]+n*gL[k]),2.0)*si[k];
+          argxm   += -pow((xx[k]-n*gL[k]),2.0)*si[k];
+        }
+        psum    =  exp(argxp) + exp(argxm);
+        sum    +=  psum;
+        bContin =  psum/sum > eps;
+        n++;
       }
-      psum    =  exp(argxp) + exp(argxm);
-      sum    +=  psum;
-      bContin =  psum/sum > eps;
-      n++;
+      prod *= sum;
     }
-    (*ua[0])[j] = u0*pow(sig0,2)/pow(sig[0],2)*sum;
+    (*ua[0])[j] = u0*pow(sig0,2)/pow(sig[0],2)*prod;
   }
 
   
@@ -727,7 +723,7 @@ void compute_pergauss_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
   GBOOL            bContin;
   GINT             n;
   GSIZET           i, j, k;
-  GFTYPE           argxp, argxm, eps, psum, sum;
+  GFTYPE           argxp, argxm, eps, prod, psum, sum;
   GFTYPE           nxy, sig0, u0;
   GTVector<GFTYPE> xx(GDIM), si(GDIM), sig(GDIM);
   GTPoint<GFTYPE>  r0(3), P0(3), gL(3);
@@ -771,29 +767,31 @@ void compute_pergauss_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
   }
 
   for ( j=0; j<nxy; j++ ) {
-    for ( i=0; i<GDIM; i++ ) xx[i] = (*xnodes)[i][j] - r0[i];
+    for ( k=0, argxp=0.0; k<GDIM; k++ ) {
+      xx[k]  = (*xnodes)[k][j] - r0[k];
+      argxp += -xx[k]*xx[k]*si[k];
+    }
 
-    sum = 0.0;
-    for ( k=0, argxp=0.0; k<GDIM; k++ ) argxp += -xx[k]*xx[k]*si[k];
     sum  = exp(argxp);
-    n       = 1;
-    bContin = TRUE;
-    while ( bContin ) {
-      argxp = argxm = 0.0;
-      for ( k=0; k<GDIM; k++ ) {
-        argxp   += -pow((xx[k]+n*gL[k]),2.0)*si[k];
-        argxm   += -pow((xx[k]-n*gL[k]),2.0)*si[k];
+
+    prod = 1.0;
+    for ( k=0; k<GDIM; k++ ) {
+      n       = 1;
+      bContin = TRUE;
+      while ( bContin ) {
+        argxp = argxm = 0.0;
+        for ( k=0; k<GDIM; k++ ) {
+          argxp   += -pow((xx[k]+n*gL[k]),2.0)*si[k];
+          argxm   += -pow((xx[k]-n*gL[k]),2.0)*si[k];
+        }
+        psum    =  exp(argxp) + exp(argxm);
+        sum    +=  psum;
+        bContin =  psum/sum > eps;
+        n++;
       }
-      psum    =  exp(argxp) + exp(argxm);
-      sum    +=  psum;
-      bContin =  psum/sum > eps;
-      n++;
+      prod *= sum;
     }
-    (*ua[0])[j] = u0*pow(sig0,2)/pow(sig[0],2)*sum;
-    if ( std::isnan((*ua[0])[j]) ) {
-      cout << "compute_pergauss_heat: NaN at j=" << j << endl;
-      while ( TRUE ) {};
-    }
+    (*ua[0])[j] = u0*pow(sig0,2)/pow(sig[0],2)*prod;
   }
 
   
