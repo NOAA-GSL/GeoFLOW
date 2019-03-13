@@ -618,19 +618,21 @@ void compute_pergauss_adv(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GT
   if ( GDIM > 2 ) *c_[2]  = 0.0;
 
   for ( j=0; j<nxy; j++ ) {
-    for ( k=0; k<GDIM; k++ ) {
-      f [k] = modf((*c_[k])[j]*t/gL[k],&pint);
-      xx[k] = (*xnodes)[k][j] - r0[k] - f[k]*gL[k];
+
+    for ( k=0, argxp=0.0; k<GDIM; k++ ) {
+      f [k]  = modf((*c_[k])[j]*t/gL[k],&pint);
+//    f [k]  = (*c_[k])[j]*t/gL[k];
+      xx[k]  = (*xnodes)[k][j] - r0[k] - f[k]*gL[k];
+      argxp += -xx[k]*xx[k]*si[k];
     }
 
-    sum = 0.0;
-    for ( k=0, argxp=0.0; k<GDIM; k++ ) argxp += -xx[k]*xx[k]*si[k];
     sum  = exp(argxp);
+
     n       = 1;
     bContin = TRUE;
     while ( bContin ) {
       argxp = argxm = 0.0;
-      for ( i=0; i<GDIM; i++ ) {
+      for ( k=0; k<GDIM; k++ ) {
         argxp   += -pow((xx[k]+n*gL[k]),2.0)*si[k];
         argxm   += -pow((xx[k]-n*gL[k]),2.0)*si[k];
       }
@@ -778,7 +780,7 @@ void compute_pergauss_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
     bContin = TRUE;
     while ( bContin ) {
       argxp = argxm = 0.0;
-      for ( i=0; i<GDIM; i++ ) {
+      for ( k=0; k<GDIM; k++ ) {
         argxp   += -pow((xx[k]+n*gL[k]),2.0)*si[k];
         argxm   += -pow((xx[k]-n*gL[k]),2.0)*si[k];
       }
