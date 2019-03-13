@@ -7,6 +7,8 @@
 //==================================================================================
 #include "gio.h"
 
+using namespace std;
+
 int gio(GGrid &grid, State &u, GSIZET tindex, GTVector<GString> &svars, GC_COMM comm, GBOOL &bgridprinted)
 {
 
@@ -46,7 +48,8 @@ int gio(GGrid &grid, State &u, GSIZET tindex, GTVector<GString> &svars, GC_COMM 
       bgridprinted = TRUE;
     }
 
-    for ( auto j=0; j<xnodes->size(); j++ ) {
+    // Print field data:
+    for ( auto j=0; j<u.size(); j++ ) {
       sprintf(fname, "%s.%06d.%04d.out", svars[j].c_str(), tindex, myrank);
       fp = fopen(fname,"wb");
       // write header: dim, numelems, poly_order:
@@ -57,7 +60,7 @@ int gio(GGrid &grid, State &u, GSIZET tindex, GTVector<GString> &svars, GC_COMM 
       fwrite((*u[j]).data(), sizeof(GFTYPE), (*u[j]).size(), fp);
       fclose(fp);
     }
-
+cout << "gio: done." << endl;
     return(0);
 
 } // end, gio
