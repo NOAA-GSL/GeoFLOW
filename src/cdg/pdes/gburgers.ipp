@@ -239,7 +239,7 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const Time &dt
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : step_impl
+// METHOD : step_impl (1)
 // DESC   : Step implementation method entry point
 // ARGS   : t   : time
 //          uin : input state, modified on output with update
@@ -274,7 +274,28 @@ void GBurgers<TypePack>::step_impl(const Time &t, State &uin, State &ub, const T
       break;
   }
 
-} // end of method step_impl
+} // end of method step_impl (1)
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : step_impl (2)
+// DESC   : Step implementation method entry point
+// ARGS   : t   : time
+//          uin : input state, modified on output with update
+//                If doing pure advection, this state contains the *unevolved*
+//                advection velocities, which must be separated from the 
+//                single evolved state variable.
+//          ub  : bdy vector
+//          dt  : time step
+//          uout: output state
+// RETURNS: none.
+//**********************************************************************************
+template<typename TypePack>
+void GBurgers<TypePack>::step_impl(const Time &t, State &uin, State &ub, const Time &dt, State &uout)
+{
+  assert(FALSE && "step_impl(2) not available");
+
+} // end of method step_impl (2)
 
 
 //**********************************************************************************
