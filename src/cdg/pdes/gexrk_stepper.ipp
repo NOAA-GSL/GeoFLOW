@@ -88,7 +88,7 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &ub,
    *uout[n] = *uin[n]; // deep copy 
   }
   isum = tmp[nstate];
-  for ( j=0,n=0; j<nstage_ == 1 ? 1 : nstage_-1; j++ ) {
+  for ( j=0,n=0; j<MAX(nstage_-1,1); j++ ) {
     for ( i=0; i<nstate; i++ )  {
       K_[j][i] = tmp[nstate+1+n]; // set K storage from tmp space
       n++;
@@ -207,7 +207,7 @@ void GExRKStepper<T>::step(const Time &t, State &uin, State &ub,
    *uout[j] = *uin[j]; // deep copy
   }
   isum = tmp[2*nstate];
-  for ( j=0,n=0; j<nstage_ == 1 ? 1 : nstage_-1; j++ ) {
+  for ( j=0,n=0; j<MAX(nstage_-1,1); j++ ) {
     for ( i=0; i<nstate; i++ )  {
       K_[j][i] = tmp[2*nstate+1+n]; // set K storage from tmp space
       n++;
