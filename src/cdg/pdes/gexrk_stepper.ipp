@@ -98,7 +98,7 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &ub,
   for ( m=0; m<nstage_-1; m++ ) { // cycle thru stages minus 1
     // Compute k_m:
     //   k_m = RHS( t^n + alpha_m * h, u^n + h Sum_j=1^m-1 beta_mj k_j ),
-    tt = t+(*alpha)[m]*h;
+    tt = t + (*alpha)[m]*h;
     for ( n=0; n<nstate; n++ ) { // for each state member, u
       for ( j=0,*isum=0.0; j<m; j++ ) *isum += (*K_[j][n]) * ( (*beta)(m,j)*h );
      *u[n]  = (*uin[n]) + (*isum);
@@ -121,7 +121,7 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &ub,
   }
 
    // Do contrib from final stage, M = nstage_:
-   tt = t+(*alpha)[nstage_-1]*h;
+   tt = t + (*alpha)[nstage_-1]*h;
    for ( n=0; n<nstate; n++ ) { // for each state member, u
      for ( j=0,*isum=0.0; j<nstage_-1; j++ ) *isum += (*K_[j][n]) * ( (*beta)(nstage_-1,j)*h );
      *u[n] = (*uin[n]) + (*isum);
@@ -141,7 +141,7 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &ub,
     *uout[n] += (*K_[0][n])*( (*c)[nstage_-1]*h ); // += h * c_M * k_M
    }
 
-   tt = t+dt;
+   tt = t + dt;
    if ( bupdatebc_ ) bdy_update_callback_(tt, uout, ub); 
    if ( bapplybc_  ) bdy_apply_callback_ (tt, uout, ub); 
    if ( ggfx_ != NULLPTR ) {
