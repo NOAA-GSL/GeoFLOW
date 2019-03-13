@@ -277,17 +277,9 @@ cout << "main: u(t=0)=" << *u_[0] << endl;
     GTVector<GString> svars;
     svars.resize(u_.size());
 
-*uold_[0] = *u_[0];
     GPTLstart("time_loop");
     for( GSIZET i=0; i<maxSteps; i++ ){
       eqn_base->step(t, u_, ub_, dt);
-*utmp_[0] = (*u_[0]) - (*uold_[0]);
-utmp_[0]->abs();
-for ( auto j=0; j<svars.size(); j++ ) {
-sprintf(stmp, "du%d", j+1);
-svars[j] = stmp;
-}
-gio(*grid_, utmp_, 1, i, svars, comm, bgridwritten);
       t += dt;
     }
     GPTLstop("time_loop");
@@ -640,7 +632,7 @@ void compute_pergauss_adv(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GT
       while ( bContin ) {
         argxp   = -pow((xx[k]+n*gL[k]),2.0)*si[k];
         argxm   = -pow((xx[k]-n*gL[k]),2.0)*si[k];
-        da      = exp(argxp + argxm);
+        da      = exp(argxp) + exp(argxm);
         wsum   += da;
         bContin = da/wsum > eps;
         n++;
