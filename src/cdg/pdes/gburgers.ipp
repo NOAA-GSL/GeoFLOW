@@ -256,24 +256,24 @@ void GBurgers<TypePack>::step_impl(const Time &t, State &uin, State &ub, const T
 
   // Set evolved state vars from input state:
   if ( bpureadv_ ) {
-    for ( GSIZET j=0; j<c_.size(); j++ ) c_ [j] = uin[j+1];
+    for ( auto j=0; j<c_.size(); j++ ) c_ [j] = uin[j+1];
     uevolve_[0] = uin[0];
   }
   else {
-    for ( GSIZET j=0; j<uin.size(); j++ ) uevolve_ [j] = uin[j];
+    for ( auto j=0; j<uin.size(); j++ ) uevolve_ [j] = uin[j];
   }
 
   switch ( isteptype_ ) {
     case GSTEPPER_EXRK:
-      for ( GSIZET j=0; j<uevolve_.size(); j++ ) *uold_[j] = *uevolve_[j];
-      step_exrk(t, uold_, ub, dt, uevolve_);
+      step_exrk(t, uevolve_, ub, dt, uold_);
+      for ( auto j=0; j<uevolve_.size(); j++ ) *uevolve_[j] = *uold_[j];
       break;
     case GSTEPPER_BDFAB:
     case GSTEPPER_BDFEXT:
       step_multistep(t, uevolve_, ub, dt);
       break;
   }
-  
+
 } // end of method step_impl
 
 
