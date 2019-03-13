@@ -87,7 +87,7 @@ int main(int argc, char **argv)
     GTVector<GTVector<GFTYPE>*> uout(1);
     GTVector<GTVector<GFTYPE>*> ua  (1);
     GTVector<GTVector<GFTYPE>*> ub  (1);
-    GTVector<GTVector<GFTYPE>*> utmp(u.size()*nstage+1);
+    GTVector<GTVector<GFTYPE>*> utmp(u.size()*(nstage+2)+1);
     
     for ( GSIZET j=0; j<utmp.size(); j++ ) utmp[j] = new GTVector<GFTYPE>(1);
     for ( GSIZET j=0; j<u   .size(); j++ ) u   [j] = new GTVector<GFTYPE>(1);
@@ -102,8 +102,8 @@ int main(int argc, char **argv)
 
     t = t0;
     for ( GSIZET k=0; k<maxSteps; k++ ) {
-      gexrk.step(t, u, ub, dt, utmp, uout);
-      *u[0] = *uout[0];
+      gexrk.step(t, u, ub, dt, utmp);
+//    *u[0] = *uout[0];
       t += dt;
     }
 
