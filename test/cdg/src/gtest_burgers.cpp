@@ -564,7 +564,8 @@ void compute_pergauss_adv(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GT
 {
   GBOOL            bContin;
   GINT             n;
-  GFTYPE           wsum, prod, argxp, argxm, da, eps;
+  GSIZET           i, j, k;
+  GFTYPE           argxp, argxm, psum, sum, eps;
   GFTYPE           nxy, pint, sig0, u0;
   GTVector<GFTYPE> f(GDIM), xx(GDIM), si(GDIM), sig(GDIM);
   GTPoint<GFTYPE>  r0(3), P0(3), gL(3);
@@ -605,7 +606,7 @@ void compute_pergauss_adv(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GT
   // First state elem is the scalar solution, and
   // the remainder are the velocity components:
 
-  for ( GSIZET j=0; j<GDIM; j++ ) {
+  for ( j=0; j<GDIM; j++ ) {
     sig[j] = sqrt(sig0*sig0 + 2.0*t*nu_[0]);
     si [j] = 0.5/(sig[j]*sig[j]);
   }
@@ -616,31 +617,29 @@ void compute_pergauss_adv(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GT
   *c_[1]  = 0.0;
   if ( GDIM > 2 ) *c_[2]  = 0.0;
 
-
-  for ( GSIZET j=0; j<nxy; j++ ) {
-
-    for ( GSIZET k=0; k<GDIM; k++ ) {
+  for ( j=0; j<nxy; j++ ) {
+    for ( k=0; k<GDIM; k++ ) {
       f [k] = modf((*c_[k])[j]*t/gL[k],&pint);
       xx[k] = (*xnodes)[k][j] - r0[k] - f[k]*gL[k];
     }
 
-    prod = 1.0;
-    for ( GSIZET k=0; k<GDIM; k++ ) {
-      wsum    = exp(-xx[k]*xx[k]*si[k]);
-      n       = 1;
-      bContin = TRUE;
-      while ( bContin ) {
-        argxp   = -pow((xx[k]+n*gL[k]),2.0)*si[k];
-        argxm   = -pow((xx[k]-n*gL[k]),2.0)*si[k];
-        da      = exp(argxp) + exp(argxm);
-        wsum   += da;
-        bContin = da/wsum > eps;
-        n++;
+    sum = 0.0;
+    for ( k=0, argxp=0.0; k<GDIM; k++ ) argxp += -xx[k]*xx[k]*si[k];
+    sum  = exp(argxp);
+    n       = 1;
+    bContin = TRUE;
+    while ( bContin ) {
+      argxp = argxm = 0.0;
+      for ( i=0; i<GDIM; i++ ) {
+        argxp   += -pow((xx[k]+n*gL[k]),2.0)*si[k];
+        argxm   += -pow((xx[k]-n*gL[k]),2.0)*si[k];
       }
-      prod *= wsum;
+      psum    =  exp(argxp) + exp(argxm);
+      sum    +=  psum;
+      bContin =  psum/sum > eps;
+      n++;
     }
-    (*ua[0])[j] = u0*pow(sig0,2)/pow(sig[0],2)*prod;
-
+    (*ua[0])[j] = u0*pow(sig0,2)/pow(sig[0],2)*sum;
   }
 
   
@@ -725,7 +724,8 @@ void compute_pergauss_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
 {
   GBOOL            bContin;
   GINT             n;
-  GFTYPE           wsum, prod, argxp, argxm, da, eps;
+  GSIZET           i, j, k;
+  GFTYPE           argxp, argxm, eps, psum, sum;
   GFTYPE           nxy, sig0, u0;
   GTVector<GFTYPE> xx(GDIM), si(GDIM), sig(GDIM);
   GTPoint<GFTYPE>  r0(3), P0(3), gL(3);
@@ -763,30 +763,31 @@ void compute_pergauss_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
   sig0  = heatptree.getValue<GFTYPE>("sigma"); 
   u0    = heatptree.getValue<GFTYPE>("u0"); 
 
-  for ( GSIZET k=0; k<GDIM; k++ ) {
+  for ( k=0; k<GDIM; k++ ) {
     sig[k] = sqrt(sig0*sig0 + 2.0*t*nu_[0]); // scalar viscosity only
     si [k] = 0.5/(sig[k]*sig[k]);
   }
 
-  for ( GSIZET j=0; j<nxy; j++ ) {
-    for ( GSIZET i=0; i<GDIM; i++ ) xx[i] = (*xnodes)[i][j] - r0[i];
+  for ( j=0; j<nxy; j++ ) {
+    for ( i=0; i<GDIM; i++ ) xx[i] = (*xnodes)[i][j] - r0[i];
 
-    prod = 1.0;
-    for ( GSIZET k=0; k<GDIM; k++ ) {
-      wsum    = exp(-xx[k]*xx[k]*si[k]);
-      n       = 1;
-      bContin = TRUE;
-      while ( bContin ) {
-        argxp = -pow((xx[k]+n*gL[k]),2.0)*si[k];
-        argxm = -pow((xx[k]-n*gL[k]),2.0)*si[k];
-        da    =  exp(argxp + argxm);
-        wsum  += da;
-        bContin = da/wsum > eps;
-        n++;
+    sum = 0.0;
+    for ( k=0, argxp=0.0; k<GDIM; k++ ) argxp += -xx[k]*xx[k]*si[k];
+    sum  = exp(argxp);
+    n       = 1;
+    bContin = TRUE;
+    while ( bContin ) {
+      argxp = argxm = 0.0;
+      for ( i=0; i<GDIM; i++ ) {
+        argxp   += -pow((xx[k]+n*gL[k]),2.0)*si[k];
+        argxm   += -pow((xx[k]-n*gL[k]),2.0)*si[k];
       }
-      prod *= wsum;
+      psum    =  exp(argxp) + exp(argxm);
+      sum    +=  psum;
+      bContin =  psum/sum > eps;
+      n++;
     }
-    (*ua[0])[j] = u0*pow(sig0,2)/pow(sig[0],2)*prod;
+    (*ua[0])[j] = u0*pow(sig0,2)/pow(sig[0],2)*sum;
     if ( std::isnan((*ua[0])[j]) ) {
       cout << "compute_pergauss_heat: NaN at j=" << j << endl;
       while ( TRUE ) {};
