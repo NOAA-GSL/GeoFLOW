@@ -275,7 +275,7 @@ cout << "main: Initializing state..." << endl;
     for ( auto j=0; j<u_.size(); j++ ) {
       sprintf(stmp, "u%d", j+1);
       svars.push_back(stmp);
-      sprintf(stmp, "ua%d", j+1);
+      sprintf(stmp, "u%da", j+1);
       savars.push_back(stmp);
     }
     gio(*grid_, u_, 1, 0, svars, comm, bgridwritten);
