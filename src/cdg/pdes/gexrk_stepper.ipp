@@ -88,7 +88,7 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &ub,
    *uout[n] = *uin[n]; // deep copy 
   }
   isum = tmp[nstate];
-  for ( j=0,n=0; j<nstage_-1; j++ ) {
+  for ( j=0,n=0; j<nstage_ == 1 ? 1 : nstage_-1; j++ ) {
     for ( i=0; i<nstate; i++ )  {
       K_[j][i] = tmp[nstate+1+n]; // set K storage from tmp space
       n++;
@@ -116,9 +116,10 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &ub,
     // x^n+1 = x^n + h Sum_i=1^m c_i K_i, so
     // accumulate the sum in uout here: 
     for ( n=0; n<nstate; n++ ) { // for each state member, u
-      *uout[n] += (*K_[m][n])*( (*c)[m]*h ); // += h * c_m * k_m
+      *isum     = (*K_[m][n])*( (*c)[m]*h );
+      *uout[n] += *isum; // += h * c_m * k_m
     }
-  }
+  } // end, m-loop
 
    // Do contrib from final stage, M = nstage_:
    tt = t + (*alpha)[nstage_-1]*h;
@@ -138,7 +139,8 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &ub,
    // Compute final output state, and set its bcs and
    // H1-smooth it:
    for ( n=0; n<nstate; n++ ) { // for each state member, u
-    *uout[n] += (*K_[0][n])*( (*c)[nstage_-1]*h ); // += h * c_M * k_M
+    *isum     = (*K_[0][n])*( (*c)[nstage_-1]*h );
+    *uout[n] += *isum; // += h * c_M * k_M
    }
 
    tt = t + dt;
@@ -205,7 +207,7 @@ void GExRKStepper<T>::step(const Time &t, State &uin, State &ub,
    *uout[j] = *uin[j]; // deep copy
   }
   isum = tmp[2*nstate];
-  for ( j=0,n=0; j<nstage_-1; j++ ) {
+  for ( j=0,n=0; j<nstage_ == 1 ? 1 : nstage_-1; j++ ) {
     for ( i=0; i<nstate; i++ )  {
       K_[j][i] = tmp[2*nstate+1+n]; // set K storage from tmp space
       n++;
