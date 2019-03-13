@@ -291,7 +291,7 @@ void GBurgers<TypePack>::step_impl(const Time &t, State &uin, State &ub, const T
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GBurgers<TypePack>::step_impl(const Time &t, State &uin, State &ub, const Time &dt, State &uout)
+void GBurgers<TypePack>::step_impl(const Time &t, const State &uin, State &ub, const Time &dt, State &uout)
 {
   assert(FALSE && "step_impl(2) not available");
 
