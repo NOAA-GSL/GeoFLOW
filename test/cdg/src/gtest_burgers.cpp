@@ -60,6 +60,7 @@ GTVector<GTVector<GFTYPE>*> c_;
 GTVector<GTVector<GFTYPE>*> ua_;
 GTVector<GTVector<GFTYPE>*> ub_;
 GTVector<GTVector<GFTYPE>*> utmp_;
+GTVector<GTVector<GFTYPE>*> uold_;
 GTVector<GFTYPE> nu_(3);
 PropertyTree ptree;       // main prop tree
 
@@ -229,11 +230,13 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     
     if      ( solver_traits.doheat   ) { nstate =  nsolve = 1; } 
     else if ( solver_traits.bpureadv ) { nstate = GDIM + 1; nsolve = 1;} // 1-state + GDIM  v-components
+    uold_.resize(nsolve);
     utmp_.resize(24);
     u_.resize(nstate);
     ua_.resize(nsolve);
     ub_.resize(nsolve);
     c_ .resize(GDIM);
+    for ( GSIZET j=0; j<uold_.size(); j++ ) uold_[j] = new GTVector<GFTYPE>(grid_->size());
     for ( GSIZET j=0; j<utmp_.size(); j++ ) utmp_[j] = new GTVector<GFTYPE>(grid_->size());
     for ( GSIZET j=0; j<u_   .size(); j++ ) u_   [j] = new GTVector<GFTYPE>(grid_->size());
     for ( GSIZET j=0; j<ua_  .size(); j++ ) ua_  [j] = new GTVector<GFTYPE>(grid_->size());
@@ -270,22 +273,32 @@ cout << "main: Initializing state..." << endl;
 cout << "main: State initiallized." << endl; 
 cout << "main: u(t=0)=" << *u_[0] << endl;
 
+    char stmp[1024];
+    GTVector<GString> svars;
+    svars.resize(u_.size());
+
+*uold_[0] = *u_[0];
     GPTLstart("time_loop");
     for( GSIZET i=0; i<maxSteps; i++ ){
       eqn_base->step(t, u_, ub_, dt);
+*utmp_[0] = (*u_[0]) - (*uold_[0]);
+utmp_[0]->abs();
+for ( auto j=0; j<svars.size(); j++ ) {
+sprintf(stmp, "du%d", j+1);
+svars[j] = stmp;
+}
+gio(*grid_, utmp_, 1, i, svars, comm, bgridwritten);
       t += dt;
     }
     GPTLstop("time_loop");
     
     // Write binary output:
-    char stmp[1024];
-    GTVector<GString> svars;
     svars.resize(u_.size());
     for ( auto j=0; j<svars.size(); j++ ) {
       sprintf(stmp, "u%d", j+1);
       svars[j] = stmp;
     }
-    gio(*grid_, u_, maxSteps, svars, comm, bgridwritten);
+    gio(*grid_, u_, u_.size(), maxSteps, svars, comm, bgridwritten);
 
 #if 1
     // Compute analytic solution, do comparisons:
@@ -314,6 +327,11 @@ cout << "main: nnorm[" << j << "]=" << nnorm[j] << endl;
     }
     
     compute_analytic(*grid_, t, ptree, ua_); // analyt soln at t
+    for ( auto j=0; j<svars.size(); j++ ) {
+      sprintf(stmp, "u%da", j+1);
+      svars[j] = stmp;
+    }
+    gio(*grid_, ua_, ua_.size(),  maxSteps, svars, comm, bgridwritten);
     for ( GSIZET j=0; j<nsolve; j++ ) { //local errors
 cout << "main: u [t=" << t << "]=" << *u_ [ j] << endl;
 cout << "main: ua[t=" << t << "]=" << *ua_ [j] << endl;

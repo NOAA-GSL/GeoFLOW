@@ -9,7 +9,7 @@
 
 using namespace std;
 
-int gio(GGrid &grid, State &u, GSIZET tindex, GTVector<GString> &svars, GC_COMM comm, GBOOL &bgridprinted)
+int gio(GGrid &grid, State &u, GINT nu, GSIZET tindex, GTVector<GString> &svars, GC_COMM comm, GBOOL &bgridprinted)
 {
 
     GString serr ="gio: ";
@@ -17,7 +17,7 @@ int gio(GGrid &grid, State &u, GSIZET tindex, GTVector<GString> &svars, GC_COMM 
     
     GINT myrank = GComm::WorldRank(comm);
 
-    assert(svars.size() >= u.size() 
+    assert(svars.size() >=  nu
         && "Insufficicent number of state variable names specified");
 
     GINT           dim = GDIM;
@@ -49,7 +49,7 @@ int gio(GGrid &grid, State &u, GSIZET tindex, GTVector<GString> &svars, GC_COMM 
     }
 
     // Print field data:
-    for ( auto j=0; j<u.size(); j++ ) {
+    for ( auto j=0; j<nu; j++ ) {
       sprintf(fname, "%s.%06d.%04d.out", svars[j].c_str(), tindex, myrank);
       fp = fopen(fname,"wb");
       // write header: dim, numelems, poly_order:
