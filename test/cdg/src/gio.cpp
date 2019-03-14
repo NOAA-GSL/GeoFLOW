@@ -9,7 +9,7 @@
 
 using namespace std;
 
-int gio(GGrid &grid, State &u, GINT nu, GSIZET tindex, GTVector<GString> &svars, GC_COMM comm, GBOOL &bgridprinted)
+int gio(GGrid &grid, State &u, GINT nu, GSIZET tindex, GFTYPE time, GTVector<GString> &svars, GC_COMM comm, GBOOL &bgridprinted)
 {
 
     GString serr ="gio: ";
@@ -29,8 +29,9 @@ int gio(GGrid &grid, State &u, GINT nu, GSIZET tindex, GTVector<GString> &svars,
    
 
     // Print convergence data to file:
-    FILE *fp;
-    GString sx[3] = {"xgrid", "ygrid", "zgrid"};
+    FILE      *fp;
+    GString   sx[3] = {"xgrid", "ygrid", "zgrid"};
+    GElemType gtype = grid.gtype();
 
     // Print grid, if not printed already:
     if ( !bgridprinted ) {
@@ -38,9 +39,11 @@ int gio(GGrid &grid, State &u, GINT nu, GSIZET tindex, GTVector<GString> &svars,
         sprintf(fname, "%s.%04d.out", sx[j].c_str(),  myrank);
         fp = fopen(fname,"wb");
         // write header: dim, numelems, poly_order:
-        fwrite(&dim         , sizeof(GINT)  ,    1, fp);
-        fwrite(&nelems      , sizeof(GSIZET),    1, fp);
-        fwrite(porder.data(), sizeof(GINT)  , GDIM, fp);
+        fwrite(&dim         , sizeof(GINT)  ,    1, fp); // problem dimension
+        fwrite(&nelems      , sizeof(GSIZET),    1, fp); // # elems
+        fwrite(porder.data(), sizeof(GINT)  , GDIM, fp); // expansion order in each dir
+        fwrite(&gtype       , sizeof(GINT)  ,    1, fp); // grid type
+        fwrite(&time        , sizeof(GFTYPE),    1, fp); // time stamp
         // write this tasks field data:
         fwrite((*xnodes)[j].data(), sizeof(GFTYPE), (*xnodes)[j].size(), fp);
         fclose(fp);
@@ -56,6 +59,8 @@ int gio(GGrid &grid, State &u, GINT nu, GSIZET tindex, GTVector<GString> &svars,
       fwrite(&dim         , sizeof(GINT)  ,    1, fp);
       fwrite(&nelems      , sizeof(GSIZET),    1, fp);
       fwrite(porder.data(), sizeof(GINT)  , GDIM, fp);
+      fwrite(&gtype       , sizeof(GINT)  , GDIM, fp);
+      fwrite(&time        , sizeof(GFTYPE), GDIM, fp);
       // write this tasks field data:
       fwrite((*u[j]).data(), sizeof(GFTYPE), (*u[j]).size(), fp);
       fclose(fp);
