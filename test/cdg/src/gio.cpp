@@ -59,8 +59,8 @@ int gio(GGrid &grid, State &u, GINT nu, GSIZET tindex, GFTYPE time, GTVector<GSt
       fwrite(&dim         , sizeof(GINT)  ,    1, fp);
       fwrite(&nelems      , sizeof(GSIZET),    1, fp);
       fwrite(porder.data(), sizeof(GINT)  , GDIM, fp);
-      fwrite(&gtype       , sizeof(GINT)  , GDIM, fp);
-      fwrite(&time        , sizeof(GFTYPE), GDIM, fp);
+      fwrite(&gtype       , sizeof(GINT)  ,    1, fp); // grid type
+      fwrite(&time        , sizeof(GFTYPE),    1, fp); // time stamp
       // write this tasks field data:
       fwrite((*u[j]).data(), sizeof(GFTYPE), (*u[j]).size(), fp);
       fclose(fp);
