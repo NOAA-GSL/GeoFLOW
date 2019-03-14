@@ -264,7 +264,7 @@ void normalize_euclidean(GTVector<GTVector<T>*> &x, GINT *iind, GINT nind)
 //**********************************************************************************
 // METHOD :    saxpby
 // DESC   : 
-//             compute x += ax + by
+//             compute x = ax + by
 //          
 // ARGS   : x : vector , updated
 //          a : const multiplying x
@@ -276,6 +276,7 @@ void normalize_euclidean(GTVector<GTVector<T>*> &x, GINT *iind, GINT nind)
 template<typename T>
 void saxpby(GTVector<T> &x, T a, GTVector<T> &y, T b) 
 {
+  assert(x.size() == y.size() && "Incompatible array sizes");
   for ( GSIZET j=0; j<x.size(); j++ ) { 
     x[j] = a*x[j] + b*y[j];
   }
