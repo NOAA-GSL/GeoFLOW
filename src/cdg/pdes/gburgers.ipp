@@ -221,8 +221,13 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const Time &dt
     gadvect_->apply   (*u[0], c_ , uoptmp_, *dudt[0]); // apply advection
     ghelm_->opVec_prod(*u[0], uoptmp_, *urhstmp_[0]);  // apply diffusion
    *urhstmp_[0] *= -1.0; // Lap op is negative on RHS
+#if 1
    *urhstmp_[0] -= (*dudt[0]); // subtract advection term
+#else
+   *urhstmp_[0] = (*urhstmp_[0]) - (*dudt[0]); // subtract advection term
+#endif
     gimass_->opVec_prod(*urhstmp_[0], uoptmp_, *dudt[0]); // apply M^-1
+cout << "GBurgers::dudt_impl  .....................................................dudt completed" << endl;
   }
   else {             // nonlinear advection
     for ( auto k=0; k<GDIM; k++ ) {
@@ -256,8 +261,8 @@ void GBurgers<TypePack>::step_impl(const Time &t, State &uin, State &ub, const T
 
   // Set evolved state vars from input state:
   if ( bpureadv_ ) {
-    for ( auto j=0; j<c_.size(); j++ ) c_ [j] = uin[j+1];
     uevolve_[0] = uin[0];
+    for ( auto j=0; j<c_.size(); j++ ) c_ [j] = uin[j+1];
   }
   else {
     for ( auto j=0; j<uin.size(); j++ ) uevolve_ [j] = uin[j];
@@ -265,8 +270,8 @@ void GBurgers<TypePack>::step_impl(const Time &t, State &uin, State &ub, const T
 
   switch ( isteptype_ ) {
     case GSTEPPER_EXRK:
-      step_exrk(t, uevolve_, ub, dt, uold_);
-      for ( auto j=0; j<uevolve_.size(); j++ ) *uevolve_[j] = *uold_[j];
+      for ( auto j=0; j<uold_.size(); j++ ) *uold_[j] = *uevolve_[j];
+      step_exrk(t, uold_, ub, dt, uevolve_);
       break;
     case GSTEPPER_BDFAB:
     case GSTEPPER_BDFEXT:
@@ -334,6 +339,7 @@ void GBurgers<TypePack>::step_multistep(const Time &t, State &uin, State &ub, co
 template<typename TypePack>
 void GBurgers<TypePack>::step_exrk(const Time &t, State &uin, State &ub, const Time &dt, State &uout)
 {
+  assert(gexrk_ != NULLPTR && "GExRK operator not instantiated");
 
   // If non-conservative, compute RHS from:
   //     du/dt = M^-1 ( -u.Grad u + nu nabla u ):
@@ -409,6 +415,7 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
       nop = utmp_.size()-uold_.size()-urktmp_.size()-urhstmp_.size();
       assert(nop > 0 && "Invalid operation tmp array specification");
       uoptmp_ .resize(nop); // RHS operator work space
+      // Make sure there is no overlap between tmp arrays:
       n = 0;
       for ( GSIZET j=0; j<nstate         ; j++, n++ ) uold_   [j] = utmp_[n];
       for ( GSIZET j=0; j<urktmp_ .size(); j++, n++ ) urktmp_ [j] = utmp_[n];

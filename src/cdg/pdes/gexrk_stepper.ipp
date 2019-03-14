@@ -99,6 +99,7 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &ub,
     // Compute k_m:
     //   k_m = RHS( t^n + alpha_m * h, u^n + h Sum_j=1^m-1 beta_mj k_j ),
     tt = t + (*alpha)[m]*h;
+
     for ( n=0; n<nstate; n++ ) { // for each state member, u
       for ( j=0,*isum=0.0; j<m; j++ ) *isum += (*K_[j][n]) * ( (*beta)(m,j)*h );
      *u[n]  = (*uin[n]) + (*isum);
