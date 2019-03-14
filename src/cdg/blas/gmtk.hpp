@@ -215,7 +215,6 @@ void cross_prod(GTVector<T> &Ax, GTVector<T> &Ay, GTVector<T> &Az,
 } // end of method cross_prod (2)
 
 
-
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : normalize_euclidean
@@ -258,7 +257,29 @@ void normalize_euclidean(GTVector<GTVector<T>*> &x, GINT *iind, GINT nind)
     }
   }
 
-} // end of method cross_prod
+} // end of method normalize_euclidean
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD :    saxpby
+// DESC   : 
+//             compute x += ax + by
+//          
+// ARGS   : x : vector , updated
+//          a : const multiplying x
+//          y : vector, must be same size as x
+//          b : const multiplying y
+//          
+// RETURNS: GTVector & 
+//**********************************************************************************
+template<typename T>
+void saxpby(GTVector<T> &x, T a, GTVector<T> &y, T b) 
+{
+  for ( GSIZET j=0; j<x.size(); j++ ) { 
+    x[j] = a*x[j] + b*y[j];
+  }
+} // end of method saxpby
 
 
   template<typename T>     
