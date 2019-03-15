@@ -196,7 +196,7 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const Time &dt
   // weak Laplacian (q * mass isn't being used), or there will 
   // be problems. This is required for explicit schemes, for
   // which this method is called.
-
+cout << "GBurgers::dudt: ........................doheat=" << doheat_ << endl;
   // Do heat equation RHS:
   //     du/dt = nu nabla^2 u -->
   //     du/dt = -nu L u (in descrete form) 
