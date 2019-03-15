@@ -547,7 +547,7 @@ void I3_X_I2_X_D1<GDOUBLE>(GTMatrix<GDOUBLE> &D1, GTVector<GDOUBLE> &u,
   }
 #endif
 
-  dmxm(y.data(), D1.data().data(), &N11, &N12, y.data(), &N1, &NYZ, &szMatCache_);
+  dmxm(y.data(), D1.data().data(), &N11, &N12, u.data(), &N1, &NYZ, &szMatCache_);
 
 
 } // end of method I3_X_I2_X_D1
