@@ -218,23 +218,17 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const Time &dt
   if ( bpureadv_ ) { // pure linear advection
     // Remember: adv. velocity, c_ should already be set in
     //           main entry point, step_impl() method:
+//cout << "GBurgers::dudt_impl  .....................................................cx=" <<endl << *c_[0] << endl;
     gadvect_->apply   (*u[0], c_ , uoptmp_, *dudt[0]); // apply advection
     ghelm_->opVec_prod(*u[0], uoptmp_, *urhstmp_[0]);  // apply diffusion
-   *urhstmp_[0] *= -1.0; // Lap op is negative on RHS
-#if 1
-   *urhstmp_[0] -= (*dudt[0]); // subtract advection term
-#else
-   *urhstmp_[0] = (*urhstmp_[0]) - (*dudt[0]); // subtract advection term
-#endif
+    GMTK::saxpby<GFTYPE>(*urhstmp_[0], -1.0, *dudt[0], -1.0);
     gimass_->opVec_prod(*urhstmp_[0], uoptmp_, *dudt[0]); // apply M^-1
-cout << "GBurgers::dudt_impl  .....................................................dudt completed" << endl;
   }
   else {             // nonlinear advection
     for ( auto k=0; k<GDIM; k++ ) {
       gadvect_->apply(*u[k], u, uoptmp_, *dudt[k]);     // apply advection
       ghelm_->opVec_prod(*u[k], uoptmp_, *urhstmp_[0]); // apply diffusion
-     *urhstmp_[0] *= -1.0; // is negative on RHS
-     *urhstmp_[0] -= *dudt[k]; // subtract nonlinear term
+      GMTK::saxpby<GFTYPE>(*urhstmp_[0], -1.0, *dudt[k], -1.0);
       gimass_->opVec_prod(*urhstmp_[0], uoptmp_, *dudt[k]); // apply M^-1
     }
   }
