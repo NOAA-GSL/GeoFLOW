@@ -166,7 +166,7 @@ int main(int argc, char **argv)
 
     // Initialize u: set p, q, r exponents
     // (Can set up to read from input file):
-    GFTYPE p=6, q=6, r=0; 
+    GFTYPE p=10, q=10, r=0; 
     GFTYPE x, y, z=1.0;
     GTVector<GFTYPE> etmp1;
     GTVector<GTVector<GFTYPE>> *xnodes = &grid_->xNodes();   
@@ -185,8 +185,10 @@ int main(int argc, char **argv)
       if ( GDIM > 2 ) (*da[2])[j] = r==0 ? 0.0 : r*pow(x,p)*pow(y,q)*pow(z,r-1);
     }
 #if defined(_DO_REFDERIV)
+cout << "main......................................doing REF_DERIVS:" << endl;
     // Compute GDIM derivs on u, with weights. Integrate solution
     // later to compare with analytic solution:
+//  GMTK::compute_grefderivs(*grid_, *u[0], etmp1, FALSE, du);
     GMTK::compute_grefderivsW(*grid_, *u[0], etmp1, FALSE, du);
     for ( GSIZET j=0; j<du.size(); j++ ) {  // do chain rule
        du[j]->pointProd((*dXidX)(j,0));
@@ -231,6 +233,7 @@ int main(int argc, char **argv)
       cout << "main: error du[" << j << "]=" << *du[j] << endl; 
 #if 1
       du[j]->pointProd(*jac);
+//    du[j]->pointProd(*(mass.data()));
       ftmp = du[j]->sum();
       GComm::Allreduce(&ftmp  , du_int.data()+j , 1, T2GCDatatype<GFTYPE>() , GC_OP_SUM, comm);
       maxerror[j] = fabs(da_int[j] - du_int[j]) / (da_int[j]+1.0e-15);
