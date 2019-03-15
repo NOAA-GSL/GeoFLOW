@@ -91,10 +91,10 @@ int main(int argc, char **argv)
     GINT   nstate=GDIM;  // number 'state' arrays
     GINT   nsolve=GDIM;  // number *solved* 'state' arrays
     GSIZET maxSteps;
-    GFTYPE radiusi=1, radiuso=2;
+    GFTYPE radiusi=1, radiuso=2, tt;
     std::vector<GINT> ne(3); // # elements in each direction in 3d
     GString sgrid;// name of JSON grid object to use
-    GTVector<GString> svars, savars;
+    GTVector<GString> svars, savars, sdu;
     char stmp[1024];
     GC_COMM comm = GC_COMM_WORLD;
 
@@ -232,8 +232,8 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     
     if      ( solver_traits.doheat   ) { nstate =  nsolve = 1; } 
     else if ( solver_traits.bpureadv ) { nstate = GDIM + 1; nsolve = 1;} // 1-state + GDIM  v-components
-    uold_.resize(nsolve);
     utmp_.resize(24);
+    uold_.resize(nsolve);
     u_.resize(nstate);
     ua_.resize(nsolve);
     ub_.resize(nsolve);
@@ -277,8 +277,11 @@ cout << "main: Initializing state..." << endl;
       svars.push_back(stmp);
       sprintf(stmp, "u%da", j+1);
       savars.push_back(stmp);
+      sprintf(stmp, "du%d", j+1);
+      sdu.push_back(stmp);
     }
-    gio(*grid_, u_, 1, 0, svars, comm, bgridwritten);
+    gio(*grid_, u_, 1, 0, 0.0, svars, comm, bgridwritten);
+
 cout << "main: State initiallized." << endl; 
 cout << "main: u(t=0)=" << *u_[0] << endl;
 
@@ -289,25 +292,25 @@ cout << "main: u(t=0)=" << *u_[0] << endl;
     }
     GPTLstop("time_loop");
     
+    tt = 0.0;
+    compute_analytic(*grid_, tt, ptree, ua_); // analyt soln at t=0
+
     // Write binary output:
-    gio(*grid_, u_, u_.size(), maxSteps, svars, comm, bgridwritten);
+    gio(*grid_, u_, u_.size(), maxSteps, t, svars, comm, bgridwritten);
 
 #if 1
     // Compute analytic solution, do comparisons:
-    GFTYPE tt;
     GTVector<GFTYPE> lnorm(3), gnorm(3), maxerror(3);
     GTVector<GFTYPE> nnorm(nsolve);
     
     maxerror = 0.0;
     lnorm    = 0.0;  
     nnorm    = 1.0;
-  
-    tt = 0.0;
-    compute_analytic(*grid_, tt, ptree, ua_); // analyt soln at t=0
+
+
     for ( GSIZET j=0; j<nsolve; j++ ) { //local errors
-      for ( GSIZET i=0; i<ua_[j]->size(); i++ ) lnorm[0] = MAX(lnorm[0],fabs((*ua_[j])[i]));
+      ua_[j]->pow(2);
       nnorm[j] = grid_->integrate(*ua_  [j],*utmp_[0]) ; // L2 norm of analyt soln at t=0
-      GComm::Allreduce(lnorm.data()  , nnorm.data()  , 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm);
 cout << "main: ua(t=0)[" << j << "]_max=" << ua_[j]->max() << endl;
 cout << "main: ua(t=0)[" << j << "]_imax=" << ua_[j]->imax() << endl;
 cout << "main: u (t=" << t << ")[" << j << "]_max=" << u_[j]->max() << endl;
@@ -316,7 +319,7 @@ cout << "main: nnorm[" << j << "]=" << nnorm[j] << endl;
     }
     
     compute_analytic(*grid_, t, ptree, ua_); // analyt soln at t
-    gio(*grid_, ua_, ua_.size(),  maxSteps, savars, comm, bgridwritten);
+    gio(*grid_, ua_, ua_.size(),  maxSteps, t, savars, comm, bgridwritten);
     for ( GSIZET j=0; j<nsolve; j++ ) { //local errors
 cout << "main: u [t=" << t << "]=" << *u_ [ j] << endl;
 cout << "main: ua[t=" << t << "]=" << *ua_ [j] << endl;
@@ -558,7 +561,7 @@ void compute_pergauss_adv(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GT
   GBOOL            bContin;
   GINT             n;
   GSIZET           i, j, k;
-  GFTYPE           argxp, argxm, psum, prod, sum, eps;
+  GFTYPE           argxp, argxm, psum, rat, sum, eps;
   GFTYPE           nxy, pint, sig0, u0;
   GTVector<GFTYPE> f(GDIM), xx(GDIM), si(GDIM), sig(GDIM);
   GTPoint<GFTYPE>  r0(3), P0(3), gL(3);
@@ -575,7 +578,7 @@ void compute_pergauss_adv(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GT
   // Get periodicity length, gL:
   std::vector<GFTYPE> xyz0 = boxptree.getArray<GFTYPE>("xyz0");
   std::vector<GFTYPE> dxyz = boxptree.getArray<GFTYPE>("delxyz");
-  P0 = xyz0; r0 = dxyz; gL = P0 + r0;
+  P0 = xyz0; r0 = dxyz; gL = r0;
 
   GTVector<GString> bc(6);
   bc[0] = boxptree.getValue<GString>("bdy_x_0");
@@ -606,7 +609,7 @@ void compute_pergauss_adv(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GT
 
   // Set velocity here. May be a function of time.
   // These point to components of state u_:
-  *c_[0]  = 1.0;
+  *c_[0]  = 0.0;
   *c_[1]  = 0.0;
   if ( GDIM > 2 ) *c_[2]  = 0.0;
 
@@ -614,30 +617,27 @@ void compute_pergauss_adv(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GT
 
     for ( k=0, argxp=0.0; k<GDIM; k++ ) {
       f [k]  = modf((*c_[k])[j]*t/gL[k],&pint);
+//    f [k]  = (*c_[k])[j]*t/gL[k];
       xx[k]  = (*xnodes)[k][j] - r0[k] - f[k]*gL[k];
-      argxp += -xx[k]*xx[k]*si[k];
     }
 
-    sum  = exp(argxp);
+    sum  = 0.0;
 
-    prod = 1.0;
-    for ( k=0; k<GDIM; k++ ) {
-      n       = 1;
-      bContin = TRUE;
-      while ( bContin ) {
-        argxp = argxm = 0.0;
-        for ( k=0; k<GDIM; k++ ) {
-          argxp   += -pow((xx[k]+n*gL[k]),2.0)*si[k];
-          argxm   += -pow((xx[k]-n*gL[k]),2.0)*si[k];
-        }
-        psum    =  exp(argxp) + exp(argxm);
-        sum    +=  psum;
-        bContin =  psum/sum > eps;
-        n++;
+    n    = 0;
+    rat = 1.0;
+    while ( rat > eps ) {
+      argxp = argxm = 0.0;
+      for ( k=0; k<GDIM; k++ ) {
+        argxp   += pow((xx[k]+n*gL[k]),2.0)*si[k];
+        argxm   += pow((xx[k]-n*gL[k]),2.0)*si[k];
       }
-      prod *= sum;
+      psum    =  n==0 ? exp(-argxp) : exp(-argxp) + exp(-argxm);
+      sum    +=  psum;
+      rat     = psum / sum ;
+      n++;
     }
-    (*ua[0])[j] = u0*pow(sig0,2)/pow(sig[0],2)*prod;
+cout << "compute_pergauss_adv: .................................n=" << n << endl;
+    (*ua[0])[j] = u0*pow(sig0,2)/pow(sig[0],2)*sum;
   }
 
   
@@ -723,7 +723,7 @@ void compute_pergauss_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
   GBOOL            bContin;
   GINT             n;
   GSIZET           i, j, k;
-  GFTYPE           argxp, argxm, eps, prod, psum, sum;
+  GFTYPE           argxp, argxm, eps, psum, sum;
   GFTYPE           nxy, sig0, u0;
   GTVector<GFTYPE> xx(GDIM), si(GDIM), sig(GDIM);
   GTPoint<GFTYPE>  r0(3), P0(3), gL(3);
@@ -774,24 +774,20 @@ void compute_pergauss_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
 
     sum  = exp(argxp);
 
-    prod = 1.0;
-    for ( k=0; k<GDIM; k++ ) {
-      n       = 1;
-      bContin = TRUE;
-      while ( bContin ) {
-        argxp = argxm = 0.0;
-        for ( k=0; k<GDIM; k++ ) {
-          argxp   += -pow((xx[k]+n*gL[k]),2.0)*si[k];
-          argxm   += -pow((xx[k]-n*gL[k]),2.0)*si[k];
-        }
-        psum    =  exp(argxp) + exp(argxm);
-        sum    +=  psum;
-        bContin =  psum/sum > eps;
-        n++;
+    n       = 1;
+    bContin = TRUE;
+    while ( bContin ) {
+      argxp = argxm = 0.0;
+      for ( k=0; k<GDIM; k++ ) {
+        argxp   += -pow((xx[k]+n*gL[k]),2.0)*si[k];
+        argxm   += -pow((xx[k]-n*gL[k]),2.0)*si[k];
       }
-      prod *= sum;
+      psum    =  exp(argxp) + exp(argxm);
+      sum    +=  psum;
+      bContin =  psum/sum > eps;
+      n++;
     }
-    (*ua[0])[j] = u0*pow(sig0,2)/pow(sig[0],2)*prod;
+    (*ua[0])[j] = u0*pow(sig0,2)/pow(sig[0],2)*sum;
   }
 
   
