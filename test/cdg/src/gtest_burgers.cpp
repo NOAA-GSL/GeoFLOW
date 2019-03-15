@@ -288,6 +288,7 @@ cout << "main: u(t=0)=" << *u_[0] << endl;
     GPTLstart("time_loop");
     for( GSIZET i=0; i<maxSteps; i++ ){
       eqn_base->step(t, u_, ub_, dt);
+gio(*grid_, u_, 1, i, t, svars, comm, bgridwritten);
       t += dt;
     }
     GPTLstop("time_loop");
@@ -609,8 +610,8 @@ void compute_pergauss_adv(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GT
 
   // Set velocity here. May be a function of time.
   // These point to components of state u_:
-  *c_[0]  = 0.0;
-  *c_[1]  = 0.0;
+  *c_[0]  = -1.0;
+  *c_[1]  =  0.0;
   if ( GDIM > 2 ) *c_[2]  = 0.0;
 
   for ( j=0; j<nxy; j++ ) {
@@ -636,7 +637,6 @@ void compute_pergauss_adv(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GT
       rat     = psum / sum ;
       n++;
     }
-cout << "compute_pergauss_adv: .................................n=" << n << endl;
     (*ua[0])[j] = u0*pow(sig0,2)/pow(sig[0],2)*sum;
   }
 
@@ -813,6 +813,7 @@ void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVecto
   GString      sbcs   = ptree.getValue<GString>("bdy_conditions"); // name of initialization block
   PropertyTree blockptree = ptree.getPropertyTree(sblock); // sub-block of main ptree describing initialization type
 
+  assert(doheat != bpureadv && "Cannot set both heat AND pure advection eqs");
   
   if ( doheat  ) {
     
