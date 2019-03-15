@@ -157,16 +157,17 @@ void GAdvect::reg_prod(GTVector<GFTYPE> &p, const GTVector<GTVector<GFTYPE>*> &u
        && "Insufficient temp space specified");
 
 // Must compute:
-//    po = u . Grad p = W J (G1 u1 D1 + G2 u2 D2 + G3 u3 D3 ) p
+//    po = u . Grad p => W J (G1 u1 D1 + G2 u2 D2 + G3 u3 D3 ) p
 //
 // where
 //    D1u = (I_X_I_X_Dx)u; D2u = (I_X_Dy_X_I)u; D3u = (Dz_X_I_X_I)u
 // and Gj are the 'metric' terms computed for the grid, dXi^j/dX^j.
 // For regular elements, these are diagnonal, and we include in G_j
-// Jacobians and weights:
+// Jacobians, and weights are inclued in the computation of 
+// the derivative:
 
   // Get reference derivatives:
-  GMTK::compute_grefderivs(*grid_, p, etmp1_, FALSE, utmp); // utmp stores tensor-prod derivatives, Dj p
+  GMTK::compute_grefderivsW(*grid_, p, etmp1_, FALSE, utmp); // utmp stores tensor-prod derivatives, Dj p
 
   // Compute po += Gj uj D^j p): 
   po = *utmp[0];
@@ -175,8 +176,7 @@ void GAdvect::reg_prod(GTVector<GFTYPE> &p, const GTVector<GTVector<GFTYPE>*> &u
   for ( GSIZET j=1; j<GDIM; j++ ) { 
     utmp [j]->pointProd(*G_[j]);// remember, mass & Jac included in G
     utmp [j]->pointProd(*u[j]); // do uj * (Gj * Dj p)
-    GMTK::saxpby(po, 1.0, *utmp[j], 1.0);
-//  po += *utmp[j];
+    po += *utmp[j];
   }
 
 } // end of method reg_prod
@@ -309,21 +309,16 @@ void GAdvect::reg_init()
   GTVector<GSIZET>             N(GDIM);
   GTMatrix<GTVector<GFTYPE>>  *dXidX;    // dXi/dX matrix
   GTVector<GFTYPE>            *Jac;      // Jacobian
-  GMass                        mass(*grid_);
+//GMass                        mass(*grid_);
 
   // Compute 'metric' components:
   // Gi = [dxi/dx, deta/dy, dzeta/dz]; 
   //
   // We have
   // 
-  //    Jac = L1 L2 L3/8 and
-  //  dXi_1/dx)^2 = 4 / L1^2
-  //  dXi_2/dy)^2 = 4 / L2^2
-  //  dXi_3/dz)^2 = 4 / L3^2
+  //    Jac = L1 L2 L3/8 , 3d
+  //    Jac = L1 L2 /4 , 2d
   //
-  // We compute the metric terms as : Gii = (dXi_i/dX_i)^2
-  // NOTE: unlike in the deformed case, we don't multiply
-  //       by the weights or by Jacobian:
   //
   //  G1 = dXi^1/dX^1 = 2 / L1
   //  G2 = dXi^2/dX^2 = 2 / L2
@@ -344,7 +339,7 @@ void GAdvect::reg_init()
   for ( GSIZET j=0; j<GDIM; j++ ) {
    *G_[j] = (*dXidX)(j,0);
     G_[j]->pointProd(*Jac);
-    G_[j]->pointProd(*(mass.data()));
+//  G_[j]->pointProd(*(mass.data()));
   }
 
 
