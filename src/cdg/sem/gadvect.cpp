@@ -169,10 +169,13 @@ void GAdvect::reg_prod(GTVector<GFTYPE> &p, const GTVector<GTVector<GFTYPE>*> &u
   GMTK::compute_grefderivs(*grid_, p, etmp1_, FALSE, utmp); // utmp stores tensor-prod derivatives, Dj p
 
   // Compute po += Gj uj D^j p): 
-  po = 0.0;
-  for ( GSIZET j=0; j<GDIM; j++ ) { 
+  po = *utmp[0];
+  po.pointProd(*G_[0]);// remember, mass & Jac included in G
+  po.pointProd(*u[0]); // do uj * (Gj * Dj p)
+  for ( GSIZET j=1; j<GDIM; j++ ) { 
     utmp [j]->pointProd(*G_[j]);// remember, mass & Jac included in G
     utmp [j]->pointProd(*u[j]); // do uj * (Gj * Dj p)
+//  GMTK::saxpby(po, 1.0, *utmp[j], 1.0);
     po += *utmp[j];
   }
 
