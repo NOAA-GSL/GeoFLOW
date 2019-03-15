@@ -65,7 +65,6 @@ int gio(GGrid &grid, State &u, GINT nu, GSIZET tindex, GFTYPE time, GTVector<GSt
       fwrite((*u[j]).data(), sizeof(GFTYPE), (*u[j]).size(), fp);
       fclose(fp);
     }
-cout << "gio: done." << endl;
     return(0);
 
 } // end, gio
