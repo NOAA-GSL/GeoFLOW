@@ -27,16 +27,12 @@
 #include "gmass.hpp"
 #include "gexrk_stepper.hpp"
 #include "ggrid_factory.hpp"
-#include "pdeint/equation_base.hpp"
-#include "pdeint/integrator.hpp"
-#include "pdeint/null_observer.hpp"
 #include "tbox/property_tree.hpp"
 #include "tbox/mpixx.hpp"
 #include "tbox/global_manager.hpp"
 #include "tbox/input_manager.hpp"
 #include "gio.h"
 
-using namespace geoflow::pdeint;
 using namespace geoflow::tbox;
 using namespace std;
 
@@ -49,7 +45,7 @@ GGrid      *grid_;
 GAdvect    *gadvect_;
 GHelmholtz *ghelm_;
 GMass      *gimass_;
-GGFX        ggfx_;
+GGFX       *ggfx_;
 State u_;
 State c_;
 State ua_;
@@ -91,9 +87,10 @@ int main(int argc, char **argv)
     GC_COMM comm = GC_COMM_WORLD;
 
     // Initialize comm & global environment:
-    mpixx::environment env(argc,argv); // init GeoFLOW comm
+//  GComm::InitComm(&argc,&argv);
+    mpixx::environment env(argc, argv); // init GeoFLOW comm
     mpixx::communicator world;
-    GlobalManager::initialize(argc,argv); 
+    GlobalManager::initialize(argc, argv); 
     GlobalManager::startup();
     comm = world; // need this for solver(s) & grid
 
@@ -194,19 +191,20 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
 
     GPTLstart("do_gather_op");
     // Initialize gather/scatter operator:
-    init_ggfx(*grid_, ggfx_);
+    ggfx_ = new GGFX();
+    init_ggfx(*grid_, *ggfx_);
     GPTLstop("do_gather_op");
 
 
     // Create state and tmp space:
-    nstate = GDIM + 1; nsolve = 1; // 1-state + GDIM  v-components
+    nstate = nsolve = 1; // 1-state + GDIM  v-components
     utmp_.resize(24);
     uold_.resize(nsolve);
-    u_.resize(nstate);
+    u_.resize(nsolve);
     ua_.resize(nsolve);
     ub_.resize(nsolve);
     c_ .resize(GDIM);
-    urktmp_ .resize(nstate*(itorder+1)+1); // RK stepping work space
+    urktmp_ .resize(nstate*(itorder+2)+1); // RK stepping work space
     urhstmp_.resize(1); // work space for RHS
     GSIZET nop = utmp_.size()-uold_.size()-urktmp_.size()-urhstmp_.size();
     assert(nop > 0 && "Invalid operation tmp array specification");
@@ -217,9 +215,8 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     for ( GSIZET j=0; j<u_   .size(); j++ ) u_   [j] = new GTVector<GFTYPE>(grid_->size());
     for ( GSIZET j=0; j<ua_  .size(); j++ ) ua_  [j] = new GTVector<GFTYPE>(grid_->size());
     for ( GSIZET j=0; j<ub_  .size(); j++ ) ub_  [j] = new GTVector<GFTYPE>(grid_->nbdydof());
-    for ( GSIZET j=0; j<c_   .size(); j++ ) c_   [j] = u_[j+1];
+    for ( GSIZET j=0; j<c_   .size(); j++ ) c_   [j] = new GTVector<GFTYPE>(grid_->size());
     n = 0;
-    for ( GSIZET j=0; j<nstate         ; j++, n++ ) uold_   [j] = utmp_[n];
     for ( GSIZET j=0; j<urktmp_ .size(); j++, n++ ) urktmp_ [j] = utmp_[n];
     for ( GSIZET j=0; j<urhstmp_.size(); j++, n++ ) urhstmp_[j] = utmp_[n];
     for ( GSIZET j=0; j<uoptmp_ .size(); j++, n++ ) uoptmp_ [j] = utmp_[n];
@@ -251,7 +248,7 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     gexrk.set_update_bdy_callback(updatebc);
     gexrk.set_apply_bdy_callback(applybc);
     gexrk.setRHSfunction(rhs);
-    gexrk.set_ggfx(&ggfx_);
+    gexrk.set_ggfx(ggfx_);
 
     dt         = tintptree.getValue<GFTYPE>("dt"); 
     maxSteps = tintptree.getValue<GSIZET>("cycle_end");
@@ -365,6 +362,7 @@ cout << "main: diff=u-ua[" << j << "]=" << *utmp_[0] << endl;
     if ( grid_    != NULLPTR ) delete grid_;
     if ( gadvect_ != NULLPTR ) delete gadvect_;
     if ( ghelm_   != NULLPTR ) delete ghelm_;
+    if ( ggfx_    != NULLPTR ) delete ggfx_;
 
     return(0);
 
@@ -680,8 +678,9 @@ void dudt(const Time &t, const State &u,
           const Time &dt, State &dudt)
 {
     gadvect_->apply   (*u[0], c_ , uoptmp_, *dudt[0]); // apply advection
-    ghelm_->opVec_prod(*u[0], uoptmp_, *urhstmp_[0]);  // apply diffusion
-    GMTK::saxpby<GFTYPE>(*urhstmp_[0], -1.0, *dudt[0], -1.0);
+//  ghelm_->opVec_prod(*u[0], uoptmp_, *urhstmp_[0]);  // apply diffusion
+//  GMTK::saxpby<GFTYPE>(*urhstmp_[0], -1.0, *dudt[0], -1.0);
+    *dudt[0] *= -1.0;
     gimass_->opVec_prod(*urhstmp_[0], uoptmp_, *dudt[0]); // apply M^-1
 
 } // end method dudt
