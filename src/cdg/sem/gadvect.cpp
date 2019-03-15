@@ -175,8 +175,8 @@ void GAdvect::reg_prod(GTVector<GFTYPE> &p, const GTVector<GTVector<GFTYPE>*> &u
   for ( GSIZET j=1; j<GDIM; j++ ) { 
     utmp [j]->pointProd(*G_[j]);// remember, mass & Jac included in G
     utmp [j]->pointProd(*u[j]); // do uj * (Gj * Dj p)
-//  GMTK::saxpby(po, 1.0, *utmp[j], 1.0);
-    po += *utmp[j];
+    GMTK::saxpby(po, 1.0, *utmp[j], 1.0);
+//  po += *utmp[j];
   }
 
 } // end of method reg_prod
