@@ -538,6 +538,8 @@ void compute_dirgauss_adv(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GT
 
   // Ok, return to assumption of isotropic nu: 
   for ( GSIZET j=0; j<nxy; j++ ) {
+    // Note: following c t is actually Integral_0^t c(t') dt', 
+    //       so if c(t) changes, change this term accordingly:
     for ( GSIZET i=0; i<GDIM; i++ ) xx[i] = (*xnodes)[i][j] - r0[i] - (*c_[i])[j]*t;
     argxp = 0.0;
     for ( GSIZET i=0; i<GDIM; i++ ) argxp += -pow(xx[i],2.0)*si[i];
@@ -574,7 +576,7 @@ void compute_pergauss_adv(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GT
 
   assert(grid.gtype() == GE_REGULAR && "Invalid element types");
 
-  eps = std::numeric_limits<GFTYPE>::epsilon();
+  eps = 1.0e-4*std::numeric_limits<GFTYPE>::epsilon();
 
   // Get periodicity length, gL:
   std::vector<GFTYPE> xyz0 = boxptree.getArray<GFTYPE>("xyz0");
@@ -617,6 +619,8 @@ void compute_pergauss_adv(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GT
   for ( j=0; j<nxy; j++ ) {
 
     for ( k=0, argxp=0.0; k<GDIM; k++ ) {
+      // Note: following c t is actually Integral_0^t c(t') dt', 
+      //       so if c(t) changes, change this term accordingly:
       f [k]  = modf((*c_[k])[j]*t/gL[k],&pint);
 //    f [k]  = (*c_[k])[j]*t/gL[k];
       xx[k]  = (*xnodes)[k][j] - r0[k] - f[k]*gL[k];
@@ -720,10 +724,9 @@ void compute_dirgauss_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
 //**********************************************************************************
 void compute_pergauss_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVector<GTVector<GFTYPE>*> &ua)
 {
-  GBOOL            bContin;
   GINT             n;
   GSIZET           i, j, k;
-  GFTYPE           argxp, argxm, eps, psum, sum;
+  GFTYPE           argxp, argxm, eps, psum, rat, sum;
   GFTYPE           nxy, sig0, u0;
   GTVector<GFTYPE> xx(GDIM), si(GDIM), sig(GDIM);
   GTPoint<GFTYPE>  r0(3), P0(3), gL(3);
@@ -735,7 +738,7 @@ void compute_pergauss_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
 
   assert(grid.gtype() == GE_REGULAR && "Invalid element types");
   
-  eps = 10.0*std::numeric_limits<GFTYPE>::epsilon();
+  eps = 1.0e-4*std::numeric_limits<GFTYPE>::epsilon();
 
   // Get periodicity length, gL:
   PropertyTree boxptree = ptree.getPropertyTree("grid_box");
@@ -769,22 +772,21 @@ void compute_pergauss_heat(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
   for ( j=0; j<nxy; j++ ) {
     for ( k=0, argxp=0.0; k<GDIM; k++ ) {
       xx[k]  = (*xnodes)[k][j] - r0[k];
-      argxp += -xx[k]*xx[k]*si[k];
     }
 
-    sum  = exp(argxp);
+    sum  = 0.0;
 
-    n       = 1;
-    bContin = TRUE;
-    while ( bContin ) {
+    n    = 0;
+    rat  = 1.0;
+    while ( rat > eps) {
       argxp = argxm = 0.0;
       for ( k=0; k<GDIM; k++ ) {
-        argxp   += -pow((xx[k]+n*gL[k]),2.0)*si[k];
-        argxm   += -pow((xx[k]-n*gL[k]),2.0)*si[k];
+        argxp   += pow((xx[k]+n*gL[k]),2.0)*si[k];
+        argxm   += pow((xx[k]-n*gL[k]),2.0)*si[k];
       }
-      psum    =  exp(argxp) + exp(argxm);
+      psum    =  n == 0 ? exp(-argxp) : exp(-argxp) + exp(-argxm);
       sum    +=  psum;
-      bContin =  psum/sum > eps;
+      rat     =  psum/sum;
       n++;
     }
     (*ua[0])[j] = u0*pow(sig0,2)/pow(sig[0],2)*sum;
