@@ -538,6 +538,8 @@ void compute_dirgauss_adv(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GT
 
   // Ok, return to assumption of isotropic nu: 
   for ( GSIZET j=0; j<nxy; j++ ) {
+    // Note: following c t is actually Integral_0^t c(t') dt', 
+    //       so if c(t) changes, change this term accordingly:
     for ( GSIZET i=0; i<GDIM; i++ ) xx[i] = (*xnodes)[i][j] - r0[i] - (*c_[i])[j]*t;
     argxp = 0.0;
     for ( GSIZET i=0; i<GDIM; i++ ) argxp += -pow(xx[i],2.0)*si[i];
@@ -617,6 +619,8 @@ void compute_pergauss_adv(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GT
   for ( j=0; j<nxy; j++ ) {
 
     for ( k=0, argxp=0.0; k<GDIM; k++ ) {
+      // Note: following c t is actually Integral_0^t c(t') dt', 
+      //       so if c(t) changes, change this term accordingly:
       f [k]  = modf((*c_[k])[j]*t/gL[k],&pint);
 //    f [k]  = (*c_[k])[j]*t/gL[k];
       xx[k]  = (*xnodes)[k][j] - r0[k] - f[k]*gL[k];
