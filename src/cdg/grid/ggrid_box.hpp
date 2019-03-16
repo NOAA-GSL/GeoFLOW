@@ -41,6 +41,8 @@ public:
         void                do_grid();                                       // compute grid for irank
         void                set_partitioner(GDD_base *d);                    // set and use GDD object
         void                set_basis(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b); // set element basis
+        void                periodize();                                     // periodize coords, if allowed
+        void                unperiodize();                                   // un-periodize coords, if allow
 
         void                print(const GString &filename);                  // print grid to file
 
@@ -72,6 +74,8 @@ private:
                              hmesh_;         // list of vertices for each 3d (hex) element
          GTVector<GINT>      ne_;            // # elems in each coord direction in 3d
          GTVector<GBOOL>     bPeriodic_;     // is periodic in x, y, or z?
+         GTVector<GSIZET>    periodicids_;   // node ids that were made periodic in 1 or more dirs
+         GTVector<GINT>      periodicdirs_;  // integer with bits 1, 2, 3 set for direction of periodiscity
          GTVector<GBdyType>  global_bdy_types_;  // global types for each direction
          GTVector<GFTYPE>    Lbox_;          // length of box edges (x, y, [and z])
 

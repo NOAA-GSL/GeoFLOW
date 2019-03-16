@@ -11,6 +11,7 @@
 #include <cmath>
 #include <limits>
 #include <gptl.h>
+#include <typeinfo>
 #include "gelem_base.hpp"
 #include "ggrid.hpp"
 #include "gcomm.hpp"
@@ -886,8 +887,4 @@ void GGrid::init_bc_info()
   if ( ind != NULLPTR ) delete [] ind;
 
 } // end of method init_bc_info
-
-
-
-
 

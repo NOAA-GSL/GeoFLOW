@@ -706,3 +706,31 @@ void GGridBox::set_global_bdytypes_3d(GElem_base &pelem)
     }
   }
 } // end, method set_global_bdytypes_3d
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : periodize
+// DESC   : Periodize grid, if of appropriate type
+// ARGS   : none
+// RETURNS: none.
+//**********************************************************************************
+void GGridBox::periodize()
+{
+  cout << "GGridBox::periodize: ..........................................made it!" << endl;
+
+} // end of method periiodize
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : unperiodize
+// DESC   : Un-periodize grid, if of appropriate type
+// ARGS   : none
+// RETURNS: none.
+//**********************************************************************************
+void GGridBox::unperiodize()
+{
+
+} // end of method unperiodize
+
