@@ -75,7 +75,7 @@ private:
          GTVector<GINT>      ne_;            // # elems in each coord direction in 3d
          GTVector<GBOOL>     bPeriodic_;     // is periodic in x, y, or z?
          GTVector<GSIZET>    periodicids_;   // node ids that were made periodic in 1 or more dirs
-         GTVector<GINT>      periodicdirs_;  // integer with bits 1, 2, 3 set for direction of periodiscity
+         GTVector<GUINT>     periodicdirs_;  // integer with bits 1, 2, 3 set for direction of periodiscity
          GTVector<GBdyType>  global_bdy_types_;  // global types for each direction
          GTVector<GFTYPE>    Lbox_;          // length of box edges (x, y, [and z])
 

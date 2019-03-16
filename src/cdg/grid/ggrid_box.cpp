@@ -336,7 +336,7 @@ void GGridBox::do_grid2d(GINT irank)
 
     // With face/edge centroids computed, compute 
     // global boundary nodes:
-    GFTYPE eps=100*std::numeric_limits<GFTYPE>::min();
+    GFTYPE eps=100*std::numeric_limits<GFTYPE>::epsilon();
     for ( GSIZET j=0; j<2*ndim_; j++ ) { // cycle over all edges
       cent = pelem->edgeCentroid(j);
       face_ind = NULLPTR;
@@ -465,7 +465,7 @@ void GGridBox::do_grid3d(GINT irank)
     pelem->init(*xNodes);
 
     // With edge/face centroids set, compute bdy_nodes:
-    GFTYPE eps=100*std::numeric_limits<GFTYPE>::min();
+    GFTYPE eps=100*std::numeric_limits<GFTYPE>::epsilon();
     for ( GSIZET j=0; j<2*ndim_; j++ ) { // cycle over faces
       cent = pelem->faceCentroid(j);
       face_ind = NULLPTR;
@@ -577,15 +577,15 @@ void GGridBox::set_global_bdytypes_2d(GElem_base &pelem)
   GTVector<GTVector<GINT>>    *face_ind;
 
   GSIZET ib;
-  GFTYPE eps=100*std::numeric_limits<GFTYPE>::min();
+  GFTYPE eps=100*std::numeric_limits<GFTYPE>::epsilon();
   if ( bPeriodic_[0] ) { // check for periodicity in x
     for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each face index
       ib = (*bdy_ind)[k];
       if ( (FUZZYEQ(P0_.x1,(*xNodes)[0][ib],eps) 
         ||  FUZZYEQ(P1_.x1,(*xNodes)[0][ib],eps)) ) {
           (*bdy_typ)[k] = GBDY_PERIODIC;
-        // Set right x-coord equal to that on left-most bdy:
-        if ( FUZZYEQ(P1_.x1,(*xNodes)[0][ib],eps) ) (*xNodes)[0][ib] = P0_.x1;
+//      // Set right x-coord equal to that on left-most bdy:
+//      if ( FUZZYEQ(P1_.x1,(*xNodes)[0][ib],eps) ) (*xNodes)[0][ib] = P0_.x1;
       }
     }
   }
@@ -605,8 +605,8 @@ void GGridBox::set_global_bdytypes_2d(GElem_base &pelem)
       if ( FUZZYEQ(P0_.x2,(*xNodes)[1][ib],eps)  
         || FUZZYEQ(P1_.x2,(*xNodes)[1][ib],eps) ) {
           (*bdy_typ)[k] = GBDY_PERIODIC;
-        // Set top y-coord equal to that on bottom-most bdy:
-        if ( FUZZYEQ(P1_.x2,(*xNodes)[1][ib],eps) ) (*xNodes)[1][ib] = P0_.x2;
+//      // Set top y-coord equal to that on bottom-most bdy:
+//      if ( FUZZYEQ(P1_.x2,(*xNodes)[1][ib],eps) ) (*xNodes)[1][ib] = P0_.x2;
       }
     }
   }
@@ -642,15 +642,15 @@ void GGridBox::set_global_bdytypes_3d(GElem_base &pelem)
   GTVector<GTVector<GFTYPE>>  *xNodes =&pelem.xNodes();
 
   GSIZET ib;
-  GFTYPE eps=100*std::numeric_limits<GFTYPE>::min();
+  GFTYPE eps=100*std::numeric_limits<GFTYPE>::epsilon();
   if ( bPeriodic_[0] ) { // check for periodicity in x
     for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
       ib = (*bdy_ind)[k];
       if ( FUZZYEQ(P0_.x1,(*xNodes)[0][ib],eps)
         || FUZZYEQ(P1_.x1,(*xNodes)[0][ib],eps) ) {
           (*bdy_typ)[k] = GBDY_PERIODIC;
-        // Set right x-coord equal to that on left-most bdy:
-        if ( FUZZYEQ(P1_.x1,(*xNodes)[0][ib],eps) ) (*xNodes)[0][ib] = P0_.x1;
+//      // Set right x-coord equal to that on left-most bdy:
+//      if ( FUZZYEQ(P1_.x1,(*xNodes)[0][ib],eps) ) (*xNodes)[0][ib] = P0_.x1;
       }
     }
   }
@@ -670,8 +670,8 @@ void GGridBox::set_global_bdytypes_3d(GElem_base &pelem)
       if ( (FUZZYEQ(P0_.x2,(*xNodes)[1][ib],eps) 
        ||   FUZZYEQ(P1_.x2,(*xNodes)[1][ib],eps)) ) {
           (*bdy_typ)[k] = GBDY_PERIODIC;
-        // Set top y-coord equal to that on bottom-most bdy:
-        if ( FUZZYEQ(P1_.x2,(*xNodes)[1][ib],eps) ) (*xNodes)[1][ib] = P0_.x2;
+//      // Set top y-coord equal to that on bottom-most bdy:
+//      if ( FUZZYEQ(P1_.x2,(*xNodes)[1][ib],eps) ) (*xNodes)[1][ib] = P0_.x2;
       }
     }
   }
@@ -685,14 +685,14 @@ void GGridBox::set_global_bdytypes_3d(GElem_base &pelem)
     }
   }
 
-  if ( bPeriodic_[1] ) { // check for periodicity in z
+  if ( bPeriodic_[2] ) { // check for periodicity in z
     for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
       ib = (*bdy_ind)[k];
       if ( FUZZYEQ(P0_.x3,(*xNodes)[2][ib],eps) 
        ||  FUZZYEQ(P1_.x3,(*xNodes)[2][ib],eps) ) {
           (*bdy_typ)[k] = GBDY_PERIODIC;
-        // Set top z-coord equal to that on bottom-most bdy:
-        if ( FUZZYEQ(P1_.x3,(*xNodes)[2][ib],eps) ) (*xNodes)[2][ib] = P0_.x3;
+//      // Set top z-coord equal to that on bottom-most bdy:
+//      if ( FUZZYEQ(P1_.x3,(*xNodes)[2][ib],eps) ) (*xNodes)[2][ib] = P0_.x3;
       }
     }
   }
@@ -711,15 +711,57 @@ void GGridBox::set_global_bdytypes_3d(GElem_base &pelem)
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : periodize
-// DESC   : Periodize grid, if of appropriate type
+// DESC   : Periodize grid coordinates, by making x_2 = x_1 for all
+//          periodic coordinate directions, x.
 // ARGS   : none
 // RETURNS: none.
 //**********************************************************************************
 void GGridBox::periodize()
 {
-  cout << "GGridBox::periodize: ..........................................made it!" << endl;
+  assert(bInitialized_ && "Object not initialized");
 
-} // end of method periiodize
+  GTVector<GFTYPE>  x(xNodes_.size()); // coord values to set to
+
+
+  periodicids_.clear();
+  periodicdirs_.clear();
+
+  // Coords to set to correspond to bottom-most domain point:
+  for ( GSIZET k=0; k<x.size(); k++ ) x[k] = P0_[k];
+
+  GUINT  bit;
+  GSIZET id, n=0;
+  GFTYPE eps=100*std::numeric_limits<GFTYPE>::epsilon();
+  for ( GSIZET k=0; k<igbdy_[GBDY_PERIODIC].size(); k++ ) { // for each blobal bdy node
+    id = igbdy_[GBDY_PERIODIC][k];
+    periodicids_.push_back(id);       
+    periodicdirs_.push_back(0);
+    if ( FUZZYEQ(P1_.x1,xNodes_[0][id],eps) ) { // right-most coord will change
+      periodicdirs_[n] |= 1 << 0;  // set right-most direction bit  
+    }
+    if ( FUZZYEQ(P1_.x2,xNodes_[1][id],eps) ) { // top-most coord will change
+      periodicdirs_[n] |= 1 << 1;  // set 2nd right-most direction bit  
+    }
+    if ( xNodes_.size() > 2 
+      && FUZZYEQ(P1_.x3,xNodes_[2][id],eps) ) { // top-most coord will change
+      periodicdirs_[n] |= 1 << 2;  // set 3rd right-most direction bit  
+    }
+    n++;
+  }
+cout << "GGridBox::periodize: periodicids=" << periodicids_ << endl;
+cout << "GGridBox::periodize: periodicdirs=" << periodicdirs_ << endl;
+
+  // Now, cycle through periodic nodes and periodize coordinates:
+  for ( GSIZET k=0; k<periodicids_.size(); k++ ) { // for each periodic node
+    id = periodicids_[k];
+    for ( GSIZET i= 0; i<xNodes_.size(); i++ ) { // coord direction
+      // Set coord in this direction if corresp bit is set:
+      bit = (periodicdirs_[k] >> i) & 1; 
+      if ( bit ) xNodes_[i][id] = x[i];
+    }
+  }
+
+} // end of method periodize
 
 
 //**********************************************************************************
@@ -731,6 +773,29 @@ void GGridBox::periodize()
 //**********************************************************************************
 void GGridBox::unperiodize()
 {
+  // Use data from 'periodize' method to unset change in
+  // coordinates:
+
+  GTVector<GFTYPE>  x(xNodes_.size()); // coord values to set to
+
+  // Coords to set to correspond to top-most domain point:
+  for ( GSIZET k=0; k<x.size(); k++ ) x[k] = P1_[k];
+
+  // Cycle through periodic nodes and un-periodize coordinates:
+  GUINT  bit;
+  GSIZET id;
+  GFTYPE eps=100*std::numeric_limits<GFTYPE>::epsilon();
+  for ( GSIZET k=0; k<periodicids_.size(); k++ ) { // for each periodic node
+    id = periodicids_[k];
+    for ( GSIZET i= 0; i<xNodes_.size(); i++ ) { // coord direction
+      // Set coord in this direction if corresp bit is set:
+      bit = (periodicdirs_[k] >> i) & 1; 
+      if ( bit ) xNodes_[i][id] = x[i];
+    }
+  }
+
+  periodicids_.clear();
+  periodicdirs_.clear();
 
 } // end of method unperiodize
 
