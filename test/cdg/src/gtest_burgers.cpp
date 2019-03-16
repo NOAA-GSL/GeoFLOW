@@ -17,11 +17,13 @@
 #include <cstdlib>
 #include <cassert>
 #include <random>
+#include <typeinfo>
 #include "gcomm.hpp"
 #include "ggfx.hpp"
 #include "gllbasis.hpp"
 #include "gmorton_keygen.hpp"
 #include "gburgers.hpp"
+#include "ggrid_box.hpp"
 #include "ggrid_factory.hpp"
 #include "pdeint/equation_base.hpp"
 #include "pdeint/integrator.hpp"
@@ -218,6 +220,10 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     GPTLstart("gen_grid");
     // Create grid:
     grid_ = GGridFactory::build(gridptree, gbasis, comm);
+    if ( typeid(grid_) == typeid(GGridBox) ) {
+      static_cast<GGridBox*>(grid_)->periodize();
+exit(1);
+    }
     GPTLstop("gen_grid");
 
 
