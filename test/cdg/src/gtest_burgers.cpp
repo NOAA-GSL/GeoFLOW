@@ -220,18 +220,14 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     GPTLstart("gen_grid");
     // Create grid:
     grid_ = GGridFactory::build(gridptree, gbasis, comm);
-    if ( typeid(grid_) == typeid(GGridBox) ) {
-      static_cast<GGridBox*>(grid_)->periodize();
-exit(1);
-    }
     GPTLstop("gen_grid");
 
 
-    GPTLstart("do_gather_op");
+    GPTLstart("init_ggfx_op");
     // Initialize gather/scatter operator:
     GGFX ggfx;
     init_ggfx(*grid_, ggfx);
-    GPTLstop("do_gather_op");
+    GPTLstop("init_ggfx_op");
 
 
     // Create state and tmp space:
@@ -768,8 +764,15 @@ void init_ggfx(GGrid &grid, GGFX &ggfx)
 cout << "init_ggfx: glob_indices=" << glob_indices << endl;
 
   // Initialize gather/scatter operator:
-  GBOOL bret = ggfx.init(glob_indices);
+  GBOOL bret;
+  if ( typeid(*grid_) == typeid(GGridBox) ) { // periodize coords
+    static_cast<GGridBox*>(grid_)->periodize();
+  }
+  bret = ggfx.init(glob_indices);
   assert(bret && "Initialization of GGFX operator failed");
+  if ( typeid(*grid_) == typeid(GGridBox) ) { // periodize coords
+    static_cast<GGridBox*>(grid_)->periodize();
+  }
 
 } // end method init_ggfx
 
