@@ -91,10 +91,17 @@ int main(int argc, char **argv)
     GTVector<GDOUBLE>  E3  (N[0]*N[1]*N[2]);
     GTVector<GDOUBLE>  y3  (N[0]*N[1]*N[2]);
     GTMatrix<GDOUBLE>  D1  (N[0],N[0]);
+    GTMatrix<GDOUBLE>  I1  (N[0],N[0]);
     GTMatrix<GDOUBLE>  D2  (N[1],N[1]);
+    GTMatrix<GDOUBLE>  I2  (N[1],N[1]);
     GTMatrix<GDOUBLE>  D2T (N[1],N[1]);
     GTMatrix<GDOUBLE>  D3  (N[2],N[2]);
+    GTMatrix<GDOUBLE>  I3  (N[2],N[2]);
     GTMatrix<GDOUBLE>  D3T (N[2],N[2]);
+
+    I1.createIdentity();
+    I2.createIdentity();
+    I3.createIdentity();
 
     // Set 1d matrices, solution vector:
     for ( GSIZET j=0; j<N[0]; j++ ) {
@@ -159,13 +166,72 @@ std::cout << "y2=" << y2 << std::endl;
 std::cout << "y2a  = " << u2da << std::endl;
 #endif
  
-   if ( E2.L1norm() > 0 ) {
+   if ( E2.Eucnorm() > 0 ) {
       std::cout << "main: -------------------------------------D2_X_D1 FAILED" << std::endl;
       errcode = 1;
    } else {
       std::cout << "main: -------------------------------------D2_X_D1 OK" << std::endl;
    }
 
+    for ( GSIZET j=0; j<N[1]; j++ ) {
+      for ( GSIZET i=0; i<N[1]; i++ ) {
+
+        for ( GSIZET m=0; m<N[0]; m++ ) {
+          for ( GSIZET l=0; l<N[0]; l++ ) {
+            BIG2(l+i*N[0],m+j*N[0]) = I2(i,j)*D1(l,m);
+          }  
+        }  
+
+      }
+    }
+    u2da = BIG2 * u2d;
+
+    GMTK::I2_X_D1(D1, u2d, N[0], N[1], y2); 
+    E2 = y2;
+    E2 -= u2da;
+  
+#if 1
+std::cout << "BIG2 = " << BIG2 << std::endl;
+std::cout << "y2=" << y2 << std::endl; 
+std::cout << "y2a  = " << u2da << std::endl;
+#endif
+ 
+   if ( E2.Eucnorm() > 0 ) {
+      std::cout << "main: -------------------------------------I2_X_D1 FAILED" << std::endl;
+      errcode = 1;
+   } else {
+      std::cout << "main: -------------------------------------I2_X_D1 OK" << std::endl;
+   }
+
+    for ( GSIZET j=0; j<N[1]; j++ ) {
+      for ( GSIZET i=0; i<N[1]; i++ ) {
+
+        for ( GSIZET m=0; m<N[0]; m++ ) {
+          for ( GSIZET l=0; l<N[0]; l++ ) {
+            BIG2(l+i*N[0],m+j*N[0]) = D2(i,j)*I1(l,m);
+          }  
+        }  
+
+      }
+    }
+    u2da = BIG2 * u2d;
+
+    GMTK::D2_X_I1(D2T, u2d, N[0], N[1], y2); 
+    E2 = y2;
+    E2 -= u2da;
+  
+#if 0
+std::cout << "BIG2 = " << BIG2 << std::endl;
+std::cout << "y2=" << y2 << std::endl; 
+std::cout << "y2a  = " << u2da << std::endl;
+#endif
+ 
+   if ( E2.Eucnorm() > 0 ) {
+      std::cout << "main: -------------------------------------D2_X_I1 FAILED" << std::endl;
+      errcode = 1;
+   } else {
+      std::cout << "main: -------------------------------------D2_X_I1 OK" << std::endl;
+   }
 
     // Create solution vector for 3d:
     // First, create full matrix:
@@ -196,9 +262,9 @@ std::cout << "y3a  = " << u3da << std::endl;
      if ( y3[j] != u3da[j] ) std::cout << j << " :  del u=" << y3[j]-u3da[j] << std::endl;
    }
 
-   if ( E3.L1norm() > 0 ) {
+   if ( E3.Eucnorm() > 0 ) {
       std::cout << "main: --------------------------------D3_X_D2_X_D1 FAILED" << std::endl;
-      std::cout << "                                      L1norm=" << E3.L1norm() << std::endl;
+      std::cout << "                                      Eucnorm=" << E3.Eucnorm() << std::endl;
       errcode = 2;
    } else {
       std::cout << "main: --------------------------------D3_X_D2_X_D1 OK" << std::endl;
