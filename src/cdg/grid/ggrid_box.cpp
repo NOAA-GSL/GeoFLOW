@@ -355,7 +355,7 @@ void GGridBox::do_grid2d(GINT irank)
       }
     }
 
-cout << "GGrdBox::do_grid2d: bdy_ind=" << *bdy_ind << endl;
+cout << "GGridBox::do_grid2d: bdy_ind=" << *bdy_ind << endl;
 
     gelems_.push_back(pelem);
 
@@ -736,15 +736,10 @@ void GGridBox::periodize()
     id = igbdy_[GBDY_PERIODIC][k];
     periodicids_.push_back(id);       
     periodicdirs_.push_back(0);
-    if ( FUZZYEQ(P1_.x1,xNodes_[0][id],eps) ) { // right-most coord will change
-      periodicdirs_[n] |= 1 << 0;  // set right-most direction bit  
-    }
-    if ( FUZZYEQ(P1_.x2,xNodes_[1][id],eps) ) { // top-most coord will change
-      periodicdirs_[n] |= 1 << 1;  // set 2nd right-most direction bit  
-    }
-    if ( xNodes_.size() > 2 
-      && FUZZYEQ(P1_.x3,xNodes_[2][id],eps) ) { // top-most coord will change
-      periodicdirs_[n] |= 1 << 2;  // set 3rd right-most direction bit  
+    for ( GSIZET i=0; i<xNodes_.size(); i++ ) {
+      if ( FUZZYEQ(P1_[i],xNodes_[i][id],eps) ) { // right/top-most coord will change
+        periodicdirs_[n] |= 1U << i;  // position right-most direction bit  
+      }
     }
     n++;
   }
