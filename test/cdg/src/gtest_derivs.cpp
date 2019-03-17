@@ -188,8 +188,8 @@ int main(int argc, char **argv)
 cout << "main......................................doing REF_DERIVS:" << endl;
     // Compute GDIM derivs on u, with weights. Integrate solution
     // later to compare with analytic solution:
-//  GMTK::compute_grefderivs(*grid_, *u[0], etmp1, FALSE, du);
-    GMTK::compute_grefderivsW(*grid_, *u[0], etmp1, FALSE, du);
+    GMTK::compute_grefderivs (*grid_, *u[0], etmp1, FALSE, du);
+//  GMTK::compute_grefderivsW(*grid_, *u[0], etmp1, FALSE, du);
     for ( GSIZET j=0; j<du.size(); j++ ) {  // do chain rule
        du[j]->pointProd((*dXidX)(j,0));
     }
@@ -233,7 +233,7 @@ cout << "main......................................doing REF_DERIVS:" << endl;
       cout << "main: error du[" << j << "]=" << *du[j] << endl; 
 #if 1
       du[j]->pointProd(*jac);
-//    du[j]->pointProd(*(mass.data()));
+      du[j]->pointProd(*(mass.data()));
       ftmp = du[j]->sum();
       GComm::Allreduce(&ftmp  , du_int.data()+j , 1, T2GCDatatype<GFTYPE>() , GC_OP_SUM, comm);
       maxerror[j] = fabs(da_int[j] - du_int[j]) / (da_int[j]+1.0e-15);
