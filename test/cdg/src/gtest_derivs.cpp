@@ -31,7 +31,11 @@
 using namespace geoflow::tbox;
 using namespace std;
 
-#define _DO_REFDERIV
+#define  _DO_REFDERIV
+#undef   _DO_REFDERIVW
+#if defined(_DO_REFDERIVW) && defined(_DO_REFDERIV)
+  #error "Cannot define both _DO_REFDERIVW AND _DO_REFDERIV"
+#endif
 
 GGrid *grid_ = NULLPTR;
 void init_ggfx(GGrid &grid, GGFX &ggfx);
@@ -178,20 +182,24 @@ int main(int argc, char **argv)
       x = (*xnodes)[0][j];
       y = (*xnodes)[1][j];
       if ( GDIM > 2 ) z = (*xnodes)[2][j];
-      if ( xnodes->size() > 2 ) z = (*xnodes)[2][j];
       (*u [0])[j] = pow(x,p)*pow(y,q)*pow(z,r);
       (*da[0])[j] = p==0 ? 0.0 : p*pow(x,p-1)*pow(y,q)*pow(z,r);
       (*da[1])[j] = q==0 ? 0.0 : q*pow(x,p)*pow(y,q-1)*pow(z,r);
       if ( GDIM > 2 ) (*da[2])[j] = r==0 ? 0.0 : r*pow(x,p)*pow(y,q)*pow(z,r-1);
     }
 #if defined(_DO_REFDERIV)
-cout << "main......................................doing REF_DERIVS:" << endl;
     // Compute GDIM derivs on u, with weights. Integrate solution
     // later to compare with analytic solution:
-    GMTK::compute_grefderivs (*grid_, *u[0], etmp1, FALSE, du);
-//  GMTK::compute_grefderivsW(*grid_, *u[0], etmp1, FALSE, du);
-    for ( GSIZET j=0; j<du.size(); j++ ) {  // do chain rule
-       du[j]->pointProd((*dXidX)(j,0));
+/// GMTK::compute_grefderivs (*grid_, *u[0], etmp1, FALSE, du);
+    for ( GSIZET j=0; j<GDIM; j++ ) {  // do chain rule
+      GMTK::compute_grefderiv (*grid_, *u[0], etmp1, j+1, FALSE, *du[j]);
+      du[j]->pointProd((*dXidX)(j,0));
+    }
+#elif defined(_DO_REFDERIVW)
+    GMTK::compute_grefderivsW(*grid_, *u[0], etmp1, FALSE, du);
+    for ( GSIZET j=0; j<GDIM; j++ ) {  
+      du[j]->pointProd((*dXidX)(j,0)); // do chain rule for box grid
+      du[j]->pointProd(*jac);
     }
 #else
     for ( GSIZET j=0; j<GDIM; j++ ) {
@@ -216,9 +224,9 @@ cout << "main......................................doing REF_DERIVS:" << endl;
         && z0 != 0.0
         && "Don't allow zero domain endpoint!");
 
-#if defined(_DO_REFDERIV)
     maxerror = 0.0;
 
+#if defined(_DO_REFDERIVW)
     // Compute integral of analytic solutions, compare
     if ( GDIM == 2 ) {
       da_int[0] = (pow(x1,p  )-pow(x0,p  )) * (pow(y1,q+1)-pow(y0,q+1))/(q+1);
@@ -231,30 +239,32 @@ cout << "main......................................doing REF_DERIVS:" << endl;
     for ( GSIZET j=0; j<da.size(); j++ ) { // integral errors:
       cout << "main: error da[" << j << "]=" << *da[j] << endl; 
       cout << "main: error du[" << j << "]=" << *du[j] << endl; 
-#if 1
-      du[j]->pointProd(*jac);
-      du[j]->pointProd(*(mass.data()));
       ftmp = du[j]->sum();
       GComm::Allreduce(&ftmp  , du_int.data()+j , 1, T2GCDatatype<GFTYPE>() , GC_OP_SUM, comm);
       maxerror[j] = fabs(da_int[j] - du_int[j]) / (da_int[j]+1.0e-15);
       cout << "main: da_int[" << j << "]=" << da_int[j] 
            <<      " du_int[" << j << "]=" << du_int[j] << endl;
       cout << "main: error da_int-du_int[" << j << "]=" << maxerror[j] << endl;
-#else
-//   *utmp[0] = *du[j]; 
-//    mass.opVec_prod(*utmp[0],utmp,*du[j]);
-      du_int[j] = grid_->integrate(*du[j],*utmp[0]);
-      maxerror[j] = fabs(da_int[j] - du_int[j]) / (da_int[j]+1.0e-15);
-      cout << "main: error da_int[" << j << "]=" << da_int[j] 
-           <<            " du_int[" << j << "]=" << du_int[j] << endl;
-      cout << "main: error da_int-du_int[" << j << "]=" << maxerror[j] << endl;
-#endif
     }
+    // Print convergence data to file:
+    itst.open("deriv_err.txt");
+    ios.open("deriv_err.txt",std::ios_base::app);
+
+    // Write header, if required:
+    if ( itst.peek() == std::ofstream::traits_type::eof() ) {
+    ios << "# p  num_elems   rel_err_x   rel_err_y  rel_err_z " << std::endl;
+    }
+    itst.close();
+
+    ios << np  << "  "  << "  " << gnelems << "  "
+        << "  " << maxerror[0] << "  " << maxerror[1] << "  " << maxerror[2]
+        << std::endl;
+    ios.close();
 
 #else
     // Compute collocated  analytic solution, do comparisons:
     maxerror = 0.0;
-    for ( GSIZET j=0; j<1; j++ ) { //local errors
+    for ( GSIZET j=0; j<GDIM; j++ ) { //local errors
       for ( GSIZET i=0; i<da[j]->size(); i++ ) (*utmp[0])[i] = pow((*da[j])[i],2);
       nnorm = grid_->integrate(*utmp[0], *utmp[1]);
 cout << "main: nnorm=" << nnorm << endl;
@@ -269,6 +279,7 @@ cout << "main: du[" << j << "]=" << *du[j] << endl;
        
       // Accumulate to find global errors for this field:
       GComm::Allreduce(lnorm.data()  , gnorm.data()  , 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm);
+cout << "main: gnorm[" << j << "]=" << gnorm << endl;
       // now find max errors of each type for each field:
       for ( GSIZET i=0; i<1; i++ ) maxerror[i] = MAX(maxerror[i],gnorm[j]);
     }
