@@ -1245,8 +1245,7 @@ template<>
 void compute_grefderivs(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &etmp,
                         GBOOL dotrans, GTVector<GTVector<GDOUBLE>*> &du)
 {
-  assert((grid.itype(GE_REGULAR)   .size() > 0 && du.size() >= GDIM)
-       ||(grid.itype(GE_DEFORMED)  .size() > 0 && du.size() >= GDIM)
+  assert(du.size() >= GDIM
        && "Insufficient number of derivatives specified");
   
 
@@ -1328,8 +1327,7 @@ template<>
 void compute_grefderivsW(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &etmp,
                          GBOOL dotrans, GTVector<GTVector<GDOUBLE>*> &du)
 {
-  assert((grid.itype(GE_REGULAR)   .size() > 0 && du.size() >= GDIM)
-       ||(grid.itype(GE_DEFORMED)  .size() > 0 && du.size() >= GDIM)
+  assert(du.size() >= GDIM
        && "Insufficient number of derivatives specified");
   
 
