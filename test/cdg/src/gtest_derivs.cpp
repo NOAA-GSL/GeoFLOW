@@ -281,13 +281,13 @@ cout << "main: du[" << j << "]=" << *du[j] << endl;
       GComm::Allreduce(lnorm.data()  , gnorm.data()  , 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm);
 cout << "main: gnorm[" << j << "]=" << gnorm << endl;
       // now find max errors of each type for each field:
-      for ( GSIZET i=0; i<1; i++ ) maxerror[i] = MAX(maxerror[i],gnorm[j]);
+      for ( GSIZET i=0; i<maxerror.size(); i++ ) maxerror[i] = MAX(maxerror[i],gnorm[i]);
     }
 
     cout << "main: maxerror = " << maxerror << endl;
    
     GComm::Allreduce(&lnelems, &gnelems, 1, T2GCDatatype<GSIZET>() , GC_OP_SUM, comm);
-    if ( maxerror.max() > 10*std::numeric_limits<GFTYPE>::epsilon() ) {
+    if ( maxerror[2] > 10*std::numeric_limits<GFTYPE>::epsilon() ) {
       std::cout << "main: -------------------------------------derivative FAILED" << std::endl;
       errcode = 1;
     } else {
