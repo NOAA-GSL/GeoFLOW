@@ -22,8 +22,9 @@ struct ObserverFactory {
 	using Equation    = EquationType;
 	using ObsBase     = ObserverBase<Equation>;
 	using ObsBasePtr  = std::shared_ptr<ObsBase>;
+	using Grid        = EquationType::Grid;
 
-	static ObsBasePtr build(const tbox::PropertyTree& ptree);
+	static ObsBasePtr build(const tbox::PropertyTree& ptree, Grid& grid);
 
 };
 

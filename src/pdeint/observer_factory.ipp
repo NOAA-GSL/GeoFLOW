@@ -19,7 +19,7 @@ namespace pdeint {
 
 template<typename ET>
 typename ObserverFactory<ET>::ObsBasePtr
-ObserverFactory<ET>::build(const tbox::PropertyTree& ptree){
+ObserverFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid){
 
 
 	// Set the default observer type
@@ -42,7 +42,7 @@ ObserverFactory<ET>::build(const tbox::PropertyTree& ptree){
 		using ObsImpl = NullObserver<Equation>;
 
 		// Allocate observer Implementation
-		std::shared_ptr<ObsImpl> obs_impl(new ObsImpl(traits));
+		std::shared_ptr<ObsImpl> obs_impl(new ObsImpl(traits, grid));
 
 		// Set any parameters we need to set
 		// NA
@@ -52,7 +52,7 @@ ObserverFactory<ET>::build(const tbox::PropertyTree& ptree){
 	}
         else if( "gout_simple_observer" == observer_name ) {
 		// Allocate observer Implementation
-		std::shared_ptr<ObsImpl> obs_impl(new iGOutSimpleObserver(traits));
+		std::shared_ptr<ObsImpl> obs_impl(new iGOutSimpleObserver(traits, grid));
 
 		// Set back to base type
 		base_ptr = obs_impl;

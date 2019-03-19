@@ -35,6 +35,7 @@ public:
 	using Equation     = EquationType;
 	using EquationBase = typename Equation::Base;
 	using State        = typename Equation::State;
+	using Grid         = typename Equation::Grid;
 	using Value        = typename Equation::Value;
 	using Derivative   = typename Equation::Derivative;
 	using Time         = typename Equation::Time;
@@ -64,7 +65,8 @@ public:
 	 */
 	Integrator(const EqnBasePtr&  equation,
 		   const ObsBasePtr&  observer,
-		   const Traits& traits);
+		   const Traits&      traits  ,
+                         Grid&        grid);
 
 	Integrator(const Integrator& I) = default;
 	~Integrator() = default;

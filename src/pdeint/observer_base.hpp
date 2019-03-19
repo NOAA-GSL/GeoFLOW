@@ -30,6 +30,7 @@ public:
         enum ObsType     {OBS_CYCLE=0, OBS_TIME};
 	using Equation    = EquationType;
 	using State       = typename Equation::State;
+	using Grid        = typename Equation::Grid;
 	using Value       = typename Equation::Value;
 	using Derivative  = typename Equation::Derivative;
 	using Time        = typename Equation::Time;
@@ -50,7 +51,7 @@ public:
                 Time      time_interval = 1.0;    // time interval for observation
         };
 
-	ObserverBase(Traits& traits){traits_ = traits;}
+	ObserverBase(Traits& traits, Grid& grid){traits_ = traits; grid_= &grid;}
 	ObserverBase(const ObserverBase& obs) = default;
 	virtual ~ObserverBase() = default;
 	ObserverBase& operator=(const ObserverBase& obs) = default;
@@ -68,6 +69,7 @@ public:
 
 protected:
         Traits traits_;
+        Grid  *grid_;
 	/**
 	 * Must be provided by implementation
 	 */
