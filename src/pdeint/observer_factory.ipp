@@ -11,6 +11,7 @@
 
 #include "tbox/error_handler.hpp"
 #include "pdeint/null_observer.hpp"
+#include "cdg/ggio_simple.hpp"
 
 namespace geoflow {
 namespace pdeint {

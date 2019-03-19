@@ -34,7 +34,16 @@ public:
 	using Size        = typename Equation::Size;
 	using EquationPtr = std::shared_ptr<Equation>;
 
-	ObserverBase() = default;
+        /**
+         * Data structure to hold user selected parameters
+         */
+        struct Traits {
+                int       istate;     // which state member to observe (-1 for all)
+                char**    state_names;// file/ref names for each state member
+                size_t    icycle;     // time cycle, e.g.
+        };
+
+	ObserverBase();
 	ObserverBase(const ObserverBase& obs) = default;
 	virtual ~ObserverBase() = default;
 	ObserverBase& operator=(const ObserverBase& obs) = default;
@@ -42,10 +51,11 @@ public:
 	/**
 	 * Observe the current state at time
 	 *
+	 * @param[in] Traits structure
 	 * @param[in] t Time of current state
 	 * @param[in] u State at the current time
 	 */
-	void observe(const Time& t, const State& u){
+	void observe(const Traits& traits, const Time& t, const State& u){
 		this->observe_impl(t,u);
 	}
 
@@ -54,7 +64,7 @@ protected:
 	/**
 	 * Must be provided by implementation
 	 */
-	virtual void observe_impl(const Time& t, const State& u) = 0;
+	virtual void observe_impl(const Traits& traits, const Time& t, const State& u) = 0;
 
 };
 
