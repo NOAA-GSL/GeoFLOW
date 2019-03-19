@@ -82,10 +82,9 @@ int main(int argc, char **argv)
     using EqnImpl = GBurgers<MyTypes>;                         // Equation Implementa
     using ObsBase = ObserverBase<EqnBase>;                     // Observer Base Type
     using ObsImpl = NullObserver<EqnImpl>;                     // Observer Implementation Type
-//  using IntImpl = Integrator<EqnImpl>;                       // Integrator Implementation Type
 
     GString serr ="main: ";
-    GBOOL  bret;
+    GBOOL  bret, dopr=TRUE;
     GBOOL  bgridwritten=FALSE;
     GINT   iopt;
     GINT   ilevel=0;// 2d ICOS refinement level
@@ -119,9 +118,9 @@ int main(int argc, char **argv)
     PropertyTree dissptree;   // dissipation props
     PropertyTree tintptree;   // time integration props
 
-cout << "main: call load_file..." << endl;
+    EH_MESSAGE("main::call load_file...")
     ptree    = InputManager::getInputPropertyTree();       // main param file structure
-cout << "main: load_file done." << endl;
+    EH_MESSAGE("main: load_file done.")
     // Create other prop trees for various objects:
     sgrid       = ptree.getValue<GString>("grid_type");
     np          = ptree.getValue<GINT>("exp_order");
@@ -138,7 +137,7 @@ cout << "main: load_file done." << endl;
     // Parse command line. ':' after char
     // option indicates that it takes an argument.
     // Note: -i reserved for InputManager:
-    while ((iopt = getopt(argc, argv, "i:j:k:l:m:p:h")) != -1) {
+    while ((iopt = getopt(argc, argv, "i:j:k:l:m:np:h")) != -1) {
       switch (iopt) {
       case 'i': // handled by InputManager
           break;
@@ -157,6 +156,9 @@ cout << "main: load_file done." << endl;
       case 'l': // # 2d refinement level
           ilevel = atoi(optarg);
           gridptree.setValue<GINT>("ilevel",ilevel);
+          break;
+      case 'n': // no output
+          dopr = FALSE;
           break;
       case 'p': // get nodal exp order
           np = atoi(optarg);
@@ -214,7 +216,6 @@ cout << "main: load_file done." << endl;
     GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis(GDIM);
     for ( GSIZET k=0; k<GDIM; k++ ) {
       gbasis [k] = new GLLBasis<GCTYPE,GFTYPE>(np);
-std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << std::endl;
     }
     
     GPTLstart("gen_grid");
@@ -260,18 +261,18 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     eqn_impl->set_nu(nu_);
 
     // Create the observers: 
-    std::shared_ptr<ObsImpl> obs_impl(new ObsImpl());
-    std::shared_ptr<ObsBase> obs_base =  NULLPTR; //obs_impl;
+    auto pObservers = ObserverFactory<EqnBase>::build(ptree);
 
-//  std::shared_ptr<IntImpl> int_impl(new IntImpl(eqn_base,obs_base,int_traits));
-cout << "main: getting dt..." << endl; 
+    // Create integrator:
+    auto pIntegrator = IntegratorFactory<EqnBase>::build(tintptree, eqn_base, pObservers);
+#if 0
     dt       = tintptree.getValue<GFTYPE>("dt"); 
-cout << "main: getting cycle_end..." << endl; 
     maxSteps = tintptree.getValue<GSIZET>("cycle_end");
-cout << "main: getting integrator data done." << endl; 
+#endif
 
     // Initialize state:
-cout << "main: Initializing state..." << endl; 
+    EH_MESSAGE("main: Initializing state...");
+
     t = 0.0;
     compute_analytic(*grid_, t, ptree, u_);
     for ( auto j=0; j<u_.size(); j++ ) {
@@ -284,15 +285,16 @@ cout << "main: Initializing state..." << endl;
     }
     gio(*grid_, u_, 1, 0, 0.0, svars, comm, bgridwritten);
 
-cout << "main: State initiallized." << endl; 
-cout << "main: u(t=0)=" << *u_[0] << endl;
+    DH_MESSAGE("main: State initiallized.");
 
     GPTLstart("time_loop");
     for( GSIZET i=0; i<maxSteps; i++ ){
       eqn_base->step(t, u_, ub_, dt);
-gio(*grid_, u_, 1, i, t, svars, comm, bgridwritten);
-compute_analytic(*grid_, t, ptree, ua_); // analyt soln at t=0
-gio(*grid_, ua_, 1, i, t, savars, comm, bgridwritten);
+      if ( dopr ) {
+        gio(*grid_, u_, 1, i, t, svars, comm, bgridwritten);
+        compute_analytic(*grid_, t, ptree, ua_); // analyt soln at t=0
+        gio(*grid_, ua_, 1, i, t, savars, comm, bgridwritten);
+      }
       t += dt;
     }
     GPTLstop("time_loop");
@@ -301,7 +303,9 @@ gio(*grid_, ua_, 1, i, t, savars, comm, bgridwritten);
     compute_analytic(*grid_, tt, ptree, ua_); // analyt soln at t=0
 
     // Write binary output:
-    gio(*grid_, u_, u_.size(), maxSteps, t, svars, comm, bgridwritten);
+    if ( dopr ) {
+      gio(*grid_, u_, u_.size(), maxSteps, t, svars, comm, bgridwritten);
+    {
 
 #if 1
     // Compute analytic solution, do comparisons:
@@ -316,22 +320,13 @@ gio(*grid_, ua_, 1, i, t, savars, comm, bgridwritten);
     for ( GSIZET j=0; j<nsolve; j++ ) { //local errors
       ua_[j]->pow(2);
       nnorm[j] = grid_->integrate(*ua_  [j],*utmp_[0]) ; // L2 norm of analyt soln at t=0
-cout << "main: ua(t=0)[" << j << "]_max=" << ua_[j]->max() << endl;
-cout << "main: ua(t=0)[" << j << "]_imax=" << ua_[j]->imax() << endl;
-cout << "main: u (t=" << t << ")[" << j << "]_max=" << u_[j]->max() << endl;
-cout << "main: u (t=" << t << ")[" << j << "]_imax=" << u_[j]->imax() << endl;
-cout << "main: nnorm[" << j << "]=" << nnorm[j] << endl;
+      cout << "main: nnorm[" << j << "]=" << nnorm[j] << endl;
     }
     
     compute_analytic(*grid_, t, ptree, ua_); // analyt soln at t
-    gio(*grid_, ua_, ua_.size(),  maxSteps, t, savars, comm, bgridwritten);
     for ( GSIZET j=0; j<nsolve; j++ ) { //local errors
-cout << "main: u [t=" << t << "]=" << *u_ [ j] << endl;
-cout << "main: ua[t=" << t << "]=" << *ua_ [j] << endl;
-cout << "main: imax(u)=" << u_[j]->imax() << " imax(ua)=" << ua_[j]->imax() << endl;
-cout << "main: max (u)=" << u_[j]->max() << " max (ua)=" << ua_[j]->max() << endl;
       *utmp_[0] = *u_[j] - *ua_[j];
-cout << "main: diff=u-ua[" << j << "]=" << *utmp_[0] << endl;
+      cout << "main: diff=u-ua[" << j << "]=" << *utmp_[0] << endl;
       *utmp_[1] = *utmp_[0]; utmp_[1]->abs();
       *utmp_[2] = *utmp_[0]; utmp_[2]->pow(2);
       lnorm   [0]  = utmp_[0]->infnorm (); // inf-norm
@@ -761,7 +756,7 @@ void init_ggfx(GGrid &grid, GGFX &ggfx)
   gmorton.setIntegralLen(P0,dX);
   gmorton.key(glob_indices, *xnodes);
 
-cout << "init_ggfx: glob_indices=" << glob_indices << endl;
+  cout << "init_ggfx: glob_indices=" << glob_indices << endl;
 
   // Initialize gather/scatter operator:
   GBOOL bret;
