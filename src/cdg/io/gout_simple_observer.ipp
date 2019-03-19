@@ -1,15 +1,11 @@
 //==================================================================================
-// Module       : gout_simple_observer.cpp
+// Module       : gout_simple_observer.ipp
 // Date         : 3/18/19 (DLR)
 // Description  : Observer object for carrying out simple POSIX-based  
 //                binary output.
 // Copyright    : Copyright 2019. Colorado State University. All rights reserved
 // Derived From : none.
 //==================================================================================
-#include "gout_simple.hpp"
-#include "ggio.h"
-
-using namespace std;
 
 //**********************************************************************************
 //**********************************************************************************
@@ -17,9 +13,9 @@ using namespace std;
 // DESC   : Instantiate with Traits
 // ARGS   : traits: Traits sturcture
 //**********************************************************************************
-template<typename T>
-GOutSimpleObserver<T>::GOutSimpleObserver(Traits &traits)
-: Observer_base(traits),
+template<typename EquationType>
+GOutSimpleObserver<EquationType>::GOutSimpleObserver(Traits &traits, Grid &grid)
+: Observer_base(traits, grid),
 bgrid_printed_        (FALSE),
 cycle_                    (0),
 cycle_last_               (0),
@@ -36,7 +32,7 @@ time_last_              (0.0)
 //              where CCCCCC represents a cycle number, and TTTT represents
 //              the mpi task doing the writing.
 //              NOTE: an internal cycle counter is maintained, as this 
-/                     observer, like all others,  should be called at 
+//                    observer, like all others,  should be called at 
 //                    each time step.
 //
 // ARGUMENTS  : t    : time, t^n, for state, uin=u^n
@@ -45,7 +41,7 @@ time_last_              (0.0)
 // RETURNS    : none.
 //**********************************************************************************
 template<typename EquationType>
-void GOutSimpleObserver<T>::observe(const Time t, const State &u)
+void GOutSimpleObserver<EquationType>::observe(const Time t, const State &u)
 {
   init(u);
    
@@ -68,7 +64,7 @@ void GOutSimpleObserver<T>::observe(const Time t, const State &u)
 // RETURNS    : none.
 //**********************************************************************************
 template<typename EquationType>
-void GOutSimpleObserver<T>::init(State &u)
+void GOutSimpleObserver<EquationType>::init(State &u)
 {
    if ( state_names_.size() > 0 ) return;
 
@@ -77,7 +73,7 @@ void GOutSimpleObserver<T>::init(State &u)
    if ( state_names_.size() == 0 ) {
      if ( traits_.state_names.size() == 0 ) {
        for ( auto j=0; j<u.size(); j++ ) {
-         sprintf(stmp, '%s%d', "u", j+1);
+         sprintf(stmp, "%s%d", "u", j+1);
          state_names_.push_back(stmp); 
        } 
      } 

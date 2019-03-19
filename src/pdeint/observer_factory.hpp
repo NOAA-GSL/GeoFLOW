@@ -10,6 +10,10 @@
 
 #include <memory>
 
+#include <string>
+#include "gout_simple_observer.hpp"
+#include "tbox/error_handler.hpp"
+#include "pdeint/null_observer.hpp"
 #include "pdeint/observer_base.hpp"
 #include "tbox/property_tree.hpp"
 
@@ -22,7 +26,7 @@ struct ObserverFactory {
 	using Equation    = EquationType;
 	using ObsBase     = ObserverBase<Equation>;
 	using ObsBasePtr  = std::shared_ptr<ObsBase>;
-	using Grid        = EquationType::Grid;
+	using Grid        = typename EquationType::Grid;
 
 	static ObsBasePtr build(const tbox::PropertyTree& ptree, Grid& grid);
 

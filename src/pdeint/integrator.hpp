@@ -65,8 +65,8 @@ public:
 	 */
 	Integrator(const EqnBasePtr&  equation,
 		   const ObsBasePtr&  observer,
-		   const Traits&      traits  ,
-                         Grid&        grid);
+                         Grid&        grid,
+		   const Traits&      traits); 
 
 	Integrator(const Integrator& I) = default;
 	~Integrator() = default;
@@ -84,7 +84,7 @@ public:
 	 * @param[in,out] ub Boundary condition vectors
 	 * @param[in,out] u  Current and final equation state values
 	 */
-	void time_integrate( Time&        t
+	void time_integrate( Time&        t,
                              State&       ub,
 			     State&       u );
 	/**
@@ -152,6 +152,7 @@ protected:
 	Traits      traits_;
 	EqnBasePtr  eqn_ptr_;
 	ObsBasePtr  obs_ptr_;
+        Grid*       grid_;
 
 	/**
 	 * Used to calculate the limited time step size if required.

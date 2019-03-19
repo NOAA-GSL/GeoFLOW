@@ -6,21 +6,26 @@
 // Copyright    : Copyright 2019. Colorado State University. All rights reserved
 // Derived From : none.
 //==================================================================================
-#if !defined(_GGIO_SIMPLE_HPP)
-#define _GGIO_SIMPLE_HPP
+#if !defined(_GOUT_SIMPLE_OBS_HPP)
+#define _GOUT_SIMPLE_OBS_HPP
 
 #include "gtvector.hpp"
-#include "observer_base.hpp"
+#include "ggrid.hpp"
+#include "gio.h"
+#include "pdeint/equation_base.hpp"
+#include "pdeint/observer_base.hpp"
 
+using namespace geoflow::pdeint;
+using namespace std;
 
-
-template <typename EquationType>
+template<typename EquationType>
 class GOutSimpleObserver : public ObserverBase<EquationType>
 {
 
 public:
         using Equation    = EquationType;
         using State       = typename Equation::State;
+        using Grid        = typename Equation::Grid;
         using Value       = typename Equation::Value;
         using Derivative  = typename Equation::Derivative;
         using Time        = typename Equation::Time;
@@ -30,9 +35,12 @@ public:
 
         static_assert(std::is_same<State,GTVector<GTVector<GFTYPE>*>>::value,
                "State is of incorrect type");
-        static_assert(std::is_same<Derivative,GTVector<GTVector<GFTYPE>*>>::valu
+        static_assert(std::is_same<Derivative,GTVector<GTVector<GFTYPE>*>>::value,
+               "Derivative is of incorrect type");
+        static_assert(std::is_same<Grid,GGrid>::value,
+               "Grid is of incorrect type");
 
-                           GOutSimpleObserver(Traits &traits);
+                           GOutSimpleObserver(Traits &traits, Grid &grid);
                           ~GOutSimpleObserver();
                            GOutSimpleObserver(const GOutSimpleObserver &a) = default;
                            GOutSimpleObserver &operator=(const GOutSimpleObserver &bu) = default;
@@ -49,11 +57,12 @@ private:
         Time               time_last_;
         GTVector<GINT>     istate_;
         GTVector<GString>  state_names_;
+        GGrid             *grid_;
     
 
 };
 
-#include "ggio_simple.ipp"
+#include "gout_simple_observer.ipp"
 
 #endif
 

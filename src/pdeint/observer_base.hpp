@@ -51,7 +51,8 @@ public:
                 Time      time_interval = 1.0;    // time interval for observation
         };
 
-	ObserverBase(Traits& traits, Grid& grid){traits_ = traits; grid_= &grid;}
+	ObserverBase() = delete;
+	ObserverBase(Traits& traits, Grid& grid){traits_=traits; grid_= &grid;};
 	ObserverBase(const ObserverBase& obs) = default;
 	virtual ~ObserverBase() = default;
 	ObserverBase& operator=(const ObserverBase& obs) = default;

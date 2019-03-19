@@ -18,8 +18,9 @@ namespace pdeint {
 template<typename EquationType>
 Integrator<EquationType>::Integrator(const EqnBasePtr& equation,
 		                             const ObsBasePtr& observer,
+                                                   Grid&       grid,
 		                             const Traits& traits) :
-	traits_(traits), eqn_ptr_(equation), obs_ptr_(observer) {
+	traits_(traits), eqn_ptr_(equation), obs_ptr_(observer), grid_(&grid) {
 	ASSERT(nullptr != eqn_ptr_);
 	ASSERT(nullptr != obs_ptr_);
 }
