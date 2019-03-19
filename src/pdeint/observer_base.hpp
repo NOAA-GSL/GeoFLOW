@@ -9,6 +9,8 @@
 #define SRC_PDEINT_OBSERVER_BASE_HPP_
 
 #include <memory>
+#include <vector>
+#include <string>
 
 namespace geoflow {
 namespace pdeint {
@@ -25,6 +27,7 @@ template<typename EquationType>
 class ObserverBase {
 
 public:
+        enum ObsType     {OBS_CYCLE=0, OBS_TIME};
 	using Equation    = EquationType;
 	using State       = typename Equation::State;
 	using Value       = typename Equation::Value;
@@ -38,12 +41,16 @@ public:
          * Data structure to hold user selected parameters
          */
         struct Traits {
-                int       istate;     // which state member to observe (-1 for all)
-                char**    state_names;// file/ref names for each state member
-                size_t    icycle;     // time cycle, e.g.
+                ObsType   itype      = OBS_CYCLE; // obs output type
+                std::vector<int>     
+                          state_index;            // which state members to observe
+                std::vector<std::string>
+                          state_names;            // file/ref names for each state member
+                size_t    cycle_interval = 10;    // cycle interval for observation
+                Time      time_interval = 1.0;    // time interval for observation
         };
 
-	ObserverBase();
+	ObserverBase(Traits& traits){traits_ = traits;}
 	ObserverBase(const ObserverBase& obs) = default;
 	virtual ~ObserverBase() = default;
 	ObserverBase& operator=(const ObserverBase& obs) = default;
@@ -55,12 +62,12 @@ public:
 	 * @param[in] t Time of current state
 	 * @param[in] u State at the current time
 	 */
-	void observe(const Traits& traits, const Time& t, const State& u){
+	void observe(const Time t, const State& u){
 		this->observe_impl(t,u);
 	}
 
 protected:
-
+        Traits traits_;
 	/**
 	 * Must be provided by implementation
 	 */
