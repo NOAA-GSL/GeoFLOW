@@ -71,17 +71,15 @@ public:
 	Integrator& operator=(const Integrator& I) = default;
 
 	/**
-	 * Take as many steps required to progress from time t0 to t1.
+	 * Integrate state at t, as required by prop tree input
 	 *
-	 * The time method takes as many steps required to progress
-	 * from time t0 to time t1.  It will attempt to use the provided
-	 * time step size dt unless one of the user provided traits limits
-	 * the step size or a smaller time step is required to terminate
-	 * at time t1.
+	 * The time_integrate method integrates from current state 
+         * using either 'time' or 'steps' methods according to the 
+         * property tree input. The state time, t, will be updated
+         * with the final integration time.
 	 *
-	 * @param[in]     t0 Initial time at start
-	 * @param[in]     t1 Final time an completion of time stepping
-	 * @param[in]     dt Recommend time step size
+	 * @param[in,out] t  Initial time at start, and final time
+	 * @param[in,out] ub Boundary condition vectors
 	 * @param[in,out] u  Current and final equation state values
 	 */
 	void time_integrate( Time&        t
@@ -99,6 +97,7 @@ public:
 	 * @param[in]     t0 Initial time at start
 	 * @param[in]     t1 Final time an completion of time stepping
 	 * @param[in]     dt Recommend time step size
+	 * @param[in,out] ub Boundary condition vectors
 	 * @param[in,out] u  Current and final equation state values
 	 */
 	void time( const Time&  t0,
@@ -119,6 +118,7 @@ public:
 	 * @param[in]     dt Recommend time step size
 	 * @param[in]     n  Number of steps to take
 	 * @param[in,out] u  Current and final equation state values
+	 * @param[in,out] ub Boundary condition vectors
 	 * @param[out]    t  Final time resulting from taking n steps
 	 */
 	void steps( const Time&  t0,
@@ -138,6 +138,7 @@ public:
 	 * steps will be taken to reach the listed times exactly.
 	 *
 	 * @param[in]     tvec Vector of time points to march through
+	 * @param[in,out] ub Boundary condition vectors
 	 * @param[in,out] u  Current and final equation state values
 	 */
 	void list( const std::vector<Time>& tvec,
