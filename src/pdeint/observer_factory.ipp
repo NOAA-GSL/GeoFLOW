@@ -26,15 +26,23 @@ ObserverFactory<ET>::build(const tbox::PropertyTree& ptree){
 	const std::string default_observer = "none";
 
 	// Get the type of observer
-	const std::string observer_name = ptree.getValue("observer", default_observer);
+	const std::string observer_name = ptree.getValue("observer_name", default_observer);
 
-	// Create the Stepper and cast to base type
+        // Set traits from prop tree:
+        Observer_base::Traits traits;
+        traits.itype = static_cast<ObsType>(ptree.getValue("itype",OBS_CYCLE));
+        traits.state_index = ptree.getArray<int>("state_index");
+        traits.state_names= ptree.getArray<std::string>("state_index");
+        traits.cycle_interval= ptree.getArray<size_t>("cycle_interval",10);
+        traits.time_interval= ptree.getArray<double>("cycle_interval",1.0);
+     
+	// Create the observer and cast to base type
 	ObsBasePtr base_ptr;
 	if( "none" == observer_name ){
 		using ObsImpl = NullObserver<Equation>;
 
-		// Allocate Stepper Implementation
-		std::shared_ptr<ObsImpl> obs_impl(new ObsImpl());
+		// Allocate observer Implementation
+		std::shared_ptr<ObsImpl> obs_impl(new ObsImpl(traits));
 
 		// Set any parameters we need to set
 		// NA
@@ -42,6 +50,13 @@ ObserverFactory<ET>::build(const tbox::PropertyTree& ptree){
 		// Set back to base type
 		base_ptr = obs_impl;
 	}
+        else if( "gout_simple_observer" == observer_name ) {
+		// Allocate observer Implementation
+		std::shared_ptr<ObsImpl> obs_impl(new iGOutSimpleObserver(traits));
+
+		// Set back to base type
+		base_ptr = obs_impl;
+        }
 	else {
 		EH_ERROR("Requested observer not found: " << observer_name);
 	}
