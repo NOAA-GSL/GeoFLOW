@@ -20,6 +20,7 @@ set(CDG_INC
           ${GHOME}/utils
           ${GHOME}/grid
           ${GHOME}/pdes
+          ${GHOME}/io
           ${GHOME}/..
     )
 
