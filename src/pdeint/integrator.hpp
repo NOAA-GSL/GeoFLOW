@@ -31,6 +31,7 @@ template<typename EquationType>
 class Integrator {
 
 public:
+        enum IntegType     {INTEG_CYCLE=0, INTEG_TIME};
 	using Equation     = EquationType;
 	using EquationBase = typename Equation::Base;
 	using State        = typename Equation::State;
@@ -46,10 +47,10 @@ public:
 	 * Data structure to hold user selected parameters
 	 */
 	struct Traits {
-		Value cfl_min;
-		Value cfl_max;
-		Time  dt_min;
-		Time  dt_max;
+		IntegType integ_type;
+		Value     cycle_end;
+		Time      dt;
+		Time      time_end;
 	};
 
 	Integrator() = delete;
@@ -62,8 +63,8 @@ public:
 	 * @param[in] traits   Use selected traits for time step options
 	 */
 	Integrator(const EqnBasePtr&  equation,
-			   const ObsBasePtr&  observer,
-			   const Traits& traits);
+		   const ObsBasePtr&  observer,
+		   const Traits& traits);
 
 	Integrator(const Integrator& I) = default;
 	~Integrator() = default;
@@ -83,10 +84,28 @@ public:
 	 * @param[in]     dt Recommend time step size
 	 * @param[in,out] u  Current and final equation state values
 	 */
-	void time( const Time& t0,
-			   const Time& t1,
-			   const Time& dt,
-			   State&      u );
+	void time_integrate( Time&        t
+                             State&       ub,
+			     State&       u );
+	/**
+	 * Take as many steps required to progress from time t0 to t1.
+	 *
+	 * The time method takes as many steps required to progress
+	 * from time t0 to time t1.  It will attempt to use the provided
+	 * time step size dt unless one of the user provided traits limits
+	 * the step size or a smaller time step is required to terminate
+	 * at time t1.
+	 *
+	 * @param[in]     t0 Initial time at start
+	 * @param[in]     t1 Final time an completion of time stepping
+	 * @param[in]     dt Recommend time step size
+	 * @param[in,out] u  Current and final equation state values
+	 */
+	void time( const Time&  t0,
+		   const Time&  t1,
+		   const Time&  dt,
+                   State&       ub,
+		   State&       u );
 
 	/**
 	 * Take an exact number of time steps.
@@ -102,11 +121,12 @@ public:
 	 * @param[in,out] u  Current and final equation state values
 	 * @param[out]    t  Final time resulting from taking n steps
 	 */
-	void steps( const Time& t0,
-			    const Time& dt,
-				const Size& n,
-			    State&      u,
-				Time&       t );
+	void steps( const Time&  t0,
+		    const Time&  dt,
+		    const Size&  n,
+                    State&       ub,
+		    State&       u,
+	    	    Time&        t );
 
 	/**
 	 * Take steps that correspond to the provided list of times
@@ -121,7 +141,8 @@ public:
 	 * @param[in,out] u  Current and final equation state values
 	 */
 	void list( const std::vector<Time>& tvec,
-		       State&                   u );
+                   State&                   ub,
+		   State&                   u );
 
 
 protected:

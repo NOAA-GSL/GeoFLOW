@@ -25,10 +25,38 @@ Integrator<EquationType>::Integrator(const EqnBasePtr& equation,
 }
 
 template<typename EquationType>
+void Integrator<EquationType>::time_integrate( Time&       t,
+                                               State&      ub,
+		                               State&      u ){
+	ASSERT(nullptr != eqn_ptr_);
+	ASSERT(nullptr != obs_ptr_);
+	using std::min;
+
+        Time t0 = t;
+        if      ( traits_.integ_type == INTEG_CYCLE ) {
+          steps( t0 
+               , traits_.dt
+               , traits_.cycle_end - traits_.cycle_beg + 1
+               , t
+               , ub
+               , u);
+        } 
+        else if ( traits_.integ_type == INTEG_TIME  ) {
+          time ( t
+               , traits_.time_end
+               , traits_.dt
+               , ub
+               , u);
+        }
+}
+
+
+template<typename EquationType>
 void Integrator<EquationType>::time( const Time& t0,
-		                             const Time& t1,
-		                             const Time& dt,
-		                             State&      u ){
+		                     const Time& t1,
+		                     const Time& dt,
+		                     State&      ub,
+		                     State&      u ){
 	ASSERT(nullptr != eqn_ptr_);
 	ASSERT(nullptr != obs_ptr_);
 	using std::min;
@@ -56,11 +84,12 @@ void Integrator<EquationType>::time( const Time& t0,
 }
 
 template<typename EquationType>
-void Integrator<EquationType>::steps( const Time& t0,
-		                              const Time& dt,
-			                          const Size& n,
-		                              State&      u,
-			                          Time&       t ){
+void Integrator<EquationType>::steps( const Time&  t0,
+		                      const Time&  dt,
+			              const Size&  n,
+		                      State&       ub,
+		                      State&       u,
+			              Time&        t ){
 	ASSERT(nullptr != eqn_ptr_);
 	ASSERT(nullptr != obs_ptr_);
 
@@ -86,7 +115,8 @@ void Integrator<EquationType>::steps( const Time& t0,
 
 template<typename EquationType>
 void Integrator<EquationType>::list( const std::vector<Time>& tlist,
-	                                 State&                   u ){
+		                     State&                   ub,
+	                             State&                   u ){
 	ASSERT(nullptr != eqn_ptr_);
 	ASSERT(nullptr != obs_ptr_);
 

@@ -18,10 +18,13 @@ IntegratorFactory<EquationType>::build(const tbox::PropertyTree& ptree, const Eq
 
 	// Get the integrator traits
 	typename Integrator<Equation>::Traits traits;
-	traits.cfl_min = ptree.getValue("cfl_min", std::numeric_limits<Value>::lowest() );
-	traits.cfl_max = ptree.getValue("cfl_max", std::numeric_limits<Value>::max() );
-	traits.dt_min  = ptree.getValue("dt_min",  std::numeric_limits<Time>::lowest() );
-	traits.dt_max  = ptree.getValue("dt_max",  std::numeric_limits<Time>::max() );
+        std::string stype;
+	stype             = ptree.getValue("integ_type", INTEG_CYCLE );
+        if ( stype == "cycle" ) traits.integ_type = INTEG_CYCLE;
+        if ( stype == "time"  ) traits.integ_type = INTEG_TIME;
+	traits.cycle_end  = ptree.getValue("cycle_end", std::numeric_limits<Value>::max() );
+	traits.dt         = ptree.getValue("dt",  std::numeric_limits<Time>::lowest() );
+	traits.time_max  = ptree.getValue("time_end",  std::numeric_limits<Time>::max() );
 
 	// Allocate Integrator Implementation
 	IntegratorPtr integrator_ptr(new Integrator<Equation>(eqn,obs,traits));
