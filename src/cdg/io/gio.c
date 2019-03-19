@@ -9,7 +9,21 @@
 
 using namespace std;
 
-int gio(GGrid &grid, State &u, GINT nu, GSIZET tindex, GFTYPE time, GTVector<GString> &svars, GC_COMM comm, GBOOL &bprgrid)
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : gout
+// DESC   : Do simple GIO POSIX output
+// ARGS   : grid  : GGrid object
+//          u     : state
+//          nu    : indirection indices
+//          tindex: time output index
+//          time  : state evol. time
+//          svars : variable names for output
+//          comm  : communicator
+//          bprgrid: flag to print grid (not tagged by time index).
+// RETURNS: none
+//**********************************************************************************
+GINT gio(GGrid &grid, State &u, GTVector<GINT> &nu, GSIZET tindex, GFTYPE time, GTVector<GString> &svars, GC_COMM comm, GBOOL &bprgrid)
 {
 
     GString serr ="gio: ";
@@ -52,7 +66,10 @@ int gio(GGrid &grid, State &u, GINT nu, GSIZET tindex, GFTYPE time, GTVector<GSt
     }
 
     // Print field data:
-    for ( auto j=0; j<nu; j++ ) {
+    GINT j;
+    GINT n = nu.size() == 0 ? nu.size() : u.size();
+    for ( auto jj=0; jj<n; jj++ ) {
+      j = nu.size() == 0 ? nu[jj] : jj;
       sprintf(fname, "%s.%06d.%04d.out", svars[j].c_str(), tindex, myrank);
       fp = fopen(fname,"wb");
       // write header: dim, numelems, poly_order:
