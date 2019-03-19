@@ -52,9 +52,6 @@
 using namespace geoflow::pdeint;
 using namespace std;
 
-
-
-
 template<typename TypePack>
 class GBurgers : public EquationBase<TypePack>
 {
@@ -62,6 +59,7 @@ public:
         using Interface  = EquationBase<TypePack>;
         using Base       = Interface;
         using State      = typename Interface::State;
+        using Grid       = typename Interface::Grid;
         using Value      = typename Interface::Value;
         using Derivative = typename Interface::Derivative;
         using Time       = typename Interface::Time;
@@ -72,6 +70,8 @@ public:
                "State is of incorrect type");
         static_assert(std::is_same<Derivative,GTVector<GTVector<GFTYPE>*>>::value,
                "Derivative is of incorrect type");
+        static_assert(std::is_same<Grid,GGrid>::value,
+               "Grid is of incorrect type");
 
         // Burgers solver traits:
         struct Traits {
@@ -84,7 +84,7 @@ public:
         };
 
         GBurgers() = delete; 
-        GBurgers(GGFX &ggfx, GGrid &grid, State &u, GBurgers<TypePack>::Traits &traits, GTVector<GTVector<GFTYPE>*> &tmp);
+        GBurgers(GGFX &ggfx, Grid &grid, State &u, GBurgers<TypePack>::Traits &traits, GTVector<GTVector<GFTYPE>*> &tmp);
        ~GBurgers();
         GBurgers(const GBurgers &bu) = default;
         GBurgers &operator=(const GBurgers &bu) = default;
