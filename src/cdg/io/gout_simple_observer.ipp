@@ -14,19 +14,20 @@
 // ARGS   : traits: Traits sturcture
 //**********************************************************************************
 template<typename EquationType>
-GOutSimpleObserver<EquationType>::GOutSimpleObserver(Traits &traits, Grid &grid)
-: Observer_base(traits, grid),
+GOutSimpleObserver<EquationType>::GOutSimpleObserver(typename ObserverBase<EquationType>::Traits &traits, Grid &grid):
 bgrid_printed_        (FALSE),
 cycle_                    (0),
 cycle_last_               (0),
 time_last_              (0.0)
 { 
+  this->traits_ = traits;
+  this->grid_   = &grid;
 } // end of constructor (1) method
 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD     : observe
+// METHOD     : observe_impl
 // DESCRIPTION: Prints state to files specified by traits. Format is:
 //                  var1.CCCCCC.TTTT.out,
 //              where CCCCCC represents a cycle number, and TTTT represents
@@ -41,37 +42,39 @@ time_last_              (0.0)
 // RETURNS    : none.
 //**********************************************************************************
 template<typename EquationType>
-void GOutSimpleObserver<EquationType>::observe(const Time t, const State &u)
+void GOutSimpleObserver<EquationType>::observe_impl(const Time &t, const State &u)
 {
   init(u);
+
+  mpixx::communicator comm;
    
-  if ( (traits_.itype == OBS_CYCLE && (cycle-cycle_last_)%traits_.cycle_interval == 0)
-  ||   (traits_.itype == OBS_TIME  && t-time_last_ >= traits_time_interval) ) {
-    gio(*grid_, u, traits.istate, cycle_, state_names_, bprgrid_);
+  if ( (this->traits_.itype == ObserverBase<EquationType>::OBS_CYCLE && (cycle_-cycle_last_)%this->traits_.cycle_interval == 0)
+  ||   (this->traits_.itype == ObserverBase<EquationType>::OBS_TIME  &&  t-time_last_ >= this->traits_.time_interval) ) {
+    gio(*(this->grid_), u, state_index_, cycle_, t, state_names_, comm, bgrid_printed_);
     cycle_last_ = cycle_;
     time_last_  = t;
   }
   cycle_++;
   
-} // end of method observe
+} // end of method observe_impl
 
 
 //**********************************************************************************
 //**********************************************************************************
 // METHOD     : init
-// DESCRIPTION: 
+// DESCRIPTION: Fill member index and name data based on traits
 // ARGUMENTS  : u  : state variable
 // RETURNS    : none.
 //**********************************************************************************
 template<typename EquationType>
-void GOutSimpleObserver<EquationType>::init(State &u)
+void GOutSimpleObserver<EquationType>::init(const State &u)
 {
-   if ( state_names_.size() > 0 ) return;
 
    char    stmp[1024];
  
-   if ( state_names_.size() == 0 ) {
-     if ( traits_.state_names.size() == 0 ) {
+   // Set state names member data, if not already set:
+   if ( state_names_.size()  <= 0 ) {
+     if ( this->traits_.state_names.size() == 0 ) {
        for ( auto j=0; j<u.size(); j++ ) {
          sprintf(stmp, "%s%d", "u", j+1);
          state_names_.push_back(stmp); 
@@ -79,24 +82,25 @@ void GOutSimpleObserver<EquationType>::init(State &u)
      } 
      else {
        for ( auto j=0; j<u.size(); j++ ) {
-         state_names_.push_back(traits_.state_names[j].data()); 
+         state_names_.push_back(this->traits_.state_names[j].data()); 
        } 
      }
    }
 
-   if ( state_index_.size() == 0 ) {
-     if ( traits_.state_index.size() == 0 ) {
+   // Set state index member data, if not already set:
+   if ( state_index_.size()  <= 0 ) {
+     if ( this->traits_.state_index.size() == 0 ) {
        for ( auto j=0; j<u.size(); j++ ) {
-         state_names_.push_back(0); 
+         state_index_.push_back(j); 
        } 
      } 
      else {
        for ( auto j=0; j<u.size(); j++ ) {
-         state_names_.push_back(traits_.state_index[j]); 
+         state_index_.push_back(this->traits_.state_index[j]); 
        } 
      }
-   }
+  }
 
 } // end of method init
 
-
+;

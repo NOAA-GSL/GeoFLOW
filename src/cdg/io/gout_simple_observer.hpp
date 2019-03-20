@@ -15,8 +15,9 @@
 #include "pdeint/equation_base.hpp"
 #include "pdeint/observer_base.hpp"
 
-//using namespace geoflow::pdeint;
-//using namespace std;
+using namespace geoflow::pdeint;
+using namespace std;
+
 
 template<typename EquationType>
 class GOutSimpleObserver : public ObserverBase<EquationType>
@@ -33,6 +34,10 @@ public:
         using Size        = typename Equation::Size;
         using EquationPtr = std::shared_ptr<Equation>;
 
+//      using ObserverBase<EquationType>::ObsType;
+//      using OBS_CYCLE = typename ObserverBase<EquationType>::ObsType::OBS_CYCLE;
+//      using OBS_TIME  = typename ObserverBase<EquationType>::OBS_TIME;
+
         static_assert(std::is_same<State,GTVector<GTVector<GFTYPE>*>>::value,
                "State is of incorrect type");
         static_assert(std::is_same<Derivative,GTVector<GTVector<GFTYPE>*>>::value,
@@ -40,24 +45,24 @@ public:
         static_assert(std::is_same<Grid,GGrid>::value,
                "Grid is of incorrect type");
 
-                           GOutSimpleObserver(Traits &traits, Grid &grid);
+                           GOutSimpleObserver() = delete;
+                           GOutSimpleObserver(typename ObserverBase<EquationType>::Traits &traits, Grid &grid);
                           ~GOutSimpleObserver();
                            GOutSimpleObserver(const GOutSimpleObserver &a) = default;
                            GOutSimpleObserver &operator=(const GOutSimpleObserver &bu) = default;
 
-        void               observe_impl(const Time t, const State &u);
+        void               observe_impl(const Time &t, const State &u);
 
 private:
 // Private methods:
-        void               init(State &u);
+        void               init(const State &u);
 // Private data:
         GBOOL              bgrid_printed_;
         GSIZET             cycle_last_;
         GSIZET             cycle_;
-        Time               time_last_;
-        GTVector<GINT>     istate_;
+        GFTYPE             time_last_;
+        GTVector<GINT>     state_index_;
         GTVector<GString>  state_names_;
-        GGrid             *grid_;
     
 
 };
