@@ -20,9 +20,9 @@ template<typename EquationType>
 struct IntegratorFactory {
 	using Equation      = EquationType;
 //      using EqnBase       = typename Equation::Base;
-	using EqnBase       = EquationBase<Equation>;
-	using EqnBasePtr    = std::shared_ptr<EqnBase>;
+	using EqnBase       = EquationBase<EquationType>;
 	using ObsBase       = ObserverBase<Equation>;
+	using EqnBasePtr    = std::shared_ptr<EqnBase>;
 	using ObsBasePtr    = std::shared_ptr<ObsBase>;
 	using IntegratorPtr = std::shared_ptr<Integrator<Equation>>;
 	using Grid          = typename Equation::Grid;

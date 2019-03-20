@@ -11,12 +11,22 @@
 
 #include "gtvector.hpp"
 #include "ggrid.hpp"
-#include "gio.h"
+//#include "gio.h"
 #include "pdeint/equation_base.hpp"
 #include "pdeint/observer_base.hpp"
+#include "tbox/property_tree.hpp"
+#include "tbox/mpixx.hpp"
 
 using namespace geoflow::pdeint;
 using namespace std;
+
+typedef GTVector<GTVector<GFTYPE>*> State;
+typedef GTVector<GFTYPE> StateElem;
+
+
+extern void gio(const GGrid &grid, const State &u, const GTVector<GINT> &nu, 
+                const GSIZET tindex, const GFTYPE time, const GTVector<GString> &svars, 
+                GC_COMM comm, GBOOL &bprgrid);
 
 
 template<typename EquationType>

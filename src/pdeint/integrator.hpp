@@ -33,8 +33,7 @@ class Integrator {
 public:
         enum IntegType     {INTEG_CYCLE=0, INTEG_TIME};
 	using Equation     = EquationType;
-//      using EquationBase = typename Equation::Base;
-	using EquationBase = EquationBase<Equation>;
+        using EqnBase      = EquationBase<EquationType>;
 	using State        = typename Equation::State;
 	using Grid         = typename Equation::Grid;
 	using Value        = typename Equation::Value;
@@ -42,7 +41,7 @@ public:
 	using Time         = typename Equation::Time;
 	using Jacobian     = typename Equation::Jacobian;
 	using Size         = typename Equation::Size;
-	using EqnBasePtr   = std::shared_ptr<EquationBase>;
+	using EqnBasePtr   = std::shared_ptr<EqnBase>;
 	using ObsBasePtr   = std::shared_ptr<ObserverBase<Equation>>;
 
 	/**

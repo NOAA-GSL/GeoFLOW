@@ -33,6 +33,7 @@ public:
 	using Jacobian   = typename TypePack::Jacobian;
 	using Size       = typename TypePack::Size;
 
+
 	EquationBase() = default;
 	EquationBase(const EquationBase& eb) = default;
 	virtual ~EquationBase() = default;
