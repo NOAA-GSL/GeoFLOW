@@ -10,11 +10,12 @@
 
 #include <memory>
 #include <string>
-#include "gout_simple_observer.hpp"
 #include "tbox/error_handler.hpp"
 #include "pdeint/null_observer.hpp"
 #include "pdeint/observer_base.hpp"
 #include "tbox/property_tree.hpp"
+#include "gout_simple_observer.hpp"
+
 
 namespace geoflow {
 namespace pdeint {

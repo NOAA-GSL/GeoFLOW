@@ -42,17 +42,17 @@ public:
          * Data structure to hold user selected parameters
          */
         struct Traits {
-                ObsType   itype      = OBS_CYCLE; // obs output type
+                ObsType   itype          = OBS_CYCLE; // obs output type
                 std::vector<int>     
-                          state_index;            // which state members to observe
+                          state_index;                // which state members to observe
                 std::vector<std::string>
-                          state_names;            // file/ref names for each state member
-                size_t    cycle_interval = 10;    // cycle interval for observation
-                Time      time_interval = 1.0;    // time interval for observation
+                          state_names;                // file/ref names for each state member
+                size_t    cycle_interval = 10;        // cycle interval for observation
+                double    time_interval  = 1.0;       // time interval for observation
         };
 
-	ObserverBase() = delete;
-	ObserverBase(Traits& traits, Grid& grid){traits_=traits; grid_= &grid;};
+        ObserverBase() = default;
+	ObserverBase(Traits& traits, Grid& grid){traits_=traits; grid_= &grid;}
 	ObserverBase(const ObserverBase& obs) = default;
 	virtual ~ObserverBase() = default;
 	ObserverBase& operator=(const ObserverBase& obs) = default;
@@ -74,7 +74,7 @@ protected:
 	/**
 	 * Must be provided by implementation
 	 */
-	virtual void observe_impl(const Traits& traits, const Time& t, const State& u) = 0;
+	virtual void observe_impl(const Time& t, const State& u) = 0;
 
 };
 

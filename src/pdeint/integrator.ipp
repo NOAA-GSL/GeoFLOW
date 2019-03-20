@@ -17,10 +17,10 @@ namespace pdeint {
 
 template<typename EquationType>
 Integrator<EquationType>::Integrator(const EqnBasePtr& equation,
-		                             const ObsBasePtr& observer,
-                                                   Grid&       grid,
-		                             const Traits& traits) :
-	traits_(traits), eqn_ptr_(equation), obs_ptr_(observer), grid_(&grid) {
+		                     const ObsBasePtr& observer,
+                                     Grid&             grid,
+		                     const Traits&     traits) :
+	cycle_(0), traits_(traits), eqn_ptr_(equation), obs_ptr_(observer), grid_(&grid) {
 	ASSERT(nullptr != eqn_ptr_);
 	ASSERT(nullptr != obs_ptr_);
 }
@@ -34,13 +34,14 @@ void Integrator<EquationType>::time_integrate( Time&       t,
 	using std::min;
 
         Time t0 = t;
+        Size n  = traits_.cycle_end - cycle_ + 1;
         if      ( traits_.integ_type == INTEG_CYCLE ) {
           steps( t0 
                , traits_.dt
-               , traits_.cycle_end - traits_.cycle_beg + 1
-               , t
+               , n
                , ub
-               , u);
+               , u
+               , t);
         } 
         else if ( traits_.integ_type == INTEG_TIME  ) {
           time ( t
@@ -74,11 +75,13 @@ void Integrator<EquationType>::time( const Time& t0,
 		}
 
 		// Take Step
-		this->eqn_ptr_->step(t,dt_eff,u);
+		this->eqn_ptr_->step(t,u, ub, dt_eff);
 		t += dt_eff;
 
 		// Call observer on solution
 		this->obs_ptr_->observe(t,u);
+ 
+                ++cycle_;
 
 	} while( t != t1 );
 
@@ -95,7 +98,7 @@ void Integrator<EquationType>::steps( const Time&  t0,
 	ASSERT(nullptr != obs_ptr_);
 
 	t = t0;
-	for(Size i = 0; i < n; ++i){
+	for(Size i = 0; i < n; ++i, ++cycle_){
 
 		// Limit dt if requested
 		Time dt_eff = dt;
@@ -105,7 +108,7 @@ void Integrator<EquationType>::steps( const Time&  t0,
 		}
 
 		// Take Step
-		this->eqn_ptr_->step(t,dt_eff,u);
+		this->eqn_ptr_->step(t,u, ub, dt_eff);
 		t += dt_eff;
 
 		// Call observer on solution at new t
@@ -140,7 +143,7 @@ void Integrator<EquationType>::init_dt(const Time& t, State& u, Time& dt) const{
 	using std::min;
 
 	// Get pointer to equation
-	auto eqn_ptr = this->eqn_ptr_->getEquationPtr();
+	auto eqn_ptr = this->eqn_ptr_; // ->getEquationPtr();
 	ASSERT(nullptr != eqn_ptr);
 
 	// Make sure dt is between absolute limits

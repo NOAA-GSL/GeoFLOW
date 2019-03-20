@@ -33,7 +33,8 @@ class Integrator {
 public:
         enum IntegType     {INTEG_CYCLE=0, INTEG_TIME};
 	using Equation     = EquationType;
-	using EquationBase = typename Equation::Base;
+//      using EquationBase = typename Equation::Base;
+	using EquationBase = EquationBase<Equation>;
 	using State        = typename Equation::State;
 	using Grid         = typename Equation::Grid;
 	using Value        = typename Equation::Value;
@@ -49,9 +50,13 @@ public:
 	 */
 	struct Traits {
 		IntegType integ_type;
-		Value     cycle_end;
-		Time      dt;
-		Time      time_end;
+		size_t    cycle_end   = 1;
+		Value     cfl_min     = std::numeric_limits<Value>::min();
+		Value     cfl_max     = std::numeric_limits<Value>::max();
+		Time      dt_min      = std::numeric_limits<Time>::min();
+		Time      dt_max      = std::numeric_limits<Time>::max();   
+		Time      dt          = static_cast<Time>(1.0e-2);
+		Time      time_end    = static_cast<Time>(1.0);
 	};
 
 	Integrator() = delete;
@@ -149,6 +154,7 @@ public:
 
 
 protected:
+        size_t      cycle_; // no. time cycles taken so far
 	Traits      traits_;
 	EqnBasePtr  eqn_ptr_;
 	ObsBasePtr  obs_ptr_;

@@ -19,7 +19,8 @@ namespace pdeint {
 template<typename EquationType>
 struct IntegratorFactory {
 	using Equation      = EquationType;
-	using EqnBase       = typename Equation::Base;
+//      using EqnBase       = typename Equation::Base;
+	using EqnBase       = EquationBase<Equation>;
 	using EqnBasePtr    = std::shared_ptr<EqnBase>;
 	using ObsBase       = ObserverBase<Equation>;
 	using ObsBasePtr    = std::shared_ptr<ObsBase>;

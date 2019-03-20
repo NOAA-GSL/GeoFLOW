@@ -30,6 +30,8 @@ public:
 	using State      = typename Interface::State;
 	using Grid       = typename Interface::Grid;
 	using Time       = typename Interface::Time;
+        
+        NullObserver(typename ObserverBase<EquationType>::Traits &traits, Grid &grid);
 
 protected:
 

@@ -22,12 +22,17 @@ ObserverFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid){
 	const std::string observer_name = ptree.getValue("observer_name", default_observer);
 
         // Set traits from prop tree:
-        Observer_base::Traits traits;
-        traits.itype = static_cast<ObsType>(ptree.getValue("itype"));
-        traits.state_index = ptree.getArray<int>("state_index");
-        traits.state_names= ptree.getArray<std::string>("state_names");
-        traits.cycle_interval= ptree.getArray<size_t>("cycle_interval");
-        traits.time_interval= ptree.getArray<double>("cycle_interval");
+        typename ObserverBase<ET>::Traits traits;
+
+        std::string stype = ptree.getValue<std::string>("itype");
+        if      ( "cycle" == stype )  traits.itype = ObserverBase<ET>::OBS_CYCLE;
+        else if ( "time " == stype )  traits.itype = ObserverBase<ET>::OBS_TIME;
+        else EH_ERROR("Invalid observer type specified");
+
+        traits.state_index   = ptree.getArray<int>        ("state_index");
+        traits.state_names   = ptree.getArray<std::string>("state_names");
+        traits.cycle_interval= ptree.getValue<size_t>     ("cycle_interval");
+        traits.time_interval = ptree.getValue<double>     ("time_interval");
      
 	// Create the observer and cast to base type
 	ObsBasePtr base_ptr;
@@ -44,8 +49,10 @@ ObserverFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid){
 		base_ptr = obs_impl;
 	}
         else if( "gout_simple_observer" == observer_name ) {
+		using ObsImpl = GOutSimpleObserver<Equation>;
+
 		// Allocate observer Implementation
-		std::shared_ptr<ObsImpl> obs_impl(new GOutSimpleObserver(traits, grid));
+		std::shared_ptr<ObsImpl> obs_impl(new ObsImpl(traits, grid));
 
 		// Set back to base type
 		base_ptr = obs_impl;
