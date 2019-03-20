@@ -15,8 +15,8 @@
 #include "pdeint/equation_base.hpp"
 #include "pdeint/observer_base.hpp"
 
-using namespace geoflow::pdeint;
-using namespace std;
+//using namespace geoflow::pdeint;
+//using namespace std;
 
 template<typename EquationType>
 class GOutSimpleObserver : public ObserverBase<EquationType>
