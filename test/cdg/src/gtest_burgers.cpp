@@ -25,6 +25,7 @@
 #include "gburgers.hpp"
 #include "ggrid_box.hpp"
 #include "ggrid_factory.hpp"
+#include "gout_simple_observer.hpp"
 #include "pdeint/equation_base.hpp"
 #include "pdeint/integrator_factory.hpp"
 #include "pdeint/observer_factory.hpp"
@@ -285,13 +286,13 @@ int main(int argc, char **argv)
       sprintf(stmp, "du%d", j+1);
       sdu.push_back(stmp);
     }
-    gio(*grid_, u_, 1, 0, 0.0, svars, comm, bgridwritten);
+//  gio(*grid_, u_, 1, 0, 0.0, svars, comm, bgridwritten);
 
     EH_MESSAGE("main: State initialized.");
 
     GPTLstart("time_loop");
 
-    pIntegrator->time_integrate(t, ub, u);
+    pIntegrator->time_integrate(t, ub_, u_);
 
 #if 0
     for( GSIZET i=0; i<maxSteps; i++ ){
@@ -310,9 +311,9 @@ int main(int argc, char **argv)
     compute_analytic(*grid_, tt, ptree, ua_); // analyt soln at t=0
 
     // Write binary output:
-    if ( dopr ) {
-      gio(*grid_, u_, u_.size(), maxSteps, t, svars, comm, bgridwritten);
-    {
+//  if ( dopr ) {
+//    gio(*grid_, u_, u_.size(), maxSteps, t, svars, comm, bgridwritten);
+//  }
 
 #if 1
     // Compute analytic solution, do comparisons:
