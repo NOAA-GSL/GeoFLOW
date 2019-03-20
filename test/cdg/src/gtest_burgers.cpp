@@ -264,10 +264,10 @@ int main(int argc, char **argv)
     eqn_impl->set_nu(nu_);
 
     // Create the observers: 
-    auto pObservers = ObserverFactory<EqnBase>::build(ptree,*grid_);
+    auto pObservers = ObserverFactory<MyTypes>::build(ptree,*grid_);
 
     // Create integrator:
-    auto pIntegrator = IntegratorFactory<EqnBase>::build(tintptree, eqn_base, pObservers, *grid_);
+    auto pIntegrator = IntegratorFactory<MyTypes>::build(tintptree, eqn_base, pObservers, *grid_);
 #if 0
     dt       = tintptree.getValue<GFTYPE>("dt"); 
     maxSteps = tintptree.getValue<GSIZET>("cycle_end");
