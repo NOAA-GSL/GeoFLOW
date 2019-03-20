@@ -43,8 +43,7 @@
 #   )
 
 
- set(CDG_IO_SRC     ${GHOME}/io/gio.c 
-                    ${GHOME}/io/gout_simple_observer.cpp
+ set(CDG_IO_SRC     ${GHOME}/io/gio.cpp 
     )
 
  set(CDG_UTILS_SRC  ${GHOME}/utils/gbitblock.cpp 
