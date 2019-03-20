@@ -26,7 +26,8 @@
 #include "ggrid_box.hpp"
 #include "ggrid_factory.hpp"
 #include "pdeint/equation_base.hpp"
-#include "pdeint/integrator.hpp"
+#include "pdeint/integrator_factory.hpp"
+#include "pdeint/observer_factory.hpp"
 #include "pdeint/null_observer.hpp"
 #include "tbox/property_tree.hpp"
 #include "tbox/mpixx.hpp"
@@ -41,6 +42,7 @@ using namespace std;
 
 template< // default template arg types
 typename StateType = GTVector<GTVector<GFTYPE>*>,
+typename GridType  = GGrid,
 typename ValueType = GFTYPE,
 typename DerivType = StateType,
 typename TimeType  = ValueType,
@@ -49,6 +51,7 @@ typename SizeType  = GSIZET
 >
 struct EquationTypes {
         using State      = StateType;
+        using Grid       = GridType;
         using Value      = ValueType;
         using Derivative = DerivType;
         using Time       = TimeType;
@@ -76,7 +79,6 @@ int main(int argc, char **argv)
 {
 
     // Get types used for equations and solver
-//  using MyTypes = EquationTypes<GTVector<GTVector<GFTYPE>*>>; // Define types used
     using MyTypes = EquationTypes<>; // Define types used
     using EqnBase = EquationBase<MyTypes>;                     // Equation Base Type
     using EqnImpl = GBurgers<MyTypes>;                         // Equation Implementa
@@ -118,9 +120,9 @@ int main(int argc, char **argv)
     PropertyTree dissptree;   // dissipation props
     PropertyTree tintptree;   // time integration props
 
-    EH_MESSAGE("main::call load_file...")
+    EH_MESSAGE("main::call load_file...");
     ptree    = InputManager::getInputPropertyTree();       // main param file structure
-    EH_MESSAGE("main: load_file done.")
+    EH_MESSAGE("main: load_file done.");
     // Create other prop trees for various objects:
     sgrid       = ptree.getValue<GString>("grid_type");
     np          = ptree.getValue<GINT>("exp_order");
@@ -261,10 +263,10 @@ int main(int argc, char **argv)
     eqn_impl->set_nu(nu_);
 
     // Create the observers: 
-    auto pObservers = ObserverFactory<EqnBase>::build(ptree);
+    auto pObservers = ObserverFactory<EqnBase>::build(ptree,*grid_);
 
     // Create integrator:
-    auto pIntegrator = IntegratorFactory<EqnBase>::build(tintptree, eqn_base, pObservers);
+    auto pIntegrator = IntegratorFactory<EqnBase>::build(tintptree, eqn_base, pObservers, *grid_);
 #if 0
     dt       = tintptree.getValue<GFTYPE>("dt"); 
     maxSteps = tintptree.getValue<GSIZET>("cycle_end");
@@ -285,9 +287,13 @@ int main(int argc, char **argv)
     }
     gio(*grid_, u_, 1, 0, 0.0, svars, comm, bgridwritten);
 
-    DH_MESSAGE("main: State initiallized.");
+    EH_MESSAGE("main: State initialized.");
 
     GPTLstart("time_loop");
+
+    pIntegrator->time_integrate(t, ub, u);
+
+#if 0
     for( GSIZET i=0; i<maxSteps; i++ ){
       eqn_base->step(t, u_, ub_, dt);
       if ( dopr ) {
@@ -297,6 +303,7 @@ int main(int argc, char **argv)
       }
       t += dt;
     }
+#endif
     GPTLstop("time_loop");
     
     tt = 0.0;
