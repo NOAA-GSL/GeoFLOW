@@ -9,7 +9,6 @@
 #define SRC_PDEINT_OBSERVER_FACTORY_HPP_
 
 #include <memory>
-
 #include <string>
 #include "gout_simple_observer.hpp"
 #include "tbox/error_handler.hpp"

@@ -5,12 +5,6 @@
  *      Author: bryan.flynt
  */
 
-//#include "observer_factory.hpp"
-
-//#include <string>
-//#include "tbox/error_handler.hpp"
-//#include "pdeint/null_observer.hpp"
-//#include "gout_simple_observer.hpp"
 
 namespace geoflow {
 namespace pdeint {
@@ -29,11 +23,11 @@ ObserverFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid){
 
         // Set traits from prop tree:
         Observer_base::Traits traits;
-        traits.itype = static_cast<ObsType>(ptree.getValue("itype",OBS_CYCLE));
+        traits.itype = static_cast<ObsType>(ptree.getValue("itype"));
         traits.state_index = ptree.getArray<int>("state_index");
-        traits.state_names= ptree.getArray<std::string>("state_index");
-        traits.cycle_interval= ptree.getArray<size_t>("cycle_interval",10);
-        traits.time_interval= ptree.getArray<double>("cycle_interval",1.0);
+        traits.state_names= ptree.getArray<std::string>("state_names");
+        traits.cycle_interval= ptree.getArray<size_t>("cycle_interval");
+        traits.time_interval= ptree.getArray<double>("cycle_interval");
      
 	// Create the observer and cast to base type
 	ObsBasePtr base_ptr;
@@ -51,7 +45,7 @@ ObserverFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid){
 	}
         else if( "gout_simple_observer" == observer_name ) {
 		// Allocate observer Implementation
-		std::shared_ptr<ObsImpl> obs_impl(new iGOutSimpleObserver(traits, grid));
+		std::shared_ptr<ObsImpl> obs_impl(new GOutSimpleObserver(traits, grid));
 
 		// Set back to base type
 		base_ptr = obs_impl;
