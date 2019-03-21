@@ -43,7 +43,7 @@
 #   )
 
 
- set(CDG_IO_SRC     ${GHOME}/io/gio.cpp 
+ set(CDG_IO_SRC     ${GHOME}/io/gio.c
     )
 
  set(CDG_UTILS_SRC  ${GHOME}/utils/gbitblock.cpp 
