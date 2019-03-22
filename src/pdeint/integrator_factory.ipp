@@ -23,8 +23,8 @@ IntegratorFactory<EquationType>::build(const tbox::PropertyTree& ptree, const Eq
 
         // Get integrator cadence type: integrate by time or by cycle:
 	stype             = ptree.getValue<std::string>("integ_type", "cycle" );
-        if ( stype == "cycle" ) traits.integ_type = Integrator<EquationType>::INTEG_CYCLE;
-        if ( stype == "time"  ) traits.integ_type = Integrator<EquationType>::INTEG_TIME;
+        if ( "cycle" == stype ) traits.integ_type = Integrator<EquationType>::INTEG_CYCLE;
+        if ( "time"  == stype ) traits.integ_type = Integrator<EquationType>::INTEG_TIME;
 	traits.cycle_end  = ptree.getValue<size_t>("cycle_end", 1);
 	traits.dt         = ptree.getValue<Value>("dt",  std::numeric_limits<Time>::lowest() );
 	traits.time_end   = ptree.getValue<Value>("time_end",  std::numeric_limits<Time>::max() );

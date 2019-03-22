@@ -27,7 +27,7 @@ ObserverFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid){
         // Get whether 'observation' cadence should be by cycle or time:
         std::string stype = ptree.getValue<std::string>("cadence_itype","none");
         if      ( "cycle" == stype )  traits.itype = ObserverBase<ET>::OBS_CYCLE;
-        else if ( "time " == stype )  traits.itype = ObserverBase<ET>::OBS_TIME;
+        else if ( "time"  == stype )  traits.itype = ObserverBase<ET>::OBS_TIME;
         else EH_ERROR("Invalid observer type specified");
 
         traits.state_index   = ptree.getArray<int>        ("state_index");    // state ids to 'observe' [0, 1, 2...]
