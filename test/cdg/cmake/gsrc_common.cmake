@@ -71,6 +71,7 @@
                      ${CDG_GRID_SRC}
                      ${CDG_SEM_SRC}
                      ${CDG_PDES_SRC}
+                     ${CDG_IO_SRC}
                      ${GEOFLOW_TBOX_SRC}
      )
 
