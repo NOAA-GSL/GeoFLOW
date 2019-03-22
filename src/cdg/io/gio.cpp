@@ -7,7 +7,9 @@
 //==================================================================================
 #include "gio.h"
 
-using namespace std;
+#if defined(__cplusplus)
+extern "C" {
+#endif
 
 //**********************************************************************************
 //**********************************************************************************
@@ -28,6 +30,7 @@ void gio(const GGrid &grid, const State &u, const GTVector<GINT> &nu, const GSIZ
 
     GString serr ="gio: ";
     char    fname[1024];
+    char    fn2;
     
     GINT myrank = GComm::WorldRank(comm);
 
@@ -86,3 +89,7 @@ void gio(const GGrid &grid, const State &u, const GTVector<GINT> &nu, const GSIZ
     return(0);
 
 } // end, gio
+
+#if defined(__cplusplus)
+}
+#endif
