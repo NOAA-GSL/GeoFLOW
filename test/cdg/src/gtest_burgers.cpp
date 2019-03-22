@@ -778,7 +778,6 @@ void create_observers(PropertyTree &ptree,
 std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers)
 {
     PropertyTree obsptree;    // observer props 
-    ObserverBase<MyTypes>::Traits obstraits; 
     GString dstr = "none";
 
     std::vector<GString> default_obslist; default_obslist.push_back(dstr);
