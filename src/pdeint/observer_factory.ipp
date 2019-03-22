@@ -34,7 +34,7 @@ ObserverFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid){
         traits.state_names   = ptree.getArray<std::string>("state_names");    // state names 
         traits.cycle_interval= ptree.getValue<size_t>     ("cycle_interval"); // cadence for cycle type
         traits.time_interval = ptree.getValue<double>     ("time_interval");  // cadence for time type
-        traits.dir           = ptree.getValue<std::string>("directory");      // directory
+        traits.dir           = ptree.getValue<std::string>("directory",".");  // directory
      
 	// Create the observer and cast to base type
 	ObsBasePtr base_ptr;
