@@ -8,4 +8,8 @@
 8.   Verify computation of amount of tmp space required by solver
 9.   Complete flux operator, and validate faceNormal vector computations for DG
 10.  Test I X I X D, I X D X I, etc operators; use only compute_refderivs, not
-     compute_refderivsW in GAdvect to reduce no. flops required.  
+     compute_refderivsW in GAdvect to reduce no. flops required. NB: testing 
+     done, but integration not done.
+11.  Add restart capability.
+12.  Add forcing.
+13.  Generalize the application of initial conditions.
