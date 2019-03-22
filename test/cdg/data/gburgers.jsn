@@ -42,7 +42,7 @@
     "grid_name" : "grid_box",
     "xyz0"      : [0.0, 0.0, 0.0],
     "delxyz"    : [1.0, 1.0, 1.0],
-    "num_elems" : [8, 8, 1],
+    "num_elems" : [16, 16, 1],
     "bdy_x_0"   : "GBDY_PERIODIC",
     "bdy_x_1"   : "GBDY_PERIODIC",
     "bdy_y_0"   : "GBDY_PERIODIC",
@@ -61,7 +61,7 @@
   },
   "simple_output": {
     "observer_name" : "gout_simple_observer",
-    "directory"     : "./"
+    "directory"     : ".",
     "cadence_itype" : "cycle",
     "state_index"   : [0],
     "state_names"   : ["u1", "u2", "u3"],
