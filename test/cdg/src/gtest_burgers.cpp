@@ -70,21 +70,26 @@ GTVector<GTVector<GFTYPE>*> uold_;
 GTVector<GFTYPE> nu_(3);
 PropertyTree ptree;       // main prop tree
 
+
+using MyTypes = EquationTypes<>;       // Define types used
+using EqnBase = EquationBase<MyTypes>; // Equation Base Type
+using EqnImpl = GBurgers<MyTypes>;     // Equation Implementa
+using ObsBase = ObserverBase<EqnBase>; // Observer Base Type
+using ObsImpl = NullObserver<EqnImpl>; // Observer Implementation Type
+
 void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVector<GTVector<GFTYPE>*> &u);
 void update_dirichlet(const GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u, GTVector<GTVector<GFTYPE>*> &ub);
 void init_ggfx(GGrid &grid, GGFX &ggfx);
+void create_observers(PropertyTree &ptree, 
+std::vector<std::shared_ptr<ObserverBase<MyTypes>>> &vObservers);
 
 //#include "init_pde.h"
+
 
 int main(int argc, char **argv)
 {
 
     // Get types used for equations and solver
-    using MyTypes = EquationTypes<>; // Define types used
-    using EqnBase = EquationBase<MyTypes>;                     // Equation Base Type
-    using EqnImpl = GBurgers<MyTypes>;                         // Equation Implementa
-    using ObsBase = ObserverBase<EqnBase>;                     // Observer Base Type
-    using ObsImpl = NullObserver<EqnImpl>;                     // Observer Implementation Type
 
     GString serr ="main: ";
     GBOOL  bret, dopr=TRUE;
@@ -264,14 +269,12 @@ int main(int argc, char **argv)
     eqn_impl->set_nu(nu_);
 
     // Create the observers: 
-    auto pObservers = ObserverFactory<MyTypes>::build(ptree,*grid_);
+    std::vector<std::shared_ptr<ObserverBase<MyTypes>>> vObservers;
+    std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> pObservers(&vObservers);
+    create_observers(ptree, vObservers);
 
     // Create integrator:
     auto pIntegrator = IntegratorFactory<MyTypes>::build(tintptree, eqn_base, pObservers, *grid_);
-#if 0
-    dt       = tintptree.getValue<GFTYPE>("dt"); 
-    maxSteps = tintptree.getValue<GSIZET>("cycle_end");
-#endif
 
     // Initialize state:
     EH_MESSAGE("main: Initializing state...");
@@ -780,4 +783,27 @@ void init_ggfx(GGrid &grid, GGFX &ggfx)
 } // end method init_ggfx
 
 
+//**********************************************************************************
+//**********************************************************************************
+// METHOD: create_observers
+// DESC  : Create observer list from ptree
+// ARGS  : grid    : GGrid object
+//         ggfx    : gather/scatter op, GGFX
+//**********************************************************************************
+void create_observers(PropertyTree &ptree, 
+std::vector<std::shared_ptr<ObserverBase<MyTypes>>> &vObservers)
+{
+    PropertyTree obsptree;    // observer props 
+    ObserverBase<MyTypes>::Traits obstraits; 
+    GString dstr = "none";
 
+    std::vector<GString> default_obslist; default_obslist.push_back(dstr);
+    std::vector<GString> obslist = ptree.getArray<GString>("observer_list",default_obslist);
+    for ( auto j=0; j<obslist.size(); j++ ) {
+      if ( "none" != obslist[j] ) {
+        obsptree = ptree.getPropertyTree(obslist[j]);
+        vObservers.push_back(ObserverFactory<MyTypes>::build(obsptree,*grid_));
+      }
+    }
+
+} // end method init_ggfx

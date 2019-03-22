@@ -3,7 +3,8 @@
   "grid_type"      : "grid_box",
   "init_block"     : "init_lump",
   "bdy_conditions" : "PERIODIC",
-  "restart_index": 0,
+  "restart_index"  : 0,
+  "observer_list"  : ["simple_output"],
   "poly_test": {
     "xpoly" : 10,
     "ypoly" : 10,
@@ -58,8 +59,16 @@
     "nu"      : 0.0,
     "nu_type" : "constant"
   },
+  "simple_output": {
+    "observer_name" : "gout_simple_observer",
+    "cadence_itype" : "cycle",
+    "state_index"   : [0, 1, 2],
+    "state_names"   : ["u1", "u2", "u3"],
+    "cycle_interval": 1,
+    "time_interval" : 0.01
+  },
   "time_integration": {
-    "time_type" : "cycle",
+    "integ_type" : "cycle",
     "time_end"  : 10.0,
     "cycle_end" : 1000,
     "dt"        : 1.0e-3
