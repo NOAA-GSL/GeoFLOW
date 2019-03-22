@@ -81,7 +81,7 @@ void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVecto
 void update_dirichlet(const GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u, GTVector<GTVector<GFTYPE>*> &ub);
 void init_ggfx(GGrid &grid, GGFX &ggfx);
 void create_observers(PropertyTree &ptree, 
-std::vector<std::shared_ptr<ObserverBase<MyTypes>>> &vObservers);
+std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers);
 
 //#include "init_pde.h"
 
@@ -269,9 +269,9 @@ int main(int argc, char **argv)
     eqn_impl->set_nu(nu_);
 
     // Create the observers: 
-    std::vector<std::shared_ptr<ObserverBase<MyTypes>>> vObservers;
-    std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> pObservers(&vObservers);
-    create_observers(ptree, vObservers);
+//  std::vector<std::shared_ptr<ObserverBase<MyTypes>>> vObservers;
+    std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> pObservers(new std::vector<std::shared_ptr<ObserverBase<MyTypes>>>());
+    create_observers(ptree, pObservers);
 
     // Create integrator:
     auto pIntegrator = IntegratorFactory<MyTypes>::build(tintptree, eqn_base, pObservers, *grid_);
@@ -293,30 +293,14 @@ int main(int argc, char **argv)
 
     EH_MESSAGE("main: State initialized.");
 
+    // Do time integration (output included
+    // via observer(s)):
     GPTLstart("time_loop");
-
     pIntegrator->time_integrate(t, ub_, u_);
-
-#if 0
-    for( GSIZET i=0; i<maxSteps; i++ ){
-      eqn_base->step(t, u_, ub_, dt);
-      if ( dopr ) {
-        gio(*grid_, u_, 1, i, t, svars, comm, bgridwritten);
-        compute_analytic(*grid_, t, ptree, ua_); // analyt soln at t=0
-        gio(*grid_, ua_, 1, i, t, savars, comm, bgridwritten);
-      }
-      t += dt;
-    }
-#endif
     GPTLstop("time_loop");
     
     tt = 0.0;
     compute_analytic(*grid_, tt, ptree, ua_); // analyt soln at t=0
-
-    // Write binary output:
-//  if ( dopr ) {
-//    gio(*grid_, u_, u_.size(), maxSteps, t, svars, comm, bgridwritten);
-//  }
 
 #if 1
     // Compute analytic solution, do comparisons:
@@ -791,7 +775,7 @@ void init_ggfx(GGrid &grid, GGFX &ggfx)
 //         ggfx    : gather/scatter op, GGFX
 //**********************************************************************************
 void create_observers(PropertyTree &ptree, 
-std::vector<std::shared_ptr<ObserverBase<MyTypes>>> &vObservers)
+std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers)
 {
     PropertyTree obsptree;    // observer props 
     ObserverBase<MyTypes>::Traits obstraits; 
@@ -802,7 +786,7 @@ std::vector<std::shared_ptr<ObserverBase<MyTypes>>> &vObservers)
     for ( auto j=0; j<obslist.size(); j++ ) {
       if ( "none" != obslist[j] ) {
         obsptree = ptree.getPropertyTree(obslist[j]);
-        vObservers.push_back(ObserverFactory<MyTypes>::build(obsptree,*grid_));
+        pObservers->push_back(ObserverFactory<MyTypes>::build(obsptree,*grid_));
       }
     }
 
