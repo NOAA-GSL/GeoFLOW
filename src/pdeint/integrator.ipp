@@ -49,7 +49,9 @@ void Integrator<EquationType>::time_integrate( Time&       t,
                , traits_.dt
                , ub
                , u);
+          t = traits_.time_end;
         }
+
 }
 
 
@@ -78,6 +80,7 @@ void Integrator<EquationType>::time( const Time& t0,
 		this->eqn_ptr_->step(t,u, ub, dt_eff);
 		t += dt_eff;
 
+
 		// Call observer on solution
                 for ( auto j = 0 ; j < this->obs_ptr_->size(); j++ ) 
 		  (*this->obs_ptr_)[j]->observe(t,u);
@@ -85,6 +88,7 @@ void Integrator<EquationType>::time( const Time& t0,
                 ++cycle_;
 
 	} while( t != t1 );
+
 
 }
 
@@ -136,7 +140,6 @@ void Integrator<EquationType>::list( const std::vector<Time>& tlist,
 	}
 
 }
-
 
 
 template<typename EquationType>
