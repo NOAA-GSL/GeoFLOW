@@ -54,6 +54,8 @@ void gio(GGrid &grid, const State &u, const GTVector<GINT> &iu, const GSIZET tin
       for ( auto j=0; j<xnodes->size(); j++ ) {
         sprintf(fname, "%s/%s.%04d.out", sdir.c_str(), sx[j].c_str(),  myrank);
         fp = fopen(fname,"wb");
+
+        assert(fp != NULLPTR && "gio.cpp: error opening file");
         // write header: dim, numelems, poly_order:
         fwrite(&dim         , sizeof(GINT)  ,    1, fp); // problem dimension
         fwrite(&nelems      , sizeof(GSIZET),    1, fp); // # elems
@@ -71,8 +73,10 @@ void gio(GGrid &grid, const State &u, const GTVector<GINT> &iu, const GSIZET tin
     GINT n = iu.size() == 0 ? u.size() : iu.size();
     for ( auto jj=0; jj<n; jj++ ) {
       j = iu.size() == 0 ? iu[jj] : jj;
-      sprintf(fname, "%s/%s.%06d.%04d.out", svars[j].c_str(), sdir.c_str(), tindex, myrank);
+      sprintf(fname, "%s/%s.%06d.%04d.out", sdir.c_str(), svars[j].c_str(), tindex, myrank);
       fp = fopen(fname,"wb");
+      assert(fp != NULLPTR && "gio.cpp: error opening file");
+
       // write header: dim, numelems, poly_order:
       fwrite(&dim         , sizeof(GINT)  ,    1, fp);
       fwrite(&nelems      , sizeof(GSIZET),    1, fp);
