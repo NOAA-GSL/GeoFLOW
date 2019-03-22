@@ -57,7 +57,7 @@ public:
 
                            GOutSimpleObserver() = delete;
                            GOutSimpleObserver(typename ObserverBase<EquationType>::Traits &traits, Grid &grid);
-                          ~GOutSimpleObserver();
+                          ~GOutSimpleObserver() = default;
                            GOutSimpleObserver(const GOutSimpleObserver &a) = default;
                            GOutSimpleObserver &operator=(const GOutSimpleObserver &bu) = default;
 
