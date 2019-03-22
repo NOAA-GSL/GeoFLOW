@@ -15,10 +15,10 @@
 //**********************************************************************************
 template<typename EquationType>
 GOutSimpleObserver<EquationType>::GOutSimpleObserver(typename ObserverBase<EquationType>::Traits &traits, Grid &grid):
-bgrid_printed_        (FALSE),
-cycle_                    (0),
-cycle_last_               (0),
-time_last_              (0.0)
+bprgrid_        (TRUE),
+cycle_          (0),
+cycle_last_     (0),
+time_last_      (0.0)
 { 
   this->traits_ = traits;
   this->grid_   = &grid;
@@ -48,9 +48,12 @@ void GOutSimpleObserver<EquationType>::observe_impl(const Time &t, const State &
 
   mpixx::communicator comm;
    
-  if ( (this->traits_.itype == ObserverBase<EquationType>::OBS_CYCLE && (cycle_-cycle_last_)%this->traits_.cycle_interval == 0)
-  ||   (this->traits_.itype == ObserverBase<EquationType>::OBS_TIME  &&  t-time_last_ >= this->traits_.time_interval) ) {
-    gio(*(this->grid_), u, state_index_, cycle_, t, state_names_, comm, bgrid_printed_);
+  if ( (this->traits_.itype == ObserverBase<EquationType>::OBS_CYCLE 
+        && (cycle_-cycle_last_) == this->traits_.cycle_interval)
+    || (this->traits_.itype == ObserverBase<EquationType>::OBS_TIME  
+        &&  t-time_last_ >= this->traits_.time_interval) ) {
+    gio(*(this->grid_), u, state_index_, cycle_, t, state_names_, comm, bprgrid_);
+    bprgrid_ = FALSE;
     cycle_last_ = cycle_;
     time_last_  = t;
   }
@@ -90,12 +93,12 @@ void GOutSimpleObserver<EquationType>::init(const State &u)
    // Set state index member data, if not already set:
    if ( state_index_.size()  <= 0 ) {
      if ( this->traits_.state_index.size() == 0 ) {
-       for ( auto j=0; j<u.size(); j++ ) {
+       for ( auto j=0; j<state_names_.size(); j++ ) {
          state_index_.push_back(j); 
        } 
      } 
      else {
-       for ( auto j=0; j<u.size(); j++ ) {
+       for ( auto j=0; j<this->traits_.state_index.size(); j++ ) {
          state_index_.push_back(this->traits_.state_index[j]); 
        } 
      }

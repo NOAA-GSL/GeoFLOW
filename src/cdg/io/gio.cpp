@@ -14,15 +14,15 @@
 // DESC   : Do simple GIO POSIX output
 // ARGS   : grid  : GGrid object
 //          u     : state
-//          nu    : indirection indices
+//          iu    : indirection indices, point to u members to print
 //          tindex: time output index
 //          time  : state evol. time
 //          svars : variable names for output
 //          comm  : communicator
-//          bprgrid: flag to print grid (not tagged by time index).
+//          bprgrid: flag to print grid, which is not tagged by time index.
 // RETURNS: none
 //**********************************************************************************
-void gio(GGrid &grid, const State &u, const GTVector<GINT> &nu, const GSIZET tindex, const GFTYPE time, const GTVector<GString> &svars, GC_COMM comm, GBOOL &bprgrid)
+void gio(GGrid &grid, const State &u, const GTVector<GINT> &iu, const GSIZET tindex, const GFTYPE time, const GTVector<GString> &svars, GC_COMM comm, const GBOOL bprgrid)
 {
 
     GString serr ="gio: ";
@@ -31,7 +31,7 @@ void gio(GGrid &grid, const State &u, const GTVector<GINT> &nu, const GSIZET tin
     
     GINT myrank = GComm::WorldRank(comm);
 
-    assert(svars.size() >=  nu.size()
+    assert(svars.size() >=  iu.size()
         && "Insufficicent number of state variable names specified");
 
     GINT           dim    = GDIM;
@@ -63,14 +63,13 @@ void gio(GGrid &grid, const State &u, const GTVector<GINT> &nu, const GSIZET tin
         fwrite((*xnodes)[j].data(), sizeof(GFTYPE), (*xnodes)[j].size(), fp);
         fclose(fp);
       }
-      bprgrid = FALSE;
     }
 
     // Print field data:
     GINT j;
-    GINT n = nu.size() == 0 ? nu.size() : u.size();
+    GINT n = iu.size() == 0 ? u.size() : iu.size();
     for ( auto jj=0; jj<n; jj++ ) {
-      j = nu.size() == 0 ? nu[jj] : jj;
+      j = iu.size() == 0 ? iu[jj] : jj;
       sprintf(fname, "%s.%06d.%04d.out", svars[j].c_str(), tindex, myrank);
       fp = fopen(fname,"wb");
       // write header: dim, numelems, poly_order:

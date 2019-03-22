@@ -25,7 +25,7 @@ typedef GTVector<GTVector<GFTYPE>*> State;
 typedef GTVector<GFTYPE> StateElem;
 
 
-void gio(GGrid &grid, const State &u, const GTVector<GINT> &nu, const GSIZET tindex, const GFTYPE time, const GTVector<GString> &svars, GC_COMM comm, GBOOL &bprgrid);
+void gio(GGrid &grid, const State &u, const GTVector<GINT> &nu, const GSIZET tindex, const GFTYPE time, const GTVector<GString> &svars, GC_COMM comm, const GBOOL bprgrid);
 
 
 #endif
