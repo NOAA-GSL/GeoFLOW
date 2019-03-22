@@ -5,6 +5,7 @@
 // Copyright    : Copyright 2019. Colorado State University. All rights reserved.
 // Derived From : 
 //==================================================================================
+#if !defined(_GIO_H)
 
 #include "gtypes.h"
 #include <stdio.h>
@@ -23,5 +24,8 @@ using namespace std;
 typedef GTVector<GTVector<GFTYPE>*> State;
 typedef GTVector<GFTYPE> StateElem;
 
-void gio(const GGrid &grid, const State &u, const GTVector<GINT> &nu, const GSIZET tindex, const GFTYPE time, const GTVector<GString> &svars, GC_COMM comm, GBOOL &bprgrid);
 
+void gio(GGrid &grid, const State &u, const GTVector<GINT> &nu, const GSIZET tindex, const GFTYPE time, const GTVector<GString> &svars, GC_COMM comm, GBOOL &bprgrid);
+
+
+#endif

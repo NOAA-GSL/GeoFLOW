@@ -7,9 +7,6 @@
 //==================================================================================
 #include "gio.h"
 
-#if defined(__cplusplus)
-extern "C" {
-#endif
 
 //**********************************************************************************
 //**********************************************************************************
@@ -25,7 +22,7 @@ extern "C" {
 //          bprgrid: flag to print grid (not tagged by time index).
 // RETURNS: none
 //**********************************************************************************
-void gio(const GGrid &grid, const State &u, const GTVector<GINT> &nu, const GSIZET tindex, const GFTYPE time, const GTVector<GString> &svars, GC_COMM comm, GBOOL &bprgrid)
+void gio(GGrid &grid, const State &u, const GTVector<GINT> &nu, const GSIZET tindex, const GFTYPE time, const GTVector<GString> &svars, GC_COMM comm, GBOOL &bprgrid)
 {
 
     GString serr ="gio: ";
@@ -34,7 +31,7 @@ void gio(const GGrid &grid, const State &u, const GTVector<GINT> &nu, const GSIZ
     
     GINT myrank = GComm::WorldRank(comm);
 
-    assert(svars.size() >=  nu
+    assert(svars.size() >=  nu.size()
         && "Insufficicent number of state variable names specified");
 
     GINT           dim    = GDIM;
@@ -86,10 +83,6 @@ void gio(const GGrid &grid, const State &u, const GTVector<GINT> &nu, const GSIZ
       fwrite((*u[j]).data(), sizeof(GFTYPE), (*u[j]).size(), fp);
       fclose(fp);
     }
-    return(0);
 
 } // end, gio
 
-#if defined(__cplusplus)
-}
-#endif
