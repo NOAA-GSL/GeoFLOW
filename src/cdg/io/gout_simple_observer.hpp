@@ -69,7 +69,8 @@ private:
 // Private data:
         GBOOL              bprgrid_;
         GSIZET             cycle_last_;
-        GSIZET             cycle_;
+        GSIZET             cycle_;      // continuously-running cycle
+        GSIZET             ocycle_;     // output cycle number
         GFTYPE             time_last_;
         GTVector<GINT>     state_index_;
         GTVector<GString>  state_names_;

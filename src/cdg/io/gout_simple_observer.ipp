@@ -17,6 +17,7 @@ template<typename EquationType>
 GOutSimpleObserver<EquationType>::GOutSimpleObserver(typename ObserverBase<EquationType>::Traits &traits, Grid &grid):
 bprgrid_        (TRUE),
 cycle_          (0),
+ocycle_         (0),
 cycle_last_     (0),
 time_last_      (0.0)
 { 
@@ -52,10 +53,11 @@ void GOutSimpleObserver<EquationType>::observe_impl(const Time &t, const State &
         && (cycle_-cycle_last_) == this->traits_.cycle_interval)
     || (this->traits_.itype == ObserverBase<EquationType>::OBS_TIME  
         &&  t-time_last_ >= this->traits_.time_interval) ) {
-    gio(*(this->grid_), u, state_index_, cycle_, t, state_names_, comm, bprgrid_);
+    gio(*(this->grid_), u, state_index_, ocycle_, t, state_names_, comm, bprgrid_);
     bprgrid_ = FALSE;
     cycle_last_ = cycle_;
     time_last_  = t;
+    ocycle_++;
   }
   cycle_++;
   
