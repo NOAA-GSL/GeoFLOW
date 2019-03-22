@@ -79,7 +79,8 @@ void Integrator<EquationType>::time( const Time& t0,
 		t += dt_eff;
 
 		// Call observer on solution
-		this->obs_ptr_->observe(t,u);
+                for ( auto j = 0 ; j < this->obs_ptr_->size(); j++ ) 
+		  (*this->obs_ptr_)[j]->observe(t,u);
  
                 ++cycle_;
 
@@ -112,7 +113,8 @@ void Integrator<EquationType>::steps( const Time&  t0,
 		t += dt_eff;
 
 		// Call observer on solution at new t
-		this->obs_ptr_->observe(t,u);
+                for ( auto j = 0 ; j < this->obs_ptr_->size(); j++ ) 
+		  (*this->obs_ptr_)[j]->observe(t,u);
 	}
 
 }

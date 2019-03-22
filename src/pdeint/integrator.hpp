@@ -42,8 +42,8 @@ public:
 	using Jacobian     = typename Equation::Jacobian;
 	using Size         = typename Equation::Size;
 	using EqnBasePtr   = std::shared_ptr<EqnBase>;
-	using ObsBasePtr   = std::shared_ptr<ObserverBase<Equation>>;
-
+	using ObsBasePtr   = std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<Equation>>>>;
+      
 	/**
 	 * Data structure to hold user selected parameters
 	 */

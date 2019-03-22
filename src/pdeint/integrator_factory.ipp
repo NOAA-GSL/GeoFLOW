@@ -20,6 +20,8 @@ IntegratorFactory<EquationType>::build(const tbox::PropertyTree& ptree, const Eq
 	// Get the integrator traits
 	typename Integrator<Equation>::Traits traits;
         std::string stype;
+
+        // Get integrator cadence type: integrate by time or by cycle:
 	stype             = ptree.getValue<std::string>("integ_type", "cycle" );
         if ( stype == "cycle" ) traits.integ_type = Integrator<EquationType>::INTEG_CYCLE;
         if ( stype == "time"  ) traits.integ_type = Integrator<EquationType>::INTEG_TIME;

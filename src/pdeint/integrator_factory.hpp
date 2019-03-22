@@ -23,7 +23,7 @@ struct IntegratorFactory {
 	using EqnBase       = EquationBase<EquationType>;
 	using ObsBase       = ObserverBase<Equation>;
 	using EqnBasePtr    = std::shared_ptr<EqnBase>;
-	using ObsBasePtr    = std::shared_ptr<ObsBase>;
+	using ObsBasePtr    = std::shared_ptr<std::vector<std::shared_ptr<ObsBase>>>;
 	using IntegratorPtr = std::shared_ptr<Integrator<Equation>>;
 	using Grid          = typename Equation::Grid;
 	using Value         = typename Equation::Value;
