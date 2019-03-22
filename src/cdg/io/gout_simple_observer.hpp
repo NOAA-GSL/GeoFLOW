@@ -67,13 +67,14 @@ private:
 // Private methods:
         void               init(const State &u);
 // Private data:
-        GBOOL              bprgrid_;
-        GSIZET             cycle_last_;
+        GBOOL              bprgrid_;    // print grid flag
+        GSIZET             cycle_last_; // most recent output cycle
         GSIZET             cycle_;      // continuously-running cycle
         GSIZET             ocycle_;     // output cycle number
-        GFTYPE             time_last_;
-        GTVector<GINT>     state_index_;
-        GTVector<GString>  state_names_;
+        GFTYPE             time_last_;  // most recent output time
+        GTVector<GINT>     state_index_;// list of state indices to print
+        GTVector<GString>  state_names_;// list of names of states to print
+        GString            sdir_;      ;// directory in which to write
     
 
 };

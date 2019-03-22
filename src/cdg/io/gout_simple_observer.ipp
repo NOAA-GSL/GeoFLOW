@@ -53,7 +53,7 @@ void GOutSimpleObserver<EquationType>::observe_impl(const Time &t, const State &
         && (cycle_-cycle_last_) == this->traits_.cycle_interval)
     || (this->traits_.itype == ObserverBase<EquationType>::OBS_TIME  
         &&  t-time_last_ >= this->traits_.time_interval) ) {
-    gio(*(this->grid_), u, state_index_, ocycle_, t, state_names_, comm, bprgrid_);
+    gio(*(this->grid_), u, state_index_, ocycle_, t, state_names_, sdir_, comm, bprgrid_);
     bprgrid_ = FALSE;
     cycle_last_ = cycle_;
     time_last_  = t;
@@ -76,6 +76,8 @@ void GOutSimpleObserver<EquationType>::init(const State &u)
 {
 
    char    stmp[1024];
+
+   sdir_ = this->traits_.dir;
  
    // Set state names member data, if not already set:
    if ( state_names_.size()  <= 0 ) {

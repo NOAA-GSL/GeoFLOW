@@ -18,15 +18,16 @@
 //          tindex: time output index
 //          time  : state evol. time
 //          svars : variable names for output
+//          sdir  : output directory
 //          comm  : communicator
 //          bprgrid: flag to print grid, which is not tagged by time index.
 // RETURNS: none
 //**********************************************************************************
-void gio(GGrid &grid, const State &u, const GTVector<GINT> &iu, const GSIZET tindex, const GFTYPE time, const GTVector<GString> &svars, GC_COMM comm, const GBOOL bprgrid)
+void gio(GGrid &grid, const State &u, const GTVector<GINT> &iu, const GSIZET tindex, const GFTYPE time, const GTVector<GString> &svars, const GString &sdir, GC_COMM comm, const GBOOL bprgrid)
 {
 
     GString serr ="gio: ";
-    char    fname[1024];
+    char    fname[2048];
     char    fn2;
     
     GINT myrank = GComm::WorldRank(comm);
@@ -51,7 +52,7 @@ void gio(GGrid &grid, const State &u, const GTVector<GINT> &iu, const GSIZET tin
     // Print grid, if not printed already:
     if ( bprgrid ) {
       for ( auto j=0; j<xnodes->size(); j++ ) {
-        sprintf(fname, "%s.%04d.out", sx[j].c_str(),  myrank);
+        sprintf(fname, "%s/%s.%04d.out", sdir.c_str(), sx[j].c_str(),  myrank);
         fp = fopen(fname,"wb");
         // write header: dim, numelems, poly_order:
         fwrite(&dim         , sizeof(GINT)  ,    1, fp); // problem dimension
@@ -70,7 +71,7 @@ void gio(GGrid &grid, const State &u, const GTVector<GINT> &iu, const GSIZET tin
     GINT n = iu.size() == 0 ? u.size() : iu.size();
     for ( auto jj=0; jj<n; jj++ ) {
       j = iu.size() == 0 ? iu[jj] : jj;
-      sprintf(fname, "%s.%06d.%04d.out", svars[j].c_str(), tindex, myrank);
+      sprintf(fname, "%s/%s.%06d.%04d.out", svars[j].c_str(), sdir.c_str(), tindex, myrank);
       fp = fopen(fname,"wb");
       // write header: dim, numelems, poly_order:
       fwrite(&dim         , sizeof(GINT)  ,    1, fp);
