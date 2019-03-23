@@ -321,7 +321,10 @@ void GTVector<T>::resize(GSIZET nnew)
   GLLONG ipad    = gindex_.pad();
 
   if ( (iend-ibeg+1+ipad) > n_ ) {      // must reallocate; change capacity
-    if ( this->data_ != NULLPTR ) delete [] this->data_;
+    if ( this->data_ != NULLPTR ) { 
+      delete [] this->data_; 
+      this->data_ = NULLPTR; 
+    }
     this->data_ = new T [nnew];
     n_ = nnew;
   }
@@ -366,8 +369,11 @@ void GTVector<T>::resize(GIndex &gi)
   GLLONG ipad    = gi.pad();
 
   if ( nnew != n_ ) {
-    if ( data_ != NULLPTR ) delete [] data_;
-    data_ = new T [nnew];
+    if ( this->data_ != NULLPTR ) { 
+      delete [] this->data_; 
+      this->data_ = NULLPTR; 
+    }
+    this->data_ = new T [nnew];
     n_ = nnew;
   }
   gindex_(nnew, nnew, ibeg, iend, istride, ipad);
