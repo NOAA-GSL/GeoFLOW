@@ -101,7 +101,8 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &ub,
     tt = t + (*alpha)[m]*h;
 
     for ( n=0; n<nstate; n++ ) { // for each state member, u
-      for ( j=0,*isum=0.0; j<m; j++ ) *isum += (*K_[j][n]) * ( (*beta)(m,j)*h );
+      for ( j=0,*isum=0.0; j<m; j++ )
+        GMTK::saxpby(*isum,  1.0, *K_[j][n], (*beta)(m,j)*h);
      *u[n]  = (*uin[n]) + (*isum);
     }
 
@@ -125,7 +126,8 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &ub,
    // Do contrib from final stage, M = nstage_:
    tt = t + (*alpha)[nstage_-1]*h;
    for ( n=0; n<nstate; n++ ) { // for each state member, u
-     for ( j=0,*isum=0.0; j<nstage_-1; j++ ) *isum += (*K_[j][n]) * ( (*beta)(nstage_-1,j)*h );
+     for ( j=0,*isum=0.0; j<nstage_-1; j++ ) 
+       GMTK::saxpby(*isum,  1.0, *K_[j][n], (*beta)(nstage_-1,j)*h);
      *u[n] = (*uin[n]) + (*isum);
    }
 
