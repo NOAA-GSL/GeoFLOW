@@ -226,21 +226,25 @@ int main(int argc, char **argv)
       gbasis [k] = new GLLBasis<GCTYPE,GFTYPE>(np);
     }
     
+    EH_MESSAGE("main: build grid...");
     GPTLstart("gen_grid");
     // Create grid:
     grid_ = GGridFactory::build(gridptree, gbasis, comm);
     GPTLstop("gen_grid");
 
 
+    EH_MESSAGE("main: initialize gather/scatter...");
     GPTLstart("init_ggfx_op");
     // Initialize gather/scatter operator:
     GGFX ggfx;
     init_ggfx(*grid_, ggfx);
+    EH_MESSAGE("main: gather/scatter initialized.");
     GPTLstop("init_ggfx_op");
 
 
     // Create state and tmp space:
     
+    EH_MESSAGE("main: set up tmp space...");
     if      ( solver_traits.doheat   ) { nstate =  nsolve = 1; } 
     else if ( solver_traits.bpureadv ) { nstate = GDIM + 1; nsolve = 1;} // 1-state + GDIM  v-components
     utmp_.resize(24);
@@ -258,10 +262,12 @@ int main(int argc, char **argv)
     for ( GSIZET j=0; j<c_   .size(); j++ ) c_   [j] = u_[j+1];
 
     // Create observer(s), equations, integrator:
+    EH_MESSAGE("main: create equation...");
     std::shared_ptr<EqnImpl> eqn_impl(new EqnImpl(ggfx, *grid_, u_, solver_traits, utmp_));
     std::shared_ptr<EqnBase> eqn_base = eqn_impl;
 
     // Set Dirichlet bdy state update function:
+    EH_MESSAGE("main: set bdy update functions...");
     std::function<void(const GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u, 
                                         GTVector<GTVector<GFTYPE>*> &ub)>  
         fcallback = update_dirichlet; // set tmp function with proper signature for...
@@ -269,11 +275,12 @@ int main(int argc, char **argv)
     eqn_impl->set_nu(nu_);
 
     // Create the observers: 
-//  std::vector<std::shared_ptr<ObserverBase<MyTypes>>> vObservers;
+    EH_MESSAGE("main: create observers...");
     std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> pObservers(new std::vector<std::shared_ptr<ObserverBase<MyTypes>>>());
     create_observers(ptree, pObservers);
 
     // Create integrator:
+    EH_MESSAGE("main: create integrator...");
     auto pIntegrator = IntegratorFactory<MyTypes>::build(tintptree, eqn_base, pObservers, *grid_);
 
     // Initialize state:
@@ -289,12 +296,11 @@ int main(int argc, char **argv)
       sprintf(stmp, "du%d", j+1);
       sdu.push_back(stmp);
     }
-//  gio(*grid_, u_, 1, 0, 0.0, svars, comm, bgridwritten);
 
-    EH_MESSAGE("main: State initialized.");
 
     // Do time integration (output included
     // via observer(s)):
+    EH_MESSAGE("main: do time steppint...");
     GPTLstart("time_loop");
     pIntegrator->time_integrate(t, ub_, u_);
     GPTLstop("time_loop");
@@ -304,8 +310,10 @@ int main(int argc, char **argv)
 
 #if 1
     // Compute analytic solution, do comparisons:
+    EH_MESSAGE("main: gather errors...");
     GTVector<GFTYPE> lnorm(3), gnorm(3), maxerror(3);
     GTVector<GFTYPE> nnorm(nsolve);
+    GString sdir = ".";
     
     maxerror = 0.0;
     lnorm    = 0.0;  
@@ -319,6 +327,7 @@ int main(int argc, char **argv)
     }
     
     compute_analytic(*grid_, t, ptree, ua_); // analyt soln at t
+    gio(*grid_, ua_, 1, 0, t, savars, sdir, comm, FALSE);
     for ( GSIZET j=0; j<nsolve; j++ ) { //local errors
       *utmp_[0] = *u_[j] - *ua_[j];
       cout << "main: diff=u-ua[" << j << "]=" << *utmp_[0] << endl;
@@ -362,10 +371,17 @@ int main(int argc, char **argv)
     GPTLpr_file("timing.txt");
     GPTLfinalize();
 
+    EH_MESSAGE("main: do shutdown...");
 //  GComm::TermComm();
     GlobalManager::shutdown();
     GlobalManager::finalize();
     if ( grid_ != NULLPTR ) delete grid_;
+    for ( auto j=0; j<GDIM; j++ ) delete gbasis[j];
+    for ( auto j=0; j<uold_.size(); j++ ) delete uold_[j];
+    for ( auto j=0; j<utmp_.size(); j++ ) delete utmp_[j];
+    for ( auto j=0; j<u_   .size(); j++ ) delete u_   [j];
+    for ( auto j=0; j<ua_  .size(); j++ ) delete ua_  [j];
+    for ( auto j=0; j<ub_  .size(); j++ ) delete ub_  [j];
 
     return(0);
 
@@ -729,7 +745,7 @@ void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVecto
 //**********************************************************************************
 //**********************************************************************************
 // METHOD: init_ggfx
-// DESC  : Initialize gather scatter operator
+// DESC  : Initialize gather/scatter operator
 // ARGS  : grid    : GGrid object
 //         ggfx    : gather/scatter op, GGFX
 //**********************************************************************************
