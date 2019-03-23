@@ -450,11 +450,12 @@ void GTVector<T>::reserve(GSIZET nnew)
   // Copy old data to temp buffer:
   if ( nnew > n_ ) { // growing
     for ( GSIZET j=0; j<n_; j++ ) ttmp[j] = this->data_[j];
-    if ( data_ != NULLPTR ) delete [] data_;
-    data_ = new T [nnew];
+    if ( this->data_ != NULLPTR ) delete [] this->data_;
+    this->data_ = new T [nnew];
 
-    // Copy only what was there already to expanded buffer:
-    for ( GSIZET j=0; j<n_; j++ ) data_[j] = ttmp[j];
+    // Copy only what was there already to expanded buffer,
+    // leaving remainder 'uninitialized':
+    for ( GSIZET j=0; j<n_; j++ ) this->data_[j] = ttmp[j];
     gindex_(nnew, nnew, ibeg, iend, istride, ipad);
     n_ = nnew;
   }
@@ -463,8 +464,7 @@ void GTVector<T>::reserve(GSIZET nnew)
     if ( this->data_ != NULLPTR ) delete [] this->data_;
     this->data_ = new T [nnew];
 
-    // Copy only the new amount, leaving the reminder
-    // 'uninitialized':
+    // Copy only what of the original amount fills new buffer:
     n_ = nnew;
     for ( GSIZET j=0; j<n_; j++ ) this->data_[j] = ttmp[j];
     gindex_(n_, n_, ibeg, MIN(n_-1,iend), istride, ipad);
@@ -526,7 +526,7 @@ void GTVector<T>::push_back(const T &obj)
   }
 
 
-  GIndex gi      = gindex_; 
+  GIndex  gi      = gindex_; 
   GLLONG  iglob   = gindex_.szglobal();
   GLLONG  iloc    = gindex_.szlocal();
   GLLONG  istride = gindex_.stride();
