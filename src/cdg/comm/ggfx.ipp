@@ -243,7 +243,7 @@ GBOOL GGFX::doOp (GTVector<T> &u,  GSZBuffer &ind, GGFX_OP op)
 //          nlocal : for each shared node (column in ilocal), local indices to it
 //          op     : operation to be performed in the combination
 //          qop    : operand; used if non_NULL; must have same no elements as columns in
-//                   ilocal.
+//                   ilocal. qop==NULLPTR is default.
 // RETURNS: TRUE on success; else FALSE
 //************************************************************************************
 template<typename T> 
