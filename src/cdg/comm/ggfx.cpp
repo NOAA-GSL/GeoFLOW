@@ -119,6 +119,9 @@ GBOOL GGFX::init(GNIDBuffer &glob_index)
 #endif
 
   bInit_ = TRUE;
+
+  initMult();
+
   return bInit_;
 
 } // end of method init
@@ -1024,15 +1027,19 @@ GBOOL GGFX::extractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedData, GIBu
 //************************************************************************************
 //************************************************************************************
 // METHOD     : initMult
-// DESCRIPTION: initialize for smoothing
+// DESCRIPTION: Initialize data for H1-smoothing
 // ARGUMENTS  : 
 // RETURNS    : 
 //************************************************************************************
 void GGFX::initMult()
 {
+
+  assert(bInit_ && "Operator not initialized");
+
   GFVector mult(nglob_index_);
 
   mult = 1.0;
+  GPP(comm_,"GGFX::initMult: entering...");
 
   // Do DSS sum to find multiplicity:
   doOp<GFLOAT>(mult, GGFX_OP_SUM);
@@ -1044,7 +1051,7 @@ void GGFX::initMult()
     imult_[j] = 1.0/mult[j];
   }
 
-cout << "GGFX::initMult: mult = " << mult << endl;
+  GPP(comm_,"GGFX::initMult: mult=" << mult);
 
 } // end of method initMult
 

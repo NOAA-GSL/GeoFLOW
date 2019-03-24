@@ -16,7 +16,7 @@
 #include "gtmatrix.hpp"
 #include "gcomm.hpp"
 
-#undef GGFX_TRACE_OUTPUT
+#define GGFX_TRACE_OUTPUT
 
 enum GGFX_Timer_t {GGFXTR_OP, GGFXTR_EXCH, GGFXTR_LCOMB, GGFXTR_GCOMB, GGFXTR_GCOMBA, GGFXTR_GCOMBB, GGFXTR_GCOMBC};
 

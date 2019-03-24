@@ -341,7 +341,6 @@ GBOOL GGFX::localGS(T *&qu, GSIZET nu, GSZMatrix &ilocal, GSZBuffer &nlocal, GGF
       }
       break;
     case GGFX_OP_SMOOTH:
-      if ( imult_.size() <= 0 ) initMult();
       if ( qop == NULLPTR ) {
         for ( j=0; j<ilocal.size(2); j++ ) {
           res = 0.0;
