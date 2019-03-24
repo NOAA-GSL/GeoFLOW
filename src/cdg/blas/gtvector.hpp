@@ -51,6 +51,8 @@ template <class T> class GTVector
     void   resizem(GSIZET n);   // Resize data buffer only if n > current
     void   clear();             // Set capacity to 0
     void   push_back(T const &);// Push new element to end of data buffer
+    T     &back();              // Get reference to last element
+    T     &back() const;        // Get reference to last element
     void   bconstdata(GBOOL);   // If data const, all access access 1 element only
 
     void range(GSIZET ibeg, GSIZET end);    // Set range of vector within capacity

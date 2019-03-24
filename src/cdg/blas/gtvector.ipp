@@ -22,8 +22,8 @@
 //**********************************************************************************
 template<class T>
 GTVector<T>::GTVector():
-data_   (NULLPTR),
-n_      (0),
+data_    (NULLPTR),
+n_             (0),
 bdatalocal_ (TRUE),
 bconstdata_ (FALSE)
 {
@@ -45,8 +45,8 @@ bconstdata_ (FALSE)
 //**********************************************************************************
 template<class T>
 GTVector<T>::GTVector(GSIZET n):
-data_   (NULLPTR),
-n_      (n),
+data_    (NULLPTR),
+n_             (n),
 bdatalocal_ (TRUE),
 bconstdata_ (FALSE)
 {
@@ -68,7 +68,7 @@ bconstdata_ (FALSE)
 //**********************************************************************************
 template<class T>
 GTVector<T>::GTVector(GIndex &gi):
-data_   (NULLPTR),
+data_    (NULLPTR),
 bdatalocal_ (TRUE),
 bconstdata_ (FALSE)
 {
@@ -93,10 +93,10 @@ bconstdata_ (FALSE)
 //**********************************************************************************
 template<class T>
 GTVector<T>::GTVector(GTVector<T> &obj):
-data_   (NULLPTR),
+data_      (NULLPTR),
 n_      (obj.size()),
-bdatalocal_ (TRUE),
-bconstdata_ (FALSE)
+bdatalocal_   (TRUE),
+bconstdata_  (FALSE)
 {
   data_ = new T [n_];
   
@@ -124,9 +124,9 @@ bconstdata_ (FALSE)
 //**********************************************************************************
 template<class T>
 GTVector<T>::GTVector(T *indata, GSIZET n, GSIZET istride):
-data_   (NULLPTR),
+data_     (NULLPTR),
 n_      (n/istride),
-bdatalocal_ (TRUE),
+bdatalocal_  (TRUE),
 bconstdata_ (FALSE)
 {
   data_ = new T [n_];
@@ -158,9 +158,9 @@ bconstdata_ (FALSE)
 //**********************************************************************************
 template<class T>
 GTVector<T>::GTVector(T *indata, GSIZET n, GSIZET istride, GBOOL blocmgd):
-data_   (NULLPTR),
+data_     (NULLPTR),
 n_      (n/istride),
-bdatalocal_ (TRUE),
+bdatalocal_  (TRUE),
 bconstdata_ (FALSE)
 {
   if ( bdatalocal_ ) {
@@ -193,10 +193,10 @@ bconstdata_ (FALSE)
 //**********************************************************************************
 template<class T>
 GTVector<T>::GTVector(const GTVector<T> &obj):
-data_   (NULLPTR),
+data_      (NULLPTR),
 n_      (obj.size()),
-bdatalocal_ (TRUE),
-bconstdata_ (FALSE)
+bdatalocal_   (TRUE),
+bconstdata_  (FALSE)
 {
   data_ = new T [n_];
   for ( GLLONG j=0; j<obj.capacity(); j++ ) {
@@ -444,7 +444,7 @@ void GTVector<T>::reserve(GSIZET nnew)
     #pragma acc exit data delete( data_[0:n_-1], this[0:1] )
   #endif
 
-  T *ttmp;
+  T *ttmp=NULLPTR;
   GLLONG ibeg    = gindex_.beg();
   GLLONG iend    = gindex_.end();
   GLLONG istride = gindex_.stride();
@@ -456,7 +456,10 @@ void GTVector<T>::reserve(GSIZET nnew)
   // Copy old data to temp buffer:
   if ( nnew > n_ ) { // growing
     for ( GSIZET j=0; j<n_; j++ ) ttmp[j] = this->data_[j];
-    if ( this->data_ != NULLPTR ) delete [] this->data_;
+    if ( this->data_ != NULLPTR ){
+      delete [] this->data_;
+      this->data_ = NULLPTR; 
+    }
     this->data_ = new T [nnew];
 
     // Copy only what was there already to expanded buffer,
@@ -467,7 +470,10 @@ void GTVector<T>::reserve(GSIZET nnew)
   }
   else if ( nnew < n_ ) { // shrinking
     for ( GSIZET j=0; j<nnew; j++ ) ttmp[j] = this->data_[j];
-    if ( this->data_ != NULLPTR ) delete [] this->data_;
+    if ( this->data_ != NULLPTR ) {
+      delete [] this->data_;
+      this->data_ = NULLPTR; 
+    }
     this->data_ = new T [nnew];
 
     // Copy only what of the original amount fills new buffer:
@@ -476,7 +482,7 @@ void GTVector<T>::reserve(GSIZET nnew)
     gindex_(n_, n_, ibeg, MIN(n_-1,iend), istride, ipad);
   }
 
-  delete [] ttmp;
+  if ( ttmp != NULLPTR ) delete [] ttmp;
 
   #if defined(_G_AUTO_CREATE_DEV)
 //  #pragma acc enter data create( data_[0:n_-1] )
@@ -502,7 +508,10 @@ void GTVector<T>::clear()
     #pragma acc exit data delete( data_[0:n_-1], this[0:1] )
   #endif
 
-  if ( data_ != NULLPTR ) delete [] data_;
+  if ( data_ != NULLPTR ) {
+    delete [] data_;
+    this->data_ = NULLPTR; 
+  }
   gindex_(0, 0, 0, -1, 0,  0);
 
   #if defined(_G_AUTO_CREATE_DEV)
@@ -548,6 +557,34 @@ void GTVector<T>::push_back(const T &obj)
   #endif
 
 } // end, method push_back
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : back
+// DESC   : Get reference to last element
+// ARGS   : none
+// RETURNS: T reference
+//**********************************************************************************
+template<class T>
+T &GTVector<T>::back()
+{
+  return data_[n_-1];
+} // end, method back
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : back
+// DESC   : Get reference to last element
+// ARGS   : none
+// RETURNS: T reference
+//**********************************************************************************
+template<class T>
+T &GTVector<T>::back() const
+{
+  return data_[n_-1];
+} // end, method back
 
 
 //**********************************************************************************
