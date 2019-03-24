@@ -309,6 +309,7 @@ void GGridBox::do_grid2d(GINT irank)
   // only for this task:
   gdd_->doDD(ftcentroids_, irank, iind);
 
+  GPP(comm_, "do_grid2d: iind=" << iind);
 
   GSIZET i, n;
   GSIZET nvnodes;   // no. vol nodes
