@@ -93,7 +93,7 @@ int main(int argc, char **argv)
 
 NOTE: global ids are labeled starting from left on bottom-most
       row, advancing along the row, continuing to the next 
-      row, etc.
+      row, etc. T0, T1, ... represent task ids.
 */
     GTVector<GNODEID>    glob_indices;
     glob_indices.resize(ne*(np+1)*(np+1));
@@ -164,21 +164,21 @@ NOTE: global ids are labeled starting from left on bottom-most
     u = 1;
     GPTLstart("ggfx_init");
     for ( GSIZET k=0; k<nrpt && errcode==0; k++ ) { 
-      bret = ggfx.Init(glob_indices);
+      bret = ggfx.init(glob_indices);
       if ( !bret ) errcode = 2;
     }
     if ( errcode == 0 ) GPP(comm, serr << " GGFX::Init done.");
     GPTLstop("ggfx_init");
 
 
-    GPP(comm,serr << " doing GGFX::DoOp...");
+    GPP(comm,serr << " doing GGFX::doOp...");
     GPTLstart("ggfx_doop");
     for ( GSIZET k=0; k<nrpt && errcode==0; k++ ) { 
-      bret = ggfx.DoOp<GINT>(u, GGFX_OP_SUM);
+      bret = ggfx.doOp<GINT>(u, GGFX_OP_SUM);
       if ( !bret ) errcode = 3;
     }
     GPTLstop("ggfx_doop");
-    if ( errcode == 0 ) GPP(comm,serr << " GGFX::DoOp done.");
+    if ( errcode == 0 ) GPP(comm,serr << " GGFX::doOp done.");
 
 
     GComm::Allreduce(&errcode, &gerrcode, 1, T2GCDatatype<GINT>() , GC_OP_MAX, comm);
