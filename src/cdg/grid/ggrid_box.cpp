@@ -10,6 +10,9 @@
 #include <math.h>
 #include "geoflow.hpp"
 #include "ggrid_box.hpp"
+#include "tbox/mpixx.hpp"
+#include "tbox/global_manager.hpp"
+
 
 using namespace std;
 
@@ -306,6 +309,7 @@ void GGridBox::do_grid2d(GINT irank)
   // only for this task:
   gdd_->doDD(ftcentroids_, irank, iind);
 
+
   GSIZET i, n;
   GSIZET nvnodes;   // no. vol nodes
   GSIZET nfnodes;   // no. face nodes
@@ -355,21 +359,20 @@ void GGridBox::do_grid2d(GINT irank)
       }
     }
 
-cout << "GGridBox::do_grid2d: bdy_ind=" << *bdy_ind << endl;
+    GPP(comm_,"GRridBox:do_grid2d: elem[" << i << "]: bdy_ind=" << *bdy_ind);
 
     gelems_.push_back(pelem);
 
     // Set global bdy types at each bdy_ind (this is a coarse 
     // application; finer control may be exercised in callback):
     set_global_bdytypes_2d(*pelem);
-
-
+    GPP(comm_,"GRridBox:do_grid2d: set_global_bdytypes_2d done.");
 
     // Find global global interior and bdy start & stop indices represented 
     // locally within element:
-    nvnodes = gelems_[i]->nnodes();
-    nfnodes = gelems_[i]->nfnodes();
-    nbnodes = gelems_[i]->bdy_indices().size();
+    nvnodes = gelems_[n]->nnodes();
+    nfnodes = gelems_[n]->nfnodes();
+    nbnodes = gelems_[n]->bdy_indices().size();
     pelem->igbeg() = icurr;           // beg global vol index
     pelem->igend() = icurr+nvnodes-1; // end global vol index
     pelem->ifbeg() = fcurr;           // beg global face index
@@ -380,6 +383,7 @@ cout << "GGridBox::do_grid2d: bdy_ind=" << *bdy_ind << endl;
     fcurr += nfnodes;
     bcurr += nbnodes;
   } // end of quad mesh loop
+
 
   // Can set individual nodes and internal bdy conditions
   // with callback here: NOTE: Must re-globalize bdy_indices!!!
@@ -492,9 +496,9 @@ void GGridBox::do_grid3d(GINT irank)
     // application; finer control may be exercised in callback):
     set_global_bdytypes_3d(*pelem);
 
-    nvnodes = gelems_[i]->nnodes();
-    nfnodes = gelems_[i]->nfnodes();
-    nbnodes = gelems_[i]->bdy_indices().size();
+    nvnodes = gelems_[n]->nnodes();
+    nfnodes = gelems_[n]->nfnodes();
+    nbnodes = gelems_[n]->bdy_indices().size();
     pelem->igbeg() = icurr;           // beg global vol index
     pelem->igend() = icurr+nvnodes-1; // end global vol index
     pelem->ifbeg() = fcurr;           // beg global face index
