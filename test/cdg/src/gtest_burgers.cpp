@@ -69,6 +69,7 @@ GTVector<GTVector<GFTYPE>*> utmp_;
 GTVector<GTVector<GFTYPE>*> uold_;
 GTVector<GFTYPE> nu_(3);
 PropertyTree ptree;       // main prop tree
+GC_COMM      comm_ ;      // communicator
 
 
 using MyTypes = EquationTypes<>;       // Define types used
@@ -105,7 +106,6 @@ int main(int argc, char **argv)
     GString sgrid;// name of JSON grid object to use
     GTVector<GString> svars, savars, sdu;
     char stmp[1024];
-    GC_COMM comm = GC_COMM_WORLD;
 
     typename MyTypes::Time  t  = 0;
     typename MyTypes::Time  dt = 0.1;
@@ -115,7 +115,7 @@ int main(int argc, char **argv)
     mpixx::communicator world;
     GlobalManager::initialize(argc,argv); 
     GlobalManager::startup();
-    comm = world; // need this for solver(s) & grid
+    comm_ = world; // need this for solver(s) & grid
 
 
     // Read main prop tree; may ovewrite with
@@ -229,7 +229,7 @@ int main(int argc, char **argv)
     EH_MESSAGE("main: build grid...");
     GPTLstart("gen_grid");
     // Create grid:
-    grid_ = GGridFactory::build(gridptree, gbasis, comm);
+    grid_ = GGridFactory::build(gridptree, gbasis, comm_);
     GPTLstop("gen_grid");
 
 
@@ -300,17 +300,21 @@ int main(int argc, char **argv)
 
     // Do time integration (output included
     // via observer(s)):
-    EH_MESSAGE("main: do time steppint...");
+    EH_MESSAGE("main: do time stepping...");
+    GPP(comm_,"main: do time stepping...");
     GPTLstart("time_loop");
     pIntegrator->time_integrate(t, ub_, u_);
     GPTLstop("time_loop");
     
+    GPP(comm_,"main: time stepping done.");
+
     tt = 0.0;
     compute_analytic(*grid_, tt, ptree, ua_); // analyt soln at t=0
 
 #if 1
     // Compute analytic solution, do comparisons:
     EH_MESSAGE("main: gather errors...");
+    GPP(comm_,"main: gather errors...");
     GTVector<GFTYPE> lnorm(3), gnorm(3), maxerror(3);
     GTVector<GFTYPE> nnorm(nsolve);
     GString sdir = ".";
@@ -327,7 +331,7 @@ int main(int argc, char **argv)
     }
     
     compute_analytic(*grid_, t, ptree, ua_); // analyt soln at t
-    gio(*grid_, ua_, 1, 0, t, savars, sdir, comm, FALSE);
+    gio(*grid_, ua_, 1, 0, t, savars, sdir, comm_, FALSE);
     for ( GSIZET j=0; j<nsolve; j++ ) { //local errors
       *utmp_[0] = *u_[j] - *ua_[j];
       cout << "main: diff=u-ua[" << j << "]=" << *utmp_[0] << endl;
@@ -337,7 +341,7 @@ int main(int argc, char **argv)
       gnorm   [1]  = grid_->integrate(*utmp_[1],*utmp_[0])/sqrt(nnorm[j]) ; // L1-norm
       gnorm   [2]  = grid_->integrate(*utmp_[2],*utmp_[0]) ; // L2-norm
       // Accumulate to find global errors for this field:
-      GComm::Allreduce(lnorm.data()  , gnorm.data()  , 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm);
+      GComm::Allreduce(lnorm.data()  , gnorm.data()  , 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm_);
       gnorm[2] =  sqrt(gnorm[2]/nnorm[j]);
       // now find max errors of each type for each field:
       for ( GSIZET i=0; i<3; i++ ) maxerror[i] = MAX(maxerror[i],fabs(gnorm[i]));
@@ -347,7 +351,7 @@ int main(int argc, char **argv)
    
     GSIZET lnelems=grid_->nelems();
     GSIZET gnelems;
-    GComm::Allreduce(&lnelems, &gnelems, 1, T2GCDatatype<GSIZET>() , GC_OP_SUM, comm);
+    GComm::Allreduce(&lnelems, &gnelems, 1, T2GCDatatype<GSIZET>() , GC_OP_SUM, comm_);
 
     // Print convergence data to file:
     std::ifstream itst;
@@ -767,7 +771,7 @@ void init_ggfx(GGrid &grid, GGFX &ggfx)
   gmorton.setIntegralLen(P0,dX);
   gmorton.key(glob_indices, *xnodes);
 
-  cout << "init_ggfx: glob_indices=" << glob_indices << endl;
+  GPP(comm_,"init_ggfx: glob_indices=" << glob_indices);
 
   // Initialize gather/scatter operator:
   GBOOL bret;
@@ -777,7 +781,7 @@ void init_ggfx(GGrid &grid, GGFX &ggfx)
   bret = ggfx.init(glob_indices);
   assert(bret && "Initialization of GGFX operator failed");
   if ( typeid(*grid_) == typeid(GGridBox) ) { // periodize coords
-    static_cast<GGridBox*>(grid_)->periodize();
+    static_cast<GGridBox*>(grid_)->unperiodize();
   }
 
 } // end method init_ggfx
