@@ -874,17 +874,17 @@ GBOOL GGFX::extractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedData, GIBu
   GNODEID   nnid;
   GIBuffer  itasktmp(nprocs_); itasktmp.set(-1);
   GSZBuffer nindtmp (nprocs_); nindtmp.set(0);
-  GSZBuffer igltmp(glob_index.size()); igltmp.set(0);
+  GNIDBuffer igltmp(glob_index.size()); igltmp.set(0);
   GSZBuffer ngltmp(glob_index.size()); ngltmp.set(0);
   for ( j=0, nt=0, nl=0; j<mySharedData.size(2); j++ ) {
     if ( mySharedData(0,j)==-1 ) continue; // column contain no usable data
     i = 0; 
     while ( i<mySharedData.size(1) && mySharedData(i,j)>-1 ) { // parse jth record
-      nnid = mySharedData(i,j);        // shared node id
+      nnid = mySharedData(i,j);       // shared node id
       for ( k=0; k<mySharedData(i+1,j); k++ ) { // self-ref data gives # tasks sharing this id
-        itask = mySharedData(i+k+2,j); // get taskd id for ith shared node
+        itask = mySharedData(i+k+2,j);// get taskd id for ith shared node
         bind = glob_index.contains(nnid, index1);
-        if ( itask != rank_ ) {        // if remote task != this rank
+        if ( itask != rank_ ) {       // if remote task != this rank
           if ( bind ) {
             if ( !itasktmp.containsn(itask, nt, index) )  {
               itasktmp[nt] = itask;   // add remote task id to list of unique ids
@@ -896,12 +896,12 @@ GBOOL GGFX::extractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedData, GIBu
             }
           } 
         } 
-        else {                      // task == this rank; not remote
+        else {                        // task == this rank; not remote
           if ( bind && !igltmp.containsn(nnid, nl) 
              && (mult = glob_index.multiplicity(nnid)) > 1 ) {  // # times this node id represented locally
-            igltmp[nl] = nnid;      // add global shared node to list of global/shared nodes
-            ngltmp [nl]+=mult;      // update # local node ids for this shared global id
-            nl++;                   // update number of global id in local matrix
+            igltmp[nl]  = nnid;      // add global shared node to list of global/shared nodes
+            ngltmp[nl] += mult;      // update # local node ids for this shared global id
+            nl++;                    // update number of global id in local matrix
           }
         }
       } // end, for k loop

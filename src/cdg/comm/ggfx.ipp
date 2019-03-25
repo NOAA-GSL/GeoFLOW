@@ -13,6 +13,7 @@
 #include "ggfx.hpp"
 #include "gcomm.hpp"
 
+using namespace std;
 
 //************************************************************************************
 //************************************************************************************
@@ -79,6 +80,7 @@ GBOOL GGFX::doOp(T *&u, GSIZET nu,  GGFX_OP op)
   GPP(comm_,serr << "dataExchange done.");
 #endif
 
+  GPP(comm_,"doOp(1): nu=" << nu << " recvBuff.size=" << recvBuff_.data().size());
   bret = localGS(u, nu, iOpR2LIndices_, nOpR2LIndices_, op, recvBuff_.data().data());
   if ( !bret ) {
     std::cout << serr << "localGS (2) failed " << std::endl;
@@ -256,6 +258,7 @@ GBOOL GGFX::localGS(T *&qu, GSIZET nu, GSZMatrix &ilocal, GSZBuffer &nlocal, GGF
   T       res;
   GLLONG  i, j;
 
+GPP(comm_,"GGFX::localGS(1): entering...op=" << op);
 
   // Perform GGFX_OP on the nodes shared by this proc:
   switch(op) {
@@ -264,9 +267,12 @@ GBOOL GGFX::localGS(T *&qu, GSIZET nu, GSZMatrix &ilocal, GSZBuffer &nlocal, GGF
         for ( j=0; j<ilocal.size(2); j++ ) {
           res = 0.0;
           for ( i=0; i<nlocal[j]; i++ ) { // do gather
+GPP(comm_,"(a)localGS: nu=" << nu);
+GPP(comm_,"(a)localGS: ilocal("<<i<<","<<j<<")=" << ilocal(i,j));
              res += qu[ilocal(i,j)];
           }
           for ( i=0; i<nlocal[j]; i++ ) { // do scatter
+GPP(comm_,"(b)localGS: ilocal("<<i<<","<<j<<")=" << ilocal(i,j));
              qu[ilocal(i,j)] = res;
           }
         }
@@ -274,6 +280,7 @@ GBOOL GGFX::localGS(T *&qu, GSIZET nu, GSZMatrix &ilocal, GSZBuffer &nlocal, GGF
       else {
         for ( j=0; j<ilocal.size(2); j++ ) {
           for ( i=0; i<nlocal[j]; i++ ) { // do scatter
+GPP(comm_,"(c)localGS: ilocal("<<i<<","<<j<<")=" << ilocal(i,j));
              qu[ilocal(i,j)] += qop[j];
           }
         }
@@ -355,6 +362,8 @@ GBOOL GGFX::localGS(T *&qu, GSIZET nu, GSZMatrix &ilocal, GSZBuffer &nlocal, GGF
       else {
         for ( j=0; j<ilocal.size(2); j++ ) {
           for ( i=0; i<nlocal[j]; i++ ) { // do scatter
+cout << "localGS: nu=" << nu << endl;
+cout << "localGS: ilocal("<<i<<","<<j<<")=" << ilocal(i,j) << endl;
              qu[ilocal(i,j)] += qop[j];
           }
           for ( i=0; i<nlocal[j]; i++ ) { // do H1-smoothing
@@ -402,6 +411,8 @@ GBOOL GGFX::localGS(T *&qu, GSIZET nu, GSIZET *&iind, GSIZET nind,
 {
 
   assert( std::is_arithmetic<T>::value && "Illegal template type");
+
+cout << "GGFX::localGS(2): entering...op=" << op << endl;
 
   GString serr = "GGFX::localGS (2): ";
   T       res;
