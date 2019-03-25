@@ -1650,7 +1650,7 @@ GTVector<T>::containsn(T val, GSIZET n, GSIZET &iwhere)
 
   GLLONG i=this->gindex_.beg();
 
-  while ( i < this->gindex_.beg()+n &&  data_[i] != val ) i++;
+  while ( i < MIN(this->gindex_.beg()+n,n_) &&  data_[i] != val ) i++;
 
   if ( i >= this->gindex_.beg()+n ) return FALSE;
 
@@ -1708,7 +1708,7 @@ GTVector<T>::containsn(T val, GSIZET n)
 
   GLLONG i=this->gindex_.beg();
 
-  while ( i < this->gindex_.beg()+n && data_[i] != val ) i++;
+  while ( i < MIN(this->gindex_.beg()+n,n_) && data_[i] != val ) i++;
 
   return i < this->gindex_.beg()+n;
 
