@@ -37,10 +37,10 @@ public:
                    
 
                       GBOOL    init(GNIDBuffer &glob_index);
-template<typename T>  GBOOL    doOp(T *&u, GSIZET nu,  GGFX_OP op);
 template<typename T>  GBOOL    doOp(GTVector<T> &u,  GGFX_OP op);
-template<typename T>  GBOOL    doOp(T *&u, GSIZET nu,  GSIZET *iind, GSIZET nind, GGFX_OP op);
 template<typename T>  GBOOL    doOp(GTVector<T> &u,  GSZBuffer &ind, GGFX_OP op);
+template<typename T>  GBOOL    doOp(T *&u, GSIZET nu,  GGFX_OP op);
+template<typename T>  GBOOL    doOp(T *&u, GSIZET nu,  GSIZET *iind, GSIZET nind, GGFX_OP op);
                       GC_COMM  getComm() { return comm_; }
 
                       GDOUBLE  getTimes(GGFX_Timer_t type);
@@ -69,8 +69,12 @@ private:
  
 
                      // doOp-specific methods:
+template<typename T> GBOOL localGS(GTVector<T> &u, GSZMatrix  &ilocal, GSZBuffer &nlocal, GGFX_OP op, GDOUBLE *qop=NULLPTR);
+template<typename T> GBOOL localGS(GTVector<T> &u, GTVector<GSIZET> &iind, GSZMatrix  &ilocal, GSZBuffer &nlocal, GGFX_OP op, GDOUBLE *qop=NULLPTR);
 template<typename T> GBOOL localGS(T *&u, GSIZET  nu, GSZMatrix  &ilocal, GSZBuffer &nlocal, GGFX_OP op, GDOUBLE *qop=NULLPTR);
 template<typename T> GBOOL localGS(T *&u, GSIZET  nu, GSIZET *&iind, GSIZET nind, GSZMatrix  &ilocal, GSZBuffer &nlocal, GGFX_OP op, GDOUBLE *qop=NULLPTR);
+template<typename T> GBOOL dataExchange(GTVector<T> &u );
+template<typename T> GBOOL dataExchange(GTVector<T> &u, GTVector<GSIZET> &iind );
 template<typename T> GBOOL dataExchange(T *&u, GSIZET nu );
 template<typename T> GBOOL dataExchange(T *&send_data, GSIZET nu, GSIZET *&iind, GSIZET nind );
 
