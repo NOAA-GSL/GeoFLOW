@@ -43,6 +43,7 @@ GBOOL GGFX::doOp(GTVector<T> &u, GGFX_OP op)
   GBOOL     bret=TRUE;
   GString   serr = "GGFX::doOp(1): ";
 
+  GPP(comm_, serr << "iOpL2LIndices=" << iOpL2LIndices_);
 #if defined(GGFX_TRACE_OUTPUT)
   GPP(comm_, serr << "Doing first localGS...");
 #endif
@@ -84,7 +85,7 @@ GBOOL GGFX::doOp(GTVector<T> &u, GGFX_OP op)
   GPP(comm_,serr << "dataExchange done.");
 #endif
 
-  GPP(comm_,"doOp(1): recvBuff.size=" << recvBuff_.data().size());
+  GPP(comm_,serr << " recvBuff.size=" << recvBuff_.data().size());
   bret = localGS(u, iOpR2LIndices_, nOpR2LIndices_, op, recvBuff_.data().data());
   if ( !bret ) {
     std::cout << serr << "localGS (2) failed " << std::endl;
@@ -248,7 +249,7 @@ GBOOL GGFX::doOp(T *&u, GSIZET nu,  GGFX_OP op)
   GPP(comm_,serr << "dataExchange done.");
 #endif
 
-  GPP(comm_,"doOp(1): nu=" << nu << " recvBuff.size=" << recvBuff_.data().size());
+  GPP(comm_,serr << " nu=" << nu << " recvBuff.size=" << recvBuff_.data().size());
   bret = localGS(u, nu, iOpR2LIndices_, nOpR2LIndices_, op, recvBuff_.data().data());
   if ( !bret ) {
     std::cout << serr << "localGS (2) failed " << std::endl;
@@ -378,6 +379,7 @@ GBOOL GGFX::localGS(GTVector<T> &qu, GSZMatrix &ilocal, GSZBuffer &nlocal, GGFX_
   T       res;
   GLLONG  i, j;
 
+  GPP(comm_,serr << "op=" << op);
 
   // Perform GGFX_OP on the nodes shared by this proc:
   switch(op) {
@@ -464,6 +466,8 @@ GBOOL GGFX::localGS(GTVector<T> &qu, GSZMatrix &ilocal, GSZBuffer &nlocal, GGFX_
       break;
     case GGFX_OP_SMOOTH:
       if ( qop == NULLPTR ) {
+GPP(comm_,serr<<"GGFX_OP_SMOOTH... qop==NULL");
+GPP(comm_,serr<<"imult="<<imult_);
         for ( j=0; j<ilocal.size(2); j++ ) {
           res = 0.0;
           for ( i=0; i<nlocal[j]; i++ ) { // do gather
@@ -475,6 +479,7 @@ GBOOL GGFX::localGS(GTVector<T> &qu, GSZMatrix &ilocal, GSZBuffer &nlocal, GGFX_
         }
       }
       else {
+GPP(comm_,serr<<"GGFX_OP_SMOOTH... qop!=NULL");
         for ( j=0; j<ilocal.size(2); j++ ) {
           for ( i=0; i<nlocal[j]; i++ ) { // do scatter
              qu[ilocal(i,j)] += qop[j];
@@ -522,7 +527,6 @@ GBOOL GGFX::localGS(GTVector<T> &qu, GTVector<GSIZET> &iind,
 
   assert( std::is_arithmetic<T>::value && "Illegal template type");
 
-cout << "GGFX::localGS(4): entering...op=" << op << endl;
 
   GString serr = "GGFX::localGS (2): ";
   T       res;
@@ -612,7 +616,6 @@ cout << "GGFX::localGS(4): entering...op=" << op << endl;
       }
       break;
     case GGFX_OP_SMOOTH:
-      if ( imult_.size() <= 0 ) initMult();
       if ( qop == NULLPTR ) {
         for ( j=0; j<ilocal.size(2); j++ ) {
           res = 0.0;
@@ -670,11 +673,10 @@ GBOOL GGFX::localGS(T *&qu, GSIZET nu, GSZMatrix &ilocal, GSZBuffer &nlocal, GGF
 
   assert( std::is_arithmetic<T>::value && "Illegal template type");
 
-  GString serr = "GGFX::localGS (3): ";
+  GString serr = "GGFX::localGS(3): ";
   T       res;
   GLLONG  i, j;
 
-GPP(comm_,"GGFX::localGS(1): entering...op=" << op);
 
   // Perform GGFX_OP on the nodes shared by this proc:
   switch(op) {
@@ -828,9 +830,8 @@ GBOOL GGFX::localGS(T *&qu, GSIZET nu, GSIZET *&iind, GSIZET nind,
 
   assert( std::is_arithmetic<T>::value && "Illegal template type");
 
-cout << "GGFX::localGS(2): entering...op=" << op << endl;
 
-  GString serr = "GGFX::localGS (2): ";
+  GString serr = "GGFX::localGS(4): ";
   T       res;
   GLLONG  i, j;
 
@@ -918,7 +919,6 @@ cout << "GGFX::localGS(2): entering...op=" << op << endl;
       }
       break;
     case GGFX_OP_SMOOTH:
-      if ( imult_.size() <= 0 ) initMult();
       if ( qop == NULLPTR ) {
         for ( j=0; j<ilocal.size(2); j++ ) {
           res = 0.0;
@@ -964,7 +964,7 @@ GBOOL GGFX::dataExchange(GTVector<T> &u)
 {
   assert( std::is_arithmetic<T>::value && "Illegal template type");
 
-  GString       serr = "GGFX::dataExchange (1): ";
+  GString       serr = "GGFX::dataExchange(1): ";
   GCommDatatype dtype=T2GCDatatype<GDOUBLE>();
   GINT          i, j;
   GBOOL         bret=TRUE;
@@ -1013,7 +1013,7 @@ GBOOL GGFX::dataExchange(GTVector<T> &u, GTVector<GSIZET> &iind)
 {
   assert( std::is_arithmetic<T>::value && "Illegal template type");
 
-  GString       serr = "GGFX::dataExchange (2): ";
+  GString       serr = "GGFX::dataExchange(2): ";
   GCommDatatype dtype=T2GCDatatype<GDOUBLE>();
   GINT          i, j;
   GBOOL         bret=TRUE;
@@ -1052,7 +1052,7 @@ GBOOL GGFX::dataExchange(T *&u, GSIZET nu)
 {
   assert( std::is_arithmetic<T>::value && "Illegal template type");
 
-  GString       serr = "GGFX::dataExchange (3): ";
+  GString       serr = "GGFX::dataExchange(3): ";
   GCommDatatype dtype=T2GCDatatype<GDOUBLE>();
   GINT          i, j;
   GBOOL         bret=TRUE;
@@ -1106,7 +1106,7 @@ GBOOL GGFX::dataExchange(T *&u, GSIZET nu, GSIZET *&iind, GSIZET nind)
 {
   assert( std::is_arithmetic<T>::value && "Illegal template type");
 
-  GString       serr = "GGFX::dataExchange (4): ";
+  GString       serr = "GGFX::dataExchange(4): ";
   GCommDatatype dtype=T2GCDatatype<GDOUBLE>();
   GINT           i, j;
   GBOOL          bret=TRUE;

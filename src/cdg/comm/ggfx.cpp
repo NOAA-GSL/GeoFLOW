@@ -1039,7 +1039,6 @@ void GGFX::initMult()
   GFVector mult(nglob_index_);
 
   mult = 1.0;
-  GPP(comm_,"GGFX::initMult: entering...");
 
   // Do DSS sum to find multiplicity:
   doOp<GFLOAT>(mult, GGFX_OP_SUM);
