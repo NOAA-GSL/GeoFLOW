@@ -80,7 +80,7 @@ using ObsImpl = NullObserver<EqnImpl>; // Observer Implementation Type
 
 void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVector<GTVector<GFTYPE>*> &u);
 void update_dirichlet(const GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u, GTVector<GTVector<GFTYPE>*> &ub);
-void init_ggfx(GGrid &grid, GGFX &ggfx);
+void init_ggfx(GGrid &grid, GGFX<GFTYPE> &ggfx);
 void create_observers(PropertyTree &ptree, 
 std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers);
 
@@ -114,10 +114,12 @@ int main(int argc, char **argv)
     mpixx::environment env(argc,argv); // init GeoFLOW comm
     mpixx::communicator world;
     GINT                myrank;
+    GINT                ntasks;
     GlobalManager::initialize(argc,argv); 
     GlobalManager::startup();
     comm_ = world; // need this for solver(s) & grid
     myrank = world.rank();
+    ntasks = world.size();
 
 
     // Read main prop tree; may ovewrite with
@@ -238,7 +240,7 @@ int main(int argc, char **argv)
     EH_MESSAGE("main: initialize gather/scatter...");
     GPTLstart("init_ggfx_op");
     // Initialize gather/scatter operator:
-    GGFX ggfx;
+    GGFX<GFTYPE> ggfx;
     init_ggfx(*grid_, ggfx);
     EH_MESSAGE("main: gather/scatter initialized.");
     GPTLstop("init_ggfx_op");
@@ -363,11 +365,11 @@ int main(int argc, char **argv)
 
     // Write header, if required:
     if ( itst.peek() == std::ofstream::traits_type::eof() ) {
-    ios << "# p     num_elems      inf_err     L1_err      L2_err" << std::endl;
+    ios << "#ntasks  # p     num_elems      inf_err     L1_err      L2_err" << std::endl;
     }
     itst.close();
 
-    ios << np  << "  "  << "  " << gnelems << "  "
+    ios << ntasks << "  " << np  << "  "  << "  " << gnelems << "  "
         << "  " << maxerror[0] << "  " << maxerror[1] << "  " << maxerror[2]
         << std::endl;
     ios.close();
@@ -755,7 +757,7 @@ void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVecto
 // ARGS  : grid    : GGrid object
 //         ggfx    : gather/scatter op, GGFX
 //**********************************************************************************
-void init_ggfx(GGrid &grid, GGFX &ggfx)
+void init_ggfx(GGrid &grid, GGFX<GFTYPE> &ggfx)
 {
   GFTYPE                         delta;
   GMorton_KeyGen<GNODEID,GFTYPE> gmorton;
