@@ -186,7 +186,6 @@ void GGridBox::init2d()
  
   a = 0.0;
   for ( GSIZET j=0; j<qmesh_.size(); j++ ) { // for each quad polygon
-    std::cout << "GGridBox::init2d: qmesh[" << j << "]=" << qmesh_[j] << std::endl;
     for ( GSIZET k=0; k<qmesh_[j].v.size(); k++ )
        a += qmesh_[j][k];
     a *= (1.0/static_cast<GFTYPE>(qmesh_[j].v.size()));
@@ -328,6 +327,7 @@ void GGridBox::do_grid2d(GINT irank)
     bdy_ind = &pelem->bdy_indices(); // get bdy indices data member
     bdy_typ = &pelem->bdy_types  (); // get bdy types data member
     bdy_ind->clear(); bdy_typ->clear();
+    GPP(comm_,"GGridBox::do_grid2d: qmesh[" << i << "]=" << qmesh_[i]);
     for ( GSIZET l=0; l<ndim_; l++ ) { // loop over element Cart coords
       (*xNodes)[l] = 0.0;
       for ( GSIZET m=0; m<pow(2,ndim_); m++ ) { // loop over verts given in Cart coords
@@ -748,8 +748,9 @@ void GGridBox::periodize()
     }
     n++;
   }
-cout << "GGridBox::periodize: periodicids=" << periodicids_ << endl;
-cout << "GGridBox::periodize: periodicdirs=" << periodicdirs_ << endl;
+
+GPP(comm_,"GGridBox::periodize: periodicids=" << periodicids_);
+GPP(comm_,"GGridBox::periodize: periodicdirs=" << periodicdirs_);
 
   // Now, cycle through periodic nodes and periodize coordinates:
   for ( GSIZET k=0; k<periodicids_.size(); k++ ) { // for each periodic node
