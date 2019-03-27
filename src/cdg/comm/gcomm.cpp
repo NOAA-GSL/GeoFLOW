@@ -25,7 +25,7 @@ void *gsstatus_ = NULLPTR;
 
 #endif  
 
-
+using namespace std;
 
 //**********************************************************************************
 //**********************************************************************************
@@ -164,8 +164,12 @@ GBOOL GComm::ASendRecv(void *RecvBuff, GINT  nRecvBuff, GINT  *irecv, GINT maxRe
 
 #if defined(_G_USE_MPI)
 
+#if 0
   if ( RecvBuff == NULLPTR || nRecvBuff == 0 || maxRecvLen == 0 
     || SendBuff == NULLPTR || nSendBuff == 0 || maxSendLen == 0  ) return TRUE;
+  // Note: may want one task to send, another to receive, so this 
+  //       test isn't advised!
+#endif
  
     
   GBYTE *pbeg;
