@@ -27,7 +27,7 @@ int main(int argc, char **argv)
     GSIZET ne=2; // no. elements per task (# 'y' elems)
     GSIZET np=1;    // elem 'order'
     GC_COMM comm = GC_COMM_WORLD;
-    GGFX   ggfx;
+    GGFX<GFLOAT>   ggfx;
 
 
     // Parse command line. ':' after char
@@ -104,7 +104,7 @@ NOTE: global ids are labeled starting from left on bottom-most
 
     GSIZET rowlen = nprocs*np + 1; // # global dof in a row of nodes
     GSIZET collen = ne    *np + 1; // # global dof in a col of nodes
-    GSIZET icol, irow;
+    GSIZET c, r, icol, irow;
     
 
     // Label each node point of local elements with
@@ -124,9 +124,9 @@ NOTE: global ids are labeled starting from left on bottom-most
     GPP(comm,serr << " glob_indices=" << glob_indices);
  
     // Set field, and analytic field buffers:
-    GTVector<GINT>  u (glob_indices.size()); // trial field
-    GTVector<GINT>  ua(glob_indices.size()); // analytic solution
-    GTVector<GINT>  utmp(glob_indices.size()); // tmp buffer
+    GTVector<GFLOAT>  u (glob_indices.size()); // trial field
+    GTVector<GFLOAT>  ua(glob_indices.size()); // analytic solution
+    GTVector<GFLOAT>  utmp(glob_indices.size()); // tmp buffer
 
 
     // Set analytic solution of GGFX_OP_SUM:
@@ -144,6 +144,9 @@ NOTE: global ids are labeled starting from left on bottom-most
         jstart = irow*rowlen + myrank*np ; // global start of col index
         for ( GSIZET j=0; j<np+1; j++) {
           icol = jstart + j; // global col id
+          ua[n] = irow+icol;
+          r = irow; c = icol;
+#if 0
           if ( isTopElem  && i == np ) ua[n] = 2;
           if ( isBotElem  && i ==  0 ) ua[n] = 2;
           if ( isLeftTask && j ==  0 ) ua[n] = 2;
@@ -152,6 +155,15 @@ NOTE: global ids are labeled starting from left on bottom-most
           if ( isLeftTask && isBotElem && i ==  0 && j == 0  ) ua[n] = 4;
           if ( isRghtTask && isTopElem && i == np && j == np ) ua[n] = 4;
           if ( isRghtTask && isBotElem && i ==  0 && j == np ) ua[n] = 4;
+#endif
+          if ( isTopElem  && i == np ) ua[n] = irow+icol + irow+icol+1;
+          if ( isBotElem  && i ==  0 ) ua[n] = irow+icol + irow+icol-1;
+          if ( isLeftTask && j ==  0 ) ua[n] = irow+icol + irow-1+icol;
+          if ( isRghtTask && j == np ) ua[n] = irow+icol + irow+1+icol;
+          if ( isLeftTask && isTopElem && i == np && j == 0  ) ua[n] = r+c + r+c+1 + r-1+c+1 + r-1+c;
+          if ( isLeftTask && isBotElem && i ==  0 && j == 0  ) ua[n] = r+c + r+1+c + r+1+c+1 + r+c+1;
+          if ( isRghtTask && isTopElem && i == np && j == np ) ua[n] = r+c + r-1+c + r-1+c-1 + r+c-1;
+          if ( isRghtTask && isBotElem && i ==  0 && j == np ) ua[n] = r+c + r+c-1 + r+1+c-1 + r+1+c;
           n++;
         }
       }
@@ -174,7 +186,7 @@ NOTE: global ids are labeled starting from left on bottom-most
     GPP(comm,serr << " doing GGFX::doOp...");
     GPTLstart("ggfx_doop");
     for ( GSIZET k=0; k<nrpt && errcode==0; k++ ) { 
-      bret = ggfx.doOp<GINT>(u, GGFX_OP_SUM);
+      bret = ggfx.doOp(u, GGFX_OP_SUM);
       if ( !bret ) errcode = 3;
     }
     GPTLstop("ggfx_doop");
@@ -186,7 +198,7 @@ NOTE: global ids are labeled starting from left on bottom-most
     // Print u to task 0:
 
     // Check against truth solution:
-    GIBuffer del(ua.size());
+    GTVector<GFLOAT> del(ua.size());
     if ( gerrcode > 0 ) {
       GPP(comm,serr << " ua=" << ua);
       GPP(comm,serr << " u =" << u );
