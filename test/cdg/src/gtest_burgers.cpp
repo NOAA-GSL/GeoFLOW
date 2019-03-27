@@ -360,19 +360,22 @@ int main(int argc, char **argv)
     // Print convergence data to file:
     std::ifstream itst;
     std::ofstream ios;
-    itst.open("burgers_err.txt");
-    ios.open("burgers_err.txt",std::ios_base::app);
 
-    // Write header, if required:
-    if ( itst.peek() == std::ofstream::traits_type::eof() ) {
-    ios << "#ntasks  # p     num_elems      inf_err     L1_err      L2_err" << std::endl;
+    if ( myrank == 0 ) {
+      itst.open("burgers_err.txt");
+      ios.open("burgers_err.txt",std::ios_base::app);
+  
+      // Write header, if required:
+      if ( itst.peek() == std::ofstream::traits_type::eof() ) {
+      ios << "#ntasks  # p     num_elems      inf_err     L1_err      L2_err" << std::endl;
+      }
+      itst.close();
+  
+      ios << ntasks << "  " << np  << "  "  << "  " << gnelems << "  "
+          << "  " << maxerror[0] << "  " << maxerror[1] << "  " << maxerror[2]
+          << std::endl;
+      ios.close();
     }
-    itst.close();
-
-    ios << ntasks << "  " << np  << "  "  << "  " << gnelems << "  "
-        << "  " << maxerror[0] << "  " << maxerror[1] << "  " << maxerror[2]
-        << std::endl;
-    ios.close();
 
 #endif
  
