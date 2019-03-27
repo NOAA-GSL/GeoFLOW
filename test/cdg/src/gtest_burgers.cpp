@@ -113,9 +113,11 @@ int main(int argc, char **argv)
     // Initialize comm & global environment:
     mpixx::environment env(argc,argv); // init GeoFLOW comm
     mpixx::communicator world;
+    GINT                myrank;
     GlobalManager::initialize(argc,argv); 
     GlobalManager::startup();
     comm_ = world; // need this for solver(s) & grid
+    myrank = world.rank();
 
 
     // Read main prop tree; may ovewrite with
@@ -327,14 +329,13 @@ int main(int argc, char **argv)
     for ( GSIZET j=0; j<nsolve; j++ ) { //local errors
       ua_[j]->pow(2);
       nnorm[j] = grid_->integrate(*ua_  [j],*utmp_[0]) ; // L2 norm of analyt soln at t=0
-      cout << "main: nnorm[" << j << "]=" << nnorm[j] << endl;
     }
     
     compute_analytic(*grid_, t, ptree, ua_); // analyt soln at t
     gio(*grid_, ua_, 1, 0, t, savars, sdir, comm_, FALSE);
     for ( GSIZET j=0; j<nsolve; j++ ) { //local errors
       *utmp_[0] = *u_[j] - *ua_[j];
-      cout << "main: diff=u-ua[" << j << "]=" << *utmp_[0] << endl;
+      GPP(comm_,"main: diff=u-ua[" << j << "]=" << *utmp_[0]);
       *utmp_[1] = *utmp_[0]; utmp_[1]->abs();
       *utmp_[2] = *utmp_[0]; utmp_[2]->pow(2);
       lnorm   [0]  = utmp_[0]->infnorm (); // inf-norm
@@ -347,7 +348,8 @@ int main(int argc, char **argv)
       for ( GSIZET i=0; i<3; i++ ) maxerror[i] = MAX(maxerror[i],fabs(gnorm[i]));
     }
 
-    cout << "main: maxerror = " << maxerror << endl;
+    if ( myrank == 0 ) 
+      cout << "main: maxerror = " << maxerror << endl;
    
     GSIZET lnelems=grid_->nelems();
     GSIZET gnelems;
