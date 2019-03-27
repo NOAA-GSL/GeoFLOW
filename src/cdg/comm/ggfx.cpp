@@ -23,7 +23,8 @@ using namespace std;
 // ARGS   : GD_COMM object, defaults to GD_COMM_WORLD
 // RETURNS: GGFX
 //************************************************************************************
-GGFX::GGFX(GC_COMM icomm)
+template<typename T>
+GGFX<T>::GGFX(GC_COMM icomm)
 :
 comm_                 (icomm),
 nprocs_               (1),
@@ -46,7 +47,8 @@ bBinSorted_           (FALSE)
 // ARGS   : none.
 // RETURNS: none.
 //************************************************************************************
-GGFX::~GGFX()
+template<typename T>
+GGFX<T>::~GGFX()
 {
 }
 
@@ -59,7 +61,8 @@ GGFX::~GGFX()
 // RETURNS: none
 //************************************************************************************
 // Copy constructor method
-GGFX::GGFX(const GGFX &a)
+template<typename T>
+GGFX<T>::GGFX(const GGFX<T> &a)
 {
 
 } // end of copy constructor method
@@ -72,7 +75,8 @@ GGFX::GGFX(const GGFX &a)
 // ARGS   : GGFX
 // RETURNS: GGFX
 //************************************************************************************
-GGFX  &GGFX::operator=(const GGFX &a)
+template<typename T>
+GGFX<T>  &GGFX<T>::operator=(const GGFX<T> &a)
 {
 
   return *this;
@@ -90,10 +94,11 @@ GGFX  &GGFX::operator=(const GGFX &a)
 // ARGS   : glob_index: global index list
 // RETURNS: TRUE on success; else FALSE
 //************************************************************************************
-GBOOL GGFX::init(GNIDBuffer &glob_index)
+template<typename T>
+GBOOL GGFX<T>::init(GNIDBuffer &glob_index)
 {
   GBOOL      bret;
-  GString   serr = "GGFX::init: ";
+  GString   serr = "GGFX<T>::init: ";
 
   nglob_index_ = glob_index.size();
 
@@ -120,6 +125,8 @@ GBOOL GGFX::init(GNIDBuffer &glob_index)
 
   bInit_ = TRUE;
 
+  // With all comm data computed, find
+  // inv multiplicity vector:
   initMult();
 
   return bInit_;
@@ -150,12 +157,13 @@ GBOOL GGFX::init(GNIDBuffer &glob_index)
 // RETURNS: 
 //          TRUE on success; else FALSE
 //************************************************************************************
-GBOOL GGFX::initSort(GNIDBuffer  &glob_index, GIBuffer &iOpL2RTasks, 
+template<typename T>
+GBOOL GGFX<T>::initSort(GNIDBuffer  &glob_index, GIBuffer &iOpL2RTasks, 
                      GSZMatrix &iOpL2RIndices, GSZBuffer &nOpL2RIndices, 
                      GSZMatrix &iOpR2LIndices, GSZBuffer &nOpR2LIndices, 
                      GSZMatrix &iOpL2LIndices, GSZBuffer &nOpL2LIndices)
 {
-  GString serr = "GGFX::initSort: ";
+  GString serr = "GGFX<T>::initSort: ";
   GBOOL   bret;
 
 #if defined(GGFX_TRACE_OUTPUT)
@@ -270,11 +278,12 @@ GBOOL GGFX::initSort(GNIDBuffer  &glob_index, GIBuffer &iOpL2RTasks,
 //          locWork          : list of local node list that this task will work on
 // RETURNS: TRUE on success; else FALSE
 //************************************************************************************
-GBOOL GGFX::binSort(GNIDBuffer &nodelist, GIMatrix &gBinMat, 
+template<typename T>
+GBOOL GGFX<T>::binSort(GNIDBuffer &nodelist, GIMatrix &gBinMat, 
                     GINT &numlocfilledbins, GINT &max_numfilledbins, GINT &max_numlocbinmem, 
                     GNIDMatrix &gBinBdy, GNIDBuffer &locWork)
 {
-  GString  serr = "GGFX::binSort: ";
+  GString  serr = "GGFX<T>::binSort: ";
   GSIZET   i, j, n;
 
   locWork.resize(nodelist.size());
@@ -294,8 +303,7 @@ GBOOL GGFX::binSort(GNIDBuffer &nodelist, GIMatrix &gBinMat,
   }
 
 #if defined(GGFX_TRACE_OUTPUT)
-  if ( rank_ == 0 ) 
-    std::cout << serr << "gBinBdy=" << gBinBdy << std::endl;
+    GPP(comm_,serr << "gBinBdy=" << gBinBdy);
 #endif
 
   // Find number nodes in each bin from local task:
@@ -383,10 +391,11 @@ GBOOL GGFX::binSort(GNIDBuffer &nodelist, GIMatrix &gBinMat,
 //          isWork          : Work send buffer            
 // RETURNS: TRUE on success; else FALSE
 //************************************************************************************
-GBOOL GGFX::createWorkBuffs(GIMatrix &gBinMat, GINT max_numlocbinmem, GIBuffer &iRecvWorkTaskID, 
+template<typename T>
+GBOOL GGFX<T>::createWorkBuffs(GIMatrix &gBinMat, GINT max_numlocbinmem, GIBuffer &iRecvWorkTaskID, 
                             GNIDMatrix &irWork, GIBuffer &iSendWorkTaskID, GNIDMatrix &isWork)
 {
-  GString  serr = "GGFX::createWorkBuffs: ";
+  GString  serr = "GGFX<T>::createWorkBuffs: ";
   GSIZET   i, j;
 
   if ( !bBinSorted_ ) return FALSE;
@@ -469,9 +478,10 @@ GBOOL GGFX::createWorkBuffs(GIMatrix &gBinMat, GINT max_numlocbinmem, GIBuffer &
 //                    corresponding to this bin. Allocated here.
 // RETURNS: TRUE on success; else FALSE
 //************************************************************************************
-GBOOL GGFX::binWorkFill(GNIDBuffer &nodelist, GNIDMatrix &gBinBdy, GNIDMatrix  &sWork, GIBuffer &iSendWorkTaskID)
+template<typename T>
+GBOOL GGFX<T>::binWorkFill(GNIDBuffer &nodelist, GNIDMatrix &gBinBdy, GNIDMatrix  &sWork, GIBuffer &iSendWorkTaskID)
 {
-  GString serr = "GGFX::binWorkFill: ";
+  GString serr = "GGFX<T>::binWorkFill: ";
   GSIZET  i, iwhere, j, n;
 
 #if defined(GGFX_TRACE_OUTPUT)
@@ -521,11 +531,12 @@ GBOOL GGFX::binWorkFill(GNIDBuffer &nodelist, GNIDMatrix &gBinBdy, GNIDMatrix  &
 //          isWork         : Matrix of work to send: num iSendWorkTaskID.size+1 X Max no indices
 // RETURNS: TRUE on success; else FALSE
 //************************************************************************************
-GBOOL GGFX::doSendRecvWork( GNIDBuffer &glob_index      , GNIDMatrix &gBinBdy, 
+template<typename T>
+GBOOL GGFX<T>::doSendRecvWork( GNIDBuffer &glob_index      , GNIDMatrix &gBinBdy, 
                             GIBuffer   &iRecvWorkTaskID , GNIDMatrix &irWork, 
                             GIBuffer   &iSendWorkTaskID , GNIDMatrix &isWork)
 {
-  GString serr = "GGFX::doSendRecvWork: ";
+  GString serr = "GGFX<T>::doSendRecvWork: ";
   GINT    i, j, m;
   GBOOL   bret=TRUE;
 
@@ -548,7 +559,7 @@ GBOOL GGFX::doSendRecvWork( GNIDBuffer &glob_index      , GNIDMatrix &gBinBdy,
   // Set send buffer indirection, and prevent
   // send and receive to the same task; place
   // this task's receive buff (if any) as final
-  // recv buffer.
+  // real recv buffer.
   GINT     nsend;
   GINT     nrecv;
   GINT     maxsend = iSendWorkTaskID.size();
@@ -575,11 +586,13 @@ GBOOL GGFX::doSendRecvWork( GNIDBuffer &glob_index      , GNIDMatrix &gBinBdy,
 
   for ( j=0, nsend=0; j<maxsend; j++ ) {
     if ( iSendWorkTaskID[j] != rank_ ) {
-      itsend[nsend] = iSendWorkTaskID[j];
-      ibsend[nsend] = j;
+      itsend[nsend] = iSendWorkTaskID[j]; // task id to send to
+      ibsend[nsend] = j;                  // buffer id to send (column)
       nsend++;
     }
     else {
+      // fill last (maxrecv) receive buffer with work it would send
+      // to itself:
       for ( i=0; i<isWork.size(1); i++ ) irWork(i,maxrecv-1) = isWork(i,j);
     }
   }
@@ -588,6 +601,9 @@ GBOOL GGFX::doSendRecvWork( GNIDBuffer &glob_index      , GNIDMatrix &gBinBdy,
   GPP(comm_,serr << "nsend=" << nsend << " ibsend=" << ibsend);
   GPP(comm_,serr << "itsend=" << itsend);
   GPP(comm_,serr << "nrecv=" << nrecv << " itrecv=" << iRecvWorkTaskID );
+#endif
+#if defined(GGFX_TRACE_OUTPUT)
+  GPP(comm_, serr << "done. Beginning irWork=" << irWork);
 #endif
 
   // Send work data to respective procs; wait for receive:
@@ -600,7 +616,7 @@ GBOOL GGFX::doSendRecvWork( GNIDBuffer &glob_index      , GNIDMatrix &gBinBdy,
   }
 
 #if defined(GGFX_TRACE_OUTPUT)
-  GPP(comm_, serr << "done. irWork=" << irWork);
+  GPP(comm_, serr << "done. Final irWork=" << irWork);
 #endif
 
 
@@ -643,11 +659,12 @@ GBOOL GGFX::doSendRecvWork( GNIDBuffer &glob_index      , GNIDMatrix &gBinBdy,
 //                            
 // RETURNS: TRUE on success; else FALSE
 //************************************************************************************
-GBOOL GGFX::doCommonNodeSort(GNIDBuffer &glob_index, GNIDMatrix &irWork, 
+template<typename T>
+GBOOL GGFX<T>::doCommonNodeSort(GNIDBuffer &glob_index, GNIDMatrix &irWork, 
                              GIBuffer &iRecvWorkTaskID, GIBuffer &iSendWorkTaskID,
                              GNIDMatrix &mySharedData)
 {
-  GString    serr = "GGFX::doCommonNodeSort: ";
+  GString    serr = "GGFX<T>::doCommonNodeSort: ";
   GSIZET     i, j, k, nr, ns;
   GBOOL      bret=TRUE;
   GINT       itask, nl;
@@ -855,12 +872,13 @@ GBOOL GGFX::doCommonNodeSort(GNIDBuffer &glob_index, GNIDMatrix &irWork,
 // RETURNS: 
 //          TRUE on success; else FALSE
 //************************************************************************************
-GBOOL GGFX::extractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedData, GIBuffer &iOpL2RTasks, 
+template<typename T>
+GBOOL GGFX<T>::extractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedData, GIBuffer &iOpL2RTasks, 
                           GSZMatrix &iOpL2RIndices, GSZBuffer &nOpL2RIndices,
                           GSZMatrix &iOpR2LIndices, GSZBuffer &nOpR2LIndices,
                           GSZMatrix &iOpL2LIndices, GSZBuffer &nOpL2LIndices)
 {
-  GString serr = "GGFX::extractOpData: ";
+  GString serr = "GGFX<T>::extractOpData: ";
   GBOOL   bind, bret;
   GSIZET  i, j, k, m;
 
@@ -898,7 +916,7 @@ GBOOL GGFX::extractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedData, GIBu
         } 
         else {                        // task == this rank; not remote
           if ( bind && !igltmp.containsn(nnid, nl) 
-             && (mult = glob_index.multiplicity(nnid)) > 1 ) {  // # times this node id represented locally
+             && (mult = glob_index.multiplicity(nnid)) > 0 ) {  // # times this node id represented locally
             igltmp[nl]  = nnid;      // add global shared node to list of global/shared nodes
             ngltmp[nl] += mult;      // update # local node ids for this shared global id
             nl++;                    // update number of global id in local matrix
@@ -909,6 +927,7 @@ GBOOL GGFX::extractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedData, GIBu
     } // end, while j loop
   }
 
+  GPP(comm_, serr << "nigltmp=" << nl << " igltmp=" << igltmp);
 
   nnidmax = nindtmp.maxn(nt);       // max # global indices for a remote task
   iOpL2RTasks  .resize(nt);
@@ -961,7 +980,7 @@ GBOOL GGFX::extractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedData, GIBu
 
   // ...indirection arrays (R2L = 'remote to local'): apply remote data to local
   // indices: 1 column for each global index, and rows indicate indices of other 
-  // representations of that global index; sort of an inversion of iOpL2RIndices:
+  // local representations of that global index into glob_index array:
   GSIZET  maxmult=0;
   for ( j=0; j<iOpL2RIndices.size(2); j++ ) { // loop over all unique indices to find max sizes
     for ( i=0; i<nOpL2RIndices[j]; i++ ) {
@@ -1022,64 +1041,4 @@ GBOOL GGFX::extractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedData, GIBu
   return bret; 
 
 } // end, method extractOpData
-
-
-//************************************************************************************
-//************************************************************************************
-// METHOD     : initMult
-// DESCRIPTION: Initialize data for H1-smoothing
-// ARGUMENTS  : 
-// RETURNS    : 
-//************************************************************************************
-void GGFX::initMult()
-{
-
-  assert(bInit_ && "Operator not initialized");
-
-  GFVector mult(nglob_index_);
-
-  mult = 1.0;
-
-  // Do DSS sum to find multiplicity:
-  doOp<GFLOAT>(mult, GGFX_OP_SUM);
-
-
-  // Compute 1/mult:
-  imult_.resize(mult.size());
-  for ( GSIZET j=0; j<imult_.size(); j++ ) {
-    imult_[j] = 1.0/mult[j];
-  }
-
-  GPP(comm_,"GGFX::initMult: mult=" << mult);
-
-} // end of method initMult
-
-
-
-//************************************************************************************
-//************************************************************************************
-// METHOD : getTimes
-// DESC   : Retrieves timer results
-// ARGS   : 
-// RETURNS: 
-//************************************************************************************
-GDOUBLE GGFX::getTimes(GGFX_Timer_t type)
-{
-    return timer_data_[type];
-
-} // end of method getTimes
-
-
-//************************************************************************************
-//************************************************************************************
-// METHOD     : resetTimes
-// DESCRIPTION: Reset timing variables
-// ARGUMENTS  : 
-// RETURNS    : 
-//************************************************************************************
-void GGFX::resetTimes()
-{
-  timer_data_ = 0.0;
-
-} // end of method resetTimes
 

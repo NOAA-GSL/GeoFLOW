@@ -18,8 +18,6 @@
 
 #define GGFX_TRACE_OUTPUT
 
-enum GGFX_Timer_t {GGFXTR_OP, GGFXTR_EXCH, GGFXTR_LCOMB, GGFXTR_GCOMB, GGFXTR_GCOMBA, GGFXTR_GCOMBB, GGFXTR_GCOMBC};
-
 // GGFX reduction operation defs:
 #if !defined(GGFX_OP_DEF)
 #define GGFX_OP_DEF
@@ -27,6 +25,7 @@ enum GGFX_OP {GGFX_OP_SUM=0, GGFX_OP_PROD, GGFX_OP_MAX, GGFX_OP_MIN, GGFX_OP_SMO
 #endif
 
 
+template<typename T> 
 class GGFX
 {
 public:
@@ -37,13 +36,10 @@ public:
                    
 
                       GBOOL    init(GNIDBuffer &glob_index);
-template<typename T>  GBOOL    doOp(GTVector<T> &u,  GGFX_OP op);
-template<typename T>  GBOOL    doOp(GTVector<T> &u,  GSZBuffer &ind, GGFX_OP op);
-template<typename T>  GBOOL    doOp(T *&u, GSIZET nu,  GGFX_OP op);
-template<typename T>  GBOOL    doOp(T *&u, GSIZET nu,  GSIZET *iind, GSIZET nind, GGFX_OP op);
+                      GBOOL    doOp(GTVector<T> &u,  GGFX_OP op);
+                      GBOOL    doOp(GTVector<T> &u,  GSZBuffer &ind, GGFX_OP op);
                       GC_COMM  getComm() { return comm_; }
 
-                      GDOUBLE  getTimes(GGFX_Timer_t type);
                       void     resetTimes();
 
 private:
@@ -69,14 +65,10 @@ private:
  
 
                      // doOp-specific methods:
-template<typename T> GBOOL localGS(GTVector<T> &u, GSZMatrix  &ilocal, GSZBuffer &nlocal, GGFX_OP op, GDOUBLE *qop=NULLPTR);
-template<typename T> GBOOL localGS(GTVector<T> &u, GTVector<GSIZET> &iind, GSZMatrix  &ilocal, GSZBuffer &nlocal, GGFX_OP op, GDOUBLE *qop=NULLPTR);
-template<typename T> GBOOL localGS(T *&u, GSIZET  nu, GSZMatrix  &ilocal, GSZBuffer &nlocal, GGFX_OP op, GDOUBLE *qop=NULLPTR);
-template<typename T> GBOOL localGS(T *&u, GSIZET  nu, GSIZET *&iind, GSIZET nind, GSZMatrix  &ilocal, GSZBuffer &nlocal, GGFX_OP op, GDOUBLE *qop=NULLPTR);
-template<typename T> GBOOL dataExchange(GTVector<T> &u );
-template<typename T> GBOOL dataExchange(GTVector<T> &u, GTVector<GSIZET> &iind );
-template<typename T> GBOOL dataExchange(T *&u, GSIZET nu );
-template<typename T> GBOOL dataExchange(T *&send_data, GSIZET nu, GSIZET *&iind, GSIZET nind );
+                     GBOOL localGS(GTVector<T> &u, GSZMatrix  &ilocal, GSZBuffer &nlocal, GGFX_OP op, GTMatrix<T> *qop=NULLPTR);
+                     GBOOL localGS(GTVector<T> &u, GTVector<GSIZET> &iind, GSZMatrix  &ilocal, GSZBuffer &nlocal, GGFX_OP op, GTMatrix<T> *qop=NULLPTR);
+                     GBOOL dataExchange(GTVector<T> &u );
+                     GBOOL dataExchange(GTVector<T> &u, GTVector<GSIZET> &iind );
 
                      // misc. methods:
                      void initMult(); // initialize multiplicity for smoothing
@@ -93,18 +85,16 @@ GNODEID            maxNodeVal_   ;  // Node value dynamical range
 GNODEID            maxNodes_     ;  // total number of nodes distributed among all procs
 GNIDMatrix         gBinBdy_      ;  // global bin bdy ranges for each task [0,nporocs_-1]
 GIBuffer           iOpL2RTasks_  ;  // task ids to send op data to, and recv from
+GIBuffer           iOpR2LTasks_  ;  // task ids in order of receive
 GSZMatrix          iOpL2RIndices_;  // matrix with send/recv data for each off-task shared node
 GSZMatrix          iOpR2LIndices_;  // matrix with send/recv data for each off-task shared node
 GSZBuffer          nOpL2RIndices_;  // number shared nodes to snd/rcv for each task
 GSZBuffer          nOpR2LIndices_;  // number shared nodes to snd/rcv for each task
 GSZMatrix          iOpL2LIndices_;  // matrix with local indices pointing to shared nodes
 GSZBuffer          nOpL2LIndices_;  // number valid columns in each row of iOpLoIndices_
-GDMatrix           sendBuff_     ;  // send buffer
-GDMatrix           recvBuff_     ;  // recv buffer
-GFVector           imult_        ;  // inverse of multiplicity matrix (for H1-smoothing)
-
-// Timer data:
-GDVector           timer_data_   ;  // cumlative times for each timer
+GTMatrix<T>        sendBuff_     ;  // send buffer
+GTMatrix<T>        recvBuff_     ;  // recv buffer
+GTVector<T>        imult_        ;  // inverse of multiplicity matrix (for H1-smoothing)
 
 };
 
