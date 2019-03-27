@@ -57,7 +57,7 @@ using namespace std;
 // RETURNS: none
 //**********************************************************************************
 template<typename TypePack>
-GBurgers<TypePack>::GBurgers(GGFX &ggfx, Grid &grid, State &u, GBurgers<TypePack>::Traits &traits, GTVector<GTVector<GFTYPE>*> &tmp) :
+GBurgers<TypePack>::GBurgers(GGFX<GFTYPE> &ggfx, Grid &grid, State &u, GBurgers<TypePack>::Traits &traits, GTVector<GTVector<GFTYPE>*> &tmp) :
 doheat_         (traits.doheat),
 bpureadv_     (traits.bpureadv),
 bconserved_ (traits.bconserved),

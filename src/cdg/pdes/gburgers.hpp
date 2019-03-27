@@ -84,7 +84,7 @@ public:
         };
 
         GBurgers() = delete; 
-        GBurgers(GGFX &ggfx, Grid &grid, State &u, GBurgers<TypePack>::Traits &traits, GTVector<GTVector<GFTYPE>*> &tmp);
+        GBurgers(GGFX<GFTYPE> &ggfx, Grid &grid, State &u, GBurgers<TypePack>::Traits &traits, GTVector<GTVector<GFTYPE>*> &tmp);
        ~GBurgers();
         GBurgers(const GBurgers &bu) = default;
         GBurgers &operator=(const GBurgers &bu) = default;
@@ -161,7 +161,7 @@ private:
 //      GFlux              *gflux_;         // flux op
         GBC                *gbc_;           // bdy conditions operator
         GC_COMM             comm_;          // communicator
-        GGFX               *ggfx_;          // gather-scatter operator
+        GGFX<GFTYPE>       *ggfx_;          // gather-scatter operator
         std::function<void(const Time &t, State &u,
                            State &ub)> update_bdy_callback_;
 

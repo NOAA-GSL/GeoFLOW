@@ -57,7 +57,7 @@ public:
                                          State &ub)> callback)
                                          { bdy_apply_callback_ = callback;
                                            bapplybc_ = TRUE; }        // set bdy-application callback
-        void                set_ggfx(GGFX *ggfx)
+        void                set_ggfx(GGFX<GFTYPE> *ggfx)
                             {ggfx_ = ggfx;}                           // set geom-free exchange op
 
 
@@ -73,7 +73,7 @@ private:
         GINT               nstage_;                          // no stages (not nec. 'order'!)
         GButcherRK<T>      butcher_;                         // Butcher tableau
         GTVector<State>    K_;                               // RK stage update vectors
-        GGFX               *ggfx_;                           // geom-free exchange op
+        GGFX<GFTYPE>      *ggfx_;                           // geom-free exchange op
         std::function<void(const Time &t,                    
                            const State  &uin,
                            const Time &dt, 
