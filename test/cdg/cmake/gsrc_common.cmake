@@ -13,7 +13,7 @@
     )
 
  set(CDG_COMM_SRC   ${GHOME}/comm/gcomm.cpp 
-                    ${GHOME}/comm/ggfx.cpp
+#                   ${GHOME}/comm/ggfx.cpp
     )
 
  set(CDG_SEM_SRC    ${GHOME}/sem/gelem_base.cpp
