@@ -360,14 +360,14 @@ void GGridBox::do_grid2d(GINT irank)
       }
     }
 
-    GPP(comm_,"GRridBox:do_grid2d: elem[" << i << "]: bdy_ind=" << *bdy_ind);
+    GPP(comm_,"GridBox:do_grid2d: elem[" << i << "]: bdy_ind=" << *bdy_ind);
 
     gelems_.push_back(pelem);
 
     // Set global bdy types at each bdy_ind (this is a coarse 
     // application; finer control may be exercised in callback):
     set_global_bdytypes_2d(*pelem);
-    GPP(comm_,"GRridBox:do_grid2d: set_global_bdytypes_2d done.");
+    GPP(comm_,"GridBox:do_grid2d: set_global_bdytypes_2d done.");
 
     // Find global global interior and bdy start & stop indices represented 
     // locally within element:
