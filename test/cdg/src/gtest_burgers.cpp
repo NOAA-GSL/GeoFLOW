@@ -234,6 +234,7 @@ int main(int argc, char **argv)
     GPTLstart("gen_grid");
     // Create grid:
     grid_ = GGridFactory::build(gridptree, gbasis, comm_);
+    GComm::Synch(comm_);
     GPTLstop("gen_grid");
 
 
@@ -769,14 +770,16 @@ void init_ggfx(GGrid &grid, GGFX<GFTYPE> &ggfx)
   GTVector<GTVector<GFTYPE>>    *xnodes;
 
   delta  = grid.minnodedist();
-  dX     = 0.2*delta;
+  dX     = 0.1*delta;
   xnodes = &grid.xNodes();
   glob_indices.resize(grid.ndof());
 
   // Integralize *all* internal nodes
   // using Morton indices:
   gmorton.setIntegralLen(P0,dX);
+
   gmorton.key(glob_indices, *xnodes);
+  GComm::Synch(comm_);
 
   GPP(comm_,"init_ggfx: glob_indices=" << glob_indices);
 
