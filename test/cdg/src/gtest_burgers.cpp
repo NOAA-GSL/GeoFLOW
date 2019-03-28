@@ -816,4 +816,4 @@ std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers
       }
     }
 
-} // end method init_ggfx
+} // end method create_observers
