@@ -1608,7 +1608,7 @@ void GGFX<T>::initMult()
 
   assert(bInit_ && "Operator not initialized");
 
-  GDVector mult(nglob_index_);
+  GTVector<T> mult(nglob_index_);
 
   mult = 1.0;
 
