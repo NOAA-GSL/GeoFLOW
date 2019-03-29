@@ -336,7 +336,7 @@ int main(int argc, char **argv)
     
     compute_analytic(*grid_, t, ptree, ua_); // analyt soln at t
     gio(*grid_, ua_, 1, 0, t, savars, sdir, comm_, FALSE);
-    for ( GSIZET j=0; j<nsolve; j++ ) { //local errors
+    for ( GSIZET j=0; j<1; j++ ) { //local errors
       *utmp_[0] = *u_[j] - *ua_[j];
       GPP(comm_,"main: diff=u-ua[" << j << "]=" << *utmp_[0]);
       *utmp_[1] = *utmp_[0]; utmp_[1]->abs();
@@ -492,10 +492,10 @@ void compute_dirplnwave_burgers(GGrid &grid, GFTYPE &t, const PropertyTree& ptre
   }
   else {
     // If not doing a rotated planar wave:
-    nu_[0] = 5.0e-3;
-    A    = 1.0e4;
-    R0   = 5.0;
-    t0   = 5.0e-2;
+    nu_[0] = 0.1;
+    A    = 0.01;
+    R0   = 0.1;
+    t0   = 0.04;
     if ( t == 0.0 ) t = t0;
     K[0] = 1.0; K[1] = 0.0;
     if ( GDIM == 3 ) K[2] = 0.0;
@@ -504,7 +504,7 @@ void compute_dirplnwave_burgers(GGrid &grid, GFTYPE &t, const PropertyTree& ptre
   for ( GSIZET j=0; j<nxy; j++ ) {
     r2 = 0.0;
     for ( GSIZET i=0; i<GDIM; i++ ) {
-      xx[i] = (*xnodes)[i][j] - r0[i];
+      xx[i] = (*xnodes)[i][j] ; //- r0[i];
       (*ua[i])[j] = 0.0;
       r2   += xx[i]*xx[i];
     }
@@ -650,8 +650,6 @@ void compute_pergauss_lump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
   GBOOL doheat   = advptree.getValue<GBOOL>("doheat");
   GBOOL bpureadv = advptree.getValue<GBOOL>("bpureadv");
 
-  assert(!(doheat &&  bpureadv) && "Must select either heat equation or pure advection, or neither");
-
   GTVector<GTVector<GFTYPE>> *xnodes = &grid_->xNodes();
 
   assert(grid.gtype() == GE_REGULAR && "Invalid element types");
@@ -751,8 +749,6 @@ void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVecto
   GString      sbcs   = ptree.getValue<GString>("bdy_conditions"); // name of initialization block
   PropertyTree blockptree = ptree.getPropertyTree(sblock); // sub-block of main ptree describing initialization type
 
-  assert(doheat != bpureadv && "Cannot set both heat AND pure advection eqs");
-  
   if ( doheat  ) {
     
     if ( sblock == "init_lump" ) {
