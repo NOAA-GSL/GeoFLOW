@@ -13,3 +13,4 @@
 11.  Add restart capability.
 12.  Add forcing.
 13.  Generalize the application of initial conditions.
+14.  Remove iOpR2LIndices and associated quaitites from GGFX
