@@ -434,25 +434,24 @@ void update_dirichlet(const GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u, GTVector<
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD: compute_percircnwave_burgers
-// DESC  : Compute solution to (nonlinear) Burgers with N-wave
-//         initial conditions for use with GBDY_PERIODIC bdys
+// METHOD: compute_dirplnwave_burgers
+// DESC  : Compute solution to (nonlinear) Burgers with planar or
+//         cicularized N-wave initial conditions for use with GBDY_DIRICHLET bdys
 //         Must use box grid.
 // ARGS  : grid    : GGrid object
 //         t       : time
 //         ptree   : main property tree
 //         ua      : return solution
 //**********************************************************************************
-void compute_percircnwave_burgers(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVector<GTVector<GFTYPE>*> &ua)
+void compute_dirplnwave_burgers(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVector<GTVector<GFTYPE>*> &ua)
 {
-
-  assert(FALSE && "N-wave not ready yet");
-
-  GBOOL            bContin;
-  GFTYPE           wsum, prod, argxp, argxm, da, eps=1e-18;
-  GFTYPE           nxy, pint, sig0, ufact=1.0, u0;
-  GFTYPE           K2;
-  GTVector<GFTYPE> f(GDIM), K[GDIM], xx(GDIM), si(GDIM), sig(GDIM);
+  GBOOL            bplanar=TRUE;
+  GBOOL            brot   =FALSE;
+  GSIZET           nxy;
+  GFTYPE           A, R0, r2, t0, tdenom;
+  GFTYPE           denom, trt;
+  GFTYPE           efact, tfact, xfact;
+  GTVector<GFTYPE> K[GDIM], xx(GDIM), si(GDIM), sig(GDIM);
   GTPoint<GFTYPE>  r0(3), P0(3), gL(3);
 
   PropertyTree heatptree = ptree.getPropertyTree("init_lump");
@@ -462,42 +461,85 @@ void compute_percircnwave_burgers(GGrid &grid, GFTYPE &t, const PropertyTree& pt
 
   assert(grid.gtype() == GE_REGULAR && "Invalid element types");
 
+
   // Get periodicity length, gL:
   std::vector<GFTYPE> xyz0 = boxptree.getArray<GFTYPE>("xyz0");
   std::vector<GFTYPE> dxyz = boxptree.getArray<GFTYPE>("delxyz");
-  P0 = xyz0; r0 = dxyz; gL = P0 + r0;
+  P0 = xyz0; r0 = dxyz; gL = r0;
+
+  GTVector<GString> bc(6);
+  bc[0] = boxptree.getValue<GString>("bdy_x_0");
+  bc[1] = boxptree.getValue<GString>("bdy_x_1");
+  bc[2] = boxptree.getValue<GString>("bdy_y_0");
+  bc[3] = boxptree.getValue<GString>("bdy_y_1");
+  bc[4] = boxptree.getValue<GString>("bdy_z_0");
+  bc[5] = boxptree.getValue<GString>("bdy_z_1");
+  assert(bc.multiplicity("GBDY_DIRICHLET") >= 2*GDIM
+      && "Dirichlet boundaries must be set on all boundaries");
 
   nxy = (*xnodes)[0].size(); // same size for x, y, z
- 
-  assert(FALSE && "Periodized N-wave unavailable"); 
-#if 0
-  for ( GSIZET j=0; j<nxy; j++ ) {
-    for ( GSIZET i=0; i<GDIM; i++ ) {
-      f [i] = modf((*c[i])[j]*t/gL[i],&pint);
-      xx[i] = (*xnodes)[i][j] - r0[i] - f[i]*gL[i];
 
-    }
-
-    prod = 1.0;
-    for ( GSIZET k=0; k<GDIM; k++ ) {
-      wsum     = exp(-xx[k]*xx[k]*si[k]);
-      n       = 1;
-      bContin = TRUE;
-      while ( bContin ) {
-        argxp = -pow((xx[k]+n*gL[k]),2.0)*si[k];
-        argxm = -pow((xx[k]-n*gL[k]),2.0)*si[k];
-        da    =  exp(argxp) + exp(argxm);
-        wsum  += da;
-        bContin = da/wsum > eps;
-        n++;
-      }
-      prod *= wsum;
-    }
-    (*ua[0])[j] = (*ua[0])[j]*ufact + u0*pow(sig0,2)/pow(sig[0],2)*prod;
+  // Set some parameters:
+  if ( brot ) {
+    // If doing a rotated planar wave:
+    nu_[0] = 5.0e-3;
+    A    = 1.0e4;
+    R0   = 5.0;
+    t0   = 5.0e-2;
+    if ( t == 0.0 ) t = t0;
+    K[0] = 1.0; K[1] = 2.0;
+    if ( GDIM == 3 ) K[2] = 0.0;
   }
-#endif
+  else {
+    // If not doing a rotated planar wave:
+    nu_[0] = 5.0e-3;
+    A    = 1.0e4;
+    R0   = 5.0;
+    t0   = 5.0e-2;
+    if ( t == 0.0 ) t = t0;
+    K[0] = 1.0; K[1] = 0.0;
+    if ( GDIM == 3 ) K[2] = 0.0;
+  }
+ 
+  for ( GSIZET j=0; j<nxy; j++ ) {
+    r2 = 0.0;
+    for ( GSIZET i=0; i<GDIM; i++ ) {
+      xx[i] = (*xnodes)[i][j] - r0[i];
+      (*ua[i])[j] = 0.0;
+      r2   += xx[i]*xx[i];
+    }
+    if ( bplanar ) r2 = xx[0]*xx[0] ; // choose one direction
+
+    if ( brot ) {
+      // NOTE: not tested in 2D!
+      tdenom = 1.0/(4.0*nu_[0]*t);
+      trt    = bplanar ? sqrt(t/t0): t/t0;
+      denom  = 1.0 / ( exp(R0) - 1.0 );
+      xfact  = 1.0 /( t * ( 1.0+(trt*denom*exp(r2*tdenom)) ) );
+    
+
+      (*ua[0])[j] = xx[0] * xfact ;
+      if ( !bplanar ) {
+        (*ua[1])[j] = xx[1] * xfact ;
+        if ( GDIM == 3 ) (*ua[2])[j] = xx[2] * xfact ;
+      }
+    }
+    else {
+      tdenom = 1.0/(4.0*nu_[0]*t);
+      tfact  = bplanar ? sqrt(t/A) : sqrt(t)/A;
+      efact  = tfact * exp(r2*tdenom);
+      xfact  = 1.0 /( t * (  1.0 + efact ) );
+      (*ua[0])[j] = xx[0] * xfact ;
+      if ( !bplanar ) {
+        (*ua[1])[j] = xx[1] * xfact ;
+        if ( GDIM == 3 ) (*ua[2])[j] = xx[2] * xfact ;
+      }
+      // dU1max = 1.0 / ( t * (sqrt(t/A) + 1.0) );
+      // aArea  = 4.0*nu_[0]*log( 1.0 + sqrt(A/t) );
+    }
+  }
   
-} // end, compute_percircnwave_burgers
+} // end, compute_dirplnwave_burgers
 
 
 //**********************************************************************************
@@ -745,7 +787,7 @@ void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVecto
 
   // Inititialize for nonlinear advection:
   if ( sblock == "init_lump" ) {
-    compute_percircnwave_burgers(grid, t, ptree, ua);
+    compute_dirplnwave_burgers(grid, t, ptree, ua);
   }
   else {
     assert(FALSE && "Invalid Burgers equation initialization specified");
