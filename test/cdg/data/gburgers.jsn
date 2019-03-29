@@ -15,7 +15,7 @@
     "x0"    : 0.5,
     "y0"    : 0.5,
     "z0"    : 0.5,
-    "sigma" : 0.1,
+    "sigma" : 0.05,
     "u0"    : 1.0
   },
   "adv_equation_traits": {
@@ -42,7 +42,7 @@
     "grid_name" : "grid_box",
     "xyz0"      : [0.0, 0.0, 0.0],
     "delxyz"    : [1.0, 1.0, 1.0],
-    "num_elems" : [2, 2, 1],
+    "num_elems" : [16, 16, 1],
     "bdy_x_0"   : "GBDY_DIRICHLET",
     "bdy_x_1"   : "GBDY_DIRICHLET",
     "bdy_y_0"   : "GBDY_DIRICHLET",
@@ -56,7 +56,7 @@
     "extrap_order"     : 2
   },
   "dissipation_traits": {
-    "nu"      : 0.0,
+    "nu"      : 1.0e-2,
     "nu_type" : "constant"
   },
   "simple_output": {
@@ -65,11 +65,11 @@
     "cadence_itype" : "cycle",
     "state_index"   : [0],
     "state_names"   : ["u1", "u2", "u3"],
-    "cycle_interval": 1,
+    "cycle_interval": 10,
     "time_interval" : 0.05
   },
   "time_integration": {
-    "integ_type" : "cycle",
+    "integ_type" : "time",
     "time_end"   : 0.5,
     "cycle_end"  : 10,
     "dt"         : 1.0e-3
