@@ -862,7 +862,10 @@ GBOOL GGFX<T>::doCommonNodeSort(GNIDBuffer &glob_index, GNIDMatrix &irWork,
 //                col 0, task 0: index0 index1 index2....
 //                col 1, task 1: index0 index1 index2....
 //                col 2, task 2: index0 index1 index2....
-//          nOpL2RIndices : returned; length of OpIndices record to be sent to each task
+//          nOpL2RIndices : returned; length of OpL2RIndices record to be sent to each task
+//          iOpR2LIndices : returned; 1 column for each task, provides the local indices 
+//                          with which remote data will be operated on.
+//          nOpR2LIndices : returned; length of OpR2LIndices record to be sent to each task
 //          iOpL2LIndices : returned; matrix of indices into local glob_index; each column
 //                          represents a shared (global) index, and each row represents 
 //                          an index to the same shared index. Used for only local operations
@@ -884,7 +887,7 @@ GBOOL GGFX<T>::extractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedData, G
 
   // Find unique list of task IDs contained within mySharedData, that we will have
   // to send to/recv from. Find also the local indices into glob_index that represent
-  // 'global shared nodes.
+  // 'global' shared nodes.
 
   // First, get sizes for indirection arrays:
   GINT      itask, nt ;
@@ -894,7 +897,7 @@ GBOOL GGFX<T>::extractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedData, G
   GSZBuffer nindtmp (nprocs_); nindtmp.set(0);
   GNIDBuffer igltmp(glob_index.size()); igltmp.set(0);
   GSZBuffer ngltmp(glob_index.size()); ngltmp.set(0);
-  for ( j=0, nt=0, nl=0; j<mySharedData.size(2); j++ ) {
+  for ( j=0, nt=0, nl=0; j<mySharedData.size(2); j++ ) { // cyle over all work tasks
     if ( mySharedData(0,j)==-1 ) continue; // column contain no usable data
     i = 0; 
     while ( i<mySharedData.size(1) && mySharedData(i,j)>-1 ) { // parse jth record
@@ -932,7 +935,7 @@ GBOOL GGFX<T>::extractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedData, G
   nnidmax = nindtmp.maxn(nt);       // max # global indices for a remote task
   iOpL2RTasks  .resize(nt);
   nOpL2RIndices.resize(nt);
-  iOpL2RIndices.resize(nnidmax,nt); // of size # unique remote tasks X max # unique shared nodes
+  iOpL2RIndices.resize(nnidmax,nt); // of size # unique shared nodes X  # remote tasks 
 
   iOpL2RIndices.set(999999);
 
@@ -955,7 +958,7 @@ GBOOL GGFX<T>::extractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedData, G
   // Find indirection arrays for local indices of shared nodes that will
   // be sent & recvd from remote tasks, and for these that are entirely local:
 
-  // ... indirection arrays (G2R = 'global to remote') for remote sends & receives:
+  // ... indirection arrays (L2R = 'local to remote') for remote sends & receives:
   // 1 column for each task to send to, and rows refer to the indices:
   nindtmp.set(0);
   for ( j=0; j<mySharedData.size(2); j++ ) {
@@ -981,6 +984,7 @@ GBOOL GGFX<T>::extractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedData, G
   // ...indirection arrays (R2L = 'remote to local'): apply remote data to local
   // indices: 1 column for each global index, and rows indicate indices of other 
   // local representations of that global index into glob_index array:
+#if 1
   GSIZET  maxmult=0;
   for ( j=0; j<iOpL2RIndices.size(2); j++ ) { // loop over all unique indices to find max sizes
     for ( i=0; i<nOpL2RIndices[j]; i++ ) {
@@ -988,20 +992,25 @@ GBOOL GGFX<T>::extractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedData, G
       maxmult = MAX(maxmult,glob_index.multiplicity(nnid)); 
     }
   }
-  iOpR2LIndices.resize(maxmult,nOpL2RIndices.sum()); iOpR2LIndices.set(999999); 
-  nOpR2LIndices.resize(iOpR2LIndices.size(2)); 
+#endif
+  iOpR2LIndices.resize(maxmult,iOpL2RIndices.size(2)); 
+  nOpR2LIndices.resize(nOpL2RIndices.size());
+  iOpR2LIndices.set(999999); 
+
+GPP(comm_,"(1) iOpR2LIndices=" << iOpR2LIndices);
 
   GSIZET *iwhere=0;
   GSIZET  nw=0;
-  for ( j=0, m=0; j<iOpL2RIndices.size(2); j++ ) { // loop over unique global indices
+  for ( j=0, m=0; j<iOpL2RIndices.size(2); j++ ) { // loop over tasks
     for ( i=0; i<nOpL2RIndices[j]; i++ ) { // for each unique global index, find local indices
-      nnid = glob_index[iOpL2RIndices(i,j)];
+      nnid = glob_index[iOpL2RIndices(i,j)]; // get 'global' id
       mult = glob_index.multiplicity(nnid, iwhere, nw);
-      for ( k=0; k<mult; k++ ) iOpR2LIndices(k,m) = iwhere[k]; 
-      nOpR2LIndices[m] = mult;
+      for ( k=0; k<mult; k++ ) iOpR2LIndices(k,j) = iwhere[k]; 
+      nOpR2LIndices[j] = mult;
       m++;
     }
   }
+GPP(comm_,"(2) iOpR2LIndices=" << iOpR2LIndices);
 
   // ... indirection arrays (L2L = 'local to local ') for local operations:
   // 1 column for each 'global' node, and rows refer to the local indices that
@@ -1115,7 +1124,7 @@ GBOOL GGFX<T>::doOp(GTVector<T> &u, GGFX_OP op)
   GPP(comm_,serr << " iOpR2LIndices=" << iOpR2LIndices_);
   GPP(comm_,serr << " nOpR2LIndices=" << nOpR2LIndices_);
 //GPP(comm_,serr << " recvBuff.size=" << recvBuff_.data().size());
-  bret = localGS(u, iOpL2RIndices_, nOpL2RIndices_, op, &recvBuff_);
+  bret = localGS(u, iOpR2LIndices_, nOpR2LIndices_, op, &recvBuff_);
   if ( !bret ) {
     std::cout << serr << "localGS (2) failed " << std::endl;
     exit(1);
