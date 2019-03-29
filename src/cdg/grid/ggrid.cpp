@@ -15,6 +15,7 @@
 #include "gelem_base.hpp"
 #include "ggrid.hpp"
 #include "gcomm.hpp"
+#include "tbox/error_handler.hpp"
 
 using namespace std;
 
@@ -341,10 +342,14 @@ GFTYPE GGrid::maxlength()
 void GGrid::grid_init()
 {
 
+  cout << GComm::WorldRank() << ": GGrid::grid_init: do_grid..." << endl;
   GPTLstart("GGrid::grid_init: do_grid");
   do_grid(); // generate element list from derived class
   GPTLstop("GGrid::grid_init: do_grid");
 
+  GComm::Synch(comm_);
+
+  cout << GComm::WorldRank() << ": GGrid::grid_init: do_typing..." << endl;
   GPTLstart("GGrid::grid_init: do_typing");
   do_typing(); // do element-typing check
   GPTLstop("GGrid::grid_init: do_typing");
@@ -361,6 +366,7 @@ void GGrid::grid_init()
   else if ( itype_[GE_DEFORMED]  .size() > 0 ) gtype_ = GE_DEFORMED;
   else if ( itype_[GE_REGULAR]   .size() > 0 ) gtype_ = GE_REGULAR;
 
+  cout << GComm::WorldRank() << ": GGrid::grid_init: init_bc_info..." << endl;;
   GPTLstart("GGrid::grid_init: init_bc_info");
   // All element bdy/face data should have been set by now:
   init_bc_info();
@@ -373,15 +379,19 @@ void GGrid::grid_init()
   }
   GPTLstop("GGrid::grid_init: def_init");
 
+  cout << GComm::WorldRank() << ": GGrid::grid_init: reg_init..."<< endl; ;
   GPTLstart("GGrid::grid_init: reg_init");
   if ( itype_[GE_REGULAR].size() > 0 ) {
     reg_init();
   }
   GPTLstop("GGrid::grid_init: reg_init");
 
+
+  cout << GComm::WorldRank() << ": GGrid::grid_init: find_min_dist..." << endl;;
   GPTLstart("GGrid::grid_init: find_min_dist");
   minnodedist_ = find_min_dist();
   GPTLstop("GGrid::grid_init: find_min_dist");
+  cout << GComm::WorldRank() << ": GGrid::grid_init: find_min_dist done." << endl;;
 
   bInitialized_ = TRUE;
 
@@ -465,6 +475,8 @@ void GGrid::def_init()
    }
    Jac_.range_reset();
    faceJac_.range_reset();
+
+   GComm::Synch(comm_);
    
 } // end of method def_init
 
@@ -511,10 +523,13 @@ void GGrid::reg_init()
    GSIZET ibeg, iend; // beg, end indices for global arrays
    GSIZET ibbeg, ibend; // beg, end indices for global arrays for bdy quantities
    GSIZET ifbeg, ifend; // beg, end indices for global arrays for face quantities
+char serr[1024];
    for ( GSIZET e=0; e<gelems_.size(); e++ ) {
      ibeg  = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
      ifbeg = gelems_[e]->ifbeg(); ifend = gelems_[e]->ifend();
      ibbeg = gelems_[e]->ibbeg(); ibend = gelems_[e]->ibend();
+sprintf(serr,"ibeg=%d; iend=%d; ifbeg=%d; ifend=%d; ibbeg=%d; ibbeg=%d",ibeg, iend, ifbeg, ifend, ibbeg, ibend);
+cout << GComm::WorldRank() << ": GGrid::reg_init: elem["<< e << "]: " << serr << endl;
      xe    = &gelems_[e]->xNodes();
    
      // Restrict global data to local scope:
@@ -540,13 +555,14 @@ void GGrid::reg_init()
 
 
      // Set the geom/metric quantities using element data:
+cout << GComm::WorldRank() << " GGrid::reg_init: elem["<< e << "]: calling dogeom..." << endl;
      if ( GDIM == 2 ) {
        gelems_[e]->dogeom2d(rijtmp, dXidX_, Jac_, faceJac_, faceNormal_, bdyNormal_);
      } 
      else if ( GDIM == 3 ) {
        gelems_[e]->dogeom3d(rijtmp, dXidX_, Jac_, faceJac_, faceNormal_, bdyNormal_);
      }
-    
+cout << GComm::WorldRank() << " GGrid::reg_init: elem["<< e << "]: dogeom done." << endl;
       
    } // end, element loop
 
@@ -563,6 +579,8 @@ void GGrid::reg_init()
    Jac_.range_reset();
    faceJac_.range_reset();
    for ( GSIZET j=0; j<nxy; j++ ) xNodes_[j].range_reset();
+
+   GComm::Synch(comm_);
    
 } // end of method reg_init
 
@@ -666,6 +684,7 @@ GFTYPE GGrid::find_min_dist()
   GFTYPE xmin = std::numeric_limits<GFTYPE>::max();
   GFTYPE xgmin;
 
+  GComm::Synch(comm_);
 
   // Get grid dimension:
   GINT nxy = gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
@@ -680,7 +699,6 @@ GFTYPE GGrid::find_min_dist()
     dx = p1 - p0; 
     if ( dx.norm() > 0.0 ) xmin = MIN(xmin, dx.norm()); 
   }
-
   GComm::Allreduce(&xmin, &xgmin, 1, T2GCDatatype<GFTYPE>() , GC_OP_MIN, comm_);
   return xgmin;
 

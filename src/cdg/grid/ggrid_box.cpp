@@ -308,8 +308,6 @@ void GGridBox::do_grid2d(GINT irank)
   // only for this task:
   gdd_->doDD(ftcentroids_, irank, iind);
 
-  GPP(comm_, "do_grid2d: iind=" << iind);
-
   GSIZET i, n;
   GSIZET nvnodes;   // no. vol nodes
   GSIZET nfnodes;   // no. face nodes
@@ -320,6 +318,7 @@ void GGridBox::do_grid2d(GINT irank)
   for ( GSIZET n=0; n<iind.size(); n++ ) { // for each hex in irank's mesh
     i = iind[n];
 
+cout << GComm::WorldRank() << ": GGrid::do_grid2d: qmesh[" << i << "]=" << qmesh_[i] << endl;
     pelem = new GElem_base(GE_REGULAR, gbasis_);
     xNodes  = &pelem->xNodes();  // node spatial data
     xiNodes = &pelem->xiNodes(); // node ref interval data
@@ -327,7 +326,6 @@ void GGridBox::do_grid2d(GINT irank)
     bdy_ind = &pelem->bdy_indices(); // get bdy indices data member
     bdy_typ = &pelem->bdy_types  (); // get bdy types data member
     bdy_ind->clear(); bdy_typ->clear();
-    GPP(comm_,"GGridBox::do_grid2d: qmesh[" << i << "]=" << qmesh_[i]);
     for ( GSIZET l=0; l<ndim_; l++ ) { // loop over element Cart coords
       (*xNodes)[l] = 0.0;
       for ( GSIZET m=0; m<pow(2,ndim_); m++ ) { // loop over verts given in Cart coords
@@ -360,14 +358,12 @@ void GGridBox::do_grid2d(GINT irank)
       }
     }
 
-    GPP(comm_,"GridBox:do_grid2d: elem[" << i << "]: bdy_ind=" << *bdy_ind);
 
     gelems_.push_back(pelem);
 
     // Set global bdy types at each bdy_ind (this is a coarse 
     // application; finer control may be exercised in callback):
     set_global_bdytypes_2d(*pelem);
-    GPP(comm_,"GridBox:do_grid2d: set_global_bdytypes_2d done.");
 
     // Find global global interior and bdy start & stop indices represented 
     // locally within element:
@@ -749,8 +745,6 @@ void GGridBox::periodize()
     n++;
   }
 
-GPP(comm_,"GGridBox::periodize: periodicids=" << periodicids_);
-GPP(comm_,"GGridBox::periodize: periodicdirs=" << periodicdirs_);
 
   // Now, cycle through periodic nodes and periodize coordinates:
   for ( GSIZET k=0; k<periodicids_.size(); k++ ) { // for each periodic node
