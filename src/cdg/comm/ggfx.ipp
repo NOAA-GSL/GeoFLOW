@@ -925,7 +925,9 @@ GBOOL GGFX<T>::extractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedData)
     } // end, while j loop
   }
 
+#if defined(GGFX_TRACE_OUTPUT)
   GPP(comm_, serr << "nigltmp=" << nl << " igltmp=" << igltmp);
+#endif
 
   nnidmax = nindtmp.maxn(nt);       // max # global indices for a remote task
   iOpL2RTasks_  .resize(nt);
@@ -1093,8 +1095,8 @@ GBOOL GGFX<T>::doOp(GTVector<T> &u, GGFX_OP op)
   GBOOL     bret=TRUE;
   GString   serr = "GGFX<T>::doOp(1): ";
 
-  GPP(comm_, serr << "iOpL2LIndices=" << iOpL2LIndices_);
 #if defined(GGFX_TRACE_OUTPUT)
+  GPP(comm_, serr << "iOpL2LIndices=" << iOpL2LIndices_);
   GPP(comm_, serr << "Doing first localGS...");
 #endif
   
@@ -1133,9 +1135,8 @@ GBOOL GGFX<T>::doOp(GTVector<T> &u, GGFX_OP op)
   }
 #if defined(GGFX_TRACE_OUTPUT)
   GPP(comm_,serr << "dataExchange done.");
-#endif
   GPP(comm_,serr << " recvBuff=" << recvBuff_);
-//GPP(comm_,serr << " recvBuff.size=" << recvBuff_.data().size());
+#endif
   bret = localGS(u, iOpL2RIndices_, nOpL2RIndices_, op, &recvBuff_);
   if ( !bret ) {
     std::cout << serr << "localGS (2) failed " << std::endl;
@@ -1266,8 +1267,6 @@ GBOOL GGFX<T>::localGS(GTVector<T> &qu, GSZMatrix &ilocal, GSZBuffer &nlocal, GG
   T       res;
   GLLONG  i, j, k;
 
-  GPP(comm_,serr << "op=" << op);
-
   // Perform GGFX_OP on the nodes shared by this proc:
   switch(op) {
     case GGFX_OP_SUM:
@@ -1356,7 +1355,6 @@ GBOOL GGFX<T>::localGS(GTVector<T> &qu, GSZMatrix &ilocal, GSZBuffer &nlocal, GG
       break;
     case GGFX_OP_SMOOTH:
       if ( qop == NULLPTR ) {
-GPP(comm_,serr<<"imult="<<imult_);
         for ( j=0; j<ilocal.size(2); j++ ) {
           res = static_cast<T>(0);
           for ( i=0; i<nlocal[j]; i++ ) { // do gather
@@ -1649,8 +1647,10 @@ void GGFX<T>::initMult()
     imult_[j] = 1.0/mult[j];
   }
 
+#if defined(GGFX_TRACE_OUTPUT)
   GPP(comm_,"GGFX<T>::initMult: mult=" << mult);
   GPP(comm_,"GGFX<T>::initMult: imult=" << imult_);
+#endif
 
 } // end of method initMult
 

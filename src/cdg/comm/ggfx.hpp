@@ -16,7 +16,7 @@
 #include "gtmatrix.hpp"
 #include "gcomm.hpp"
 
-#define GGFX_TRACE_OUTPUT
+#undef GGFX_TRACE_OUTPUT
 
 // GGFX reduction operation defs:
 #if !defined(GGFX_OP_DEF)
