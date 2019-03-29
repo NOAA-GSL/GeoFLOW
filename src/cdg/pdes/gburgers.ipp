@@ -79,7 +79,7 @@ update_bdy_callback_  (NULLPTR)
   static_assert(std::is_same<State,GTVector<GTVector<GFTYPE>*>>::value,
                 "State is of incorrect type"); 
   assert(tmp.size() >= req_tmp_size() && "Insufficient tmp space provided");
-  assert(doheat_ != bpureadv_ && "Invalid PDE configuration");
+  assert(!(doheat_ && bpureadv_) && "Invalid PDE configuration");
 
   valid_types_.resize(4);
   valid_types_[0] = GSTEPPER_EXRK;
