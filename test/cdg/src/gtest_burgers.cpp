@@ -445,13 +445,13 @@ void update_dirichlet(const GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u, GTVector<
 //**********************************************************************************
 void compute_dirplnwave_burgers(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVector<GTVector<GFTYPE>*> &ua)
 {
-  GBOOL            bplanar=TRUE;
-  GBOOL            brot   =FALSE;
+  GBOOL            bplanar=TRUE; // planar or circularized
+  GBOOL            brot   =TRUE;
   GSIZET           nxy;
   GFTYPE           A, R0, r2, t0, tdenom;
-  GFTYPE           denom, trt;
+  GFTYPE           denom, K2, trt;
   GFTYPE           efact, tfact, xfact;
-  GTVector<GFTYPE> K[GDIM], xx(GDIM), si(GDIM), sig(GDIM);
+  GTVector<GFTYPE> K(GDIM), xx(GDIM), si(GDIM), sig(GDIM);
   GTPoint<GFTYPE>  r0(3), P0(3), gL(3);
 
   PropertyTree heatptree = ptree.getPropertyTree("init_lump");
@@ -483,12 +483,14 @@ void compute_dirplnwave_burgers(GGrid &grid, GFTYPE &t, const PropertyTree& ptre
   if ( brot ) {
     // If doing a rotated planar wave:
     nu_[0] = 5.0e-3;
-    A    = 1.0e4;
-    R0   = 5.0;
-    t0   = 5.0e-2;
+    A    = 1.0;
+    R0   = 1.0;
+    t0   = 0.1;
     if ( t == 0.0 ) t = t0;
     K[0] = 1.0; K[1] = 2.0;
     if ( GDIM == 3 ) K[2] = 0.0;
+    K2 = 0.0;
+    for ( GSIZET i=0; i<GDIM; i++ ) K2 += K[i]*K[i];
   }
   else {
     // If not doing a rotated planar wave:
@@ -499,12 +501,23 @@ void compute_dirplnwave_burgers(GGrid &grid, GFTYPE &t, const PropertyTree& ptre
     if ( t == 0.0 ) t = t0;
     K[0] = 1.0; K[1] = 0.0;
     if ( GDIM == 3 ) K[2] = 0.0;
+    K2 = 1.0;
   }
- 
+  t *= K2;
+
+
   for ( GSIZET j=0; j<nxy; j++ ) {
     r2 = 0.0;
+    if ( GDIM == 2 ) {
+      xx[0] = K[0] * (*xnodes)[0][j]  + K[1] * (*xnodes)[1][j];
+      xx[1] = 0.0;
+    }
+    else if ( GDIM ==3 ) {
+      xx[0] = K[0] * (*xnodes)[0][j]  + K[1] * (*xnodes)[1][j];
+      xx[1] = 0.0;
+      xx[2] = 0.0;
+    }
     for ( GSIZET i=0; i<GDIM; i++ ) {
-      xx[i] = (*xnodes)[i][j] ; //- r0[i];
       (*ua[i])[j] = 0.0;
       r2   += xx[i]*xx[i];
     }
