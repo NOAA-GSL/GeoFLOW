@@ -19,7 +19,6 @@ for itask = 0:ntasks-1
   for j=1:2
     fname = sprintf('%s.%04d.out', scoord{j}, itask)
     [x{j} dim nelems porder gtype time] = rgeoflow(fname, 8, 'ieee-le');
-x{j}
   end
 
 
