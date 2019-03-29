@@ -1285,7 +1285,6 @@ GBOOL GGFX<T>::localGS(GTVector<T> &qu, GSZMatrix &ilocal, GSZBuffer &nlocal, GG
         for ( j=0; j<ilocal.size(2); j++ ) {
           for ( i=0; i<nlocal[j]; i++ ) { // do scatter
             for ( k=0; k<nOpR2LMult_(i,j); k++ ) {
-//             qu[ilocal(i,j)] += (*qop)(i,j);
                qu[iOpR2LIndices_(i,j)[k]] += (*qop)(i,j);
             }
           }
@@ -1307,7 +1306,9 @@ GBOOL GGFX<T>::localGS(GTVector<T> &qu, GSZMatrix &ilocal, GSZBuffer &nlocal, GG
       else {
         for ( j=0; j<ilocal.size(2); j++ ) {
           for ( i=0; i<nlocal[j]; i++ ) {
-             qu[ilocal(i,j)] *= (*qop)(i,j);
+            for ( k=0; k<nOpR2LMult_(i,j); k++ ) {
+               qu[iOpR2LIndices_(i,j)[k]] *= (*qop)(i,j);
+            }
           }
         }
       }
@@ -1327,7 +1328,9 @@ GBOOL GGFX<T>::localGS(GTVector<T> &qu, GSZMatrix &ilocal, GSZBuffer &nlocal, GG
       else {
         for ( j=0; j<ilocal.size(2); j++ ) {
           for ( i=0; i<nlocal[j]; i++ ) {
-             qu[ilocal(i,j)] = MIN(qu[ilocal(i,j)],(*qop)(i,j));
+            for ( k=0; k<nOpR2LMult_(i,j); k++ ) {
+               qu[iOpR2LIndices_(i,j)[k]] = MAX(qu[iOpR2LIndices_(i,j)[k]],(*qop)(i,j));
+            }
           }
         }
       }
@@ -1348,7 +1351,9 @@ GBOOL GGFX<T>::localGS(GTVector<T> &qu, GSZMatrix &ilocal, GSZBuffer &nlocal, GG
         for ( j=0; j<ilocal.size(2); j++ ) {
           res = std::numeric_limits<T>::max();
           for ( i=0; i<nlocal[j]; i++ ) {
-             qu[ilocal(i,j)] = MIN(qu[ilocal(i,j)],(*qop)(i,j));
+            for ( k=0; k<nOpR2LMult_(i,j); k++ ) {
+               qu[iOpR2LIndices_(i,j)[k]] = MIN(qu[iOpR2LIndices_(i,j)[k]],(*qop)(i,j));
+            }
           }
         }
       }
@@ -1369,7 +1374,6 @@ GBOOL GGFX<T>::localGS(GTVector<T> &qu, GSZMatrix &ilocal, GSZBuffer &nlocal, GG
         for ( j=0; j<ilocal.size(2); j++ ) {
           for ( i=0; i<nlocal[j]; i++ ) { // do scatter
             for ( k=0; k<nOpR2LMult_(i,j); k++ ) {
-//             qu[ilocal(i,j)] += (*qop)(i,j);
                qu[iOpR2LIndices_(i,j)[k]] += (*qop)(i,j);
             }
           }
@@ -1437,7 +1441,9 @@ GBOOL GGFX<T>::localGS(GTVector<T> &qu, GTVector<GSIZET> &iind,
       else {
         for ( j=0; j<ilocal.size(2); j++ ) {
           for ( i=0; i<nlocal[j]; i++ ) {
-             qu[iind[ilocal(i,j)]] += (*qop)(i,j);
+            for ( k=0; k<nOpR2LMult_(i,j); k++ ) {
+               qu[iind[iOpR2LIndices_(i,j)[k]]] += (*qop)(i,j);
+            }
           }
         }
       }
@@ -1457,7 +1463,9 @@ GBOOL GGFX<T>::localGS(GTVector<T> &qu, GTVector<GSIZET> &iind,
       else {
         for ( j=0; j<ilocal.size(2); j++ ) {
           for ( i=0; i<nlocal[j]; i++ ) {
-             qu[iind[ilocal(i,j)]] *= (*qop)(i,j);
+            for ( k=0; k<nOpR2LMult_(i,j); k++ ) {
+               qu[iind[iOpR2LIndices_(i,j)[k]]] *= (*qop)(i,j);
+            }
           }
         }
       }
@@ -1477,7 +1485,9 @@ GBOOL GGFX<T>::localGS(GTVector<T> &qu, GTVector<GSIZET> &iind,
       else {
         for ( j=0; j<ilocal.size(2); j++ ) {
           for ( i=0; i<nlocal[j]; i++ ) {
-             qu[iind[ilocal(i,j)]] = MAX(qu[iind[ilocal(i,j)]],(*qop)(i,j));
+            for ( k=0; k<nOpR2LMult_(i,j); k++ ) {
+               qu[iind[iOpR2LIndices_(i,j)[k]]] *= MAX(qu[iind[iOpR2LIndices_(i,j)[k]]],(*qop)(i,j));
+            }
           }
         }
       }
@@ -1497,7 +1507,9 @@ GBOOL GGFX<T>::localGS(GTVector<T> &qu, GTVector<GSIZET> &iind,
       else {
         for ( j=0; j<ilocal.size(2); j++ ) {
           for ( i=0; i<nlocal[j]; i++ ) {
-             qu[iind[ilocal(i,j)]] = MAX(qu[iind[ilocal(i,j)]],(*qop)(i,j));
+            for ( k=0; k<nOpR2LMult_(i,j); k++ ) {
+               qu[iind[iOpR2LIndices_(i,j)[k]]] *= MIN(qu[iind[iOpR2LIndices_(i,j)[k]]],(*qop)(i,j));
+            }
           }
         }
       }
@@ -1517,7 +1529,9 @@ GBOOL GGFX<T>::localGS(GTVector<T> &qu, GTVector<GSIZET> &iind,
       else {
         for ( j=0; j<ilocal.size(2); j++ ) {
           for ( i=0; i<nlocal[j]; i++ ) { // do scatter
-             qu[iind[ilocal(i,j)]] += (*qop)(i,j);
+            for ( k=0; k<nOpR2LMult_(i,j); k++ ) {
+               qu[iind[iOpR2LIndices_(i,j)[k]]] += (*qop)(i,j);
+            }
           }
         }
         for ( i=0; i<iind.size(); i++ ) { // do H1-smoothing
