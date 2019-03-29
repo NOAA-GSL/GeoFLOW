@@ -113,8 +113,7 @@ GBOOL GGFX<T>::init(GNIDBuffer &glob_index)
 #if defined(GGFX_TRACE_OUTPUT)
     GPP(comm_,serr << "initSort...");
 #endif
-  bret = initSort(glob_index, iOpL2RTasks_, iOpL2RIndices_, nOpL2RIndices_, 
-                  iOpR2LIndices_, nOpR2LIndices_, iOpL2LIndices_, nOpL2LIndices_);
+  bret = initSort(glob_index);
   if ( !bret ) {
     GPP(comm_,serr << "initSort failed");
     exit(1);
@@ -139,29 +138,27 @@ GBOOL GGFX<T>::init(GNIDBuffer &glob_index)
 // METHOD: initSort
 // DESC  : Performs sorting for initialization of global gather-scatter operation.
 // ARGS   : glob_index: global index list input to Init
-//          iOpL2RTasks     : returned; list of task ids to send rows of iOpIndices to;
-//                           receive from
-//          iOpL2RIndices   : matrix returned , 1 row for each task in iOpTasks, 
-//                           containing columns of local indices into the glob_index array:
-//                row 0, task 0: index0 index1 index2....
-//                row 1, task 1: index0 index1 index2....
-//                row 2, task 2: index0 index1 index2....
-//                           This data is used to send data.
-//          nOpL2RIndices : returned, number of OpSRIndices for each task
-//          iOpL2LIndices: returned, matrix of indices into local glob_index; each column
-//                         represents a shared (global) index, and each row represents 
-//                         the index to the same shared index 
-//          nOpL2LIndices: returned, for each column in iOpL2LIndices, the number
-//                         of local indices representing the same shared node.
+//            Note:
+//            iOpL2RTasks     : list of task ids to send rows of iOpIndices to;
+//                             receive from
+//            iOpL2RIndices   : matrix returned , 1 row for each task in iOpTasks, 
+//                             containing columns of local indices into the glob_index array:
+//                  row 0, task 0: index0 index1 index2....
+//                  row 1, task 1: index0 index1 index2....
+//                  row 2, task 2: index0 index1 index2....
+//                             This data is used to send data.
+//            nOpL2RIndices : number of OpSRIndices for each task
+//            iOpL2LIndices: matrix of indices into local glob_index; each column
+//                           represents a shared (global) index, and each row represents 
+//                           the index to the same shared index 
+//            nOpL2LIndices: for each column in iOpL2LIndices, the number
+//                           of local indices representing the same shared node.
 //                ...
 // RETURNS: 
 //          TRUE on success; else FALSE
 //************************************************************************************
 template<typename T>
-GBOOL GGFX<T>::initSort(GNIDBuffer  &glob_index, GIBuffer &iOpL2RTasks, 
-                     GSZMatrix &iOpL2RIndices, GSZBuffer &nOpL2RIndices, 
-                     GSZMatrix &iOpR2LIndices, GSZBuffer &nOpR2LIndices, 
-                     GSZMatrix &iOpL2LIndices, GSZBuffer &nOpL2LIndices)
+GBOOL GGFX<T>::initSort(GNIDBuffer  &glob_index)
 {
   GString serr = "GGFX<T>::initSort: ";
   GBOOL   bret;
@@ -244,8 +241,7 @@ GBOOL GGFX<T>::initSort(GNIDBuffer  &glob_index, GIBuffer &iOpL2RTasks,
 
   // Finally, find list of local indices and for send/receive (SR) operations, and
   // for purely local operations:
-  bret = extractOpData(glob_index, mySharedData, iOpL2RTasks, iOpL2RIndices, nOpL2RIndices, 
-                       iOpR2LIndices, nOpR2LIndices, iOpL2LIndices, nOpL2LIndices);
+  bret = extractOpData(glob_index, mySharedData);
   if ( !bret ) {  
     GPP(comm_,serr << "extractOpData failed ");
     exit(1);
@@ -852,34 +848,33 @@ GBOOL GGFX<T>::doCommonNodeSort(GNIDBuffer &glob_index, GNIDMatrix &irWork,
 //          worktask1, col 1:   nodeid0 NTask0 TaskID00 TaskID01 ...; nodeid1 NTask1 TaskID10 TaskID11...
 //                ...
 //
-//          iOpL2RTasks   : returned; list of task ids to send rows of iOpIndices to. Do not
-//                          include this rank.
-//          iOpL2RIndices : returned; 1 column for each task in iOpTasks, 
-//                          containing rows of local indices into the glob_index array.
-//                          These indices point to a single global node id, and
-//                          this data is used to send the local data to other tasks that
-//                          own it. Form is:
-//                col 0, task 0: index0 index1 index2....
-//                col 1, task 1: index0 index1 index2....
-//                col 2, task 2: index0 index1 index2....
-//          nOpL2RIndices : returned; length of OpL2RIndices record to be sent to each task
-//          iOpR2LIndices : returned; 1 column for each task, provides the local indices 
-//                          with which remote data will be operated on.
-//          nOpR2LIndices : returned; length of OpR2LIndices record to be sent to each task
-//          iOpL2LIndices : returned; matrix of indices into local glob_index; each column
-//                          represents a shared (global) index, and each row represents 
-//                          an index to the same shared index. Used for only local operations
-//                          (on this task only).
-//          nOpL2LIndices : returned; for each column in iOpL2LIndices, the number
-//                          of local indices representing the same shared node.
+//            Note: 
+//            iOpL2RTasks_  : list of task ids to send rows of iOpIndices to. Do not
+//                            include this rank.
+//            iOpL2RIndices_: 1 column for each task in iOpTasks, 
+//                            containing rows of local indices into the glob_index array.
+//                            These indices point to a single global node id, and
+//                            this data is used to send the local data to other tasks that
+//                            own it. Form is:
+//                  col 0, task 0: index0 index1 index2....
+//                  col 1, task 1: index0 index1 index2....
+//                  col 2, task 2: index0 index1 index2....
+//            nOpL2RIndices_: length of OpL2RIndices record to be sent to each task
+//            iOpR2LIndices_: same dimensions as iOpL2RIndices, but with a 'depth'
+//                            array at each matrix element giving the local representations
+//                            of that global id.
+//            nOpR2LMult_   : multiplicity of each value in iOpR2LIndices_ matrix.
+//            iOpL2LIndices_: matrix of indices into local glob_index; each column
+//                            represents a shared (global) index, and each row represents 
+//                            an index to the same shared index. Used for only local operations
+//                            (on this task only).
+//            nOpL2LIndices_: for each column in iOpL2LIndices, the number
+//                            of local indices representing the same shared node.
 // RETURNS: 
 //          TRUE on success; else FALSE
 //************************************************************************************
 template<typename T>
-GBOOL GGFX<T>::extractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedData, GIBuffer &iOpL2RTasks, 
-                          GSZMatrix &iOpL2RIndices, GSZBuffer &nOpL2RIndices,
-                          GSZMatrix &iOpR2LIndices, GSZBuffer &nOpR2LIndices,
-                          GSZMatrix &iOpL2LIndices, GSZBuffer &nOpL2LIndices)
+GBOOL GGFX<T>::extractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedData)
 {
   GString serr = "GGFX<T>::extractOpData: ";
   GBOOL   bind, bret;
@@ -890,13 +885,13 @@ GBOOL GGFX<T>::extractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedData, G
   // 'global' shared nodes.
 
   // First, get sizes for indirection arrays:
-  GINT      itask, nt ;
-  GSIZET    index, index1, mult, nl, nnidmax;
-  GNODEID   nnid;
-  GIBuffer  itasktmp(nprocs_); itasktmp.set(-1);
-  GSZBuffer nindtmp (nprocs_); nindtmp.set(0);
+  GINT       itask, nt ;
+  GSIZET     index, index1, mult, nl, nnidmax;
+  GNODEID    nnid;
+  GIBuffer   itasktmp(nprocs_); itasktmp.set(-1);
+  GSZBuffer  nindtmp (nprocs_); nindtmp.set(0);
   GNIDBuffer igltmp(glob_index.size()); igltmp.set(0);
-  GSZBuffer ngltmp(glob_index.size()); ngltmp.set(0);
+  GSZBuffer  ngltmp(glob_index.size()); ngltmp.set(0);
   for ( j=0, nt=0, nl=0; j<mySharedData.size(2); j++ ) { // cyle over all work tasks
     if ( mySharedData(0,j)==-1 ) continue; // column contain no usable data
     i = 0; 
@@ -933,11 +928,11 @@ GBOOL GGFX<T>::extractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedData, G
   GPP(comm_, serr << "nigltmp=" << nl << " igltmp=" << igltmp);
 
   nnidmax = nindtmp.maxn(nt);       // max # global indices for a remote task
-  iOpL2RTasks  .resize(nt);
-  nOpL2RIndices.resize(nt);
-  iOpL2RIndices.resize(nnidmax,nt); // of size # unique shared nodes X  # remote tasks 
+  iOpL2RTasks_  .resize(nt);
+  nOpL2RIndices_.resize(nt);
+  iOpL2RIndices_.resize(nnidmax,nt); // of size # unique shared nodes X  # remote tasks 
 
-  iOpL2RIndices.set(999999);
+  iOpL2RIndices_.set(999999);
 
   // Resize send, recv, & local buffers for operations:
   GSIZET lmax[2], gmax[2];
@@ -947,13 +942,13 @@ GBOOL GGFX<T>::extractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedData, G
   sendBuff_.resize(gmax[0],gmax[1]);
   recvBuff_.resize(gmax[0],gmax[1]);    
 
-  iOpL2RTasks  .set(itasktmp.data(),nt);    // task ids to send/recv to/from
-  nOpL2RIndices.set(nindtmp.data (),nt);    // # indices to send/rcv for each task
+  iOpL2RTasks_  .set(itasktmp.data(),nt);    // task ids to send/recv to/from
+  nOpL2RIndices_.set(nindtmp.data (),nt);    // # indices to send/rcv for each task
 
-  iOpL2LIndices.resize(ngltmp.maxn(nl),nl); // local indices pointing to shared global nodes
-  iOpL2LIndices.set(999999);
-  nOpL2LIndices.resize(nl); 
-  nOpL2LIndices.set(ngltmp.data(),nl);
+  iOpL2LIndices_.resize(ngltmp.maxn(nl),nl); // local indices pointing to shared global nodes
+  iOpL2LIndices_.set(999999);
+  nOpL2LIndices_.resize(nl); 
+  nOpL2LIndices_.set(ngltmp.data(),nl);
 
   // Find indirection arrays for local indices of shared nodes that will
   // be sent & recvd from remote tasks, and for these that are entirely local:
@@ -970,8 +965,8 @@ GBOOL GGFX<T>::extractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedData, G
         itask = mySharedData(i+k+2,j);
         if ( itask == rank_ ) continue;
         if ( glob_index.contains(nnid,index1) ) {
-          if ( iOpL2RTasks.contains(itask, index) ) {
-            iOpL2RIndices(nindtmp[index],index) = index1; // assign local index to global id
+          if ( iOpL2RTasks_.contains(itask, index) ) {
+            iOpL2RIndices_(nindtmp[index],index) = index1; // assign local index to global id
             nindtmp[index]++;
           } 
         }
@@ -980,37 +975,56 @@ GBOOL GGFX<T>::extractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedData, G
     }
   }
 
+  // Re-order iOpL2RIndices s.t. global ids indices refer to
+  // are re-ordered smallest to largest. By basing ordering on 
+  // global ids, we ensure that the sent and received data
+  // align:
+  GNIDBuffer iglsort(nOpL2RIndices_.max()); 
+  GSZBuffer  isort, ilocal(nOpL2RIndices_.max());
+  for ( j=0, m=0; j<iOpL2RIndices_.size(2); j++ ) { // loop over tasks
+    for ( i=0; i<nOpL2RIndices_[j]; i++ ) { // get list of global ids
+      iglsort[i] = glob_index[iOpL2RIndices_(i,j)];
+      ilocal [i] = iOpL2RIndices_(i,j);     // copy this task's local ids
+    }
+    iglsort.range(0,nOpL2RIndices_[j]-1);   // restrict range
+    iglsort.sortincreasing(isort);         // sort global list
+    iglsort.range_reset();                 // reset range
+    for ( i=0; i<nOpL2RIndices_[j]; i++ ) { // re-order local indices
+      iOpL2RIndices_(i,j) = ilocal[isort[i]];
+    }
+  }
+  
 
-  // ...indirection arrays (R2L = 'remote to local'): apply remote data to local
-  // indices: 1 column for each global index, and rows indicate indices of other 
-  // local representations of that global index into glob_index array:
-#if 1
+  // ...indirection arrays (R2L = 'remote to local'): This is a matrix of same
+  // size as iOpL2RIndices, but with a 'depth' that indicates the multiplicity
+  // of each global id from each task. It is used to combine remote data with
+  // local data:
   GSIZET  maxmult=0;
-  for ( j=0; j<iOpL2RIndices.size(2); j++ ) { // loop over all unique indices to find max sizes
-    for ( i=0; i<nOpL2RIndices[j]; i++ ) {
-      nnid = glob_index[iOpL2RIndices(i,j)];
+  for ( j=0; j<iOpL2RIndices_.size(2); j++ ) { // loop over all unique indices to find max sizes
+    for ( i=0; i<nOpL2RIndices_[j]; i++ ) {
+      nnid = glob_index[iOpL2RIndices_(i,j)];
       maxmult = MAX(maxmult,glob_index.multiplicity(nnid)); 
     }
   }
-#endif
-  iOpR2LIndices.resize(maxmult,iOpL2RIndices.size(2)); 
-  nOpR2LIndices.resize(nOpL2RIndices.size());
-  iOpR2LIndices.set(999999); 
-
-GPP(comm_,"(1) iOpR2LIndices=" << iOpR2LIndices);
+  iOpR2LIndices_.resize(iOpL2RIndices_.size(1),iOpL2RIndices_.size(2)); 
+  nOpR2LMult_.resize(iOpL2RIndices_.size(1),iOpL2RIndices_.size(2)); 
+  iOpR2LIndices_.set(999999); 
+  nOpR2LMult_.set(0);
+  for ( j=0; j<iOpR2LIndices_.size(2); j++ ) { 
+    for ( i=0; i<iOpR2LIndices_.size(1); i++ ) iOpR2LIndices_(i,j).resize(maxmult); 
+  }
 
   GSIZET *iwhere=0;
   GSIZET  nw=0;
-  for ( j=0, m=0; j<iOpL2RIndices.size(2); j++ ) { // loop over tasks
-    for ( i=0; i<nOpL2RIndices[j]; i++ ) { // for each unique global index, find local indices
-      nnid = glob_index[iOpL2RIndices(i,j)]; // get 'global' id
+  for ( j=0, m=0; j<iOpR2LIndices_.size(2); j++ ) { // loop over global ids
+    for ( i=0; i<nOpL2RIndices_[j]; i++ ) { // for each unique global index, find local indices
+      nnid = glob_index[iOpL2RIndices_(i,j)]; // get 'global' id
       mult = glob_index.multiplicity(nnid, iwhere, nw);
-      for ( k=0; k<mult; k++ ) iOpR2LIndices(k,j) = iwhere[k]; 
-      nOpR2LIndices[j] = mult;
+      for ( k=0; k<mult; k++ ) iOpR2LIndices_(i,j)[k] = iwhere[k]; 
+      nOpR2LMult_(i,j) = mult;
       m++;
     }
   }
-GPP(comm_,"(2) iOpR2LIndices=" << iOpR2LIndices);
 
   // ... indirection arrays (L2L = 'local to local ') for local operations:
   // 1 column for each 'global' node, and rows refer to the local indices that
@@ -1027,7 +1041,7 @@ GPP(comm_,"(2) iOpR2LIndices=" << iOpR2LIndices);
         bind = igltmp.containsn(nnid, nl, index); // where global id sits in local tmp array
         if ( bind ) {
           mult  = glob_index.multiplicity(nnid, iwhere, nw); // # times this node id represented
-          for ( m=0; m<mult; m++ ) iOpL2LIndices(m,index) = iwhere[m];
+          for ( m=0; m<mult; m++ ) iOpL2LIndices_(m,index) = iwhere[m];
         }
       }
       i += mySharedData(i+1,j) + 2; // skip to next global node id
@@ -1035,13 +1049,13 @@ GPP(comm_,"(2) iOpR2LIndices=" << iOpR2LIndices);
   }
 
 #if defined(GGFX_TRACE_OUTPUT)
-  GPP(comm_,serr << "iOpL2RTasks  ="  << iOpL2RTasks );
-  GPP(comm_,serr << "nOpL2RIndices="  << nOpL2RIndices);
-  GPP(comm_,serr << "iOpL2RIndices="  << iOpL2RIndices);
-  GPP(comm_,serr << "nOpR2LIndices="  << nOpR2LIndices);
-  GPP(comm_,serr << "iOpR2LIndices="  << iOpR2LIndices);
-  GPP(comm_,serr << "nOpL2LIndices="  << nOpL2LIndices);
-  GPP(comm_,serr << "iOpL2LIndices="  << iOpL2LIndices);
+  GPP(comm_,serr << "iOpL2RTasks  ="  << iOpL2RTasks_ );
+  GPP(comm_,serr << "nOpL2RIndices="  << nOpL2RIndices_);
+  GPP(comm_,serr << "iOpL2RIndices="  << iOpL2RIndices_);
+  GPP(comm_,serr << "nOpR2LIndices="  << nOpR2LMult_);
+  GPP(comm_,serr << "iOpR2LIndices="  << iOpR2LIndices_);
+  GPP(comm_,serr << "nOpL2LIndices="  << nOpL2LIndices_);
+  GPP(comm_,serr << "iOpL2LIndices="  << iOpL2LIndices_);
 #endif
 
 
@@ -1121,10 +1135,8 @@ GBOOL GGFX<T>::doOp(GTVector<T> &u, GGFX_OP op)
   GPP(comm_,serr << "dataExchange done.");
 #endif
   GPP(comm_,serr << " recvBuff=" << recvBuff_);
-  GPP(comm_,serr << " iOpR2LIndices=" << iOpR2LIndices_);
-  GPP(comm_,serr << " nOpR2LIndices=" << nOpR2LIndices_);
 //GPP(comm_,serr << " recvBuff.size=" << recvBuff_.data().size());
-  bret = localGS(u, iOpR2LIndices_, nOpR2LIndices_, op, &recvBuff_);
+  bret = localGS(u, iOpL2RIndices_, nOpL2RIndices_, op, &recvBuff_);
   if ( !bret ) {
     std::cout << serr << "localGS (2) failed " << std::endl;
     exit(1);
@@ -1252,7 +1264,7 @@ GBOOL GGFX<T>::localGS(GTVector<T> &qu, GSZMatrix &ilocal, GSZBuffer &nlocal, GG
 
   GString serr = "GGFX<T>::localGS (1): ";
   T       res;
-  GLLONG  i, j;
+  GLLONG  i, j, k;
 
   GPP(comm_,serr << "op=" << op);
 
@@ -1273,7 +1285,10 @@ GBOOL GGFX<T>::localGS(GTVector<T> &qu, GSZMatrix &ilocal, GSZBuffer &nlocal, GG
       else {
         for ( j=0; j<ilocal.size(2); j++ ) {
           for ( i=0; i<nlocal[j]; i++ ) { // do scatter
-             qu[ilocal(i,j)] += (*qop)(i,j);
+            for ( k=0; k<nOpR2LMult_(i,j); k++ ) {
+//             qu[ilocal(i,j)] += (*qop)(i,j);
+               qu[iOpR2LIndices_(i,j)[k]] += (*qop)(i,j);
+            }
           }
         }
       }
@@ -1355,7 +1370,10 @@ GPP(comm_,serr<<"imult="<<imult_);
       else {
         for ( j=0; j<ilocal.size(2); j++ ) {
           for ( i=0; i<nlocal[j]; i++ ) { // do scatter
-             qu[ilocal(i,j)] += (*qop)(i,j);
+            for ( k=0; k<nOpR2LMult_(i,j); k++ ) {
+//             qu[ilocal(i,j)] += (*qop)(i,j);
+               qu[iOpR2LIndices_(i,j)[k]] += (*qop)(i,j);
+            }
           }
         }
         qu.pointProd(imult_); // apply inverse multiplicity to avg:

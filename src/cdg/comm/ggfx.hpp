@@ -46,10 +46,7 @@ private:
 // Private methods:
  
 // Init-specific methods:
-                      GBOOL initSort(GNIDBuffer  &glob_index, GIBuffer &iOpL2RTasks, 
-                                    GSZMatrix &iOpL2RIndices, GSZBuffer &nOpL2RIndices,
-                                    GSZMatrix &iOpR2LIndices, GSZBuffer &nOpR2LIndices,
-                                    GSZMatrix &iOpL2LIndices, GSZBuffer &nOpL2LIndices);
+                      GBOOL initSort(GNIDBuffer  &glob_index);
                       GBOOL binSort(GNIDBuffer &glob_index   , GIMatrix    &gBinMat, 
                                     GINT       &nlocfilledbins,
                                     GINT       &maxfilledbins, GINT       &maxbinmem,
@@ -58,10 +55,7 @@ private:
                       GBOOL binWorkFill(GNIDBuffer &, GNIDMatrix &, GNIDMatrix &, GIBuffer &);
                       GBOOL createWorkBuffs(GIMatrix &, GINT, GIBuffer &, GNIDMatrix &, GIBuffer &, GNIDMatrix &);
                       GBOOL doCommonNodeSort(GNIDBuffer &, GNIDMatrix &, GIBuffer &, GIBuffer &, GNIDMatrix &);
-                      GBOOL extractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedNodes, GIBuffer &iOpL2RTasks, 
-                                          GSZMatrix &iOpL2RIndices, GSZBuffer &nOpL2RIndices, 
-                                          GSZMatrix &iOpR2LIndices, GSZBuffer &nOpR2LIndices, 
-                                          GSZMatrix &iOpL2LIndices, GSZBuffer &nOpL2LIndices);
+                      GBOOL extractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedNodes);
  
 
                      // doOp-specific methods:
@@ -85,11 +79,12 @@ GNODEID            maxNodeVal_   ;  // Node value dynamical range
 GNODEID            maxNodes_     ;  // total number of nodes distributed among all procs
 GNIDMatrix         gBinBdy_      ;  // global bin bdy ranges for each task [0,nporocs_-1]
 GIBuffer           iOpL2RTasks_  ;  // task ids to send op data to, and recv from
-GIBuffer           iOpR2LTasks_  ;  // task ids in order of receive
 GSZMatrix          iOpL2RIndices_;  // matrix with send/recv data for each off-task shared node
-GSZMatrix          iOpR2LIndices_;  // matrix with send/recv data for each off-task shared node
 GSZBuffer          nOpL2RIndices_;  // number shared nodes to snd/rcv for each task
-GSZBuffer          nOpR2LIndices_;  // number shared nodes to snd/rcv for each task
+GIBuffer           iOpR2LTasks_  ;  // task ids in order of receive
+GTMatrix<GTVector<GSIZET>>
+                   iOpR2LIndices_;  // matrix with send/recv data for each off-task shared node
+GTMatrix<GSIZET>   nOpR2LMult_   ;  // number shared nodes to snd/rcv for each task, and each shared node
 GSZMatrix          iOpL2LIndices_;  // matrix with local indices pointing to shared nodes
 GSZBuffer          nOpL2LIndices_;  // number valid columns in each row of iOpLoIndices_
 GTMatrix<T>        sendBuff_     ;  // send buffer
