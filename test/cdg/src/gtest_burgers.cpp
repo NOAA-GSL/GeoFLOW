@@ -520,7 +520,6 @@ void compute_dirplnwave_burgers(GGrid &grid, GFTYPE &t, const PropertyTree& ptre
       xx[0] = sum;
     }
     for ( i=0, r2=0.0; i<GDIM; i++ ) r2 += xx[i]*xx[i];  
-//  if ( bplanar ) r2 = xx[idir]*xx[idir]; // in dir of propagation 
 
 #if 0
 #if 1
