@@ -451,8 +451,7 @@ void compute_dirplnwave_burgers(GGrid &grid, GFTYPE &t, const PropertyTree& ptre
   GBOOL            bplanar=TRUE; // planar or circularized
   GBOOL            brot   =FALSE;
   GSIZET           i, j, idir, nxy;
-  GFTYPE           A, Re, r2, t0, tdenom;
-  GFTYPE           denom, K2, norm;
+  GFTYPE           A, K2, Re, r2, t0, tdenom;
   GFTYPE           efact, sum, tfact, xfact;
   GTVector<GFTYPE> K(GDIM), xx(GDIM), si(GDIM), sig(GDIM);
   GTPoint<GFTYPE>  r0(3), P0(3), gL(3);
@@ -472,8 +471,8 @@ void compute_dirplnwave_burgers(GGrid &grid, GFTYPE &t, const PropertyTree& ptre
   bc[3] = boxptree.getValue<GString>("bdy_y_1");
   bc[4] = boxptree.getValue<GString>("bdy_z_0");
   bc[5] = boxptree.getValue<GString>("bdy_z_1");
-  assert(bc.multiplicity("GBDY_DIRICHLET") >= 2*GDIM
-      && "Dirichlet boundaries must be set on all boundaries");
+//assert(bc.multiplicity("GBDY_DIRICHLET") >= 2*GDIM
+//    && "Dirichlet boundaries must be set on all boundaries");
 
   nxy = (*xnodes)[0].size(); // same size for x, y, z
 
@@ -492,9 +491,6 @@ void compute_dirplnwave_burgers(GGrid &grid, GFTYPE &t, const PropertyTree& ptre
   kprop  = nwaveptree.getArray<GFTYPE>("prop_dir");
   K      = kprop;
   K     *= 1.0/K.Eucnorm();
-
-  GPP(comm_, "nwave_init: bplanar = " << bplanar);
-  GPP(comm_, "nwave_init: K = " << K);
 
   K2     = 0.0 ; for ( GSIZET i=0; i<GDIM; i++ ) K2 += K[i]*K[i];
 
@@ -521,29 +517,6 @@ void compute_dirplnwave_burgers(GGrid &grid, GFTYPE &t, const PropertyTree& ptre
     }
     for ( i=0, r2=0.0; i<GDIM; i++ ) r2 += xx[i]*xx[i];  
 
-#if 0
-#if 1
-//  if ( brot ) {
-      // NOTE: not tested in 2D!
-      tdenom = 1.0/(4.0*nu_[0]*t);
-      tfact  = bplanar ? sqrt(t/t0): t/t0;
-      denom  = 1.0 / ( exp(Re) - 1.0 );
-      xfact  = 1.0 /( t * ( 1.0+(tfact*denom*exp(r2*tdenom)) ) );
-    
-      for ( i=0; i<GDIM; i++ ) (*ua[i])[j] = xx[i]*xfact;
-#else
-//  }
-//  else {
-      tdenom = 1.0/(4.0*nu_[0]*t);
-      tfact  = bplanar ? sqrt(t/A) : sqrt(t)/A;
-      efact  = tfact * exp(r2*tdenom);
-      xfact  = 1.0 /( t * (  1.0 + efact ) );
-      for ( i=0; i<GDIM; i++ ) (*ua[i])[j] = xx[i]*xfact;
-      // dU1max = 1.0 / ( t * (sqrt(t/A) + 1.0) );
-      // aArea  = 4.0*nu_[0]*log( 1.0 + sqrt(A/t) );
-//  }
-#endif
-#endif
     // u(x,t) = (x/t) [ 1 + sqrt(t/t0) (e^Re - 1)^-1 exp(x^2/(4 nu t)) ]^-1
     tdenom = 1.0/(4.0*nu_[0]*t);
     tfact  = bplanar ? sqrt(t/t0): t/t0;
