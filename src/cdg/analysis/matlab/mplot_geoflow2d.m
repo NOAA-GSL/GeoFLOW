@@ -12,7 +12,6 @@ if ntasks<= 0
   error('Grid data missing or incomplete');
 end
 
-figure;
 for itask = 0:ntasks-1
 
   % Read node coords:
@@ -24,6 +23,10 @@ for itask = 0:ntasks-1
 
   fname = sprintf('%s.%06d.%04d.out', svar, tindex, itask);
   [u dim nelems porder gtype time] = rgeoflow(fname, 8, 'ieee-le');
+  if ( itask == 0 )
+    figure;
+  end
+
  
   NN = double(porder + 1);
   lelem = prod(NN);  % data length per element
