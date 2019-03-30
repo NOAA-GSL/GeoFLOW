@@ -17,7 +17,7 @@ template<typename EquationType>
 GOutSimpleObserver<EquationType>::GOutSimpleObserver(typename ObserverBase<EquationType>::Traits &traits, Grid &grid):
 bprgrid_        (TRUE),
 cycle_          (0),
-ocycle_         (0),
+ocycle_         (1),
 cycle_last_     (0),
 time_last_      (0.0)
 { 
