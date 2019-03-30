@@ -2,8 +2,23 @@ function h = keplot_geoflow2d(s1var, s2var, tindex)
 %
 % Does a mesh plot kinetic energy of 2D GeoFLOW data
 %
+%  Usage:
+%    h = keplot_geoflow2d('u1','u2', 10)
+%
+%  Input:
+%    s1var   : prefix for v1 component file. Required
+%    s2var   : prefix for v2 component file. Required
+%    tindex  : time index for output. Required
+%
+%  Output:
+%    h       : plot handle
 
-ntasks = 2;
+%
+
+if nargin < 3 
+  error('must specify s1var, s2var, and tindex');
+end
+
 scoord = {'xgrid','ygrid' 'zgrid'};
 
 d = dir('xgrid.*');

@@ -2,6 +2,22 @@ function h = mplot_geoglow2d(svar, tindex)
 %
 % Does a mesh plot of 2D GeoFLOW data
 %
+%  Usage:
+%    h = mplot_geoflow2d('u1',10)
+%
+%  Input:
+%    s1var   : prefix for field file. Required
+%    tindex  : time index for output. Required
+%
+%  Output:
+%    h       : plot handle
+
+%
+
+if nargin < 2
+  error('must specify svar and tindex');
+end 
+
 
 ntasks = 2;
 scoord = {'xgrid','ygrid' 'zgrid'};
