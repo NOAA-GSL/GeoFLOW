@@ -446,26 +446,21 @@ void update_dirichlet(const GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u, GTVector<
 void compute_dirplnwave_burgers(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVector<GTVector<GFTYPE>*> &ua)
 {
   GBOOL            bplanar=TRUE; // planar or circularized
-  GBOOL            brot   =TRUE;
+  GBOOL            brot   =FALSE;
   GSIZET           nxy;
-  GFTYPE           A, R0, r2, t0, tdenom;
-  GFTYPE           denom, K2, trt;
+  GFTYPE           A, Re, r2, t0, tdenom;
+  GFTYPE           denom, K2, norm, trt;
   GFTYPE           efact, tfact, xfact;
   GTVector<GFTYPE> K(GDIM), xx(GDIM), si(GDIM), sig(GDIM);
   GTPoint<GFTYPE>  r0(3), P0(3), gL(3);
+  std::vector<GFTYPE> kprop;
 
-  PropertyTree heatptree = ptree.getPropertyTree("init_lump");
-  PropertyTree boxptree = ptree.getPropertyTree("grid_box");
+  PropertyTree nwaveptree = ptree.getPropertyTree("init_nwave");
+  PropertyTree boxptree   = ptree.getPropertyTree("grid_box");
 
   GTVector<GTVector<GFTYPE>> *xnodes = &grid_->xNodes();
 
   assert(grid.gtype() == GE_REGULAR && "Invalid element types");
-
-
-  // Get periodicity length, gL:
-  std::vector<GFTYPE> xyz0 = boxptree.getArray<GFTYPE>("xyz0");
-  std::vector<GFTYPE> dxyz = boxptree.getArray<GFTYPE>("delxyz");
-  P0 = xyz0; r0 = dxyz; gL = r0;
 
   GTVector<GString> bc(6);
   bc[0] = boxptree.getValue<GString>("bdy_x_0");
@@ -479,44 +474,43 @@ void compute_dirplnwave_burgers(GGrid &grid, GFTYPE &t, const PropertyTree& ptre
 
   nxy = (*xnodes)[0].size(); // same size for x, y, z
 
+  // From Whitham's book, in 1d:
+  // u(x,t) = (x/t) [ 1 + sqrt(t/to) (e^Re - 1)^-1 exp(x^2/(4 nu t))i ]^-1
+  // were Re is 'Reynolds' number: Re = A / 2nu; can think of
+  // A ~ U L scaling.
   // Set some parameters:
-  if ( brot ) {
-    // If doing a rotated planar wave:
-    nu_[0] = 5.0e-3;
-    A    = 1.0;
-    R0   = 1.0;
-    t0   = 0.1;
-    if ( t == 0.0 ) t = t0;
-    K[0] = 1.0; K[1] = 2.0;
-    if ( GDIM == 3 ) K[2] = 0.0;
-    K2 = 0.0;
-    for ( GSIZET i=0; i<GDIM; i++ ) K2 += K[i]*K[i];
-  }
-  else {
-    // If not doing a rotated planar wave:
-    nu_[0] = 0.1;
-    A    = 0.01;
-    R0   = 0.1;
-    t0   = 0.04;
-    if ( t == 0.0 ) t = t0;
-    K[0] = 1.0; K[1] = 0.0;
-    if ( GDIM == 3 ) K[2] = 0.0;
-    K2 = 1.0;
-  }
-  t *= K2;
+  r0.x1  = nwaveptree.getValue<GFTYPE>("x0"); 
+  r0.x2  = nwaveptree.getValue<GFTYPE>("y0"); 
+  r0.x3  = nwaveptree.getValue<GFTYPE>("z0"); 
+  A      = nwaveptree.getValue<GFTYPE>("ULparm",1.0);
+  Re     = nwaveptree.getValue<GFTYPE>("Re",100.0);
+  t0     = nwaveptree.getValue<GFTYPE>("t0",0.04);
+  bplanar= nwaveptree.getValue<GBOOL>("planar",TRUE);
+  kprop  = nwaveptree.getArray<GFTYPE>("prop_dir");
+  K      = kprop;
+  K     *= 1.0/K.Eucnorm();
+
+  GPP(comm_, "nwave_init: K = " << K);
+
+  K2     = 0.0 ; for ( GSIZET i=0; i<GDIM; i++ ) K2 += K[i]*K[i];
+  brot   = TRUE; for ( GSIZET i=0; i<GDIM; i++ ) brot = brot && K[i] != 0.0 ;
+
+  if ( t == 0.0 ) t = K2 * t0;
+  nu_[0] = A/(2.0*Re); // set nu from Re
 
 
   for ( GSIZET j=0; j<nxy; j++ ) {
-    r2 = 0.0;
+    for ( GSIZET i=0; i<GDIM; i++ ) xx[i] = (*xnodes)[i][j] - r0[i];
     if ( GDIM == 2 ) {
-      xx[0] = K[0] * (*xnodes)[0][j]  + K[1] * (*xnodes)[1][j];
+      xx[0] = K[0] * xx[0]  + K[1] * xx[1];
       xx[1] = 0.0;
     }
     else if ( GDIM ==3 ) {
-      xx[0] = K[0] * (*xnodes)[0][j]  + K[1] * (*xnodes)[1][j];
+      xx[0] = K[0] * xx[0]  + K[1] * xx[1];
       xx[1] = 0.0;
       xx[2] = 0.0;
     }
+    r2 = 0.0;
     for ( GSIZET i=0; i<GDIM; i++ ) {
       (*ua[i])[j] = 0.0;
       r2   += xx[i]*xx[i];
@@ -527,7 +521,7 @@ void compute_dirplnwave_burgers(GGrid &grid, GFTYPE &t, const PropertyTree& ptre
       // NOTE: not tested in 2D!
       tdenom = 1.0/(4.0*nu_[0]*t);
       trt    = bplanar ? sqrt(t/t0): t/t0;
-      denom  = 1.0 / ( exp(R0) - 1.0 );
+      denom  = 1.0 / ( exp(Re) - 1.0 );
       xfact  = 1.0 /( t * ( 1.0+(trt*denom*exp(r2*tdenom)) ) );
     
 
@@ -795,7 +789,7 @@ void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVecto
   }
 
   // Inititialize for nonlinear advection:
-  if ( sblock == "init_lump" ) {
+  if ( sblock == "init_nwave" ) {
     compute_dirplnwave_burgers(grid, t, ptree, ua);
   }
   else {
