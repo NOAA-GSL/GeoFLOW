@@ -335,7 +335,10 @@ int main(int argc, char **argv)
     }
     
     compute_analytic(*grid_, t, ptree, ua_); // analyt soln at t
-    gio(*grid_, ua_, 1, 0, t, savars, sdir, comm_, FALSE);
+    
+    GTVector<GINT> istate(nstate);
+    for ( GSIZET j=0; j<nstate; j++ ) istate[j] = j;
+    gio(*grid_, ua_, istate, 0, t, savars, sdir, comm_, FALSE);
     for ( GSIZET j=0; j<1; j++ ) { //local errors
       *utmp_[0] = *u_[j] - *ua_[j];
       GPP(comm_,"main: diff=u-ua[" << j << "]=" << *utmp_[0]);
@@ -447,10 +450,10 @@ void compute_dirplnwave_burgers(GGrid &grid, GFTYPE &t, const PropertyTree& ptre
 {
   GBOOL            bplanar=TRUE; // planar or circularized
   GBOOL            brot   =FALSE;
-  GSIZET           nxy;
+  GSIZET           i, j, idir, nxy;
   GFTYPE           A, Re, r2, t0, tdenom;
-  GFTYPE           denom, K2, norm, trt;
-  GFTYPE           efact, tfact, xfact;
+  GFTYPE           denom, K2, norm;
+  GFTYPE           efact, sum, tfact, xfact;
   GTVector<GFTYPE> K(GDIM), xx(GDIM), si(GDIM), sig(GDIM);
   GTPoint<GFTYPE>  r0(3), P0(3), gL(3);
   std::vector<GFTYPE> kprop;
@@ -475,7 +478,7 @@ void compute_dirplnwave_burgers(GGrid &grid, GFTYPE &t, const PropertyTree& ptre
   nxy = (*xnodes)[0].size(); // same size for x, y, z
 
   // From Whitham's book, in 1d:
-  // u(x,t) = (x/t) [ 1 + sqrt(t/to) (e^Re - 1)^-1 exp(x^2/(4 nu t))i ]^-1
+  // u(x,t) = (x/t) [ 1 + sqrt(t/t0) (e^Re - 1)^-1 exp(x^2/(4 nu t))i ]^-1
   // were Re is 'Reynolds' number: Re = A / 2nu; can think of
   // A ~ U L scaling.
   // Set some parameters:
@@ -490,60 +493,66 @@ void compute_dirplnwave_burgers(GGrid &grid, GFTYPE &t, const PropertyTree& ptre
   K      = kprop;
   K     *= 1.0/K.Eucnorm();
 
+  GPP(comm_, "nwave_init: bplanar = " << bplanar);
   GPP(comm_, "nwave_init: K = " << K);
 
   K2     = 0.0 ; for ( GSIZET i=0; i<GDIM; i++ ) K2 += K[i]*K[i];
-  brot   = TRUE; for ( GSIZET i=0; i<GDIM; i++ ) brot = brot && K[i] != 0.0 ;
+
+  // If prop direction has more than one component != 0. then
+  // front is rotated (but still planar):
+  for ( i=0, brot=TRUE; i<GDIM; i++ ) brot = brot && K[i] != 0.0 ;
+  for ( i=0, idir=0; i<GDIM; i++ ) if ( K[i] > 0 ) {idir=i; break;}
 
   if ( t == 0.0 ) t = K2 * t0;
   nu_[0] = A/(2.0*Re); // set nu from Re
 
 
-  for ( GSIZET j=0; j<nxy; j++ ) {
-    for ( GSIZET i=0; i<GDIM; i++ ) xx[i] = (*xnodes)[i][j] - r0[i];
-    if ( GDIM == 2 ) {
-      xx[0] = K[0] * xx[0]  + K[1] * xx[1];
-      xx[1] = 0.0;
-    }
-    else if ( GDIM ==3 ) {
-      xx[0] = K[0] * xx[0]  + K[1] * xx[1];
-      xx[1] = 0.0;
-      xx[2] = 0.0;
-    }
-    r2 = 0.0;
-    for ( GSIZET i=0; i<GDIM; i++ ) {
+  for ( j=0; j<nxy; j++ ) {
+    for ( i=0; i<GDIM; i++ ) {
+      xx[i] = (*xnodes)[i][j] - r0[i];
       (*ua[i])[j] = 0.0;
-      r2   += xx[i]*xx[i];
     }
-    if ( bplanar ) r2 = xx[0]*xx[0] ; // choose one direction
+    if ( bplanar ) { // compute k.r for planar wave
+      for ( i=0, sum=0.0; i<GDIM; i++ ) { 
+        sum += K[i]*xx[i];
+        xx[i] = 0.0;
+      }
+      xx[0] = sum;
+    }
+    for ( i=0, r2=0.0; i<GDIM; i++ ) r2 += xx[i]*xx[i];  
+//  if ( bplanar ) r2 = xx[idir]*xx[idir]; // in dir of propagation 
 
-    if ( brot ) {
+#if 0
+#if 1
+//  if ( brot ) {
       // NOTE: not tested in 2D!
       tdenom = 1.0/(4.0*nu_[0]*t);
-      trt    = bplanar ? sqrt(t/t0): t/t0;
+      tfact  = bplanar ? sqrt(t/t0): t/t0;
       denom  = 1.0 / ( exp(Re) - 1.0 );
-      xfact  = 1.0 /( t * ( 1.0+(trt*denom*exp(r2*tdenom)) ) );
+      xfact  = 1.0 /( t * ( 1.0+(tfact*denom*exp(r2*tdenom)) ) );
     
-
-      (*ua[0])[j] = xx[0] * xfact ;
-      if ( !bplanar ) {
-        (*ua[1])[j] = xx[1] * xfact ;
-        if ( GDIM == 3 ) (*ua[2])[j] = xx[2] * xfact ;
-      }
-    }
-    else {
+      for ( i=0; i<GDIM; i++ ) (*ua[i])[j] = xx[i]*xfact;
+#else
+//  }
+//  else {
       tdenom = 1.0/(4.0*nu_[0]*t);
       tfact  = bplanar ? sqrt(t/A) : sqrt(t)/A;
       efact  = tfact * exp(r2*tdenom);
       xfact  = 1.0 /( t * (  1.0 + efact ) );
-      (*ua[0])[j] = xx[0] * xfact ;
-      if ( !bplanar ) {
-        (*ua[1])[j] = xx[1] * xfact ;
-        if ( GDIM == 3 ) (*ua[2])[j] = xx[2] * xfact ;
-      }
+      for ( i=0; i<GDIM; i++ ) (*ua[i])[j] = xx[i]*xfact;
       // dU1max = 1.0 / ( t * (sqrt(t/A) + 1.0) );
       // aArea  = 4.0*nu_[0]*log( 1.0 + sqrt(A/t) );
-    }
+//  }
+#endif
+#endif
+    // u(x,t) = (x/t) [ 1 + sqrt(t/t0) (e^Re - 1)^-1 exp(x^2/(4 nu t)) ]^-1
+    tdenom = 1.0/(4.0*nu_[0]*t);
+    tfact  = bplanar ? sqrt(t/t0): t/t0;
+    efact  = tfact * exp(r2*tdenom) / ( exp(Re) - 1.0 );
+    xfact  = 1.0 /( t * (  1.0 + efact ) );
+    for ( i=0; i<GDIM; i++ ) (*ua[i])[j] = xx[i]*xfact;
+    // dU1max = 1.0 / ( t * (sqrt(t/A) + 1.0) );
+    // aArea  = 4.0*nu_[0]*log( 1.0 + sqrt(A/t) );
   }
   
 } // end, compute_dirplnwave_burgers
