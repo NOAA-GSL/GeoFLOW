@@ -1,4 +1,4 @@
-function h = keplot_geoglow2d(s1var, s2var, tindex)
+function h = keplot_geoflow2d(s1var, s2var, tindex)
 %
 % Does a mesh plot kinetic energy of 2D GeoFLOW data
 %
