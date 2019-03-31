@@ -795,6 +795,12 @@ void init_ggfx(GGrid &grid, GGFX<GFTYPE> &ggfx)
   GTVector<GNODEID>              glob_indices;
   GTVector<GTVector<GFTYPE>>    *xnodes;
 
+  // First, periodize coords if required to, 
+  // before labeling nodes:
+  if ( typeid(*grid_) == typeid(GGridBox) ) { 
+    static_cast<GGridBox*>(grid_)->periodize();
+  }
+
   delta  = grid.minnodedist();
   dX     = 0.1*delta;
   xnodes = &grid.xNodes();
@@ -811,11 +817,11 @@ void init_ggfx(GGrid &grid, GGFX<GFTYPE> &ggfx)
 
   // Initialize gather/scatter operator:
   GBOOL bret;
-  if ( typeid(*grid_) == typeid(GGridBox) ) { // periodize coords
-    static_cast<GGridBox*>(grid_)->periodize();
-  }
   bret = ggfx.init(glob_indices);
   assert(bret && "Initialization of GGFX operator failed");
+
+  // Unperiodize nodes now that connectivity map is
+  // generated, so that coordinates mean what they should:
   if ( typeid(*grid_) == typeid(GGridBox) ) { // periodize coords
     static_cast<GGridBox*>(grid_)->unperiodize();
   }
