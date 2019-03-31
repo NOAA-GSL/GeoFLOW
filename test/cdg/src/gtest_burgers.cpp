@@ -28,6 +28,7 @@
 #include "gout_simple_observer.hpp"
 #include "pdeint/equation_base.hpp"
 #include "pdeint/integrator_factory.hpp"
+#include "pdeint/stirrer_factory.hpp"
 #include "pdeint/observer_factory.hpp"
 #include "pdeint/null_observer.hpp"
 #include "tbox/property_tree.hpp"
@@ -76,14 +77,17 @@ GC_COMM      comm_ ;      // communicator
 using MyTypes = EquationTypes<>;       // Define types used
 using EqnBase = EquationBase<MyTypes>; // Equation Base Type
 using EqnImpl = GBurgers<MyTypes>;     // Equation Implementa
+using StirBase= StirrerBase<MyTypes>;  // Stirring Base Type
+using StirBasePtr 
+              = std::shared_ptr<StirBase>; // Stirring Base ptr
 using ObsBase = ObserverBase<EqnBase>; // Observer Base Type
-using ObsImpl = NullObserver<EqnImpl>; // Observer Implementation Type
 
 void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVector<GTVector<GFTYPE>*> &u);
 void update_dirichlet(const GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u, GTVector<GTVector<GFTYPE>*> &ub);
 void init_ggfx(GGrid &grid, GGFX<GFTYPE> &ggfx);
 void create_observers(PropertyTree &ptree, 
 std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers);
+void create_stirrer(PropertyTree &ptree, StirBasePtr &pStirrer);
 
 //#include "init_pde.h"
 
@@ -284,6 +288,11 @@ int main(int argc, char **argv)
     eqn_impl->set_bdy_update_callback(fcallback);
     eqn_impl->set_nu(nu_);
 
+    // Create the stirrer (to update forcing)
+    EH_MESSAGE("main: create stirrer...");
+    StirBasePtr pStirrer;
+    create_stirrer(ptree, pStirrer);
+
     // Create the observers: 
     EH_MESSAGE("main: create observers...");
     std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> pObservers(new std::vector<std::shared_ptr<ObserverBase<MyTypes>>>());
@@ -291,7 +300,7 @@ int main(int argc, char **argv)
 
     // Create integrator:
     EH_MESSAGE("main: create integrator...");
-    auto pIntegrator = IntegratorFactory<MyTypes>::build(tintptree, eqn_base, pObservers, *grid_);
+    auto pIntegrator = IntegratorFactory<MyTypes>::build(tintptree, eqn_base, pStirrer, pObservers, *grid_);
 
     // Initialize state:
     EH_MESSAGE("main: Initializing state...");
@@ -833,6 +842,30 @@ void init_ggfx(GGrid &grid, GGFX<GFTYPE> &ggfx)
   }
 
 } // end method init_ggfx
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD: create_observers
+// DESC  : Create observer list from ptree
+// ARGS  : grid    : GGrid object
+//         ggfx    : gather/scatter op, GGFX
+//**********************************************************************************
+void create_stirrer(PropertyTree &ptree, StirBasePtr  &pStirrer)
+{
+    PropertyTree     stirptree;    // observer props 
+    StirBase::Traits traits;
+
+    GString sstirrer = ptree.getValue<GString>("default_stirrer","none");
+    if ( "none" == sstirrer ) {
+      pStirrer= std::make_shared<NullStirrer<MyTypes>>(traits, *grid_);
+    }
+    else {
+      stirptree = ptree.getPropertyTree(sstirrer);
+      pStirrer = StirrerFactory<MyTypes>::build(stirptree, *grid_);
+    }
+
+} // end method create_stirrer
 
 
 //**********************************************************************************
