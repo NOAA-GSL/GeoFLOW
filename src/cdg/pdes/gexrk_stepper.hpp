@@ -44,7 +44,8 @@ public:
         void               setRHSfunction(std::function<void(
                                           const Time &t, 
                                           const State &uin,
-                                          State &uf,
+                                          const State &uf,
+                                          const State &ub,
                                           const Time &dt, 
                                           State &dudt)> callback)
                                           { rhs_callback_ = callback; 
@@ -79,7 +80,8 @@ private:
         GGFX<GFTYPE>      *ggfx_;                           // geom-free exchange op
         std::function<void(const Time &t,                    
                            const State  &uin,
-                           State  &uf,
+                           const State  &uf,
+                           const State  &ub,
                            const Time &dt, 
                            State &dudt)>
                            rhs_callback_;                   // RHS callback function

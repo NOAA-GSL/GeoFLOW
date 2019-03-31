@@ -113,7 +113,7 @@ private:
 
         void                init(State &u, GBurgers::Traits &);           // initialize 
         GINT                req_tmp_size();                               // required tmp size
-        void                dudt_impl  (const Time &t, const State &u, State &uf, State &ub,
+        void                dudt_impl  (const Time &t, const State &u, const State &uf, const State &ub,
                                         const Time &dt, Derivative &dudt);
         void                step_exrk  (const Time &t, State &uin, State &uf, State &ub,
                                         const Time &dt, State &uout);
@@ -125,6 +125,7 @@ private:
         GBOOL               doheat_;        // flag to do heat equation alone
         GBOOL               bpureadv_;      // do pure (linear) advection?
         GBOOL               bconserved_;    // use conservation form?
+        GBOOL               bforced_;       // use forcing vectors
         GBOOL               bupdatebc_;     // bdy update callback set?
         GStepperType        isteptype_;     // stepper type
         GINT                nsteps_ ;       // num steps taken

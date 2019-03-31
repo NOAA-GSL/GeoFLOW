@@ -61,6 +61,7 @@ GBurgers<TypePack>::GBurgers(GGFX<GFTYPE> &ggfx, Grid &grid, State &u, GBurgers<
 doheat_         (traits.doheat),
 bpureadv_     (traits.bpureadv),
 bconserved_ (traits.bconserved),
+bforced_       (traits.bforced),
 bupdatebc_              (FALSE),
 isteptype_    (traits.steptype),
 nsteps_                     (0),
@@ -206,7 +207,7 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const State &u
       ghelm_->opVec_prod(*u[k], uoptmp_, *urhstmp_[0]); // apply diffusion
      *urhstmp_[0] *= -1.0; // weak Lap op is neg on RHS
       gimass_->opVec_prod(*urhstmp_[0], uoptmp_, *dudt[k]); // apply M^-1
-      if ( traits_.bforced ) *dudt[k] += *uf[k];
+      if ( bforced_ ) *dudt[k] += *uf[k];
     }
     return;
   }
@@ -224,7 +225,7 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const State &u
     ghelm_->opVec_prod(*u[0], uoptmp_, *urhstmp_[0]);  // apply diffusion
     GMTK::saxpby<GFTYPE>(*urhstmp_[0], -1.0, *dudt[0], -1.0);
     gimass_->opVec_prod(*urhstmp_[0], uoptmp_, *dudt[0]); // apply M^-1
-    if ( traits_.bforced ) *dudt[0] += *uf[0];
+    if ( bforced_ ) *dudt[0] += *uf[0];
   }
   else {             // nonlinear advection
     for ( auto k=0; k<GDIM; k++ ) {
@@ -232,7 +233,7 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const State &u
       ghelm_->opVec_prod(*u[k], uoptmp_, *urhstmp_[0]); // apply diffusion
       GMTK::saxpby<GFTYPE>(*urhstmp_[0], -1.0, *dudt[k], -1.0);
       gimass_->opVec_prod(*urhstmp_[0], uoptmp_, *dudt[k]); // apply M^-1
-      if ( traits_.bforced ) *dudt[k] += *uf[k];
+      if ( bforced_ ) *dudt[k] += *uf[k];
     }
   }
   
@@ -347,7 +348,7 @@ void GBurgers<TypePack>::step_exrk(const Time &t, State &uin, State &uf, State &
   // for each u
 
   // GExRK stepper steps entire state over one dt:
-  gexrk_->step(t, uin, ub, dt, urktmp_, uout);
+  gexrk_->step(t, uin, uf, ub, dt, urktmp_, uout);
 
 } // end of method step_exrk
 
@@ -388,13 +389,13 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
 
   std::function<void(const Time &t,                    // RHS callback function
                      const State  &uin,
-                     State  &uf,
+                     const State  &uf,
                      const State  &ub,
                      const Time &dt,
                      State &dudt)> rhs
                   = [this](const Time &t,           
                      const State  &uin, 
-                     State  &uf, 
+                     const State  &uf, 
                      const State  &ub, 
                      const Time &dt,
                      State &dudt){dudt_impl(t, uin, uf, ub, dt, dudt);}; 
