@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "pdeint/null_observer.hpp"
+#include "pdeint/stirrer_base.hpp"
 #include "pdeint/equation_base.hpp"
 
 namespace geoflow {
@@ -42,6 +43,7 @@ public:
 	using Jacobian     = typename Equation::Jacobian;
 	using Size         = typename Equation::Size;
 	using EqnBasePtr   = std::shared_ptr<EqnBase>;
+	using StirBasePtr  = std::shared_ptr<StirrerBase<Equation>>;
 	using ObsBasePtr   = std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<Equation>>>>;
       
 	/**
@@ -64,10 +66,13 @@ public:
 	 * Constructor to initialize everything needed to run
 	 *
 	 * @param[in] stepper  Pointer to the time stepping algorithm
+	 * @param[in] stirrer  Pointer to the stirrer-update to use
 	 * @param[in] observer Pointer to the observer to use
+	 * @param[in] grid     Pointer to the grid
 	 * @param[in] traits   Use selected traits for time step options
 	 */
 	Integrator(const EqnBasePtr&  equation,
+		   const StirBasePtr& stirrer,
 		   const ObsBasePtr&  observer,
                          Grid&        grid,
 		   const Traits&      traits); 
@@ -164,6 +169,7 @@ protected:
         size_t      cycle_; // no. time cycles taken so far
 	Traits      traits_;
 	EqnBasePtr  eqn_ptr_;
+	StirBasePtr stir_ptr_;
 	ObsBasePtr  obs_ptr_;
         Grid*       grid_;
 

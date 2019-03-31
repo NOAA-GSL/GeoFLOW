@@ -17,11 +17,13 @@ namespace pdeint {
 
 template<typename EquationType>
 Integrator<EquationType>::Integrator(const EqnBasePtr& equation,
+		                     const StirBasePtr& stirrer,
 		                     const ObsBasePtr& observer,
                                      Grid&             grid,
 		                     const Traits&     traits) :
-	cycle_(0), traits_(traits), eqn_ptr_(equation), obs_ptr_(observer), grid_(&grid) {
+	cycle_(0), traits_(traits), eqn_ptr_(equation), stir_ptr_(stirrer), obs_ptr_(observer), grid_(&grid) {
 	ASSERT(nullptr != eqn_ptr_);
+	ASSERT(nullptr != stir_ptr_);
 	ASSERT(nullptr != obs_ptr_);
 }
 
@@ -66,6 +68,7 @@ void Integrator<EquationType>::time( const Time& t0,
 		                     State&      ub,
 		                     State&      u ){
 	ASSERT(nullptr != eqn_ptr_);
+	ASSERT(nullptr != stir_ptr_);
 	ASSERT(nullptr != obs_ptr_);
 	using std::min;
 
@@ -84,6 +87,8 @@ void Integrator<EquationType>::time( const Time& t0,
 		this->eqn_ptr_->step(t, u, uf, ub, dt_eff);
 		t += dt_eff;
 
+                // Call stirrer to upate forcing:
+		this->stir_ptr_->stir(t,u, uf);
 
 		// Call observer on solution
                 for ( auto j = 0 ; j < this->obs_ptr_->size(); j++ ) 
@@ -105,6 +110,7 @@ void Integrator<EquationType>::steps( const Time&  t0,
 		                      State&       u,
 			              Time&        t ){
 	ASSERT(nullptr != eqn_ptr_);
+	ASSERT(nullptr != stir_ptr_);
 	ASSERT(nullptr != obs_ptr_);
 
 	t = t0;
@@ -120,6 +126,9 @@ void Integrator<EquationType>::steps( const Time&  t0,
 		// Take Step
 		this->eqn_ptr_->step(t, u, uf, ub, dt_eff);
 		t += dt_eff;
+
+                // Call stirrer to upate forcing:
+		this->stir_ptr_->stir(t,u, uf);
 
 		// Call observer on solution at new t
                 for ( auto j = 0 ; j < this->obs_ptr_->size(); j++ ) 
