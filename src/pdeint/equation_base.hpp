@@ -87,9 +87,11 @@ public:
 	 * \param[in]     t  Current time of state u before taking step
 	 * \param[in]     ub Boundary conditions for u
 	 * \param[in,out] u  State of the system of equations
+	 * \param[in,out] uf Forcing tendency
+	 * \param[in,out] ub Boundary vector
 	 * \param[in]     dt Size of time step to take
 	 */
-	void step(const Time& t, State& u, State& ub, const Time &dt){
+	void step(const Time& t, State& u, State &uf, State& ub, const Time &dt){
 		this->step_impl(t,u,ub,dt);
 	}
 
@@ -98,14 +100,15 @@ public:
 	 * Take exactly one time step from t with current solution uin to
 	 * time t + dt and return new solution within uout.
 	 *
-	 * \param[in]  t     Current time of state u before taking step
-	 * \param[in]  uin   State of the system of equations at time t
-	 * \param[in]  ub    Boundary conditions for u
-	 * \param[in]  dt    Size of time step to take
-	 * \param[out] uout  New state of the system of equations at t + dt
+	 * \param[in]     t     Current time of state u before taking step
+	 * \param[in]     uin   State of the system of equations at time t
+	 * \param[in,out] uf    Forcing tendency
+	 * \param[in,out] ub    Boundary conditions for u
+	 * \param[in]     dt    Size of time step to take
+	 * \param[out]    uout  New state of the system of equations at t + dt
 	 */
-	void step(const Time& t, const State& uin, State& ub, const Time& dt, State& uout){
-		this->step_impl(t,uin,ub,dt,uout);
+	void step(const Time& t, const State& uin, State &uf, State& ub, const Time& dt, State& uout){
+		this->step_impl(t,uin,uf,ub,dt,uout);
 	}
 
 protected:
@@ -128,12 +131,12 @@ protected:
 	/**
 	 * Must be provided by implementation
 	 */
-	virtual void step_impl(const Time& t, State& u, State& ub, const Time& dt) = 0;
+	virtual void step_impl(const Time& t, State& u, State uf,  State& ub, const Time& dt) = 0;
 
 	/**
 	 * Must be provided by implementation
 	 */
-	virtual void step_impl(const Time& t, const State& uin, State& ub, const Time& dt, State& uout) = 0;
+	virtual void step_impl(const Time& t, const State& uin, State &uf, State& ub, const Time& dt, State& uout) = 0;
 };
 
 

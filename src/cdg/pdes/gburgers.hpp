@@ -113,11 +113,11 @@ private:
 
         void                init(State &u, GBurgers::Traits &);           // initialize 
         GINT                req_tmp_size();                               // required tmp size
-        void                dudt_impl  (const Time &t, const State &u,
+        void                dudt_impl  (const Time &t, const State &u, State &uf, State &ub,
                                         const Time &dt, Derivative &dudt);
-        void                step_exrk  (const Time &t, State &uin, State &ub,
+        void                step_exrk  (const Time &t, State &uin, State &uf, State &ub,
                                         const Time &dt, State &uout);
-        void                step_multistep(const Time &t, State &uin, State &ub,
+        void                step_multistep(const Time &t, State &uin, State &uf, State &ub,
                                            const Time &dt);
         void                cycle_keep(State &u);
        

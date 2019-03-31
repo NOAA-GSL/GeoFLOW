@@ -56,6 +56,8 @@ GExRKStepper<T>::~GExRKStepper()
 //
 // ARGUMENTS  : t    : time, t^n, for state, uin=u^n
 //              uin  : initial (entry) state, u^n
+//              uf   : forcing tendency
+//              ub   : bdy tendency
 //              dt   : time step
 //              tmp  : tmp space. Must have at least NState*(M+1)+1 vectors,
 //                     where NState is the number of state vectors.
@@ -64,7 +66,7 @@ GExRKStepper<T>::~GExRKStepper()
 // RETURNS    : none.
 //**********************************************************************************
 template<typename T>
-void GExRKStepper<T>::step(const Time &t, const State &uin, State &ub,  
+void GExRKStepper<T>::step(const Time &t, const State &uin, State &uf, State &ub,  
                            const Time &dt, State &tmp, State &uout)
 {
   assert(bRHS_  && "(1): RHS callback not set");
@@ -111,7 +113,7 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &ub,
 
     if ( bupdatebc_ ) bdy_update_callback_(tt, u, ub); 
     if ( bapplybc_  ) bdy_apply_callback_ (tt, u, ub); 
-    rhs_callback_( tt, u, h, K_[m] ); // k_m at stage m
+    rhs_callback_( tt, u, uf, h, K_[m] ); // k_m at stage m
 
     // x^n+1 = x^n + h Sum_i=1^m c_i K_i, so
     // accumulate the sum in uout here: 
@@ -136,7 +138,7 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &ub,
    }
    if ( bupdatebc_ ) bdy_update_callback_(tt, u, ub); 
    if ( bapplybc_  ) bdy_apply_callback_ (tt, u, ub); 
-   rhs_callback_( tt, u, h, K_[0]); // k_M at stage M
+   rhs_callback_( tt, u, uf, h, K_[0]); // k_M at stage M
 
    // Compute final output state, and set its bcs and
    // H1-smooth it:
@@ -181,7 +183,7 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &ub,
 // RETURNS    : none.
 //**********************************************************************************
 template<typename T>
-void GExRKStepper<T>::step(const Time &t, State &uin, State &ub,  
+void GExRKStepper<T>::step(const Time &t, State &uin, State &uf, State &ub,  
                            const Time &dt, State &tmp)
 {
   assert(bRHS_  && "(2) RHS callback not set");
@@ -231,7 +233,7 @@ void GExRKStepper<T>::step(const Time &t, State &uin, State &ub,
         ggfx_->doOp(*u[n], GGFX_OP_SMOOTH);
       }
     }
-    rhs_callback_( tt, u, h, K_[m] ); // k_m at stage m
+    rhs_callback_( tt, u, uf, h, K_[m] ); // k_m at stage m
 
     // x^n+1 = x^n + h Sum_i=1^m c_i K_i, so
     // accumulate the sum in uout here: 
@@ -249,7 +251,7 @@ void GExRKStepper<T>::step(const Time &t, State &uin, State &ub,
    }
    if ( bupdatebc_ ) bdy_update_callback_(tt, u, ub); 
    if ( bapplybc_  ) bdy_apply_callback_ (tt, u, ub); 
-   rhs_callback_( tt, u, h, K_[0]); // k_M at stage M
+   rhs_callback_( tt, u, uf, h, K_[0]); // k_M at stage M
 
    for ( n=0; n<nstate; n++ ) { // for each state member, u
     *uout[n] += (*K_[0][n])*( (*c)[nstage_-1]*h ); // += h * c_M * k_M

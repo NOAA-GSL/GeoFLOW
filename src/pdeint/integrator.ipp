@@ -27,6 +27,7 @@ Integrator<EquationType>::Integrator(const EqnBasePtr& equation,
 
 template<typename EquationType>
 void Integrator<EquationType>::time_integrate( Time&       t,
+                                               State&      uf,
                                                State&      ub,
 		                               State&      u ){
 	ASSERT(nullptr != eqn_ptr_);
@@ -39,6 +40,7 @@ void Integrator<EquationType>::time_integrate( Time&       t,
           steps( t0 
                , traits_.dt
                , n
+               , uf
                , ub
                , u
                , t);
@@ -47,6 +49,7 @@ void Integrator<EquationType>::time_integrate( Time&       t,
           time ( t
                , traits_.time_end
                , traits_.dt
+               , uf
                , ub
                , u);
           t = traits_.time_end;
@@ -59,6 +62,7 @@ template<typename EquationType>
 void Integrator<EquationType>::time( const Time& t0,
 		                     const Time& t1,
 		                     const Time& dt,
+		                     State&      uf,
 		                     State&      ub,
 		                     State&      u ){
 	ASSERT(nullptr != eqn_ptr_);
@@ -77,7 +81,7 @@ void Integrator<EquationType>::time( const Time& t0,
 		}
 
 		// Take Step
-		this->eqn_ptr_->step(t,u, ub, dt_eff);
+		this->eqn_ptr_->step(t, u, uf, ub, dt_eff);
 		t += dt_eff;
 
 
@@ -96,6 +100,7 @@ template<typename EquationType>
 void Integrator<EquationType>::steps( const Time&  t0,
 		                      const Time&  dt,
 			              const Size&  n,
+		                      State&       uf,
 		                      State&       ub,
 		                      State&       u,
 			              Time&        t ){
@@ -113,7 +118,7 @@ void Integrator<EquationType>::steps( const Time&  t0,
 		}
 
 		// Take Step
-		this->eqn_ptr_->step(t,u, ub, dt_eff);
+		this->eqn_ptr_->step(t, u, uf, ub, dt_eff);
 		t += dt_eff;
 
 		// Call observer on solution at new t
@@ -125,6 +130,7 @@ void Integrator<EquationType>::steps( const Time&  t0,
 
 template<typename EquationType>
 void Integrator<EquationType>::list( const std::vector<Time>& tlist,
+		                     State&                   uf,
 		                     State&                   ub,
 	                             State&                   u ){
 	ASSERT(nullptr != eqn_ptr_);
@@ -136,7 +142,7 @@ void Integrator<EquationType>::list( const std::vector<Time>& tlist,
 		Time dt = tlist[i+1] - tlist[i];
 
 		// Step till next time
-		this->time(tlist[i],tlist[i+1],dt,u);
+		this->time(tlist[i],tlist[i+1],dt,uf,ub,u);
 	}
 
 }

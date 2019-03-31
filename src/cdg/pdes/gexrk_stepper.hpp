@@ -31,17 +31,20 @@ public:
         void               setOrder(GINT nstage);
 
         void               step(const Time &t, const State &uin,
+                                State &uf,
                                 State &ub,
                                 const Time &dt, State &tmp,
                                 State &uout);
 
-        void               step(const Time &t, State &uin,
+        void               step(const Time &t, State &uin, 
+                                State &uf,
                                 State &ub,
                                 const Time &dt, State &tmp);
 
         void               setRHSfunction(std::function<void(
                                           const Time &t, 
                                           const State &uin,
+                                          State &uf,
                                           const Time &dt, 
                                           State &dudt)> callback)
                                           { rhs_callback_ = callback; 
@@ -76,6 +79,7 @@ private:
         GGFX<GFTYPE>      *ggfx_;                           // geom-free exchange op
         std::function<void(const Time &t,                    
                            const State  &uin,
+                           State  &uf,
                            const Time &dt, 
                            State &dudt)>
                            rhs_callback_;                   // RHS callback function

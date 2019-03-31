@@ -65,6 +65,7 @@ GTVector<GTVector<GFTYPE>*> u_;
 GTVector<GTVector<GFTYPE>*> c_;
 GTVector<GTVector<GFTYPE>*> ua_;
 GTVector<GTVector<GFTYPE>*> ub_;
+GTVector<GTVector<GFTYPE>*> uf_;
 GTVector<GTVector<GFTYPE>*> utmp_;
 GTVector<GTVector<GFTYPE>*> uold_;
 GTVector<GFTYPE> nu_(3);
@@ -199,9 +200,10 @@ int main(int argc, char **argv)
     // Set solver traits from prop tree:
     GFTYPE nu_scalar;
     GBurgers<MyTypes>::Traits solver_traits;
-    solver_traits.doheat     = eqptree  .getValue<GBOOL>("doheat");
-    solver_traits.bpureadv   = eqptree  .getValue<GBOOL>("bpureadv");
-    solver_traits.bconserved = eqptree  .getValue<GBOOL>("bconserved");
+    solver_traits.doheat     = eqptree  .getValue<GBOOL>("doheat", FALSE);
+    solver_traits.bpureadv   = eqptree  .getValue<GBOOL>("bpureadv", FALSE);
+    solver_traits.bconserved = eqptree  .getValue<GBOOL>("bconserved", FALSE);
+    solver_traits.bforced    = eqptree  .getValue<GBOOL>("use_forcing", FALSE);
     solver_traits.itorder    = stepptree.getValue <GINT>("time_deriv_order");
     solver_traits.inorder    = stepptree.getValue <GINT>("extrap_order");
     nu_scalar                = dissptree.getValue<GFTYPE>("nu");
@@ -257,12 +259,15 @@ int main(int argc, char **argv)
     u_.resize(nstate);
     ua_.resize(nsolve);
     ub_.resize(nsolve);
+    uf_.resize(nsolve);
     c_ .resize(GDIM);
     for ( GSIZET j=0; j<uold_.size(); j++ ) uold_[j] = new GTVector<GFTYPE>(grid_->size());
     for ( GSIZET j=0; j<utmp_.size(); j++ ) utmp_[j] = new GTVector<GFTYPE>(grid_->size());
     for ( GSIZET j=0; j<u_   .size(); j++ ) u_   [j] = new GTVector<GFTYPE>(grid_->size());
     for ( GSIZET j=0; j<ua_  .size(); j++ ) ua_  [j] = new GTVector<GFTYPE>(grid_->size());
     for ( GSIZET j=0; j<ub_  .size(); j++ ) ub_  [j] = new GTVector<GFTYPE>(grid_->nbdydof());
+    if ( solver_traits.bforced )
+    for ( GSIZET j=0; j<ub_  .size(); j++ ) uf_  [j] = new GTVector<GFTYPE>(grid_->nbdydof());
     if ( solver_traits.bpureadv ) 
     for ( GSIZET j=0; j<c_   .size(); j++ ) c_   [j] = u_[j+1];
 
@@ -308,7 +313,7 @@ int main(int argc, char **argv)
     EH_MESSAGE("main: do time stepping...");
     GPP(comm_,"main: do time stepping...");
     GPTLstart("time_loop");
-    pIntegrator->time_integrate(t, ub_, u_);
+    pIntegrator->time_integrate(t, uf_, ub_, u_);
     GPTLstop("time_loop");
     
     GPP(comm_,"main: time stepping done.");
@@ -397,6 +402,7 @@ int main(int argc, char **argv)
     for ( auto j=0; j<u_   .size(); j++ ) delete u_   [j];
     for ( auto j=0; j<ua_  .size(); j++ ) delete ua_  [j];
     for ( auto j=0; j<ub_  .size(); j++ ) delete ub_  [j];
+    for ( auto j=0; j<uf_  .size(); j++ ) delete uf_  [j];
 
     return(0);
 

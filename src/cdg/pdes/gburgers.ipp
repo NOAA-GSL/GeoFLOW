@@ -182,12 +182,13 @@ void GBurgers<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
 //               remainder of the State elements are the 
 //               (linear) velocity components that are not
 //               updated.
-//          uf : focring/tendency vector, used if size > 0.
+//          uf : forcing tendency state vector
+//          ub : bdy state vector
 //          dt : time step
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, State uf, const Time &dt, Derivative &dudt)
+void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const State &uf,  const State &ub, const Time &dt, Derivative &dudt)
 {
   assert(!bconserved_ &&
          "conservation not yet supported"); 
@@ -268,11 +269,11 @@ void GBurgers<TypePack>::step_impl(const Time &t, State &uin, State &uf, State &
   switch ( isteptype_ ) {
     case GSTEPPER_EXRK:
       for ( auto j=0; j<uold_.size(); j++ ) *uold_[j] = *uevolve_[j];
-      step_exrk(t, uold_, ub, dt, uevolve_);
+      step_exrk(t, uold_, uf, ub, dt, uevolve_);
       break;
     case GSTEPPER_BDFAB:
     case GSTEPPER_BDFEXT:
-      step_multistep(t, uevolve_, ub, dt);
+      step_multistep(t, uevolve_, uf, ub, dt);
       break;
   }
 
@@ -310,12 +311,13 @@ void GBurgers<TypePack>::step_impl(const Time &t, const State &uin, State &uf,  
 //          implicit treatment. The dissipation term is handled implicitly.
 // ARGS   : t   : time
 //          u   : state
+//          uf  : force tendency vector
 //          ub  : bdy vector
 //          dt  : time step
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GBurgers<TypePack>::step_multistep(const Time &t, State &uin, State &ub, const Time &dt)
+void GBurgers<TypePack>::step_multistep(const Time &t, State &uin, State &uf, State &ub, const Time &dt)
 {
   assert(FALSE && "Multistep methods not yet available");
 
@@ -329,12 +331,14 @@ void GBurgers<TypePack>::step_multistep(const Time &t, State &uin, State &ub, co
 // DESC   : Take a step using Explicit RK method
 // ARGS   : t   : time
 //          uin : input state; must not be modified
+//          uf  : force tendency vector
+//          ub  : bdy vector
 //          dt  : time step
 //          uout: output/updated state
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GBurgers<TypePack>::step_exrk(const Time &t, State &uin, State &ub, const Time &dt, State &uout)
+void GBurgers<TypePack>::step_exrk(const Time &t, State &uin, State &uf, State &ub, const Time &dt, State &uout)
 {
   assert(gexrk_ != NULLPTR && "GExRK operator not instantiated");
 
@@ -385,13 +389,15 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
   std::function<void(const Time &t,                    // RHS callback function
                      const State  &uin,
                      State  &uf,
+                     const State  &ub,
                      const Time &dt,
                      State &dudt)> rhs
                   = [this](const Time &t,           
                      const State  &uin, 
                      State  &uf, 
+                     const State  &ub, 
                      const Time &dt,
-                     State &dudt){dudt_impl(t, uin, uf, dt, dudt);}; 
+                     State &dudt){dudt_impl(t, uin, uf, ub, dt, dudt);}; 
 
   std::function<void(const Time &t,                    // Bdy apply callback function
                      State  &uin, 
