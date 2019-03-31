@@ -182,11 +182,12 @@ void GBurgers<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
 //               remainder of the State elements are the 
 //               (linear) velocity components that are not
 //               updated.
+//          uf : focring/tendency vector, used if size > 0.
 //          dt : time step
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const Time &dt, Derivative &dudt)
+void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, State uf, const Time &dt, Derivative &dudt)
 {
   assert(!bconserved_ &&
          "conservation not yet supported"); 
@@ -204,6 +205,7 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const Time &dt
       ghelm_->opVec_prod(*u[k], uoptmp_, *urhstmp_[0]); // apply diffusion
      *urhstmp_[0] *= -1.0; // weak Lap op is neg on RHS
       gimass_->opVec_prod(*urhstmp_[0], uoptmp_, *dudt[k]); // apply M^-1
+      if ( traits_.bforced ) *dudt[k] += *uf[k];
     }
     return;
   }
@@ -221,6 +223,7 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const Time &dt
     ghelm_->opVec_prod(*u[0], uoptmp_, *urhstmp_[0]);  // apply diffusion
     GMTK::saxpby<GFTYPE>(*urhstmp_[0], -1.0, *dudt[0], -1.0);
     gimass_->opVec_prod(*urhstmp_[0], uoptmp_, *dudt[0]); // apply M^-1
+    if ( traits_.bforced ) *dudt[0] += *uf[0];
   }
   else {             // nonlinear advection
     for ( auto k=0; k<GDIM; k++ ) {
@@ -228,6 +231,7 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const Time &dt
       ghelm_->opVec_prod(*u[k], uoptmp_, *urhstmp_[0]); // apply diffusion
       GMTK::saxpby<GFTYPE>(*urhstmp_[0], -1.0, *dudt[k], -1.0);
       gimass_->opVec_prod(*urhstmp_[0], uoptmp_, *dudt[k]); // apply M^-1
+      if ( traits_.bforced ) *dudt[k] += *uf[k];
     }
   }
   
@@ -243,12 +247,13 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const Time &dt
 //                If doing pure advection, this state contains the *unevolved*
 //                advection velocities, which must be separated from the 
 //                single evolved state variable.
+//          uf  : force-tendency vector
 //          ub  : bdy vector
 //          dt  : time step
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GBurgers<TypePack>::step_impl(const Time &t, State &uin, State &ub, const Time &dt)
+void GBurgers<TypePack>::step_impl(const Time &t, State &uin, State &uf, State &ub, const Time &dt)
 {
 
   // Set evolved state vars from input state:
@@ -288,7 +293,7 @@ void GBurgers<TypePack>::step_impl(const Time &t, State &uin, State &ub, const T
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GBurgers<TypePack>::step_impl(const Time &t, const State &uin, State &ub, const Time &dt, State &uout)
+void GBurgers<TypePack>::step_impl(const Time &t, const State &uin, State &uf,  State &ub, const Time &dt, State &uout)
 {
   assert(FALSE && "step_impl(2) not available");
 
@@ -379,12 +384,14 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
 
   std::function<void(const Time &t,                    // RHS callback function
                      const State  &uin,
+                     State  &uf,
                      const Time &dt,
                      State &dudt)> rhs
                   = [this](const Time &t,           
                      const State  &uin, 
+                     State  &uf, 
                      const Time &dt,
-                     State &dudt){dudt_impl(t, uin, dt, dudt);}; 
+                     State &dudt){dudt_impl(t, uin, uf, dt, dudt);}; 
 
   std::function<void(const Time &t,                    // Bdy apply callback function
                      State  &uin, 
