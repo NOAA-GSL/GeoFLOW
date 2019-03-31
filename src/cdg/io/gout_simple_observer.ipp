@@ -80,7 +80,7 @@ void GOutSimpleObserver<EquationType>::init(const Time t, const State &u)
 
    sdir_ = this->traits_.dir;
  
-   if ( icycle_ == 0 ) {
+   if ( cycle_ == 0 ) {
      time_last_ = t; 
    }
  
