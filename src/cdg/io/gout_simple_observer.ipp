@@ -45,7 +45,7 @@ time_last_      (0.0)
 template<typename EquationType>
 void GOutSimpleObserver<EquationType>::observe_impl(const Time &t, const State &u)
 {
-  init(u);
+  init(t,u);
 
   mpixx::communicator comm;
    
@@ -68,16 +68,21 @@ void GOutSimpleObserver<EquationType>::observe_impl(const Time &t, const State &
 //**********************************************************************************
 // METHOD     : init
 // DESCRIPTION: Fill member index and name data based on traits
-// ARGUMENTS  : u  : state variable
+// ARGUMENTS  : t  : state time
+//              u  : state variable
 // RETURNS    : none.
 //**********************************************************************************
 template<typename EquationType>
-void GOutSimpleObserver<EquationType>::init(const State &u)
+void GOutSimpleObserver<EquationType>::init(const Time t, const State &u)
 {
 
    char    stmp[1024];
 
    sdir_ = this->traits_.dir;
+ 
+   if ( icycle_ == 0 ) {
+     time_last_ = t; 
+   }
  
    // Set state names member data, if not already set:
    if ( state_names_.size()  <= 0 ) {

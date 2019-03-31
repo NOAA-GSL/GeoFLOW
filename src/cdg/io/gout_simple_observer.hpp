@@ -65,7 +65,7 @@ public:
 
 private:
 // Private methods:
-        void               init(const State &u);
+        void               init(const Time t, const State &u);
 // Private data:
         GBOOL              bprgrid_;    // print grid flag
         GSIZET             cycle_last_; // most recent output cycle
