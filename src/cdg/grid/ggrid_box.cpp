@@ -737,7 +737,7 @@ void GGridBox::periodize()
     id = igbdy_[GBDY_PERIODIC][k];
     periodicids_.push_back(id);       
     periodicdirs_.push_back(0);
-    for ( GSIZET i=0; i<xNodes_.size(); i++ ) {
+    for ( GSIZET i=0; i<xNodes_.size(); i++ ) { // for x, y, z dirs
       if ( FUZZYEQ(P1_[i],xNodes_[i][id],eps) ) { // right/top-most coord will change
         periodicdirs_[n] |= 1U << i;  // position right-most direction bit  
       }
@@ -745,6 +745,8 @@ void GGridBox::periodize()
     n++;
   }
 
+  GPP(comm_, "GGridBox::periodize: igbdy_[GBDY_PERIODIC]=" << igbdy_[GBDY_PERIODIC]);
+  GPP(comm_, "GGridBox::periodize: periodicdirs_=" << periodicdirs_);
 
   // Now, cycle through periodic nodes and periodize coordinates:
   for ( GSIZET k=0; k<periodicids_.size(); k++ ) { // for each periodic node
