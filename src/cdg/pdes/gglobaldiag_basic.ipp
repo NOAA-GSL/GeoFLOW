@@ -145,13 +145,16 @@ void GGlobalDiag_basic<EquationType>::do_L2(const Time t, const State &u, const 
 
   // Energy injection = <f.u>
   fv = 0.0;
-  *utmp[1] = 0.0;
-  for ( GINT j=0; j<GDIM; j++ ) {
-    *utmp[1] = *uf[j];
-    utmp[1]->pointProd(*u[j]);
-    fv += grid_->integrate(*utmp[1],*utmp[0]); 
+  if ( uf.size() > 0 && uf[0] != NULLPTR 
+    && uf[0]->size() > 0 ) {
+    *utmp[1] = 0.0;
+    for ( GINT j=0; j<GDIM; j++ ) {
+      *utmp[1] = *uf[j];
+      utmp[1]->pointProd(*u[j]);
+      fv += grid_->integrate(*utmp[1],*utmp[0]); 
+    }
+    fv *= ivol_;
   }
-  fv *= ivol_;
 
   // Helicity = <u.omega>
   hel = 0.0;
@@ -240,14 +243,14 @@ void GGlobalDiag_basic<EquationType>::do_L2(const Time t, const State &u, const 
 template<typename EquationType>
 void GGlobalDiag_basic<EquationType>::do_max(const Time t, const State &u, const State &uf, const GString fname)
 {
-  assert(utmp_ != NULLPTR && utmp_->size() > 4
+  assert(utmp_ != NULLPTR && utmp_->size() > 5
       && "tmp space not set, or is insufficient");
 
   GFTYPE absu, absw, ener, enst, hel, fv, rhel;
 
   // Make things a little easier:
-  GTVector<GTVector<GFTYPE>*> utmp(5);
-  for ( GSIZET j=0; j<5; j++ ) utmp[j] = (*utmp_)[j];
+  GTVector<GTVector<GFTYPE>*> utmp(6);
+  for ( GSIZET j=0; j<6; j++ ) utmp[j] = (*utmp_)[j];
 
 
   // Energy = u^2/2:
@@ -276,12 +279,16 @@ void GGlobalDiag_basic<EquationType>::do_max(const Time t, const State &u, const
   enst = 0.5*utmp[3]->max();
 
   // Energy injection = f.u
-  *utmp[3] = 0.0;
-  for ( GINT j=0; j<GDIM; j++ ) {
-    *utmp[1] = *uf[j];
-    utmp[1]->pointProd(*u[j]);
+  fv = 0.0;
+  if ( uf.size() > 0 && uf[0] != NULLPTR 
+    && uf[0]->size() > 0 ) {
+    *utmp[3] = 0.0;
+    for ( GINT j=0; j<GDIM; j++ ) {
+      *utmp[1] = *uf[j];
+      utmp[1]->pointProd(*u[j]);
+    }
+    fv = utmp[3]->amax();
   }
-  fv = utmp[3]->amax();
 
   // Helicity = u.omega
   *utmp[3] = 0.0;
