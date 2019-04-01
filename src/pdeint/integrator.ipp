@@ -92,7 +92,7 @@ void Integrator<EquationType>::time( const Time& t0,
 
 		// Call observer on solution
                 for ( auto j = 0 ; j < this->obs_ptr_->size(); j++ ) 
-		  (*this->obs_ptr_)[j]->observe(t,u);
+		  (*this->obs_ptr_)[j]->observe(t,u,uf);
  
                 ++cycle_;
 
@@ -132,7 +132,7 @@ void Integrator<EquationType>::steps( const Time&  t0,
 
 		// Call observer on solution at new t
                 for ( auto j = 0 ; j < this->obs_ptr_->size(); j++ ) 
-		  (*this->obs_ptr_)[j]->observe(t,u);
+		  (*this->obs_ptr_)[j]->observe(t,u,uf);
 	}
 
 }
