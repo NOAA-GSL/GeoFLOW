@@ -2,7 +2,7 @@
 // Description  : Object defining a (global) icosahedral grid, that
 //                uses gnomonic projections to locate element vertices.
 // Copyright    : Copyright 2018. Colorado State University. All rights reserved
-// Derived From : none.
+// Derived From : GGrid.
 //==================================================================================
 
 #include <stdlib.h>

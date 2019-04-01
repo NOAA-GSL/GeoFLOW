@@ -1,9 +1,11 @@
 //==================================================================================
 // Module       : ggrid_box
 // Date         : 11/11/18 (DLR)
-// Description  : Object defining a (global) 2d or 3d box grid.
+// Description  : Object defining a (global) 2d or 3d box grid. Builds
+//                elements that base class then uses to build global
+//                computational data structures.
 // Copyright    : Copyright 2018. Colorado State University. All rights reserved
-// Derived From : none.
+// Derived From : GGrid.
 //==================================================================================
 #if !defined(_GGRID_BOX_HPP)
 #define _GGRID_BOX_HPP

@@ -8,7 +8,7 @@
 //                the same procedure as in 2d, but we use isoparameteric
 //                representation on the sphere.
 // Copyright    : Copyright 2018. Colorado State University. All rights reserved
-// Derived From : none.
+// Derived From : GGrid.
 //==================================================================================
 #if !defined(_GGRID_ICOS_HPP)
 #define _GGRID_ICOS_HPP
