@@ -131,11 +131,15 @@ inline    T operator[](const GSIZET i) const {
     #pragma acc routine vector
     T max();
     #pragma acc routine vector
+    T amax();
+    #pragma acc routine vector
     T maxn(GSIZET n);
     #pragma acc routine vector
     GSIZET imax();
     #pragma acc routine vector
     T min();
+    #pragma acc routine vector
+    T amin();
     #pragma acc routine vector
     T minn(GSIZET n);
     #pragma acc routine vector

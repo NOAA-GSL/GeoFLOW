@@ -1105,6 +1105,28 @@ GTVector<T>::max()
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD : amax
+// DESC   : Find absolute max of all members
+// ARGS   : none.
+// RETURNS: T-type max
+//**********************************************************************************
+template<class T>
+T
+GTVector<T>::amax()
+{
+  T fm = std::numeric_limits<T>::min();
+
+  for ( GLLONG j=this->gindex_.beg(); j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
+    fm = MAX(fm,fabs(this->data_[j]));
+  }
+
+  return fm;
+
+} // end amax
+
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD : minn
 // DESC   : Find max of first n elements
 // ARGS   : n : num elements past gindex.beg to check
@@ -1156,7 +1178,7 @@ GTVector<T>::imin()
 // METHOD : min
 // DESC   : Find max of all members
 // ARGS   : none.
-// RETURNS: T-type max
+// RETURNS: T-type min
 //**********************************************************************************
 template<class T>
 T
@@ -1171,6 +1193,28 @@ GTVector<T>::min()
   return fm;
 
 } // end min
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : amin
+// DESC   : Find absolute min of all members
+// ARGS   : none.
+// RETURNS: T-type min
+//**********************************************************************************
+template<class T>
+T
+GTVector<T>::amin()
+{
+  T fm = std::numeric_limits<T>::max();
+
+  for ( GLLONG j=this->gindex_.beg(); j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
+    fm = MIN(fm,fabs(this->data_[j]));
+  }
+
+  return fm;
+
+} // end amin
 
 
 //**********************************************************************************
