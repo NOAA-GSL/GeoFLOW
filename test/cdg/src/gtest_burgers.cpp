@@ -260,7 +260,7 @@ int main(int argc, char **argv)
     u_.resize(nstate);
     ua_.resize(nsolve);
     ub_.resize(nsolve);
-    uf_.resize(nsolve);
+    uf_.resize(nsolve); uf_ = NULLPTR;
     c_ .resize(GDIM);
     for ( GSIZET j=0; j<uold_.size(); j++ ) uold_[j] = new GTVector<GFTYPE>(grid_->size());
     for ( GSIZET j=0; j<utmp_.size(); j++ ) utmp_[j] = new GTVector<GFTYPE>(grid_->size());
