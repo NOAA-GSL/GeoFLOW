@@ -41,12 +41,11 @@ template<typename T>
  void    curl(GGrid &grid, const GTVector<GTVector<T>*> &u, GINT idir, 
               GTVector<GTVector<T>*> &tmp, GTVector<T> &curl)
 {
-  assert( u.size() >= GDIM && "Too few vector components provided");
   assert( ( (GDIM == 2 && idir == 3) ||
             (idir >= 1 && idir <= 3) )
        &&  "Invalid return component specified");
 
-  if ( grid.gtype() ==  GE_2DEMBEDDED ) {
+  if ( GDIM == 2 && u.size() > GDIM ) {
     switch (idir) {
       case 1:
         grid.deriv(*u[2], 2, *tmp[0], curl]);
@@ -60,9 +59,28 @@ template<typename T>
         grid.deriv(*u[0], 2, *tmp[0], *tmp[1]]);
         curl -= *tmp[1];
         break;
+      default:
+        assert( FALSE && "Invalid component specified");
+        break;
     }
+    return;
   }
-  else {
+
+  if ( GDIM == 2 ) {
+    switch (idir) {
+      case 3:
+        grid.deriv(*u[1], 1, *tmp[0], curl);
+        grid.deriv(*u[0], 2, *tmp[0], *tmp[1]]);
+        curl -= *tmp[1];
+        break;
+      default:
+        assert( FALSE && "Invalid component specified");
+        break;
+    }
+    return;
+  }
+
+  if ( GDIM == 3 ) {
     switch (idir) {
       case 1:
         grid.deriv(*u[1], 3, *tmp[0], curl);
@@ -81,6 +99,7 @@ template<typename T>
         break;
     }
   }
+  return;
 
 } // end of method curl
 
