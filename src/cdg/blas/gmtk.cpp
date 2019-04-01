@@ -37,9 +37,9 @@ namespace GMTK
 //          curl : result
 // RETURNS: none.
 //**********************************************************************************
-template<typename T>
-void curl(GGrid &grid, const GTVector<GTVector<T>*> &u, const GINT idir, 
-          GTVector<GTVector<T>*> &tmp, GTVector<T> &curl)
+template<>
+void curl(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &u, const GINT idir, 
+          GTVector<GTVector<GFTYPE>*> &tmp, GTVector<GFTYPE> &curl)
 {
 
   if ( GDIM == 2 && u.size() > GDIM ) {
