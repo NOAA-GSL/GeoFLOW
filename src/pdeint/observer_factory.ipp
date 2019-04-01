@@ -59,7 +59,7 @@ ObserverFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid){
 		// Set back to base type
 		base_ptr = obs_impl;
         }
-        else if( "gobal_diag_basic" == observer_name ) {
+        else if( "global_diag_basic" == observer_name ) {
 		using ObsImpl = GGlobalDiag_basic<Equation>;
 
 		// Allocate observer Implementation
