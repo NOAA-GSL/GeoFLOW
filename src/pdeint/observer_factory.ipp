@@ -30,10 +30,12 @@ ObserverFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid){
         else if ( "time"  == stype )  traits.itype = ObserverBase<ET>::OBS_TIME;
         else EH_ERROR("Invalid observer type specified");
 
-        traits.state_index   = ptree.getArray<int>        ("state_index");    // state ids to 'observe' [0, 1, 2...]
-        traits.state_names   = ptree.getArray<std::string>("state_names");    // state names 
-        traits.cycle_interval= ptree.getValue<size_t>     ("cycle_interval"); // cadence for cycle type
-        traits.time_interval = ptree.getValue<double>     ("time_interval");  // cadence for time type
+        std::vector<std::string> default_names;
+        std::vector<int> default_ids;
+        traits.state_index   = ptree.getArray<int>        ("state_index",default_ids);    // state ids to 'observe' [0, 1, 2...]
+        traits.state_names   = ptree.getArray<std::string>("state_names",default_names);  // state names 
+        traits.cycle_interval= ptree.getValue<size_t>     ("cycle_interval", 10);         // cadence for cycle type
+        traits.time_interval = ptree.getValue<double>     ("time_interval", 1.0);         // cadence for time type
         traits.dir           = ptree.getValue<std::string>("directory",".");  // directory
      
 	// Create the observer and cast to base type
