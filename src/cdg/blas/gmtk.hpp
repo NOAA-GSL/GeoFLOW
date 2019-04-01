@@ -26,6 +26,48 @@ namespace GMTK
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD : curl 
+// DESC   : Compute curl component, idir, of input vector field
+//          
+// ARGS   : grid : grid
+//          u    : input vector field. Must have GDIM components.
+//          idir : curl component to compute. Must be appropriate for 
+//                 problem dimension.
+//          tmp  : tmp vector; must be of at least length 2.
+//          curl : result
+// RETURNS: none.
+//**********************************************************************************
+template<typename T>
+ void    curl(GGrid &grid, const GTVector<GTVector<T>*> &u, GINT idir, 
+              GTVector<GTVector<T>*> &tmp, GTVector<T> &curl)
+{
+  assert( u.size() == GDIM &&  "Too few vector components provided");
+  assert( ( (GDIM == 2 && idir == 3) ||
+            (idir >= 1 && idir <= 3) )
+       &&  "Invalid return component specified");
+
+  switch (idir) {
+    case 1:
+      grid.deriv(*u[1], 3, *tmp[0], curl);
+      grid.deriv(*u[2], 2, *tmp[0], *tmp[1]]);
+      curl -= *tmp[1];
+      break;
+    case 2:
+      grid.deriv(*u[2], 1, *tmp[0], curl);
+      grid.deriv(*u[0], 3, *tmp[0], *tmp[1]]);
+      curl -= *tmp[1];
+      break;
+    case 3:
+      grid.deriv(*u[1], 1, *tmp[0], curl);
+      grid.deriv(*u[0], 2, *tmp[0], *tmp[1]]);
+      curl -= *tmp[1];
+      break;
+  }
+
+} // end of method curl
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD : cross_prod_k (1)
 // DESC   : Compute cross/vector product with hat(k)
 //             C = A X hat(k)
@@ -351,6 +393,9 @@ void saxpby(GTVector<T> &x, T a, GTVector<T> &y, T b)
   template<typename T>  
   void    compute_grefdiviW(GGrid &grid, GTVector<GTVector<T>*> &u, GTVector<T> &etmp,
                            GBOOL btrans, GTVector<T> &divu);
+  template<typename T>  
+  void    curl(GGrid &grid, GTVector<GTVector<T>*> &u, GINT idir, 
+               GTVector<T> &tmp, GTVector<T> &curl);
 
 
 };
