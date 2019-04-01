@@ -4,7 +4,7 @@
   "init_block"     : "init_nwave",
   "bdy_conditions" : "DIRICHLET",
   "restart_index"  : 0,
-  "observer_list"  : ["simple_output"],
+  "observer_list"  : ["simple_output", "global_diag_basic"],
   "poly_test": {
     "xpoly" : 10,
     "ypoly" : 10,
@@ -75,6 +75,13 @@
     "cadence_itype" : "time",
     "state_index"   : [0, 1],
     "state_names"   : ["u1", "u2", "u3"],
+    "cycle_interval": 50,
+    "time_interval" : 0.01
+  },
+  "global_diag_basic": {
+    "observer_name" : "global_diag_basic",
+    "directory"     : ".",
+    "cadence_itype" : "time",
     "cycle_interval": 50,
     "time_interval" : 0.01
   },
