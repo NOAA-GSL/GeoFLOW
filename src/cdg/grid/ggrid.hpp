@@ -34,13 +34,13 @@ public:
                             ~GGrid();
 //static                       GGrid *build(geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GC_COMM comm);
 
-virtual void                do_grid() = 0;                            // compute grid for irank
-virtual void                set_partitioner(GDD_base *d) = 0;         // set and use GDD object
-virtual void                set_bdy_callback(
-                            std::function<void(GElemList &)> *callback) 
-                            {bdycallback_ =  callback; }              // set bdy-set callback
+virtual void                 do_grid() = 0;                            // compute grid for irank
+virtual void                 set_partitioner(GDD_base *d) = 0;         // set and use GDD object
+virtual void                 set_bdy_callback(
+                             std::function<void(GElemList &)> *callback) 
+                             {bdycallback_ =  callback; }              // set bdy-set callback
 
-virtual void                print(const GString &filename){}          // print grid to file
+virtual void                 print(const GString &filename){}          // print grid to file
 
 
         void                 grid_init();                             // initialize class
@@ -86,8 +86,9 @@ virtual void                print(const GString &filename){}          // print g
         GTVector<GTVector<GSIZET>>
                             &igbdy() { return igbdy_;}                 // global dom bdy indices into u for eacb GBdyType
 
+        GC_COMM              get_comm() { return comm_; }              // get communicator
 
-friend  std::ostream&        operator<<(std::ostream&, GGrid &);      // Output stream operator
+friend  std::ostream&        operator<<(std::ostream&, GGrid &);       // Output stream operator
  
 
 protected:
