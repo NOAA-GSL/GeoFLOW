@@ -5,7 +5,6 @@
 // Copyright    : Copyright 2018-19. Colorado State University. All rights reserved.
 // Derived From : 
 //==================================================================================
-
 #include "gexec.h"
 #include "gtypes.h"
 #include <stdio.h>
@@ -95,8 +94,6 @@ void create_stirrer(PropertyTree &ptree, StirBasePtr &pStirrer);
 int main(int argc, char **argv)
 {
 
-    // Get types used for equations and solver
-
     GString serr ="main: ";
     GBOOL  bret, dopr=TRUE;
     GBOOL  bgridwritten=FALSE;
@@ -109,7 +106,7 @@ int main(int argc, char **argv)
     GFTYPE radiusi=1, radiuso=2, tt;
     std::vector<GINT> ne(3); // # elements in each direction in 3d
     GString sgrid;// name of JSON grid object to use
-    GTVector<GString> svars, savars, sdu;
+    GTVector<GString> svars, savars;
     char stmp[1024];
 
     typename MyTypes::Time  t  = 0;
@@ -297,6 +294,7 @@ int main(int argc, char **argv)
     EH_MESSAGE("main: create observers...");
     std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> pObservers(new std::vector<std::shared_ptr<ObserverBase<MyTypes>>>());
     create_observers(ptree, pObservers);
+    for ( GSIZET j=0; j<pObservers->size(); j++ ) (*pObservers)[j]->set_tmp(utmp_);
 
     // Create integrator:
     EH_MESSAGE("main: create integrator...");
@@ -312,10 +310,7 @@ int main(int argc, char **argv)
       svars.push_back(stmp);
       sprintf(stmp, "u%da", j+1);
       savars.push_back(stmp);
-      sprintf(stmp, "du%d", j+1);
-      sdu.push_back(stmp);
     }
-
 
     // Do time integration (output included
     // via observer(s)):
