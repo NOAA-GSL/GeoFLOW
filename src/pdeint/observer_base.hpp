@@ -54,7 +54,7 @@ public:
         };
 
         ObserverBase() = default;
-	ObserverBase(Traits& traits, Grid& grid){traits_=traits; grid_= &grid;}
+	ObserverBase(Traits& traits, Grid& grid){traits_=traits; grid_= &grid; utmp_=nullptr;}
 	ObserverBase(const ObserverBase& obs) = default;
 	virtual ~ObserverBase() = default;
 	ObserverBase& operator=(const ObserverBase& obs) = default;
@@ -70,9 +70,17 @@ public:
 		this->observe_impl(t,u,uf);
 	}
 
+	/**
+	 * Set tmp space
+	 *
+	 * @param[in] State variable for tmp
+	 */
+	void set_tmp(State& utmp) { utmp_ = &utmp; }
+
 protected:
         Traits traits_;
         Grid  *grid_;
+        State *utmp_;
 	/**
 	 * Must be provided by implementation
 	 */
