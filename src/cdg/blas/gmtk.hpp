@@ -30,7 +30,7 @@ namespace GMTK
 // DESC   : Compute curl component, idir, of input vector field
 //          
 // ARGS   : grid : grid
-//          u    : input vector field. Must have GDIM components.
+//          u    : input vector field. Must have >= GDIM components.
 //          idir : curl component to compute. Must be appropriate for 
 //                 problem dimension.
 //          tmp  : tmp vector; must be of at least length 2.
@@ -41,27 +41,45 @@ template<typename T>
  void    curl(GGrid &grid, const GTVector<GTVector<T>*> &u, GINT idir, 
               GTVector<GTVector<T>*> &tmp, GTVector<T> &curl)
 {
-  assert( u.size() == GDIM &&  "Too few vector components provided");
+  assert( u.size() >= GDIM && "Too few vector components provided");
   assert( ( (GDIM == 2 && idir == 3) ||
             (idir >= 1 && idir <= 3) )
        &&  "Invalid return component specified");
 
-  switch (idir) {
-    case 1:
-      grid.deriv(*u[1], 3, *tmp[0], curl);
-      grid.deriv(*u[2], 2, *tmp[0], *tmp[1]]);
-      curl -= *tmp[1];
-      break;
-    case 2:
-      grid.deriv(*u[2], 1, *tmp[0], curl);
-      grid.deriv(*u[0], 3, *tmp[0], *tmp[1]]);
-      curl -= *tmp[1];
-      break;
-    case 3:
-      grid.deriv(*u[1], 1, *tmp[0], curl);
-      grid.deriv(*u[0], 2, *tmp[0], *tmp[1]]);
-      curl -= *tmp[1];
-      break;
+  if ( grid.gtype() ==  GE_2DEMBEDDED ) {
+    switch (idir) {
+      case 1:
+        grid.deriv(*u[2], 2, *tmp[0], curl]);
+        curl *= -1.0;
+        break;
+      case 2:
+        grid.deriv(*u[2], 1, *tmp[0], curl);
+        break;
+      case 3:
+        grid.deriv(*u[1], 1, *tmp[0], curl);
+        grid.deriv(*u[0], 2, *tmp[0], *tmp[1]]);
+        curl -= *tmp[1];
+        break;
+    }
+  }
+  else {
+    switch (idir) {
+      case 1:
+        grid.deriv(*u[1], 3, *tmp[0], curl);
+        grid.deriv(*u[2], 2, *tmp[0], *tmp[1]]);
+        curl -= *tmp[1];
+        break;
+      case 2:
+        grid.deriv(*u[2], 1, *tmp[0], curl);
+        grid.deriv(*u[0], 3, *tmp[0], *tmp[1]]);
+        curl -= *tmp[1];
+        break;
+      case 3:
+        grid.deriv(*u[1], 1, *tmp[0], curl);
+        grid.deriv(*u[0], 2, *tmp[0], *tmp[1]]);
+        curl -= *tmp[1];
+        break;
+    }
   }
 
 } // end of method curl
