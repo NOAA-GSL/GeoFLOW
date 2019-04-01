@@ -59,6 +59,15 @@ ObserverFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid){
 		// Set back to base type
 		base_ptr = obs_impl;
         }
+        else if( "gobal_diag_basic" == observer_name ) {
+		using ObsImpl = GGlobalDiag_basic<Equation>;
+
+		// Allocate observer Implementation
+		std::shared_ptr<ObsImpl> obs_impl(new ObsImpl(traits, grid));
+
+		// Set back to base type
+		base_ptr = obs_impl;
+        }
 	else {
 		EH_ERROR("Requested observer not found: " << observer_name);
 	}
