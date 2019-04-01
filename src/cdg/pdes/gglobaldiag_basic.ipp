@@ -237,7 +237,7 @@ void GGlobalDiag_basic<EquationType>::do_global(const Time t, const State &u, co
 template<typename EquationType>
 void GGlobalDiag_basic<EquationType>::do_max(const Time t, const State &u, const State &uf, const GString fname)
 {
-  assert(utmp_ != NULLPTR && utmp_->size() > 3
+  assert(utmp_ != NULLPTR && utmp_->size() > 4
       && "tmp space not set, or is insufficient");
 
   GFTYPE absu, absw, ener, enst, hel, fv, rhel;
