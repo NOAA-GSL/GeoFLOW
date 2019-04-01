@@ -207,7 +207,7 @@ void GGlobalDiag_basic<EquationType>::do_L2(const Time t, const State &u, const 
   // Print data to file:
   std::ifstream itst;
   std::ofstream ios;
-  GString       fullfile = sdir_ + fname;
+  GString       fullfile = sdir_ + "/" + fname;
 
   if ( myrank_ == 0 ) {
     itst.open(fullfile);
@@ -340,7 +340,7 @@ void GGlobalDiag_basic<EquationType>::do_max(const Time t, const State &u, const
   // Print data to file:
   std::ifstream itst;
   std::ofstream ios;
-  GString       fullfile = sdir_ + fname;
+  GString       fullfile = sdir_ + "/" + fname;
 
   if ( myrank_ == 0 ) {
     itst.open(fullfile);
