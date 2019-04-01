@@ -4,7 +4,7 @@
 // Description  : Observer object for carrying out simple POSIX-based  
 //                binary output.
 // Copyright    : Copyright 2019. Colorado State University. All rights reserved
-// Derived From : none.
+// Derived From : ObserverBase.
 //==================================================================================
 
 //**********************************************************************************
