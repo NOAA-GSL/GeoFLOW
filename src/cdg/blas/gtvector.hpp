@@ -147,7 +147,7 @@ inline    T operator[](const GSIZET i) const {
     #pragma acc routine vector
     T Eucnorm();
     #pragma acc routine vector
-    void pow(GINT p);
+    void pow(GDOUBLE p);
     #pragma acc routine vector
     void abs();
     #pragma acc routine vector

@@ -1332,7 +1332,7 @@ GTVector<T>::Eucnorm()
 //**********************************************************************************
 template<class T>
 void
-GTVector<T>::pow(const GINT p)
+GTVector<T>::pow(const GDOUBLE p)
 {
   assert(std::is_arithmetic<T>::value && "Requires arithmetic template parameter");
   GDOUBLE tmp;
