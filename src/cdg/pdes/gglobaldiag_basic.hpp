@@ -63,7 +63,7 @@ public:
 private:
 // Private methods:
         void               init(const Time t, const State &u);
-        void               do_global(const Time t, const State &u, const State &uf, const GString file);
+        void               do_L2 (const Time t, const State &u, const State &uf, const GString file);
         void               do_max(const Time t, const State &u, const State &uf, const GString file);
 // Private data:
         GBOOL              bInit_;

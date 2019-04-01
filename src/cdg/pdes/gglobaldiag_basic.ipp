@@ -54,8 +54,8 @@ void GGlobalDiag_basic<EquationType>::observe_impl(const Time &t, const State &u
     || (traits_.itype == ObserverBase<EquationType>::OBS_TIME  
         &&  t-time_last_ >= traits_.time_interval) ) {
 
-    do_global(t, u, uf, "gbalance.txt");
-    do_max   (t, u, uf, "gmax.txt");
+    do_L2 (t, u, uf, "gbalance.txt");
+    do_max(t, u, uf, "gmax.txt");
     cycle_last_ = cycle_;
     time_last_  = t;
     ocycle_++;
@@ -98,8 +98,8 @@ void GGlobalDiag_basic<EquationType>::init(const Time t, const State &u)
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD     : do_global
-// DESCRIPTION: Compute global quantities, and output to file
+// METHOD     : do_L2
+// DESCRIPTION: Compute integrated diagnostic quantities, and output to file
 // ARGUMENTS  : t  : state time
 //              uu : state variable
 //              uf : forcing
@@ -107,7 +107,7 @@ void GGlobalDiag_basic<EquationType>::init(const Time t, const State &u)
 // RETURNS    : none.
 //**********************************************************************************
 template<typename EquationType>
-void GGlobalDiag_basic<EquationType>::do_global(const Time t, const State &u, const State &uf, const GString fname)
+void GGlobalDiag_basic<EquationType>::do_L2(const Time t, const State &u, const State &uf, const GString fname)
 {
   assert(utmp_ != NULLPTR && utmp_->size() > 3
       && "tmp space not set, or is insufficient");
@@ -224,7 +224,7 @@ void GGlobalDiag_basic<EquationType>::do_global(const Time t, const State &u, co
     ios.close();
   }
  
-} // end of method do_global
+} // end of method do_L2
 
 
 //**********************************************************************************
