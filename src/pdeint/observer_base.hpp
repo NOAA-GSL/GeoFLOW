@@ -75,7 +75,9 @@ public:
 	 *
 	 * @param[in] State variable for tmp
 	 */
-	void set_tmp(State& utmp) { utmp_ = &utmp; }
+	void set_tmp(State& utmp){
+		utmp_ = &utmp;
+        } 
 
 protected:
         Traits traits_;

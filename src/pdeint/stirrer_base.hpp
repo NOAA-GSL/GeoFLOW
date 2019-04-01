@@ -66,9 +66,20 @@ public:
 		this->stir_impl(t,u,uf);
 	}
 
+        /**
+         * Set tmp space
+         *
+         * @param[in] State variable for tmp
+         */
+        void set_tmp(State& utmp){
+                utmp_ = &utmp;
+        }
+
+
 protected:
         Traits traits_;
         Grid  *grid_;
+        State *utmp_;
 	/**
 	 * Must be provided by implementation
 	 */
