@@ -23,7 +23,6 @@ extern GINT szVecCache_;
 namespace GMTK
 {
 
-
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : cross_prod_k (1)
@@ -352,8 +351,8 @@ void saxpby(GTVector<T> &x, T a, GTVector<T> &y, T b)
   void    compute_grefdiviW(GGrid &grid, GTVector<GTVector<T>*> &u, GTVector<T> &etmp,
                            GBOOL btrans, GTVector<T> &divu);
   template<typename T>  
-  void    curl(GGrid &grid, GTVector<GTVector<T>*> &u, GINT idir, 
-               GTVector<T> &tmp, GTVector<T> &curl);
+  void    curl(GGrid &grid, const GTVector<GTVector<T>*> &u, const GINT idir, 
+               GTVector<GTVector<T>*> &tmp, GTVector<T> &curl);
 
 
 };
