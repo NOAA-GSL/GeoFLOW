@@ -5,7 +5,7 @@
 //                and Adams-Bashforth scheme with variable timestep.
 //                PDE. 
 // Copyright    : Copyright 2019. Colorado State University. All rights reserved
-// Derived From : none.
+// Derived From : GMultilevel_coeffs_base.
 //==================================================================================
 #if !defined(_G_AB_HPP)
 #define _G_AB_HPP

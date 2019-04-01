@@ -22,7 +22,7 @@
 //                The dissipation coefficient may also be provided as a spatial field.
 //
 // Copyright    : Copyright 2019. Colorado State University. All rights reserved
-// Derived From : none.
+// Derived From : EquationBase.
 //==================================================================================
 #include <stdlib.h>
 #include <memory.h>

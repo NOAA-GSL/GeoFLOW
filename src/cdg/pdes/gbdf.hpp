@@ -5,7 +5,7 @@
 //                a Backwards Differencing Formula (BDF) scheme with variable 
 //                timestep.
 // Copyright    : Copyright 2019. Colorado State University. All rights reserved
-// Derived From : none.
+// Derived From : GMultilevel_coeffs_base.
 //==================================================================================
 #if !defined(_G_BDF_HPP)
 #define _G_BDF_HPP
