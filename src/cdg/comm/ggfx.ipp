@@ -1421,7 +1421,7 @@ GBOOL GGFX<T>::localGS(GTVector<T> &qu, GTVector<GSIZET> &iind,
 
   GString serr = "GGFX<T>::localGS (2): ";
   T       res;
-  GLLONG  i, j;
+  GLLONG  i, j, k;
 
 
   // Perform GGFX_OP on the nodes shared by this proc:
