@@ -66,8 +66,8 @@ public:
 	 * @param[in] t Time of current state
 	 * @param[in] u State at the current time
 	 */
-	void observe(const Time t, const State& u){
-		this->observe_impl(t,u);
+	void observe(const Time t, const State& u, const State& uf){
+		this->observe_impl(t,u,uf);
 	}
 
 protected:
@@ -76,7 +76,7 @@ protected:
 	/**
 	 * Must be provided by implementation
 	 */
-	virtual void observe_impl(const Time& t, const State& u) = 0;
+	virtual void observe_impl(const Time& t, const State& u, const State& uf) = 0;
 
 };
 

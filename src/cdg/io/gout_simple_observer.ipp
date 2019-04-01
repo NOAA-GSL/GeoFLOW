@@ -39,11 +39,12 @@ time_last_      (0.0)
 //
 // ARGUMENTS  : t    : time, t^n, for state, uin=u^n
 //              u    : state
+//              uf   : forcing
 //               
 // RETURNS    : none.
 //**********************************************************************************
 template<typename EquationType>
-void GOutSimpleObserver<EquationType>::observe_impl(const Time &t, const State &u)
+void GOutSimpleObserver<EquationType>::observe_impl(const Time &t, const State &u, const State &uf)
 {
   init(t,u);
 

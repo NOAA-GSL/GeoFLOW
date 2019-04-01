@@ -61,7 +61,7 @@ public:
                            GOutSimpleObserver(const GOutSimpleObserver &a) = default;
                            GOutSimpleObserver &operator=(const GOutSimpleObserver &bu) = default;
 
-        void               observe_impl(const Time &t, const State &u);
+        void               observe_impl(const Time &t, const State &u, const State &uf);
 
 private:
 // Private methods:

@@ -36,7 +36,7 @@ public:
 
 protected:
 
-	void observe_impl(const Time& /* t */, const State& /* u */){
+	void observe_impl(const Time& /* t */, const State& /* u */, const State& /* uf */){
 		// Do nothing ...
 	}
 
