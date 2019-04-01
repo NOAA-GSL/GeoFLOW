@@ -9,6 +9,8 @@
 #if !defined(_GGLOBALDIAG_BURGERS_OBS_HPP)
 #define _GGLOBALDIAG_BURGERS_OBS_HPP
 
+#include "gtvector.hpp"
+#include "ggrid.hpp"
 #include "pdeint/equation_base.hpp"
 #include "pdeint/observer_base.hpp"
 #include "tbox/property_tree.hpp"
@@ -35,6 +37,9 @@ public:
         using Jacobian    = typename Equation::Jacobian;
         using Size        = typename Equation::Size;
         using EquationPtr = std::shared_ptr<Equation>;
+        using ObserverBase<EquationType>::utmp_;
+        using ObserverBase<EquationType>::grid_;
+        using ObserverBase<EquationType>::traits_;
 
 //      using ObserverBase<EquationType>::ObsType;
 //      using OBS_CYCLE = typename ObserverBase<EquationType>::ObsType::OBS_CYCLE;
