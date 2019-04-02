@@ -400,31 +400,31 @@ GGridIcos::lagvert(GTPoint<GFTYPE>&a, GTPoint<GFTYPE> &b, GTPoint<GFTYPE> &c,
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : do_grid
+// METHOD : do_elems
 // DESC   : Public entry point for grid computation
 // ARGS   : 
 //          rank: MPI rank or partition id
 // RETURNS: none.
 //**********************************************************************************
-void GGridIcos::do_grid()
+void GGridIcos::do_elems()
 {
-  if ( ndim_ == 2 ) do_grid2d(irank_);
-  if ( ndim_ == 3 ) do_grid3d(irank_);
+  if ( ndim_ == 2 ) do_elems2d(irank_);
+  if ( ndim_ == 3 ) do_elems3d(irank_);
 
-} // end, method do_grid
+} // end, method do_elems
 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : do_grid2d
+// METHOD : do_elems2d
 // DESC   : Build 2d elemental grid on base mesh
 // ARGS   : grid: GGrid object
 //          rank: MPI rank or partition id
 // RETURNS: none.
 //**********************************************************************************
-void GGridIcos::do_grid2d(GINT irank)
+void GGridIcos::do_elems2d(GINT irank)
 {
-  GString           serr = "GridIcos::do_grid2d: ";
+  GString           serr = "GridIcos::do_elems2d: ";
   GFTYPE            fact, xlatc, xlongc;
   GTVector<GFPoint> cverts(4), gverts(4), tverts(4);
   GTPoint<GFTYPE>   c(3), ct(3), v1(3), v2(3), v3(3); // 3d points
@@ -536,12 +536,12 @@ void GGridIcos::do_grid2d(GINT irank)
     (*bdycallback_)(gelems_);
   }
 
-} // end of method do_grid2d
+} // end of method do_elems2d
 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : do_grid3d
+// METHOD : do_elems3d
 // DESC   : Build 3d elemental grid. It's assumed that init3d has been called
 //          prior to entry, and that the hmesh_ has beed set. This arrays
 //          of hexagonal 3d elements provides for each hex its vertices in Cartesian
@@ -554,9 +554,9 @@ void GGridIcos::do_grid2d(GINT irank)
 //          rank: MPI rank or partition id
 // RETURNS: none.
 //**********************************************************************************
-void GGridIcos::do_grid3d(GINT irank)
+void GGridIcos::do_elems3d(GINT irank)
 {
-  GString                      serr = "GridIcos::do_grid3d: ";
+  GString                      serr = "GridIcos::do_elems3d: ";
   GTVector<GINT>               iind;
   GTVector<GINT>               I(3);
   GTVector<GINT>              *bdy_ind;
@@ -636,7 +636,7 @@ void GGridIcos::do_grid3d(GINT irank)
     (*bdycallback_)(gelems_);
   }
 
-} // end of method do_grid3d
+} // end of method do_elems3d
 
 
 //**********************************************************************************

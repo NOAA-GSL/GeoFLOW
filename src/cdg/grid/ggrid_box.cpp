@@ -256,23 +256,23 @@ void GGridBox::init3d()
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : do_grid
+// METHOD : do_elems
 // DESC   : Public entry point for grid computation
 // ARGS   : grid: GGrid object
 //          rank: MPI rank or partition id
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::do_grid()
+void GGridBox::do_elems()
 {
-  if ( ndim_ == 2 ) do_grid2d(irank_);
-  if ( ndim_ == 3 ) do_grid3d(irank_);
+  if ( ndim_ == 2 ) do_elems2d(irank_);
+  if ( ndim_ == 3 ) do_elems3d(irank_);
 
-} // end, method do_grid
+} // end, method do_elems
 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : do_grid2d
+// METHOD : do_elems2d
 // DESC   : Build 2d element list. It's assumed that init3d has been called
 //          prior to entry, and that the qmesh_ has beed set. This arrays
 //          of hexagonal 3d elements provides for each hex its vertices in Cartesian
@@ -285,12 +285,12 @@ void GGridBox::do_grid()
 //          rank: MPI rank or partition id
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::do_grid2d(GINT irank)
+void GGridBox::do_elems2d(GINT irank)
 {
   assert(gbasis_.size()>0 && "Must set basis first");
   assert(ndim_ == 2 && "Dimension must be 2");
 
-  GString                      serr = "GGridBox::do_grid2d: ";
+  GString                      serr = "GGridBox::do_elems2d: ";
   GTPoint<GFTYPE>              cent;
   GTVector<GINT>               iind;
   GTVector<GINT>               I(3);
@@ -320,7 +320,7 @@ void GGridBox::do_grid2d(GINT irank)
   for ( GSIZET n=0; n<iind.size(); n++ ) { // for each hex in irank's mesh
     i = iind[n];
 
-cout << GComm::WorldRank() << ": GGrid::do_grid2d: qmesh[" << i << "]=" << qmesh_[i] << endl;
+cout << GComm::WorldRank() << ": GGrid::do_elems2d: qmesh[" << i << "]=" << qmesh_[i] << endl;
     pelem = new GElem_base(GE_REGULAR, gbasis_);
     xNodes  = &pelem->xNodes();  // node spatial data
     xiNodes = &pelem->xiNodes(); // node ref interval data
@@ -391,13 +391,13 @@ cout << GComm::WorldRank() << ": GGrid::do_grid2d: qmesh[" << i << "]=" << qmesh
     (*bdycallback_)(gelems_);
   }
 
-} // end of method do_grid2d
+} // end of method do_elems2d
 
 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : do_grid3d
+// METHOD : do_elems3d
 // DESC   : Build 3d element list. It's assumed that init3d has been called
 //          prior to entry, and that the bmesh_ has beed set. This arrays
 //          of hexagonal 3d elements provides for each hex its vertices in Cartesian
@@ -410,13 +410,13 @@ cout << GComm::WorldRank() << ": GGrid::do_grid2d: qmesh[" << i << "]=" << qmesh
 //          rank: MPI rank or partition id
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::do_grid3d(GINT irank)
+void GGridBox::do_elems3d(GINT irank)
 {
 
   assert(gbasis_.size()>0 && "Must set basis first");
   assert(ndim_ == 3 && "Dimension must be 3");
 
-  GString                      serr = "GGridBox::do_grid3d: ";
+  GString                      serr = "GGridBox::do_elems3d: ";
   GTPoint<GFTYPE>              cent;
   GTVector<GINT>               iind;
   GTVector<GINT>               I(3);
@@ -515,7 +515,7 @@ void GGridBox::do_grid3d(GINT irank)
     (*bdycallback_)(gelems_);
   }
 
-} // end of method do_grid3d
+} // end of method do_elems3d
 
 
 //**********************************************************************************

@@ -40,7 +40,7 @@ public:
 
                            ~GGridBox();
 
-        void                do_grid();                                       // compute grid for irank
+        void                do_elems();                                      // compute grid for irank
         void                set_partitioner(GDD_base *d);                    // set and use GDD object
         void                set_basis(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b); // set element basis
         void                periodize();                                     // periodize coords, if allowed
@@ -56,8 +56,8 @@ private:
          void               init3d();                                       // initialize for 3d grid
 
 
-         void               do_grid2d(GINT rank);                           // do 2d grid
-         void               do_grid3d(GINT rank);                           // do 3d grid
+         void               do_elems2d(GINT rank);                          // do 2d grid
+         void               do_elems3d(GINT rank);                          // do 3d grid
          void               set_global_bdytypes_2d(GElem_base &);           // set 2d bdy type info
          void               set_global_bdytypes_3d(GElem_base &);           // set 3d bdy type info
 

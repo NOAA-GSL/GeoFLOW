@@ -342,10 +342,10 @@ GFTYPE GGrid::maxlength()
 void GGrid::grid_init()
 {
 
-  cout << GComm::WorldRank() << ": GGrid::grid_init: do_grid..." << endl;
-  GPTLstart("GGrid::grid_init: do_grid");
-  do_grid(); // generate element list from derived class
-  GPTLstop("GGrid::grid_init: do_grid");
+  cout << GComm::WorldRank() << ": GGrid::grid_init: do_elems..." << endl;
+  GPTLstart("GGrid::grid_init: do_elems");
+  do_elems(); // generate element list from derived class
+  GPTLstop("GGrid::grid_init: do_elems");
 
   GComm::Synch(comm_);
 
