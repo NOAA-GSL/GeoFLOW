@@ -366,7 +366,6 @@ void GGrid::grid_init()
   else if ( itype_[GE_DEFORMED]  .size() > 0 ) gtype_ = GE_DEFORMED;
   else if ( itype_[GE_REGULAR]   .size() > 0 ) gtype_ = GE_REGULAR;
 
-  cout << GComm::WorldRank() << ": GGrid::grid_init: init_bc_info..." << endl;;
   GPTLstart("GGrid::grid_init: init_bc_info");
   // All element bdy/face data should have been set by now:
   init_bc_info();
@@ -379,7 +378,6 @@ void GGrid::grid_init()
   }
   GPTLstop("GGrid::grid_init: def_init");
 
-  cout << GComm::WorldRank() << ": GGrid::grid_init: reg_init..."<< endl; ;
   GPTLstart("GGrid::grid_init: reg_init");
   if ( itype_[GE_REGULAR].size() > 0 ) {
     reg_init();
@@ -387,11 +385,9 @@ void GGrid::grid_init()
   GPTLstop("GGrid::grid_init: reg_init");
 
 
-  cout << GComm::WorldRank() << ": GGrid::grid_init: find_min_dist..." << endl;;
   GPTLstart("GGrid::grid_init: find_min_dist");
   minnodedist_ = find_min_dist();
   GPTLstop("GGrid::grid_init: find_min_dist");
-  cout << GComm::WorldRank() << ": GGrid::grid_init: find_min_dist done." << endl;;
 
   bInitialized_ = TRUE;
 
