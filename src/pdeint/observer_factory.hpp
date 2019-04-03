@@ -14,7 +14,7 @@
 #include "pdeint/null_observer.hpp"
 #include "pdeint/observer_base.hpp"
 #include "tbox/property_tree.hpp"
-#include "gout_simple_observer.hpp"
+#include "gposixio_observer.hpp"
 #include "gglobaldiag_basic.hpp"
 
 

@@ -52,8 +52,8 @@ ObserverFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid){
 		// Set back to base type
 		base_ptr = obs_impl;
 	}
-        else if( "gout_simple_observer" == observer_name ) {
-		using ObsImpl = GOutSimpleObserver<Equation>;
+        else if( "posixio_observer" == observer_name ) {
+		using ObsImpl = GPosixIOObserver<Equation>;
 
 		// Allocate observer Implementation
 		std::shared_ptr<ObsImpl> obs_impl(new ObsImpl(traits, grid));
