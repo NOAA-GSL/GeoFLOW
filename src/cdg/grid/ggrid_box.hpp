@@ -61,13 +61,13 @@ private:
          void               do_elems2d(GINT rank);                          // do 2d grid
          void               do_elems3d(GINT rank);                          // do 3d grid
          void               do_elems2d(GTMatrix<GINT> &p, 
-                              GTVector<GTVector<GFTYPE>> &xnodes)           // do 2d grid restart
+                              GTVector<GTVector<GFTYPE>> &xnodes);          // do 2d grid restart
          void               do_elems3d(GTMatrix<GINT> &p, 
-                              GTVector<GTVector<GFTYPE>> &xnodes)           // do 3d grid restart
+                              GTVector<GTVector<GFTYPE>> &xnodes);          // do 3d grid restart
          void               set_global_bdytypes_2d(GElem_base &);           // set 2d bdy type info
          void               set_global_bdytypes_3d(GElem_base &);           // set 3d bdy type info
 
-         GINT               ndim_;           // grid dimensionality (2 or 3)
+         GINT                ndim_;          // grid dimensionality (2 or 3)
          GDD_base           *gdd_;           // domain decomposition/partitioning object
          GShapeFcn_linear   *lshapefcn_;     // linear shape func to compute 2d coords
          GTPoint<GFTYPE>     P0_;            // P0 = starting point of box origin

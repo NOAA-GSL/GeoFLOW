@@ -54,6 +54,8 @@ public:
                            ~GGridIcos();
 
         void                do_elems();                                   // compute grid for irank
+        void                do_elems(GTMatrix<GINT> &p,
+                              GTVector<GTVector<GFTYPE>> &xnodes);        // compute elems from restart data)
         void                set_partitioner(GDD_base *d);                 // set and use GDD object
         GTVector<GTriangle<GFTYPE>> 
                            &get_tmesh(){ return tmesh_;}                  // get complete triang. mesh
@@ -103,6 +105,11 @@ friend  std::ostream&       operator<<(std::ostream&, GGridIcos &);       // Out
 private:
          void               do_elems2d(GINT rank);              // do 2d grid
          void               do_elems3d(GINT rank);              // do 3d grid
+         void               do_elems2d(GTMatrix<GINT> &p,
+                              GTVector<GTVector<GFTYPE>> &xnodes); // do 2d grid restart
+         void               do_elems3d(GTMatrix<GINT> &p,
+                              GTVector<GTVector<GFTYPE>> &xnodes); // do 3d grid restart
+
          void               set_global_bdy_2d(GElem_base &);    // set 2d bdy info
          void               set_global_bdy_3d(GElem_base &);    // set 3d bdy info
 

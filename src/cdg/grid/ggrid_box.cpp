@@ -564,11 +564,13 @@ void GGridBox::do_elems2d(GTMatrix<GINT> &p,
                                gb(GDIM);
   GVector<GINT>                ppool(gbasis_.size());
 
+  assert(gbasis_.size()>0 && "Must set basis first");
+
   // Now, treat the gbasis_ as a pool that we search
   // to find bases we need:
   for ( GSIZET j=0; j<ppool.size(); j++ ) ppool[j] = gbasis_[j].getOrder();
 
-  GSIZET i, iwhere, n;
+  GSIZET iwhere, n;
   GSIZET nvnodes;   // no. vol nodes
   GSIZET nfnodes;   // no. face nodes
   GSIZET nbnodes;   // no. bdy nodes
@@ -578,7 +580,7 @@ void GGridBox::do_elems2d(GTMatrix<GINT> &p,
   for ( GSIZET i=0; i<p.size(1); i++ ) { // for each element
     nvnodes = 1;
     for ( GSIZET j=0; j<GDIM; j++ ) { // set basis from pool
-      assert(ppool.contains(p(i,j),iwhere) && "Expansion order not found");
+      assert(ppool.contains(p(ip,j),iwhere) && "Expansion order not found");
       gb[j] = gbasis_[iwhere];
       nvnodes *= (p(i,j) + 1);
     }
@@ -631,8 +633,8 @@ void GGridBox::do_elems2d(GTMatrix<GINT> &p,
     // Find global global interior and bdy start & stop indices represented 
     // locally within element:
     assert(nvnodes == gelems_[n]->nnodes() && "Incompatible node count");
-    nfnodes = gelems_[n]->nfnodes();
-    nbnodes = gelems_[n]->bdy_indices().size();
+    nfnodes = gelems_[i]->nfnodes();
+    nbnodes = gelems_[i]->bdy_indices().size();
     pelem->igbeg() = icurr;           // beg global vol index
     pelem->igend() = icurr+nvnodes-1; // end global vol index
     pelem->ifbeg() = fcurr;           // beg global face index
@@ -687,6 +689,8 @@ void GGridBox::do_elems3d(GTMatrix<GINT> &p,
   GTVector<GNBasis<GCTYPE,GFTYPE>*>
                                gb(GDIM);
   GVector<GINT>                ppool(gbasis_.size());
+
+  assert(gbasis_.size()>0 && "Must set basis first");
 
   // Now, treat the gbasis_ as a pool that we search
   // to find bases we need:
@@ -757,9 +761,9 @@ void GGridBox::do_elems3d(GTMatrix<GINT> &p,
     // application; finer control may be exercised in callback):
     set_global_bdytypes_3d(*pelem);
 
-    assert(nvnodes == gelems_[n]->nnodes() && "Incompatible node count");
-    nfnodes = gelems_[n]->nfnodes();
-    nbnodes = gelems_[n]->bdy_indices().size();
+    assert(nvnodes == gelems_[i]->nnodes() && "Incompatible node count");
+    nfnodes = gelems_[i]->nfnodes();
+    nbnodes = gelems_[i]->bdy_indices().size();
     pelem->igbeg() = icurr;           // beg global vol index
     pelem->igend() = icurr+nvnodes-1; // end global vol index
     pelem->ifbeg() = fcurr;           // beg global face index

@@ -400,7 +400,7 @@ GGridIcos::lagvert(GTPoint<GFTYPE>&a, GTPoint<GFTYPE> &b, GTPoint<GFTYPE> &c,
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : do_elems
+// METHOD : do_elems (1)
 // DESC   : Public entry point for grid computation
 // ARGS   : 
 //          rank: MPI rank or partition id
@@ -411,20 +411,39 @@ void GGridIcos::do_elems()
   if ( ndim_ == 2 ) do_elems2d(irank_);
   if ( ndim_ == 3 ) do_elems3d(irank_);
 
-} // end, method do_elems
+} // end, method do_elems (1)
 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : do_elems2d
+// METHOD : do_elems (2)
+// DESC   : Public entry point for grid element computation, for restart
+// ARGS   : p     : matrix of size the number of elements X GDIM containing 
+//                  the poly expansion order in each direction
+//          xnodes: vector of GDIM vectors containing Cartesian coords of elements
+//                  for each node point
+// RETURNS: none.
+//**********************************************************************************
+void GGridBox::do_elems(GTMatrix<GINT> &p,
+                        GTVector<GTVector<GFTYPE>> &xnodes)
+{
+  if ( ndim_ == 2 ) do_elems2d(p, xnodes);
+  if ( ndim_ == 3 ) do_elems3d(p, xnodes);
+
+} // end, method do_elems (2)
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : do_elems2d (1)
 // DESC   : Build 2d elemental grid on base mesh
-// ARGS   : grid: GGrid object
-//          rank: MPI rank or partition id
+// ARGS   : 
+//          irank: MPI rank or partition id
 // RETURNS: none.
 //**********************************************************************************
 void GGridIcos::do_elems2d(GINT irank)
 {
-  GString           serr = "GridIcos::do_elems2d: ";
+  GString           serr = "GridIcos::do_elems2d (1): ";
   GFTYPE            fact, xlatc, xlongc;
   GTVector<GFPoint> cverts(4), gverts(4), tverts(4);
   GTPoint<GFTYPE>   c(3), ct(3), v1(3), v2(3), v3(3); // 3d points
@@ -536,12 +555,12 @@ void GGridIcos::do_elems2d(GINT irank)
     (*bdycallback_)(gelems_);
   }
 
-} // end of method do_elems2d
+} // end of method do_elems2d (1)
 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : do_elems3d
+// METHOD : do_elems3d (1)
 // DESC   : Build 3d elemental grid. It's assumed that init3d has been called
 //          prior to entry, and that the hmesh_ has beed set. This arrays
 //          of hexagonal 3d elements provides for each hex its vertices in Cartesian
@@ -550,13 +569,13 @@ void GGridIcos::do_elems2d(GINT irank)
 //          converted into sherical coordinates, and the GShapeFcn_linear
 //          will be used in spherical coords to compute the interior nodes. These
 //          will then be converted to Cartesian coords.
-// ARGS   : grid: GGrid object
-//          rank: MPI rank or partition id
+// ARGS   : 
+//          irank: MPI rank or partition id
 // RETURNS: none.
 //**********************************************************************************
 void GGridIcos::do_elems3d(GINT irank)
 {
-  GString                      serr = "GridIcos::do_elems3d: ";
+  GString                      serr = "GridIcos::do_elems3d (1): ";
   GTVector<GINT>               iind;
   GTVector<GINT>               I(3);
   GTVector<GINT>              *bdy_ind;
@@ -636,7 +655,179 @@ void GGridIcos::do_elems3d(GINT irank)
     (*bdycallback_)(gelems_);
   }
 
-} // end of method do_elems3d
+} // end of method do_elems3d (1)
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : do_elems2d (2)
+// DESC   : Build 2d elemental grid on base mesh
+// ARGS   : p      : matrix of size the number of elements X GDIM containing 
+//                   the poly expansion order in each direction
+//          gxnodes: vector of GDIM vectors containing Cartesian coords of elements
+// RETURNS: none.
+//**********************************************************************************
+void GGridIcos::do_elems2d(GTMatrix<GINT> &p,
+                           GTVector<GTVector<GFTYPE>> &gxnodes)
+{
+  GString                     serr = "GridIcos::do_elems2d (2): ";
+  GElem_base                  *pelem;
+  GTVector<GTVector<GFTYPE>>  *xNodes;
+  GTVector<GTVector<GFTYPE>*> *xiNodes;
+  GTVector<GNBasis<GCTYPE,GFTYPE>*>
+                               gb(GDIM);
+  GVector<GINT>                ppool(gbasis_.size());
+
+  // Now, treat the gbasis_ as a pool that we search
+  // to find bases we need:
+  for ( GSIZET j=0; j<ppool.size(); j++ ) ppool[j] = gbasis_[j].getOrder();
+
+
+  // Set element internal dof from input data:
+  fact = 1.0/3.0;
+  GSIZET iwhere ;
+  GSIZET nvnodes;   // no. vol nodes
+  GSIZET nfnodes;   // no. face nodes
+  GSIZET icurr = 0; // current global index
+  GSIZET fcurr = 0; // current global face index
+  // For each triangle in base mesh owned by this rank...
+  for ( GSIZET i=0; i<p.size(1); i++ ) { 
+    nvnodes = 1;
+    for ( GSIZET j=0; j<GDIM; j++ ) { // set basis from pool
+      assert(ppool.contains(p(i,j),iwhere) && "Expansion order not found");
+      gb[j] = gbasis_[iwhere];
+      nvnodes *= (p(i,j) + 1);
+    }
+    pelem = new GElem_base(GE_REGULAR, gb);
+    xNodes  = &pelem->xNodes();  // node spatial data
+    xiNodes = &pelem->xiNodes(); // node ref interval data
+    bdy_ind = &pelem->bdy_indices(); // get bdy indices data member
+    bdy_typ = &pelem->bdy_types  (); // get bdy types data member
+    bdy_ind->clear(); bdy_typ->clear();
+
+    // Set internal node positions from input data.
+    // Note that gxnodes are 'global' and xNodes is
+    // element-local:
+    for ( GSIZET j=0; j<GDIM; j++ ) {
+       gxnodes[j].range(icurr, icurr+nvnodes-1);
+      (*xNodes)[j] = gxnodes[j];
+    }
+    for ( GSIZET j=0; j<GDIM; j++ ) gxnodes[j].range_reset();
+
+    pelem->init(*xNodes);
+    gelems_.push_back(pelem);
+
+    assert(nvnodes == gelems_[i]->nnodes() && "Incompatible node count");
+    nfnodes = gelems_[i]->nfnodes();
+    pelem->igbeg() = icurr;      // beginning global index
+    pelem->igend() = icurr+nvnodes-1; // end global index
+    pelem->ifbeg() = fcurr;
+    pelem->ifend() = fcurr+nfnodes-1; // end global face index
+    icurr += nvnodes;
+    fcurr += nfnodes;
+  } // end of triangle base mesh loop
+
+  // Can set individual nodes and internal bdy conditions
+  // with callback here:
+  if ( bdycallback_ != NULLPTR ) {
+    (*bdycallback_)(gelems_);
+  }
+
+} // end of method do_elems2d (2)
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : do_elems3d (2)
+// DESC   : Build 3d elemental grid. It's assumed that init3d has been called
+//          prior to entry, and that the hmesh_ has beed set. This arrays
+//          of hexagonal 3d elements provides for each hex its vertices in Cartesian
+//          coordinates. Also, the centroids of these hexes (in Cartesian coords)
+//          should also have been computed. The Cartesian hex vertices will be
+//          converted into sherical coordinates, and the GShapeFcn_linear
+//          will be used in spherical coords to compute the interior nodes. These
+//          will then be converted to Cartesian coords.
+// ARGS   : p      : matrix of size the number of elements X GDIM containing 
+//                   the poly expansion order in each direction
+//          gxnodes: vector of GDIM vectors containing Cartesian coords of elements
+// RETURNS: none.
+//**********************************************************************************
+void GGridIcos::do_elems3d(GTMatrix<GINT> &p,
+                           GTVector<GTVector<GFTYPE>> &gxnodes)
+{
+  GString                      serr = "GridIcos::do_elems3d (2): ";
+  GTVector<GINT>              *bdy_ind;
+  GTVector<GINT>              *face_ind;
+  GElem_base                  *pelem;
+  GTVector<GTVector<GFTYPE>>  *xNodes;
+  GTVector<GNBasis<GCTYPE,GFTYPE>*>
+                               gb(GDIM);
+  GVector<GINT>                ppool(gbasis_.size());
+
+  assert(gbasis_.size()>0 && "Must set basis first");
+
+  // Now, treat the gbasis_ as a pool that we search
+  // to find bases we need:
+  for ( GSIZET j=0; j<ppool.size(); j++ ) ppool[j] = gbasis_[j].getOrder();
+
+
+
+  GSIZET i, n;
+  GSIZET nvnodes;   // no. vol nodes
+  GSIZET nfnodes;   // no. face nodes
+  GSIZET icurr = 0; // current global index
+  GSIZET fcurr = 0; // current global face index
+  for ( GSIZET i=0; i<iind.size(); i++ ) { // for each hex in irank's mesh
+    nvnodes = 1;
+    for ( GSIZET j=0; j<GDIM; j++ ) { // set basis from pool
+      assert(ppool.contains(p(i,j),iwhere) && "Expansion order not found");
+      gb[j] = gbasis_[iwhere];
+      nvnodes *= (p(i,j) + 1);
+    }
+
+    // Set internal node positions from input data.
+    // Note that gxnodes are 'global' and xNodes is
+    // element-local:
+    for ( GSIZET j=0; j<GDIM; j++ ) {
+       gxnodes[j].range(icurr, icurr+nvnodes-1);
+      (*xNodes)[j] = gxnodes[j];
+    }
+    for ( GSIZET j=0; j<GDIM; j++ ) gxnodes[j].range_reset();
+
+    // Set element's bdy indices:
+    // ... need to check only vertex 0 for this:
+    if ( hmesh_[i].v[0]->x1 == radiusi_ || hmesh_[i].v[0]->x1 == radiuso_ ) { 
+      face_ind = &pelem->face_indices(0);
+      for ( GSIZET k=0; k<face_ind->size(); k++ ) {
+        // Do not allow face indices to be repeated in bdy list:
+        if ( !bdy_ind->contains((*face_ind)[k]) ) 
+          bdy_ind->push_back((*face_ind)[k]); 
+      }
+    }
+
+    pelem->init(*xNodes);
+    gelems_.push_back(pelem);
+
+    // Set global bdy types at each bdy_ind (this is a coarse
+    // application; finer control may be exercised in callback):
+    set_global_bdy_3d(*pelem);
+
+    assert(nvnodes == gelems_[i]->nnodes() && "Incompatible node count");
+    nfnodes = gelems_[i]->nfnodes();
+    pelem->igbeg() = icurr;      // beginning global index
+    pelem->igend() = icurr + nvnodes; // end global index
+    pelem->ifbeg() = fcurr;
+    pelem->ifend() = fcurr+nfnodes-1; // end global face index
+    icurr += nvnodes;
+    fcurr += nfnodes;
+  } // end of hex mesh loop
+
+  // If we have a callback function, set the boundary conditions here:
+  if ( bdycallback_ != NULLPTR ) {
+    (*bdycallback_)(gelems_);
+  }
+
+} // end of method do_elems3d (2)
 
 
 //**********************************************************************************
