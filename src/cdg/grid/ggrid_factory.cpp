@@ -107,7 +107,6 @@ void GGridFactory::read_grid(const geoflow::tbox::PropertyTree& ptree, GTMatrix<
   GFTYPE               time;
   GString              def = ".";
   GString              sfname;
-  GString              sout;
   GString              sin;
   GTVector<GString>    gobslist;
   std::vector<GString> stdobslist;
