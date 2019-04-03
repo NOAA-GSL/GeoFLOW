@@ -18,9 +18,12 @@ class GGridFactory
 {
   public:
 
-	static GGrid *build(const geoflow::tbox::PropertyTree& ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis, GC_COMM &comm);
+	static GGrid *build(const geoflow::tbox::PropertyTree& ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis, GC_COMM &comm) 
 
   private:
+        void         read_grid(const geoflow::tbox::PropertyTree& ptree, GTVector<GINT> &p,
+                               GTVector<GTVector<GFTYPE>> &xnodes);
+        GC_COMM      comm_;
 
 }; // namespace geoflow
 
