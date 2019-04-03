@@ -10,7 +10,7 @@
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : gout
+// METHOD : gio_write
 // DESC   : Do simple GIO POSIX output
 // ARGS   : grid  : GGrid object
 //          u     : state
@@ -23,10 +23,10 @@
 //          bprgrid: flag to print grid, which is not tagged by time index.
 // RETURNS: none
 //**********************************************************************************
-void gio(GGrid &grid, const State &u, const GTVector<GINT> &iu, const GSIZET tindex, const GFTYPE time, const GTVector<GString> &svars, const GString &sdir, GC_COMM comm, const GBOOL bprgrid)
+void gio_write(GGrid &grid, const State &u, const GTVector<GINT> &iu, const GSIZET tindex, const GFTYPE time, const GTVector<GString> &svars, const GString &sdir, GC_COMM comm, const GBOOL bprgrid)
 {
 
-    GString serr ="gio: ";
+    GString serr ="gio_write: ";
     char    fname[2048];
     char    fn2;
     
@@ -88,5 +88,5 @@ void gio(GGrid &grid, const State &u, const GTVector<GINT> &iu, const GSIZET tin
       fclose(fp);
     }
 
-} // end, gio
+} // end, gio_write
 
