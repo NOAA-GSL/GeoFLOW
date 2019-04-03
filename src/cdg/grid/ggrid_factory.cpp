@@ -110,7 +110,7 @@ void GGridFactory::read_grid(const geoflow::tbox::PropertyTree& ptree, GTMatrix<
   GString              sin;
   GTVector<GString>    gobslist;
   std::vector<GString> stdobslist;
-  geoflow::tbox::PropertyTree& outputptree;
+  geoflow::tbox::PropertyTree& inputptree;
   stdobslist = ptree.getArray<GString>("observer_list");
   gobslist = stdobslist;
 
@@ -122,8 +122,8 @@ void GGridFactory::read_grid(const geoflow::tbox::PropertyTree& ptree, GTMatrix<
 
   GString   sx[3] = {"xgrid", "ygrid", "zgrid"};
   if ( gobslist.contains("posixio_observer") ) { 
-    outputptree = ptree.getPropertyTree("posixio_observer");
-    sin         = outputptree.getValue<GString>("indirectory",def);
+    inputptree = ptree.getPropertyTree("posixio_observer");
+    sin        = inputptree.getValue<GString>("indirectory",def);
     for ( j=0; j<nd; j++ ) { // Retrieve all grid coord vectors
       sfname      = sin + "/" + sx[j];
       printf(fname, "%s/%s.%05d.out", sin.c_str(), sfname.c_str(),  myrank);
