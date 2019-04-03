@@ -31,14 +31,14 @@ for itask = 0:ntasks-1
 
   % Read node coords:
   for j=1:2
-    fname = sprintf('%s.%04d.out', scoord{j}, itask)
+    fname = sprintf('%s.%05d.out', scoord{j}, itask)
     [x{j} dim nelems porder gtype time] = rgeoflow(fname, 8, 'ieee-le');
   end
 
 
-  fname = sprintf('%s.%06d.%04d.out', s1var, tindex, itask);
+  fname = sprintf('%s.%06d.%05d.out', s1var, tindex, itask);
   [u1 dim nelems porder gtype time] = rgeoflow(fname, 8, 'ieee-le');
-  fname = sprintf('%s.%06d.%04d.out', s2var, tindex, itask);
+  fname = sprintf('%s.%06d.%05d.out', s2var, tindex, itask);
   [u2 dim nelems porder gtype time] = rgeoflow(fname, 8, 'ieee-le');
   if ( itask == 0 )
     figure;
