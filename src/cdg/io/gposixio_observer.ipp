@@ -1,5 +1,5 @@
 //==================================================================================
-// Module       : gout_simple_observer.ipp
+// Module       : gposixio_observer.ipp
 // Date         : 3/18/19 (DLR)
 // Description  : Observer object for carrying out simple POSIX-based  
 //                binary output.
