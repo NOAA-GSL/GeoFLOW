@@ -73,7 +73,8 @@ private:
         GFTYPE             time_last_;  // most recent output time
         GTVector<GINT>     state_index_;// list of state indices to print
         GTVector<GString>  state_names_;// list of names of states to print
-        GString            sdir_;      ;// directory in which to write
+        GString            sidir_;     ;// directory from which to read (e.g., for restart)
+        GString            sodir_;     ;// directory in which to write
     
 
 };

@@ -30,8 +30,8 @@ time_last_      (0.0)
 //**********************************************************************************
 // METHOD     : observe_impl
 // DESCRIPTION: Prints state to files specified by traits. Format is:
-//                  var1.CCCCCC.TTTT.out,
-//              where CCCCCC represents a cycle number, and TTTT represents
+//                  var1.CCCCCC.TTTTT.out,
+//              where CCCCCC represents a cycle number, and TTTTT represents
 //              the mpi task doing the writing.
 //              NOTE: an internal cycle counter is maintained, as this 
 //                    observer, like all others,  should be called at 
@@ -54,7 +54,7 @@ void GPosixIOObserver<EquationType>::observe_impl(const Time &t, const State &u,
         && (cycle_-cycle_last_) == this->traits_.cycle_interval)
     || (this->traits_.itype == ObserverBase<EquationType>::OBS_TIME  
         &&  t-time_last_ >= this->traits_.time_interval) ) {
-    gio_write(*(this->grid_), u, state_index_, ocycle_, t, state_names_, sdir_, comm, bprgrid_);
+    gio_write(*(this->grid_), u, state_index_, ocycle_, t, state_names_, sodir_, comm, bprgrid_);
     bprgrid_ = FALSE;
     cycle_last_ = cycle_;
     time_last_  = t;
@@ -79,7 +79,8 @@ void GPosixIOObserver<EquationType>::init(const Time t, const State &u)
 
    char    stmp[1024];
 
-   sdir_ = this->traits_.dir;
+   sidir_ = this->traits_.idir;
+   sodir_ = this->traits_.odir;
  
    if ( cycle_ == 0 ) {
      time_last_ = t; 
@@ -116,4 +117,3 @@ void GPosixIOObserver<EquationType>::init(const Time t, const State &u)
 
 } // end of method init
 
-;
