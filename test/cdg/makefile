@@ -16,7 +16,7 @@ clean:
 	cd ../../build ; \
 	make clean  ; \
 	cd ../test/cdg
-build: 
+dist: 
 	/bin/rm -rf ../../build/* ; \
 	cd ../../build            ; \
 	cmake ../test/cdg         ; \
