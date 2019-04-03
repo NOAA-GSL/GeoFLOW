@@ -1,4 +1,4 @@
-function [data dim nelems porder gtype time] = rgeoflow(filein, isz, sformat)
+function [data dim nelems porder gtype time ivers] = rgeoflow(filein, isz, sformat)
 %
 % Reads binary GeoFLOW data, and stores in local variable data.
 %
@@ -19,6 +19,7 @@ function [data dim nelems porder gtype time] = rgeoflow(filein, isz, sformat)
 %    porder  : array of size dim with the polynomial orders
 %    gtype   : grid type (of GeoFLOW type GElemType)
 %    time    : time stamp
+%    ivers   : version number
 %
 if nargin < 1
   error('Input file name must be specified');
@@ -37,7 +38,7 @@ end
 if nargout < 1
   error('Must provide at least the data output argument');
 end
-if nargout > 6
+if nargout > 7
   error('Too many output arguments provided');
 end
 
@@ -51,8 +52,8 @@ else
 end
 
 % Read header:
-[pdim pnelems pporder pgtype ptime] = hgeoflow(filein, isz, sformat);
-skip = sizeof(pdim) + sizeof(pnelems) + pdim*sizeof(pporder) + sizeof(pgtype) + sizeof(ptime);
+[pdim pnelems pporder pgtype ptime pvers] = hgeoflow(filein, isz, sformat);
+skip = sizeof(pvers) + sizeof(pdim) + sizeof(pnelems) + pdim*sizeof(pporder) + sizeof(pgtype) + sizeof(ptime);
 
 lun =fopen(filein,'r',sformat);
 if  lun == -1
@@ -94,6 +95,9 @@ end
 if nargout >= 5
   gtype = pgtype;
 end
-if nargout == 6
+if nargout >= 6
   time = ptime;
+end
+if nargout == 7
+  ivers = pvers;
 end

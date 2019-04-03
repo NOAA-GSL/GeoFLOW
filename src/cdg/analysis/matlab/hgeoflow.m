@@ -1,9 +1,9 @@
-function [dim nelems porder gtype time] = hgeoflow(filein, isz, sformat)
+function [dim nelems porder gtype time ivers] = hgeoflow(filein, isz, sformat)
 %
 % Reads header from binary GeoFLOW data file
 %
 %  Usage:
-%    [dim nelems porder gtype time] = hghost(filename, 0, 'ieee-be');
+%    [dim nelems porder gtype time ivers] = hghost(filename, 0, 'ieee-be');
 %
 %  Input:
 %    filein  : input file to read. Required.
@@ -18,6 +18,7 @@ function [dim nelems porder gtype time] = hgeoflow(filein, isz, sformat)
 %    porder  : array of size dim with the polynomial orders
 %    gtype   : grid type (of GeoFLOW type GElemType)
 %    time    : time stamp
+%    ivers   : version number
 %
 if nargin < 1
   error('Input file name must be specified');
@@ -28,7 +29,7 @@ if nargin == 1
   swarn = sprintf('using isz=%d; sformat=%s', isz, sformat);
   warning(swarn);
 end
-if nargout > 5
+if nargout > 6
   error('Too many output arguments provided');
 end
 
@@ -52,6 +53,7 @@ if ~strcmp(permission,'r')
 end
 
 % Read header:
+pvers   = fread(lun, 1   , 'uint32'); % version number
 pdim    = fread(lun, 1   , 'uint32'); % problem dimension
 pnelems = fread(lun, 1   , 'uint64'); % # elems
 pporder = fread(lun, pdim, 'uint32'); % expansion order in each dir
@@ -96,6 +98,9 @@ end
 if nargout >= 4
   gtype = pgtype;
 end
-if nargout == 5
+if nargout >= 5
+  ivers = pvers;
+end
+if nargout == 6
   time = ptime;
 end
