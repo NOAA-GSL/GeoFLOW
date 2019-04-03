@@ -23,7 +23,7 @@
     "y0"    : 0.5,
     "z0"    : 0.5,
     "ULparm": 1.0,
-    "Re"    : 4.0,
+    "Re"    : 6.0,
     "t0"    : 0.01,
     "planar": false,
     "prop_dir": [1.0, 2.0, 0.0]
@@ -70,24 +70,24 @@
     "nu_type" : "constant"
   },
   "simple_output": {
-    "observer_name" : "gout_simple_observer",
-    "directory"     : ".",
+    "observer_name" : "posixio_observer",
+    "directory"     : "outs",
     "cadence_itype" : "time",
     "state_index"   : [0, 1],
-    "state_names"   : ["u1", "u2", "u3"],
+    "state_names"   : ["u1", "u2"],
     "cycle_interval": 50,
     "time_interval" : 0.01
   },
   "global_diag_basic": {
     "observer_name" : "global_diag_basic",
     "directory"     : ".",
-    "cadence_itype" : "time",
+    "cadence_itype" : "cycle",
     "cycle_interval": 50,
-    "time_interval" : 0.01
+    "time_interval" : 0.001
   },
   "time_integration": {
     "integ_type" : "time",
-    "time_end"   : 0.501,
+    "time_end"   : 1.501,
     "cycle_end"  : 10,
     "dt"         : 1.0e-4
   }
