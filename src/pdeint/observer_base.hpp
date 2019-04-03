@@ -50,7 +50,9 @@ public:
                 size_t    cycle_interval = 10;        // cycle interval for observation
                 double    time_interval  = 1.0;       // time interval for observation
                 std::string
-                          dir                 ;       // directory (for I/O, e.g.)
+                          idir                ;       // input directory (for data e.g.)
+                std::string
+                          odir                ;       // input directory (for I/O, e.g.)
         };
 
         ObserverBase() = default;
