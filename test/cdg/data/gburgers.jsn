@@ -1,10 +1,11 @@
 { 
   "exp_order"      : 3,
+  "exp_order_type" : "constant",
   "grid_type"      : "grid_box",
   "init_block"     : "init_nwave",
   "bdy_conditions" : "DIRICHLET",
   "restart_index"  : 0,
-  "observer_list"  : ["simple_output", "global_diag_basic"],
+  "observer_list"  : ["posixio_observer", "global_diag_basic"],
   "poly_test": {
     "xpoly" : 10,
     "ypoly" : 10,
@@ -69,9 +70,9 @@
     "nu"      : 1.0e-2,
     "nu_type" : "constant"
   },
-  "simple_output": {
-    "observer_name" : "posixio_observer",
-    "directory"     : "outs",
+  "posixio_observer": {
+    "indirectory"   : "outs",
+    "outdirectory"  : "outs",
     "cadence_itype" : "time",
     "state_index"   : [0, 1],
     "state_names"   : ["u1", "u2"],
@@ -79,8 +80,8 @@
     "time_interval" : 0.01
   },
   "global_diag_basic": {
-    "observer_name" : "global_diag_basic",
-    "directory"     : ".",
+    "indirectory"   : ".",
+    "outdirectory"  : ".",
     "cadence_itype" : "cycle",
     "cycle_interval": 50,
     "time_interval" : 0.001
