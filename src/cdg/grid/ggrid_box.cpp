@@ -256,10 +256,9 @@ void GGridBox::init3d()
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : do_elems
-// DESC   : Public entry point for grid computation
-// ARGS   : grid: GGrid object
-//          rank: MPI rank or partition id
+// METHOD : do_elems (1)
+// DESC   : Public entry point for grid element computation
+// ARGS   : none.
 // RETURNS: none.
 //**********************************************************************************
 void GGridBox::do_elems()
@@ -267,20 +266,38 @@ void GGridBox::do_elems()
   if ( ndim_ == 2 ) do_elems2d(irank_);
   if ( ndim_ == 3 ) do_elems3d(irank_);
 
-} // end, method do_elems
+} // end, method do_elems (1)
 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : do_elems2d
+// METHOD : do_elems (2)
+// DESC   : Public entry point for grid element computation, for restart
+// ARGS   : p     : matrix of size the number of elements X GDIM containing 
+//                  the poly expansion order in each direction
+//          xnodes: vector of GDIM vectors containing Cartesian coords of elements
+//                  for each node point
+// RETURNS: none.
+//**********************************************************************************
+void GGridBox::do_elems(GTMatrix<GINT> &p,
+                        GTVector<GTVector<GFTYPE>> &xnodes)
+{
+  if ( ndim_ == 2 ) do_elems2d(p, xnodes);
+  if ( ndim_ == 3 ) do_elems3d(p, xnodes);
+
+} // end, method do_elems (2)
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : do_elems2d (1)
 // DESC   : Build 2d element list. It's assumed that init3d has been called
 //          prior to entry, and that the qmesh_ has beed set. This arrays
 //          of hexagonal 3d elements provides for each hex its vertices in Cartesian
 //          coordinates. Also, the centroids of these hexes (in Cartesian coords)
 //          should also have been computed. The Cartesian hex vertices will be
 //          converted into sherical coordinates, and the GShapeFcn_linear
-//          will be used in spherical coords to compute the interior nodes. These
-//          will then be converted to Cartesian coords.
+//          will be used in to compute the interior nodes. 
 // ARGS   : 
 //          rank: MPI rank or partition id
 // RETURNS: none.
@@ -290,7 +307,7 @@ void GGridBox::do_elems2d(GINT irank)
   assert(gbasis_.size()>0 && "Must set basis first");
   assert(ndim_ == 2 && "Dimension must be 2");
 
-  GString                      serr = "GGridBox::do_elems2d: ";
+  GString                      serr = "GGridBox::do_elems2d (1): ";
   GTPoint<GFTYPE>              cent;
   GTVector<GINT>               iind;
   GTVector<GINT>               I(3);
@@ -391,21 +408,20 @@ cout << GComm::WorldRank() << ": GGrid::do_elems2d: qmesh[" << i << "]=" << qmes
     (*bdycallback_)(gelems_);
   }
 
-} // end of method do_elems2d
+} // end of method do_elems2d (1)
 
 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : do_elems3d
+// METHOD : do_elems3d (1)
 // DESC   : Build 3d element list. It's assumed that init3d has been called
-//          prior to entry, and that the bmesh_ has beed set. This arrays
+//          prior to entry, and that the qmesh_ has beed set. This arrays
 //          of hexagonal 3d elements provides for each hex its vertices in Cartesian
 //          coordinates. Also, the centroids of these hexes (in Cartesian coords)
 //          should also have been computed. The Cartesian hex vertices will be
 //          converted into sherical coordinates, and the GShapeFcn_linear
-//          will be used in spherical coords to compute the interior nodes. These
-//          will then be converted to Cartesian coords.
+//          will be used to compute the interior nodes. 
 // ARGS   : 
 //          rank: MPI rank or partition id
 // RETURNS: none.
@@ -416,7 +432,7 @@ void GGridBox::do_elems3d(GINT irank)
   assert(gbasis_.size()>0 && "Must set basis first");
   assert(ndim_ == 3 && "Dimension must be 3");
 
-  GString                      serr = "GGridBox::do_elems3d: ";
+  GString                      serr = "GGridBox::do_elems3d (1): ";
   GTPoint<GFTYPE>              cent;
   GTVector<GINT>               iind;
   GTVector<GINT>               I(3);
@@ -515,7 +531,253 @@ void GGridBox::do_elems3d(GINT irank)
     (*bdycallback_)(gelems_);
   }
 
-} // end of method do_elems3d
+} // end of method do_elems3d (1)
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : do_elems2d (2)
+// DESC   : Build 2d element list from input data.
+// ARGS   : p      : matrix of size the number of elements X GDIM containing 
+//                   the poly expansion order in each direction
+//          gxnodes: vector of GDIM vectors containing Cartesian coords of elements
+//                   for each node point
+// RETURNS: none.
+//**********************************************************************************
+void GGridBox::do_elems2d(GTMatrix<GINT> &p,
+                          GTVector<GTVector<GFTYPE>> &gxnodes)
+{
+  assert(gbasis_.size()>0 && "Must set basis pool first");
+  assert(ndim_ == 2 && "Dimension must be 2");
+
+  GString                      serr = "GGridBox::do_elems2d (2): ";
+  GTPoint<GFTYPE>              cent;
+  GTVector<GINT>               I(3);
+  GTVector<GINT>              *bdy_ind;
+  GTVector<GBdyType>          *bdy_typ;
+  GTVector<GINT>              *face_ind;
+  GElem_base                  *pelem;
+  GTVector<GTVector<GFTYPE>>  *xNodes;
+  GTVector<GTVector<GFTYPE>*> *xiNodes;
+  GTVector<GTVector<GFTYPE>>   xgtmp(3);
+  GTVector<GNBasis<GCTYPE,GFTYPE>*>
+                               gb(GDIM);
+  GVector<GINT>                ppool(gbasis_.size());
+
+  // Now, treat the gbasis_ as a pool that we search
+  // to find bases we need:
+  for ( GSIZET j=0; j<ppool.size(); j++ ) ppool[j] = gbasis_[j].getOrder();
+
+  GSIZET i, iwhere, n;
+  GSIZET nvnodes;   // no. vol nodes
+  GSIZET nfnodes;   // no. face nodes
+  GSIZET nbnodes;   // no. bdy nodes
+  GSIZET icurr = 0; // current global index
+  GSIZET fcurr = 0; // current global face index
+  GSIZET bcurr = 0; // current global bdy index
+  for ( GSIZET i=0; i<p.size(1); i++ ) { // for each element
+    nvnodes = 1;
+    for ( GSIZET j=0; j<GDIM; j++ ) { // set basis from pool
+      assert(ppool.contains(p(i,j),iwhere) && "Expansion order not found");
+      gb[j] = gbasis_[iwhere];
+      nvnodes *= (p(i,j) + 1);
+    }
+    pelem = new GElem_base(GE_REGULAR, gb);
+    xNodes  = &pelem->xNodes();  // node spatial data
+    xiNodes = &pelem->xiNodes(); // node ref interval data
+    bdy_ind = &pelem->bdy_indices(); // get bdy indices data member
+    bdy_typ = &pelem->bdy_types  (); // get bdy types data member
+    bdy_ind->clear(); bdy_typ->clear();
+
+    // Set internal node positions from input data.
+    // Note that gxnodes are 'global' and xNodes is
+    // element-local:
+    for ( GSIZET j=0; j<GDIM; j++ ) {
+       gxnodes[j].range(icurr, icurr+nvnodes-1);
+      (*xNodes)[j] = gxnodes[j];
+    }
+    for ( GSIZET j=0; j<GDIM; j++ ) gxnodes[j].range_reset();
+
+    pelem->init(*xNodes);
+
+    // With face/edge centroids computed, compute 
+    // global boundary nodes:
+    GFTYPE eps=100*std::numeric_limits<GFTYPE>::epsilon();
+    for ( GSIZET j=0; j<2*ndim_; j++ ) { // cycle over all edges
+      cent = pelem->edgeCentroid(j);
+      face_ind = NULLPTR;
+      if ( FUZZYEQ(P0_.x2,cent.x2,eps) ) face_ind = &pelem->edge_indices(0);
+      if ( FUZZYEQ(P1_.x1,cent.x1,eps) ) face_ind = &pelem->edge_indices(1);
+      if ( FUZZYEQ(P1_.x2,cent.x2,eps) ) face_ind = &pelem->edge_indices(2);
+      if ( FUZZYEQ(P0_.x1,cent.x1,eps) ) face_ind = &pelem->edge_indices(3);
+      // For now, we don't allow corner nodes to be repeated, 
+      // and we'll have to choose the best way to define the 
+      // normal vectors at the 'corner' nodes:
+      for ( GSIZET k=0; face_ind != NULLPTR && k<face_ind->size(); k++ ) {
+        if ( !bdy_ind->contains((*face_ind)[k]) ) {
+          bdy_ind->push_back((*face_ind)[k]); 
+          bdy_typ->push_back(GBDY_NONE); 
+        }
+      }
+    }
+
+
+    gelems_.push_back(pelem);
+
+    // Set global bdy types at each bdy_ind (this is a coarse 
+    // application; finer control may be exercised in callback):
+    set_global_bdytypes_2d(*pelem);
+
+    // Find global global interior and bdy start & stop indices represented 
+    // locally within element:
+    assert(nvnodes == gelems_[n]->nnodes() && "Incompatible node count");
+    nfnodes = gelems_[n]->nfnodes();
+    nbnodes = gelems_[n]->bdy_indices().size();
+    pelem->igbeg() = icurr;           // beg global vol index
+    pelem->igend() = icurr+nvnodes-1; // end global vol index
+    pelem->ifbeg() = fcurr;           // beg global face index
+    pelem->ifend() = fcurr+nfnodes-1; // end global face index
+    pelem->ibbeg() = bcurr;           // beg global bdy index
+    pelem->ibend() = bcurr+nbnodes-1; // end global bdy index
+    icurr += nvnodes;
+    fcurr += nfnodes;
+    bcurr += nbnodes;
+  } // end of quad mesh loop
+
+
+  // Can set individual nodes and internal bdy conditions
+  // with callback here: NOTE: Must re-globalize bdy_indices!!!
+  if ( bdycallback_ != NULLPTR ) {
+    assert(FALSE && "Re-globalization of bdy data not done");
+    (*bdycallback_)(gelems_);
+  }
+
+} // end of method do_elems2d (2)
+
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : do_elems3d (2)
+// DESC   : Build 3d element list from input data. 
+// ARGS   : p      : matrix of size the number of elements X GDIM containing 
+//                   the poly expansion order in each direction
+//          gxnodes: vector of GDIM vectors containing Cartesian coords of elements
+//                   for each node point
+// RETURNS: none.
+//**********************************************************************************
+void GGridBox::do_elems3d(GTMatrix<GINT> &p,
+                          GTVector<GTVector<GFTYPE>> &gxnodes)
+{
+  assert(gbasis_.size()>0 && "Must set basis pool first");
+  assert(ndim_ == 3 && "Dimension must be 3");
+
+  GString                      serr = "GGridBox::do_elems3d (2): ";
+  GTPoint<GFTYPE>              cent;
+  GTVector<GINT>               iind;
+  GTVector<GINT>               I(3);
+  GTVector<GINT>              *bdy_ind;
+  GTVector<GBdyType>          *bdy_typ;
+  GTVector<GINT>              *face_ind;
+  GTVector<GFTYPE>             Ni;
+  GElem_base                  *pelem;
+  GTVector<GTVector<GFTYPE>>  *xNodes;
+  GTVector<GTVector<GFTYPE>*> *xiNodes;
+  GTVector<GTVector<GFTYPE>>   xgtmp(3);
+  GTVector<GNBasis<GCTYPE,GFTYPE>*>
+                               gb(GDIM);
+  GVector<GINT>                ppool(gbasis_.size());
+
+  // Now, treat the gbasis_ as a pool that we search
+  // to find bases we need:
+  for ( GSIZET j=0; j<ppool.size(); j++ ) ppool[j] = gbasis_[j].getOrder();
+
+
+  GSIZET i, where, n;
+  GSIZET nvnodes;   // no. vol indices
+  GSIZET nfnodes;   // no. face indices
+  GSIZET nbnodes;   // no. bdy indices
+  GSIZET icurr = 0; // current global index
+  GSIZET fcurr = 0; // current global face index
+  GSIZET bcurr = 0; // current global bdy index
+  for ( GSIZET i=0; i<p.size(1); i++ ) { // for each hex in irank's mesh
+    nvnodes = 1; 
+    for ( GSIZET j=0; j<GDIM; j++ ) { // set basis from pool
+      assert(ppool.contains(p(i,j),iwhere) && "Expansion order not found");
+      gb[j] = gbasis_[iwhere];
+      nvnodes *= (p(i,j) + 1);
+    }    
+
+    pelem = new GElem_base(GE_REGULAR, gbasis_);
+    xNodes  = &pelem->xNodes();  // node spatial data
+    xiNodes = &pelem->xiNodes(); // node ref interval data
+    bdy_ind = &pelem->bdy_indices(); // get bdy indices data member
+    bdy_typ = &pelem->bdy_types  (); // get bdy types data member
+    bdy_ind->clear(); bdy_typ->clear();
+    pelem->igbeg() = icurr;      // beginning global index
+    pelem->igend() = icurr + pelem->nnodes()-1; // end global index
+
+    // Set internal node positions from input data.
+    // Note that gxnodes are 'global' and xNodes is
+    // element-local:
+    for ( GSIZET j=0; j<GDIM; j++ ) {
+       gxnodes[j].range(icurr, icurr+nvnodes-1);
+      (*xNodes)[j] = gxnodes[j];
+    }
+    for ( GSIZET j=0; j<GDIM; j++ ) gxnodes[j].range_reset();
+
+    pelem->init(*xNodes);
+
+    // With edge/face centroids set, compute bdy_nodes:
+    GFTYPE eps=100*std::numeric_limits<GFTYPE>::epsilon();
+    for ( GSIZET j=0; j<2*ndim_; j++ ) { // cycle over faces
+      cent = pelem->faceCentroid(j);
+      face_ind = NULLPTR;
+      if ( FUZZYEQ(P0_.x2,cent.x2,eps) ) face_ind = &pelem->edge_indices(0);
+      if ( FUZZYEQ(P1_.x1,cent.x1,eps) ) face_ind = &pelem->edge_indices(1);
+      if ( FUZZYEQ(P1_.x2,cent.x2,eps) ) face_ind = &pelem->edge_indices(2);
+      if ( FUZZYEQ(P0_.x1,cent.x1,eps) ) face_ind = &pelem->edge_indices(3);
+      if ( FUZZYEQ(P0_.x3,cent.x3,eps) ) face_ind = &pelem->edge_indices(4);
+      if ( FUZZYEQ(P1_.x3,cent.x3,eps) ) face_ind = &pelem->edge_indices(5);
+      face_ind = &pelem->face_indices(0);
+
+      // For now, we don't allow corner nodes to be repeated, 
+      // and we'll have to choose the best way to define the 
+      // normal vectors at the 'corner' nodes:
+      for ( GSIZET k=0; face_ind != NULLPTR && k<face_ind->size(); k++ ) {
+        if ( !bdy_ind->contains((*face_ind)[k]) ) {
+          bdy_ind->push_back((*face_ind)[k]); 
+          bdy_typ->push_back(GBDY_NONE); // default always to GBDY_NONE 
+        }
+      }
+    }
+
+    gelems_.push_back(pelem);
+    // Set global bdy types at each bdy_ind (this is a coarse 
+    // application; finer control may be exercised in callback):
+    set_global_bdytypes_3d(*pelem);
+
+    assert(nvnodes == gelems_[n]->nnodes() && "Incompatible node count");
+    nfnodes = gelems_[n]->nfnodes();
+    nbnodes = gelems_[n]->bdy_indices().size();
+    pelem->igbeg() = icurr;           // beg global vol index
+    pelem->igend() = icurr+nvnodes-1; // end global vol index
+    pelem->ifbeg() = fcurr;           // beg global face index
+    pelem->ifend() = fcurr+nfnodes-1; // end global face index
+    pelem->ibbeg() = bcurr;           // beg global bdy index
+    pelem->ibend() = bcurr+nbnodes-1; // end global bdy index
+    icurr += nvnodes;
+    fcurr += nfnodes;
+    bcurr += nbnodes;
+  } // end of hex mesh loop
+
+  // Can set individual nodes and internal bdy conditions
+  // with callback here:
+  if ( bdycallback_ != NULLPTR ) {
+    (*bdycallback_)(gelems_);
+  }
+
+} // end of method do_elems3d (2)
 
 
 //**********************************************************************************
