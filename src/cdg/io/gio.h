@@ -51,6 +51,9 @@ void gio_write_grid (GIOTraits &, GGrid &grid,
                      const GTVector<GString> &svars, 
                      GC_COMM comm);
 
+void  gio_restart(const geoflow::tbox::PropertyTree& ptree, GINT igrid, 
+                  GTVector<GTVector<GFTYPE>*> &u, GTMatrix<GINT> &p,
+                  GSIZET &icycle, GFTYPE &time, GC_COMM comm);
 
 GSIZET gio_read_header(GIOTraits&, GString filename);
 

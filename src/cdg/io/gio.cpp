@@ -142,12 +142,109 @@ void gio_write_grid(GIOTraits &traits, GGrid &grid, const GTVector<GString> &sva
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD : gio_restart
+// DESC   : Read restart files for entire state, based on prop tree configuration.
+//          
+// ARGS   : ptree : main property tree
+//          igrid : if > 0, uses grid format; else uses state format
+//          tindex: time index to restart
+//          u     : state object
+//          p     : matrix of polynomial orders of size nelems X GDIM if 
+//                  order isn't constant, and of size x X GDIM if it is
+//          icycle: time cycle of input
+//          t     : time stamp of input
+//          comm  : GC_COMM object
+// RETURNS: none
+//**********************************************************************************
+void gio_restart(const geoflow::tbox::PropertyTree& ptree, GINT igrid, 
+                 GTVector<GTVector<GFTYPE>*> &u, GTMatrix<GINT> &p,
+                 GSIZET &icycle, GFTYPE &time, GC_COMM comm)
+{
+  GINT                 myrank = GComm::WorldRank(comm);
+  GINT                 ivers, nc, nr, nt;
+  GElemType            igtype;
+  GSIZET               itindex;
+  GString              fname;
+  GString              def;
+  GString              stmp;
+  GString              sgtype;
+  GTVector<GString>    gobslist;
+  GTVector<GString>    ggnames;
+  std::vector<GString> defgnames = {"xgrid", "ygrid", "zgrid"};
+  std::vector<GString> stdlist;
+  std::stringstream    format;
+  geoflow::tbox::PropertyTree inputptree;
+  GIOTraits            traits;
+
+  // Get restart index:
+  itindex = ptree.getValue<GSIZET>   ("restart_index", 0);
+
+  // Get observer list:
+  stdlist = ptree.getArray<GString>("observer_list");
+  gobslist = stdlist;
+
+  // Get version number:
+  def    = "constant";
+  stmp   = ptree.getValue<GString>("exp_order_type", def);
+  ivers  = stmp == "constant" ? 0 : 1;
+
+  // Get configured grid type:
+  def    = "grid_box";
+  sgtype = ptree.getValue<GString>("grid_type", def);
+  igtype = GE_REGULAR;
+  if ( sgtype == "grid_icos" && GDIM == 2 ) igtype = GE_2DEMBEDDED;
+  if ( sgtype == "grid_icos" && GDIM == 3 ) igtype = GE_DEFORMED;
+  nc = GDIM;
+  if ( igtype == GE_2DEMBEDDED ) nc = GDIM + 1;
+
+
+  if ( gobslist.contains("posixio_observer") ) {
+    inputptree    = ptree.getPropertyTree       ("posixio_observer");
+    fname.resize(inputptree.getValue<GINT>("filename_size",2048));
+    stdlist       = inputptree.getArray<GString>("grid_names", defgnames);
+    ggnames       = stdlist;
+    traits.wfile  = inputptree.getValue   <GINT>("filename_size",2048);
+    traits.wtask  = inputptree.getValue   <GINT>("task_field_width", 5);
+    traits.wtime  = inputptree.getValue   <GINT>("time_field_width", 6);
+    def = ".";
+    traits.dir    = inputptree.getValue<GString>("indirectory",def);
+
+    // Get data:
+    if ( igrid )  // use grid format
+      format    << "\%s/\%s.\%0" << traits.wtask << "d.out";
+    else          // use state format
+      format    << "\%s/\%s.\%0" << traits.wtime << "d\%0" << traits.wtask << "d.out";
+    
+    for ( GSIZET j=0; j<nc; j++ ) { // Retrieve all grid coord vectors
+      if ( igrid )  // use grid format
+        printf(fname.c_str(), format.str().c_str(), traits.dir.c_str(), myrank);
+      else          // use state format
+        printf(fname.c_str(), format.str().c_str(), traits.dir.c_str(), itindex, myrank);
+  
+      nr = gio_read(traits, fname, *u[j]);
+    }
+    p.resize(traits.porder.size(1),traits.porder.size(2));
+    p = traits.porder;
+
+    if ( traits.ivers > 0 ) traits.ivers = 1;
+    assert(traits.ivers == ivers  && "Incompatible version identifier");
+    assert(traits.dim   == GDIM   && "Incompatible problem dimension");
+    assert(traits.gtype == igtype && "Incompatible grid type");
+  }
+  else {
+    assert( FALSE && "Configuration does not exist for grid files");
+  }
+
+} // end, gio_restart method
+
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD : gio_write
 // DESC   : Do simple (lowes-level) GIO POSIX output of specified field
 // ARGS   : 
 //          traits  : GIOTraits structure
 //          fname   : filename, fully resolved
-//          comm    : MPI communicator
 //          u       : field to output
 //          icycle  : evol. time cycle
 //          time    : evol. time
