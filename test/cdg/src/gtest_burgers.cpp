@@ -84,7 +84,7 @@ using ObsBase = ObserverBase<EqnBase>; // Observer Base Type
 void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVector<GTVector<GFTYPE>*> &u);
 void update_dirichlet(const GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u, GTVector<GTVector<GFTYPE>*> &ub);
 void init_ggfx(GGrid &grid, GGFX<GFTYPE> &ggfx);
-void create_observers(PropertyTree &ptree, 
+void create_observers(PropertyTree &ptree, GSIZET icycle, GFTYPE time, 
 std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers);
 void create_stirrer(PropertyTree &ptree, StirBasePtr &pStirrer);
 void gresetart(PropertyTree &ptree);
@@ -103,11 +103,13 @@ int main(int argc, char **argv)
     GINT   np=1;    // elem 'order'
     GINT   nstate=GDIM;  // number 'state' arrays
     GINT   nsolve=GDIM;  // number *solved* 'state' arrays
-    GSIZET maxSteps;
-    GFTYPE radiusi=1, radiuso=2, tt;
+    GSIZET itindex=0;    // restart flag/index
+    GSIZET icycle;       // curr time cycle
+    GFTYPE tt;
     std::vector<GINT> ne(3); // # elements in each direction in 3d
     GString sgrid;// name of JSON grid object to use
-    GTVector<GString> svars, savars;
+    GTVector<GString> savars;
+    GTMatrix<GINT> p; // needed for restart, but is dummy
     char stmp[1024];
 
     typename MyTypes::Time  t  = 0;
@@ -135,6 +137,8 @@ int main(int argc, char **argv)
 
     EH_MESSAGE("main::call load_file...");
     ptree    = InputManager::getInputPropertyTree();       // main param file structure
+    itindex = ptree.getValue<GSIZET>   ("restart_index");
+
     EH_MESSAGE("main: load_file done.");
     // Create other prop trees for various objects:
     sgrid       = ptree.getValue<GString>("grid_type");
@@ -270,7 +274,7 @@ int main(int argc, char **argv)
     if ( solver_traits.bpureadv ) 
     for ( GSIZET j=0; j<c_   .size(); j++ ) c_   [j] = u_[j+1];
 
-    // Create observer(s), equations, integrator:
+    // Create equation set:
     EH_MESSAGE("main: create equation...");
     std::shared_ptr<EqnImpl> eqn_impl(new EqnImpl(ggfx, *grid_, u_, solver_traits, utmp_));
     std::shared_ptr<EqnBase> eqn_base = eqn_impl;
@@ -288,27 +292,33 @@ int main(int argc, char **argv)
     StirBasePtr pStirrer;
     create_stirrer(ptree, pStirrer);
 
+    // Initialize state:
+    EH_MESSAGE("main: Initializing state...");
+
+    if ( itindex == 0 ) { // start new run
+      icycle = 0;
+      t      = 0.0; 
+      compute_analytic(*grid_, t, ptree, u_);
+//    initialize_start(ptree, *grid_, t, u_);
+      for ( auto j=0; j<u_.size(); j++ ) {
+        sprintf(stmp, "u%da", j+1);
+        savars.push_back(stmp);
+      }
+    }
+    else {              // restart run
+      gio_restart(ptree, 0, u_, p, icycle, t, comm_);
+    }
+
     // Create the observers: 
     EH_MESSAGE("main: create observers...");
     std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> pObservers(new std::vector<std::shared_ptr<ObserverBase<MyTypes>>>());
-    create_observers(ptree, pObservers);
+    create_observers(ptree, icycle, t, pObservers);
     for ( GSIZET j=0; j<pObservers->size(); j++ ) (*pObservers)[j]->set_tmp(utmp_);
 
     // Create integrator:
     EH_MESSAGE("main: create integrator...");
     auto pIntegrator = IntegratorFactory<MyTypes>::build(tintptree, eqn_base, pStirrer, pObservers, *grid_);
 
-    // Initialize state:
-    EH_MESSAGE("main: Initializing state...");
-
-    t = 0.0;
-    compute_analytic(*grid_, t, ptree, u_);
-    for ( auto j=0; j<u_.size(); j++ ) {
-      sprintf(stmp, "u%d", j+1);
-      svars.push_back(stmp);
-      sprintf(stmp, "u%da", j+1);
-      savars.push_back(stmp);
-    }
 
     // Do time integration (output included
     // via observer(s)):
@@ -865,10 +875,12 @@ void create_stirrer(PropertyTree &ptree, StirBasePtr  &pStirrer)
 //**********************************************************************************
 // METHOD: create_observers
 // DESC  : Create observer list from main ptree
-// ARGS  : grid    : GGrid object
-//         ggfx    : gather/scatter op, GGFX
+// ARGS  : grid      : GGrid object
+//         icycle    : initial icycle
+//         time      : initial time
+//         pObservers: gather/scatter op, GGFX
 //**********************************************************************************
-void create_observers(PropertyTree &ptree, 
+void create_observers(PropertyTree &ptree, GSIZET icycle, GFTYPE time,
 std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers)
 {
     GINT ivers;
@@ -888,6 +900,12 @@ std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers
         // Set output version based on exp_order_type:
         if ( "constant" == ptype 
          && "posixio_observer" == obslist[j]  ) obsptree.setValue("misc",ivers);
+
+        // Set current time and cycle so that observer can initialize itself
+        // These should be hidden from the config file:
+        obsptree.setValue("start_cycle",icycle);
+        obsptree.setValue("start_time" ,time);
+
         pObservers->push_back(ObserverFactory<MyTypes>::build(obsptree,*grid_));
       }
     }
