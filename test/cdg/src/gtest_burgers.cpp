@@ -107,6 +107,7 @@ int main(int argc, char **argv)
     GSIZET icycle;       // curr time cycle
     GFTYPE tt;
     std::vector<GINT> ne(3); // # elements in each direction in 3d
+    std::vector<GINT> pstd(GDIM);  // order in each direction
     GString sgrid;// name of JSON grid object to use
     GTVector<GString> savars;
     GTMatrix<GINT> p; // needed for restart, but is dummy
@@ -142,7 +143,7 @@ int main(int argc, char **argv)
     EH_MESSAGE("main: load_file done.");
     // Create other prop trees for various objects:
     sgrid       = ptree.getValue<GString>("grid_type");
-    np          = ptree.getValue<GINT>("exp_order");
+    pstd        = ptree.getArray<GINT>("exp_order");
     eqptree     = ptree.getPropertyTree("adv_equation_traits");
     gridptree   = ptree.getPropertyTree(sgrid);
     stepptree   = ptree.getPropertyTree("stepper_props");
@@ -181,7 +182,7 @@ int main(int argc, char **argv)
           break;
       case 'p': // get nodal exp order
           np = atoi(optarg);
-          ptree.setValue<GINT>("exp_order",np);
+          pstd.assign(GDIM, np);
           break;
       case 'h': // help
           std::cout << "usage: " << std::endl <<
@@ -221,7 +222,7 @@ int main(int argc, char **argv)
     GSIZET itype; 
     GString stepmthd = stepptree.getValue<GString>("stepping_method");
     GBOOL  bfound = ssteppers.contains(stepmthd,itype);
-    assert( bfound && "Invalide stepping method in JSON file");
+    assert( bfound && "Invalid stepping method in JSON file");
     
     solver_traits.steptype   = static_cast<GStepperType>(itype);
 
@@ -233,8 +234,8 @@ int main(int argc, char **argv)
 
     // Create basis:
     GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis(GDIM);
-    for ( GSIZET k=0; k<GDIM; k++ ) {
-      gbasis [k] = new GLLBasis<GCTYPE,GFTYPE>(np);
+    for ( GSIZET j=0; j<GDIM; j++ ) {
+      gbasis [j] = new GLLBasis<GCTYPE,GFTYPE>(pstd[j]);
     }
     
     EH_MESSAGE("main: build grid...");
@@ -388,11 +389,15 @@ int main(int argc, char **argv)
   
       // Write header, if required:
       if ( itst.peek() == std::ofstream::traits_type::eof() ) {
-      ios << "#ntasks  # p     num_elems      inf_err     L1_err      L2_err" << std::endl;
+        ios << "#ntasks" ;
+        for ( GSIZET j=0; j<pstd.size(); j++ ) ios << "p" << j+1 << "  ";
+        ios << "num_elems      inf_err     L1_err      L2_err" << std::endl;
       }
       itst.close();
   
-      ios << ntasks << "  " << np  << "  "  << "  " << gnelems << "  "
+      ios << ntasks << "  ";
+      for ( GSIZET j=0; j<pstd.size(); j++ ) ios << pstd[j] << "  ";
+      ios << gnelems << "  "
           << "  " << maxerror[0] << "  " << maxerror[1] << "  " << maxerror[2]
           << std::endl;
       ios.close();
