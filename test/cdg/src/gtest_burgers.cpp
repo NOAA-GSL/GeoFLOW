@@ -358,10 +358,12 @@ int main(int argc, char **argv)
     for ( GSIZET j=0; j<nstate; j++ ) istate[j] = j;
 //  gio_write(*grid_, ua_, istate, 0, 0, t, savars, sdir, 0, comm_, FALSE);
     for ( GSIZET j=0; j<1; j++ ) { //local errors
-      *utmp_[0] = *u_[j] - *ua_[j];
+     *utmp_[0] = *u_[j] - *ua_[j];
+#if 0
       GPP(comm_,"main: diff=u-ua[" << j << "]=" << *utmp_[0]);
-      *utmp_[1] = *utmp_[0]; utmp_[1]->abs();
-      *utmp_[2] = *utmp_[0]; utmp_[2]->pow(2);
+#endif
+     *utmp_[1] = *utmp_[0]; utmp_[1]->abs();
+     *utmp_[2] = *utmp_[0]; utmp_[2]->pow(2);
       lnorm   [0]  = utmp_[0]->infnorm (); // inf-norm
       gnorm   [1]  = grid_->integrate(*utmp_[1],*utmp_[0])/sqrt(nnorm[j]) ; // L1-norm
       gnorm   [2]  = grid_->integrate(*utmp_[2],*utmp_[0]) ; // L2-norm
@@ -836,7 +838,9 @@ void init_ggfx(GGrid &grid, GGFX<GFTYPE> &ggfx)
   gmorton.key(glob_indices, *xnodes);
   GComm::Synch(comm_);
 
+#if 0
   GPP(comm_,"init_ggfx: glob_indices=" << glob_indices);
+#endif
 
   // Initialize gather/scatter operator:
   GBOOL bret;
