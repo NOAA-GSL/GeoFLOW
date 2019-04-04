@@ -71,13 +71,17 @@
     "nu_type" : "constant"
   },
   "posixio_observer": {
-    "indirectory"   : "outs",
-    "outdirectory"  : "outs",
-    "cadence_itype" : "time",
-    "state_index"   : [0, 1],
-    "state_names"   : ["u1", "u2"],
-    "cycle_interval": 50,
-    "time_interval" : 0.01
+    "indirectory"     : "outs",
+    "outdirectory"    : "outs",
+    "cadence_itype"   : "time",
+    "state_index"     : [0, 1],
+    "state_names"     : ["u1", "u2"],
+    "grid_names"      : ["xgrid", "ygrid", "zgrid"],
+    "time_field_width": 6,
+    "task_field_width": 5,
+    "filename_size"   : 2048,
+    "cycle_interval"  : 50,
+    "time_interval"   : 0.01
   },
   "global_diag_basic": {
     "indirectory"   : ".",
