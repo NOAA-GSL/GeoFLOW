@@ -16,6 +16,7 @@
 template<typename EquationType>
 GPosixIOObserver<EquationType>::GPosixIOObserver(typename ObserverBase<EquationType>::Traits &traits, Grid &grid):
 bprgrid_        (TRUE),
+bInit_          (FALSE),
 cycle_          (0),
 ocycle_         (1),
 cycle_last_     (0),
@@ -90,6 +91,8 @@ template<typename EquationType>
 void GPosixIOObserver<EquationType>::init(const Time t, const State &u)
 {
 
+   if ( bInit_ ) return;
+
    char    stmp[1024];
 
    sidir_ = this->traits_.idir;
@@ -99,9 +102,8 @@ void GPosixIOObserver<EquationType>::init(const Time t, const State &u)
    wtask_ = this->traits_.itag2;
    wfile_ = this->traits_.itag3;
  
-   if ( cycle_ == 0 ) {
-     time_last_ = t; 
-   }
+   cycle_last_ = this->traits_.start_cycle;
+   time_last_  = this->traits_.start_time ;
  
    // Set state names member data, if not already set:
    if ( state_names_.size()  <= 0 ) {
@@ -131,6 +133,8 @@ void GPosixIOObserver<EquationType>::init(const Time t, const State &u)
        } 
      }
   }
+
+  bInit_ = TRUE;
 
 } // end of method init
 

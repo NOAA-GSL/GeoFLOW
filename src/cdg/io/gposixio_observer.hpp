@@ -74,6 +74,7 @@ private:
         void               init(const Time t, const State &u);
 // Private data:
         GBOOL              bprgrid_;    // print grid flag
+        GBOOL              bInit_;      // is initialized?
         GINT               ivers_;      // output version number
         GINT               wtime_;      // width of time field
         GINT               wtask_;      // width of task field
