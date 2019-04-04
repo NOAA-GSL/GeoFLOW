@@ -42,6 +42,7 @@ public:
          * Data structure to hold user selected parameters
          */
         struct Traits {
+                int       imisc          = 0;         // obs output type
                 ObsType   itype          = OBS_CYCLE; // obs output type
                 std::vector<int>     
                           state_index;                // which state members to observe
