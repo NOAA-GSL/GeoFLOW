@@ -7,101 +7,188 @@
 //==================================================================================
 #include "gio.h"
 
+using namespace std;
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : gio_write_state
+// DESC   : Do simple GIO POSIX output of state
+// ARGS   : traits: GIOTraits structure
+//          grid  : GGrid object
+//          u     : state
+//          iu    : indirection indices to fields to write
+//          svars : variable names for state members
+//          comm  : communicator
+// RETURNS: none
+//**********************************************************************************
+void gio_write_state(GIOTraits &traits, GGrid &grid, 
+                     const GTVector<GTVector<GFTYPE>*> &u, 
+                     GTVector<GINT>              &iu, 
+                     const GTVector<GString> &svars, GC_COMM comm) 
+{
+    GString serr = "gio_write_state: ";
+    FILE          *fp;
+    GINT           myrank = GComm::WorldRank(comm);
+    GString        fname;
+    GSIZET         nb, nc, nd;
+    GTVector<GTVector<GFTYPE>>
+                  *xnodes = &grid.xNodes();
+    GElemList     *elems  = &grid.elems();
+    std::stringstream format;
+
+    // Required number of coord vectors:
+    nc = grid.gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
+
+    // Do some checks:
+    assert(svars.size() >=  iu.size()
+        && "Insufficient number of state variable names specified");
+    assert(traits.gtype == grid.gtype()
+        && "Incompatible grid type");
+
+    traits.dim    = GDIM;
+    traits.nelems = grid.nelems();
+    traits.gtype  = grid.gtype();
+
+    assert(nc ==  xnodes->size()
+        && "Incompatible grid or coord  dimensions");
+
+    // Build format string:
+    fname.resize(traits.wfile);
+    format    << "\%s/\%s.\%0" << traits.wtime << "\%0" << traits.wtask << "d.out";
+
+    // Set porder vector depending on version:
+    traits.porder.resize(traits.ivers == 0 ? 1: traits.nelems, GDIM);
+    for ( auto i=0; i<traits.porder.size(1); i++ )  { // for each element
+      for ( auto j=0; j<traits.porder.size(2); j++ ) traits.porder(i,j) = (*elems)[i]->order(j);
+    }
+
+    // Cycle over all fields, and write:
+    for ( auto j=0; j<iu.size(); j++ ) {
+      printf(fname.c_str(), format.str().c_str(), traits.dir.c_str(), 
+             svars[j].c_str(), traits.index,  myrank);
+      fp = fopen(fname.c_str(),"wb");
+      if ( fp == NULL ) {
+        cout << serr << "Error opening file: " << fname << endl;
+        exit(1);
+      }
+      gio_write(traits, fname, *u[iu[j]]);
+      fclose(fp);
+    }
+
+} // end, gio_write_state
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : gio_write_grid
+// DESC   : Do simple GIO POSIX output of grid
+// ARGS   : traits: GIOTraits structure
+//          grid  : GGrid object
+//          svars : variable names for grid components
+//          comm  : communicator
+// RETURNS: none
+//**********************************************************************************
+void gio_write_grid(GIOTraits &traits, GGrid &grid, const GTVector<GString> &svars, GC_COMM comm) 
+{
+    GString serr ="gio_write_grid: ";
+    FILE          *fp;
+    GINT           myrank = GComm::WorldRank(comm);
+    GString        fname;
+    GSIZET         nb, nc, nd;
+    GTVector<GTVector<GFTYPE>>
+                  *xnodes = &grid.xNodes();
+    GElemList     *elems  = &grid.elems();
+    std::stringstream format;
+
+    // Required number of coord vectors:
+    nc = grid.gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
+
+    // Do some checks:
+    assert(svars.size() >=  xnodes->size()
+        && "Insufficient number of grid variable names specified");
+    assert(nc ==  xnodes->size()
+        && "Incompatible grid or coord  dimensions");
+
+    traits.dim    = GDIM;
+    traits.nelems = grid.nelems();
+    traits.gtype  = grid.gtype();
+
+
+    // Build format string:
+    fname.resize(traits.wfile);
+    format    << "\%s/\%s.\%0" << traits.wtask << "d.out";
+
+    // Set porder vector depending on version:
+    traits.porder.resize(traits.ivers == 0 ? 1: traits.nelems, GDIM);
+    for ( auto i=0; i<traits.porder.size(1); i++ )  { // for each element
+      for ( auto j=0; j<traits.porder.size(2); j++ ) traits.porder(i,j) = (*elems)[i]->order(j);
+    }
+
+    // Cycle over all coords, and write:
+    for ( auto j=0; j<xnodes->size(); j++ ) {
+      printf(fname.c_str(), format.str().c_str(), traits.dir.c_str(), svars[j].c_str(),  myrank);
+      fp = fopen(fname.c_str(),"wb");
+      if ( fp == NULL ) {
+        cout << serr << "Error opening file: " << fname << endl;
+        exit(1);
+      }
+      gio_write(traits, fname, (*xnodes)[j]);
+      fclose(fp);
+    }
+
+} // end, gio_write_grid
+
 
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : gio_write
-// DESC   : Do simple GIO POSIX output
-// ARGS   : grid  : GGrid object
-//          u     : state
-//          iu    : indirection indices, point to u members to print
-//          tindex: time output index
-//          time  : state evol. time
-//          svars : variable names for output
-//          sdir  : output directory
-//          ivers : version number
-//          comm  : communicator
-//          bprgrid: flag to print grid, which is not tagged by time index.
+// DESC   : Do simple (lowes-level) GIO POSIX output of specified field
+// ARGS   : 
+//          traits  : GIOTraits structure
+//          fname   : filename, fully resolved
+//          comm    : MPI communicator
+//          u       : field to output
+//          icycle  : evol. time cycle
+//          time    : evol. time
 // RETURNS: none
 //**********************************************************************************
-void gio_write(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &u, const GTVector<GINT> &iu, GSIZET tindex, GFTYPE time, const GTVector<GString> &svars, const GString &sdir, GINT ivers, GC_COMM comm, const GBOOL bprgrid)
+GSIZET gio_write(GIOTraits &traits, GString fname, const GTVector<GFTYPE> &u) 
 {
 
-    GString serr ="gio_write: ";
-    char    fname[2048];
-    char    fn2;
-    
-    GINT myrank = GComm::WorldRank(comm);
-
-    assert(svars.size() >=  iu.size()
-        && "Insufficient number of state variable names specified");
-
-    GINT           dim    = GDIM;
-    GSIZET         nelems = grid.nelems();
-    GSIZET         nb, nd;
-    GTMatrix<GINT> porder;
-    GTVector<GTVector<GFTYPE>>
-                  *xnodes = &grid.xNodes();
-    GElemList     *elems  = &grid.elems();
-
-    porder.resize(1,ivers == 0 ? GDIM : nelems);
-    for ( auto i=0; i<porder.size(1); i++ )  { // for each element
-      for ( auto j=0; j<porder.size(2); j++ ) porder(i,j) = (*elems)[i]->order(j);
-    }
-   
-    // Print convergence data to file:
+    GString  serr ="gio_write: ";
     FILE     *fp;
-    GString   sx[3] = {"xgrid", "ygrid", "zgrid"};
-    GElemType gtype = grid.gtype();
+    GSIZET    i, j, nb, nd;
 
-    // Print grid, if not printed already:
-    if ( bprgrid ) {
-      for ( auto j=0; j<xnodes->size(); j++ ) {
-        sprintf(fname, "%s/%s.%05d.out", sdir.c_str(), sx[j].c_str(),  myrank);
-        fp = fopen(fname,"wb");
-        if ( nb != nd ) {
-          cout << serr << "Error opening file: " << fname << endl;
-          exit(1);
-        }
-        
-        // write header: dim, numelems, poly_order:
-        fwrite(&ivers       , sizeof(GINT)  ,    1, fp); // GIO version number
-        fwrite(&dim         , sizeof(GINT)  ,    1, fp); // problem dimension
-        fwrite(&nelems      , sizeof(GSIZET),    1, fp); // # elems
-        fwrite(porder.data().data()
-                            , sizeof(GINT)  , GDIM, fp); // expansion order in each dir
-        fwrite(&gtype       , sizeof(GINT)  ,    1, fp); // grid type
-        fwrite(&time        , sizeof(GFTYPE),    1, fp); // time stamp
-        // write this tasks field data:
-        fwrite((*xnodes)[j].data(), sizeof(GFTYPE), (*xnodes)[j].size(), fp);
-        fclose(fp);
-      }
+   
+    fp = fopen(fname.c_str(),"wb");
+    if ( fp == NULL ) {
+      cout << serr << "Error opening file: " << fname << endl;
+      exit(1);
     }
 
-    // Print field data:
-    GINT j;
-    GINT n = iu.size() == 0 ? u.size() : iu.size();
-    for ( auto jj=0; jj<n; jj++ ) {
-      j = iu.size() == 0 ? iu[jj] : jj;
-      sprintf(fname, "%s/%s.%06d.%05d.out", sdir.c_str(), svars[j].c_str(), tindex, myrank);
-      fp = fopen(fname,"wb");
-       if ( nb != nd ) {
-         cout << serr << "Error opening file: " << fname << endl;
-         exit(1);
-       }
-
-      // write header: dim, numelems, poly_order:
-      fwrite(&ivers       , sizeof(GINT)  ,    1, fp); // GIO version number
-      fwrite(&dim         , sizeof(GINT)  ,    1, fp);
-      fwrite(&nelems      , sizeof(GSIZET),    1, fp);
-      fwrite(porder.data().data()
-                          , sizeof(GINT)  , GDIM, fp);
-      fwrite(&gtype       , sizeof(GINT)  ,    1, fp); // grid type
-      fwrite(&time        , sizeof(GFTYPE),    1, fp); // time stamp
-      // write this tasks field data:
-      fwrite((*u[j]).data(), sizeof(GFTYPE), (*u[j]).size(), fp);
-      fclose(fp);
+    if ( traits.ivers > 0 && traits.porder.size(1) <= 1 ) {
+      cout << serr << " porder of insufficient size for version: " << traits.ivers
+                   << ". Error writing file " << fname << endl;
+      exit(1);
     }
+
+    // Write header: dim, numelems, poly_order:
+    fwrite(&traits.ivers       , sizeof(GINT)  ,    1, fp); // GIO version number
+    fwrite(&traits.dim         , sizeof(GINT)  ,    1, fp); // dimension
+    fwrite(&traits.nelems      , sizeof(GSIZET),    1, fp); // num elements
+    nd = traits.porder.size(1) * traits.porder.size(2);
+    fwrite(traits.porder.data().data()
+                               , sizeof(GINT)  ,   nd, fp); // exp order
+    fwrite(&traits.gtype       , sizeof(GINT)  ,    1, fp); // grid type
+    fwrite(&traits.cycle       , sizeof(GSIZET),    1, fp); // time cycle stamp
+    fwrite(&traits.time        , sizeof(GFTYPE),    1, fp); // time stamp
+
+    // Write field data:
+    nb = fwrite(u.data(), sizeof(GFTYPE), u.size(), fp);
+    fclose(fp);
+
+    return nb;
 
 } // end, gio_write
 
@@ -109,31 +196,26 @@ void gio_write(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &u, const GTVector
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : gio_read
-// DESC   : Do simple GIO POSIX input
-// ARGS   : fname : file name (fully resolved)
-//          comm  : communicator
-//          u     : state member vector, returned, resized to exact required size,
-//                  if necessary
+// DESC   : Do simple GIO POSIX read
+// ARGS   : 
+//          traits  : GIOTraits structure, filled here
+//          fname   : filename, fully resolved
+//          u       : field to output; resized if required
 // RETURNS: none
 //**********************************************************************************
-GSIZET gio_read(GString fname, GC_COMM comm, GTVector<GFTYPE> &u)
+GSIZET gio_read(GIOTraits &traits, GString fname, GTVector<GFTYPE> &u)
 {
 
-    GString serr ="gio_read: ";
-    GINT           dim, ivers;
-    GElemType      gtype;
-    GSIZET         nb, nd, nh, nelems, nt;
-    GFTYPE         time;
-    GTMatrix<GINT> porder(GDIM);
+    GString serr = "gio_read: ";
+    FILE     *fp;
+    GSIZET    nb, nd, nh, nt;
     
-    nh  = gio_read_header(fname, comm, ivers, dim, nelems, porder, gtype, time); 
+    nh  = gio_read_header(traits, fname);
 
-    assert(dim == GDIM && "File dimension incompatible with GDIM");
+    assert(traits.dim == GDIM && "File dimension incompatible with GDIM");
 
-    // Print convergence data to file:
-    FILE *fp;
     fp = fopen(fname.c_str(),"rb");
-    if ( nb != nd ) {
+    if ( fp == NULL ) {
       cout << serr << "Error opening file: " << fname << endl;
       exit(1);
     }
@@ -141,17 +223,17 @@ GSIZET gio_read(GString fname, GC_COMM comm, GTVector<GFTYPE> &u)
     // Seek to first byte after header:
     fseek(fp, nh, SEEK_SET); 
 
-    // Compute data size from header data:
+    // Compute field data size from header data:
     nd = 0;
-    if ( ivers == 0 ) {
+    if ( traits.ivers == 0 ) { // expansion order is constant
       nt = 1; 
-      for ( GSIZET j=0; j<GDIM; j++ ) nt *= (porder(0,j) + 1);
-      nd += nt * nelems;
+      for ( GSIZET j=0; j<GDIM; j++ ) nt *= (traits.porder(0,j) + 1);
+      nd += nt * traits.nelems;
     }
-    else {
-      for ( GSIZET i=0; i<porder.size(1); i++ ) {
+    else {                     // expansion order varies
+      for ( GSIZET i=0; i<traits.porder.size(1); i++ ) {
         nt = 1; 
-        for ( GSIZET j=0; j<GDIM; j++ ) nt *= (porder(i,j) + 1);
+        for ( GSIZET j=0; j<GDIM; j++ ) nt *= (traits.porder(i,j) + 1);
         nd += nt;
       }
     }
@@ -175,21 +257,11 @@ GSIZET gio_read(GString fname, GC_COMM comm, GTVector<GFTYPE> &u)
 //**********************************************************************************
 // METHOD : gio_read_header
 // DESC   : Read GIO POSIX file header
-// ARGS   : fname : file name (fully resolved)
-//          comm  : communicator
-//          ivers : version number
-//          dim   : problem dimensionality
-//          nelems: number elements represented
-//          porder: matrix of dimensions nelem X dim containing expansion order
-//                  for each element, if ivers > 0. If ivers == 0, then exp.
-//                  order is assumed to be constant, and matrix size is just
-//                  1 X GDIM.
-//          gtype : GElemType grid type
-//          time  : GFTYPE time
-// RETURNS: no header bytes read
+// ARGS   : traits: GIOTraits structure, filled with what header provides
+//          fname : file name (fully resolved)
+// RETURNS: no. header bytes read
 //**********************************************************************************
-GSIZET gio_read_header(GString fname, GC_COMM comm, GINT &ivers, GINT &dim, GSIZET &nelems, 
-                GTMatrix<GINT> &porder, GElemType &gtype, GFTYPE &time)
+GSIZET gio_read_header(GIOTraits &traits, GString fname)
 {
 
     GString serr ="gio_read_header: ";
@@ -201,20 +273,21 @@ GSIZET gio_read_header(GString fname, GC_COMM comm, GINT &ivers, GINT &dim, GSIZ
     fp = fopen(fname.c_str(),"rb");
     assert(fp != NULLPTR && "gio.cpp: error opening file");
   
-    // Read header: dim, numelems, poly_order:
-    nh = fread(&ivers       , sizeof(GINT)  ,    1, fp); nb += nd;
-    nh = fread(&dim         , sizeof(GINT)  ,    1, fp); nb += nd;
-    nh = fread(&nelems      , sizeof(GSIZET),    1, fp); nb += nd;
-    numr = ivers == 0 ? dim : nelems*dim;;
-    nh = fread(porder.data().data()
-                            , sizeof(GINT)  , numr, fp); nb += nd;
-    nh = fread(&gtype       , sizeof(GINT)  ,    1, fp); nb += nd;
-    nh = fread(&time        , sizeof(GFTYPE),    1, fp); nb += nd;
+    // Read header: 
+    nh = fread(&traits.ivers       , sizeof(GINT)  ,    1, fp); nb += nh;
+    nh = fread(&traits.dim         , sizeof(GINT)  ,    1, fp); nb += nh;
+    nh = fread(&traits.nelems      , sizeof(GSIZET),    1, fp); nb += nh;
+    numr = traits.ivers == 0 ? traits.dim : traits.nelems * traits.dim;
+    nh = fread(traits.porder.data().data()
+                                   , sizeof(GINT)  , numr, fp); nb += nh;
+    nh = fread(&traits.gtype       , sizeof(GINT)  ,    1, fp); nb += nh;
+    nh = fread(&traits.cycle       , sizeof(GSIZET),    1, fp); nb += nh;
+    nh = fread(&traits.time        , sizeof(GFTYPE),    1, fp); nb += nh;
   
     fclose(fp);
   
     // Get no. bytest that should have been read:
-    nd = (numr+3)*sizeof(GINT) + sizeof(GSIZET) + sizeof(GFTYPE);
+    nd = (numr+3)*sizeof(GINT) + 2*sizeof(GSIZET) + sizeof(GFTYPE);
   
     if ( nb != nd ) {
       cout << serr << "Incorrect amount of data read from file: " << fname << endl;

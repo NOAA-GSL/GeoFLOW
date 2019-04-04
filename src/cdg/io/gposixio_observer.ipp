@@ -49,12 +49,25 @@ void GPosixIOObserver<EquationType>::observe_impl(const Time &t, const State &u,
   init(t,u);
 
   mpixx::communicator comm;
+
+  GIOTraits traits;
    
   if ( (this->traits_.itype == ObserverBase<EquationType>::OBS_CYCLE 
         && (cycle_-cycle_last_) == this->traits_.cycle_interval)
     || (this->traits_.itype == ObserverBase<EquationType>::OBS_TIME  
         &&  t-time_last_ >= this->traits_.time_interval) ) {
-    gio_write(*(this->grid_), u, state_index_, ocycle_, t, state_names_, sodir_, ivers_,  comm, bprgrid_);
+    traits.prgrid = bprgrid_;
+    traits.wtime  = wtime_;
+    traits.wtask  = wtask_;
+    traits.wfile  = wfile_;
+    traits.ivers  = ivers_;
+    traits.dim    = GDIM;
+    traits.gtype  = this->grid_->gtype();
+    traits.index  = ocycle_;
+    traits.cycle  = cycle_;
+    traits.time   = t;
+    traits.dir    = sodir_;
+    gio_write_state(traits, *(this->grid_), u, state_index_, state_names_,  comm);
     bprgrid_ = FALSE;
     cycle_last_ = cycle_;
     time_last_  = t;
@@ -82,6 +95,9 @@ void GPosixIOObserver<EquationType>::init(const Time t, const State &u)
    sidir_ = this->traits_.idir;
    sodir_ = this->traits_.odir;
    ivers_ = this->traits_.imisc;
+   wtime_ = this->traits_.itag1;
+   wtask_ = this->traits_.itag2;
+   wfile_ = this->traits_.itag3;
  
    if ( cycle_ == 0 ) {
      time_last_ = t; 

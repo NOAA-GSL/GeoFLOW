@@ -6,7 +6,7 @@
 // Copyright    : Copyright 2019. Colorado State University. All rights reserved
 // Derived From : ObserverBase.
 //==================================================================================
-#if !defined(_GGPOSIXIO_OBSERVER_HPP)
+#if !defined(_GPOSIXIO_OBSERVER_HPP)
 #define _GPOSIXIO_OBSERVER_HPP
 
 #include "gtvector.hpp"
@@ -15,17 +15,24 @@
 #include "pdeint/observer_base.hpp"
 #include "tbox/property_tree.hpp"
 #include "tbox/mpixx.hpp"
+#include "gio.h"
 
 using namespace geoflow::pdeint;
 using namespace std;
 
-typedef GTVector<GTVector<GFTYPE>*> State;
-typedef GTVector<GFTYPE> StateElem;
 
+#if 0
+extern GIOTraits;
+void gio_write_state(GIOTraits &, GGrid &grid, 
+                     const GTVector<GTVector<GFTYPE>*> &u,
+                     const GTVector<GINT> &iu, 
+                     const GTVector<GString> &svars,
+                     GC_COMM comm);
 
-extern void gio_write(const GGrid &grid, const State &u, const GTVector<GINT> &nu, 
-                      const GSIZET tindex, const GFTYPE time, const GTVector<GString> &svars, GINT ivers, 
-                      GC_COMM comm, GBOOL &bprgrid);
+void gio_write_grid (GIOTraits &, GGrid &grid,
+                     const GTVector<GString> &svars,
+                     GC_COMM comm);
+#endif
 
 
 template<typename EquationType>
@@ -68,6 +75,9 @@ private:
 // Private data:
         GBOOL              bprgrid_;    // print grid flag
         GINT               ivers_;      // output version number
+        GINT               wtime_;      // width of time field
+        GINT               wtask_;      // width of task field
+        GINT               wfile_;      // filename max
         GSIZET             cycle_last_; // most recent output cycle
         GSIZET             cycle_;      // continuously-running cycle
         GSIZET             ocycle_;     // output cycle number

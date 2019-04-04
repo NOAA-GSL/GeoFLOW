@@ -6,6 +6,7 @@
 // Derived From : 
 //==================================================================================
 #if !defined(_GIO_H)
+#define _GIO_H
 
 #include "gtypes.h"
 #include <stdio.h>
@@ -24,14 +25,39 @@ using namespace std;
 
 #define GIO_VERSION 0
 
+struct GIOTraits {
+  GBOOL        prgrid;
+  GINT         wtime;
+  GINT         wtask;
+  GINT         wfile;
+  GINT         ivers;
+  GINT         dim;
+  GINT         gtype;
+  GSIZET       index;
+  GSIZET       nelems;
+  GSIZET       cycle;
+  GFTYPE       time;
+  GString      dir;
+  GTMatrix<GINT> porder;
+};
 
-void gio_write(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &u, const GTVector<GINT> &nu, 
-               GSIZET tindex, GFTYPE time, const GTVector<GString> &svars, 
-               const GString &sdir, GINT ivers, GC_COMM comm, const GBOOL bprgrid);
-GSIZET gio_read(GString filename, GC_COMM comm, GTVector<GFTYPE> &u);
+void gio_write_state(GIOTraits &, GGrid &grid, 
+                     const GTVector<GTVector<GFTYPE>*> &u, 
+                     GTVector<GINT> &iu, 
+                     const GTVector<GString> &svars, 
+                     GC_COMM comm);
 
-GSIZET gio_read_header(GString filename, GC_COMM comm, GINT &ivers, GINT &dim, GSIZET &nelems, 
-                       GTMatrix<GINT> &porder, GElemType &gtype, GFTYPE &time);
+void gio_write_grid (GIOTraits &, GGrid &grid, 
+                     const GTVector<GString> &svars, 
+                     GC_COMM comm);
+
+
+GSIZET gio_read_header(GIOTraits&, GString filename);
+
+GSIZET gio_write(GIOTraits&, GString filename, const GTVector<GFTYPE> &u);
+
+GSIZET gio_read (GIOTraits&, GString filename, GTVector<GFTYPE> &u);
+
 
 
 #endif
