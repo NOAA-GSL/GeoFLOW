@@ -337,7 +337,9 @@ void GGridBox::do_elems2d(GINT irank)
   for ( GSIZET n=0; n<iind.size(); n++ ) { // for each hex in irank's mesh
     i = iind[n];
 
+#if 0
 cout << GComm::WorldRank() << ": GGrid::do_elems2d: qmesh[" << i << "]=" << qmesh_[i] << endl;
+#endif
     pelem = new GElem_base(GE_REGULAR, gbasis_);
     xNodes  = &pelem->xNodes();  // node spatial data
     xiNodes = &pelem->xiNodes(); // node ref interval data
@@ -1012,8 +1014,10 @@ void GGridBox::periodize()
     n++;
   }
 
+#if 0
   GPP(comm_, "GGridBox::periodize: igbdy_[GBDY_PERIODIC]=" << igbdy_[GBDY_PERIODIC]);
   GPP(comm_, "GGridBox::periodize: periodicdirs_=" << periodicdirs_);
+#endif
 
   // Now, cycle through periodic nodes and periodize coordinates:
   for ( GSIZET k=0; k<periodicids_.size(); k++ ) { // for each periodic node
