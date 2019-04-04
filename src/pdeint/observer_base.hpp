@@ -43,6 +43,9 @@ public:
          */
         struct Traits {
                 int       imisc          = 0;         // obs output type
+                int       itag1          = 0;         // integer tag
+                int       itag2          = 0;         // integer tag
+                int       itag3          = 0;         // integer tag
                 ObsType   itype          = OBS_CYCLE; // obs output type
                 std::vector<int>     
                           state_index;                // which state members to observe
@@ -54,6 +57,12 @@ public:
                           idir                ;       // input directory (for data e.g.)
                 std::string
                           odir                ;       // input directory (for I/O, e.g.)
+                std::string
+                          stag1               ;       // string tag
+                std::string
+                          stag2               ;       // string tag
+                std::string
+                          stag3               ;       // string tag
         };
 
         ObserverBase() = default;

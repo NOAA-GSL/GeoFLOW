@@ -38,7 +38,6 @@ ObserverFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid){
         traits.time_interval = ptree.getValue<double>     ("time_interval", 1.0);         // cadence for time type
         traits.idir          = ptree.getValue<std::string>("indirectory",".");            // input directory
         traits.odir          = ptree.getValue<std::string>("outdirectory",".");           // outputdirectory
-//      traits.misc          = ptree.getValue       <GINT>("misc",0);           // outputdirectory
      
 	// Create the observer and cast to base type
 	ObsBasePtr base_ptr;
@@ -56,6 +55,10 @@ ObserverFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid){
 	}
         else if( "posixio_observer" == observer_name ) {
 		using ObsImpl = GPosixIOObserver<Equation>;
+
+                traits.itag1  = ptree.getValue <GINT>("time_field_width",6);  
+                traits.itag2  = ptree.getValue <GINT>("task_field_width",5);  
+                traits.itag3  = ptree.getValue <GINT>("filename_size",2048);  
 
 		// Allocate observer Implementation
 		std::shared_ptr<ObsImpl> obs_impl(new ObsImpl(traits, grid));
