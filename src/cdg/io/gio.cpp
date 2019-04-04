@@ -24,8 +24,7 @@
 //          bprgrid: flag to print grid, which is not tagged by time index.
 // RETURNS: none
 //**********************************************************************************
-template <typename T>
-void gio_write(GGrid &grid, const GTVector<GTVector<T>*> &u, const GTVector<GINT> &iu, const GSIZET tindex, const GFTYPE time, const GTVector<GString> &svars, const GString &sdir, GINT ivers, GC_COMM comm, const GBOOL bprgrid)
+void gio_write(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &u, const GTVector<GINT> &iu, GSIZET tindex, GFTYPE time, const GTVector<GString> &svars, const GString &sdir, GINT ivers, GC_COMM comm, const GBOOL bprgrid)
 {
 
     GString serr ="gio_write: ";
@@ -39,6 +38,7 @@ void gio_write(GGrid &grid, const GTVector<GTVector<T>*> &u, const GTVector<GINT
 
     GINT           dim    = GDIM;
     GSIZET         nelems = grid.nelems();
+    GSIZET         nb, nd;
     GTMatrix<GINT> porder;
     GTVector<GTVector<GFTYPE>>
                   *xnodes = &grid.xNodes();
@@ -46,7 +46,7 @@ void gio_write(GGrid &grid, const GTVector<GTVector<T>*> &u, const GTVector<GINT
 
     porder.resize(1,ivers == 0 ? GDIM : nelems);
     for ( auto i=0; i<porder.size(1); i++ )  { // for each element
-      for ( auto j=0; j<porder->size(2); j++ ) porder(i,j) = (*elems)[i]->order(j);
+      for ( auto j=0; j<porder.size(2); j++ ) porder(i,j) = (*elems)[i]->order(j);
     }
    
     // Print convergence data to file:
@@ -68,7 +68,8 @@ void gio_write(GGrid &grid, const GTVector<GTVector<T>*> &u, const GTVector<GINT
         fwrite(&ivers       , sizeof(GINT)  ,    1, fp); // GIO version number
         fwrite(&dim         , sizeof(GINT)  ,    1, fp); // problem dimension
         fwrite(&nelems      , sizeof(GSIZET),    1, fp); // # elems
-        fwrite(porder.data(), sizeof(GINT)  , GDIM, fp); // expansion order in each dir
+        fwrite(porder.data().data()
+                            , sizeof(GINT)  , GDIM, fp); // expansion order in each dir
         fwrite(&gtype       , sizeof(GINT)  ,    1, fp); // grid type
         fwrite(&time        , sizeof(GFTYPE),    1, fp); // time stamp
         // write this tasks field data:
@@ -93,7 +94,8 @@ void gio_write(GGrid &grid, const GTVector<GTVector<T>*> &u, const GTVector<GINT
       fwrite(&ivers       , sizeof(GINT)  ,    1, fp); // GIO version number
       fwrite(&dim         , sizeof(GINT)  ,    1, fp);
       fwrite(&nelems      , sizeof(GSIZET),    1, fp);
-      fwrite(porder.data(), sizeof(GINT)  , GDIM, fp);
+      fwrite(porder.data().data()
+                          , sizeof(GINT)  , GDIM, fp);
       fwrite(&gtype       , sizeof(GINT)  ,    1, fp); // grid type
       fwrite(&time        , sizeof(GFTYPE),    1, fp); // time stamp
       // write this tasks field data:
@@ -114,8 +116,7 @@ void gio_write(GGrid &grid, const GTVector<GTVector<T>*> &u, const GTVector<GINT
 //                  if necessary
 // RETURNS: none
 //**********************************************************************************
-template <typename T>
-GSIZET gio_read(const GString fname, GC_COMM comm, GTVector<T> &u)
+GSIZET gio_read(GString fname, GC_COMM comm, GTVector<GFTYPE> &u)
 {
 
     GString serr ="gio_read: ";
@@ -125,13 +126,13 @@ GSIZET gio_read(const GString fname, GC_COMM comm, GTVector<T> &u)
     GFTYPE         time;
     GTMatrix<GINT> porder(GDIM);
     
-    nh  = gio_read_header(fname, comm, ivers, GINT dim, nelems, porder, gtype, time); 
+    nh  = gio_read_header(fname, comm, ivers, dim, nelems, porder, gtype, time); 
 
     assert(dim == GDIM && "File dimension incompatible with GDIM");
 
     // Print convergence data to file:
     FILE *fp;
-    fp = fopen(fname.c_str(),"wb");
+    fp = fopen(fname.c_str(),"rb");
     if ( nb != nd ) {
       cout << serr << "Error opening file: " << fname << endl;
       exit(1);
@@ -156,7 +157,7 @@ GSIZET gio_read(const GString fname, GC_COMM comm, GTVector<T> &u)
     }
 
     u.resize(nd);
-    nb = fread((*u[j]).data(), sizeof(T), ns, fp);
+    nb = fread(u.data(), sizeof(GFTYPE), nd, fp);
 
     fclose(fp);
 
@@ -187,17 +188,17 @@ GSIZET gio_read(const GString fname, GC_COMM comm, GTVector<T> &u)
 //          time  : GFTYPE time
 // RETURNS: no header bytes read
 //**********************************************************************************
-template <typename T>
-GSIZET gio_read_header(const GString fname, GC_COMM comm, GINT &ivers, GINT &dim, GSIZET &nelems, 
-                GTMatrix<GINT> porder, GElemType &gtype, GFTYPE &time)
+GSIZET gio_read_header(GString fname, GC_COMM comm, GINT &ivers, GINT &dim, GSIZET &nelems, 
+                GTMatrix<GINT> &porder, GElemType &gtype, GFTYPE &time)
 {
 
     GString serr ="gio_read_header: ";
     GSIZET nb, nd, nh, numr;
   
     // Read field data:
+    FILE *fp;
     nb = 0;
-    fp = fopen(fname.c_str(),"wb");
+    fp = fopen(fname.c_str(),"rb");
     assert(fp != NULLPTR && "gio.cpp: error opening file");
   
     // Read header: dim, numelems, poly_order:
@@ -205,7 +206,8 @@ GSIZET gio_read_header(const GString fname, GC_COMM comm, GINT &ivers, GINT &dim
     nh = fread(&dim         , sizeof(GINT)  ,    1, fp); nb += nd;
     nh = fread(&nelems      , sizeof(GSIZET),    1, fp); nb += nd;
     numr = ivers == 0 ? dim : nelems*dim;;
-    nh = fread(porder.data(), sizeof(GINT)  , numr, fp); nb += nd;
+    nh = fread(porder.data().data()
+                            , sizeof(GINT)  , numr, fp); nb += nd;
     nh = fread(&gtype       , sizeof(GINT)  ,    1, fp); nb += nd;
     nh = fread(&time        , sizeof(GFTYPE),    1, fp); nb += nd;
   

@@ -24,7 +24,7 @@ typedef GTVector<GFTYPE> StateElem;
 
 
 extern void gio_write(const GGrid &grid, const State &u, const GTVector<GINT> &nu, 
-                      const GSIZET tindex, const GFTYPE time, const GTVector<GString> &svars, 
+                      const GSIZET tindex, const GFTYPE time, const GTVector<GString> &svars, GINT ivers, 
                       GC_COMM comm, GBOOL &bprgrid);
 
 

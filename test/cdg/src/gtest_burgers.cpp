@@ -345,7 +345,7 @@ int main(int argc, char **argv)
     
     GTVector<GINT> istate(nstate);
     for ( GSIZET j=0; j<nstate; j++ ) istate[j] = j;
-    gio(*grid_, ua_, istate, 0, t, savars, sdir, comm_, FALSE);
+    gio_write(*grid_, ua_, istate, 0, t, savars, sdir, 0, comm_, FALSE);
     for ( GSIZET j=0; j<1; j++ ) { //local errors
       *utmp_[0] = *u_[j] - *ua_[j];
       GPP(comm_,"main: diff=u-ua[" << j << "]=" << *utmp_[0]);
@@ -871,6 +871,7 @@ void create_stirrer(PropertyTree &ptree, StirBasePtr  &pStirrer)
 void create_observers(PropertyTree &ptree, 
 std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers)
 {
+    GINT ivers;
     PropertyTree obsptree;    // observer props 
     GString dstr = "none";
     GString ptype;
@@ -878,13 +879,15 @@ std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers
     std::vector<GString> default_obslist; default_obslist.push_back(dstr);
     std::vector<GString> obslist = ptree.getArray<GString>("observer_list",default_obslist);
     dstr = "constant";
-    ptype = ptree.getArray<GString>("exp_order_type",dstr);
+    ptype = ptree.getValue<GString>("exp_order_type",dstr);
+    if ( "constant" == ptype ) ivers = 0;
+    if ( "variable" == ptype ) ivers = 1;
     for ( auto j=0; j<obslist.size(); j++ ) {
       if ( "none" != obslist[j] ) {
         obsptree = ptree.getPropertyTree(obslist[j]);
         // Set output version based on exp_order_type:
         if ( "constant" == ptype 
-         && "posixio_observer" == obslist[j]  ) obsptree.setValue("misc",0);
+         && "posixio_observer" == obslist[j]  ) obsptree.setValue("misc",ivers);
         pObservers->push_back(ObserverFactory<MyTypes>::build(obsptree,*grid_));
       }
     }
