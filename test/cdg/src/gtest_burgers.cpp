@@ -87,6 +87,7 @@ void init_ggfx(GGrid &grid, GGFX<GFTYPE> &ggfx);
 void create_observers(PropertyTree &ptree, 
 std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers);
 void create_stirrer(PropertyTree &ptree, StirBasePtr &pStirrer);
+void gresetart(PropertyTree &ptree);
 
 //#include "init_pde.h"
 
@@ -218,14 +219,12 @@ int main(int argc, char **argv)
     assert( bfound && "Invalide stepping method in JSON file");
     
     solver_traits.steptype   = static_cast<GStepperType>(itype);
-    
 
     // Set GTPL options:
     GPTLsetoption (GPTLcpu, 1);
 
     // Initialize GPTL:
     GPTLinitialize();
-
 
     // Create basis:
     GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis(GDIM);
@@ -236,7 +235,7 @@ int main(int argc, char **argv)
     EH_MESSAGE("main: build grid...");
     GPTLstart("gen_grid");
     // Create grid:
-    grid_ = GGridFactory::build(gridptree, gbasis, comm_);
+    grid_ = GGridFactory::build(ptree, gbasis, comm_);
     GComm::Synch(comm_);
     GPTLstop("gen_grid");
 
@@ -249,9 +248,7 @@ int main(int argc, char **argv)
     EH_MESSAGE("main: gather/scatter initialized.");
     GPTLstop("init_ggfx_op");
 
-
     // Create state and tmp space:
-    
     EH_MESSAGE("main: set up tmp space...");
     if      ( solver_traits.doheat   ) { nstate =  nsolve = 1; } 
     else if ( solver_traits.bpureadv ) { nstate = GDIM + 1; nsolve = 1;} // 1-state + GDIM  v-components
