@@ -22,7 +22,7 @@
 //**********************************************************************************
 GGrid *GGridFactory::build(const geoflow::tbox::PropertyTree& ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis, GC_COMM &comm)
 {
-  GINT    itindex = ptree.getValue<GINT>   ("restart_index", 0);
+  GSIZET  itindex = ptree.getValue<GSIZET>   ("restart_index", 0);
   GString sdef    = "grid_box";
   GString gname   = ptree.getValue<GString>("grid_type", sdef);
   sdef            = "constant";
@@ -100,37 +100,53 @@ void GGridFactory::read_grid(const geoflow::tbox::PropertyTree& ptree, GC_COMM c
                              GTVector<GTVector<GFTYPE>> &xnodes)
 {
   GINT                 myrank = GComm::WorldRank(comm);
-  GINT                 dim, ivers, nd;
-  GElemType            gtype;
-  GSIZET               nelems;
-  GTMatrix<GINT>       porder;
-  char                 fname[2048];
-  GFTYPE               time;
-  GString              def = ".";
-  GString              sfname;
-  GString              sin;
+  GINT                 ivers, nc, nr, nt;
+  GElemType            igtype;
+  GString              fname;
+  GString              def;
+  GString              stmp;
+  GString              sgtype;
   GTVector<GString>    gobslist;
-  std::vector<GString> stdobslist;
+  GTVector<GString>    ggnames;
+  std::vector<GString> defgnames = {"xgrid", "ygrid", "zgrid"};
+  std::vector<GString> stdlist;
+  std::stringstream    format;
   geoflow::tbox::PropertyTree inputptree;
-  stdobslist = ptree.getArray<GString>("observer_list");
-  gobslist = stdobslist;
+  GIOTraits            traits;
 
-  // Verify size of xnodes:
-  printf(fname, "%s/%s.%05d.out", sin.c_str(), "xgrid",  myrank);
-  gio_read_header(fname, comm, ivers, dim, nelems, porder, gtype, time);
-  nd = gtype == GE_2DEMBEDDED ? dim + 1 : dim;
-  xnodes.resize(nd);
 
-  GString   sx[3] = {"xgrid", "ygrid", "zgrid"};
+  stdlist = ptree.getArray<GString>("observer_list");
+  gobslist = stdlist;
+
+  def    = "constant";
+  stmp   = ptree.getValue<GString>("exp_order_type", def); 
+  def    = "grid_box";
+  sgtype = ptree.getValue<GString>("grid_type", def); 
+
+  igtype = GE_REGULAR;
+  if ( sgtype == "grid_icos" && GDIM == 2 ) igtype = GE_2DEMBEDDED;
+  if ( sgtype == "grid_icos" && GDIM == 3 ) igtype = GE_DEFORMED;
   if ( gobslist.contains("posixio_observer") ) { 
     inputptree = ptree.getPropertyTree("posixio_observer");
-    sin        = inputptree.getValue<GString>("indirectory",def);
-    for ( GSIZET j=0; j<nd; j++ ) { // Retrieve all grid coord vectors
-      sfname      = sin + "/" + sx[j];
-      printf(fname, "%s/%s.%05d.out", sin.c_str(), sfname.c_str(),  myrank);
-      sfname.assign(fname);
-      gio_read(sfname, comm, xnodes[j]);
+    fname.resize(inputptree.getValue<GINT>("filename_size",2048));
+    def = ".";
+    stdlist       = inputptree.getArray<GString>("grid_names", defgnames); 
+    ggnames       = stdlist; 
+    traits.wfile  = inputptree.getValue<GINT>("filename_size",2048);
+    traits.wtask  = inputptree.getValue<GINT>("task_field_width", 5); 
+    traits.wtime  = inputptree.getValue<GINT>("time_field_width", 6); 
+    traits.dir    = inputptree.getValue<GString>("indirectory",def);
+
+    format    << "\%s/\%s.%0" << traits.wtask << "d.out"; 
+    for ( GSIZET j=0; j<nc; j++ ) { // Retrieve all grid coord vectors
+      printf(fname.c_str(), format.str().c_str(), traits.dir.c_str(), myrank);
+      nr = gio_read(traits, fname, xnodes[j]);
     }
+    p.resize(traits.porder.size(1),traits.porder.size(2));
+    p = traits.porder;
+    assert(traits.ivers == ivers  && "Incompatible version identifier");
+    assert(traits.dim   == GDIM   && "Incompatible problem dimension");
+    assert(traits.gtype == igtype && "Incompatible grid type");
   }
   else {
     assert( FALSE && "Configuration does not exist for grid files");
