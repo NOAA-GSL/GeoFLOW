@@ -223,8 +223,11 @@ void gio_restart(const geoflow::tbox::PropertyTree& ptree, GINT igrid,
   
       nr = gio_read(traits, fname, *u[j]);
     }
-    p.resize(traits.porder.size(1),traits.porder.size(2));
-    p = traits.porder;
+
+    if ( igrid ) { // needed for grid restart
+      p = traits.porder;
+      p.resize(traits.porder.size(1),traits.porder.size(2));
+    }
 
     if ( traits.ivers > 0 ) traits.ivers = 1;
     assert(traits.ivers == ivers  && "Incompatible version identifier");
