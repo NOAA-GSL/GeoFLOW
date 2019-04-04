@@ -22,7 +22,6 @@ class GGridFactory
 
   private:
         static void   read_grid(const geoflow::tbox::PropertyTree& ptree, GC_COMM comm,  GTMatrix<GINT> &p, GTVector<GTVector<GFTYPE>> &xnodes);
-
 }; // namespace geoflow
 
 //#include "ggrid_factory.ipp"

@@ -99,57 +99,26 @@ GGrid *GGridFactory::build(const geoflow::tbox::PropertyTree& ptree, GTVector<GN
 void GGridFactory::read_grid(const geoflow::tbox::PropertyTree& ptree, GC_COMM comm,  GTMatrix<GINT> &p, 
                              GTVector<GTVector<GFTYPE>> &xnodes)
 {
-  GINT                 myrank = GComm::WorldRank(comm);
-  GINT                 ivers, nc, nr, nt;
-  GElemType            igtype;
-  GString              fname;
-  GString              def;
-  GString              stmp;
-  GString              sgtype;
-  GTVector<GString>    gobslist;
-  GTVector<GString>    ggnames;
-  std::vector<GString> defgnames = {"xgrid", "ygrid", "zgrid"};
-  std::vector<GString> stdlist;
-  std::stringstream    format;
-  geoflow::tbox::PropertyTree inputptree;
-  GIOTraits            traits;
+  GINT                        nc=GDIM;
+  GElemType                   igtype;
+  GSIZET                      cycle;
+  GFTYPE                      time;
+  GString                     sgtype;
+  GTVector<GTVector<GFTYPE>*> u;
 
 
-  stdlist = ptree.getArray<GString>("observer_list");
-  gobslist = stdlist;
-
-  def    = "constant";
-  stmp   = ptree.getValue<GString>("exp_order_type", def); 
-  def    = "grid_box";
-  sgtype = ptree.getValue<GString>("grid_type", def); 
-
+  // Resize xnodes based on configuration file:
+  sgtype = ptree.getValue<GString>("grid_type");
   igtype = GE_REGULAR;
   if ( sgtype == "grid_icos" && GDIM == 2 ) igtype = GE_2DEMBEDDED;
   if ( sgtype == "grid_icos" && GDIM == 3 ) igtype = GE_DEFORMED;
-  if ( gobslist.contains("posixio_observer") ) { 
-    inputptree = ptree.getPropertyTree("posixio_observer");
-    fname.resize(inputptree.getValue<GINT>("filename_size",2048));
-    def = ".";
-    stdlist       = inputptree.getArray<GString>("grid_names", defgnames); 
-    ggnames       = stdlist; 
-    traits.wfile  = inputptree.getValue<GINT>("filename_size",2048);
-    traits.wtask  = inputptree.getValue<GINT>("task_field_width", 5); 
-    traits.wtime  = inputptree.getValue<GINT>("time_field_width", 6); 
-    traits.dir    = inputptree.getValue<GString>("indirectory",def);
+  if ( igtype == GE_2DEMBEDDED ) nc = GDIM + 1;
+  xnodes.resize(nc);
 
-    format    << "\%s/\%s.%0" << traits.wtask << "d.out"; 
-    for ( GSIZET j=0; j<nc; j++ ) { // Retrieve all grid coord vectors
-      printf(fname.c_str(), format.str().c_str(), traits.dir.c_str(), myrank);
-      nr = gio_read(traits, fname, xnodes[j]);
-    }
-    p.resize(traits.porder.size(1),traits.porder.size(2));
-    p = traits.porder;
-    assert(traits.ivers == ivers  && "Incompatible version identifier");
-    assert(traits.dim   == GDIM   && "Incompatible problem dimension");
-    assert(traits.gtype == igtype && "Incompatible grid type");
-  }
-  else {
-    assert( FALSE && "Configuration does not exist for grid files");
-  }
+  u.resize(nc);
+  for ( GSIZET j=0; j<nc; j++ ) u[j] = &xnodes[j];
+
+  // Read restart data; time and  cycle are dummy here:
+  gio_restart(ptree, 1, u, p, cycle, time, comm);
 
 } // end, read_grid method
