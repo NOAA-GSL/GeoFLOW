@@ -424,7 +424,7 @@ void GGridIcos::do_elems()
 //                  for each node point
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::do_elems(GTMatrix<GINT> &p,
+void GGridIcos::do_elems(GTMatrix<GINT> &p,
                         GTVector<GTVector<GFTYPE>> &xnodes)
 {
   if ( ndim_ == 2 ) do_elems2d(p, xnodes);
@@ -676,15 +676,14 @@ void GGridIcos::do_elems2d(GTMatrix<GINT> &p,
   GTVector<GTVector<GFTYPE>*> *xiNodes;
   GTVector<GNBasis<GCTYPE,GFTYPE>*>
                                gb(GDIM);
-  GVector<GINT>                ppool(gbasis_.size());
+  GTVector<GINT>               ppool(gbasis_.size());
 
   // Now, treat the gbasis_ as a pool that we search
   // to find bases we need:
-  for ( GSIZET j=0; j<ppool.size(); j++ ) ppool[j] = gbasis_[j].getOrder();
+  for ( GSIZET j=0; j<ppool.size(); j++ ) ppool[j] = gbasis_[j]->getOrder();
 
 
   // Set element internal dof from input data:
-  fact = 1.0/3.0;
   GSIZET iwhere ;
   GSIZET nvnodes;   // no. vol nodes
   GSIZET nfnodes;   // no. face nodes
@@ -701,9 +700,11 @@ void GGridIcos::do_elems2d(GTMatrix<GINT> &p,
     pelem = new GElem_base(GE_REGULAR, gb);
     xNodes  = &pelem->xNodes();  // node spatial data
     xiNodes = &pelem->xiNodes(); // node ref interval data
+#if 0
     bdy_ind = &pelem->bdy_indices(); // get bdy indices data member
     bdy_typ = &pelem->bdy_types  (); // get bdy types data member
     bdy_ind->clear(); bdy_typ->clear();
+#endif
 
     // Set internal node positions from input data.
     // Note that gxnodes are 'global' and xNodes is
@@ -762,22 +763,20 @@ void GGridIcos::do_elems3d(GTMatrix<GINT> &p,
   GTVector<GTVector<GFTYPE>>  *xNodes;
   GTVector<GNBasis<GCTYPE,GFTYPE>*>
                                gb(GDIM);
-  GVector<GINT>                ppool(gbasis_.size());
+  GTVector<GINT>               ppool(gbasis_.size());
 
   assert(gbasis_.size()>0 && "Must set basis first");
 
   // Now, treat the gbasis_ as a pool that we search
   // to find bases we need:
-  for ( GSIZET j=0; j<ppool.size(); j++ ) ppool[j] = gbasis_[j].getOrder();
+  for ( GSIZET j=0; j<ppool.size(); j++ ) ppool[j] = gbasis_[j]->getOrder();
 
-
-
-  GSIZET i, n;
+  GSIZET i, iwhere, n;
   GSIZET nvnodes;   // no. vol nodes
   GSIZET nfnodes;   // no. face nodes
   GSIZET icurr = 0; // current global index
   GSIZET fcurr = 0; // current global face index
-  for ( GSIZET i=0; i<iind.size(); i++ ) { // for each hex in irank's mesh
+  for ( GSIZET i=0; i<p.size(1); i++ ) { // for each hex in irank's mesh
     nvnodes = 1;
     for ( GSIZET j=0; j<GDIM; j++ ) { // set basis from pool
       assert(ppool.contains(p(i,j),iwhere) && "Expansion order not found");

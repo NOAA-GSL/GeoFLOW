@@ -333,7 +333,7 @@ GFTYPE GGrid::maxlength()
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : grid_init
+// METHOD : grid_init (1)
 // DESC   : Initialize global (metric) variables. All elements are assumed to be
 //          of the same type.
 // ARGS   : none
@@ -345,6 +345,70 @@ void GGrid::grid_init()
   cout << GComm::WorldRank() << ": GGrid::grid_init: do_elems..." << endl;
   GPTLstart("GGrid::grid_init: do_elems");
   do_elems(); // generate element list from derived class
+  GPTLstop("GGrid::grid_init: do_elems");
+
+  GComm::Synch(comm_);
+
+  cout << GComm::WorldRank() << ": GGrid::grid_init: do_typing..." << endl;
+  GPTLstart("GGrid::grid_init: do_typing");
+  do_typing(); // do element-typing check
+  GPTLstop("GGrid::grid_init: do_typing");
+
+  // Have elements been set yet?
+  assert(gelems_.size() > 0 && "Elements not set");
+
+  // Restrict grid to a single element type:
+  assert(ntype_.multiplicity(0) == GE_MAX-1
+        && "Only a single element type allowed on grid");
+
+
+  if      ( itype_[GE_2DEMBEDDED].size() > 0 ) gtype_ = GE_2DEMBEDDED;
+  else if ( itype_[GE_DEFORMED]  .size() > 0 ) gtype_ = GE_DEFORMED;
+  else if ( itype_[GE_REGULAR]   .size() > 0 ) gtype_ = GE_REGULAR;
+
+  GPTLstart("GGrid::grid_init: init_bc_info");
+  // All element bdy/face data should have been set by now:
+  init_bc_info();
+  GPTLstop("GGrid::grid_init: init_bc_info");
+
+  GPTLstart("GGrid::grid_init: def_init");
+  if ( itype_[GE_2DEMBEDDED].size() > 0
+    || itype_  [GE_DEFORMED].size() > 0 ) {
+    def_init();
+  }
+  GPTLstop("GGrid::grid_init: def_init");
+
+  GPTLstart("GGrid::grid_init: reg_init");
+  if ( itype_[GE_REGULAR].size() > 0 ) {
+    reg_init();
+  }
+  GPTLstop("GGrid::grid_init: reg_init");
+
+
+  GPTLstart("GGrid::grid_init: find_min_dist");
+  minnodedist_ = find_min_dist();
+  GPTLstop("GGrid::grid_init: find_min_dist");
+
+  bInitialized_ = TRUE;
+
+} // end of method grid_init (1)
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : grid_inita (2)
+// DESC   : Initialize global (metric) variables. All elements are assumed to be
+//          of the same type.
+// ARGS   : none
+// RETURNS: none
+//**********************************************************************************
+void GGrid::grid_init(GTMatrix<GINT> &p,
+                      GTVector<GTVector<GFTYPE>> &xnodes)
+{
+
+  cout << GComm::WorldRank() << ": GGrid::grid_init: do_elems..." << endl;
+  GPTLstart("GGrid::grid_init: do_elems");
+  do_elems(p, xnodes); // generate element list from derived class
   GPTLstop("GGrid::grid_init: do_elems");
 
   GComm::Synch(comm_);

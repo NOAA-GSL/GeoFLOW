@@ -8,6 +8,7 @@
 #include "ggrid_factory.hpp"
 #include "ggrid_icos.hpp"
 #include "ggrid_box.hpp"
+#include "gio.h"
 
 
 //**********************************************************************************
@@ -22,16 +23,15 @@
 GGrid *GGridFactory::build(const geoflow::tbox::PropertyTree& ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis, GC_COMM &comm)
 {
   GINT    itindex = ptree.getValue<GINT>   ("restart_index", 0);
-  GString sdef    = "grid_box",
+  GString sdef    = "grid_box";
   GString gname   = ptree.getValue<GString>("grid_type", sdef);
-  sdef            = "constant",
+  sdef            = "constant";
   GString ptype   = ptree.getValue<GString>("exp_order_type", sdef);
-  geoflow::tbox::PropertyTree& gridptree = ptree.getPropertyTree(gname);
+  geoflow::tbox::PropertyTree gridptree = ptree.getPropertyTree(gname);
   GGrid *grid;
-  GMatrix<GINT> p;
+  GTMatrix<GINT> p;
   GTVector<GTVector<GFTYPE>> xnodes;
 
-  comm_ = comm;
 
 
   // NOTE: If doing a restart, and if exp_order_type = constant, then we build 
@@ -47,11 +47,11 @@ GGrid *GGridFactory::build(const geoflow::tbox::PropertyTree& ptree, GTVector<GN
     // constant:
     if      ( "grid_icos"   == gname   // 2d or 3d Icos grid
         ||    "grid_sphere" == gname ) {
-      grid = new GGridIcos(gridptree, gbasis, comm_);
+      grid = new GGridIcos(gridptree, gbasis, comm);
       grid->grid_init();
     }
     else if ( "grid_box"    ==  gname) { // 2d or 3D Cart grid
-      grid = new GGridBox(gridptree, gbasis, comm_);
+      grid = new GGridBox(gridptree, gbasis, comm);
       grid->grid_init();
     }
     else {
@@ -64,14 +64,14 @@ GGrid *GGridFactory::build(const geoflow::tbox::PropertyTree& ptree, GTVector<GN
     // In this case, gbasis is interpreted as a 'pool' of 
     // basis functions with various orders. It is an error
     // if correct order is not found on restart:
-    read_grid(ptree, p, xnodes);
+    read_grid(ptree, comm, p, xnodes);
     if      ( "grid_icos"   == gname   // 2d or 3d Icos grid
         ||    "grid_sphere" == gname ) {
-      grid = new GGridIcos(gridptree, gbasis, comm_);
+      grid = new GGridIcos(gridptree, gbasis, comm);
       grid->grid_init(p, xnodes);
     }
     else if ( "grid_box"    ==  gname) { // 2d or 3D Cart grid
-      grid = new GGridBox(gridptree, gbasis, comm_);
+      grid = new GGridBox(gridptree, gbasis, comm);
       grid->grid_init(p, xnodes);
     }
     else {
@@ -96,27 +96,28 @@ GGrid *GGridFactory::build(const geoflow::tbox::PropertyTree& ptree, GTVector<GN
 //                  Is resized according to the input data.
 // RETURNS: GGrid object ptr
 //**********************************************************************************
-void GGridFactory::read_grid(const geoflow::tbox::PropertyTree& ptree, GTMatrix<GFTYPE> &p, 
+void GGridFactory::read_grid(const geoflow::tbox::PropertyTree& ptree, GC_COMM comm,  GTMatrix<GINT> &p, 
                              GTVector<GTVector<GFTYPE>> &xnodes)
 {
-  GINT                 myrank = GCOMM::WorldRank(comm_);
+  GINT                 myrank = GComm::WorldRank(comm);
   GINT                 dim, ivers, nd;
   GElemType            gtype;
+  GSIZET               nelems;
   GTMatrix<GINT>       porder;
-  char                 sfname[2048];
+  char                 fname[2048];
   GFTYPE               time;
   GString              def = ".";
   GString              sfname;
   GString              sin;
   GTVector<GString>    gobslist;
   std::vector<GString> stdobslist;
-  geoflow::tbox::PropertyTree& inputptree;
+  geoflow::tbox::PropertyTree inputptree;
   stdobslist = ptree.getArray<GString>("observer_list");
   gobslist = stdobslist;
 
   // Verify size of xnodes:
   printf(fname, "%s/%s.%05d.out", sin.c_str(), "xgrid",  myrank);
-  gio_read_header(fname, comm_, ivers, dim, nelems, porder, gtype, time);
+  gio_read_header(fname, comm, ivers, dim, nelems, porder, gtype, time);
   nd = gtype == GE_2DEMBEDDED ? dim + 1 : dim;
   xnodes.resize(nd);
 
@@ -124,11 +125,11 @@ void GGridFactory::read_grid(const geoflow::tbox::PropertyTree& ptree, GTMatrix<
   if ( gobslist.contains("posixio_observer") ) { 
     inputptree = ptree.getPropertyTree("posixio_observer");
     sin        = inputptree.getValue<GString>("indirectory",def);
-    for ( j=0; j<nd; j++ ) { // Retrieve all grid coord vectors
+    for ( GSIZET j=0; j<nd; j++ ) { // Retrieve all grid coord vectors
       sfname      = sin + "/" + sx[j];
       printf(fname, "%s/%s.%05d.out", sin.c_str(), sfname.c_str(),  myrank);
       sfname.assign(fname);
-      gio_read(sfname, comm_, xnodes[j]);
+      gio_read(sfname, comm, xnodes[j]);
     }
   }
   else {

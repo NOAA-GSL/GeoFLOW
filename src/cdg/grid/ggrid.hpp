@@ -34,7 +34,9 @@ public:
                             ~GGrid();
 //static                       GGrid *build(geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GC_COMM comm);
 
-virtual void                 do_grid() = 0;                            // compute grid for irank
+virtual void                 do_elems() = 0;                            // compute grid for irank
+virtual void                 do_elems(GTMatrix<GINT> &p,
+                               GTVector<GTVector<GFTYPE>> &xnodes) = 0; // compute grid on restart
 virtual void                 set_partitioner(GDD_base *d) = 0;         // set and use GDD object
 virtual void                 set_bdy_callback(
                              std::function<void(GElemList &)> *callback) 
@@ -44,6 +46,8 @@ virtual void                 print(const GString &filename){}          // print 
 
 
         void                 grid_init();                             // initialize class
+        void                 grid_init(GTMatrix<GINT> &p, 
+                               GTVector<GTVector<GFTYPE>> &xnodes);   // initialize class for restart
         void                 do_typing(); // classify into types
         GElemList           &elems() { return gelems_; }              // get elem list
         GSIZET               nelems() { return gelems_.size(); }      // local num elems

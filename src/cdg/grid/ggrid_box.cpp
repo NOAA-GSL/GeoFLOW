@@ -562,13 +562,13 @@ void GGridBox::do_elems2d(GTMatrix<GINT> &p,
   GTVector<GTVector<GFTYPE>>   xgtmp(3);
   GTVector<GNBasis<GCTYPE,GFTYPE>*>
                                gb(GDIM);
-  GVector<GINT>                ppool(gbasis_.size());
+  GTVector<GINT>               ppool(gbasis_.size());
 
   assert(gbasis_.size()>0 && "Must set basis first");
 
   // Now, treat the gbasis_ as a pool that we search
   // to find bases we need:
-  for ( GSIZET j=0; j<ppool.size(); j++ ) ppool[j] = gbasis_[j].getOrder();
+  for ( GSIZET j=0; j<ppool.size(); j++ ) ppool[j] = gbasis_[j]->getOrder();
 
   GSIZET iwhere, n;
   GSIZET nvnodes;   // no. vol nodes
@@ -580,7 +580,7 @@ void GGridBox::do_elems2d(GTMatrix<GINT> &p,
   for ( GSIZET i=0; i<p.size(1); i++ ) { // for each element
     nvnodes = 1;
     for ( GSIZET j=0; j<GDIM; j++ ) { // set basis from pool
-      assert(ppool.contains(p(ip,j),iwhere) && "Expansion order not found");
+      assert(ppool.contains(p(i,j),iwhere) && "Expansion order not found");
       gb[j] = gbasis_[iwhere];
       nvnodes *= (p(i,j) + 1);
     }
@@ -688,16 +688,15 @@ void GGridBox::do_elems3d(GTMatrix<GINT> &p,
   GTVector<GTVector<GFTYPE>>   xgtmp(3);
   GTVector<GNBasis<GCTYPE,GFTYPE>*>
                                gb(GDIM);
-  GVector<GINT>                ppool(gbasis_.size());
+  GTVector<GINT>               ppool(gbasis_.size());
 
   assert(gbasis_.size()>0 && "Must set basis first");
 
   // Now, treat the gbasis_ as a pool that we search
   // to find bases we need:
-  for ( GSIZET j=0; j<ppool.size(); j++ ) ppool[j] = gbasis_[j].getOrder();
+  for ( GSIZET j=0; j<ppool.size(); j++ ) ppool[j] = gbasis_[j]->getOrder();
 
-
-  GSIZET i, where, n;
+  GSIZET i, iwhere, n;
   GSIZET nvnodes;   // no. vol indices
   GSIZET nfnodes;   // no. face indices
   GSIZET nbnodes;   // no. bdy indices
