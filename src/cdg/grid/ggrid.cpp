@@ -583,13 +583,10 @@ void GGrid::reg_init()
    GSIZET ibeg, iend; // beg, end indices for global arrays
    GSIZET ibbeg, ibend; // beg, end indices for global arrays for bdy quantities
    GSIZET ifbeg, ifend; // beg, end indices for global arrays for face quantities
-char serr[1024];
    for ( GSIZET e=0; e<gelems_.size(); e++ ) {
      ibeg  = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
      ifbeg = gelems_[e]->ifbeg(); ifend = gelems_[e]->ifend();
      ibbeg = gelems_[e]->ibbeg(); ibend = gelems_[e]->ibend();
-sprintf(serr,"ibeg=%d; iend=%d; ifbeg=%d; ifend=%d; ibbeg=%d; ibbeg=%d",ibeg, iend, ifbeg, ifend, ibbeg, ibend);
-cout << GComm::WorldRank() << ": GGrid::reg_init: elem["<< e << "]: " << serr << endl;
      xe    = &gelems_[e]->xNodes();
    
      // Restrict global data to local scope:
@@ -615,14 +612,12 @@ cout << GComm::WorldRank() << ": GGrid::reg_init: elem["<< e << "]: " << serr <<
 
 
      // Set the geom/metric quantities using element data:
-cout << GComm::WorldRank() << " GGrid::reg_init: elem["<< e << "]: calling dogeom..." << endl;
      if ( GDIM == 2 ) {
        gelems_[e]->dogeom2d(rijtmp, dXidX_, Jac_, faceJac_, faceNormal_, bdyNormal_);
      } 
      else if ( GDIM == 3 ) {
        gelems_[e]->dogeom3d(rijtmp, dXidX_, Jac_, faceJac_, faceNormal_, bdyNormal_);
      }
-cout << GComm::WorldRank() << " GGrid::reg_init: elem["<< e << "]: dogeom done." << endl;
       
    } // end, element loop
 
