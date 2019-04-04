@@ -603,6 +603,20 @@ T *GTVector<T>::data()
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD : data (const)
+// DESC   : Get (const) pointer to data block. 
+// ARGS   : 
+// RETURNS: T* pointer to data
+//**********************************************************************************
+template<class T> 
+const T *GTVector<T>::data() const 
+{
+  return data_+gindex_.beg();
+} // end, method data (const)
+
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD : assignment operator= GTVector
 // DESC   : Equate to another GTVector
 // ARGS   : GTVector<T> & right-hand side arg 

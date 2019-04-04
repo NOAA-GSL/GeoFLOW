@@ -43,6 +43,7 @@ template <class T> class GTVector
    ~GTVector<T>();
     
     T *data();
+    const T *data() const;
     GSIZET size() const;        // Return used buffer size
     GSIZET capacity() const;    // Return total available buffer size
     void   reserve(GSIZET n);   // Set capacity before having to initialize
