@@ -54,7 +54,7 @@ void GPosixIOObserver<EquationType>::observe_impl(const Time &t, const State &u,
         && (cycle_-cycle_last_) == this->traits_.cycle_interval)
     || (this->traits_.itype == ObserverBase<EquationType>::OBS_TIME  
         &&  t-time_last_ >= this->traits_.time_interval) ) {
-    gio_write(*(this->grid_), u, state_index_, ocycle_, t, state_names_, sodir_, comm, bprgrid_);
+    gio_write(*(this->grid_), u, state_index_, ocycle_, t, state_names_, sodir_, vers_,  comm, bprgrid_);
     bprgrid_ = FALSE;
     cycle_last_ = cycle_;
     time_last_  = t;
@@ -81,6 +81,7 @@ void GPosixIOObserver<EquationType>::init(const Time t, const State &u)
 
    sidir_ = this->traits_.idir;
    sodir_ = this->traits_.odir;
+   ivers_ = this->traits_.imisc;
  
    if ( cycle_ == 0 ) {
      time_last_ = t; 

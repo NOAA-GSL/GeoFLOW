@@ -67,6 +67,7 @@ private:
         void               init(const Time t, const State &u);
 // Private data:
         GBOOL              bprgrid_;    // print grid flag
+        GINT               ivers_;      // output version number
         GSIZET             cycle_last_; // most recent output cycle
         GSIZET             cycle_;      // continuously-running cycle
         GSIZET             ocycle_;     // output cycle number

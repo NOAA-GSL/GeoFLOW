@@ -19,12 +19,13 @@
 //          time  : state evol. time
 //          svars : variable names for output
 //          sdir  : output directory
+//          ivers : version number
 //          comm  : communicator
 //          bprgrid: flag to print grid, which is not tagged by time index.
 // RETURNS: none
 //**********************************************************************************
 template <typename T>
-void gio_write(GGrid &grid, const GTVector<GTVector<T>*> &u, const GTVector<GINT> &iu, const GSIZET tindex, const GFTYPE time, const GTVector<GString> &svars, const GString &sdir, GC_COMM comm, const GBOOL bprgrid)
+void gio_write(GGrid &grid, const GTVector<GTVector<T>*> &u, const GTVector<GINT> &iu, const GSIZET tindex, const GFTYPE time, const GTVector<GString> &svars, const GString &sdir, GINT ivers, GC_COMM comm, const GBOOL bprgrid)
 {
 
     GString serr ="gio_write: ";
@@ -36,14 +37,14 @@ void gio_write(GGrid &grid, const GTVector<GTVector<T>*> &u, const GTVector<GINT
     assert(svars.size() >=  iu.size()
         && "Insufficient number of state variable names specified");
 
-    GINT           dim    = GDIM, ivers=GIO_VERSION;
+    GINT           dim    = GDIM;
     GSIZET         nelems = grid.nelems();
     GTMatrix<GINT> porder;
     GTVector<GTVector<GFTYPE>>
                   *xnodes = &grid.xNodes();
     GElemList     *elems  = &grid.elems();
 
-    porder.resize(1,GIO_VERSION == 0 ? GDIM : nelems);
+    porder.resize(1,ivers == 0 ? GDIM : nelems);
     for ( auto i=0; i<porder.size(1); i++ )  { // for each element
       for ( auto j=0; j<porder->size(2); j++ ) porder(i,j) = (*elems)[i]->order(j);
     }
