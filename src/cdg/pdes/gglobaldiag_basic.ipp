@@ -80,12 +80,13 @@ void GGlobalDiag_basic<EquationType>::init(const Time t, const State &u)
    assert(utmp_ != NULLPTR && this->utmp_->size() > 1
        && "tmp space not set, or is insufficient");
 
+   if ( bInit_ ) return;
+
    sidir_ = traits_.idir;
    sodir_ = traits_.odir;
  
-   if ( cycle_ == 0 ) {
-     time_last_ = t; 
-   }
+   cycle_last_ = this->traits_.start_cycle;
+   time_last_  = this->traits_.start_time ;
 
    *(*utmp_)[0] = 1.0;
    GFTYPE vol = grid_->integrate(*(*utmp_)[0],*(*utmp_)[1]);
