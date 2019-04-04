@@ -1,5 +1,5 @@
 { 
-  "exp_order"      : 3,
+  "exp_order"      : [3, 3],
   "exp_order_type" : "constant",
   "grid_type"      : "grid_box",
   "init_block"     : "init_nwave",
@@ -71,29 +71,31 @@
     "nu_type" : "constant"
   },
   "posixio_observer": {
+    "observer_name"   : "posixio_observer",
     "indirectory"     : "outs",
     "outdirectory"    : "outs",
-    "cadence_itype"   : "time",
+    "cadence_type"    : "cycle",
+    "cycle_interval"  : 5,
+    "time_interval"   : 0.01,
     "state_index"     : [0, 1],
     "state_names"     : ["u1", "u2"],
     "grid_names"      : ["xgrid", "ygrid", "zgrid"],
     "time_field_width": 6,
     "task_field_width": 5,
-    "filename_size"   : 2048,
-    "cycle_interval"  : 50,
-    "time_interval"   : 0.01
+    "filename_size"   : 2048
   },
   "global_diag_basic": {
+    "observer_name" : "global_diag_basic",
     "indirectory"   : ".",
     "outdirectory"  : ".",
-    "cadence_itype" : "cycle",
-    "cycle_interval": 50,
+    "cadence_type"  : "cycle",
+    "cycle_interval": 1,
     "time_interval" : 0.001
   },
   "time_integration": {
-    "integ_type" : "time",
+    "integ_type" : "cycle",
     "time_end"   : 1.501,
-    "cycle_end"  : 10,
+    "cycle_end"  : 20,
     "dt"         : 1.0e-4
   }
 
