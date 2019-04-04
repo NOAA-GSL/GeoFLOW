@@ -33,12 +33,12 @@ for itask = 0:ntasks-1
   % Read node coords:
   for j=1:2
     fname = sprintf('%s.%05d.out', scoord{j}, itask)
-    [x{j} dim nelems porder gtype time] = rgeoflow(fname, 8, 'ieee-le');
+    [x{j} dim nelems porder gtype icycle time] = rgeoflow(fname, 8, 'ieee-le');
   end
 
 
   fname = sprintf('%s.%06d.%05d.out', svar, tindex, itask);
-  [u dim nelems porder gtype time] = rgeoflow(fname, 8, 'ieee-le');
+  [u dim nelems porder gtype icycle time] = rgeoflow(fname, 8, 'ieee-le');
   if ( itask == 0 )
     figure;
   end
