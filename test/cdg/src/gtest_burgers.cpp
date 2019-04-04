@@ -198,6 +198,7 @@ int main(int argc, char **argv)
     }
 
 #endif
+    ptree.setValue<GString>("exp_order_type","constant");
 
     // Set solver traits from prop tree:
     GFTYPE nu_scalar;
@@ -839,7 +840,7 @@ void init_ggfx(GGrid &grid, GGFX<GFTYPE> &ggfx)
 //**********************************************************************************
 //**********************************************************************************
 // METHOD: create_observers
-// DESC  : Create observer list from ptree
+// DESC  : Create observer list from main ptree
 // ARGS  : grid    : GGrid object
 //         ggfx    : gather/scatter op, GGFX
 //**********************************************************************************
@@ -863,7 +864,7 @@ void create_stirrer(PropertyTree &ptree, StirBasePtr  &pStirrer)
 //**********************************************************************************
 //**********************************************************************************
 // METHOD: create_observers
-// DESC  : Create observer list from ptree
+// DESC  : Create observer list from main ptree
 // ARGS  : grid    : GGrid object
 //         ggfx    : gather/scatter op, GGFX
 //**********************************************************************************
@@ -872,12 +873,18 @@ std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers
 {
     PropertyTree obsptree;    // observer props 
     GString dstr = "none";
+    GString ptype;
 
     std::vector<GString> default_obslist; default_obslist.push_back(dstr);
     std::vector<GString> obslist = ptree.getArray<GString>("observer_list",default_obslist);
+    dstr = "constant";
+    ptype = ptree.getArray<GString>("exp_order_type",dstr);
     for ( auto j=0; j<obslist.size(); j++ ) {
       if ( "none" != obslist[j] ) {
         obsptree = ptree.getPropertyTree(obslist[j]);
+        // Set output version based on exp_order_type:
+        if ( "constant" == ptype 
+         && "posixio_observer" == obslist[j]  ) obsptree.setValue("misc",0);
         pObservers->push_back(ObserverFactory<MyTypes>::build(obsptree,*grid_));
       }
     }
