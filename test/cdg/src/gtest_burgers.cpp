@@ -24,7 +24,7 @@
 #include "gburgers.hpp"
 #include "ggrid_box.hpp"
 #include "ggrid_factory.hpp"
-#include "gout_simple_observer.hpp"
+#include "gposixio_observer.hpp"
 #include "pdeint/equation_base.hpp"
 #include "pdeint/integrator_factory.hpp"
 #include "pdeint/stirrer_factory.hpp"
@@ -34,7 +34,7 @@
 #include "tbox/mpixx.hpp"
 #include "tbox/global_manager.hpp"
 #include "tbox/input_manager.hpp"
-#include "gio.h"
+//#include "gio.h"
 
 using namespace geoflow::pdeint;
 using namespace geoflow::tbox;
@@ -345,7 +345,7 @@ int main(int argc, char **argv)
     
     GTVector<GINT> istate(nstate);
     for ( GSIZET j=0; j<nstate; j++ ) istate[j] = j;
-    gio_write(*grid_, ua_, istate, 0, t, savars, sdir, 0, comm_, FALSE);
+//  gio_write(*grid_, ua_, istate, 0, 0, t, savars, sdir, 0, comm_, FALSE);
     for ( GSIZET j=0; j<1; j++ ) { //local errors
       *utmp_[0] = *u_[j] - *ua_[j];
       GPP(comm_,"main: diff=u-ua[" << j << "]=" << *utmp_[0]);
