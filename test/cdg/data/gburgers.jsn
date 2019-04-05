@@ -89,12 +89,12 @@
     "indirectory"        : ".",
     "outdirectory"       : ".",
     "cadence_type"       : "cycle",
-    "interval_freq_fact" : 10.0,
+    "interval_freq_fact" : 10.0
   },
   "time_integration": {
     "integ_type" : "cycle",
     "time_end"   : 1.501,
-    "cycle_end"  : 40,
+    "cycle_end"  : 80,
     "dt"         : 1.0e-4
   }
 
