@@ -157,14 +157,13 @@ void gio_restart(const geoflow::tbox::PropertyTree& ptree, GINT igrid,
   GString              stmp;
   GString              sgtype;
   GTVector<GString>    gobslist;
-  GTVector<GString>    ggnames;
   std::vector<GString> defgnames = {"xgrid", "ygrid", "zgrid"};
   std::vector<GString> stdlist;
   std::stringstream    format;
   geoflow::tbox::PropertyTree inputptree;
   GIOTraits            traits;
 
-  // Get restart index:
+  // Get restart indexd:
   itindex = ptree.getValue<GSIZET>   ("restart_index", 0);
 
   // Get observer list:
@@ -189,8 +188,10 @@ void gio_restart(const geoflow::tbox::PropertyTree& ptree, GINT igrid,
   if ( gobslist.contains("posixio_observer") ) {
     inputptree    = ptree.getPropertyTree       ("posixio_observer");
     gio_resize(inputptree.getValue<GINT>("filename_size",2048));
-    stdlist       = inputptree.getArray<GString>("grid_names", defgnames);
-    ggnames       = stdlist;
+    if ( igrid )  // use grid format
+      stdlist     = inputptree.getArray<GString>("grid_names", defgnames);
+    else          // use state format
+      stdlist     = inputptree.getArray<GString>("state_names");
     traits.wfile  = inputptree.getValue   <GINT>("filename_size",2048);
     traits.wtask  = inputptree.getValue   <GINT>("task_field_width", 5);
     traits.wtime  = inputptree.getValue   <GINT>("time_field_width", 6);
@@ -205,9 +206,9 @@ void gio_restart(const geoflow::tbox::PropertyTree& ptree, GINT igrid,
     
     for ( GSIZET j=0; j<nc; j++ ) { // Retrieve all grid coord vectors
       if ( igrid )  // use grid format
-        sprintf(cfname_, format.str().c_str(), traits.dir.c_str(), myrank);
+        sprintf(cfname_, format.str().c_str(), traits.dir.c_str(), stdlist[j].c_str(), myrank);
       else          // use state format
-        sprintf(cfname_, format.str().c_str(), traits.dir.c_str(), itindex, myrank);
+        sprintf(cfname_, format.str().c_str(), traits.dir.c_str(), stdlist[j].c_str(), itindex, myrank);
       fname_.assign(cfname_);
       nr = gio_read(traits, fname_, *u[j]);
     }
