@@ -5,6 +5,7 @@
   "init_block"     : "init_nwave",
   "bdy_conditions" : "DIRICHLET",
   "restart_index"  : 4,
+  "benchmark"      : false,
   "observer_list"  : ["posixio_observer", "global_diag_basic"],
   "poly_test": {
     "xpoly" : 10,
