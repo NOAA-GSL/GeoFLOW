@@ -42,7 +42,7 @@ ObserverFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid){
         traits.idir          = ptree.getValue<std::string>("indirectory",".");          // input directory
         traits.odir          = ptree.getValue<std::string>("outdirectory",".");         // outputdirectory
         traits.start_ocycle  = ptree.getValue<size_t>     ("start_ocycle",0);           // starting output cycle 
-        traits.start_cycle   = ptree.getValue<size_t>     ("start_cycle",0);            // start evol cycle
+//      traits.start_cycle   = ptree.getValue<size_t>     ("start_cycle",0);            // start evol cycle
         traits.start_time    = ptree.getValue<double>     ("start_time",0.0);           // start evol time
      
 	// Create the observer and cast to base type
