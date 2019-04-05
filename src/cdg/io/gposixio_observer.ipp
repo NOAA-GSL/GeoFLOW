@@ -70,10 +70,10 @@ void GPosixIOObserver<EquationType>::observe_impl(const Time &t, const State &u,
     traits.dir    = sodir_;
     gio_write_state(traits, *(this->grid_), u, state_index_, state_names_,  comm);
     gio_write_grid (traits, *(this->grid_), grid_names_,  comm);
-    bprgrid_ = FALSE;
-    cycle_last_ = cycle_;
-    time_last_  = t;
-    ocycle_++;
+    bprgrid_      = FALSE;
+    cycle_last_   = cycle_;
+    time_last_    = t;
+    ocycle_++; // ouput cycle index
   }
   cycle_++;
   
@@ -104,8 +104,8 @@ void GPosixIOObserver<EquationType>::init(const Time t, const State &u)
    wtask_ = this->traits_.itag2;
    wfile_ = this->traits_.itag3;
  
-   cycle_last_ = this->traits_.start_cycle;
    time_last_  = this->traits_.start_time ;
+   ocycle_     = this->traits_.start_ocycle;
  
    // Set state names member data, if not already set:
    if ( state_names_.size()  <= 0 ) {

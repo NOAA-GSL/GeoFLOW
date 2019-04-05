@@ -187,6 +187,10 @@ void gio_restart(const geoflow::tbox::PropertyTree& ptree, GINT igrid,
 
   if ( gobslist.contains("posixio_observer") ) {
     inputptree    = ptree.getPropertyTree       ("posixio_observer");
+
+    // Set output cycle in observer traits:
+    inputptree.setValue<GINT>("start_ocycle",itindex);
+
     gio_resize(inputptree.getValue<GINT>("filename_size",2048));
     if ( igrid )  // use grid format
       stdlist     = inputptree.getArray<GString>("grid_names", defgnames);
@@ -222,6 +226,10 @@ void gio_restart(const geoflow::tbox::PropertyTree& ptree, GINT igrid,
     assert(traits.ivers == ivers  && "Incompatible version identifier");
     assert(traits.dim   == GDIM   && "Incompatible problem dimension");
     assert(traits.gtype == igtype && "Incompatible grid type");
+
+    // Assign time and cycle from traits, for return:
+    icycle = traits.cycle;
+    time   = traits.time;
   }
   else {
     assert( FALSE && "Configuration does not exist for grid files");
