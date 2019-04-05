@@ -391,7 +391,7 @@ int main(int argc, char **argv)
   
       // Write header, if required:
       if ( itst.peek() == std::ofstream::traits_type::eof() ) {
-        ios << "#ntasks" ;
+        ios << "#ntasks" << "  ";
         for ( GSIZET j=0; j<pstd.size(); j++ ) ios << "p" << j+1 << "  ";
         ios << "num_elems      inf_err     L1_err      L2_err" << std::endl;
       }
@@ -894,7 +894,9 @@ std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers
 {
     GINT    ivers;
     GSIZET  rest_ocycle;       // restart output cycle
+    GSIZET  deltac;            // cycle interval
     GFTYPE  ofact;             // output freq in terms of restart output
+    GFTYPE  deltat;            // time interval
     PropertyTree obsptree;     // observer props 
     GString dstr = "none";
     GString ptype;
@@ -905,8 +907,8 @@ std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers
     ptype = ptree.getValue<GString>("exp_order_type",dstr);
    
     // If doing a restart, set observer output
-    // cycles to value relative to the main_ocycle:
-    rest_ocycle=  ptree.getValue<GString>("restart_index",0);
+    // cycles to value relative to the restart output cycle:
+    rest_ocycle = ptree.getValue <GSIZET>("restart_index");
     if ( "constant" == ptype ) ivers = 0;
     if ( "variable" == ptype ) ivers = 1;
     for ( auto j=0; j<obslist.size(); j++ ) {
@@ -916,11 +918,15 @@ std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers
         if ( "constant" == ptype 
          && "posixio_observer" == obslist[j]  ) obsptree.setValue("misc",ivers);
 
-        ofact = obsptree.setValue("interval_freq_fact",1.0);
-        // Set current time and cycle so that observer can initialize itself
+        ofact       = obsptree.getValue<GDOUBLE>("interval_freq_fact",1.0);
+        deltat      = obsptree.getValue<GDOUBLE>("time_interval",0.01);
+        deltac      = obsptree.getValue<GDOUBLE>("cycle_interval",1);
+        // Set current time and output cycle so that observer can initialize itself
         // These should be hidden from the config file:
-        obsptree.setValue("start_ocycle",restart_ocycle*ofact);
+        obsptree.setValue("start_ocycle",rest_ocycle*ofact);
         obsptree.setValue("start_time"  ,time);
+        obsptree.setValue("time_interval", MAX(0.0,deltat/ofact));
+        obsptree.setValue("cycle_interval",MAX(1,deltac/ofact));
 
         pObservers->push_back(ObserverFactory<MyTypes>::build(obsptree,*grid_));
       }
