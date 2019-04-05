@@ -58,6 +58,7 @@ public:
                 size_t    cycle_interval = 10;        // cycle interval for observation
                 double    start_time     = 0.0;       // starting evol time
                 double    time_interval  = 1.0;       // time interval for observation
+                double    freq_fact      = 1.0;       // ties output freq to another observer (e.g., restart)
                 std::string
                           idir                ;       // input directory (for data e.g.)
                 std::string

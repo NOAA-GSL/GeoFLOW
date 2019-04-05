@@ -38,6 +38,7 @@ ObserverFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid){
         traits.grid_names    = ptree.getArray<std::string>("grid_names",defgr_names);   // grid comp names 
         traits.cycle_interval= ptree.getValue<size_t>     ("cycle_interval", 10);       // cadence for cycle type
         traits.time_interval = ptree.getValue<double>     ("time_interval", 1.0);       // cadence for time type
+        traits.freq_fact     = ptree.getValue<double>     ("interval_freq_fact", 1.0);  // freq factor relative to, say restart
         traits.idir          = ptree.getValue<std::string>("indirectory",".");          // input directory
         traits.odir          = ptree.getValue<std::string>("outdirectory",".");         // outputdirectory
         traits.start_ocycle  = ptree.getValue<size_t>     ("start_ocycle",0);           // starting output cycle 
