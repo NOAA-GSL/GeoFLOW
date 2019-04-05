@@ -202,7 +202,7 @@ void gio_restart(const geoflow::tbox::PropertyTree& ptree, GINT igrid,
     if ( igrid )  // use grid format
       format    << "%s/%s.%0" << traits.wtask << "d.out";
     else          // use state format
-      format    << "%s/%s.%0" << traits.wtime << "d%0" << traits.wtask << "d.out";
+      format    << "%s/%s.%0" << traits.wtime << "d.%0" << traits.wtask << "d.out";
     
     for ( GSIZET j=0; j<nc; j++ ) { // Retrieve all grid coord vectors
       if ( igrid )  // use grid format
@@ -363,15 +363,17 @@ GSIZET gio_read_header(GIOTraits &traits, GString fname)
     assert(fp != NULLPTR && "gio.cpp: error opening file");
   
     // Read header: 
-    nh = fread(&traits.ivers       , sizeof(GINT)  ,    1, fp); nb += nh;
-    nh = fread(&traits.dim         , sizeof(GINT)  ,    1, fp); nb += nh;
-    nh = fread(&traits.nelems      , sizeof(GSIZET),    1, fp); nb += nh;
-    numr = traits.ivers == 0 ? traits.dim : traits.nelems * traits.dim;
+    nh = fread(&traits.ivers       , sizeof(GINT)  ,    1, fp); nb += nh*sizeof(GINT);
+    nh = fread(&traits.dim         , sizeof(GINT)  ,    1, fp); nb += nh*sizeof(GINT);
+    nh = fread(&traits.nelems      , sizeof(GSIZET),    1, fp); nb += nh*sizeof(GSIZET);
+    numr = traits.ivers == 0 ? 1 : traits.nelems;
+    traits.porder.resize(numr,traits.dim);
+    numr = traits.porder.size(1)*traits.porder.size(2);
     nh = fread(traits.porder.data().data()
-                                   , sizeof(GINT)  , numr, fp); nb += nh;
-    nh = fread(&traits.gtype       , sizeof(GINT)  ,    1, fp); nb += nh;
-    nh = fread(&traits.cycle       , sizeof(GSIZET),    1, fp); nb += nh;
-    nh = fread(&traits.time        , sizeof(GFTYPE),    1, fp); nb += nh;
+                                   , sizeof(GINT)  , numr, fp); nb += nh*sizeof(GINT);
+    nh = fread(&traits.gtype       , sizeof(GINT)  ,    1, fp); nb += nh*sizeof(GINT);
+    nh = fread(&traits.cycle       , sizeof(GSIZET),    1, fp); nb += nh*sizeof(GSIZET);
+    nh = fread(&traits.time        , sizeof(GFTYPE),    1, fp); nb += nh*sizeof(GFTYPE);
   
     fclose(fp);
   
