@@ -85,8 +85,8 @@ void GGlobalDiag_basic<EquationType>::init(const Time t, const State &u)
    sidir_ = traits_.idir;
    sodir_ = traits_.odir;
  
-   cycle_last_ = this->traits_.start_cycle;
    time_last_  = this->traits_.start_time ;
+   ocycle_     = this->traits_.start_ocycle;
 
    *(*utmp_)[0] = 1.0;
    GFTYPE vol = grid_->integrate(*(*utmp_)[0],*(*utmp_)[1]);
