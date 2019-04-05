@@ -125,7 +125,7 @@ void GPosixIOObserver<EquationType>::init(const Time t, const State &u)
    // Set grid names member data, if not already set:
    if ( grid_names_.size()  <= 0 ) {
      if ( this->traits_.grid_names.size() == 0 ) {
-       for ( auto j=0; j<u.size(); j++ ) {
+       for ( auto j=0; j<GDIM+1; j++ ) {
          sprintf(stmp, "%sgrid", spref[j]);
          grid_names_.push_back(stmp); 
        } 
