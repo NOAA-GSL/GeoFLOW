@@ -35,13 +35,14 @@ ObserverFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid){
         std::vector<int> def_ids;
         traits.state_index   = ptree.getArray<int>        ("state_index",def_ids);    // state ids to 'observe' [0, 1, 2...]
         traits.state_names   = ptree.getArray<std::string>("state_names",defst_names);  // state names 
-        traits.grid_names   = ptree.getArray<std::string>("grid_names",defgr_names);  // grid comp names 
-        traits.cycle_interval= ptree.getValue<size_t>     ("cycle_interval", 10);         // cadence for cycle type
-        traits.time_interval = ptree.getValue<double>     ("time_interval", 1.0);         // cadence for time type
-        traits.idir          = ptree.getValue<std::string>("indirectory",".");            // input directory
-        traits.odir          = ptree.getValue<std::string>("outdirectory",".");           // outputdirectory
-        traits.start_cycle   = ptree.getValue<size_t>     ("start_cycle",0);              // start cycle
-        traits.start_time    = ptree.getValue<double>     ("start_time",0.0);             // start time
+        traits.grid_names    = ptree.getArray<std::string>("grid_names",defgr_names);   // grid comp names 
+        traits.cycle_interval= ptree.getValue<size_t>     ("cycle_interval", 10);       // cadence for cycle type
+        traits.time_interval = ptree.getValue<double>     ("time_interval", 1.0);       // cadence for time type
+        traits.idir          = ptree.getValue<std::string>("indirectory",".");          // input directory
+        traits.odir          = ptree.getValue<std::string>("outdirectory",".");         // outputdirectory
+        traits.start_ocycle  = ptree.getValue<size_t>     ("start_ocycle",0);           // starting output cycle 
+        traits.start_cycle   = ptree.getValue<size_t>     ("start_cycle",0);            // start evol cycle
+        traits.start_time    = ptree.getValue<double>     ("start_time",0.0);           // start evol time
      
 	// Create the observer and cast to base type
 	ObsBasePtr base_ptr;

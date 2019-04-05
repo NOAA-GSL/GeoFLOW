@@ -53,9 +53,10 @@ public:
                           state_names;                // file/ref names for each state member
                 std::vector<std::string>
                           grid_names;                 // file/ref names for each grid comp
-                size_t    start_cycle   = 0;          // start cycle 
+                size_t    start_ocycle   = 0;         // starting output cycle 
+                size_t    start_cycle    = 0;         // starting evol cycle 
                 size_t    cycle_interval = 10;        // cycle interval for observation
-                double    start_time     = 0.0;       // start time
+                double    start_time     = 0.0;       // starting evol time
                 double    time_interval  = 1.0;       // time interval for observation
                 std::string
                           idir                ;       // input directory (for data e.g.)
