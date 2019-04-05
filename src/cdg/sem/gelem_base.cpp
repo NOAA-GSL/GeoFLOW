@@ -978,7 +978,6 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
   } else if ( elemtype_ == GE_REGULAR) {  // dXi/dX are just constants for GE_REGULAR:
     // Set only diagonal elements of rij, irij:
     for ( k=0; k<nxy; k++ ) { // rij matrix element col
-//    irij(k,0).bconstdata(TRUE);
       rij (k,0) = 0.5*L[k]; 
       irij(k,0) = 2.0/L[k];
     } // k-loop
@@ -1126,7 +1125,6 @@ void GElem_base::dogeom3d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
     det (rij, jac, pChk, NULLPTR, 0);
   }
   else if ( elemtype_ == GE_REGULAR ) {
-//  jac.bconstdata(TRUE);
     jac[0] = 0.125*L[0]*L[1]*L[2];
   }
 
