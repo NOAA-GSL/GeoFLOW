@@ -323,8 +323,7 @@ void GpdV::reg_init()
   G_ .resize(nxy);
   G_ = NULLPTR;
   for ( GSIZET j=0; j<nxy; j++ ) {
-    G_ [j] = new GTVector<GFTYPE>(1);
-    G_ [j]->bconstdata(TRUE); // treat as constant; any access returns constant
+    G_ [j] = new GTVector<GFTYPE>(grid_->ndof());
   }
 
 
@@ -333,7 +332,8 @@ void GpdV::reg_init()
     if ( (*gelems)[e]->elemtype() != GE_REGULAR ) continue;
 
     for ( GSIZET j=0; j<GDIM; j++ ) {
-      (*G_[j])[0] = (*dXidX)(j,0)[0]*(*Jac)[0];
+     *G_[j] = (*dXidX)(j,0);
+      G_[j]->pointProd(*Jac);
     }
   } // end, element list
 
