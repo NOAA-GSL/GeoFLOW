@@ -24,8 +24,7 @@ template<class T>
 GTVector<T>::GTVector():
 data_    (NULLPTR),
 n_             (0),
-bdatalocal_ (TRUE),
-bconstdata_ (FALSE)
+bdatalocal_ (TRUE)
 {
   gindex_(n_, n_, 0, n_-1, 1,  0);
   gindex_keep_ = gindex_;
@@ -47,8 +46,7 @@ template<class T>
 GTVector<T>::GTVector(GSIZET n):
 data_    (NULLPTR),
 n_             (n),
-bdatalocal_ (TRUE),
-bconstdata_ (FALSE)
+bdatalocal_ (TRUE)
 {
   data_ = new T [n_];
   gindex_(n_, n_, 0, n_-1, 1,  0);
@@ -69,8 +67,7 @@ bconstdata_ (FALSE)
 template<class T>
 GTVector<T>::GTVector(GIndex &gi):
 data_    (NULLPTR),
-bdatalocal_ (TRUE),
-bconstdata_ (FALSE)
+bdatalocal_ (TRUE)
 {
   gindex_ = gi;
   gindex_keep_ = gindex_;
@@ -95,8 +92,7 @@ template<class T>
 GTVector<T>::GTVector(GTVector<T> &obj):
 data_      (NULLPTR),
 n_      (obj.size()),
-bdatalocal_   (TRUE),
-bconstdata_  (FALSE)
+bdatalocal_   (TRUE)
 {
   data_ = new T [n_];
   
@@ -126,8 +122,7 @@ template<class T>
 GTVector<T>::GTVector(T *indata, GSIZET n, GSIZET istride):
 data_     (NULLPTR),
 n_      (n/istride),
-bdatalocal_  (TRUE),
-bconstdata_ (FALSE)
+bdatalocal_  (TRUE)
 {
   data_ = new T [n_];
 
@@ -160,8 +155,7 @@ template<class T>
 GTVector<T>::GTVector(T *indata, GSIZET n, GSIZET istride, GBOOL blocmgd):
 data_     (NULLPTR),
 n_      (n/istride),
-bdatalocal_  (TRUE),
-bconstdata_ (FALSE)
+bdatalocal_  (TRUE)
 {
   if ( bdatalocal_ ) {
     data_ = new T [n_];
@@ -195,8 +189,7 @@ template<class T>
 GTVector<T>::GTVector(const GTVector<T> &obj):
 data_      (NULLPTR),
 n_      (obj.size()),
-bdatalocal_   (TRUE),
-bconstdata_  (FALSE)
+bdatalocal_   (TRUE)
 {
   data_ = new T [n_];
   for ( GLLONG j=0; j<obj.capacity(); j++ ) {
@@ -224,29 +217,6 @@ GTVector<T>::~GTVector()
   #pragma acc exit data delete( data_[0:n_-1], this[0:1] )
   if ( data_  != NULLPTR  && bdatalocal_ ) delete [] data_;
 }
-
-
-//**********************************************************************************
-//**********************************************************************************
-// METHOD : bconstdata
-// DESC   : Sets vector to be a 'constant'. Member data is resized to be of
-//          capacity 1, and any get of the data (for any index) returns the
-//          value in element 0 of data block
-// ARGS   : bdoconst : TRUE or false to make vector 'constant' or not.
-// RETURNS: none.
-//**********************************************************************************
-template<class T>
-void GTVector<T>::bconstdata(GBOOL doconst) 
-{
-  bconstdata_ = doconst;
-
-  if ( bconstdata_ ) {
-    if ( data_ != NULLPTR ) delete data_;
-    n_ = 1;
-    data_ = new T [n_];
-    gindex_(n_, n_, 0, n_-1, 1,  0);
-  }
-} // end, method bconstdata
 
 
 //**********************************************************************************
@@ -303,11 +273,6 @@ GIndex &GTVector<T>::getIndex()
 template<class T> 
 void GTVector<T>::resize(GSIZET nnew)
 {
-  if ( bconstdata_ ) {
-    clear();
-    resizem(1);
-  }
-
   assert(bdatalocal_ && "Data not local; cannot resize");
 
   #if defined(_G_AUTO_CREATE_DEV)
@@ -350,11 +315,6 @@ void GTVector<T>::resize(GSIZET nnew)
 template<class T> 
 void GTVector<T>::resize(GIndex &gi)
 {
-  if ( bconstdata_ ) {
-    clear();
-    resize(1);
-  }
-
   assert(bdatalocal_ && "Data not local; cannot resize");
 
   #if defined(_G_AUTO_CREATE_DEV)
@@ -396,11 +356,6 @@ void GTVector<T>::resize(GIndex &gi)
 template<class T>
 void GTVector<T>::resizem(GSIZET nnew)
 {
-  if ( bconstdata_ ) {
-    clear();
-    resize(1);
-  }
-
   if ( nnew > n_ ) {
 
     assert(bdatalocal_ && "Data not local; cannot resize");
@@ -432,11 +387,6 @@ void GTVector<T>::resizem(GSIZET nnew)
 template<class T> 
 void GTVector<T>::reserve(GSIZET nnew)
 {
-  if ( bconstdata_ ) {
-    clear();
-    resize(1);
-  }
-
   assert(bdatalocal_ && "Can reserve only on data local vector");
 
   #if defined(_G_AUTO_CREATE_DEV)
@@ -532,7 +482,6 @@ void GTVector<T>::clear()
 template<class T>
 void GTVector<T>::push_back(const T &obj)
 {
-  if ( bconstdata_ ) return;
 
   GSIZET nnew = gindex_.end() + gindex_.pad() + 2;
 
@@ -719,9 +668,6 @@ void GTVector<T>::operator=(T a)
 template<class T> 
 void  GTVector<T>::range(GSIZET ibeg, GSIZET iend) 
 {
-
-  if ( bconstdata_ ) return;
-
 //assert(ibeg <= n_ && iend <= n_ && "Invalid range specification");
 
   gindex_.beg() = ibeg;

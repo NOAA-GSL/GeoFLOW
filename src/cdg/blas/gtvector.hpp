@@ -54,7 +54,6 @@ template <class T> class GTVector
     void   push_back(T const &);// Push new element to end of data buffer
     T     &back();              // Get reference to last element
     T     &back() const;        // Get reference to last element
-    void   bconstdata(GBOOL);   // If data const, all access access 1 element only
 
     void range(GSIZET ibeg, GSIZET end);    // Set range of vector within capacity
     void range_reset();                     // Reset range of vector 
@@ -86,23 +85,23 @@ template <class T> class GTVector
 inline   T &operator[](const GSIZET i) {
     #if defined(_G_BOUNDS_CHK)
       const char serr[] = "GTVector<T>::operator[]: ";
-      if ( !bconstdata_ && i+gindex_.beg() > gindex_.end() ) {
+      if ( i+gindex_.beg() > gindex_.end() ) {
         std::cout << serr << "Access error: " << i << std::endl;
         while(1){}; exit(1);
       }
     #endif
-      return bconstdata_ ? data_[0] : data_[i+gindex_.beg()];
+      return data_[i+gindex_.beg()];
     };
 
 inline    T operator[](const GSIZET i) const {
     #if defined(_G_BOUNDS_CHK)
       const char serr[] = "GTVector<T>::operator[] const: ";
-      if ( !bconstdata_  && i+gindex_.beg() > gindex_.end() ) {
+      if ( i+gindex_.beg() > gindex_.end() ) {
         std::cout << serr << "Access error: " << i << std::endl;
         while(1){}; exit(1);
       }
     #endif
-      T ret = bconstdata_ ? data_[0] : data_[i+gindex_.beg()];
+      T ret = data_[0] : data_[i+gindex_.beg()];
       return ret;
     };
 
@@ -209,7 +208,6 @@ inline    T operator[](const GSIZET i) const {
     T     *data_;
     GSIZET n_;
     GBOOL  bdatalocal_; // tells us that data_ is owned by caller
-    GBOOL  bconstdata_; // says data is const, and access is to 1st element only
 
 
   #pragma acc routine vector 
