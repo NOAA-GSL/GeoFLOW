@@ -101,7 +101,7 @@ inline    T operator[](const GSIZET i) const {
         while(1){}; exit(1);
       }
     #endif
-      T ret = data_[0] : data_[i+gindex_.beg()];
+      T ret = data_[i+gindex_.beg()];
       return ret;
     };
 
