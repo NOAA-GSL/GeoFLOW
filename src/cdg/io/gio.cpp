@@ -9,6 +9,10 @@
 
 using namespace std;
 
+GString  fname_;
+char    *cfname_ = NULLPTR;
+GINT     nfname_ = 0;
+
 
 //**********************************************************************************
 //**********************************************************************************
@@ -28,9 +32,7 @@ void gio_write_state(GIOTraits &traits, GGrid &grid,
                      const GTVector<GString> &svars, GC_COMM comm) 
 {
     GString serr = "gio_write_state: ";
-    FILE          *fp;
     GINT           myrank = GComm::WorldRank(comm);
-    GString        fname;
     GSIZET         nb, nc, nd;
     GTVector<GTVector<GFTYPE>>
                   *xnodes = &grid.xNodes();
@@ -54,26 +56,21 @@ void gio_write_state(GIOTraits &traits, GGrid &grid,
         && "Incompatible grid or coord  dimensions");
 
     // Build format string:
-    fname.resize(traits.wfile);
-    format    << "\%s/\%s.\%0" << traits.wtime << "\%0" << traits.wtask << "d.out";
+    gio_resize(traits.wfile);
+    format    << "%s/%s.%0" << traits.wtime << "d.%0" << traits.wtask << "d.out";
 
     // Set porder vector depending on version:
     traits.porder.resize(traits.ivers == 0 ? 1: traits.nelems, GDIM);
     for ( auto i=0; i<traits.porder.size(1); i++ )  { // for each element
       for ( auto j=0; j<traits.porder.size(2); j++ ) traits.porder(i,j) = (*elems)[i]->order(j);
     }
-
+ 
     // Cycle over all fields, and write:
     for ( auto j=0; j<iu.size(); j++ ) {
-      printf(fname.c_str(), format.str().c_str(), traits.dir.c_str(), 
-             svars[j].c_str(), traits.index,  myrank);
-      fp = fopen(fname.c_str(),"wb");
-      if ( fp == NULL ) {
-        cout << serr << "Error opening file: " << fname << endl;
-        exit(1);
-      }
-      gio_write(traits, fname, *u[iu[j]]);
-      fclose(fp);
+      sprintf(cfname_, format.str().c_str(), traits.dir.c_str(), 
+              svars[j].c_str(), traits.index, myrank);
+      fname_.assign(cfname_);
+      gio_write(traits, fname_, *u[iu[j]]);
     }
 
 } // end, gio_write_state
@@ -92,9 +89,7 @@ void gio_write_state(GIOTraits &traits, GGrid &grid,
 void gio_write_grid(GIOTraits &traits, GGrid &grid, const GTVector<GString> &svars, GC_COMM comm) 
 {
     GString serr ="gio_write_grid: ";
-    FILE          *fp;
     GINT           myrank = GComm::WorldRank(comm);
-    GString        fname;
     GSIZET         nb, nc, nd;
     GTVector<GTVector<GFTYPE>>
                   *xnodes = &grid.xNodes();
@@ -116,9 +111,8 @@ void gio_write_grid(GIOTraits &traits, GGrid &grid, const GTVector<GString> &sva
 
 
     // Build format string:
-    fname.resize(traits.wfile);
-    format    << "\%s/\%s.\%0" << traits.wtask << "d.out";
-
+    gio_resize(traits.wfile);
+    format    << "%s/%s.%0" << traits.wtask << "d.out";
     // Set porder vector depending on version:
     traits.porder.resize(traits.ivers == 0 ? 1: traits.nelems, GDIM);
     for ( auto i=0; i<traits.porder.size(1); i++ )  { // for each element
@@ -127,14 +121,9 @@ void gio_write_grid(GIOTraits &traits, GGrid &grid, const GTVector<GString> &sva
 
     // Cycle over all coords, and write:
     for ( auto j=0; j<xnodes->size(); j++ ) {
-      printf(fname.c_str(), format.str().c_str(), traits.dir.c_str(), svars[j].c_str(),  myrank);
-      fp = fopen(fname.c_str(),"wb");
-      if ( fp == NULL ) {
-        cout << serr << "Error opening file: " << fname << endl;
-        exit(1);
-      }
-      gio_write(traits, fname, (*xnodes)[j]);
-      fclose(fp);
+      sprintf(cfname_, format.str().c_str(), traits.dir.c_str(), svars[j].c_str(),  myrank);
+      fname_.assign(cfname_);
+      gio_write(traits, fname_, (*xnodes)[j]);
     }
 
 } // end, gio_write_grid
@@ -164,7 +153,6 @@ void gio_restart(const geoflow::tbox::PropertyTree& ptree, GINT igrid,
   GINT                 ivers, nc, nr, nt;
   GElemType            igtype;
   GSIZET               itindex;
-  GString              fname;
   GString              def;
   GString              stmp;
   GString              sgtype;
@@ -200,7 +188,7 @@ void gio_restart(const geoflow::tbox::PropertyTree& ptree, GINT igrid,
 
   if ( gobslist.contains("posixio_observer") ) {
     inputptree    = ptree.getPropertyTree       ("posixio_observer");
-    fname.resize(inputptree.getValue<GINT>("filename_size",2048));
+    gio_resize(inputptree.getValue<GINT>("filename_size",2048));
     stdlist       = inputptree.getArray<GString>("grid_names", defgnames);
     ggnames       = stdlist;
     traits.wfile  = inputptree.getValue   <GINT>("filename_size",2048);
@@ -211,17 +199,17 @@ void gio_restart(const geoflow::tbox::PropertyTree& ptree, GINT igrid,
 
     // Get data:
     if ( igrid )  // use grid format
-      format    << "\%s/\%s.\%0" << traits.wtask << "d.out";
+      format    << "%s/%s.%0" << traits.wtask << "d.out";
     else          // use state format
-      format    << "\%s/\%s.\%0" << traits.wtime << "d\%0" << traits.wtask << "d.out";
+      format    << "%s/%s.%0" << traits.wtime << "d%0" << traits.wtask << "d.out";
     
     for ( GSIZET j=0; j<nc; j++ ) { // Retrieve all grid coord vectors
       if ( igrid )  // use grid format
-        printf(fname.c_str(), format.str().c_str(), traits.dir.c_str(), myrank);
+        sprintf(cfname_, format.str().c_str(), traits.dir.c_str(), myrank);
       else          // use state format
-        printf(fname.c_str(), format.str().c_str(), traits.dir.c_str(), itindex, myrank);
-  
-      nr = gio_read(traits, fname, *u[j]);
+        sprintf(cfname_, format.str().c_str(), traits.dir.c_str(), itindex, myrank);
+      fname_.assign(cfname_);
+      nr = gio_read(traits, fname_, *u[j]);
     }
 
     if ( igrid ) { // needed for grid restart
@@ -397,4 +385,24 @@ GSIZET gio_read_header(GIOTraits &traits, GString fname)
     return nb;
 
 } // end, gio_read_header
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : gio_resize
+// DESC   : Resize global data
+// ARGS   : n  : new number bytes
+// RETURNS: none.
+//**********************************************************************************
+void gio_resize(GINT n)
+{
+
+  if ( n > nfname_ ) {
+    if ( cfname_ != NULLPTR ) delete [] cfname_;
+    cfname_ = new char [n];
+    fname_.resize(n);
+    nfname_ = n;
+  }
+
+} // end, gio_resize
 

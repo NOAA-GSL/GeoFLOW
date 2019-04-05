@@ -22,6 +22,9 @@
 using namespace geoflow::tbox;
 using namespace std;
 
+extern GString  fname_;
+extern char    *cfname_;
+extern GINT     nfname_;
 
 #define GIO_VERSION 0
 
@@ -60,6 +63,8 @@ GSIZET gio_read_header(GIOTraits&, GString filename);
 GSIZET gio_write(GIOTraits&, GString filename, const GTVector<GFTYPE> &u);
 
 GSIZET gio_read (GIOTraits&, GString filename, GTVector<GFTYPE> &u);
+
+void   gio_resize(GINT n);
 
 
 
