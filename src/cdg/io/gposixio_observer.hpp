@@ -84,7 +84,8 @@ private:
         GSIZET             ocycle_;     // output cycle number
         GFTYPE             time_last_;  // most recent output time
         GTVector<GINT>     state_index_;// list of state indices to print
-        GTVector<GString>  state_names_;// list of names of states to print
+        GTVector<GString>  state_names_;// list of names of state files
+        GTVector<GString>  grid_names_ ;// list of names of grid comp files
         GString            sidir_;     ;// directory from which to read (e.g., for restart)
         GString            sodir_;     ;// directory in which to write
     
