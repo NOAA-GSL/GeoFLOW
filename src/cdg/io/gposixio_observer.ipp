@@ -69,7 +69,7 @@ void GPosixIOObserver<EquationType>::observe_impl(const Time &t, const State &u,
     traits.time   = t;
     traits.dir    = sodir_;
     gio_write_state(traits, *(this->grid_), u, state_index_, state_names_,  comm);
-    gio_write_grid (traits, *(this->grid_), u, state_index_, grid_names_ ,  comm);
+    gio_write_grid (traits, *(this->grid_), grid_names_,  comm);
     bprgrid_ = FALSE;
     cycle_last_ = cycle_;
     time_last_  = t;
@@ -95,7 +95,7 @@ void GPosixIOObserver<EquationType>::init(const Time t, const State &u)
    if ( bInit_ ) return;
 
    char    stmp[1024];
-   GString spref = {"x", "y", "z"};
+   std::vector<GString> spref = {"x", "y", "z"};
 
    sidir_ = this->traits_.idir;
    sodir_ = this->traits_.odir;
@@ -126,7 +126,7 @@ void GPosixIOObserver<EquationType>::init(const Time t, const State &u)
    if ( grid_names_.size()  <= 0 ) {
      if ( this->traits_.grid_names.size() == 0 ) {
        for ( auto j=0; j<GDIM+1; j++ ) {
-         sprintf(stmp, "%sgrid", spref[j]);
+         sprintf(stmp, "%sgrid", spref[j].c_str());
          grid_names_.push_back(stmp); 
        } 
      } 
