@@ -4,7 +4,7 @@
   "grid_type"      : "grid_box",
   "init_block"     : "init_nwave",
   "bdy_conditions" : "DIRICHLET",
-  "restart_index"  : 0,
+  "restart_index"  : 4,
   "observer_list"  : ["posixio_observer", "global_diag_basic"],
   "poly_test": {
     "xpoly" : 10,
@@ -85,17 +85,16 @@
     "filename_size"   : 2048
   },
   "global_diag_basic": {
-    "observer_name" : "global_diag_basic",
-    "indirectory"   : ".",
-    "outdirectory"  : ".",
-    "cadence_type"  : "cycle",
-    "cycle_interval": 1,
-    "time_interval" : 0.001
+    "observer_name"      : "global_diag_basic",
+    "indirectory"        : ".",
+    "outdirectory"       : ".",
+    "cadence_type"       : "cycle",
+    "interval_freq_fact" : 10.0,
   },
   "time_integration": {
     "integ_type" : "cycle",
     "time_end"   : 1.501,
-    "cycle_end"  : 20,
+    "cycle_end"  : 40,
     "dt"         : 1.0e-4
   }
 
