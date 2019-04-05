@@ -51,6 +51,8 @@ public:
                           state_index;                // which state members to observe
                 std::vector<std::string>
                           state_names;                // file/ref names for each state member
+                std::vector<std::string>
+                          grid_names;                 // file/ref names for each grid comp
                 size_t    start_cycle   = 0;          // start cycle 
                 size_t    cycle_interval = 10;        // cycle interval for observation
                 double    time_interval  = 1.0;       // time interval for observation
