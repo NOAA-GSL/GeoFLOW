@@ -975,6 +975,7 @@ void do_bench(GString fname, GSIZET ncyc)
 
 #if defined(_G_USE_GPTL)
 
+    GINT   myrank   = GComm::WorldRank(comm_);
     GINT   ntasks   = GComm::WorldSize(comm_);
     GINT   nthreads = 0;
     GFTYPE ttotal;
@@ -989,13 +990,18 @@ void do_bench(GString fname, GSIZET ncyc)
   
       // Write header, if required:
       if ( itst.peek() == std::ofstream::traits_type::eof() ) {
-        ios << "#ntasks" << "  ";
-        for ( GSIZET j=0; j<pstd.size(); j++ ) ios << "p" << j+1 << "  ";
-        ios << "nelems     ndof      ntasks     nthreads     TimePerTimestep     GGFXTime     ExchTime" << std::endl;
+        ios << "#ntasks"  << "  ";
+        ios << "ndof"     << "  ";
+        ios << "ntasks"   << "  ";
+        ios << "nthreads" << "  ";
+        ios << "ttotal"   << "  ";
+        ios << "tggfx"    << "  ";
+        ios << "texch"           ;
+        ios << endl;
       }
       itst.close();
 
-      GPTLget_wallclock("time_loop"     , 0,  &ttotal); ttocal /= ncyc;
+      GPTLget_wallclock("time_loop"     , 0,  &ttotal); ttotal /= ncyc;
       GPTLget_wallclock("ggfx_doop"     , 0,  &tggfx ); tggfx  /= ncyc;
       GPTLget_wallclock("ggfx_doop_exch", 0,  &texch ); texch  /= ncyc;
   
@@ -1005,8 +1011,8 @@ void do_bench(GString fname, GSIZET ncyc)
       ios << nthreads        << "   ";
       ios << ttotal          << "   ";
       ios << tggfx           << "   ";
-      ios << texch           << "   ";
-      iod << endl;
+      ios << texch                   ;
+      ios << endl;
 
       ios.close();
     }
