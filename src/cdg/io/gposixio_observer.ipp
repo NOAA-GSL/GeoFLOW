@@ -19,7 +19,7 @@ bprgrid_        (TRUE),
 bInit_          (FALSE),
 cycle_          (0),
 ocycle_         (1),
-cycle_last_     (0),
+cycle_last_     (1),
 time_last_      (0.0)
 { 
   this->traits_ = traits;
@@ -54,7 +54,7 @@ void GPosixIOObserver<EquationType>::observe_impl(const Time &t, const State &u,
   GIOTraits traits;
    
   if ( (this->traits_.itype == ObserverBase<EquationType>::OBS_CYCLE 
-        && (cycle_-cycle_last_+1) == this->traits_.cycle_interval)
+        && (cycle_-cycle_last_+1) >= this->traits_.cycle_interval)
     || (this->traits_.itype == ObserverBase<EquationType>::OBS_TIME  
         &&  t-time_last_ >= this->traits_.time_interval) ) {
     traits.prgrid = bprgrid_;
