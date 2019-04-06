@@ -88,6 +88,8 @@ void Integrator<EquationType>::time( const Time& t0,
 		this->eqn_ptr_->step(t, u, uf, ub, dt_eff);
 		t += dt_eff;
 
+                ++cycle_;
+
                 // Call stirrer to upate forcing:
 		this->stir_ptr_->stir(t,u, uf);
 
@@ -95,7 +97,6 @@ void Integrator<EquationType>::time( const Time& t0,
                 for ( auto j = 0 ; j < this->obs_ptr_->size(); j++ ) 
 		  (*this->obs_ptr_)[j]->observe(t,u,uf);
  
-                ++cycle_;
 
 	} while( t != t1 );
 
