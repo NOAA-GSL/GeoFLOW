@@ -169,7 +169,7 @@ public:
          * Get number steps taken.
          *
          */
-        Traits &get_numsteps() {return cycle_;}
+        size_t &get_numsteps() {return cycle_;}
 
         /**
          * Get traits.
