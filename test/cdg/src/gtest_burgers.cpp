@@ -60,6 +60,7 @@ struct EquationTypes {
         using Size       = SizeType;
 };
 
+GBOOL  bench_;
 GGrid *grid_;
 GTVector<GTVector<GFTYPE>*> u_;
 GTVector<GTVector<GFTYPE>*> c_;
@@ -204,6 +205,7 @@ int main(int argc, char **argv)
 
 #endif
     ptree.setValue<GString>("exp_order_type","constant");
+    bench_ = ptree.getValue<GBOOL>("benchmark");
 
     // Set solver traits from prop tree:
     GFTYPE nu_scalar;
@@ -301,7 +303,7 @@ int main(int argc, char **argv)
       t      = 0.0; 
       compute_analytic(*grid_, t, ptree, u_);
 //    initialize_start(ptree, *grid_, t, u_);
-      for ( auto j=0; j<u_.size(); j++ ) {
+      for ( GSIZET j=0; j<u_.size(); j++ ) {
         sprintf(stmp, "u%da", j+1);
         savars.push_back(stmp);
       }
@@ -415,13 +417,13 @@ int main(int argc, char **argv)
     GlobalManager::shutdown();
     GlobalManager::finalize();
     if ( grid_ != NULLPTR ) delete grid_;
-    for ( auto j=0; j<GDIM; j++ ) delete gbasis[j];
-    for ( auto j=0; j<uold_.size(); j++ ) delete uold_[j];
-    for ( auto j=0; j<utmp_.size(); j++ ) delete utmp_[j];
-    for ( auto j=0; j<u_   .size(); j++ ) delete u_   [j];
-    for ( auto j=0; j<ua_  .size(); j++ ) delete ua_  [j];
-    for ( auto j=0; j<ub_  .size(); j++ ) delete ub_  [j];
-    for ( auto j=0; j<uf_  .size(); j++ ) delete uf_  [j];
+    for ( GSIZET j=0; j<GDIM; j++ ) delete gbasis[j];
+    for ( GSIZET j=0; j<uold_.size(); j++ ) delete uold_[j];
+    for ( GSIZET j=0; j<utmp_.size(); j++ ) delete utmp_[j];
+    for ( GSIZET j=0; j<u_   .size(); j++ ) delete u_   [j];
+    for ( GSIZET j=0; j<ua_  .size(); j++ ) delete ua_  [j];
+    for ( GSIZET j=0; j<ub_  .size(); j++ ) delete ub_  [j];
+    for ( GSIZET j=0; j<uf_  .size(); j++ ) delete uf_  [j];
 
     return(0);
 
@@ -901,6 +903,8 @@ std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers
     GString dstr = "none";
     GString ptype;
 
+    if ( bench_ ) return;
+
     std::vector<GString> default_obslist; default_obslist.push_back(dstr);
     std::vector<GString> obslist = ptree.getArray<GString>("observer_list",default_obslist);
     dstr = "constant";
@@ -911,7 +915,7 @@ std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers
     rest_ocycle = ptree.getValue <GSIZET>("restart_index");
     if ( "constant" == ptype ) ivers = 0;
     if ( "variable" == ptype ) ivers = 1;
-    for ( auto j=0; j<obslist.size(); j++ ) {
+    for ( GSIZET j=0; j<obslist.size(); j++ ) {
       if ( "none" != obslist[j] ) {
         obsptree = ptree.getPropertyTree(obslist[j]);
         // Set output version based on exp_order_type:
