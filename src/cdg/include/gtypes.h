@@ -21,6 +21,7 @@
 // _G_VEC_CACHE_SIZE  : Sets vector (BLAS II) op cache blocking factor
 // _G_MAT_CACHE_SIZE  : Sets vector op (BLAS III) cache blocking factor
 // _G_USE_OPENACC     : Set when using OpenACC
+// _G_USE_GPTL        : Set when using GPTL 
 
 #if !defined(_G_TYPES_DEF)
 #define _G_TYPES_DEF
