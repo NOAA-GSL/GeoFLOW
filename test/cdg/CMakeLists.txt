@@ -132,6 +132,7 @@ set(CDG_COMMON_INC ${CDG_COMMON_INC}
 if (USE_GPTL)
   set(CDG_COMMON_INC ${CDG_COMMON_INC}
       ${GPTL_PATH}/include
+     )
 endif()
 
 if (USE_MPI)
