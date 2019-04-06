@@ -40,6 +40,11 @@ if (USE_GBLAS)
   set(DEF_GBLAS "-D_G_USE_GBLAS")
 endif()
 
+set(DEF_GPTL "") 
+if (USE_GPTL)
+  set(DEF_GPTL "-D_G_USE_GPTL")
+endif()
+
 set(DEF_PAPI "") 
 if (HAVE_PAPI)
   set(DEF_PAPI "-DHAVE_PAPI")
@@ -51,5 +56,5 @@ if (USE_MPI)
 endif()
 
 add_definitions(
-                ${DEF_ACC} ${DEF_DEBUG} ${DEF_GBLAS} ${DEF_PAPI} ${DEF_MPI}
+                ${DEF_ACC} ${DEF_DEBUG} ${DEF_GBLAS} ${DEF_GPTL} ${DEF_PAPI} ${DEF_MPI}
                )

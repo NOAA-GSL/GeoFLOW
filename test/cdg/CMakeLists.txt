@@ -40,6 +40,7 @@ option(DO_OPENMP       "DO_OPENMP"    ON)   # Compile for OpenMP
 option(DO_OPENACC      "DO_OPENACC"  OFF)   # Compile for OpenACC
 option(USE_GBLAS       "USE_GBLAS"    ON)   # Use GBlas instead of C 
 option(USE_MPI         "USE_MPI"      ON)   # Build with MPI?
+option(USE_GPTL        "USE_GPTL"     ON)   # Build with GPTL?
 option(HAVE_PAPI       "HAVE_PAPI"   OFF)   # Is GPTL built with PAPI support?
 option(DO_AUTO_PROF "DO_AUTO_PROF"   OFF)   # Do auto-profing with GPTL?
  
@@ -106,7 +107,6 @@ set(BOOST_ROOT
    )
 
 set(CDG_COMMON_LIBS  
-    ${GPTL_PATH}/lib/libgptl.a
     ${BOOST_ROOT}/lib/libboost_chrono.a
     ${BOOST_ROOT}/lib/libboost_mpi.a
     ${BOOST_ROOT}/lib/libboost_serialization.a
@@ -114,17 +114,25 @@ set(CDG_COMMON_LIBS
     ${BOOST_ROOT}/lib/libboost_system.a
    )
 
+if (USE_GPTL)
+  set(CDG_COMMON_LIBS ${CDG_COMMON_LIBS} 
+    ${GPTL_PATH}/lib/libgptl.a
+     )
+endif()
 if (HAVE_PAPI)
   set(CDG_COMMON_LIBS ${CDG_COMMON_LIBS} 
      /apps/papi/5.4.0/lib/libpapi.a
      )
-
 endif()
 
 set(CDG_COMMON_INC ${CDG_COMMON_INC}
-    ${GPTL_PATH}/include
     ${BOOST_ROOT}/include
    )
+
+if (USE_GPTL)
+  set(CDG_COMMON_INC ${CDG_COMMON_INC}
+      ${GPTL_PATH}/include
+endif()
 
 if (USE_MPI)
   set(CDG_COMMON_LIBS ${CDG_COMMON_LIBS}
