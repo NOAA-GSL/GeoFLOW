@@ -995,9 +995,9 @@ void do_bench(GString fname, GSIZET ncyc)
       }
       itst.close();
 
-      GPTLget_wallclock("time_loop"     , 0,  &ttotal)/ncyc;
-      GPTLget_wallclock("ggfx_doop"     , 0,  &tggfx )/ncyc;
-      GPTLget_wallclock("ggfx_doop_exch", 0,  &texch )/ncyc;
+      GPTLget_wallclock("time_loop"     , 0,  &ttotal); ttocal /= ncyc;
+      GPTLget_wallclock("ggfx_doop"     , 0,  &tggfx ); tggfx  /= ncyc;
+      GPTLget_wallclock("ggfx_doop_exch", 0,  &texch ); texch  /= ncyc;
   
       ios << grid_->nelems() << "   " ;
       ios << grid_->ndof()   << "   " ;
