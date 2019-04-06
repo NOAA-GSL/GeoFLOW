@@ -60,7 +60,7 @@ struct EquationTypes {
         using Size       = SizeType;
 };
 
-GBOOL  bench_;
+GBOOL  bench_=FALSE;
 GGrid *grid_;
 GTVector<GTVector<GFTYPE>*> u_;
 GTVector<GTVector<GFTYPE>*> c_;
@@ -89,6 +89,7 @@ void create_observers(PropertyTree &ptree, GSIZET icycle, GFTYPE time,
 std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers);
 void create_stirrer(PropertyTree &ptree, StirBasePtr &pStirrer);
 void gresetart(PropertyTree &ptree);
+void do_bench(GString sbench, GSIZET ncyc);
 
 //#include "init_pde.h"
 
@@ -228,11 +229,13 @@ int main(int argc, char **argv)
     
     solver_traits.steptype   = static_cast<GStepperType>(itype);
 
+#if defined(_G_USE_GPTL)
     // Set GTPL options:
     GPTLsetoption (GPTLcpu, 1);
 
     // Initialize GPTL:
     GPTLinitialize();
+#endif
 
     // Create basis:
     GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis(GDIM);
@@ -241,20 +244,26 @@ int main(int argc, char **argv)
     }
     
     EH_MESSAGE("main: build grid...");
-    GPTLstart("gen_grid");
+
+    GTimerStart("gen_grid");
+
     // Create grid:
     grid_ = GGridFactory::build(ptree, gbasis, comm_);
     GComm::Synch(comm_);
-    GPTLstop("gen_grid");
+
+    GTimerStop("gen_grid");
 
 
     EH_MESSAGE("main: initialize gather/scatter...");
-    GPTLstart("init_ggfx_op");
+
+    GTimerStart("init_ggfx_op");
+
     // Initialize gather/scatter operator:
     GGFX<GFTYPE> ggfx;
     init_ggfx(*grid_, ggfx);
+
+    GTimerStop("init_ggfx_op");
     EH_MESSAGE("main: gather/scatter initialized.");
-    GPTLstop("init_ggfx_op");
 
     // Create state and tmp space:
     EH_MESSAGE("main: set up tmp space...");
@@ -328,9 +337,12 @@ int main(int argc, char **argv)
     // via observer(s)):
     EH_MESSAGE("main: do time stepping...");
     GPP(comm_,"main: do time stepping...");
-    GPTLstart("time_loop");
+
+    GTimerStart("time_loop");
+
     pIntegrator->time_integrate(t, uf_, ub_, u_);
-    GPTLstop("time_loop");
+
+    GTimerStop("time_loop");
     
     GPP(comm_,"main: time stepping done.");
 
@@ -409,9 +421,12 @@ int main(int argc, char **argv)
     }
 
 #endif
+    do_bench("benchmark.txt", pIntegrator->get_numsteps());
  
+#if defined(_G_USE_GPTL)
     GPTLpr_file("timing.txt");
     GPTLfinalize();
+#endif
 
     EH_MESSAGE("main: do shutdown...");
 //  GComm::TermComm();
@@ -945,3 +960,58 @@ std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers
     }
 
 } // end method create_observers
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD: do_bench
+// DESC  : Do benchmark from GPTL timers
+// ARGS  : fname     : filename
+//         ncyc      : number time cycles to average over
+//**********************************************************************************
+void do_bench(GString fname, GSIZET ncyc)
+{
+    if ( bench_ ) return;
+
+#if defined(_G_USE_GPTL)
+
+    GINT   ntasks   = GComm::WorldSize(comm_);
+    GINT   nthreads = 0;
+    GFTYPE ttotal;
+    GFTYPE tggfx;
+    GFTYPE texch;
+    std::ifstream itst;
+    std::ofstream ios;
+
+    if ( myrank == 0 ) {
+      itst.open(fname);
+      ios.open(fname,std::ios_base::app);
+  
+      // Write header, if required:
+      if ( itst.peek() == std::ofstream::traits_type::eof() ) {
+        ios << "#ntasks" << "  ";
+        for ( GSIZET j=0; j<pstd.size(); j++ ) ios << "p" << j+1 << "  ";
+        ios << "nelems     ndof      ntasks     nthreads     TimePerTimestep     GGFXTime     ExchTime" << std::endl;
+      }
+      itst.close();
+
+      GPTLget_wallclock("time_loop"     , 0,  &ttotal)/ncyc;
+      GPTLget_wallclock("ggfx_doop"     , 0,  &tggfx )/ncyc;
+      GPTLget_wallclock("ggfx_doop_exch", 0,  &texch )/ncyc;
+  
+      ios << grid_->nelems() << "   " ;
+      ios << grid_->ndof()   << "   " ;
+      ios << ntasks          << "   " ;
+      ios << nthreads        << "   ";
+      ios << ttotal          << "   ";
+      ios << tggfx           << "   ";
+      ios << texch           << "   ";
+      iod << endl;
+
+      ios.close();
+    }
+#endif
+
+    return;
+
+} // end method do_bench
