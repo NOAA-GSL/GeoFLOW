@@ -421,6 +421,7 @@ int main(int argc, char **argv)
     }
 
 #endif
+
     do_bench("benchmark.txt", pIntegrator->get_numsteps());
  
 #if defined(_G_USE_GPTL)
@@ -971,7 +972,7 @@ std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers
 //**********************************************************************************
 void do_bench(GString fname, GSIZET ncyc)
 {
-    if ( bench_ ) return;
+    if ( !bench_ ) return;
 
 #if defined(_G_USE_GPTL)
 
