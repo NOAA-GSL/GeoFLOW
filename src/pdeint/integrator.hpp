@@ -51,6 +51,7 @@ public:
 	 */
 	struct Traits {
 		IntegType integ_type;
+		size_t    cycle       = 0; 
 		size_t    cycle_end   = 1;
 		Value     cfl_min     = std::numeric_limits<Value>::min();
 		Value     cfl_max     = std::numeric_limits<Value>::max();
@@ -164,6 +165,11 @@ public:
                    State&                   ub,
 		   State&                   u );
 
+        /**
+         * Get traits.
+         *
+         */
+        Traits &get_traits() {return traits_;}
 
 protected:
         size_t      cycle_; // no. time cycles taken so far

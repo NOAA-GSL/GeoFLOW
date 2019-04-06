@@ -21,7 +21,7 @@ Integrator<EquationType>::Integrator(const EqnBasePtr& equation,
 		                     const ObsBasePtr& observer,
                                      Grid&             grid,
 		                     const Traits&     traits) :
-	cycle_(0), traits_(traits), eqn_ptr_(equation), stir_ptr_(stirrer), obs_ptr_(observer), grid_(&grid) {
+	cycle_(traits.cycle), traits_(traits), eqn_ptr_(equation), stir_ptr_(stirrer), obs_ptr_(observer), grid_(&grid) {
 	ASSERT(nullptr != eqn_ptr_);
 	ASSERT(nullptr != stir_ptr_);
 	ASSERT(nullptr != obs_ptr_);
