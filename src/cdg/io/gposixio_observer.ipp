@@ -19,7 +19,7 @@ bprgrid_        (TRUE),
 bInit_          (FALSE),
 cycle_          (0),
 ocycle_         (1),
-cycle_last_     (1),
+cycle_last_     (0),
 time_last_      (0.0)
 { 
   this->traits_ = traits;
@@ -71,7 +71,7 @@ void GPosixIOObserver<EquationType>::observe_impl(const Time &t, const State &u,
     gio_write_state(traits, *(this->grid_), u, state_index_, state_names_,  comm);
     gio_write_grid (traits, *(this->grid_), grid_names_,  comm);
     bprgrid_      = FALSE;
-    cycle_last_   = cycle_;
+    cycle_last_   = cycle_+1;
     time_last_    = t;
     ocycle_++; // ouput cycle index
   }
