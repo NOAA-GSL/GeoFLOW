@@ -198,11 +198,11 @@ const char * const sGStepperType[] =    {
 #if !defined(GTIMER_DEFINED)
   #define GTIMER_DEFINED 
   #if defined(_G_USE_GPTL)
-    #define GTimerStart(a) (GPTLstart(a))
-    #define GTimerStop (a) (GPTLstop(a))
+    #define GTimerStart(a) GPTLstart(a)
+    #define GTimerStop(a)  GPTLstop(a)
   #else
     #define GTimerStart(a)
-    #define GTimerStop (a) 
+    #define GTimerStop(a) 
   #endif
 #endif
 
