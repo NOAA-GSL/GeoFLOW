@@ -95,7 +95,7 @@
   "time_integration": {
     "integ_type" : "cycle",
     "time_end"   : 1.501,
-    "cycle_end"  : 80,
+    "cycle_end"  : 5,
     "dt"         : 1.0e-4
   }
 
