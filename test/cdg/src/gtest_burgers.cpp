@@ -105,7 +105,7 @@ int main(int argc, char **argv)
     GINT   nstate=GDIM;  // number 'state' arrays
     GINT   nsolve=GDIM;  // number *solved* 'state' arrays
     GSIZET itindex=0;    // restart flag/index
-    GSIZET icycle;       // curr time cycle
+    GSIZET icycle=0;       // curr time cycle
     GFTYPE tt;
     std::vector<GINT> ne(3); // # elements in each direction in 3d
     std::vector<GINT> pstd(GDIM);  // order in each direction
@@ -321,6 +321,7 @@ int main(int argc, char **argv)
     // Create integrator:
     EH_MESSAGE("main: create integrator...");
     auto pIntegrator = IntegratorFactory<MyTypes>::build(tintptree, eqn_base, pStirrer, pObservers, *grid_);
+    pIntegrator->get_traits().cycle = icycle;
 
 
     // Do time integration (output included
