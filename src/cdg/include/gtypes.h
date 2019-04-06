@@ -192,7 +192,18 @@ const char * const sGStepperType[] =    {
 #endif
 
 #if !defined FUZZYEQ
-#  define FUZZYEQ(x,y,eps) ( (y <= (x+eps)) && (y >= (x-eps)) ) 
+  #define FUZZYEQ(x,y,eps) ( (y <= (x+eps)) && (y >= (x-eps)) ) 
+#endif
+
+#if !defined(GTIMER_DEFINED)
+  #define GTIMER_DEFINED 
+  #if defined(_G_USE_GPTL)
+    #define GTimerStart(a) GPTLstart(a)
+    #define GTimerStop (a) GPTLs(a)
+  #else
+    #define GTimerStart(a) 
+    #define GTimerStop (a) 
+  #endif
 #endif
 
 
@@ -200,15 +211,15 @@ const char * const sGStepperType[] =    {
 #define GMAX_ERROR_STRING 1024
 #define BITSPERBYTE        8
 #if !defined(GWORDSIZE_BITS)
-#  define GWORDSIZE_BITS (sizeof(GWORD)*BITSPERBYTE)
+  #define GWORDSIZE_BITS (sizeof(GWORD)*BITSPERBYTE)
 #endif
 #if !defined(GWORDSIZE_BYTES)
-#  define GWORDSIZE_BYTES (GWORDSIZE_BITS / BITSPERBYTE)
+  #define GWORDSIZE_BYTES (GWORDSIZE_BITS / BITSPERBYTE)
 #endif
 
 
 #if !defined GError
-#  define GError() printf("Error: %s; line: %d\n",__FILE__,__LINE__);
+  #define GError() printf("Error: %s; line: %d\n",__FILE__,__LINE__);
 #endif
 
 extern std::stringstream oss_global_;
