@@ -38,7 +38,6 @@ void Integrator<EquationType>::time_integrate( Time&       t,
 
         Time t0 = t;
         Size n  = traits_.cycle_end - traits_.cycle + 1;
-cout << "Integrator:    ............ cycle_end=" << traits_.cycle_end << "  cyc_beg=" << traits_.cycle << endl;
         if      ( traits_.integ_type == INTEG_CYCLE ) {
           steps( t0 
                , traits_.dt

@@ -166,6 +166,12 @@ public:
 		   State&                   u );
 
         /**
+         * Get number steps taken.
+         *
+         */
+        Traits &get_numsteps() {return cycle_;}
+
+        /**
          * Get traits.
          *
          */
