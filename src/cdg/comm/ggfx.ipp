@@ -1099,9 +1099,8 @@ GBOOL GGFX<T>::doOp(GTVector<T> &u, GGFX_OP op)
   GPP(comm_, serr << "iOpL2LIndices=" << iOpL2LIndices_);
   GPP(comm_, serr << "Doing first localGS...");
 #endif
-#if defined(_G_USE_GPTL))
-  GPTLstart("ggfx_doop");
-#endif
+
+  GTimerLstart("ggfx_doop");
 
   
   // For each global index row in iOpL2LIndices, gather and
@@ -1131,14 +1130,14 @@ GBOOL GGFX<T>::doOp(GTVector<T> &u, GGFX_OP op)
 #if defined(GGFX_TRACE_OUTPUT)
   GPP(comm_,serr << "Doing dataExchange");
 #endif
-#if defined(_G_USE_GPTL))
-  GPTLstart("ggfx_doop_exch");
-#endif
+
+  GTimerStart("ggfx_doop_exch");
+
   // Perform a exchange of field data:
   bret = dataExchange(u);
-#if defined(_G_USE_GPTL))
-  GPTLstop("ggfx_doop_exch");
-#endif
+
+  GTimerStop("ggfx_doop_exch");
+
   if ( !bret ) {
     std::cout << serr << "dataExchange.failed " << std::endl;
     exit(1);
@@ -1156,9 +1155,9 @@ GBOOL GGFX<T>::doOp(GTVector<T> &u, GGFX_OP op)
 #if defined(GGFX_TRACE_OUTPUT)
   GPP(comm_,serr << "done.");
 #endif
-#if defined(_G_USE_GPTL))
-  GPTLstop("ggfx_doop");
-#endif
+
+  GTimerStop("ggfx_doop");
+
   return bret;
 #endif
 
@@ -1193,9 +1192,8 @@ template<typename T> GBOOL GGFX<T>::doOp(GTVector<T> &u, GTVector<GSIZET> &iind,
 #if defined(GGFX_TRACE_OUTPUT)
   std::cout << serr << "Doing first localGS..." << std::endl;
 #endif
-#if defined(_G_USE_GPTL))
-  GPTLstart("ggfx_doop");
-#endif
+
+  GTimerStart("ggfx_doop");
 
   // For each global index row in iOpL2LIndices, gather and
   // scatter data locally: get one operation for each of the
@@ -1218,14 +1216,14 @@ template<typename T> GBOOL GGFX<T>::doOp(GTVector<T> &u, GTVector<GSIZET> &iind,
   std::cout << serr << "Doing dataExchange..." << std::endl;
 #endif
 
-#if defined(_G_USE_GPTL))
-  GPTLstart("ggfx_doop_exch");
-#endif
+
+  GTimerStart("ggfx_doop_exch");
+
   // Perform a exchange of field data:
   bret = dataExchange(u, iind);
-#if defined(_G_USE_GPTL))
-  GPTLstop("ggfx_doop_exch");
-#endif
+
+  GTimerStop("ggfx_doop_exch");
+
   if ( !bret ) {
     std::cout << serr << "dataExchange failed " << std::endl;
     exit(1);
@@ -1243,9 +1241,9 @@ template<typename T> GBOOL GGFX<T>::doOp(GTVector<T> &u, GTVector<GSIZET> &iind,
     std::cout << serr << "localGS (2) failed " << std::endl;
     exit(1);
   }
-#if defined(_G_USE_GPTL))
-  GPTLstop("ggfx_doop");
-#endif
+
+  GTimerStop("ggfx_doop");
+
 #if defined(GGFX_TRACE_OUTPUT)
   std::cout << serr << "Second localGS done." << std::endl;
 #endif
