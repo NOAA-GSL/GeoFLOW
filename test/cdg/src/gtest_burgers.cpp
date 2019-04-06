@@ -903,6 +903,7 @@ std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers
     PropertyTree obsptree;     // observer props 
     GString dstr = "none";
     GString ptype;
+    GString ctype;
 
     if ( bench_ ) return;
 
@@ -910,6 +911,10 @@ std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers
     std::vector<GString> obslist = ptree.getArray<GString>("observer_list",default_obslist);
     dstr = "constant";
     ptype = ptree.getValue<GString>("exp_order_type",dstr);
+
+    // Tie cadence_type to restart type:
+    obsptree = ptree.getPropertyTree("posixio_observer");
+    ctype    = obsptree.getValue<GString>("cadence_type");
    
     // If doing a restart, set observer output
     // cycles to value relative to the restart output cycle:
@@ -921,17 +926,19 @@ std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers
         obsptree = ptree.getPropertyTree(obslist[j]);
         // Set output version based on exp_order_type:
         if ( "constant" == ptype 
-         && "posixio_observer" == obslist[j]  ) obsptree.setValue("misc",ivers);
+         && "posixio_observer" == obslist[j]  ) obsptree.setValue<GINT>("misc",ivers);
 
         ofact       = obsptree.getValue<GDOUBLE>("interval_freq_fact",1.0);
         deltat      = obsptree.getValue<GDOUBLE>("time_interval",0.01);
         deltac      = obsptree.getValue<GDOUBLE>("cycle_interval",1);
         // Set current time and output cycle so that observer can initialize itself
         // These should be hidden from the config file:
-        obsptree.setValue("start_ocycle",rest_ocycle*ofact);
-        obsptree.setValue("start_time"  ,time);
-        obsptree.setValue("time_interval", MAX(0.0,deltat/ofact));
-        obsptree.setValue("cycle_interval",MAX(1,deltac/ofact));
+        if ( "posixio_observer" == obslist[j]  ) ofact = 1.0;
+        obsptree.setValue <GSIZET>("start_ocycle",MAX(1.0,rest_ocycle*ofact));
+        obsptree.setValue <GFTYPE>("start_time"  ,time);
+        obsptree.setValue <GFTYPE>("time_interval", MAX(0.0,deltat/ofact));
+        obsptree.setValue <GSIZET>("cycle_interval",MAX(1.0,deltac/ofact));
+        obsptree.setValue<GString>("cadence_type",ctype);
 
         pObservers->push_back(ObserverFactory<MyTypes>::build(obsptree,*grid_));
       }
