@@ -1100,7 +1100,7 @@ GBOOL GGFX<T>::doOp(GTVector<T> &u, GGFX_OP op)
   GPP(comm_, serr << "Doing first localGS...");
 #endif
 
-  GTimerLstart("ggfx_doop");
+  GTimerStart("ggfx_doop");
 
   
   // For each global index row in iOpL2LIndices, gather and
