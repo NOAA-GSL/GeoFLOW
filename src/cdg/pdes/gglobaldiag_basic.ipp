@@ -18,7 +18,7 @@ GGlobalDiag_basic<EquationType>::GGlobalDiag_basic(typename ObserverBase<Equatio
 bInit_          (FALSE),
 cycle_          (0),
 ocycle_         (1),
-cycle_last_     (0),
+cycle_last_     (1),
 time_last_      (0.0),
 ivol_           (1.0)
 { 
@@ -50,7 +50,7 @@ void GGlobalDiag_basic<EquationType>::observe_impl(const Time &t, const State &u
   mpixx::communicator comm;
    
   if ( (traits_.itype == ObserverBase<EquationType>::OBS_CYCLE 
-        && (cycle_-cycle_last_) == traits_.cycle_interval)
+        && (cycle_-cycle_last_+1) >= traits_.cycle_interval)
     || (traits_.itype == ObserverBase<EquationType>::OBS_TIME  
         &&  t-time_last_ >= traits_.time_interval) ) {
 
@@ -59,7 +59,6 @@ void GGlobalDiag_basic<EquationType>::observe_impl(const Time &t, const State &u
     cycle_last_ = cycle_;
     time_last_  = t;
     ocycle_++;
-
   }
   cycle_++;
   
