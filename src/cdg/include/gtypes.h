@@ -201,8 +201,8 @@ const char * const sGStepperType[] =    {
     #define GTimerStart(a) GPTLstart(a)
     #define GTimerStop (a) GPTLs(a)
   #else
-    #define GTimerStart(a) 
-    #define GTimerStop (a) 
+    #define GTimerStart(a) "// a"
+    #define GTimerStop (a) "// a"
   #endif
 #endif
 
