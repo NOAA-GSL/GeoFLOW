@@ -21,7 +21,7 @@ Integrator<EquationType>::Integrator(const EqnBasePtr& equation,
 		                     const ObsBasePtr& observer,
                                      Grid&             grid,
 		                     const Traits&     traits) :
-	cycle_(traits.cycle), traits_(traits), eqn_ptr_(equation), stir_ptr_(stirrer), obs_ptr_(observer), grid_(&grid) {
+	cycle_(0), traits_(traits), eqn_ptr_(equation), stir_ptr_(stirrer), obs_ptr_(observer), grid_(&grid) {
 	ASSERT(nullptr != eqn_ptr_);
 	ASSERT(nullptr != stir_ptr_);
 	ASSERT(nullptr != obs_ptr_);
@@ -37,7 +37,8 @@ void Integrator<EquationType>::time_integrate( Time&       t,
 	using std::min;
 
         Time t0 = t;
-        Size n  = traits_.cycle_end - cycle_ + 1;
+        Size n  = traits_.cycle_end - traits_.cycle + 1;
+cout << "Integrator:    ............ cycle_end=" << traits_.cycle_end << "  cyc_beg=" << traits_.cycle << endl;
         if      ( traits_.integ_type == INTEG_CYCLE ) {
           steps( t0 
                , traits_.dt
