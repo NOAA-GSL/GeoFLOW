@@ -392,9 +392,10 @@ int main(int argc, char **argv)
     if ( myrank == 0 ) 
       cout << "main: maxerror = " << maxerror << endl;
    
-    GSIZET lnelems=grid_->nelems();
-    GSIZET gnelems;
-    GComm::Allreduce(&lnelems, &gnelems, 1, T2GCDatatype<GSIZET>() , GC_OP_SUM, comm_);
+    GTVector<GSIZET> lsz(2), gsz(2);
+    lsz[0] = grid_->nelems();
+    lsz[1] = grid_->ndof();
+    GComm::Allreduce(lsz.data(), gsz.data(), 2, T2GCDatatype<GSIZET>() , GC_OP_SUM, comm_);
 
     // Print convergence data to file:
     std::ifstream itst;
@@ -414,7 +415,7 @@ int main(int argc, char **argv)
   
       ios << ntasks << "  ";
       for ( GSIZET j=0; j<pstd.size(); j++ ) ios << pstd[j] << "  ";
-      ios << gnelems << "  "
+      ios << gsz[0] << "  "
           << "  " << maxerror[0] << "  " << maxerror[1] << "  " << maxerror[2]
           << std::endl;
       ios.close();
@@ -984,14 +985,19 @@ void do_bench(GString fname, GSIZET ncyc)
     GFTYPE texch;
     std::ifstream itst;
     std::ofstream ios;
+    GTVector<GSIZET> lsz(2), gsz(2);
 
+    // Get global no elements and dof:
+    lsz[0] = grid_->nelems();
+    lsz[1] = grid_->ndof();
+    GComm::Allreduce(lsz.data(), gsz.data(), 2, T2GCDatatype<GSIZET>() , GC_OP_SUM, comm_);
     if ( myrank == 0 ) {
       itst.open(fname);
       ios.open(fname,std::ios_base::app);
   
       // Write header, if required:
       if ( itst.peek() == std::ofstream::traits_type::eof() ) {
-        ios << "#ntasks"  << "  ";
+        ios << "#nelems"  << "  ";
         ios << "ndof"     << "  ";
         ios << "ntasks"   << "  ";
         ios << "nthreads" << "  ";
@@ -1006,8 +1012,8 @@ void do_bench(GString fname, GSIZET ncyc)
       GPTLget_wallclock("ggfx_doop"     , 0,  &tggfx ); tggfx  /= ncyc;
       GPTLget_wallclock("ggfx_doop_exch", 0,  &texch ); texch  /= ncyc;
   
-      ios << grid_->nelems() << "   " ;
-      ios << grid_->ndof()   << "   " ;
+      ios << gsz[0]          << "   " ;
+      ios << gsz[1]          << "   " ;
       ios << ntasks          << "   " ;
       ios << nthreads        << "   ";
       ios << ttotal          << "   ";
