@@ -354,7 +354,7 @@ void GGridBox::do_elems2d()
 
   for ( GSIZET i=0; i<qmesh_.size(); i++ ) { // for each quad in irank's mesh
 
-#if 1
+#if 0
 cout << GComm::WorldRank() << ": GGrid::do_elems2d: qmesh[" << i << "]=" << qmesh_[i] << endl;
 #endif
     pelem = new GElem_base(GE_REGULAR, gbasis_);

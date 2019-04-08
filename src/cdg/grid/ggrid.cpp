@@ -342,14 +342,12 @@ GFTYPE GGrid::maxlength()
 void GGrid::grid_init()
 {
 
-  cout << GComm::WorldRank() << ": GGrid::grid_init: do_elems..." << endl;
   GPTLstart("GGrid::grid_init: do_elems");
   do_elems(); // generate element list from derived class
   GPTLstop("GGrid::grid_init: do_elems");
 
   GComm::Synch(comm_);
 
-  cout << GComm::WorldRank() << ": GGrid::grid_init: do_typing..." << endl;
   GPTLstart("GGrid::grid_init: do_typing");
   do_typing(); // do element-typing check
   GPTLstop("GGrid::grid_init: do_typing");
@@ -396,7 +394,7 @@ void GGrid::grid_init()
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : grid_inita (2)
+// METHOD : grid_init (2)
 // DESC   : Initialize global (metric) variables. All elements are assumed to be
 //          of the same type.
 // ARGS   : none
@@ -406,14 +404,12 @@ void GGrid::grid_init(GTMatrix<GINT> &p,
                       GTVector<GTVector<GFTYPE>> &xnodes)
 {
 
-  cout << GComm::WorldRank() << ": GGrid::grid_init: do_elems..." << endl;
   GPTLstart("GGrid::grid_init: do_elems");
   do_elems(p, xnodes); // generate element list from derived class
   GPTLstop("GGrid::grid_init: do_elems");
 
   GComm::Synch(comm_);
 
-  cout << GComm::WorldRank() << ": GGrid::grid_init: do_typing..." << endl;
   GPTLstart("GGrid::grid_init: do_typing");
   do_typing(); // do element-typing check
   GPTLstop("GGrid::grid_init: do_typing");
@@ -607,7 +603,7 @@ void GGrid::reg_init()
        xNodes_[j].range(ibeg, iend);
        xNodes_[j] = (*xe)[j];
         // Zero-out local xe; only global allowed now:
-       (*xe)[j].clear(); 
+      (*xe)[j].clear(); 
      }
 
 
