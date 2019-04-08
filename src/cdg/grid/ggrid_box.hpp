@@ -58,14 +58,15 @@ private:
          void               init3d();                                       // initialize for 3d grid
 
 
-         void               do_elems2d(GINT rank);                          // do 2d grid
-         void               do_elems3d(GINT rank);                          // do 3d grid
+         void               do_elems2d();                                   // do 2d grid
+         void               do_elems3d();                                   // do 3d grid
          void               do_elems2d(GTMatrix<GINT> &p, 
                               GTVector<GTVector<GFTYPE>> &xnodes);          // do 2d grid restart
          void               do_elems3d(GTMatrix<GINT> &p, 
                               GTVector<GTVector<GFTYPE>> &xnodes);          // do 3d grid restart
          void               set_global_bdytypes_2d(GElem_base &);           // set 2d bdy type info
          void               set_global_bdytypes_3d(GElem_base &);           // set 3d bdy type info
+         void               find_subdomain();                               // find task's default subdomain
 
          GINT                ndim_;          // grid dimensionality (2 or 3)
          GDD_base           *gdd_;           // domain decomposition/partitioning object

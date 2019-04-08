@@ -39,6 +39,9 @@ lshapefcn_             (NULLPTR)
   assert((b.size() == GDIM ) 
         && "Basis has incorrect dimensionalilty");
 
+  irank_  = GComm::WorldRank(comm_);
+  nprocs_ = GComm::WorldSize(comm_);
+
   gbasis_.resize(GDIM);
   gbasis_ = b;
   Lbox_.resize(GDIM);
@@ -93,6 +96,7 @@ lshapefcn_             (NULLPTR)
   else if ( GDIM == 3 ) {
     init3d();
   }
+
 } // end of constructor method (1)
 
 
@@ -154,6 +158,10 @@ void GGridBox::set_partitioner(GDD_base *gdd)
 //**********************************************************************************
 void GGridBox::init2d()
 {
+
+  find_subdomain();
+
+#if 0
   GString serr = "GGridBox::init2d: ";
 
   assert(gbasis_.size() == 2 && "Invalid dimension");
@@ -193,6 +201,7 @@ void GGridBox::init2d()
     a *= (1.0/static_cast<GFTYPE>(qmesh_[j].v.size()));
     ftcentroids_.push_back(a);
   }
+#endif
 
 } // end of method init2d
 
@@ -206,6 +215,10 @@ void GGridBox::init2d()
 //**********************************************************************************
 void GGridBox::init3d()
 {
+
+  find_subdomain();
+
+#if 0
   GString serr = "GGridBox::init3d: ";
 
   assert(gbasis_.size() == 3 && "Invalid dimension");
@@ -249,6 +262,7 @@ void GGridBox::init3d()
     a *= (1.0/static_cast<GFTYPE>(hmesh_[j].v.size()));
     ftcentroids_.push_back(a);
   }
+#endif
 
 } // end, method init3d
 
@@ -263,8 +277,8 @@ void GGridBox::init3d()
 //**********************************************************************************
 void GGridBox::do_elems()
 {
-  if ( ndim_ == 2 ) do_elems2d(irank_);
-  if ( ndim_ == 3 ) do_elems3d(irank_);
+  if ( ndim_ == 2 ) do_elems2d();
+  if ( ndim_ == 3 ) do_elems3d();
 
 } // end, method do_elems (1)
 
@@ -302,7 +316,7 @@ void GGridBox::do_elems(GTMatrix<GINT> &p,
 //          rank: MPI rank or partition id
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::do_elems2d(GINT irank)
+void GGridBox::do_elems2d()
 {
   assert(gbasis_.size()>0 && "Must set basis first");
   assert(ndim_ == 2 && "Dimension must be 2");
@@ -321,11 +335,13 @@ void GGridBox::do_elems2d(GINT irank)
   GTVector<GTVector<GFTYPE>>   xgtmp(3);
 
 
+#if 0
   if ( gdd_       == NULLPTR ) gdd_ = new GDD_base(nprocs_);
 
   // Get indirection indices to create elements
   // only for this task:
-  gdd_->doDD(ftcentroids_, irank, iind);
+  gdd_->doDD(ftcentroids_, irank_, iind);
+#endif
 
   GSIZET i, n;
   GSIZET nvnodes;   // no. vol nodes
@@ -334,8 +350,8 @@ void GGridBox::do_elems2d(GINT irank)
   GSIZET icurr = 0; // current global index
   GSIZET fcurr = 0; // current global face index
   GSIZET bcurr = 0; // current global bdy index
-  for ( GSIZET n=0; n<iind.size(); n++ ) { // for each hex in irank's mesh
-    i = iind[n];
+
+  for ( GSIZET i=0; i<qmesh_.size(); i++ ) { // for each quad in irank's mesh
 
 #if 0
 cout << GComm::WorldRank() << ": GGrid::do_elems2d: qmesh[" << i << "]=" << qmesh_[i] << endl;
@@ -425,10 +441,9 @@ cout << GComm::WorldRank() << ": GGrid::do_elems2d: qmesh[" << i << "]=" << qmes
 //          converted into sherical coordinates, and the GShapeFcn_linear
 //          will be used to compute the interior nodes. 
 // ARGS   : 
-//          rank: MPI rank or partition id
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::do_elems3d(GINT irank)
+void GGridBox::do_elems3d()
 {
 
   assert(gbasis_.size()>0 && "Must set basis first");
@@ -448,12 +463,13 @@ void GGridBox::do_elems3d(GINT irank)
   GTVector<GTVector<GFTYPE>>   xgtmp(3);
 
 
-
+#if 0
   if ( gdd_       == NULLPTR ) gdd_ = new GDD_base(nprocs_);
 
   // Get indirection indices to create elements
   // only for this task:
   gdd_->doDD(ftcentroids_, irank_, iind);
+#endif
 
   GSIZET i, n;
   GSIZET nvnodes;   // no. vol indices
@@ -462,8 +478,7 @@ void GGridBox::do_elems3d(GINT irank)
   GSIZET icurr = 0; // current global index
   GSIZET fcurr = 0; // current global face index
   GSIZET bcurr = 0; // current global bdy index
-  for ( GSIZET n=0; n<iind.size(); n++ ) { // for each hex in irank's mesh
-    i = iind[n];
+  for ( GSIZET i=0; i<qmesh_.size(); i++ ) { // for each hex in irank's mesh
 
     pelem = new GElem_base(GE_REGULAR, gbasis_);
     xNodes  = &pelem->xNodes();  // node spatial data
@@ -1066,4 +1081,83 @@ void GGridBox::unperiodize()
   periodicdirs_.clear();
 
 } // end of method unperiodize
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : find_subdomain
+// DESC   : Find this rank's default portion of global domain, and
+//          store in qmesh member data.
+// ARGS   : none.
+// RETURNS: none.
+//**********************************************************************************
+void GGridBox::find_subdomain()
+{
+
+  GSIZET          n, nperrank, ntot, nxy;
+  GSIZET          beg_lin, end_lin;
+  GSIZET          ib, ie, jb, je, kb, ke;
+  GTPoint<GFTYPE> v0(ndim_);     // starting sph. point of elem
+  GTPoint<GFTYPE> dv(ndim_);     // delta-point
+  GTPoint<GFTYPE> dx(ndim_);
+
+  ntot = 1; // total num elements in global grid
+  for ( GSIZET k=0; k<ne_.size(); k++ ) ntot *= ne_[k];
+ 
+  nperrank = (ntot + nprocs_ - 1) / nprocs_; // #elems per rank
+  if ( irank_ == nprocs_-1 ) nperrank = ntot - nprocs_*nperrank;
+
+  qmesh_.resize(nperrank);
+
+ // Get uniform element sizes:
+  for ( GSIZET k=0; k<ndim_; k++ ) {
+    dx[k] = Lbox_[k] / static_cast<GFTYPE>(ne_[k]);
+  }
+
+  // Compute vertices of all hexes ('cubes')
+  // for this task:
+  if ( ndim_ == 2 ) {
+
+    beg_lin = nperrank*irank_; end_lin = beg_lin + nperrank - 1;
+    jb = beg_lin/ne_[0]; je = end_lin/ne_[0];
+    for ( GSIZET j=jb; j<je; j++ ) {
+      ib = beg_lin-j*ne_[0]; ie = end_lin-j*ne_[0]; 
+      for ( GSIZET i=ib; i<ie; i++ ) {
+        v0.x1 = P0_.x1+i*dx.x1; v0.x2 = P0_.x2+j*dx.x2;
+        qmesh_[n].v1 = v0;
+        dv.x1 = dx.x1 ; dv.x2 = 0.0  ;   qmesh_[n].v2 = v0 + dv;
+        dv.x1 = dx.x1 ; dv.x2 = dx.x2;   qmesh_[n].v3 = v0 + dv;
+        dv.x1 = 0.0   ; dv.x2 = dx.x2;   qmesh_[n].v4 = v0 + dv;
+        n++;
+      }
+    }
+
+  } // end, ndim==2 test
+  else if ( ndim_ == 3 ) {
+    nxy = ne_[0] * ne_[1];
+    beg_lin = nperrank*irank_; end_lin = beg_lin + nperrank - 1;
+    kb = beg_lin/nxy; ke = end_lin/nxy;
+    for ( GSIZET k=kb; k<ke; k++ ) { 
+      jb = (beg_lin-k*nxy)/ne_[0]; je = (end_lin-k*nxy)/ne_[0];
+      for ( GSIZET j=jb; j<je; j++ ) { 
+        ib = beg_lin-k*nxy-j*ne_[0]; ie = end_lin-k*nxy-j*ne_[0]; 
+        for ( GSIZET i=ib; i<ie; i++ ) { 
+          v0.x1 = P0_.x1+i*dx.x1; v0.x2 = P0_.x2+j*dx.x2; v0.x2 = P0_.x3+k*dx.x3; 
+          hmesh_[n].v1 = v0;
+          dv.x1 = dx.x1 ; dv.x2 = 0.0  ; dv.x3 = 0.0   ;  hmesh_[n].v2 = v0 + dv;
+          dv.x1 = dx.x1 ; dv.x2 = dx.x2; dv.x3 = 0.0   ;  hmesh_[n].v3 = v0 + dv;
+          dv.x1 = 0.0   ; dv.x2 = dx.x2; dv.x3 = 0.0   ;  hmesh_[n].v4 = v0 + dv;
+          dv.x1 = v0.x1 ; dv.x2 = 0.0  ; dv.x3 = dx.x3 ;  hmesh_[n].v5 = v0 + dv;
+          dv.x1 = v0.x1 ; dv.x2 = dx.x2; dv.x3 = dx.x3 ;  hmesh_[n].v6 = v0 + dv;
+          dv.x1 = v0.x1 ; dv.x2 = dx.x2; dv.x3 = dx.x3 ;  hmesh_[n].v7 = v0 + dv;
+          dv.x1 = v0.x1 ; dv.x2 = 0.0  ; dv.x3 = dx.x3 ;  hmesh_[n].v8 = v0 + dv;
+          n++;
+        }
+      }
+    }
+
+  } // end, ndim==3 test
+
+
+} // end of method find_subdomain
 
