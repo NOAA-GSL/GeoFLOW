@@ -26,7 +26,7 @@
 #if !defined(_G_TYPES_DEF)
 #define _G_TYPES_DEF
 
-#define _G_IS2D
+//#define _G_IS2D
 //#define _G_IS3D
 
 // Set standard float type:
