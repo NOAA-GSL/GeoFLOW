@@ -79,6 +79,18 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/gsrc_tests.cmake)
 # Fix compiler options here (don't let CMake do this for us):
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/gcomp_options.cmake)
 
+set(Boost_DEBUG OFF)                          # Enable debug output from FIND_PACKAGE
+set(Boost_NO_SYSTEM_PATHS ON)       # Do not search system paths before BOOST_ROOT
+set(Boost_USE_STATIC_LIBS ON)           # Static link to Boost libraries
+set(Boost_USE_STATIC_RUNTIME OFF)  # Use Boost static linked to C++ runtime
+set(Boost_USE_MULTITHREADED OFF)   # Use Boost multi-threaded code
+#FIND_PACKAGE(Boost 1.65.0 COMPONENTS mpi serialization REQUIRED)
+
+# BOOST path; may be changed in glocale.cmake:
+set(BOOST_ROOT 
+#   /scratch/duane.rosenberg/lib/boost_1_69_0_gcc
+    /home/Duane.Rosenberg/lib/boost_1_69_0_intel_18.1
+   )
 
 # Define libs/paths to link to (used based on target);
 # may be changed in glocale.cmake:
@@ -93,19 +105,9 @@ set(GPTL_PATH
     /home/Duane.Rosenberg/lib/gptl-v5.4.4_intel_impi_theia
    )
 
-set(Boost_DEBUG OFF)                          # Enable debug output from FIND_PACKAGE
-set(Boost_NO_SYSTEM_PATHS ON)       # Do not search system paths before BOOST_ROOT
-set(Boost_USE_STATIC_LIBS ON)           # Static link to Boost libraries
-set(Boost_USE_STATIC_RUNTIME OFF)  # Use Boost static linked to C++ runtime
-set(Boost_USE_MULTITHREADED OFF)   # Use Boost multi-threaded code
-#FIND_PACKAGE(Boost 1.65.0 COMPONENTS mpi serialization REQUIRED)
 
-# BOOST path; may be changed in glocale.cmake:
-set(BOOST_ROOT 
-#   /scratch/duane.rosenberg/lib/boost_1_69_0_gcc
-    /home/Duane.Rosenberg/lib/boost_1_69_0_intel_18.1
-   )
-
+########################################################################
+########################################################################
 set(CDG_COMMON_LIBS  
     ${BOOST_ROOT}/lib/libboost_chrono.a
     ${BOOST_ROOT}/lib/libboost_mpi.a
