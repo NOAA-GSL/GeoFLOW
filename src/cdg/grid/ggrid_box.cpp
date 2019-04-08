@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <memory.h>
 #include <math.h>
+#include "gcomm.hpp"
 #include "geoflow.hpp"
 #include "ggrid_box.hpp"
 #include "tbox/mpixx.hpp"
@@ -1094,7 +1095,7 @@ void GGridBox::unperiodize()
 void GGridBox::find_subdomain()
 {
 
-  GSIZET          n=0, nglobal, nperrank, ntot, nxy;
+  GSIZET          n=0, nglobal, nperrank, nthisrank, ntot, nxy;
   GLONG           beg_lin, end_lin;
   GLONG           ib, ie, jb, je, kb, ke;
   GTPoint<GFTYPE> v0(ndim_);     // starting sph. point of elem
@@ -1104,10 +1105,10 @@ void GGridBox::find_subdomain()
   nglobal = 1; // total num elements in global grid
   for ( GSIZET k=0; k<ne_.size(); k++ ) nglobal *= ne_[k];
  
-  nperrank = (nglobal + nprocs_ - 1) / nprocs_; // #elems per rank
-  if ( irank_ == nprocs_-1 ) nperrank = nglobal - (nprocs_-1)*nperrank;
+  nperrank = nglobal / nprocs_; // #elems per rank
+  nthisrank = irank_ != nprocs_-1 ? nperrank : nglobal - (nprocs_-1)*nperrank;
 
-  qmesh_.resize(nperrank);
+  qmesh_.resize(nthisrank);
 
  // Get uniform element sizes:
   for ( GSIZET k=0; k<ndim_; k++ ) {
@@ -1118,10 +1119,10 @@ void GGridBox::find_subdomain()
   // for this task:
   if ( ndim_ == 2 ) {
 
-    beg_lin = nperrank*irank_; end_lin = beg_lin + nperrank - 1;
+    beg_lin = nperrank*irank_; end_lin = beg_lin + nthisrank - 1;
     jb = beg_lin/ne_[0]; je = end_lin/ne_[0];
     for ( GLONG j=jb; j<=je; j++ ) {
-      ib = MAX(beg_lin  -static_cast<GLONG>(j*ne_[0]),0); 
+      ib = MAX(beg_lin-static_cast<GLONG>(j*ne_[0]),0); 
       ie = MIN(end_lin-static_cast<GLONG>(j*ne_[0]),ne_[0]-1); 
       for ( GLONG i=ib; i<=ie; i++ ) {
         v0.x1 = P0_.x1+i*dx.x1; v0.x2 = P0_.x2+j*dx.x2;
@@ -1136,7 +1137,7 @@ void GGridBox::find_subdomain()
   } // end, ndim==2 test
   else if ( ndim_ == 3 ) {
     nxy = ne_[0] * ne_[1];
-    beg_lin = nperrank*irank_; end_lin = beg_lin + nperrank - 1;
+    beg_lin = nperrank*irank_; end_lin = beg_lin + nthisrank - 1;
     kb = beg_lin/nxy; ke = end_lin/nxy;
     for ( GLONG k=kb; k<ke; k++ ) { 
       jb = MAX((beg_lin-static_cast<GLONG>(k*nxy))/ne_[0],0); 
