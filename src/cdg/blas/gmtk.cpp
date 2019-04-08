@@ -1287,7 +1287,7 @@ void compute_grefderiv(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &etm
     assert(FALSE && "Invalid coordinate direction");
   }
   u.range_reset(); // reset global vec to globalrange
-  du->range_reset();
+  du.range_reset();
 
 #endif
 
@@ -1442,9 +1442,9 @@ void compute_grefderivsW(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &e
     Di[0] = (*gelems)[e]->gbasis(0)->getDerivMatrixW (dotrans); 
     Di[1] = (*gelems)[e]->gbasis(1)->getDerivMatrixW(!dotrans); 
     Di[2] = (*gelems)[e]->gbasis(2)->getDerivMatrixW(!dotrans); 
-    GMTK::Dg3_X_Dg2_X_D1(*Di[0], *W [1], *W [2], u, N[0], N[1], N[2], etmp, *du[0]); 
-    GMTK::Dg3_X_D2_X_Dg1(*W [0], *Di[1], *W [2], u, N[0], N[1], N[2], etmp, *du[1]); 
-    GMTK::D3_X_Dg2_X_Dg1(*W [0], *W [1], *Di[2], u, N[0], N[1], N[2], etmp, *du[2]); 
+    GMTK::Dg3_X_Dg2_X_D1(*Di[0], *W [1], *W [2], u, etmp, *du[0]); 
+    GMTK::Dg3_X_D2_X_Dg1(*W [0], *Di[1], *W [2], u, etmp, *du[1]); 
+    GMTK::D3_X_Dg2_X_Dg1(*W [0], *W [1], *Di[2], u, etmp, *du[2]); 
   }
   u.range_reset(); // reset global vec to globalrange
   for ( GSIZET k=0; k<GDIM; k++ ) du[k]->range_reset();
@@ -1636,11 +1636,10 @@ void compute_grefdiviW(GGrid &grid, GTVector<GTVector<GDOUBLE>*> &u, GTVector<GD
     Di[1] = (*gelems)[e]->gbasis(1)->getDerivMatrixiW(!dotrans); 
     Di[2] = (*gelems)[e]->gbasis(1)->getDerivMatrixiW(!dotrans); 
 
-    GMTK::Dg3_X_Dg2_X_D1(*Di[0], *iW [1], *iW [2], *u[0], N[0], N[1], N[2], etmp, divu); 
-    divu += etmp;
-    GMTK::Dg3_X_D2_X_Dg1(*iW [0], *Di[1], *iW [2], *u[1], N[0], N[1], N[2], etmp, *u[0]); 
+    GMTK::Dg3_X_Dg2_X_D1(*Di[0], *iW [1], *iW [2], *u[0], etmp, divu); 
+    GMTK::Dg3_X_D2_X_Dg1(*iW [0], *Di[1], *iW [2], *u[1], etmp, *u[0]); 
     divu += *u[0];
-    GMTK::D3_X_Dg2_X_Dg1(*iW [0], *iW [1], *Di[2], *u[2], N[0], N[1], N[2], etmp, *u[0]); 
+    GMTK::D3_X_Dg2_X_Dg1(*iW [0], *iW [1], *Di[2], *u[2], etmp, *u[0]); 
     divu += *u[0];
   }
   divu.range_reset();  // reset range to global scope
