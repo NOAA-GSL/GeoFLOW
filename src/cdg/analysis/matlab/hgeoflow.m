@@ -31,7 +31,7 @@ if nargin == 1
   swarn = sprintf('using isz=%d; sformat=%s', isz, sformat);
   warning(swarn);
 end
-if nargout > 7
+if nargout > 8
   error('Too many output arguments provided');
 end
 
