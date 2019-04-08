@@ -55,6 +55,14 @@ if (USE_MPI)
   set(DEF_MPI "-D_G_USE_MPI")
 endif()
 
+set(DEF_DIM "") 
+if (GDIM MATCHES "2")
+  set(DEF_DIM "-D_G_IS2D")
+endif()
+if (GDIM MATCHES "3")
+  set(DEF_DIM "-D_G_IS3D")
+endif()
+
 add_definitions(
-                ${DEF_ACC} ${DEF_DEBUG} ${DEF_GBLAS} ${DEF_GPTL} ${DEF_PAPI} ${DEF_MPI}
+                ${DEF_ACC} ${DEF_DEBUG} ${DEF_GBLAS} ${DEF_GPTL} ${DEF_PAPI} ${DEF_MPI} ${DEF_DIM}
                )
