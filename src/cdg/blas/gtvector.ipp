@@ -49,6 +49,7 @@ n_             (n),
 bdatalocal_ (TRUE)
 {
   data_ = new T [n_];
+  assert(this->data_!= NULLPTR );
   gindex_(n_, n_, 0, n_-1, 1,  0);
   gindex_keep_ = gindex_;
 
@@ -74,6 +75,7 @@ bdatalocal_ (TRUE)
   n_=gindex_.end()+1+gindex_.pad();
 
   data_ = new T [n_];
+  assert(this->data_!= NULLPTR );
 
   #if defined(_G_AUTO_CREATE_DEV)
     #pragma acc enter data copyin( this[0:1] ) create( data_[0:n_-1] )
@@ -95,6 +97,7 @@ n_      (obj.size()),
 bdatalocal_   (TRUE)
 {
   data_ = new T [n_];
+  assert(this->data_!= NULLPTR );
   
   for ( GLLONG j=0; j<obj.capacity(); j++ ) {
     this->data_[j] = obj[j];
@@ -125,6 +128,7 @@ n_      (n/istride),
 bdatalocal_  (TRUE)
 {
   data_ = new T [n_];
+  assert(this->data_!= NULLPTR );
 
   GLLONG k=0;
   for ( GLLONG j=0; j<n_; j++ ) {
@@ -159,6 +163,7 @@ bdatalocal_  (TRUE)
 {
   if ( bdatalocal_ ) {
     data_ = new T [n_];
+    assert(this->data_!= NULLPTR );
     GLLONG k=0;
     for ( GLLONG j=0; j<n_; j++ ) {
       data_[j] = indata[k];
@@ -192,6 +197,7 @@ n_      (obj.size()),
 bdatalocal_   (TRUE)
 {
   data_ = new T [n_];
+  assert(this->data_!= NULLPTR );
   for ( GLLONG j=0; j<obj.capacity(); j++ ) {
     data_[j] = obj[j];
   }
@@ -291,6 +297,7 @@ void GTVector<T>::resize(GSIZET nnew)
       this->data_ = NULLPTR; 
     }
     this->data_ = new T [nnew];
+    assert(this->data_ != NULLPTR );
     n_ = nnew;
   }
   gindex_(nnew, nnew, ibeg, iend, istride, ipad);
@@ -334,6 +341,7 @@ void GTVector<T>::resize(GIndex &gi)
       this->data_ = NULLPTR; 
     }
     this->data_ = new T [nnew];
+    assert(this->data_ != NULLPTR );
     n_ = nnew;
   }
   gindex_(nnew, nnew, ibeg, iend, istride, ipad);
@@ -402,6 +410,7 @@ void GTVector<T>::reserve(GSIZET nnew)
 
   // Check: is following exception-safe? No....
   ttmp  = new T [nnew];
+  assert(ttmp != NULLPTR );
 
   // Copy old data to temp buffer:
   if ( nnew > n_ ) { // growing
@@ -411,6 +420,7 @@ void GTVector<T>::reserve(GSIZET nnew)
       this->data_ = NULLPTR; 
     }
     this->data_ = new T [nnew];
+    assert(this->data_ != NULLPTR );
 
     // Copy only what was there already to expanded buffer,
     // leaving remainder 'uninitialized':
@@ -425,6 +435,7 @@ void GTVector<T>::reserve(GSIZET nnew)
       this->data_ = NULLPTR; 
     }
     this->data_ = new T [nnew];
+    assert(this->data_ != NULLPTR );
 
     // Copy only what of the original amount fills new buffer:
     n_ = nnew;
@@ -585,6 +596,7 @@ GTVector<T> &GTVector<T>::operator=(const GTVector<T> &obj)
   if ( data_ == NULLPTR ) {
     n_ = obj.capacity();
     data_ = new T [n_];
+    assert(this->data_ != NULLPTR );
     gindex_ = obj.gindex_;
     gindex_keep_ = gindex_;
   }
@@ -619,6 +631,7 @@ GTVector<T> &GTVector<T>::operator=(const std::vector<T> &obj)
   if ( data_ == NULLPTR ) {
     n_ = obj.capacity();
     data_ = new T [n_];
+    assert(this->data_ != NULLPTR );
     gindex_(n_, n_, 0, n_-1, 1,  0);
     gindex_keep_ = gindex_;
   }
@@ -1843,11 +1856,13 @@ GTVector<T>::distinctrng(GSIZET ibeg, GSIZET n, GSIZET is, T *&vals,
     }
   }
   if ( nd < nfound ) {
-    if ( vals    != NULLPTR ) delete [] vals;
-    if ( indices != NULLPTR ) delete [] indices;
+    if ( vals    != NULLPTR ) delete [] vals;   vals = NULLPTR;
+    if ( indices != NULLPTR ) delete [] indices; indices = NULLPTR;
     nd = nfound;
     vals    = new T      [nd];
+    assert(vals != NULLPTR );
     indices = new GSIZET [nd];
+    assert(indices != NULLPTR );
   }
   for ( i=0; i<nfound; i++ ) {
     vals   [i] = tunique[i];
@@ -1974,11 +1989,13 @@ GTVector<T>::distinctrng_floor(GSIZET ibeg, GSIZET n, GSIZET is, T *&vals,
   }
 
   if ( nd < nfound ) {
-    if ( vals    != NULLPTR ) delete [] vals;
-    if ( indices != NULLPTR ) delete [] indices;
+    if ( vals    != NULLPTR ) delete [] vals;   vals = NULLPTR;
+    if ( indices != NULLPTR ) delete [] indices; indices = NULLPTR;
     nd = nfound;
-    indices = new GSIZET [nd];
     vals    = new T      [nd];
+    assert(vals != NULLPTR );
+    indices = new GSIZET [nd];
+    assert(indices != NULLPTR );
   }
   for ( i=0; i<nfound; i++ ) {
     vals   [i] = tunique[i];
