@@ -35,7 +35,7 @@ enable_language (Fortran)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/gtest_macros.cmake)
 
 # Define and set default CMake logical variables here:
-option(DO_DEBUG        "DO_DEBUG"     ON)   # Compile for DEBUG
+option(DO_DEBUG        "DO_DEBUG"    OFF)   # Compile for DEBUG
 option(DO_OPENMP       "DO_OPENMP"    ON)   # Compile for OpenMP
 option(DO_OPENACC      "DO_OPENACC"  OFF)   # Compile for OpenACC
 option(USE_GBLAS       "USE_GBLAS"    ON)   # Use GBlas instead of C 
