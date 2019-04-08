@@ -296,7 +296,7 @@ void GTVector<T>::resize(GSIZET nnew)
       delete [] this->data_; 
       this->data_ = NULLPTR; 
     }
-    this->data_ = new T [nnew];
+    this->data_ = new T [ibeg+nnew+ipad];
     assert(this->data_ != NULLPTR );
     n_ = nnew;
   }
@@ -340,7 +340,7 @@ void GTVector<T>::resize(GIndex &gi)
       delete [] this->data_; 
       this->data_ = NULLPTR; 
     }
-    this->data_ = new T [nnew];
+    this->data_ = new T [ibeg+nnew+ipad];
     assert(this->data_ != NULLPTR );
     n_ = nnew;
   }
@@ -409,7 +409,7 @@ void GTVector<T>::reserve(GSIZET nnew)
   GLLONG ipad    = gindex_.pad();
 
   // Check: is following exception-safe? No....
-  ttmp  = new T [nnew];
+  ttmp  = new T [ibeg+nnew+ipad];
   assert(ttmp != NULLPTR );
 
   // Copy old data to temp buffer:
@@ -419,7 +419,7 @@ void GTVector<T>::reserve(GSIZET nnew)
       delete [] this->data_;
       this->data_ = NULLPTR; 
     }
-    this->data_ = new T [nnew];
+    this->data_ = new T [ibeg+nnew+ipad];
     assert(this->data_ != NULLPTR );
 
     // Copy only what was there already to expanded buffer,
@@ -434,7 +434,7 @@ void GTVector<T>::reserve(GSIZET nnew)
       delete [] this->data_;
       this->data_ = NULLPTR; 
     }
-    this->data_ = new T [nnew];
+    this->data_ = new T [ibeg+nnew+ipad];
     assert(this->data_ != NULLPTR );
 
     // Copy only what of the original amount fills new buffer:
