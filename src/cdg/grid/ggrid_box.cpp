@@ -343,7 +343,7 @@ void GGridBox::do_elems2d()
   gdd_->doDD(ftcentroids_, irank_, iind);
 #endif
 
-  GSIZET i, n;
+  GSIZET i;
   GSIZET nvnodes;   // no. vol nodes
   GSIZET nfnodes;   // no. face nodes
   GSIZET nbnodes;   // no. bdy nodes
@@ -353,7 +353,7 @@ void GGridBox::do_elems2d()
 
   for ( GSIZET i=0; i<qmesh_.size(); i++ ) { // for each quad in irank's mesh
 
-#if 0
+#if 1
 cout << GComm::WorldRank() << ": GGrid::do_elems2d: qmesh[" << i << "]=" << qmesh_[i] << endl;
 #endif
     pelem = new GElem_base(GE_REGULAR, gbasis_);
@@ -404,9 +404,9 @@ cout << GComm::WorldRank() << ": GGrid::do_elems2d: qmesh[" << i << "]=" << qmes
 
     // Find global global interior and bdy start & stop indices represented 
     // locally within element:
-    nvnodes = gelems_[n]->nnodes();
-    nfnodes = gelems_[n]->nfnodes();
-    nbnodes = gelems_[n]->bdy_indices().size();
+    nvnodes = gelems_[i]->nnodes();
+    nfnodes = gelems_[i]->nfnodes();
+    nbnodes = gelems_[i]->bdy_indices().size();
     pelem->igbeg() = icurr;           // beg global vol index
     pelem->igend() = icurr+nvnodes-1; // end global vol index
     pelem->ifbeg() = fcurr;           // beg global face index
@@ -471,7 +471,7 @@ void GGridBox::do_elems3d()
   gdd_->doDD(ftcentroids_, irank_, iind);
 #endif
 
-  GSIZET i, n;
+  GSIZET i;
   GSIZET nvnodes;   // no. vol indices
   GSIZET nfnodes;   // no. face indices
   GSIZET nbnodes;   // no. bdy indices
@@ -528,9 +528,9 @@ void GGridBox::do_elems3d()
     // application; finer control may be exercised in callback):
     set_global_bdytypes_3d(*pelem);
 
-    nvnodes = gelems_[n]->nnodes();
-    nfnodes = gelems_[n]->nfnodes();
-    nbnodes = gelems_[n]->bdy_indices().size();
+    nvnodes = gelems_[i]->nnodes();
+    nfnodes = gelems_[i]->nfnodes();
+    nbnodes = gelems_[i]->bdy_indices().size();
     pelem->igbeg() = icurr;           // beg global vol index
     pelem->igend() = icurr+nvnodes-1; // end global vol index
     pelem->ifbeg() = fcurr;           // beg global face index
@@ -1094,18 +1094,18 @@ void GGridBox::unperiodize()
 void GGridBox::find_subdomain()
 {
 
-  GSIZET          n, nperrank, ntot, nxy;
-  GSIZET          beg_lin, end_lin;
-  GSIZET          ib, ie, jb, je, kb, ke;
+  GSIZET          n=0, nglobal, nperrank, ntot, nxy;
+  GLONG           beg_lin, end_lin;
+  GLONG           ib, ie, jb, je, kb, ke;
   GTPoint<GFTYPE> v0(ndim_);     // starting sph. point of elem
   GTPoint<GFTYPE> dv(ndim_);     // delta-point
   GTPoint<GFTYPE> dx(ndim_);
 
-  ntot = 1; // total num elements in global grid
-  for ( GSIZET k=0; k<ne_.size(); k++ ) ntot *= ne_[k];
+  nglobal = 1; // total num elements in global grid
+  for ( GSIZET k=0; k<ne_.size(); k++ ) nglobal *= ne_[k];
  
-  nperrank = (ntot + nprocs_ - 1) / nprocs_; // #elems per rank
-  if ( irank_ == nprocs_-1 ) nperrank = ntot - nprocs_*nperrank;
+  nperrank = (nglobal + nprocs_ - 1) / nprocs_; // #elems per rank
+  if ( irank_ == nprocs_-1 ) nperrank = nglobal - (nprocs_-1)*nperrank;
 
   qmesh_.resize(nperrank);
 
@@ -1120,11 +1120,12 @@ void GGridBox::find_subdomain()
 
     beg_lin = nperrank*irank_; end_lin = beg_lin + nperrank - 1;
     jb = beg_lin/ne_[0]; je = end_lin/ne_[0];
-    for ( GSIZET j=jb; j<je; j++ ) {
-      ib = beg_lin-j*ne_[0]; ie = end_lin-j*ne_[0]; 
-      for ( GSIZET i=ib; i<ie; i++ ) {
+    for ( GLONG j=jb; j<=je; j++ ) {
+      ib = MAX(beg_lin  -static_cast<GLONG>(j*ne_[0]),0); 
+      ie = MIN(end_lin-static_cast<GLONG>(j*ne_[0]),ne_[0]-1); 
+      for ( GLONG i=ib; i<=ie; i++ ) {
         v0.x1 = P0_.x1+i*dx.x1; v0.x2 = P0_.x2+j*dx.x2;
-        qmesh_[n].v1 = v0;
+                                         qmesh_[n].v1 = v0;
         dv.x1 = dx.x1 ; dv.x2 = 0.0  ;   qmesh_[n].v2 = v0 + dv;
         dv.x1 = dx.x1 ; dv.x2 = dx.x2;   qmesh_[n].v3 = v0 + dv;
         dv.x1 = 0.0   ; dv.x2 = dx.x2;   qmesh_[n].v4 = v0 + dv;
@@ -1137,11 +1138,13 @@ void GGridBox::find_subdomain()
     nxy = ne_[0] * ne_[1];
     beg_lin = nperrank*irank_; end_lin = beg_lin + nperrank - 1;
     kb = beg_lin/nxy; ke = end_lin/nxy;
-    for ( GSIZET k=kb; k<ke; k++ ) { 
-      jb = (beg_lin-k*nxy)/ne_[0]; je = (end_lin-k*nxy)/ne_[0];
-      for ( GSIZET j=jb; j<je; j++ ) { 
-        ib = beg_lin-k*nxy-j*ne_[0]; ie = end_lin-k*nxy-j*ne_[0]; 
-        for ( GSIZET i=ib; i<ie; i++ ) { 
+    for ( GLONG k=kb; k<ke; k++ ) { 
+      jb = MAX((beg_lin-static_cast<GLONG>(k*nxy))/ne_[0],0); 
+      je = MIN((end_lin-static_cast<GLONG>(k*nxy))/ne_[0],ne_[1]-1);
+      for ( GLONG j=jb; j<je; j++ ) { 
+        ib = MAX(beg_lin-static_cast<GLONG>(k*nxy+j*ne_[0]),0); 
+        ie = MIN(end_lin-static_cast<GLONG>(k*nxy+j*ne_[0]),ne_[0]-1); 
+        for ( GLONG i=ib; i<ie; i++ ) { 
           v0.x1 = P0_.x1+i*dx.x1; v0.x2 = P0_.x2+j*dx.x2; v0.x2 = P0_.x3+k*dx.x3; 
           hmesh_[n].v1 = v0;
           dv.x1 = dx.x1 ; dv.x2 = 0.0  ; dv.x3 = 0.0   ;  hmesh_[n].v2 = v0 + dv;
