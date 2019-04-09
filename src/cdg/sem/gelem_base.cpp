@@ -1704,7 +1704,7 @@ GTVector<GTMatrix<GFTYPE>> &matv, GTVector<GTMatrix<GFTYPE>> &matu, GTVector<GFT
   
 #if defined(_G_IS3D)
   for ( j=0; j<GDIM; j++ ) {
-    matv.resizem(xito[j]->size(),gbasis_[j]->getOrder()+1);
+    matv[j].resizem(xito[j]->size(),gbasis_[j]->getOrder()+1);
     gbasis_[j]->evalBasis(*xito[j], matv[j]);
   }
   matu[0].resizem(matv[1].size(2),matv[1].size(1));
