@@ -1035,7 +1035,8 @@ GBOOL GGFX<T>::extractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedData)
   }
 #if defined(GGFX_TRACE_OUTPUT)
     GPP(comm_,serr << "iOpL2RIndices_.size1=" << iOpL2RIndices_.size(1)
-        << " iOpL2RIndices_.size2=" << iOpL2RIndices_.size(2));
+        << " iOpL2RIndices_.size2=" << iOpL2RIndices_.size(2)
+        << " maxmult=" << maxmult);
 #endif
   iOpR2LIndices_.resize(iOpL2RIndices_.size(1),iOpL2RIndices_.size(2)); 
   nOpR2LMult_.resize(iOpL2RIndices_.size(1),iOpL2RIndices_.size(2)); 
