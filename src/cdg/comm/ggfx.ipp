@@ -328,6 +328,9 @@ GBOOL GGFX<T>::binSort(GNIDBuffer &nodelist, GIMatrix &gBinMat,
   // Find max number of nodes in each bin among all ranks:
   GINT lmax = nInBin.max();
   GComm::Allreduce(&lmax, &max_numlocbinmem, 1, T2GCDatatype<GINT>() , GC_OP_MAX, comm_);
+#if defined(GGFX_TRACE_OUTPUT)
+    GPP(comm_,serr << "max_numlocbinmem=" << max_numlocbinmem);
+#endif
 
   // Find max number of bins filled by any rank:
   numlocfilledbins = 0;
@@ -342,6 +345,9 @@ GBOOL GGFX<T>::binSort(GNIDBuffer &nodelist, GIMatrix &gBinMat,
   // tells us that that task must send data to num. nodes to rank represented
   // by 1st nonempty bin, and no. nodes binned in 2nd bin to rank represented by
   // 2nd bin, etc.
+#if defined(GGFX_TRACE_OUTPUT)
+    GPP(comm_,serr << "max_numfilledbins=" << max_numfilledbins);
+#endif
   gBinMat.resize(2*max_numfilledbins,nprocs_);
   gBinMat = -1;
 
@@ -428,6 +434,9 @@ GBOOL GGFX<T>::createWorkBuffs(GIMatrix &gBinMat, GINT max_numlocbinmem, GIBuffe
       }
     }
   }
+#if defined(GGFX_TRACE_OUTPUT)
+    GPP(comm_,serr << "numRecv=" << numRecv);
+#endif
   iRecvWorkTaskID.resize(numRecv);  
   iRecvWorkTaskID.set(ittmp.data(),numRecv); 
 
@@ -451,6 +460,10 @@ GBOOL GGFX<T>::createWorkBuffs(GIMatrix &gBinMat, GINT max_numlocbinmem, GIBuffe
 
   // Create node 'receive' buffers for work received from other tasks, 
   // not including this task:
+#if defined(GGFX_TRACE_OUTPUT)
+    GPP(comm_,serr << "max_numlocbinmem=" << max_numlocbinmem
+        << " gnumRecv=" << gnumRecv << " numSend=" << numSend);
+#endif
   irWork.resize(max_numlocbinmem,gnumRecv); 
   irWork.set(-1); 
 
@@ -689,6 +702,10 @@ GBOOL GGFX<T>::doCommonNodeSort(GNIDBuffer &glob_index, GNIDMatrix &irWork,
   GPP(comm_,serr << "irWork=" << irWork);
 #endif
 
+#if defined(GGFX_TRACE_OUTPUT)
+    GPP(comm_,serr << "irwork.size1=" << irWork.size(1)
+        << " irwork.size2=" << irWork.size(2));
+#endif
   // First, get sizes for this shared node matrix:
   ipos = 0;
   nworktmp.resize(irWork.size(1)*irWork.size(2));
@@ -719,6 +736,9 @@ GBOOL GGFX<T>::doCommonNodeSort(GNIDBuffer &glob_index, GNIDMatrix &irWork,
 
   // mySharedData column length must be at least 
   // the number of tasks work data was sent to:
+#if defined(GGFX_TRACE_OUTPUT)
+    GPP(comm_,serr << "gsz1=" << gsz[0] << " gsz2=" << gsz[1]);
+#endif
   mySharedData.resize(gsz[0],gsz[1]);
 
 
@@ -927,6 +947,7 @@ GBOOL GGFX<T>::extractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedData)
 
 #if defined(GGFX_TRACE_OUTPUT)
   GPP(comm_, serr << "nigltmp=" << nl << " igltmp=" << igltmp);
+  GPP(comm_, serr << "nnidmax=" << nnidmax <<  " nt=" << nt);
 #endif
 
   nnidmax = nindtmp.maxn(nt);       // max # global indices for a remote task
@@ -941,6 +962,10 @@ GBOOL GGFX<T>::extractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedData)
   lmax[0] = nnidmax; lmax[1] = nt; 
   GComm::Allreduce(lmax, gmax, 2, T2GCDatatype<GSIZET>() , GC_OP_MAX, comm_);
           
+#if defined(GGFX_TRACE_OUTPUT)
+    GPP(comm_,serr << "gmax1=" << gmax[0] << " gmax2=" << gmax[1]);
+    GPP(comm_,serr << "ngltmp.maxn(nl)=" << ngltmp.maxn(nl)  << " nl=" << nl);
+#endif
   sendBuff_.resize(gmax[0],gmax[1]);
   recvBuff_.resize(gmax[0],gmax[1]);    
 
@@ -1008,6 +1033,10 @@ GBOOL GGFX<T>::extractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedData)
       maxmult = MAX(maxmult,glob_index.multiplicity(nnid)); 
     }
   }
+#if defined(GGFX_TRACE_OUTPUT)
+    GPP(comm_,serr << "iOpL2RIndices_.size1=" << iOpL2RIndices_.size(1)
+        << " iOpL2RIndices_.size2=" << iOpL2RIndices_.size(2));
+#endif
   iOpR2LIndices_.resize(iOpL2RIndices_.size(1),iOpL2RIndices_.size(2)); 
   nOpR2LMult_.resize(iOpL2RIndices_.size(1),iOpL2RIndices_.size(2)); 
   iOpR2LIndices_.set(999999); 
@@ -1679,6 +1708,9 @@ void GGFX<T>::initMult()
 
 
   // Compute 1/mult:
+#if defined(GGFX_TRACE_OUTPUT)
+    GPP(comm_,serr << " mult.size=" << mult.size());
+#endif
   imult_.resize(mult.size());
   for ( GSIZET j=0; j<mult.size(); j++ ) {
     imult_[j] = 1.0/mult[j];
