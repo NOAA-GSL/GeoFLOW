@@ -44,6 +44,8 @@ option(USE_GPTL        "USE_GPTL"     ON)   # Build with GPTL?
 option(HAVE_PAPI       "HAVE_PAPI"   OFF)   # Is GPTL built with PAPI support?
 option(DO_AUTO_PROF "DO_AUTO_PROF"   OFF)   # Do auto-profing with GPTL?
  
+set (GDIM "2")     # Dimensionality
+
 # Following should be set in call to cmake as
 # cmake -DCMAKE_BUILD_TYPE=DEBUG [or RELEASE]:
 set(CMAKE_BUILD_TYPE DEBUG) 
