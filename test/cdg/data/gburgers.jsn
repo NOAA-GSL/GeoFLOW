@@ -36,7 +36,7 @@
     "bconserved" : false,
     "use_forcing": false,
     "variable_dt": true,
-    "courant"    : 0.05,
+    "courant"    : 0.04 ,
     "adv_vel"    : [1.0, 0.0, 0.0]
   },
   "grid_icos": {
@@ -67,7 +67,7 @@
   },
   "stepper_props": {
     "stepping_method"  : "GSTEPPER_EXRK",
-    "time_deriv_order" : 2,
+    "time_deriv_order" : 4,
     "extrap_order"     : 2
   },
   "dissipation_traits": {
