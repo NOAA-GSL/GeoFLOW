@@ -34,6 +34,8 @@
     "doheat"     : false,
     "bpureadv"   : false,
     "bconserved" : false,
+    "use_forcing": false,
+    "variable_dt": false,
     "adv_vel"    : [1.0, 0.0, 0.0]
   },
   "grid_icos": {
