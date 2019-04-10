@@ -411,12 +411,15 @@ int main(int argc, char **argv)
       if ( itst.peek() == std::ofstream::traits_type::eof() ) {
         ios << "#ntasks" << "  ";
         ios << "ncyc"    << "  ";
+        ios << "var_dt"  << "  ";
         for ( GSIZET j=0; j<pstd.size(); j++ ) ios << "p" << j+1 << "  ";
         ios << "num_elems      inf_err     L1_err      L2_err" << std::endl;
       }
       itst.close();
   
-      ios << ntasks << "  " << pIntegrator->get_numsteps()  << "  ";
+      ios << ntasks << "  " ;
+      ios << pIntegrator->get_numsteps()  << "  ";
+      ios << solver_traits.variabledt << "  ";
       for ( GSIZET j=0; j<pstd.size(); j++ ) ios << pstd[j] << "  ";
       ios << gsz[0] << "  "
           << "  " << maxerror[0] << "  " << maxerror[1] << "  " << maxerror[2]
