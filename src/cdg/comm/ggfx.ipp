@@ -1027,7 +1027,7 @@ GBOOL GGFX<T>::extractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedData)
   // of each global id from each task. It is used to combine remote data with
   // local data:
   GSIZET  maxmult=0;
-  for ( j=0; j<iOpL2RIndices_.size(2); j++ ) { // loop over all unique indices to find max sizes
+  for ( j=0; j<iOpL2RIndices_.size(2); j++ ) { // loop over all unique indices to find max  multiplicity
     for ( i=0; i<nOpL2RIndices_[j]; i++ ) {
       nnid = glob_index[iOpL2RIndices_(i,j)];
       maxmult = MAX(maxmult,glob_index.multiplicity(nnid)); 
@@ -1040,11 +1040,16 @@ GBOOL GGFX<T>::extractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedData)
 #endif
   iOpR2LIndices_.resize(iOpL2RIndices_.size(1),iOpL2RIndices_.size(2)); 
   nOpR2LMult_.resize(iOpL2RIndices_.size(1),iOpL2RIndices_.size(2)); 
-  iOpR2LIndices_.set(999999); 
   nOpR2LMult_.set(0);
+#if defined(GGFX_TRACE_OUTPUT)
+    GPP(comm_,serr << "..................After iOpR2LIndices_ matrix alloc" );
+#endif
   for ( j=0; j<iOpR2LIndices_.size(2); j++ ) { 
     for ( i=0; i<iOpR2LIndices_.size(1); i++ ) iOpR2LIndices_(i,j).resize(maxmult); 
   }
+#if defined(GGFX_TRACE_OUTPUT)
+    GPP(comm_,serr << "..................After iOpR2LIndices_ matrix elems alloc" );
+#endif
 
   GSIZET *iwhere=0;
   GSIZET  nw=0;
@@ -1057,6 +1062,9 @@ GBOOL GGFX<T>::extractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedData)
       m++;
     }
   }
+#if defined(GGFX_TRACE_OUTPUT)
+    GPP(comm_,serr << "..................After nOpR2LMult computation" );
+#endif
 
   // ... indirection arrays (L2L = 'local to local ') for local operations:
   // 1 column for each 'global' node, and rows refer to the local indices that
