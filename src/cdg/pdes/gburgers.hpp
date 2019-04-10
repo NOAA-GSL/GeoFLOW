@@ -75,13 +75,15 @@ public:
 
         // Burgers solver traits:
         struct Traits {
-          GBOOL        doheat;
-          GBOOL        bpureadv;
-          GBOOL        bconserved;
-          GBOOL        bforced;
-          GStepperType steptype;
-          GINT         itorder;
-          GINT         inorder;
+          GBOOL        doheat      = FALSE;
+          GBOOL        bpureadv    = FALSE;
+          GBOOL        bconserved  = FALSE;
+          GBOOL        bforced     = FALSE;
+          GBOOL        variabledt  = FALSE;
+          GStepperType steptype    = GSTEPPER_EXRK;
+          GINT         itorder     = 2;
+          GINT         inorder     = 2;
+          GFTYPE       courant     = 0.5;
         };
 
         GBurgers() = delete; 
@@ -105,7 +107,7 @@ protected:
                                       const Time &dt);                    // Take a step
         void                step_impl(const Time &t, const State &uin, State &uf, State &ub,
                                       const Time &dt, State &uout);       // Take a step
-        GBOOL               has_dt_impl() const {return FALSE;}           // Has dynamic dt?
+        GBOOL               has_dt_impl() const {return bvariabledt_;}    // Has dynamic dt?
         void                dt_impl(const Time &t, State &u, Time &dt);   // Get dt
         void                apply_bc_impl(const Time &t, State &u, 
                                           const State &ub);               // Apply bdy conditions
@@ -127,10 +129,12 @@ private:
         GBOOL               bconserved_;    // use conservation form?
         GBOOL               bforced_;       // use forcing vectors
         GBOOL               bupdatebc_;     // bdy update callback set?
+        GBOOL               bvariabledt_;   // is dt allowed to vary?
         GStepperType        isteptype_;     // stepper type
         GINT                nsteps_ ;       // num steps taken
         GINT                itorder_;       // time deriv order
         GINT                inorder_;       // nonlin term order
+        GFTYPE              courant_;       // Courant number if dt varies
         GTVector<GFTYPE>    tcoeffs_;       // coeffs for time deriv
         GTVector<GFTYPE>    acoeffs_;       // coeffs for NL adv term
         GTVector<GFTYPE>    dthist_;        // coeffs for NL adv term

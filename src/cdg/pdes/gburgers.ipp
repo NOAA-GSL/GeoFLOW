@@ -58,24 +58,26 @@ using namespace std;
 //**********************************************************************************
 template<typename TypePack>
 GBurgers<TypePack>::GBurgers(GGFX<GFTYPE> &ggfx, Grid &grid, State &u, GBurgers<TypePack>::Traits &traits, GTVector<GTVector<GFTYPE>*> &tmp) :
-doheat_         (traits.doheat),
-bpureadv_     (traits.bpureadv),
-bconserved_ (traits.bconserved),
-bforced_       (traits.bforced),
-bupdatebc_              (FALSE),
-isteptype_    (traits.steptype),
-nsteps_                     (0),
-itorder_       (traits.itorder),
-inorder_       (traits.inorder),
-nu_                   (NULLPTR),
-gadvect_              (NULLPTR),
-gmass_                (NULLPTR),
-gpdv_                 (NULLPTR),
-//gflux_                (NULLPTR),
-gbc_                  (NULLPTR),
-grid_                   (&grid),
-ggfx_                   (&ggfx),
-update_bdy_callback_  (NULLPTR)
+doheat_          (traits.doheat),
+bpureadv_      (traits.bpureadv),
+bconserved_  (traits.bconserved),
+bforced_        (traits.bforced),
+bupdatebc_               (FALSE),
+bvariabledt_ (traits.variabledt),
+isteptype_     (traits.steptype),
+nsteps_                      (0),
+itorder_        (traits.itorder),
+inorder_        (traits.inorder),
+courant_        (traits.courant),
+nu_                    (NULLPTR),
+gadvect_               (NULLPTR),
+gmass_                  (NULLPTR),
+gpdv_                  (NULLPTR),
+//gflux_                 (NULLPTR),
+gbc_                   (NULLPTR),
+grid_                    (&grid),
+ggfx_                    (&ggfx),
+update_bdy_callback_   (NULLPTR)
 {
   static_assert(std::is_same<State,GTVector<GTVector<GFTYPE>*>>::value,
                 "State is of incorrect type"); 
@@ -167,6 +169,8 @@ void GBurgers<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
    }
 
    GComm::Allreduce(&dtmin, &dt, 1, T2GCDatatype<GFTYPE>() , GC_OP_MIN, comm_);
+
+   dt *= courant_;
 
 } // end of method dt_impl
 
