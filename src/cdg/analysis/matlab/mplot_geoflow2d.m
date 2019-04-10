@@ -57,7 +57,7 @@ for itask = 0:ntasks-1
     xx = reshape(xx, NN(1), NN(2));
     yy = reshape(yy, NN(1), NN(2));
     uu = reshape(uu, NN(1), NN(2));
-    surf( xx, yy, uu )
+    surf( xx, yy, uu, 'edgecolor', 'none' )
     title(sprintf('%s t=%f', svar, time));
     hold on
     icurr = icurr + lelem ; 
