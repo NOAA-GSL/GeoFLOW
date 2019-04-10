@@ -35,8 +35,8 @@
     "bpureadv"   : false,
     "bconserved" : false,
     "use_forcing": false,
-    "variable_dt": false,
-    "courant"    : 0.5,
+    "variable_dt": true,
+    "courant"    : 0.01,
     "adv_vel"    : [1.0, 0.0, 0.0]
   },
   "grid_icos": {
@@ -67,7 +67,7 @@
   },
   "stepper_props": {
     "stepping_method"  : "GSTEPPER_EXRK",
-    "time_deriv_order" : 4,
+    "time_deriv_order" : 2,
     "extrap_order"     : 2
   },
   "dissipation_traits": {
@@ -96,7 +96,7 @@
   },
   "time_integration": {
     "integ_type" : "time",
-    "time_end"   : 0.1,
+    "time_end"   : 1.5,
     "cycle_end"  : 21,
     "dt"         : 1.0e-4
   }
