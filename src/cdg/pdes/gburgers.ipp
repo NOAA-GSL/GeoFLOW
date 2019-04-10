@@ -151,18 +151,18 @@ void GBurgers<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
        for ( auto e=0; e<gelems->size(); e++ ) { // for each element
          ibeg = (*gelems)[e]->igbeg(); iend = (*gelems)[e]->igend();
          u[k]->range(ibeg, iend);
-         umax = u[k]->max();
+         umax = u[k]->amax();
          dtmin = MIN(dtmin, drmin / umax);
        }
        u[k]->range_reset();
      }
    }
    else {             // nonlinear advection
-     for ( auto k=0; k<u.size(); k++ ) { // each c
+     for ( auto k=0; k<u.size(); k++ ) { // each advecting u
        for ( auto e=0; e<gelems->size(); e++ ) { // for each element
          ibeg = (*gelems)[e]->igbeg(); iend = (*gelems)[e]->igend();
          u[k]->range(ibeg, iend);
-         umax = u[k]->max();
+         umax = u[k]->amax();
          dtmin = MIN(dtmin, drmin / umax);
        }
        u[k]->range_reset();
