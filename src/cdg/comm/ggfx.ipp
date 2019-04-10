@@ -1696,6 +1696,7 @@ recvBuff_.set(-1);
 template<typename T> 
 void GGFX<T>::initMult()
 {
+  GString serr = "GGFX<T>::initMult: ";
 
   assert(bInit_ && "Operator not initialized");
 
