@@ -134,6 +134,7 @@ GBurgers<TypePack>::~GBurgers()
 template<typename TypePack>
 void GBurgers<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
 {
+   GString serr = "GBurgers<TypePack>::dt_impl: ";
    GSIZET ibeg, iend;
    GFTYPE dtmin, umax;
    GFTYPE        drmin  = grid_->minnodedist();
@@ -146,7 +147,7 @@ void GBurgers<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
    dtmin = std::numeric_limits<GFTYPE>::max();
 
    if ( bpureadv_ ) { // pure (linear) advection
-     for ( auto k=1; k<u.size(); k++ ) { // each u
+     for ( auto k=1; k<u.size(); k++ ) { // each advecting u
        for ( auto e=0; e<gelems->size(); e++ ) { // for each element
          ibeg = (*gelems)[e]->igbeg(); iend = (*gelems)[e]->igend();
          u[k]->range(ibeg, iend);
