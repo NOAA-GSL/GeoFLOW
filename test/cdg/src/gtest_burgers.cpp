@@ -410,12 +410,13 @@ int main(int argc, char **argv)
       // Write header, if required:
       if ( itst.peek() == std::ofstream::traits_type::eof() ) {
         ios << "#ntasks" << "  ";
+        ios << "ncyc"    << "  ";
         for ( GSIZET j=0; j<pstd.size(); j++ ) ios << "p" << j+1 << "  ";
         ios << "num_elems      inf_err     L1_err      L2_err" << std::endl;
       }
       itst.close();
   
-      ios << ntasks << "  ";
+      ios << ntasks << "  " << pIntegrator->get_numsteps()  << "  ";
       for ( GSIZET j=0; j<pstd.size(); j++ ) ios << pstd[j] << "  ";
       ios << gsz[0] << "  "
           << "  " << maxerror[0] << "  " << maxerror[1] << "  " << maxerror[2]
