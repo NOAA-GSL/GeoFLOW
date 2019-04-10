@@ -36,6 +36,7 @@
     "bconserved" : false,
     "use_forcing": false,
     "variable_dt": false,
+    "courant"    : 0.5,
     "adv_vel"    : [1.0, 0.0, 0.0]
   },
   "grid_icos": {
