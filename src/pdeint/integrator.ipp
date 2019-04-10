@@ -174,9 +174,10 @@ void Integrator<EquationType>::init_dt(const Time& t, State& u, Time& dt) const{
 	// Make sure dt is between CFL limits
 	if( eqn_ptr->has_dt() ){
 		Time dt_cfl_1 = std::numeric_limits<Time>::max()/(1+traits_.cfl_max);
-		eqn_ptr->dt(t,u,dt_cfl_1);
-		dt = min(dt, dt_cfl_1*traits_.cfl_max);
-		dt = max(dt, dt_cfl_1*traits_.cfl_min);
+//              eqn_ptr->dt(t,u,dt_cfl_1);
+                eqn_ptr->dt(t,u,dt);
+//              dt = min(dt, dt_cfl_1*traits_.cfl_max);
+//              dt = max(dt, dt_cfl_1*traits_.cfl_min);
 	}
 
 }
