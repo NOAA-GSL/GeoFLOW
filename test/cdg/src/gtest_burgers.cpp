@@ -215,6 +215,8 @@ int main(int argc, char **argv)
     solver_traits.bpureadv   = eqptree  .getValue<GBOOL>("bpureadv", FALSE);
     solver_traits.bconserved = eqptree  .getValue<GBOOL>("bconserved", FALSE);
     solver_traits.bforced    = eqptree  .getValue<GBOOL>("use_forcing", FALSE);
+    solver_traits.variabledt = eqptree  .getValue<GBOOL>("variable_dt", FALSE);
+    solver_traits.courant    = eqptree  .getValue<GFTYPE>("Courant", 0.5);
     solver_traits.itorder    = stepptree.getValue <GINT>("time_deriv_order");
     solver_traits.inorder    = stepptree.getValue <GINT>("extrap_order");
     nu_scalar                = dissptree.getValue<GFTYPE>("nu");
