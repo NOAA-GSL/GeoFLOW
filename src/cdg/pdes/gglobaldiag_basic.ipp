@@ -261,7 +261,7 @@ void GGlobalDiag_basic<EquationType>::do_max(const Time t, const State &u, const
     utmp[0]->pow(2);
    *utmp[1] += *utmp[0];
   }
-  ener = 0.5*utmp[0]->max();
+  ener = 0.5*utmp[1]->max();
  
   // Enstrophy = omega^2/2
   *utmp[3] = 0.0;
@@ -287,6 +287,7 @@ void GGlobalDiag_basic<EquationType>::do_max(const Time t, const State &u, const
     for ( GINT j=0; j<GDIM; j++ ) {
       *utmp[1] = *uf[j];
       utmp[1]->pointProd(*u[j]);
+     *utmp[3] += *utmp[1];
     }
     fv = utmp[3]->amax();
   }
