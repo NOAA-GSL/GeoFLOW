@@ -114,62 +114,63 @@ void GGlobalDiag_basic<EquationType>::do_L2(const Time t, const State &u, const 
       && "tmp space not set, or is insufficient");
 
   GFTYPE absu, absw, ener, enst, hel, fv, rhel;
+  GTVector<GFTYPE> lmax(5), gmax(5);
 
   // Make things a little easier:
   GTVector<GTVector<GFTYPE>*> utmp(4);
   for ( GSIZET j=0; j<4; j++ ) utmp[j] = (*utmp_)[j];
 
   // Energy = <u^2>/2:
-  ener = 0.0;
+  lmax[0] = 0.0;
   for ( GSIZET j=0; j<u.size(); j++ ) {
    *utmp[0] = *u[j];
     utmp[0]->pow(2);
-    ener += grid_->integrate(*utmp[0],*utmp[1]); 
+    lmax[0] += grid_->integrate(*utmp[0],*utmp[1]); 
   }
-  ener *= 0.5*ivol_;
+  lmax[0] *= 0.5*ivol_;
  
   // Enstrophy = <omega^2>/2
-  enst = 0.0;
+  lmax[1] = 0.0;
   if ( GDIM == 2 && u.size() == 2 ) {
     GMTK::curl<GFTYPE>(*grid_, u, 3, utmp, *utmp[2]);
     utmp[2]->pow(2);
-    enst += grid_->integrate(*utmp[2],*utmp[0]); 
+    lmax[1] += grid_->integrate(*utmp[2],*utmp[0]); 
   }
   else {
     for ( GINT j=0; j<GDIM; j++ ) {
       GMTK::curl<GFTYPE>(*grid_, u, j+1, utmp, *utmp[2]);
       utmp[2]->pow(2);
-      enst += grid_->integrate(*utmp[2],*utmp[0]); 
+      lmax[1] += grid_->integrate(*utmp[2],*utmp[0]); 
     }
   }
-  enst *= 0.5*ivol_;
+  lmax[1] *= 0.5*ivol_;
 
   // Energy injection = <f.u>
-  fv = 0.0;
+  lmax[2] = 0.0;
   if ( uf.size() > 0 && uf[0] != NULLPTR 
     && uf[0]->size() > 0 ) {
     *utmp[1] = 0.0;
     for ( GINT j=0; j<GDIM; j++ ) {
       *utmp[1] = *uf[j];
       utmp[1]->pointProd(*u[j]);
-      fv += grid_->integrate(*utmp[1],*utmp[0]); 
+      lmax[2] += grid_->integrate(*utmp[1],*utmp[0]); 
     }
-    fv *= ivol_;
+    lmax[2] *= ivol_;
   }
 
   // Helicity = <u.omega>
-  hel = 0.0;
+  lmax[3] = 0.0;
   if ( GDIM > 2 || u.size() > 2 ) {
     for ( GINT j=0; j<GDIM; j++ ) {
       GMTK::curl<GFTYPE>(*grid_, u, j+1, utmp, *utmp[2]);
       utmp[2]->pointProd(*u[j]);
-      hel += grid_->integrate(*utmp[2],*utmp[0]); 
+      lmax[3] += grid_->integrate(*utmp[2],*utmp[0]); 
     }
   }
-  hel *= ivol_;
+  lmax[3] *= ivol_;
 
   // Relative helicity = <u.omega/(|u|*|omega|)>
-  rhel = 0.0;
+  lmax[4] = 0.0;
   if ( GDIM > 2 || u.size() > 2 ) {
     // Compute |u|:
     *utmp[3] = 0.0;
@@ -199,10 +200,14 @@ void GGlobalDiag_basic<EquationType>::do_L2(const Time t, const State &u, const 
       GMTK::curl<GFTYPE>(*grid_, u, j+1, utmp, *utmp[2]);
       utmp[2]->pointProd(*u[j]);
       utmp[2]->pointProd(*utmp[3]);
-      rhel += grid_->integrate(*utmp[2],*utmp[0]); 
+      lmax[4] += grid_->integrate(*utmp[2],*utmp[0]); 
     }
   }
-  rhel *= ivol_;
+  lmax[4] *= ivol_;
+
+  // Gather final max's:
+  GComm::Allreduce(lmax.data(), gmax.data(), 5, T2GCDatatype<GFTYPE>(), GC_OP_MAX, grid_->get_comm());
+  ener = gmax[0]; enst = gmax[1]; fv = gmax[2]; hel = gmax[3]; rhel = gmax[4];
 
 
   // Print data to file:
