@@ -871,7 +871,7 @@ void init_ggfx(GGrid &grid, GGFX<GFTYPE> &ggfx)
   gmorton.key(glob_indices, *xnodes);
   GComm::Synch(comm_);
 
-#if 1
+#if 0
   GPP(comm_,"init_ggfx: glob_indices=" << glob_indices);
 #endif
 
