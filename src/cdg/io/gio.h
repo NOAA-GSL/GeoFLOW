@@ -29,18 +29,18 @@ extern GINT     nfname_;
 #define GIO_VERSION 0
 
 struct GIOTraits {
-  GBOOL        prgrid;
-  GINT         wtime;
-  GINT         wtask;
-  GINT         wfile;
-  GINT         ivers;
-  GINT         dim;
-  GINT         gtype;
-  GSIZET       index;
-  GSIZET       nelems;
-  GSIZET       cycle;
-  GFTYPE       time;
-  GString      dir;
+  GBOOL        prgrid  = FALSE;
+  GINT         wtime   = 6;
+  GINT         wtask   = 5;
+  GINT         wfile   = 2048;
+  GINT         ivers   = 0;
+  GINT         dim     = GDIM;
+  GINT         gtype   = GE_REGULAR;
+  GSIZET       index   = 0;
+  GSIZET       nelems  = 0;
+  GSIZET       cycle   = 0;
+  GFTYPE       time    = 0.0;
+  GString      dir     = ".";
   GTMatrix<GINT> porder;
 };
 
