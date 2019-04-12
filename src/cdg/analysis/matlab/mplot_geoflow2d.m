@@ -35,7 +35,7 @@ for itask = 0:ntasks-1
     fname = sprintf('%s.%05d.out', scoord{j}, itask)
     [x{j} dim nelems porder gtype icycle time] = rgeoflow(fname, 8, 'ieee-le');
   end
-
+ 
 
   fname = sprintf('%s.%06d.%05d.out', svar, tindex, itask);
   [u dim nelems porder gtype icycle time] = rgeoflow(fname, 8, 'ieee-le');
@@ -58,6 +58,7 @@ for itask = 0:ntasks-1
     yy = reshape(yy, NN(1), NN(2));
     uu = reshape(uu, NN(1), NN(2));
     surf( xx, yy, uu, 'edgecolor', 'none' )
+%   surf( xx, yy, uu)
     title(sprintf('%s t=%f', svar, time));
     hold on
     icurr = icurr + lelem ; 
