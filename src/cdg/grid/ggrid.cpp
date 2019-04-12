@@ -550,6 +550,7 @@ void GGrid::reg_init()
 {
    assert(gelems_.size() > 0 && "Elements not set");
 
+   GString serr = "GridIcos::reg_init: ";
    GSIZET nxy = GDIM;
    GTMatrix<GTVector<GFTYPE>>  rijtmp;
    GTVector<GTVector<GFTYPE>> *xe;
@@ -584,7 +585,7 @@ void GGrid::reg_init()
      ifbeg = gelems_[e]->ifbeg(); ifend = gelems_[e]->ifend();
      ibbeg = gelems_[e]->ibbeg(); ibend = gelems_[e]->ibend();
      xe    = &gelems_[e]->xNodes();
-   
+  
      // Restrict global data to local scope:
      for ( GSIZET j=0; j<nxy; j++ ) {
        faceNormal_[j].range(ifbeg, ifend); 
