@@ -136,14 +136,13 @@ void GBurgers<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
 {
    GString serr = "GBurgers<TypePack>::dt_impl: ";
    GSIZET ibeg, iend;
-   GFTYPE dtmin, umax;
+   GFTYPE dtmin, dt1, umax;
    GFTYPE        drmin  = grid_->minnodedist();
    GElemList    *gelems = &grid_->elems();
 
    // This is an estimate. The minimum length on each element,
    // computed in GGrid object is divided by the maximum of
    // the state variable on each element:
-   dt = 1.0;
    dtmin = std::numeric_limits<GFTYPE>::max();
 
    if ( bpureadv_ ) { // pure (linear) advection
@@ -169,9 +168,10 @@ void GBurgers<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
      }
    }
 
-   GComm::Allreduce(&dtmin, &dt, 1, T2GCDatatype<GFTYPE>() , GC_OP_MIN, comm_);
+   GComm::Allreduce(&dtmin, &dt1, 1, T2GCDatatype<GFTYPE>() , GC_OP_MIN, comm_);
 
-   dt *= courant_;
+   // Limit any timestep-to-timestep increae to 10%:
+   dt = MIN(dt1*courant_, 1.1*dt);
 
 } // end of method dt_impl
 
