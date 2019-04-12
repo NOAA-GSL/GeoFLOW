@@ -373,7 +373,12 @@ int main(int argc, char **argv)
     
     GTVector<GINT> istate(nstate);
     for ( GSIZET j=0; j<nstate; j++ ) istate[j] = j;
-//  gio_write(*grid_, ua_, istate, 0, 0, t, savars, sdir, 0, comm_, FALSE);
+GIOTraits iot;
+iot.nelems = grid_->nelems();
+iot.gtype  = grid_->gtype();
+iot.porder.resize(1,GDIM);
+for ( GSIZET j=0; j<GDIM; j++ ) iot.porder(0,j) = gbasis[j]->getOrder();
+    gio_write_state(iot, *grid_, ua_, istate, savars, comm_);
     for ( GSIZET j=0; j<1; j++ ) { //local errors
      *utmp_[0] = *u_[j] - *ua_[j];
 #if 0
@@ -432,7 +437,9 @@ int main(int argc, char **argv)
     do_bench("benchmark.txt", pIntegrator->get_numsteps());
  
 #if defined(_G_USE_GPTL)
-    GPTLpr_file("timing.txt");
+//  GPTLpr_file("timings.txt");
+    GPTLpr(myrank);
+//  GPTLpr_summary();
     GPTLfinalize();
 #endif
 
@@ -864,7 +871,7 @@ void init_ggfx(GGrid &grid, GGFX<GFTYPE> &ggfx)
   gmorton.key(glob_indices, *xnodes);
   GComm::Synch(comm_);
 
-#if 0
+#if 1
   GPP(comm_,"init_ggfx: glob_indices=" << glob_indices);
 #endif
 
