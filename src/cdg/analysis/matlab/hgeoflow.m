@@ -64,6 +64,7 @@ pcycle  = fread(lun, 1   , 'uint64'); % time cycle
 ptime   = fread(lun, 1   ,  zsize  ); % time stamp
 
 % Ensure header types have correct size:
+pvers   = uint32(pvers);
 pdim    = uint32(pdim);
 pnelems = uint64(pnelems);
 pporder = uint32(pporder);
@@ -75,7 +76,7 @@ elseif strcmp(ssize,'real*8')
   ptime = double(ptime);
 end
 
-pskip = sizeof(pvers) + sizeof(pdim)   + sizeof(pnelems) + pdim*sizeof(pporder) 
+pskip = sizeof(pvers) + sizeof(pdim)   + sizeof(pnelems) + pdim*sizeof(pporder) ...
                       + sizeof(pgtype) + sizeof(pcycle)  + sizeof(ptime);
 
 pformat = '  %s=';
@@ -84,6 +85,7 @@ for j=1:pdim
 end
 
 disp(sprintf('header for file: %s', filein));
+disp(sprintf('  %s=%d', 'vers'      , pvers));
 disp(sprintf('  %s=%d', 'dim'       , pdim));
 disp(sprintf('  %s=%d', 'nelems'    , pnelems));
 disp(sprintf(pformat  , 'pporder'   , pporder));
@@ -107,13 +109,13 @@ if nargout >= 4
   gtype = pgtype;
 end
 if nargout >= 5
-  ivers = pvers;
-end
-if nargout >= 6
   icycle = pcycle;
 end
-if nargout >= 7
+if nargout >= 6
   time = ptime;
+end
+if nargout >= 7
+  ivers = pvers;
 end
 if nargout == 8
   skip = pskip;
