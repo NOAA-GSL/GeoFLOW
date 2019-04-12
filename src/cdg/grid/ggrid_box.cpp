@@ -160,9 +160,10 @@ void GGridBox::set_partitioner(GDD_base *gdd)
 void GGridBox::init2d()
 {
 
+#if 1
   find_subdomain();
+#else
 
-#if 0
   GString serr = "GGridBox::init2d: ";
 
   assert(gbasis_.size() == 2 && "Invalid dimension");
@@ -344,7 +345,6 @@ void GGridBox::do_elems2d()
   gdd_->doDD(ftcentroids_, irank_, iind);
 #endif
 
-  GSIZET i;
   GSIZET nvnodes;   // no. vol nodes
   GSIZET nfnodes;   // no. face nodes
   GSIZET nbnodes;   // no. bdy nodes
@@ -353,7 +353,6 @@ void GGridBox::do_elems2d()
   GSIZET bcurr = 0; // current global bdy index
 
   for ( GSIZET i=0; i<qmesh_.size(); i++ ) { // for each quad in irank's mesh
-
 #if 0
 cout << GComm::WorldRank() << ": GGrid::do_elems2d: qmesh[" << i << "]=" << qmesh_[i] << endl;
 #endif
