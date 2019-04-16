@@ -307,7 +307,7 @@ void GGridBox::do_elems(GTMatrix<GINT> &p,
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : do_elems2d (1)
-// DESC   : Build 2d element list. It's assumed that init3d has been called
+// DESC   : Build 2d element list. It's assumed that init2d has been called
 //          prior to entry, and that the qmesh_ has beed set. This arrays
 //          of hexagonal 3d elements provides for each hex its vertices in Cartesian
 //          coordinates. Also, the centroids of these hexes (in Cartesian coords)
@@ -1107,7 +1107,6 @@ void GGridBox::find_subdomain()
   nperrank = nglobal / nprocs_; // #elems per rank
   nthisrank = irank_ != nprocs_-1 ? nperrank : nglobal - (nprocs_-1)*nperrank;
 
-  qmesh_.resize(nthisrank);
 
  // Get uniform element sizes:
   for ( GSIZET k=0; k<ndim_; k++ ) {
@@ -1118,6 +1117,7 @@ void GGridBox::find_subdomain()
   // for this task:
   if ( ndim_ == 2 ) {
 
+    qmesh_.resize(nthisrank);
     beg_lin = nperrank*irank_; end_lin = beg_lin + nthisrank - 1;
     jb = beg_lin/ne_[0]; je = end_lin/ne_[0];
     for ( GLONG j=jb; j<=je; j++ ) {
@@ -1135,16 +1135,17 @@ void GGridBox::find_subdomain()
 
   } // end, ndim==2 test
   else if ( ndim_ == 3 ) {
+    hmesh_.resize(nthisrank);
     nxy = ne_[0] * ne_[1];
     beg_lin = nperrank*irank_; end_lin = beg_lin + nthisrank - 1;
     kb = beg_lin/nxy; ke = end_lin/nxy;
     for ( GLONG k=kb; k<ke; k++ ) { 
       jb = MAX((beg_lin-static_cast<GLONG>(k*nxy))/ne_[0],0); 
       je = MIN((end_lin-static_cast<GLONG>(k*nxy))/ne_[0],ne_[1]-1);
-      for ( GLONG j=jb; j<je; j++ ) { 
+      for ( GLONG j=jb; j<=je; j++ ) { 
         ib = MAX(beg_lin-static_cast<GLONG>(k*nxy+j*ne_[0]),0); 
         ie = MIN(end_lin-static_cast<GLONG>(k*nxy+j*ne_[0]),ne_[0]-1); 
-        for ( GLONG i=ib; i<ie; i++ ) { 
+        for ( GLONG i=ib; i<=ie; i++ ) { 
           v0.x1 = P0_.x1+i*dx.x1; v0.x2 = P0_.x2+j*dx.x2; v0.x2 = P0_.x3+k*dx.x3; 
           hmesh_[n].v1 = v0;
           dv.x1 = dx.x1 ; dv.x2 = 0.0  ; dv.x3 = 0.0   ;  hmesh_[n].v2 = v0 + dv;
