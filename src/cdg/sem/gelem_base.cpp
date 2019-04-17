@@ -313,7 +313,7 @@ void GElem_base::set_size()
     set_size1d();
   #elif defined(_G_IS2D)
     set_size2d();
-  #elif defined(_G_IS2D)
+  #elif defined(_G_IS3D)
     set_size3d();
   #endif
   
@@ -560,7 +560,7 @@ void GElem_base::set_size3d()
 
   // Face indices defining edges
   ifedge_.resize(nEdges_);
-  for ( GSIZET j=0; j<nEdges_; j++ ) ivedge_[j].resize(1);
+  for ( GSIZET j=0; j<nEdges_; j++ ) ifedge_[j].resize(2);
   ifedge_ [0][0] = 0; ifedge_ [0][1] = 4; 
   ifedge_ [1][0] = 1; ifedge_ [1][1] = 4; 
   ifedge_ [2][0] = 2; ifedge_ [2][1] = 4; 
@@ -1042,18 +1042,17 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
 // DESC   : Compute all geometry objects that depend on basis in 3d
 //          NOTE: no resizing here, as all return quantities may be
 //                global here, and simply restricted to its range
-//                of this element.
+//                in this element.
 // ARGS   : 
-//          rij       : dx^j/dxi^i, computed here, but otherwise is temp space
-//                      that may be reallocated
-//          irij      : dxi^j/dx^i matrix to be created; may be global
-//          jac       : Jacobian to be created ; gmay be lobal
+//          rij       : dx^j/dxi^i, computed here
+//          irij      : dxi^j/dx^i matrix to be computed
+//          jac       : Jacobian to be created; gmay be global
 //          fjac      : face Jacobians to be created; may be global 
 //          faceNormal: normal at elem face nodes; must have same no. indices
-//                      as face_indices
+//                      as face_indices, and be in the same order
 //          bdyNormal : normal at bdy nodes; may be global. Are set from
 //                      local bdy_inidices_ data; bdyNormal must have the same
-//                      no. indices as bdy_indices_. 
+//                      no. indices as bdy_indices_, and be in the same order. 
 // RETURNS: none.
 //***********************************************************************************
 void GElem_base::dogeom3d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFTYPE>> &irij, GTVector<GFTYPE> &jac, GTVector<GFTYPE> &fjac, GTVector<GTVector<GFTYPE>> &faceNormal, GTVector<GTVector<GFTYPE>> &bdyNormal)
@@ -1062,7 +1061,7 @@ void GElem_base::dogeom3d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
   assert(gshapefcn_ != NULLPTR && "GElem_base::dogeom3d: No shape function specified");
 
   GSIZET i, j, k, l, m, n, p, nnodes;
-  GTVector<GINT> N(2);
+  GTVector<GINT> N(3);
   GTVector<GFTYPE> L(3);
   GTVector<GTVector<GFTYPE>*>  xi_ev(gbasis_.size()); // ref points at which to evaluate shape fcns
 
@@ -1078,7 +1077,7 @@ void GElem_base::dogeom3d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
   L[1] = xVertices_[2].x2 - xVertices_[1].x2;
   L[2] = xVertices_[4].x3 - xVertices_[0].x3;
 
-  // Set reference node points:
+  // Set reference node points: 
   for ( j=0; j<gbasis_.size(); j++ ) xi_ev[j] = gbasis_[j]->getXiNodes();
 
 
@@ -1116,21 +1115,22 @@ void GElem_base::dogeom3d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
     } // m-loop
   } else if ( elemtype_ == GE_REGULAR) {  // dXi/dX are just constants for GE_REGULAR:
     for ( k=0; k<nxy; k++ ) { 
+      rij (k,0) = 0.5*L[k]; 
       irij(k,0) = 2.0/L[k];
     } // k-loop
   }
 
   // Compute Jacobian; test for positive-definiteness:
-  if ( elemtype_ == GE_DEFORMED ) {
+  if ( elemtype_ == GE_2DEMBEDDED || elemtype_ == GE_DEFORMED ) {
     det (rij, jac, pChk, NULLPTR, 0);
+    assert(pChk && "Jacobian not positive definite");
+    // Find inverse of rij:
+    inv(rij, jac, irij);
   }
-  else if ( elemtype_ == GE_REGULAR ) {
-    jac[0] = 0.125*L[0]*L[1]*L[2];
+  else  {
+    jac = 0.125*L[0]*L[1]*L[2];
   }
 
-  assert(pChk && "Jacobian not positive definite");
-
-  inv(rij, jac, irij);
 
   // Compute face Jacobians. Linearize edge nodes, including them
   // in order:
@@ -1142,15 +1142,24 @@ void GElem_base::dogeom3d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
     for ( k=0; k<face_indices_[j].size(); k++ ) 
       iface[ntot++] = face_indices_[j][k];
   }
-  det(rij, fjac, pChk, iface.data(), iface.size()); 
+  if ( elemtype_ == GE_2DEMBEDDED || elemtype_ == GE_DEFORMED ) {
+    det(rij, fjac, pChk, iface.data(), iface.size()); 
+  }
+  else if ( elemtype_ == GE_REGULAR ) {
+    fjac = jac[0];
+  } 
 
-  // Compute face normals: 
-  GTVector<GINT> itmp;
-  for ( j=0; j<face_indices_.size(); j++ )
+#if 0
+  // Compute face normals, bdy normals: 
+  GTVector<GINT> iitmp; // indirection indices to volume
+  GTVector<GINT> iftmp; // face id of each index
+  for ( j=0; j<face_indices_.size(); j++ ) {
     for ( k=0; k<face_indices_[j].size(); k++ ) itmp.push_back(face_indices_[j][k]);
-  set_bdyNormal2d(rij, itmp, faceNormal);
+  }
+  set_bdyNormal2d(rij, iitmp, iftmp, faceNormal);
   if ( bdy_indices_.size() > 0 )  // there may not be bdy indices
     set_bdyNormal3d(rij, bdy_indices_, bdyNormal);
+#endif
 
 } // end of method dogeom3d
 
@@ -1356,7 +1365,7 @@ void GElem_base::get_indirect(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GVVInt &vert
     get_indirect1d(b, vert_ind, edge_ind, face_ind);
   #elif defined(_G_IS2D)
     get_indirect2d(b, vert_ind, edge_ind, face_ind);
-  #elif defined(_G_IS2D)
+  #elif defined(_G_IS3D)
     get_indirect3d(b, vert_ind, edge_ind, face_ind);
   #endif
   
@@ -1803,18 +1812,20 @@ void GElem_base::set_bdyNormal3d(GTMatrix<GTVector<GFTYPE>> &rij, GTVector<GINT>
   GSIZET k;
 
   GFTYPE xn;     // vector magnitude
+  if ( elemtype_ == GE_DEFORMED  ) {
+    assert(FALSE && "Not working for 3D GE_DEFORMED elems yet!");
+  }
 
-  if ( elemtype_ == GE_DEFORMED 
-    || elemtype_ == GE_REGULAR ) { // deformed surfaces
+  // Assume that the indirection indices, iind, are just concatenated
+  // forms of bdy_indices_, and face_indices_: 
+  if ( elemtype_ == GE_REGULAR ) { // regular surfaces
     // For each bdy node, take cross prod of d_x_/dxi_1 X d_x_/dxi_2
     // where xi1, and xi2 are the reference coords of the face:
      
-    assert(FALSE && "Not working in 3D yet!");
-    k = 0;
-    GMTK::cross_prod<GFTYPE>(rij   (0,k%2), rij         (1,k%2), rij (2,k%2),
-                             rij     (0,2), rij           (1,2), rij   (2,2),
-                             iind  .data(), iind.size()        , 
-                             bdyNormal[0] , bdyNormal[1]       , bdyNormal[2] );
+    GMTK::cross_prod<GFTYPE>(rij     (0,0), rij     (1,0), rij(2,0),
+                             rij     (0,2), rij     (1,2), rij(2,2),
+                             iind  .data(), iind.size()  , 
+                             bdyNormal[0] , bdyNormal[1] , bdyNormal[2] );
     
 
     // Normalize:
