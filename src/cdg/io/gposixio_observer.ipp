@@ -107,36 +107,6 @@ void GPosixIOObserver<EquationType>::init(const Time t, const State &u)
    time_last_  = this->traits_.start_time ;
    ocycle_     = this->traits_.start_ocycle;
  
-   // Set state names member data, if not already set:
-   if ( state_names_.size()  <= 0 ) {
-     if ( this->traits_.state_names.size() == 0 ) {
-       for ( auto j=0; j<u.size(); j++ ) {
-         sprintf(stmp, "%s%d", "u", j+1);
-         state_names_.push_back(stmp); 
-       } 
-     } 
-     else {
-       for ( auto j=0; j<u.size(); j++ ) {
-         state_names_.push_back(this->traits_.state_names[j].data()); 
-       } 
-     }
-   }
-
-   // Set grid names member data, if not already set:
-   if ( grid_names_.size()  <= 0 ) {
-     if ( this->traits_.grid_names.size() == 0 ) {
-       for ( auto j=0; j<GDIM+1; j++ ) {
-         sprintf(stmp, "%sgrid", spref[j].c_str());
-         grid_names_.push_back(stmp); 
-       } 
-     } 
-     else {
-       for ( auto j=0; j<u.size(); j++ ) {
-         grid_names_.push_back(this->traits_.grid_names[j].data()); 
-       } 
-     }
-   }
-
    // Set state index member data, if not already set:
    if ( state_index_.size()  <= 0 ) {
      if ( this->traits_.state_index.size() == 0 ) {
@@ -149,7 +119,38 @@ void GPosixIOObserver<EquationType>::init(const Time t, const State &u)
          state_index_.push_back(this->traits_.state_index[j]); 
        } 
      }
-  }
+   }
+
+   // Set state names member data, if not already set:
+   if ( state_names_.size()  <= 0 ) {
+     if ( this->traits_.state_names.size() == 0 ) {
+       for ( auto j=0; j<state_index_.size(); j++ ) {
+         sprintf(stmp, "%s%d", "u", state_index_[j]+1);
+         state_names_.push_back(stmp); 
+       } 
+     } 
+     else {
+       for ( auto j=0; j<state_index_.size(); j++ ) {
+         state_names_.push_back(this->traits_.state_names[state_index_[j]].data()); 
+       } 
+     }
+   }
+
+   // Set grid names member data, if not already set:
+   GINT ng = this->grid_->gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
+   if ( grid_names_.size()  <= 0 ) {
+     if ( this->traits_.grid_names.size() == 0 ) {
+       for ( auto j=0; j<ng; j++ ) {
+         sprintf(stmp, "%sgrid", spref[j].c_str());
+         grid_names_.push_back(stmp); 
+       } 
+     } 
+     else {
+       for ( auto j=0; j<ng; j++ ) {
+         grid_names_.push_back(this->traits_.grid_names[j].data()); 
+       } 
+     }
+   }
 
   bInit_ = TRUE;
 
