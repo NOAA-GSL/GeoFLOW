@@ -478,7 +478,7 @@ void GGridBox::do_elems3d()
   GSIZET icurr = 0; // current global index
   GSIZET fcurr = 0; // current global face index
   GSIZET bcurr = 0; // current global bdy index
-  for ( GSIZET i=0; i<qmesh_.size(); i++ ) { // for each hex in irank's mesh
+  for ( GSIZET i=0; i<hmesh_.size(); i++ ) { // for each hex in irank's mesh
 
     pelem = new GElem_base(GE_REGULAR, gbasis_);
     xNodes  = &pelem->xNodes();  // node spatial data
@@ -494,7 +494,7 @@ void GGridBox::do_elems3d()
       for ( GSIZET m=0; m<pow(2,ndim_); m++ ) { // loop over verts given in Cart coords
         I[0] = m;
         lshapefcn_->Ni(I, *xiNodes, Ni);
-        (*xNodes)[l] += Ni * ( (*(qmesh_[i].v[m]))[l] * 0.125 );
+        (*xNodes)[l] += Ni * ( (*(hmesh_[i].v[m]))[l] * 0.125 );
       }
     }
 

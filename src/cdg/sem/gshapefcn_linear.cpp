@@ -139,9 +139,7 @@ void GShapeFcn_linear::Ni_1d(GTVector<GINT> &ishape,
 //          xi    : [*xi_0[N0], *xi_1[N1], ... *xi_2[N_GDIM]]: array of reference interval 
 //                  points in each direction. Each array should have the number of 
 //                  ref interfal points for that coord direction.
-//          N     : computation of coordinate at each reference node point, 
-//                  corresponding to direction icoord
-// 
+//          N     : shape function computed, defined at all node points
 //             
 // RETURNS:  none
 //**********************************************************************************
@@ -198,7 +196,7 @@ void GShapeFcn_linear::Ni_2d(GTVector<GINT> &ishape,
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : Ni_3d
-// DESC   : Compute ishape shape function. Only 
+// DESC   : Compute ishape shape function. 
 //          Shape functions are bi-linear:
 //              N_i = (1 +/- xi ) ( (1 +/- eta) (1 +/- zeta)
 //          where +/- are taken depending on the position of the vertex, in 3d
@@ -207,9 +205,7 @@ void GShapeFcn_linear::Ni_2d(GTVector<GINT> &ishape,
 //          xi    : [*xi_0[N0], *xi_1[N1], ... *xi_2[N_GDIM]]: array of reference interval 
 //                  points in each direction. Each array should have the number of 
 //                  ref interfal points for that coord direction.
-//          N     : computation of coordinate at each reference node point, 
-//                  corresponding to direction icoord
-// 
+//          N     : shape function computed, defined at all node points
 //             
 // RETURNS:  none
 //**********************************************************************************
@@ -229,7 +225,7 @@ void GShapeFcn_linear::Ni_3d(GTVector<GINT> & ishape,
         tm = 1.0 - (*xi2)[k]; tp = 1.0 + (*xi2)[k];
         for ( GSIZET j=0; j<xi1->size(); j++ ) {
           sm = 1.0 - (*xi1)[j]; sp = 1.0 + (*xi1)[j];
-          for ( GSIZET i=0; i<xi0->size(); i++, n++ ) {
+          for ( GSIZET i=0; i<xi0->size(); i++ ) {
             rm = 1.0 - (*xi0)[i]; rp = 1.0 + (*xi0)[i];
             N   [n++] = rm*sm*tm; 
           }
@@ -241,7 +237,7 @@ void GShapeFcn_linear::Ni_3d(GTVector<GINT> & ishape,
         tm = 1.0 - (*xi2)[k]; tp = 1.0 + (*xi2)[k];
         for ( GSIZET j=0; j<xi1->size(); j++ ) {
           sm = 1.0 - (*xi1)[j]; sp = 1.0 + (*xi1)[j];
-          for ( GSIZET i=0; i<xi0->size(); i++, n++ ) {
+          for ( GSIZET i=0; i<xi0->size(); i++ ) {
             rm = 1.0 - (*xi0)[i]; rp = 1.0 + (*xi0)[i];
             N   [n++] = rp*sm*tm;
           }
@@ -253,7 +249,7 @@ void GShapeFcn_linear::Ni_3d(GTVector<GINT> & ishape,
         tm = 1.0 - (*xi2)[k]; tp = 1.0 + (*xi2)[k];
         for ( GSIZET j=0; j<xi1->size(); j++ ) {
           sm = 1.0 - (*xi1)[j]; sp = 1.0 + (*xi1)[j];
-          for ( GSIZET i=0; i<xi0->size(); i++, n++ ) {
+          for ( GSIZET i=0; i<xi0->size(); i++ ) {
             rm = 1.0 - (*xi0)[i]; rp = 1.0 + (*xi0)[i];
             N   [n++] = rp*sp*tm;
           }
@@ -265,7 +261,7 @@ void GShapeFcn_linear::Ni_3d(GTVector<GINT> & ishape,
         tm = 1.0 - (*xi2)[k]; tp = 1.0 + (*xi2)[k];
         for ( GSIZET j=0; j<xi1->size(); j++ ) {
           sm = 1.0 - (*xi1)[j]; sp = 1.0 + (*xi1)[j];
-          for ( GSIZET i=0; i<xi0->size(); i++, n++ ) {
+          for ( GSIZET i=0; i<xi0->size(); i++ ) {
             rm = 1.0 - (*xi0)[i]; rp = 1.0 + (*xi0)[i];
             N   [n++] = rm*sp*tm;
           }
@@ -277,7 +273,7 @@ void GShapeFcn_linear::Ni_3d(GTVector<GINT> & ishape,
         tm = 1.0 - (*xi2)[k]; tp = 1.0 + (*xi2)[k];
         for ( GSIZET j=0; j<xi1->size(); j++ ) {
           sm = 1.0 - (*xi1)[j]; sp = 1.0 + (*xi1)[j];
-          for ( GSIZET i=0; i<xi0->size(); i++, n++ ) {
+          for ( GSIZET i=0; i<xi0->size(); i++ ) {
             rm = 1.0 - (*xi0)[i]; rp = 1.0 + (*xi0)[i];
             N   [n++] = rm*sm*tp;
           }
@@ -289,7 +285,7 @@ void GShapeFcn_linear::Ni_3d(GTVector<GINT> & ishape,
         tm = 1.0 - (*xi2)[k]; tp = 1.0 + (*xi2)[k];
         for ( GSIZET j=0; j<xi1->size(); j++ ) {
           sm = 1.0 - (*xi1)[j]; sp = 1.0 + (*xi1)[j];
-          for ( GSIZET i=0; i<xi0->size(); i++, n++ ) {
+          for ( GSIZET i=0; i<xi0->size(); i++ ) {
             rm = 1.0 - (*xi0)[i]; rp = 1.0 + (*xi0)[i];
             N   [n++] = rp*sm*tp;
           }
@@ -301,7 +297,7 @@ void GShapeFcn_linear::Ni_3d(GTVector<GINT> & ishape,
         tm = 1.0 - (*xi2)[k]; tp = 1.0 + (*xi2)[k];
         for ( GSIZET j=0; j<xi1->size(); j++ ) {
           sm = 1.0 - (*xi1)[j]; sp = 1.0 + (*xi1)[j];
-          for ( GSIZET i=0; i<xi0->size(); i++, n++ ) {
+          for ( GSIZET i=0; i<xi0->size(); i++ ) {
             rm = 1.0 - (*xi0)[i]; rp = 1.0 + (*xi0)[i];
             N   [n++] = rp*sp*tp;
           }
@@ -313,7 +309,7 @@ void GShapeFcn_linear::Ni_3d(GTVector<GINT> & ishape,
         tm = 1.0 - (*xi2)[k]; tp = 1.0 + (*xi2)[k];
         for ( GSIZET j=0; j<xi1->size(); j++ ) {
           sm = 1.0 - (*xi1)[j]; sp = 1.0 + (*xi1)[j];
-          for ( GSIZET i=0; i<xi0->size(); i++, n++ ) {
+          for ( GSIZET i=0; i<xi0->size(); i++ ) {
             rm = 1.0 - (*xi0)[i]; rp = 1.0 + (*xi0)[i];
             N   [n++] = rm*sp*tp; 
           }

@@ -192,7 +192,7 @@ void GMass::init3d()
   mass_ = 0.0;
   for ( GSIZET i=0, n=0; i<gelems->size(); i++ ) {
     for ( GSIZET j=0; j<GDIM; j++ ) {
-      W[i]    = (*gelems)[i]->gbasis(j)->getWeights();
+      W[j]    = (*gelems)[i]->gbasis(j)->getWeights();
       N[j]    = (*gelems)[i]->size(j);
     }
     for ( GSIZET l=0; l<N[2]; l++ ) {
