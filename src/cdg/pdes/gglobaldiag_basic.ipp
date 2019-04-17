@@ -117,8 +117,8 @@ void GGlobalDiag_basic<EquationType>::do_L2(const Time t, const State &u, const 
   GTVector<GFTYPE> lmax(5), gmax(5);
 
   // Make things a little easier:
-  GTVector<GTVector<GFTYPE>*> utmp(4);
-  for ( GSIZET j=0; j<4; j++ ) utmp[j] = (*utmp_)[j];
+  GTVector<GTVector<GFTYPE>*> utmp(5);
+  for ( GSIZET j=0; j<5; j++ ) utmp[j] = (*utmp_)[j];
 
   // Energy = <u^2>/2:
   ener = 0.0;
