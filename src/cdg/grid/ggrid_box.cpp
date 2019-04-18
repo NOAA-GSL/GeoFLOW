@@ -1139,7 +1139,7 @@ void GGridBox::find_subdomain()
     nxy = ne_[0] * ne_[1];
     beg_lin = nperrank*irank_; end_lin = beg_lin + nthisrank - 1;
     kb = beg_lin/nxy; ke = end_lin/nxy;
-    for ( GLONG k=kb; k<ke; k++ ) { 
+    for ( GLONG k=kb; k<=ke; k++ ) { 
       jb = MAX((beg_lin-static_cast<GLONG>(k*nxy))/ne_[0],0); 
       je = MIN((end_lin-static_cast<GLONG>(k*nxy))/ne_[0],ne_[1]-1);
       for ( GLONG j=jb; j<=je; j++ ) { 
