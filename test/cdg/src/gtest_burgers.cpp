@@ -373,12 +373,16 @@ int main(int argc, char **argv)
     
     GTVector<GINT> istate(nsolve);
     for ( GSIZET j=0; j<nsolve; j++ ) istate[j] = j;
+
+#if 1
 GIOTraits iot;
 iot.nelems = grid_->nelems();
 iot.gtype  = grid_->gtype();
 iot.porder.resize(1,GDIM);
 for ( GSIZET j=0; j<GDIM; j++ ) iot.porder(0,j) = gbasis[j]->getOrder();
     gio_write_state(iot, *grid_, ua_, istate, savars, comm_);
+#endif
+
     for ( GSIZET j=0; j<1; j++ ) { //local errors
      *utmp_[0] = *u_[j] - *ua_[j];
 #if 0
@@ -600,6 +604,7 @@ void compute_dirplnwave_burgers(GGrid &grid, GFTYPE &t, const PropertyTree& ptre
 //**********************************************************************************
 void compute_dirgauss_lump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVector<GTVector<GFTYPE>*>  &ua)
 {
+  GString          serr = "compute_dirgauss_lump: ";
   GBOOL            bContin;
   GINT             j, n;
   GFTYPE           argxp; 
@@ -665,6 +670,8 @@ void compute_dirgauss_lump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
     for ( GSIZET i=0; i<GDIM; i++ ) argxp += -pow(xx[i],2.0)*si[i];
    (*ua[0])[j] = ufact[0]*exp(argxp);
   }
+
+  GPP(comm_,serr << "ua=" << *ua[0] );
   
 } // end, compute_dirgauss_lump
 
