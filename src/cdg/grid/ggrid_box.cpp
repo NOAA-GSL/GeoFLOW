@@ -480,6 +480,9 @@ void GGridBox::do_elems3d()
   GSIZET bcurr = 0; // current global bdy index
   for ( GSIZET i=0; i<hmesh_.size(); i++ ) { // for each hex in irank's mesh
 
+cout << serr << " hmesh[" << i << "]=" << hmesh_[i] << endl;
+
+
     pelem = new GElem_base(GE_REGULAR, gbasis_);
     xNodes  = &pelem->xNodes();  // node spatial data
     xiNodes = &pelem->xiNodes(); // node ref interval data
@@ -1146,15 +1149,15 @@ void GGridBox::find_subdomain()
         ib = MAX(beg_lin-static_cast<GLONG>(k*nxy+j*ne_[0]),0); 
         ie = MIN(end_lin-static_cast<GLONG>(k*nxy+j*ne_[0]),ne_[0]-1); 
         for ( GLONG i=ib; i<=ie; i++ ) { 
-          v0.x1 = P0_.x1+i*dx.x1; v0.x2 = P0_.x2+j*dx.x2; v0.x2 = P0_.x3+k*dx.x3; 
-          hmesh_[n].v1 = v0;
+          v0.x1 = P0_.x1+i*dx.x1; v0.x2 = P0_.x2+j*dx.x2; v0.x3 = P0_.x3+k*dx.x3; 
+                                                          hmesh_[n].v1 = v0;
           dv.x1 = dx.x1 ; dv.x2 = 0.0  ; dv.x3 = 0.0   ;  hmesh_[n].v2 = v0 + dv;
           dv.x1 = dx.x1 ; dv.x2 = dx.x2; dv.x3 = 0.0   ;  hmesh_[n].v3 = v0 + dv;
           dv.x1 = 0.0   ; dv.x2 = dx.x2; dv.x3 = 0.0   ;  hmesh_[n].v4 = v0 + dv;
-          dv.x1 = v0.x1 ; dv.x2 = 0.0  ; dv.x3 = dx.x3 ;  hmesh_[n].v5 = v0 + dv;
-          dv.x1 = v0.x1 ; dv.x2 = dx.x2; dv.x3 = dx.x3 ;  hmesh_[n].v6 = v0 + dv;
-          dv.x1 = v0.x1 ; dv.x2 = dx.x2; dv.x3 = dx.x3 ;  hmesh_[n].v7 = v0 + dv;
-          dv.x1 = v0.x1 ; dv.x2 = 0.0  ; dv.x3 = dx.x3 ;  hmesh_[n].v8 = v0 + dv;
+          dv.x1 = 0.0   ; dv.x2 = 0.0  ; dv.x3 = dx.x3 ;  hmesh_[n].v5 = v0 + dv;
+          dv.x1 = dx.x1 ; dv.x2 = 0.0  ; dv.x3 = dx.x3 ;  hmesh_[n].v6 = v0 + dv;
+          dv.x1 = dx.x1 ; dv.x2 = dx.x2; dv.x3 = dx.x3 ;  hmesh_[n].v7 = v0 + dv;
+          dv.x1 = 0.0   ; dv.x2 = dx.x2; dv.x3 = dx.x3 ;  hmesh_[n].v8 = v0 + dv;
           n++;
         }
       }
