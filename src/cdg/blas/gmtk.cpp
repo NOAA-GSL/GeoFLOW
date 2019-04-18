@@ -823,15 +823,15 @@ template<>
 void D3_X_Dg2_X_Dg1<GDOUBLE>(GTVector<GDOUBLE> &Dg1, GTVector<GDOUBLE> &Dg2, GTMatrix<GDOUBLE> &D3T,
                            GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &tmp, GTVector<GDOUBLE> &y)
 {
-  GSIZET N1, N2, N21, N22, N31, N32, NN, NXY, NYZ;
+  GSIZET N1, N2, N31, N32, NN, NXY, NYZ;
 
   N1  = Dg1.size();
   N2  = Dg2.size();
   N31 = D3T.size(1);
   N32 = D3T.size(2);
-  NXY = N1*N21;
-  NYZ = N21*N31;
-  NN  = N1*N21*N31;
+  NXY = N1*N2;
+  NYZ = N2*N31;
+  NN  = N1*N2*N31;
 #if defined(GARRAY_BOUNDS)
   if ( u.size() < NN  || y.size() < NN ) {
     cout <<"D3_X_Dg2_X_Dg1: incompatible vectors" << endl;
