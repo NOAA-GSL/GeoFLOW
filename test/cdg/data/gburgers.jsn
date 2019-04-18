@@ -1,8 +1,8 @@
 { 
-  "exp_order"      : [3, 3],
+  "exp_order"      : [2, 2, 2],
   "exp_order_type" : "constant",
   "grid_type"      : "grid_box",
-  "init_block"     : "init_nwave",
+  "init_block"     : "init_lump",
   "bdy_conditions" : "DIRICHLET",
   "restart_index"  : 0,
   "benchmark"      : false,
@@ -32,10 +32,10 @@
   },
   "adv_equation_traits": {
     "doheat"     : false,
-    "bpureadv"   : false,
+    "bpureadv"   : true,
     "bconserved" : false,
     "use_forcing": false,
-    "variable_dt": true,
+    "variable_dt": false,
     "courant"    : 0.04 ,
     "adv_vel"    : [1.0, 0.0, 0.0]
   },
@@ -57,7 +57,7 @@
     "grid_name" : "grid_box",
     "xyz0"      : [0.0, 0.0, 0.0],
     "delxyz"    : [1.0, 1.0, 1.0],
-    "num_elems" : [16, 16, 1],
+    "num_elems" : [2, 2, 2],
     "bdy_x_0"   : "GBDY_DIRICHLET",
     "bdy_x_1"   : "GBDY_DIRICHLET",
     "bdy_y_0"   : "GBDY_DIRICHLET",
@@ -78,11 +78,11 @@
     "observer_name"   : "posixio_observer",
     "indirectory"     : "outs",
     "outdirectory"    : "outs",
-    "cadence_type"    : "time",
-    "cycle_interval"  : 5,
+    "cadence_type"    : "cycle",
+    "cycle_interval"  : 1,
     "time_interval"   : 0.01,
-    "state_index"     : [0, 1],
-    "state_names"     : ["u1", "u2"],
+    "state_index"     : [0],
+    "state_names"     : ["u1", "u2", "u3"],
     "grid_names"      : ["xgrid", "ygrid", "zgrid"],
     "time_field_width": 6,
     "task_field_width": 5,
@@ -95,9 +95,9 @@
     "interval_freq_fact" : 2.0
   },
   "time_integration": {
-    "integ_type" : "time",
+    "integ_type" : "cycle",
     "time_end"   : 0.5,
-    "cycle_end"  : 21,
+    "cycle_end"  : 1,
     "dt"         : 1.0e-4
   }
 
