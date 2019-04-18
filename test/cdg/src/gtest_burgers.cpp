@@ -371,8 +371,8 @@ int main(int argc, char **argv)
     
     compute_analytic(*grid_, t, ptree, ua_); // analyt soln at t
     
-    GTVector<GINT> istate(nstate);
-    for ( GSIZET j=0; j<nstate; j++ ) istate[j] = j;
+    GTVector<GINT> istate(nsolve);
+    for ( GSIZET j=0; j<nsolve; j++ ) istate[j] = j;
 GIOTraits iot;
 iot.nelems = grid_->nelems();
 iot.gtype  = grid_->gtype();
