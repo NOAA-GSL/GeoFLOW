@@ -38,7 +38,7 @@ using namespace std;
 #endif
 
 GGrid *grid_ = NULLPTR;
-void init_ggfx(GGrid &grid, GGFX &ggfx);
+void init_ggfx(GGrid &grid, GGFX<GFTYPE> &ggfx);
 
 int main(int argc, char **argv)
 {
@@ -52,6 +52,7 @@ int main(int argc, char **argv)
     GSIZET maxSteps;
     GFTYPE radiusi=1, radiuso=2;
     std::vector<GINT> ne(3); // # elements in each direction in 3d
+    std::vector<GINT> pstd(GDIM);  
     GString sgrid;// name of JSON grid object to use
     GC_COMM comm = GC_COMM_WORLD;
 
@@ -68,7 +69,7 @@ int main(int argc, char **argv)
     ptree.load_file("input.jsn");       // main param file structure
     // Create other prop trees for various objects:
     sgrid       = ptree.getValue<GString>("grid_type");
-    np          = ptree.getValue<GINT>("exp_order");
+    pstd        = ptree.getArray<GINT>("exp_order");
     gridptree   = ptree.getPropertyTree(sgrid);
 
     ne          = gridptree.getArray<GINT>("num_elems");  // may be modified by command line
@@ -108,6 +109,7 @@ int main(int argc, char **argv)
           break;
       case 'p': // get nodal exp order
           np = atoi(optarg);
+          pstd.assign(GDIM,np);
           ptree.setValue<GINT>("exp_order",np);
           break;
       case 'h': // help
@@ -140,19 +142,19 @@ int main(int argc, char **argv)
     // Create basis:
     GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis(GDIM);
     for ( GSIZET k=0; k<GDIM; k++ ) {
-      gbasis [k] = new GLLBasis<GCTYPE,GFTYPE>(np);
+      gbasis [k] = new GLLBasis<GCTYPE,GFTYPE>(pstd[k]);
     }
     
     GPTLstart("gen_grid");
     // Create grid:
-    grid_ = GGridFactory::build(gridptree, gbasis, comm);
+    grid_ = GGridFactory::build(ptree, gbasis, comm);
     GPTLstop("gen_grid");
 
 
 
     GPTLstart("do_gather_op");
     // Initialize gather/scatter operator:
-    GGFX ggfx;
+    GGFX<GFTYPE> ggfx;
     init_ggfx(*grid_, ggfx);
     GPTLstop("do_gather_op");
 
@@ -329,7 +331,7 @@ cout << "main: gnorm[" << j << "]=" << gnorm << endl;
 // ARGS  : grid    : GGrid object
 //         ggfx    : gather/scatter op, GGFX
 //**********************************************************************************
-void init_ggfx(GGrid &grid, GGFX &ggfx)
+void init_ggfx(GGrid &grid, GGFX<GFTYPE> &ggfx)
 {
   GFTYPE                         delta;
   GMorton_KeyGen<GNODEID,GFTYPE> gmorton;
