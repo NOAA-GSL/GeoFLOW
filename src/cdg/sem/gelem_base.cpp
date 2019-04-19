@@ -1093,7 +1093,7 @@ void GElem_base::dogeom3d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
   // Can have 'embedded' coords, so # Cartesian coordinates may not be GDIM;
   // but the total number of node points in each metrix element will 
   // still be (h1-order+1) X (h2-order+1):
-  GSIZET nxy = elemtype_ == GDIM;
+  GSIZET nxy = GDIM;
   if ( elemtype_ == GE_DEFORMED ) {
     rij.resizem(nxy,nxy);
 //  irij.resize(nxy,nxy);
