@@ -199,6 +199,8 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const State &u
   assert(!bconserved_ &&
          "conservation not yet supported"); 
 
+  GString serr = "GBurgers<TypePack>::dudt_impl: ";
+
   // NOTE:
   // Make sure that, in init(), Helmholtz op is using only
   // weak Laplacian (q * mass isn't being used), or there will 
