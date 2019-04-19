@@ -61,6 +61,8 @@ struct EquationTypes {
 };
 
 GBOOL  bench_=FALSE;
+GINT   nstate_=GDIM;  // number 'state' arrays
+GINT   nsolve_=GDIM;  // number *solved* 'state' arrays
 GGrid *grid_;
 GTVector<GTVector<GFTYPE>*> u_;
 GTVector<GTVector<GFTYPE>*> c_;
@@ -103,8 +105,6 @@ int main(int argc, char **argv)
     GINT   iopt;
     GINT   ilevel=0;// 2d ICOS refinement level
     GINT   np=1;    // elem 'order'
-    GINT   nstate=GDIM;  // number 'state' arrays
-    GINT   nsolve=GDIM;  // number *solved* 'state' arrays
     GSIZET itindex=0;    // restart flag/index
     GSIZET icycle=0;       // curr time cycle
     GFTYPE tt;
@@ -269,14 +269,14 @@ int main(int argc, char **argv)
 
     // Create state and tmp space:
     EH_MESSAGE("main: set up tmp space...");
-    if      ( solver_traits.doheat   ) { nstate =  nsolve = 1; } 
-    else if ( solver_traits.bpureadv ) { nstate = GDIM + 1; nsolve = 1;} // 1-state + GDIM  v-components
+    if      ( solver_traits.doheat   //) { nstate_ =  nsolve = 1; } 
+           || solver_traits.bpureadv ) { nstate_ = GDIM + 1; nsolve_ = 1;} // 1-state + GDIM  v-components
     utmp_.resize(24);
-    uold_.resize(nsolve);
-    u_.resize(nstate);
-    ua_.resize(nsolve);
-    ub_.resize(nsolve);
-    uf_.resize(nsolve); uf_ = NULLPTR;
+    uold_.resize(nsolve_);
+    u_ .resize(nstate_);
+    ua_.resize(nstate_);
+    ub_.resize(nsolve_);
+    uf_.resize(nsolve_); uf_ = NULLPTR;
     c_ .resize(GDIM);
     for ( GSIZET j=0; j<uold_.size(); j++ ) uold_[j] = new GTVector<GFTYPE>(grid_->size());
     for ( GSIZET j=0; j<utmp_.size(); j++ ) utmp_[j] = new GTVector<GFTYPE>(grid_->size());
@@ -285,7 +285,7 @@ int main(int argc, char **argv)
     for ( GSIZET j=0; j<ub_  .size(); j++ ) ub_  [j] = new GTVector<GFTYPE>(grid_->nbdydof());
     if ( solver_traits.bforced )
     for ( GSIZET j=0; j<ub_  .size(); j++ ) uf_  [j] = new GTVector<GFTYPE>(grid_->nbdydof());
-    if ( solver_traits.bpureadv ) 
+    if ( solver_traits.bpureadv || solver_traits.doheat ) 
     for ( GSIZET j=0; j<c_   .size(); j++ ) c_   [j] = u_[j+1];
 
     // Create equation set:
@@ -356,7 +356,7 @@ int main(int argc, char **argv)
     EH_MESSAGE("main: gather errors...");
     GPP(comm_,"main: gather errors...");
     GTVector<GFTYPE> lnorm(3), gnorm(3), maxerror(3);
-    GTVector<GFTYPE> nnorm(nsolve);
+    GTVector<GFTYPE> nnorm(nsolve_);
     GString sdir = ".";
     
     maxerror = 0.0;
@@ -364,15 +364,15 @@ int main(int argc, char **argv)
     nnorm    = 1.0;
 
 
-    for ( GSIZET j=0; j<nsolve; j++ ) { //local errors
+    for ( GSIZET j=0; j<nsolve_; j++ ) { //local errors
       ua_[j]->pow(2);
       nnorm[j] = grid_->integrate(*ua_  [j],*utmp_[0]) ; // L2 norm of analyt soln at t=0
     }
     
     compute_analytic(*grid_, t, ptree, ua_); // analyt soln at t
     
-    GTVector<GINT> istate(nsolve);
-    for ( GSIZET j=0; j<nsolve; j++ ) istate[j] = j;
+    GTVector<GINT> istate(nsolve_);
+    for ( GSIZET j=0; j<nsolve_; j++ ) istate[j] = j;
 
 #if 1
 GIOTraits iot;
@@ -488,7 +488,7 @@ void update_dirichlet(const GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u, GTVector<
 
   // ...GBDY_DIRICHLET:
   // Set from State vector, ua_:
-  for ( GSIZET k=0; k<ua_.size(); k++ ) { 
+  for ( GSIZET k=0; k<nsolve_; k++ ) { 
     for ( GSIZET j=0; j<(*igbdy)[GBDY_DIRICHLET].size(); j++ ) {
       (*ub[k])[j] = (*ua_[k])[(*igbdy)[GBDY_DIRICHLET][j]];
     }
