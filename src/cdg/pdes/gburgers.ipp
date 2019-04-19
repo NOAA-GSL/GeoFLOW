@@ -266,7 +266,7 @@ void GBurgers<TypePack>::step_impl(const Time &t, State &uin, State &uf, State &
 {
 
   // Set evolved state vars from input state:
-  if ( bpureadv_ ) {
+  if ( bpureadv_ || doheat_ ) {
     uevolve_[0] = uin[0];
     for ( auto j=0; j<c_.size(); j++ ) c_ [j] = uin[j+1];
   }
@@ -378,7 +378,7 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
   GString serr = "GBurgers<TypePack>::init: ";
 
   GBOOL  bmultilevel = FALSE;
-  GSIZET n, nstate = bpureadv_ ? 1 : u.size();
+  GSIZET n, nstate = bpureadv_ || doheat_ ? 1 : u.size();
   GINT   nop;
 
   // Find multistep/multistage time stepping coefficients:
@@ -389,7 +389,7 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
   // components from input state vector, so
   // allocate size:
   uevolve_.resize(u.size()); 
-  if ( bpureadv_ ) {
+  if ( bpureadv_ || doheat_ ) {
     c_.resize(GDIM);    // adevective vel components
     uevolve_.resize(1); // state var to evolve
   }
