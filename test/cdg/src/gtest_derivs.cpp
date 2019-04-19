@@ -65,12 +65,14 @@ int main(int argc, char **argv)
     // certain command line args:
     PropertyTree ptree;     // main prop tree
     PropertyTree gridptree; // grid prop tree
+    PropertyTree polyptree; // poly_test prop tree
 
     ptree.load_file("input.jsn");       // main param file structure
     // Create other prop trees for various objects:
     sgrid       = ptree.getValue<GString>("grid_type");
     pstd        = ptree.getArray<GINT>("exp_order");
     gridptree   = ptree.getPropertyTree(sgrid);
+    polyptree   = ptree.getPropertyTree("poly_test");
 
     ne          = gridptree.getArray<GINT>("num_elems");  // may be modified by command line
 
@@ -172,7 +174,9 @@ int main(int argc, char **argv)
 
     // Initialize u: set p, q, r exponents
     // (Can set up to read from input file):
-    GFTYPE p=10, q=10, r=0; 
+    GFTYPE p=polyptree.getValue("xpoly",1);
+    GFTYPE q=polyptree.getValue("ypoly",0);
+    GFTYPE r=polyptree.getValue("zpoly",0);
     GFTYPE x, y, z=1.0;
     GTVector<GFTYPE> etmp1;
     GTVector<GTVector<GFTYPE>> *xnodes = &grid_->xNodes();   
@@ -269,6 +273,7 @@ int main(int argc, char **argv)
     for ( GSIZET j=0; j<GDIM; j++ ) { //local errors
       for ( GSIZET i=0; i<da[j]->size(); i++ ) (*utmp[0])[i] = pow((*da[j])[i],2);
       nnorm = grid_->integrate(*utmp[0], *utmp[1]);
+      nnorm = nnorm > std::numeric_limits<GFTYPE>::epsilon() ? nnorm : 1.0;
 cout << "main: nnorm=" << nnorm << endl;
 cout << "main: da[" << j << "]=" << *da[j] << endl;
 cout << "main: du[" << j << "]=" << *du[j] << endl;
@@ -289,7 +294,7 @@ cout << "main: gnorm[" << j << "]=" << gnorm << endl;
     cout << "main: maxerror = " << maxerror << endl;
    
     GComm::Allreduce(&lnelems, &gnelems, 1, T2GCDatatype<GSIZET>() , GC_OP_SUM, comm);
-    if ( maxerror[2] > 10*std::numeric_limits<GFTYPE>::epsilon() ) {
+    if ( maxerror[2] > 100.0*std::numeric_limits<GFTYPE>::epsilon() ) {
       std::cout << "main: -------------------------------------derivative FAILED" << std::endl;
       errcode = 1;
     } else {
