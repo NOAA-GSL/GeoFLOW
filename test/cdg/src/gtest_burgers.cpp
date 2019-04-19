@@ -656,9 +656,9 @@ void compute_dirgauss_lump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
 
   // Prepare for case where sig is anisotropic (for later, maybe):
   for ( GSIZET k=0; k<GDIM; k++ ) {
-    sig  [k] = sqrt(sig0*sig0 + 2.0*t*nu_[0]); // scalar viscosity only
+    sig  [k] = sqrt(sig0*sig0 + 2.0*t*nu_[0]); // constant viscosity only
     si   [k] = 0.5/(sig[k]*sig[k]);
-    ufact[k] = u0*pow(sig0,2)/pow(sig[k],2);
+    ufact[k] = u0*pow(sig0/sig[k],GDIM);
   }
 
   // Ok, return to assumption of isotropic nu: 
@@ -671,7 +671,7 @@ void compute_dirgauss_lump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
    (*ua[0])[j] = ufact[0]*exp(argxp);
   }
 
-  GPP(comm_,serr << "ua=" << *ua[0] );
+//GPP(comm_,serr << "ua=" << *ua[0] );
   
 } // end, compute_dirgauss_lump
 
