@@ -658,7 +658,7 @@ void compute_dirgauss_lump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
   for ( GSIZET k=0; k<GDIM; k++ ) {
     sig  [k] = sqrt(sig0*sig0 + 4.0*t*nu_[0]); // constant viscosity only
     si   [k] = 1.0/(sig[k]*sig[k]);
-    ufact[k] = u0*pow(sig0/sig[k],GDIM/2.0);
+    ufact[k] = u0*pow(sig0/sig[k],GDIM);
   }
 
   // Ok, return to assumption of isotropic nu: 
