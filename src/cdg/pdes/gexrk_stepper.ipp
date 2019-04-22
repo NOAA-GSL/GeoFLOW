@@ -96,6 +96,7 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &uf, State &ub
       n++;
     }
   }
+
  
   for ( m=0; m<nstage_-1; m++ ) { // cycle thru stages minus 1
     // Compute k_m:
@@ -106,9 +107,6 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &uf, State &ub
       for ( j=0,*isum=0.0; j<m; j++ )
         GMTK::saxpby(*isum,  1.0, *K_[j][n], (*beta)(m,j)*h);
      *u[n]  = (*uin[n]) + (*isum);
-      if ( ggfx_ != NULLPTR ) {
-        ggfx_->doOp(*u[n], GGFX_OP_SMOOTH);
-      }
     }
 
     if ( bupdatebc_ ) bdy_update_callback_(tt, u, ub); 
@@ -118,6 +116,9 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &uf, State &ub
     // x^n+1 = x^n + h Sum_i=1^m c_i K_i, so
     // accumulate the sum in uout here: 
     for ( n=0; n<nstate; n++ ) { // for each state member, u
+      if ( ggfx_ != NULLPTR ) {
+        ggfx_->doOp(*K_[m][n], GGFX_OP_SMOOTH);
+      }
       *isum     = (*K_[m][n])*( (*c)[m]*h );
       *uout[n] += *isum; // += h * c_m * k_m
     }
@@ -131,14 +132,23 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &uf, State &ub
      *u[n] = (*uin[n]) + (*isum);
    }
 
+#if 0
    if ( ggfx_ != NULLPTR ) {
      for ( n=0; n<nstate; n++ ) { // for each state member, u
        ggfx_->doOp(*u[n], GGFX_OP_SMOOTH);
      }
    }
+#endif
+
    if ( bupdatebc_ ) bdy_update_callback_(tt, u, ub); 
    if ( bapplybc_  ) bdy_apply_callback_ (tt, u, ub); 
    rhs_callback_( tt, u, uf, ub, h, K_[0]); // k_M at stage M
+
+   if ( ggfx_ != NULLPTR ) {
+     for ( n=0; n<nstate; n++ ) { // for each state member, uout
+       ggfx_->doOp(*K_[0][n], GGFX_OP_SMOOTH);
+     }
+   }
 
    // Compute final output state, and set its bcs and
    // H1-smooth it:
@@ -147,13 +157,13 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &uf, State &ub
     *uout[n] += *isum; // += h * c_M * k_M
    }
    if ( bapplybc_  ) bdy_apply_callback_ (tt, uout, ub); 
-#if 1
+
    if ( ggfx_ != NULLPTR ) {
      for ( n=0; n<nstate; n++ ) { // for each state member, uout
        ggfx_->doOp(*uout[n], GGFX_OP_SMOOTH);
      }
    }
-#endif
+
    if ( bapplybc_  ) bdy_apply_callback_ (tt, uout, ub); 
   
 } // end of method step (1)
