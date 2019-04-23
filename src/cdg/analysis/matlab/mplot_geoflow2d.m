@@ -35,7 +35,9 @@ for itask = 0:ntasks-1
     fname = sprintf('%s.%05d.out', scoord{j}, itask)
     [x{j} dim nelems porder gtype icycle time] = rgeoflow(fname, 8, 'ieee-le');
   end
- 
+  if ( dim ~= 2 )
+    error('Grid must be 2D');
+  end 
 
   fname = sprintf('%s.%06d.%05d.out', svar, tindex, itask);
   [u dim nelems porder gtype icycle time] = rgeoflow(fname, 8, 'ieee-le');
@@ -44,8 +46,8 @@ for itask = 0:ntasks-1
   end
 
  
-  NN = double(porder + 1);
-  lelem = prod(NN);  % data length per element
+  NN = double(porder + 1); 
+  lelem = prod(NN(1:dim))  % data length per element
 
 
   % Cycle over elems, and plot 'patches':
