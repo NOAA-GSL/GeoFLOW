@@ -421,7 +421,7 @@ for ( GSIZET j=0; j<GDIM; j++ ) iot.porder(0,j) = gbasis[j]->getOrder();
         ios << "#ntasks" << "  ";
         ios << "ncyc"    << "  ";
         ios << "var_dt"  << "  ";
-        for ( GSIZET j=0; j<pstd.size(); j++ ) ios << "p" << j+1 << "  ";
+        for ( GSIZET j=0; j<GDIM(); j++ ) ios << "p" << j+1 << "  ";
         ios << "num_elems      inf_err     L1_err      L2_err" << std::endl;
       }
       itst.close();
@@ -429,7 +429,7 @@ for ( GSIZET j=0; j<GDIM; j++ ) iot.porder(0,j) = gbasis[j]->getOrder();
       ios << ntasks << "  " ;
       ios << pIntegrator->get_numsteps()  << "  ";
       ios << solver_traits.variabledt << "  ";
-      for ( GSIZET j=0; j<pstd.size(); j++ ) ios << pstd[j] << "  ";
+      for ( GSIZET j=0; j<GDIM; j++ ) ios << pstd[j] << "  ";
       ios << gsz[0] << "  "
           << "  " << maxerror[0] << "  " << maxerror[1] << "  " << maxerror[2]
           << std::endl;
