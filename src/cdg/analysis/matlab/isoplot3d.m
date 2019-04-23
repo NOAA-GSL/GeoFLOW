@@ -29,6 +29,10 @@ if ntasks<= 0
   error('Grid data missing or incomplete');
 end
 
+umax = -1e35;
+umin =  1e35;
+
+
 for itask = 0:ntasks-1
 
   % Read node coords:
@@ -47,8 +51,6 @@ for itask = 0:ntasks-1
  
   NN = double(porder + 1);
   lelem = prod(NN(1:dim));  % data length per element
-
-  umax = 0.0;
 
   % Cycle over elems, and plot 'patches':
   icurr = 1;
@@ -74,34 +76,34 @@ for itask = 0:ntasks-1
     V    = uu;
     [pxyz, I] = unique(pxyz,'rows');
     V         = uu(I);
-if 0
-    qx   = min(xx(:)) : 0.5*dxx : max(xx(:));
-    qy   = min(yy(:)) : 0.5*dyy : max(yy(:));
-    qz   = min(zz(:)) : 0.5*dzz : max(zz(:));
-    [xxi,yyi,zzi] = meshgrid(qx,qy,qz);
-else
-sprintf('sort...')
+
+    umax = max(umax, min(abs(uu(:))));
+    umin = min(umin, min(abs(uu(:))));
+
+%sprintf('sort...')
     xm = unique(sort(xx(I))); 
     ym = unique(sort(yy(I))); 
     zm = unique(sort(zz(I)));
-sprintf('do meshgrid...')
+%sprintf('do meshgrid...')
     [xxi,yyi,zzi] = meshgrid(xm,ym,zm);
     pixyz = [xxi yyi zzi];
-sprintf('meshgrid done.')
-end
+%sprintf('meshgrid done.')
+
 if 0
     F   = scatteredInterpolant(pxyz, V);
 %   F   = scatteredInterpolant(xx, yy, zz, uu);
     Vi   = F(xxi,yyi,zzi);
 else
-sprintf('do interp...')
+%sprintf('do interp...')
     F   = TriScatteredInterp(pxyz, V, 'natural');
 %%  F   = TriScatteredInterp(xx, yy, zz, uu);
     Vi  = F(xxi,yyi,zzi);
 %   Vi  = griddatan(pxyz, V, pixyz); 
-sprintf('interp done.')
+%sprintf('interp done.')
 end
-sprintf('do isosurface...')
+%sprintf('do smoothing...')
+%   Vi = smooth3(Vi, 'gaussian',5);
+%sprintf('do isosurface...')
     p = patch( isosurface( xxi, yyi, zzi, Vi, isoval ) );
     isonormals(xxi, yyi, zzi, Vi, p);
 %   p.FaceColor = 'blue';
@@ -111,16 +113,20 @@ sprintf('do isosurface...')
     hold on
     icurr = icurr + lelem ; 
 
-    umax = max(umax, max(abs(uu(:))));
     
   end % end, elem loop
   
-  umax
 
 end % end, task loop
+
+sprintf('data range: (%f, %f)', umin, umax)
+if isoval > umax || isoval < umin 
+  warning(sprintf('Desired isoval=%f ourside data range',isoval));
+end
 
 view(3)
 axis equal
 axis tight
 camlight
 lighting phong
+%lighting gouraud
