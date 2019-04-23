@@ -421,7 +421,7 @@ for ( GSIZET j=0; j<GDIM; j++ ) iot.porder(0,j) = gbasis[j]->getOrder();
         ios << "#ntasks" << "  ";
         ios << "ncyc"    << "  ";
         ios << "var_dt"  << "  ";
-        for ( GSIZET j=0; j<GDIM(); j++ ) ios << "p" << j+1 << "  ";
+        for ( GSIZET j=0; j<GDIM; j++ ) ios << "p" << j+1 << "  ";
         ios << "num_elems      inf_err     L1_err      L2_err" << std::endl;
       }
       itst.close();
