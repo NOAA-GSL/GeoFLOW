@@ -32,6 +32,7 @@ end
 umax = -realmax;
 umin =  realmax;
 
+hwait = waitbar(0, 'Please wait...');
 
 for itask = 0:ntasks-1
 
@@ -113,12 +114,12 @@ end
     hold on
     icurr = icurr + lelem ; 
 
-    
   end % end, elem loop
-  fprintf(1, '\b%d', itask); pause(0.1); % monitor read progress
   
+  waitbar(itask/ntasks,h);
 
 end % end, task loop
+close(hwait);
 
 sprintf('data range: (%f, %f)', umin, umax)
 if isoval > umax || isoval < umin 
