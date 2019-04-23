@@ -1,4 +1,4 @@
-function h = isoplot3(svar, tindex, isoval)
+function h = isoplot3d(svar, tindex, isoval)
 %
 % Does a isosurface plot of 2D GeoFLOW data
 %
@@ -40,6 +40,9 @@ for itask = 0:ntasks-1
   for j=1:3
     fname = sprintf('%s.%05d.out', scoord{j}, itask)
     [x{j} dim nelems porder gtype icycle time] = rgeoflow(fname, 8, 'ieee-le');
+    if ndm ~= 3
+      error('Grid dimension must be 3');
+    end
   end
  
 
