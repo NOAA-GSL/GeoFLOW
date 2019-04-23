@@ -29,8 +29,8 @@ if ntasks<= 0
   error('Grid data missing or incomplete');
 end
 
-umax = -1e35;
-umin =  1e35;
+umax = -realmax;
+umin =  realmax;
 
 
 for itask = 0:ntasks-1
