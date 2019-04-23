@@ -115,6 +115,7 @@ end
 
     
   end % end, elem loop
+  fprintf(1, '\b%d', itask); pause(0.1); % monitor read progress
   
 
 end % end, task loop
@@ -124,7 +125,7 @@ if isoval > umax || isoval < umin
   warning(sprintf('Desired isoval=%f ourside data range',isoval));
 end
 
-view(3)
+view(30,30)
 axis equal
 axis tight
 camlight
