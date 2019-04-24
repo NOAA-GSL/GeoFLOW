@@ -279,7 +279,7 @@ int main(int argc, char **argv)
     ua_.resize(nstate_);
     ub_.resize(nsolve_);
     uf_.resize(nsolve_); uf_ = NULLPTR;
-    c_ .resize(GDIM);
+    c_ .resize(sgrid == "grid_icos" ? 3 : GDIM);
     for ( GSIZET j=0; j<uold_.size(); j++ ) uold_[j] = new GTVector<GFTYPE>(grid_->size());
     for ( GSIZET j=0; j<utmp_.size(); j++ ) utmp_[j] = new GTVector<GFTYPE>(grid_->size());
     for ( GSIZET j=0; j<u_   .size(); j++ ) u_   [j] = new GTVector<GFTYPE>(grid_->size());
@@ -696,18 +696,18 @@ void compute_gauss_icoslump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  
   GFTYPE           argxp; 
   GFTYPE           lat, lon;
   GFTYPE           nxy, rad, sig0, u0;
-  GTVector<GFTYPE> xx(GDIM), si(GDIM), sig(GDIM), ufact(GDIM);
+  GTVector<GFTYPE> xx(3), si(3), sig(3), ufact(3);
   GTPoint<GFTYPE>  r0(3);
 
   PropertyTree lumpptree = ptree.getPropertyTree("init_icoslump");
-  PropertyTree icosptree = ptree.getPropertyTree("gird_icos");
+  PropertyTree icosptree = ptree.getPropertyTree("grid_icos");
   PropertyTree advptree  = ptree.getPropertyTree("adv_equation_traits");
   GBOOL doheat   = advptree.getValue<GBOOL>("doheat");
   GBOOL bpureadv = advptree.getValue<GBOOL>("bpureadv");
 
   GTVector<GTVector<GFTYPE>> *xnodes = &grid_->xNodes();
 
-  assert(grid.gtype() == GE_REGULAR && "Invalid element types");
+  assert(grid.gtype() == GE_2DEMBEDDED && "Invalid element types");
 
   std::vector<GFTYPE> cs;
   if ( bpureadv ) {
