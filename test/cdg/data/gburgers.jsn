@@ -1,7 +1,7 @@
 { 
   "exp_order"      : [2, 2, 2],
   "exp_order_type" : "constant",
-  "grid_type"      : "grid_box",
+  "grid_type"      : "grid_icos",
   "init_block"     : "init_lump",
   "bdy_conditions" : "DIRICHLET",
   "restart_index"  : 0,
@@ -19,6 +19,12 @@
     "z0"    : 0.5,
     "sigma" : 0.05,
     "u0"    : 1.0
+  },
+  "init_icoslump": {
+    "latitude0"  : 0.0,
+    "longitude0" : 0.0,
+    "sigma"      : 0.05,
+    "u0"         : 1.0
   },
   "init_nwave": {
     "x0"    : 0.5,
@@ -41,7 +47,7 @@
   },
   "grid_icos": {
     "grid_name" : "grid_icos",
-    "ilevel"    : 1.0,
+    "ilevel"    : 1,
     "radius"    : 1.0,
     "num_elems" : [10, 10, 10]
   },
@@ -57,7 +63,7 @@
     "grid_name" : "grid_box",
     "xyz0"      : [0.0, 0.0, 0.0],
     "delxyz"    : [1.0, 1.0, 1.0],
-    "num_elems" : [2, 2, 2],
+    "num_elems" : [8, 8, 2],
     "bdy_x_0"   : "GBDY_DIRICHLET",
     "bdy_x_1"   : "GBDY_DIRICHLET",
     "bdy_y_0"   : "GBDY_DIRICHLET",
