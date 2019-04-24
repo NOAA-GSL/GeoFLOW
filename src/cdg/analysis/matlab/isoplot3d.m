@@ -1,6 +1,7 @@
 function h = isoplot3d(svar, tindex, isoval)
 %
 % Does a isosurface plot of 2D GeoFLOW data
+% Grid type must be of type GE_REGULAR, with dim=3.
 %
 %  Usage:
 %    h  = isoplot3d('u1',10, 0.1)
@@ -40,8 +41,11 @@ for itask = 0:ntasks-1
   for j=1:3
     fname = sprintf('%s.%05d.out', scoord{j}, itask)
     [x{j} dim nelems porder gtype icycle time] = rgeoflow(fname, 8, 'ieee-le');
-    if ndm ~= 3
+    if dim ~= 3
       error('Grid dimension must be 3');
+    end
+    if ( gtype ~= 0 )
+      error('Grid must be GE_REGULAR');
     end
   end
  
@@ -119,7 +123,7 @@ end
 
   end % end, elem loop
   
-  waitbar(itask/ntasks,h);
+  waitbar(itask/ntasks,hwait);
 
 end % end, task loop
 close(hwait);
