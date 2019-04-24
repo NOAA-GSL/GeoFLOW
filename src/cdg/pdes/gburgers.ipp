@@ -379,6 +379,7 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
 
   GBOOL  bmultilevel = FALSE;
   GSIZET n, nstate = bpureadv_ || doheat_ ? 1 : u.size();
+  GSIZET nc = grid_->gtype() == GE_2DEMBEDDED ? 3 : GDIM;
   GINT   nop;
 
   // Find multistep/multistage time stepping coefficients:
@@ -390,7 +391,7 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
   // allocate size:
   uevolve_.resize(u.size()); 
   if ( bpureadv_ || doheat_ ) {
-    c_.resize(GDIM);    // adevective vel components
+    c_.resize(nc);    // adevective vel components
     uevolve_.resize(1); // state var to evolve
   }
 
@@ -492,12 +493,6 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
     assert( (gmass_   != NULLPTR
           && ghelm_   != NULLPTR
           && gadvect_ != NULLPTR) && "1 or more operators undefined");
-  }
-
-  // If doing linear advection, set up a helper vector for
-  // linear velocity:
-  if ( bpureadv_ ) { 
-    c_.resize(GDIM);
   }
 
   // If doing a multi-step method, instantiate (deep) space for 
