@@ -481,6 +481,9 @@ void GGrid::def_init()
    Jac_.resize(ndof());
    faceJac_.resize(nfacedof());
 
+   xNodes_.resize(nxy);
+   for ( GSIZET j=0; j<nxy; j++ ) xNodes_[j].resize(ndof());
+
    // Resize surface-point-wise normals:
    faceNormal_.resize(nxy); // no. coords for each normal at each face point
    bdyNormal_.resize(nxy); // no. coords for each normal at each face point
