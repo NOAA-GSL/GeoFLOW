@@ -185,7 +185,7 @@ void GHelmholtz::def_prod(GTVector<GFTYPE> &u,
 // METHOD : embed_prod
 // DESC   : Compute application of this operator to input vector for
 //          GE_2DEMBEDDED elements
-//          NOTE: must have GDIM+3 utmp vectors set via set_tmp method
+//          NOTE: must have 2*GDIM+3 utmp vectors set via set_tmp method
 // ARGS   : u  : input vector
 //          uo : output (result) vector
 //          utmp: tmp space
@@ -196,10 +196,10 @@ void GHelmholtz::embed_prod(GTVector<GFTYPE> &u,
                             GTVector<GTVector<GFTYPE>*> &utmp,
                             GTVector<GFTYPE> &uo)
 {
-  assert( GDIM == 2 && utmp.size() >= GDIM+3
+  assert( GDIM == 2 && utmp.size() >= 2*GDIM+3
        && "Insufficient temp space specified");
 
-  GTVector<GTVector<GFTYPE>*> gdu(GDIM);
+  GTVector<GTVector<GFTYPE>*> gdu(GDIM+1);
   GElemList *gelems=&grid_->elems();
 
   // Must compute:
@@ -224,17 +224,17 @@ void GHelmholtz::embed_prod(GTVector<GFTYPE> &u,
 // p is 'viscosity', M is mass matrix, and q a factor for M
 
   // Re-arrange local temp space for divergence:
-  for ( GSIZET i=0; i<GDIM; i++ ) gdu[i] = utmp[i+GDIM];
+  for ( GSIZET i=0; i<GDIM+1; i++ ) gdu[i] = utmp[i+GDIM+1];
 
   // Compute derivatives of u:
   GMTK::compute_grefderivs(*grid_, u, etmp1_, FALSE, utmp); // utmp stores tensor-prod derivatives, Dj u
   
   // Compute Gij (D^j u). Recall, Gij contain mass: 
-  for ( GSIZET i=0; i<GDIM; i++ ) { 
+  for ( GSIZET i=0; i<GDIM+1; i++ ) { 
     *utmp[GDIM+i] = 0.0;
-    for ( GSIZET j=0; j<GDIM; j++ ) {
+    for ( GSIZET j=0; j<GDIM+1; j++ ) {
       utmp[j]->pointProd(*G_(i,j), uo); // Gij * du^j
-      *utmp[GDIM+i] += uo;
+      *utmp[GDIM+1+i] += uo;
     }
   }
 
