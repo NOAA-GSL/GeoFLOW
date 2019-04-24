@@ -40,17 +40,18 @@ lshapefcn_             (NULLPTR)
   gbasis_ = b;
   lshapefcn_ = new GShapeFcn_linear();
   ilevel_  = ptree.getValue<GINT>("ilevel");
-  radiusi_ = ptree.getValue<GFTYPE>("radiusi");
-  radiuso_ = ptree.getValue<GFTYPE>("radiuso");
   
   if ( ndim_ == 2 ) {
     assert(GDIM == 2 && "GDIM must be 2");
+    radiusi_ = ptree.getValue<GFTYPE>("radius");
     init2d();
   }
   else if ( ndim_ == 3 ) {
     assert(GDIM == 3 && "GDIM must be 3");
     GTVector<GBdyType> bdytype(2);
     std::vector<GINT> ne(3);
+    radiusi_   = ptree.getValue<GFTYPE>("radiusi");
+    radiuso_   = ptree.getValue<GFTYPE>("radiuso");
     bdytype[0] = geoflow::str2bdytype(ptree.getValue<GString>("bdy_inner"));
     bdytype[1] = geoflow::str2bdytype(ptree.getValue<GString>("bdy_outer"));
     ne         = ptree.getArray<GINT>("num_elems");
