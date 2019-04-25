@@ -341,17 +341,13 @@ int main(int argc, char **argv)
     // via observer(s)):
     EH_MESSAGE("main: do time stepping...");
     GPP(comm_,"main: do time stepping...");
-    GTimerStart("time_loop");
 #if defined(_G_USE_GPTL)
     GPTLreset();
-    GComm::Synch(comm_);
 #endif
+    GTimerStart("time_loop");
 
     pIntegrator->time_integrate(t, uf_, ub_, u_);
 
-#if defined(_G_USE_GPTL)
-    GComm::Synch(comm_);
-#endif
     GTimerStop("time_loop");
     GPP(comm_,"main: time stepping done.");
 
@@ -448,9 +444,9 @@ for ( GSIZET j=0; j<GDIM; j++ ) iot.porder(0,j) = gbasis[j]->getOrder();
     do_bench("benchmark.txt", pIntegrator->get_numsteps());
  
 #if defined(_G_USE_GPTL)
-//  GPTLpr_file("timings.txt");
-    GPTLpr(myrank);
-//  GPTLpr_summary();
+//  GPTLpr(myrank);
+    GPTLpr_file("timings.txt");
+    GPTLpr_summary();
     GPTLfinalize();
 #endif
 
@@ -701,7 +697,7 @@ void compute_gauss_icoslump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  
   GFTYPE           alpha, argxp; 
   GFTYPE           lat, lon;
   GFTYPE           x, y, z, r;
-  GFTYPE           nxy, rad, sig0, u0;
+  GFTYPE           nxy, rad, sig0, u0, u, uc, v, vc;
   GTVector<GFTYPE> xx(3), si(3), sig(3), ufact(3);
   GTPoint<GFTYPE>  r0(3);
 
@@ -741,12 +737,19 @@ void compute_gauss_icoslump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  
   if ( bpureadv ) {
 //  for ( j=0; j<3; j++ ) *c_[j] = cs[j];
     for ( k=0; k<(*xnodes)[0].size(); k++ ) {
-      x = (*xnodes)[0][k]; y = (*xnodes)[1][k]; z = (*xnodes)[2][k];
-      r = sqrt(x*x + y*y + z*z);
-      lat         = asin(z/r);
-      lon         = atan2(y,x);
-      (*c_[0])[k] = u0*( cos(lat)*cos(alpha) + sin(lat)*cos(lon)*sin(alpha) );
-      (*c_[1])[k] = u0*( cos(lat)*cos(alpha) + sin(lat)*cos(lon)*sin(alpha) );
+      x   = (*xnodes)[0][k]; y = (*xnodes)[1][k]; z = (*xnodes)[2][k];
+      r   = sqrt(x*x + y*y + z*z);
+      // Colmpute lat & long:
+      lat = asin(z/r);
+      lon = atan2(y,x);
+      // Compute contravariant adv. vel components: vc_i = v_phys_i / sqrt(gii): 
+      uc  = u0*( cos(lat)*cos(alpha) + sin(lat)*cos(lon)*sin(alpha) ) / r;
+      vc  = u0*( cos(lat)*cos(alpha) + sin(lat)*cos(lon)*sin(alpha) ) / ( r*cos(lat) );
+      // Compute Cartesian components from spherical components,
+      // vi = dx_i/d\theta v^theta + dx_i/d\phi v^phi:
+      (*c_[0])[k] = -r*sin(lat)*cos(lon)*uc - r*cos(lat)*sin(lon)*vc;
+      (*c_[1])[k] = -r*sin(lat)*sin(lon)*uc + r*cos(lat)*cos(lon)*vc;
+      (*c_[2])[k] =  r*cos(lat)         *uc ;
     }
   }
 
