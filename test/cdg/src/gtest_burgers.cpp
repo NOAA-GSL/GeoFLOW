@@ -341,13 +341,18 @@ int main(int argc, char **argv)
     // via observer(s)):
     EH_MESSAGE("main: do time stepping...");
     GPP(comm_,"main: do time stepping...");
-
     GTimerStart("time_loop");
+#if defined(_G_USE_GPTL)
+    GPTLreset();
+    GComm::Synch(comm_);
+#endif
 
     pIntegrator->time_integrate(t, uf_, ub_, u_);
 
+#if defined(_G_USE_GPTL)
+    GComm::Synch(comm_);
+#endif
     GTimerStop("time_loop");
-    
     GPP(comm_,"main: time stepping done.");
 
     tt = 0.0;
