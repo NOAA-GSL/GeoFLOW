@@ -692,9 +692,10 @@ void compute_gauss_icoslump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  
 {
   GString          serr = "compute_gauss_icoslump: ";
   GBOOL            bContin;
-  GINT             j, n;
-  GFTYPE           argxp; 
+  GINT             j, k, n;
+  GFTYPE           alpha, argxp; 
   GFTYPE           lat, lon;
+  GFTYPE           x, y, z, r;
   GFTYPE           nxy, rad, sig0, u0;
   GTVector<GFTYPE> xx(3), si(3), sig(3), ufact(3);
   GTPoint<GFTYPE>  r0(3);
@@ -720,6 +721,7 @@ void compute_gauss_icoslump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  
   lat   = lumpptree.getValue<GFTYPE>("latitude0"); 
   lon   = lumpptree.getValue<GFTYPE>("longitude0"); 
   sig0  = lumpptree.getValue<GFTYPE>("sigma"); 
+  alpha = lumpptree.getValue<GFTYPE>("alpha",0.0); 
   u0    = lumpptree.getValue<GFTYPE>("u0"); 
 
   // Compute initial position of lump in Cart coords:
@@ -732,7 +734,15 @@ void compute_gauss_icoslump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  
   for ( j=0; j<3; j++ ) *c_ [j] = 0.0;
  
   if ( bpureadv ) {
-     for ( j=0; j<3; j++ ) *c_[j] = cs[j];
+//  for ( j=0; j<3; j++ ) *c_[j] = cs[j];
+    for ( k=0; k<(*xnodes)[0].size(); k++ ) {
+      x = (*xnodes)[0][k]; y = (*xnodes)[1][k]; z = (*xnodes)[2][k];
+      r = sqrt(x*x + y*y + z*z);
+      lat         = asin(z/r);
+      lon         = atan2(y,x);
+      (*c_[0])[k] = u0*( cos(lat)*cos(alpha) + sin(lat)*cos(lon)*sin(alpha) );
+      (*c_[1])[k] = u0*( cos(lat)*cos(alpha) + sin(lat)*cos(lon)*sin(alpha) );
+    }
   }
 
   // Prepare for case where sig is anisotropic (for later, maybe):
