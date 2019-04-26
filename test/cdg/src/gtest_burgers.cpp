@@ -736,7 +736,7 @@ void compute_gauss_icoslump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  
  
   if ( bpureadv ) {
 //  for ( j=0; j<3; j++ ) *c_[j] = cs[j];
-    for ( k=0; k<(*xnodes)[0].size(); k++ ) {
+    for ( k=0; k<nxy; k++ ) {
       x   = (*xnodes)[0][k]; y = (*xnodes)[1][k]; z = (*xnodes)[2][k];
       r   = sqrt(x*x + y*y + z*z);
       // Colmpute lat & long:
