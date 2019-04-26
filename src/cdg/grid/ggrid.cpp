@@ -468,6 +468,7 @@ void GGrid::def_init()
 
    GSIZET nxy = itype_[GE_2DEMBEDDED].size() > 0 ? GDIM+1 : GDIM;
    GTMatrix<GTVector<GFTYPE>> rijtmp;
+   GTVector<GTVector<GFTYPE>> *xe;
 
    // Resize geometric quantities to global size:
    dXidX_.resize(nxy,nxy);
@@ -500,6 +501,7 @@ void GGrid::def_init()
      ibeg  = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
      ifbeg = gelems_[e]->ifbeg(); ifend = gelems_[e]->ifend();
      ibbeg = gelems_[e]->ibbeg(); ibend = gelems_[e]->ibend();
+     xe    = &gelems_[e]->xNodes();
 
      // Restrict global arrays to local scope:
      for ( GSIZET j=0; j<nxy; j++ ) {
@@ -512,6 +514,12 @@ void GGrid::def_init()
      Jac_.range(ibeg, iend);
      faceJac_.range(ifbeg, ifend);
 
+     // Set global nodal Cart coords from element coords:
+     for ( GSIZET j=0; j<nxy; j++ ) {
+       xNodes_[j].range(ibeg, iend);
+       xNodes_[j] = (*xe)[j];
+     }
+
      // Set the geom/metric quantities using element data:
      if ( GDIM == 2 ) {
        gelems_[e]->dogeom2d(rijtmp, dXidX_, Jac_, faceJac_, faceNormal_, bdyNormal_);
@@ -519,6 +527,9 @@ void GGrid::def_init()
      else if ( GDIM == 3 ) {
        gelems_[e]->dogeom3d(rijtmp, dXidX_, Jac_, faceJac_, faceNormal_, bdyNormal_);
      }
+
+     // Zero-out local xe; only global allowed now:
+     for ( GSIZET j=0; j<nxy; j++ ) (*xe)[j].clear(); 
      
    } // end, element loop
 
@@ -534,6 +545,7 @@ void GGrid::def_init()
    }
    Jac_.range_reset();
    faceJac_.range_reset();
+   for ( GSIZET j=0; j<nxy; j++ ) xNodes_[j].range_reset();
 
    GComm::Synch(comm_);
    
@@ -606,8 +618,6 @@ void GGrid::reg_init()
      for ( GSIZET j=0; j<nxy; j++ ) {
        xNodes_[j].range(ibeg, iend);
        xNodes_[j] = (*xe)[j];
-        // Zero-out local xe; only global allowed now:
-      (*xe)[j].clear(); 
      }
 
 
@@ -619,6 +629,8 @@ void GGrid::reg_init()
        gelems_[e]->dogeom3d(rijtmp, dXidX_, Jac_, faceJac_, faceNormal_, bdyNormal_);
      }
       
+     // Zero-out local xe; only global allowed now:
+     for ( GSIZET j=0; j<nxy; j++ ) (*xe)[j].clear(); 
    } // end, element loop
 
    // Reset global scope:
