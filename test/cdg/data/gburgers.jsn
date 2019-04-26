@@ -2,7 +2,7 @@
   "exp_order"      : [2, 2, 2],
   "exp_order_type" : "constant",
   "grid_type"      : "grid_icos",
-  "init_block"     : "init_lump",
+  "init_block"     : "init_icoslump",
   "bdy_conditions" : "DIRICHLET",
   "restart_index"  : 0,
   "benchmark"      : false,
@@ -24,6 +24,7 @@
     "latitude0"  : 0.0,
     "longitude0" : 0.0,
     "sigma"      : 0.05,
+    "alpha"      : 0.0,
     "u0"         : 1.0
   },
   "init_nwave": {
@@ -103,7 +104,7 @@
   "time_integration": {
     "integ_type" : "cycle",
     "time_end"   : 0.5,
-    "cycle_end"  : 1,
+    "cycle_end"  : 10,
     "dt"         : 1.0e-4
   }
 
