@@ -398,15 +398,15 @@ void GHelmholtz::def_init()
   for ( GSIZET j=0; j<nxy; j++ ) {
     for ( GSIZET i=j; i<nxy; i++ ) {
       G_ (i,j) = new GTVector<GFTYPE>(grid_->ndof());
+     *G_ (i,j) = 0.0;
     }
-    for ( GSIZET i=0; i<j; i++ ) {
+    // symmetrize, without adding arrays:
+    for ( GSIZET i=0; i<j; i++ ) { 
       G_ (i,j) = G_(j,i);
     }
   }
 
-
   // Cycle through all elements; fill metric elements
-
 
   Jac = &grid_->Jac();
   dXidX = &grid_->dXidX();
@@ -429,14 +429,15 @@ void GHelmholtz::def_init()
 
 #if defined(_G_IS2D)
 
+    // G = Sum_k dxi^i/dx^k dxi^j/dx^k * Jac * W.
     for ( GSIZET j=0; j<nxy; j++ ) { // G matrix element col
       for ( GSIZET i=j; i<nxy; i++ ) { // G matrix element row
         (*G_(i,j)).range(ibeg, iend); // restrict global vec to local range
         for ( GSIZET k=0; k<nxy; k++ ) {
           for ( GSIZET m=0, n=0; m<N[1]; m++ ) {
             for ( GSIZET l=0; l<N[0]; l++,n++ ) {
-              (*G_(i,j))[n] = (*dXidX)(i,k)[n] * (*dXidX)(j,k)[n]
-                            * (*W[0])[l] * (*W[1])[m] * (*Jac)[n];
+              (*G_(i,j))[n] += (*dXidX)(i,k)[n] * (*dXidX)(j,k)[n]
+                             * (*W[0])[l] * (*W[1])[m] * (*Jac)[n];
             }
           }
         }
@@ -446,6 +447,7 @@ void GHelmholtz::def_init()
 
 #else
 
+    // G = Sum_k dxi^i/dx^k dxi^j/dx^k * Jac * W.
     for ( GSIZET j=0; j<nxy; j++ ) { // G matrix element col
       for ( GSIZET i=0; i<nxy; i++ ) { // G matrix element row
         (*G_(i,j)).range(ibeg, iend); // restrict global vec to local range
@@ -453,8 +455,8 @@ void GHelmholtz::def_init()
           for ( GSIZET p=0, n=0; p<N[2]; p++ ) {
             for ( GSIZET m=0; m<N[1]; m++ ) {
               for ( GSIZET l=0; l<N[0]; l++,n++ ) {
-                (*G_(i,j))[n] = (*dXidX)(i,k)[n] * (*dXidX)(j,k)[n]
-                              * (*W[0])[l] * (*W[1])[m] * (*W[2])[p] * (*Jac)[n];
+                (*G_(i,j))[n] += (*dXidX)(i,k)[n] * (*dXidX)(j,k)[n]
+                               * (*W[0])[l] * (*W[1])[m] * (*W[2])[p] * (*Jac)[n];
               }
             }
           }
