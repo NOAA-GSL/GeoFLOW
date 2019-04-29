@@ -466,6 +466,7 @@ void GGrid::def_init()
 {
    assert(gelems_.size() > 0 && "Elements not set");
 
+   GString serr = "GGrid::def_init: ";
    GSIZET nxy = itype_[GE_2DEMBEDDED].size() > 0 ? GDIM+1 : GDIM;
    GTMatrix<GTVector<GFTYPE>> rijtmp;
    GTVector<GTVector<GFTYPE>> *xe;

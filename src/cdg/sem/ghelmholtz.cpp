@@ -199,6 +199,7 @@ void GHelmholtz::embed_prod(GTVector<GFTYPE> &u,
   assert( GDIM == 2 && utmp.size() >= 2*GDIM+3
        && "Insufficient temp space specified");
 
+  GString serr = "GHelmholtz::embed_prod: ";
   GTVector<GTVector<GFTYPE>*> gdu(GDIM+1);
   GElemList *gelems=&grid_->elems();
 
@@ -228,10 +229,14 @@ void GHelmholtz::embed_prod(GTVector<GFTYPE> &u,
 
   // Compute derivatives of u:
   GMTK::compute_grefderivs(*grid_, u, etmp1_, FALSE, utmp); // utmp stores tensor-prod derivatives, Dj u
+
+GPP(MPI_COMM_WORLD, serr << "du/dxi_x=" << *utmp[0]); 
+GPP(MPI_COMM_WORLD, serr << "du/dxi_y=" << *utmp[1]); 
+GPP(MPI_COMM_WORLD, serr << "du/dxi_z=" << *utmp[2]); 
   
   // Compute Gij (D^j u). Recall, Gij contain mass: 
   for ( GSIZET i=0; i<GDIM+1; i++ ) { 
-    *utmp[GDIM+i] = 0.0;
+    *utmp[GDIM+1+i] = 0.0;
     for ( GSIZET j=0; j<GDIM+1; j++ ) {
       utmp[j]->pointProd(*G_(i,j), uo); // Gij * du^j
       *utmp[GDIM+1+i] += uo;
