@@ -77,7 +77,7 @@ int main(int argc, char **argv)
     ne          = gridptree.getArray<GINT>("num_elems");  // may be modified by command line
 
     // Must use GridBox type grid for this test
-    assert(sgrid == "grid_box" && "Must use GridBox grid");
+//  assert(sgrid == "grid_box" && "Must use GridBox grid");
     GTPoint<GFTYPE> P0, dP;
     std::vector<GFTYPE> vstd = gridptree.getArray<GFTYPE>("xyz0");
     P0 = vstd;
