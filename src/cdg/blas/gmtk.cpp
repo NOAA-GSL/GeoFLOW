@@ -1248,6 +1248,7 @@ void compute_grefderiv(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &etm
     assert( bembedded
          && "Can only take 3-derivative with GE_2DEMBEDDED elements");
     du = u;
+    break;
   default:
     assert(FALSE && "Invalid coordinate direction");
   }
