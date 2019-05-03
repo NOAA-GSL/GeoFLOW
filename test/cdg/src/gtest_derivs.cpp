@@ -48,9 +48,7 @@ int main(int argc, char **argv)
     GINT   errcode, iopt;
     GINT   ilevel=0;// 2d ICOS refinement level
     GINT   np=1;    // elem 'order'
-    GINT   nstate=GDIM;  // number 'state' arrays
-    GSIZET maxSteps;
-    GFTYPE radiusi=1, radiuso=2;
+    GINT   nc=GDIM; // no. coords
     std::vector<GINT> ne(3); // # elements in each direction in 3d
     std::vector<GINT> pstd(GDIM);  
     GString sgrid;// name of JSON grid object to use
@@ -76,13 +74,19 @@ int main(int argc, char **argv)
 
     ne          = gridptree.getArray<GINT>("num_elems");  // may be modified by command line
 
-    // Must use GridBox type grid for this test
-//  assert(sgrid == "grid_box" && "Must use GridBox grid");
+    nc = sgrid == "grid_icos" ? 3: GDIM;
+    
+
+    // If using GridBox, then P0, dP are used as expected, 
+    // they aren't used for now:
     GTPoint<GFTYPE> P0, dP;
-    std::vector<GFTYPE> vstd = gridptree.getArray<GFTYPE>("xyz0");
-    P0 = vstd;
-    vstd = gridptree.getArray<GFTYPE>("delxyz");
-    dP = vstd;
+    std::vector<GFTYPE> vstd;
+    if ( sgrid != "grid_icos" ) {
+      vstd = gridptree.getArray<GFTYPE>("xyz0");
+      P0   = vstd;
+      vstd = gridptree.getArray<GFTYPE>("delxyz");
+      dP   = vstd;
+      }
 
 #if 1
 
@@ -164,8 +168,8 @@ int main(int argc, char **argv)
     // Create state and tmp space:
     GTVector<GTVector<GFTYPE>*> utmp(4);
     GTVector<GTVector<GFTYPE>*> u   (1);
-    GTVector<GTVector<GFTYPE>*> du  (GDIM);
-    GTVector<GTVector<GFTYPE>*> da  (GDIM);
+    GTVector<GTVector<GFTYPE>*> du (nc);
+    GTVector<GTVector<GFTYPE>*> da (nc);
     
     for ( GSIZET j=0; j<utmp.size(); j++ ) utmp[j] = new GTVector<GFTYPE>(grid_->size());
     for ( GSIZET j=0; j<u   .size(); j++ ) u   [j] = new GTVector<GFTYPE>(grid_->size());
@@ -183,32 +187,48 @@ int main(int argc, char **argv)
     GTVector<GFTYPE>           *jac    = &grid_->Jac();   
     GTMatrix<GTVector<GFTYPE>> *dXidX  = &grid_->dXidX();   
     GMass                       mass(*grid_);
-    GSIZET nxy = nxy = (*xnodes)[0].size();
+    GSIZET nxy = (*xnodes)[0].size();
+
+    assert(p>=0 && q>=0 && r>=0 && "Polynomial order must be >= 0");
     for ( GSIZET j=0; j<nxy; j++ ) {
       x = (*xnodes)[0][j];
       y = (*xnodes)[1][j];
-      if ( GDIM > 2 ) z = (*xnodes)[2][j];
+      if ( xnodes->size() > 2 ) z = (*xnodes)[2][j];
       (*u [0])[j] = pow(x,p)*pow(y,q)*pow(z,r);
       (*da[0])[j] = p==0 ? 0.0 : p*pow(x,p-1)*pow(y,q)*pow(z,r);
       (*da[1])[j] = q==0 ? 0.0 : q*pow(x,p)*pow(y,q-1)*pow(z,r);
-      if ( GDIM > 2 ) (*da[2])[j] = r==0 ? 0.0 : r*pow(x,p)*pow(y,q)*pow(z,r-1);
+      if ( xnodes->size() > 2 ) (*da[2])[j] = r==0 ? 0.0 : r*pow(x,p)*pow(y,q)*pow(z,r-1);
     }
-#if defined(_DO_REFDERIV)
-    // Compute GDIM derivs on u, with weights. Integrate solution
-    // later to compare with analytic solution:
-/// GMTK::compute_grefderivs (*grid_, *u[0], etmp1, FALSE, du);
-    for ( GSIZET j=0; j<GDIM; j++ ) {  // do chain rule
-      GMTK::compute_grefderiv (*grid_, *u[0], etmp1, j+1, FALSE, *du[j]);
-      du[j]->pointProd((*dXidX)(j,0));
-    }
-#elif defined(_DO_REFDERIVW)
+#if defined(_DO_REFDERIVW)
+    // Compute nc derivs on u, with weightsr; compare solutions
+    // later with integrated analytic solution: 
     GMTK::compute_grefderivsW(*grid_, *u[0], etmp1, FALSE, du);
-    for ( GSIZET j=0; j<GDIM; j++ ) {  
+    for ( GSIZET j=0; j<nc; j++ ) {  
       du[j]->pointProd((*dXidX)(j,0)); // do chain rule for box grid
       du[j]->pointProd(*jac);
     }
+#elif defined(_DO_REFDERIV)
+    // Compute nc derivs on u, without weights: 
+    for ( GSIZET j=0; j<nc; j++ ) {  // do chain rule
+      if ( grid_->gtype() == GE_REGULAR ) {
+        GMTK::compute_grefderiv (*grid_, *u[0], etmp1, j+1, FALSE, *du[j]);
+        du[j]->pointProd((*dXidX)(j,0));
+      }
+      else {
+        *du[j] = 0.0;
+        for ( GSIZET k=0; k<nc; k++ ) {
+#if 0
+          GMTK::compute_grefderiv (*grid_, *u[0], etmp1, j+1, FALSE, *utmp[0]);
+          utmp[0]->pointProd((*dXidX)(j,k));
+          *du[j] += *utmp[0];
 #else
-    for ( GSIZET j=0; j<GDIM; j++ ) {
+          grid_->deriv(*u[0], j+1, *utmp[0], *du[j]);
+#endif
+        }
+      }
+    }
+#else
+    for ( GSIZET j=0; j<nc; j++ ) {
       grid_->deriv(*u[0], j+1, *utmp[0], *du[j]);
     }
 #endif
@@ -217,31 +237,39 @@ int main(int argc, char **argv)
     GSIZET lnelems=grid_->nelems();
     GSIZET gnelems;
     GFTYPE ftmp, nnorm, eps=10.0*std::numeric_limits<GFTYPE>::epsilon();
-    GFTYPE x0=P0.x1, x1=P0.x1+dP.x1;
-    GFTYPE y0=P0.x2, y1=P0.x2+dP.x2;
-    GFTYPE z0=P0.x3, z1=P0.x3+dP.x3;
+    GFTYPE x0, x1, y0, y1, z0, z1;
     std::ifstream itst;
     std::ofstream ios;
-    GTVector<GFTYPE> da_int(GDIM), du_int(3), lnorm(3), gnorm(3), maxerror(3);
+    GTVector<GFTYPE> da_int(nc), du_int(3), lnorm(3), gnorm(3), maxerror(3);
+
+    if ( grid_->gtype() == GE_REGULAR ) {
+      x0 = P0.x1; x1 = P0.x1+dP.x1;
+      y0 = P0.x2; y1 = P0.x2+dP.x2;
+      z0 = P0.x3; z1 = P0.x3+dP.x3;
     // So we don't try to take 0^0 = pow(0,0)
     z0 = z0 == 0 ? 1.0 : z0;
     assert(x0 != 0.0 
         && y0 != 0.0
         && z0 != 0.0
         && "Don't allow zero domain endpoint!");
+    }
 
     maxerror = 0.0;
 
 #if defined(_DO_REFDERIVW)
+    assert(grid_->gtype()!=GE_2DEMBEDDED && "Do not set _DO_REFDERIVW with ICOS grid");
+
     // Compute integral of analytic solutions, compare
-    if ( GDIM == 2 ) {
-      da_int[0] = (pow(x1,p  )-pow(x0,p  )) * (pow(y1,q+1)-pow(y0,q+1))/(q+1);
-      da_int[1] = (pow(x1,p+1)-pow(x0,p+1)) * (pow(y1,q  )-pow(y0,q  ))/(p+1);
-    } else if ( GDIM == 3 ) {
-      da_int[0] = (pow(x1,p  )-pow(x0,p  )) * (pow(y1,q+1)-pow(y0,q+1)) * (pow(z1,r+1)-pow(z0,r+1))/((q+1)*(r+1));
-      da_int[1] =  (pow(x1,p+1)-pow(x0,p+1)) * (pow(y1,q  )-pow(y0,q  )) * (pow(z1,r+1)-pow(z0,r+1))/((p+1)*(r+1));
-      da_int[2] =  (pow(x1,p+1)-pow(x0,p+1)) * (pow(y1,q+1)-pow(y0,q+1)) * (pow(z1,r  )-pow(z0,r  ))/((p+1)*(q+1));
-    }
+    if ( grid_->gtype() == GE_REGULAR ) {
+      if ( nc == 2 ) {
+        da_int[0] = (pow(x1,p  )-pow(x0,p  )) * (pow(y1,q+1)-pow(y0,q+1))/(q+1);
+        da_int[1] = (pow(x1,p+1)-pow(x0,p+1)) * (pow(y1,q  )-pow(y0,q  ))/(p+1);
+      } else if ( nc == 3 ) {
+        da_int[0] = (pow(x1,p  )-pow(x0,p  )) * (pow(y1,q+1)-pow(y0,q+1)) * (pow(z1,r+1)-pow(z0,r+1))/((q+1)*(r+1));
+        da_int[1] =  (pow(x1,p+1)-pow(x0,p+1)) * (pow(y1,q  )-pow(y0,q  )) * (pow(z1,r+1)-pow(z0,r+1))/((p+1)*(r+1));
+        da_int[2] =  (pow(x1,p+1)-pow(x0,p+1)) * (pow(y1,q+1)-pow(y0,q+1)) * (pow(z1,r  )-pow(z0,r  ))/((p+1)*(q+1));
+      }
+    } 
     for ( GSIZET j=0; j<da.size(); j++ ) { // integral errors:
       cout << "main: error da[" << j << "]=" << *da[j] << endl; 
       cout << "main: error du[" << j << "]=" << *du[j] << endl; 
@@ -270,7 +298,7 @@ int main(int argc, char **argv)
 #else
     // Compute collocated  analytic solution, do comparisons:
     maxerror = 0.0;
-    for ( GSIZET j=0; j<GDIM; j++ ) { //local errors
+    for ( GSIZET j=0; j<nc; j++ ) { //local errors
       for ( GSIZET i=0; i<da[j]->size(); i++ ) (*utmp[0])[i] = pow((*da[j])[i],2);
       nnorm = grid_->integrate(*utmp[0], *utmp[1]);
       nnorm = nnorm > std::numeric_limits<GFTYPE>::epsilon() ? nnorm : 1.0;
