@@ -1330,16 +1330,17 @@ void GElem_base::inv(GMVFType &G, const GTVector<GFTYPE> &jac, GMVFType &iG)
   for ( GSIZET n=0; n<jac.size(); n++ ) { // 3x3 matrix
     ijac = 1.0/jac[n];
     iG(0,0)[n] =  (G(1,1)[n]*G(2,2)[n]-G(1,2)[n]*G(2,1)[n])*ijac;
-    iG(0,1)[n] = -(G(1,0)[n]*G(2,2)[n]-G(2,0)[n]*G(1,2)[n])*ijac;
-    iG(0,2)[n] =  (G(1,0)[n]*G(2,1)[n]-G(2,0)[n]*G(1,1)[n])*ijac;
+    iG(0,1)[n] = -(G(0,1)[n]*G(2,2)[n]-G(2,1)[n]*G(0,2)[n])*ijac;
+    iG(0,2)[n] =  (G(0,1)[n]*G(1,2)[n]-G(0,2)[n]*G(1,1)[n])*ijac;
   
-    iG(1,0)[n] = -(G(0,1)[n]*G(2,2)[n]-G(2,1)[n]*G(0,2)[n])*ijac;
-    iG(1,1)[n] =  (G(0,0)[n]*G(2,1)[n]-G(2,0)[n]*G(0,2)[n])*ijac;
-    iG(1,2)[n] = -(G(0,0)[n]*G(2,1)[n]-G(2,0)[n]*G(0,1)[n])*ijac;
+    iG(1,0)[n] = -(G(1,0)[n]*G(2,2)[n]-G(2,0)[n]*G(1,2)[n])*ijac;
+    iG(1,1)[n] =  (G(0,0)[n]*G(2,2)[n]-G(2,0)[n]*G(0,2)[n])*ijac;
+    iG(1,2)[n] = -(G(0,0)[n]*G(1,2)[n]-G(0,2)[n]*G(1,0)[n])*ijac;
 
-    iG(2,0)[n] =  (G(0,1)[n]*G(1,2)[n]-G(1,1)[n]*G(0,2)[n])*ijac;
-    iG(2,1)[n] = -(G(0,0)[n]*G(1,2)[n]-G(1,0)[n]*G(0,2)[n])*ijac;
+    iG(2,0)[n] =  (G(1,0)[n]*G(2,1)[n]-G(1,1)[n]*G(2,0)[n])*ijac;
+    iG(2,1)[n] = -(G(0,0)[n]*G(2,1)[n]-G(0,1)[n]*G(2,0)[n])*ijac;
     iG(2,2)[n] =  (G(0,0)[n]*G(1,1)[n]-G(1,0)[n]*G(0,1)[n])*ijac;
+
   }
 
 } // end of method inv
