@@ -215,18 +215,9 @@ int main(int argc, char **argv)
         du[j]->pointProd((*dXidX)(j,0));
       }
       else {
-        *du[j] = 0.0;
-        for ( GSIZET k=0; k<nc; k++ ) {
-#if 0
-          GMTK::compute_grefderiv (*grid_, *u[0], etmp1, j+1, FALSE, *utmp[0]);
-          utmp[0]->pointProd((*dXidX)(j,k));
-          *du[j] += *utmp[0];
-#else
-          grid_->deriv(*u[0], j+1, *utmp[0], *du[j]);
-#endif
-        }
+        grid_->deriv(*u[0], j+1, *utmp[0], *du[j]);
       }
-    }
+    } // end, j-loop
 #else
     for ( GSIZET j=0; j<nc; j++ ) {
       grid_->deriv(*u[0], j+1, *utmp[0], *du[j]);
