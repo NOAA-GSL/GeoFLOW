@@ -165,8 +165,8 @@ fv0_(10,0) = -0.276393202250021; fv0_(10,1) =  0.850650808352040; fv0_(10,2) = -
 fv0_(11,0) = -0.276393202250021; fv0_(11,1) = -0.850650808352040; fv0_(11,2) = -0.447213595499958;
 
   
-  // Normalize vertices to be at radiusi_:
-  GFTYPE fact = radiusi_/sqrt(phi*phi + 1.0);
+  // Normalize vertices to be at 1.0:
+  GFTYPE fact = 1.0/sqrt(phi*phi + 1.0);
   fv0_ *= fact;
 
   // Points in verts array that make up 
@@ -315,8 +315,8 @@ void GGridIcos::lagrefine()
   } // end, t-loop
 
   
-  // Project all vertices to sphere:
-  project2sphere(tmesh_,radiusi_);
+  // Project all vertices to unit sphere:
+  project2sphere(tmesh_,1.0);
 
   // Compute centroids of all triangles:
   ftcentroids_.clear();
@@ -456,6 +456,8 @@ void GGridIcos::do_elems2d(GINT irank)
   GTVector<GTVector<GFTYPE>*> *xiNodes;
   GTVector<GTVector<GFTYPE>>   xgtmp(3);
 
+  // Do eveything on unit sphere, then project to radiusi_
+  // as a final step.
 
   assert(gbasis_.size()>0 && "Must set basis first");
 
@@ -515,12 +517,12 @@ void GGridIcos::do_elems2d(GINT irank)
       xiNodes = &pelem->xiNodes(); // node ref interval data
       Ni.resize(pelem->nnodes());
 
-      project2sphere(cverts, radiusi_); // project verts to sphere     
+      project2sphere(cverts, 1.0); // project verts to unit sphere     
       c = (cverts[0] + cverts[1] + cverts[2] + cverts[3])*0.25; // elem centroid
-      xlatc  = asin(c.x3/radiusi_); // reference lat/long
+      xlatc  = asin(c.x3)         ; // reference lat/long
       xlongc = atan2(c.x2,c.x1);
 
-      cart2gnomonic(cverts, radiusi_, xlatc, xlongc, tverts); // gnomonic vertices of quads
+      cart2gnomonic(cverts, 1.0, xlatc, xlongc, tverts); // gnomonic vertices of quads
       reorderverts2d(tverts, isort, gverts); // reorder vertices consistenet with shape fcn
       for ( GSIZET l=0; l<2; l++ ) { // loop over available gnomonic coords
         xgtmp[l].resizem(pelem->nnodes());
@@ -532,7 +534,7 @@ void GGridIcos::do_elems2d(GINT irank)
           xgtmp[l] += (Ni * (gverts[m][l]*0.25)); // gnomonic node coordinate
         }
       }
-      gnomonic2cart(xgtmp, radiusi_, xlatc, xlongc, *xNodes); //
+      gnomonic2cart(xgtmp, 1.0, xlatc, xlongc, *xNodes); //
       project2sphere(*xNodes, radiusi_);
       pelem->init(*xNodes);
       gelems_.push_back(pelem);
