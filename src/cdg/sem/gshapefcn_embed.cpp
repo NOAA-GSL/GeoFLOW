@@ -346,21 +346,24 @@ void GShapeFcn_embed::dNdXi_2d(GTVector<GINT> &ishape, GINT jder,
 
   d_.resizem(GDIM);
   for ( GSIZET j=0; j<GDIM; j++ ) { 
-    d_[j].resize(xi[j]->size());
-    if ( (j+1) != jder ) { // covers the case where jder=3
-      gbasis_[j]->evalBasis (ishape[j], *xi[j], d_[j]);
+    d_[j].resizem(xi[j]->size());
+    if ( (j+1) == jder ) { // covers the case where jder=3
+      gbasis_[j]->evalDBasis(ishape[j], *xi[j], d_[j]);
     }
     else { 
-      gbasis_[j]->evalDBasis(ishape[j], *xi[j], d_[j]);
+      gbasis_[j]->evalBasis (ishape[j], *xi[j], d_[j]);
     }
   }
 
+  // Do tensor product:
   GSIZET n = 0;
   for ( GSIZET j=0; j<xi[1]->size(); j++ ) {
     for ( GSIZET i=0; i<xi[0]->size(); i++ ) {
       dNdxi[n++] = d_[0][i]*d_[1][j];
     }
   }
+
+  // In case we decide to set zeta != 1:
   if ( zeta_ != 1.0 && jder != 3 ) dNdxi *= zeta_;
 
  
