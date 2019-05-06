@@ -467,7 +467,7 @@ void GGrid::def_init()
    assert(gelems_.size() > 0 && "Elements not set");
 
    GString serr = "GGrid::def_init: ";
-   GSIZET nxy = itype_[GE_2DEMBEDDED].size() > 0 ? GDIM+1 : GDIM;
+   GSIZET nxy = gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
    GTMatrix<GTVector<GFTYPE>> rijtmp;
    GTVector<GTVector<GFTYPE>> *xe;
 
@@ -510,6 +510,7 @@ void GGrid::def_init()
        bdyNormal_ [j].range(ibbeg, ibend); // set range for each coord, j
        for ( GSIZET i=0; i<nxy; i++ )  {
          dXidX_(i,j).range(ibeg, iend);
+         rijtmp(i,j).range(ibeg, iend);
        }
      }
      Jac_.range(ibeg, iend);
@@ -542,6 +543,7 @@ void GGrid::def_init()
    for ( GSIZET j=0; j<dXidX_.size(2); j++ )  {
      for ( GSIZET i=0; i<dXidX_.size(1); i++ )  {
        dXidX_(i,j).range_reset();
+       rijtmp(i,j).range_reset();
      }
    }
    Jac_.range_reset();
@@ -876,16 +878,16 @@ void GGrid::deriv(GTVector<GFTYPE> &u, GINT idir, GTVector<GFTYPE> &utmp,
   GTMatrix<GTVector<GFTYPE>> *dXidX = &this->dXidX();
 
   // du/dx_idir = Sum_j=[1:N] dxi_j/dx_idir D_j u:
-  GINT nxy = this->gtype() == GE_2DEMBEDDED ? GDIM + 1 : GDIM;
   if ( this->gtype() == GE_REGULAR ) {
     GMTK::compute_grefderiv(*this, u, etmp_, idir, FALSE, du); // D_idir u
     du.pointProd((*dXidX)(idir-1, 0));
   }
   else {  // compute dXi_j/dX_idir D^j u:
-    du = 0.0;
-    for ( GSIZET j=0; j<GDIM; j++ ) {
+    GMTK::compute_grefderiv(*this, u, etmp_, 1, FALSE, du); // D_ri u
+    du.pointProd((*dXidX)(idir-1,0));
+    for ( GSIZET j=1; j<dXidX->size(2); j++ ) {
       GMTK::compute_grefderiv(*this, u, etmp_, j+1, FALSE, utmp); // D_ri u
-      utmp.pointProd((*dXidX)(idir-1, j));
+      utmp.pointProd((*dXidX)(idir-1,j));
       du += utmp; 
     }
   }

@@ -912,7 +912,8 @@ void GElem_base::dogeom1d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
 // ARGS   : 
 //          rij       : dx^j/dxi^i, computed here, but otherwise may be 
 //                      global temp space that MUST NOT be reallocated HERE!
-//          irij      : dxi^j/dx^i matrix to be created; may be global
+//          irij      : dxi^j/dx^i matrix to be created; may be global; don't
+//                      reallocate
 //          jac       : Jacobian to be created ; gmay be lobal
 //          fjac      : face Jacobians to be created; may be global 
 //          faceNormal: normal at elem face nodes; must have same no. indices
@@ -960,18 +961,20 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
   // still be (h1-order+1) X (h2-order+1):
   GSIZET nxy = elemtype_ == GE_2DEMBEDDED ? GDIM+1: GDIM;
   if ( elemtype_ == GE_2DEMBEDDED || elemtype_ == GE_DEFORMED ) {
-    rij.resize(nxy,nxy);
-    for ( l=0; l<nxy; l++ ) { // rij matrix element col
-      for ( k=0; k<nxy; k++ ) { // rij matrix element row
-        rij(k,l).resize(Ntot_);
+    for ( l=0; l<nxy; l++ ) { // rij col index: deriv wrt xi^l
+      for ( k=0; k<nxy; k++ ) { // rij row index: Cart coord: x, y, z
         tmp  = 0.0;
         for ( j=0, n=0; j<gbasis_[1]->getOrder()+1; j++ ) { // evaluate gbasis at xi_ev
           for ( i=0; i<gbasis_[0]->getOrder()+1; i++, n++ ) { // evaluate gbasis at xi_ev
             I[0] = i; I[1] = j;
             gshapefcn_->dNdXi(I, l+1, xi_ev, dNi); // l+1-th deriv of shape function I
             tmp += dNi*xNodes_[k][n];  // multiply by spatial coord
+if ( l == 0 ) {
+cout << "GElemBase:dogeom2d: dNi/dx^" << l+1 << "=" << dNi << endl;
+}
           } // i-loop
         } // j-loop
+cout << "GElemBase:dogeom2d: tmp^" << l+1 << "=" << tmp << endl;
         rij(k,l) = tmp;
       } // k-loop
     } // l-loop
@@ -985,25 +988,16 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
 
 
   // Compute Jacobian; test for positive-definiteness:
-#if 0
-  if ( elemtype_ == GE_2DEMBEDDED ) {
-    Jac_embed(rij, jac, pChk, NULLPTR, 0);
-  }
-  else {
-    det (rij, jac, pChk, NULLPTR, 0);
-  }
-#else
   if ( elemtype_ == GE_2DEMBEDDED || elemtype_ == GE_DEFORMED ) {
     det (rij, jac, pChk, NULLPTR, 0);
+//  assert(pChk && "Jacobian not positive definite");
     // Find inverse of rij:
     inv(rij, jac, irij);
   }
   else if ( elemtype_ == GE_REGULAR ) {
     jac = 0.25*L[0]*L[1];
   }
-#endif
 
-//assert(pChk && "Jacobian not positive definite");
 
   // Compute face Jacobians. Linearize edge nodes, including them
   // in order:
@@ -1022,9 +1016,7 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
     fjac = jac[0];
   } 
 
-  // Compute edge/face normals: 
-    // First, linearize face indices:
-   
+  // Compute edge/face normals; first, linearize face indices:
   GTVector<GINT> itmp;
   for ( j=0; j<face_indices_.size(); j++ )
     for ( k=0; k<face_indices_[j].size(); k++ ) itmp.push_back(face_indices_[j][k]);
@@ -1095,12 +1087,8 @@ void GElem_base::dogeom3d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
   // still be (h1-order+1) X (h2-order+1):
   GSIZET nxy = GDIM;
   if ( elemtype_ == GE_DEFORMED ) {
-    rij.resizem(nxy,nxy);
-//  irij.resize(nxy,nxy);
     for ( m=0; m<nxy; m++ ) { // matrix element col
       for ( l=0; l<nxy; l++ ) { // matrix element row
-        rij(k,l).resizem(Ntot_);
-//      irij(k,l).resize(Ntot_);
         rij(l,m) = 0.0;
         for ( k=0, n=0; k<gbasis_[2]->getOrder()+1; k++ ) {
           for ( j=0; j<gbasis_[1]->getOrder()+1; j++ ) {
@@ -1326,7 +1314,7 @@ void GElem_base::inv(GMVFType &G, const GTVector<GFTYPE> &jac, GMVFType &iG)
     }
     return;
   }
-  
+
   for ( GSIZET n=0; n<jac.size(); n++ ) { // 3x3 matrix
     ijac = 1.0/jac[n];
     iG(0,0)[n] =  (G(1,1)[n]*G(2,2)[n]-G(1,2)[n]*G(2,1)[n])*ijac;
@@ -1340,7 +1328,6 @@ void GElem_base::inv(GMVFType &G, const GTVector<GFTYPE> &jac, GMVFType &iG)
     iG(2,0)[n] =  (G(1,0)[n]*G(2,1)[n]-G(1,1)[n]*G(2,0)[n])*ijac;
     iG(2,1)[n] = -(G(0,0)[n]*G(2,1)[n]-G(0,1)[n]*G(2,0)[n])*ijac;
     iG(2,2)[n] =  (G(0,0)[n]*G(1,1)[n]-G(1,0)[n]*G(0,1)[n])*ijac;
-
   }
 
 } // end of method inv
