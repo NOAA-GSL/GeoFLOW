@@ -200,6 +200,8 @@ int main(int argc, char **argv)
       if ( xnodes->size() > 2 ) (*da[2])[j] = r==0 ? 0.0 : r*pow(x,p)*pow(y,q)*pow(z,r-1);
     }
 #if defined(_DO_REFDERIVW)
+    assert(grid_->gtype() != GE_2DEMBEDDED && 
+           "_DO_REFDERIVW not allowed with this grid");
     // Compute nc derivs on u, with weightsr; compare solutions
     // later with integrated analytic solution: 
     GMTK::compute_grefderivsW(*grid_, *u[0], etmp1, FALSE, du);
