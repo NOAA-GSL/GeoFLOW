@@ -4,7 +4,7 @@ function h = sphereplot2d(svar, tindex, bwire, varargin)
 % Grid type must be of type GE_2DEMBEDDED.
 %
 %  Usage:
-%    h  = isoplot3d('u1',10, 0.1)
+%    h  = sphereplot2d('u1',10)
 %
 %  Input:
 %    s1var   : prefix for field file. Required
