@@ -19,6 +19,15 @@
 #include "gmass.hpp"
 #include "ggfx.hpp"
 #include "gmorton_keygen.hpp"
+#include "ggrid_factory.hpp"
+#include "gmtk.hpp"
+#include "tbox/property_tree.hpp"
+#include "tbox/mpixx.hpp"
+#include "tbox/global_manager.hpp"
+#include "tbox/input_manager.hpp"
+
+using namespace geoflow::tbox;
+using namespace std;
 
 
 int main(int argc, char **argv)
@@ -99,26 +108,29 @@ int main(int argc, char **argv)
     // Initialize GPTL:
     GPTLinitialize();
 
+    // Get minimal property tree:
+    PropertyTree ptree; 
+    GString sgrid;
+    GGrid *grid;
+    std::vector<GINT> pstd(GDIM);
 
+    ptree.load_file("input.jsn");
+    sgrid       = ptree.getValue<GString>("grid_type");
+    pstd        = ptree.getArray<GINT>("exp_order");
+
+    assert(sgrid == "grid_icos" && "Must use ICOS grid for now");
 
     // Create basis:
     GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis(GDIM);
     for ( GSIZET k=0; k<GDIM; k++ ) {
-      gbasis [k] = new GLLBasis<GCTYPE,GFTYPE>(np);
-std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << std::endl;
+      gbasis [k] = new GLLBasis<GCTYPE,GFTYPE>(pstd[k]);
     }
-    
-    GGrid grid(comm);
 
-    GPTLstart("gen_base_grid");
+    // Generate grid:
+    GPTLstart("gen_grid");
+    grid = GGridFactory::build(ptree, gbasis, comm);
+    GPTLstop("gen_grid");
 
-    #if defined(_G_IS2D)
-    GGridIcos gen_icos(radiusi, ilevel, gbasis, nprocs);
-    #elif defined(_G_IS3D)
-    GGridIcos gen_icos(radiusi, radiuso, ne, gbasis, nprocs);
-    #endif
-
-    GPTLstop("gen_base_grid");
 
     // Test some of the coord transformation methods:
     GFTYPE xlat, xlatc, xlong, xlongc;
@@ -126,82 +138,17 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     GTPoint<GFTYPE> pdiff;
     GTVector<GTPoint<GFTYPE>> cart(1), cref(1), sph(1), tcart(1), tsph(1);
 
+    GTVector<GFTYPE> f(grid->ndof());
+    GTVector<GFTYPE> g(grid->ndof());
+    GTVector<GTVector<GFTYPE>*> utmp(1);
+    GTVector<GFTYPE> imult(grid->ndof());
+    GMass massop(*grid);
 
-
-    // Generate grid:
-    gen_icos.do_grid(grid, myrank);
-
-    GFTYPE gminsep, minsep = grid.minsep(); 
-    GFTYPE gmaxsep, maxsep = grid.maxsep(); 
-    GComm::Allreduce(&minsep, &gminsep, 1, T2GCDatatype<GFTYPE>() , GC_OP_MIN, comm);
-    GComm::Allreduce(&maxsep, &gmaxsep, 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm);
-    std::cout << "main: min grid sep=" << gminsep << std::endl;
-    std::cout << "main: max grid sep=" << gmaxsep << std::endl;
-
-    GTVector<GFTYPE> f(grid.ndof());
-    GTVector<GFTYPE> g(grid.ndof());
-    GTVector<GFTYPE> imult(grid.ndof());
-    GMass massop(grid);
-
-#if 0
-    // Generate interface node indices:
-    GTVector<GNODEID> glob_indices(grid.ndof());
-    GGFX ggfx;
-
-    GMorton_KeyGen<GNODEID,GFTYPE> gmorton;
-    GTPoint<GFTYPE> dX, porigin, P0;
-
-    
-    P0.x1= -radiusi; P0.x2=-radiusi; P0.x3=-radiusi;
-//  P1.x1=  radiusi; P1.x2= radiusi; P1.x3= radiusi;
-    dX   = 1.0e-5*gminsep;
-    gmorton.setIntegralLen(P0,dX);
-
-    GPTLstart("gen_morton_indices");
-    // NOTE: only need to find indices for boundary
-    //       nodes, and use elem bdy indirection in GGFX/DoOp, 
-    //       but for testing, we do:
-    gelems = &grid.elems();
-    GTVector<GTVector<GFTYPE>> *xnodes;
-    for ( GSIZET i=0; i<gelems->size(); i++ ) {
-      glob_indices.range((*gelems)[i]->igbeg(),(*gelems)[i]->igend()); // restrict to this range
-      xnodes = &(*gelems)[i]->xNodes();
-      gmorton.key(glob_indices, *xnodes);
-#if 0
-std::cout << "main: xNodes[" << i << "]=" << *xnodes << std::endl;
-std::cout << "main: glob_indices[" << i << "]=" << glob_indices << std::endl;
-#endif
-    }
-    glob_indices.range(0,grid.ndof()-1); // must reset to full range
-    GPTLstop("gen_morton_indices");
-
-    GPTLstart("ggfx_init");
-    // Compute connectivity map:
-    bret = ggfx.Init(glob_indices);
-    errcode += !bret ? 2 : 0;
-    GPTLstop("ggfx_init");
-
-    GPTLstart("ggfx_doop");
-    imult = 1.0;
-    bret = ggfx.DoOp<GFTYPE>(imult, GGFX_OP_SUM);
-    errcode += !bret ? 3 : 0;
-    GPTLstop("ggfx_doop");
-    
-    for ( GSIZET j=0; j<imult.size(); j++ ) imult[j] = 1.0/imult[j];
-#if 0
-    std::cout << "main: imult=" << imult << std::endl;
-#endif
-#endif
-
-    massop.init();
 
     f = 1.0;
     GPTLstart("massop_prod");
-    massop.opVec_prod(f,g);
+    massop.opVec_prod(f,utmp,g);
     GPTLstop("massop_prod");
-#if 0
-    std::cout << "main: mass_prod=" << g << std::endl;
-#endif
     std::cout << "main: mass_prod_sum=" << g.sum() << std::endl;
   
 #if 0
@@ -219,26 +166,33 @@ std::cout << "main: glob_indices[" << i << "]=" << glob_indices << std::endl;
     ios.open("mass_err.txt",std::ios_base::app);
 
     if ( itst.peek() == std::ofstream::traits_type::eof() ) {
-    #if defined(_G_IS2D)
-      ios << "# order_xy   level  area_computed  area_analytic   diff " << std::endl;
-    #elif defined(_G_IS3D)
-      ios << "# order_xyz  level  area_computed  area_analytic   diff " << std::endl;
-    #endif
+      ios << "#elems" << "  ";
+      for ( GSIZET j=0; j<GDIM; j++ ) ios << "p" << j+1 << "  ";
+      ios <<  "ndof    area_computed    area_analytic    diff " << std::endl;
     }
     itst.close();
+
+    // Get global no elements and dof:
+    GTVector<GSIZET> lsz(2), gsz(2);
+    lsz[0] = grid->nelems();
+    lsz[1] = grid->ndof();
+    GComm::Allreduce(lsz.data(), gsz.data(), 2, T2GCDatatype<GSIZET>() , GC_OP_SUM, comm);
+
 
     GFTYPE aintegral;
     #if defined(_G_IS2D)
     aintegral = 4.0*PI*pow(radiusi,2.0);
-    std::cout << "main: integral=" << gintegral << "; area=" << aintegral << std::endl;
-    ios << np  << "  "  << "  " << ilevel 
-        << "  " << gintegral << "  " << aintegral << "  " << fabs(gintegral-aintegral) << std::endl;
     #elif defined(_G_IS3D)
     aintegral = 4.0*PI*pow(radiusi,3.0)/3.0;
-    std::cout << "main: integral=" << gintegral << "; volume=" << aintegral << std::endl;
-    ios << np  << " " <<  ilevel 
-        << " " << gintegral << " " << aintegral << " " << fabs(gintegral-aintegral) << std::endl;
     #endif
+    std::cout << "main: integral=" << gintegral << "; area=" << aintegral << std::endl;
+
+    ios <<   gsz[0] << "  ";
+    for ( GSIZET j=0; j<GDIM; j++ ) ios << pstd[j] << "  ";
+    ios << gsz[1]     << "  "
+        << gintegral  << "  " 
+        << aintegral  << "  "
+        << fabs(gintegral-aintegral) << std::endl;
     ios.close();
     
 
