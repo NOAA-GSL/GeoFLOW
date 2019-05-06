@@ -39,7 +39,6 @@ int main(int argc, char **argv)
     GINT   ilevel=0;// 2d ICOS refinement level
     GINT   errcode, gerrcode;
     GINT   nlat=10, nlong=20;
-    GINT   np=1;    // elem 'order'
     GFTYPE radiusi=1, radiuso=2;
     GTVector<GINT> ne[3]; // # elements in each direction in 3d
     GC_COMM comm = GC_COMM_WORLD;
@@ -51,7 +50,7 @@ int main(int argc, char **argv)
 
     // Parse command line. ':' after char
     // option indicates that it takes an argument:
-    while ((iopt = getopt(argc, argv, "i:j:k;l:o:p:q:r:v:h")) != -1) {
+    while ((iopt = getopt(argc, argv, "i:j:k;l:o:q:r:v:h")) != -1) {
       switch (iopt) {
       case 'i': // get # elements in r
           ne[0] = atoi(optarg);
@@ -65,9 +64,6 @@ int main(int argc, char **argv)
       case 'l': // # 2d refinement level
           ilevel = atoi(optarg);
           break;
-      case 'p': // get nodal exp order
-          np = atoi(optarg);
-          break;
       case 'q': // inner radius for 2d/3d
           radiusi = atoi(optarg);
           break;
@@ -76,7 +72,7 @@ int main(int argc, char **argv)
           break;
       case 'h': // help
           std::cout << "usage: " << std::endl <<
-          argv[0] << " [-h] [-i #Elems in r] [-j #Elems in lat]  [-k #Elems in long] [-l refine level] -p expansion order] [-q rad_inner] [-r rad_outer] " << std::endl;
+          argv[0] << " [-h] [-i #Elems in r] [-j #Elems in lat]  [-k #Elems in long] [-l refine level] [-q rad_inner] [-r rad_outer] " << std::endl;
           exit(1); 
           break;
       case ':': // missing option argument
