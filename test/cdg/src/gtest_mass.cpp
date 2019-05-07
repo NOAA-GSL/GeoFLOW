@@ -93,11 +93,17 @@ int main(int argc, char **argv)
 
     GTVector<GFTYPE> f(grid_->ndof());
     GTVector<GFTYPE> g(grid_->ndof());
+    GTVector<GFTYPE> *imult;
     GTVector<GTVector<GFTYPE>*> utmp(1);
     GMass massop(*grid_);
 
     f = 1.0;
-    ggfx.doOp(f, GGFX_OP_SMOOTH);
+#if 0
+//  ggfx.doOp(f, GGFX_OP_SMOOTH);
+    imult = &ggfx.get_imult();
+    // Multiply f by inverse multiplicity:
+    f.pointProd(*imult);
+#endif
 
     GPTLstart("massop_prod");
     massop.opVec_prod(f,utmp,g);
@@ -105,8 +111,10 @@ int main(int argc, char **argv)
     std::cout << "main: mass_prod_sum=" << g.sum() << std::endl;
   
 #if 0
+    ggfx.doOp(g, GGFX_OP_SMOOTH);
+    imult = &ggfx.get_imult();
     // Multiply f by inverse multiplicity:
-    g.pointProd(imult);
+    g.pointProd(*imult);
 #endif
 
     GFTYPE integral=g.sum();
