@@ -986,10 +986,10 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
 
   // Compute Jacobian; test for positive-definiteness:
   if ( elemtype_ == GE_2DEMBEDDED || elemtype_ == GE_DEFORMED ) {
-    det (rij, jac, pChk, NULLPTR, 0);
-//  assert(pChk && "Jacobian not positive definite");
-    // Find inverse of rij:
-    inv(rij, jac, irij);
+    Jac(rij, jac, pChk, NULLPTR, 0);
+    assert(pChk && "Jacobian not positive definite");
+    // Find inverse of rij, these are the dXi/dX elements:
+    inv(rij, irij);
   }
   else if ( elemtype_ == GE_REGULAR ) {
     jac = 0.25*L[0]*L[1];
@@ -1007,7 +1007,7 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
       iedge[ntot++] = edge_indices_[j][k];
   }
   if ( elemtype_ == GE_2DEMBEDDED || elemtype_ == GE_DEFORMED ) {
-    det(rij, fjac, pChk, iedge.data(), iedge.size()); 
+    Jac(rij, fjac, pChk, iedge.data(), iedge.size()); 
   }
   else if ( elemtype_ == GE_REGULAR ) {
     fjac = jac[0];
@@ -1107,10 +1107,10 @@ void GElem_base::dogeom3d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
 
   // Compute Jacobian; test for positive-definiteness:
   if ( elemtype_ == GE_2DEMBEDDED || elemtype_ == GE_DEFORMED ) {
-    det (rij, jac, pChk, NULLPTR, 0);
+    Jac(rij, jac, pChk, NULLPTR, 0);
     assert(pChk && "Jacobian not positive definite");
     // Find inverse of rij:
-    inv(rij, jac, irij);
+    inv(rij, irij);
   }
   else  {
     jac = 0.125*L[0]*L[1]*L[2];
@@ -1128,7 +1128,7 @@ void GElem_base::dogeom3d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
       iface[ntot++] = face_indices_[j][k];
   }
   if ( elemtype_ == GE_2DEMBEDDED || elemtype_ == GE_DEFORMED ) {
-    det(rij, fjac, pChk, iface.data(), iface.size()); 
+    Jac(rij, fjac, pChk, iface.data(), iface.size()); 
   }
   else if ( elemtype_ == GE_REGULAR ) {
     fjac = jac[0];
@@ -1151,20 +1151,20 @@ void GElem_base::dogeom3d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
 
 //***********************************************************************************
 //***********************************************************************************
-// METHOD : det
-// DESC   : Compute in vectorized way the determinant of specified 
-//          (vectorized) matrix
+// METHOD : Jac
+// DESC   : Compute in vectorized way the Jacobian of reference-coord transormation
+//          matrix..
 // ARGS   : 
 //          G    : matrix to find determinant of. Each element of G is assumed
 //                 to have the same length. 
-//          detv  : determinant computed. Must be at least the same length of
+//          jacv  : determinant computed. Must be at least the same length of
 //                 each element of G, of size nind, if pind is non-NULLPTR
 //          pChk : are all elements positive definite?
 //          pind : indirection indices, used if non-NULLPTR
 //          nind : number of indirection indices in pind
 // RETURNS: none.
 //***********************************************************************************
-void GElem_base::det(GMVFType &G, GTVector<GFTYPE> &detv, GBOOL &pChk, GINT *pind, GINT nind )
+void GElem_base::Jac(GMVFType &G, GTVector<GFTYPE> &jacv, GBOOL &pChk, GINT *pind, GINT nind )
 {
   GString serr = "GElem_base::det: ";
 
@@ -1173,25 +1173,50 @@ void GElem_base::det(GMVFType &G, GTVector<GFTYPE> &detv, GBOOL &pChk, GINT *pin
        && "Invalid metric dimensions");
     
 
-  // Compute det, and check Jacobian for being positive-definite:
-  GBOOL  bcol=FALSE, brow=FALSE;
-  GSIZET n, k;
+  // Compute Jacobian, and check being positive-definite-ness:
+  GSIZET  n, k;
+  GFTYPE  Gx, Gy, Gz;
+
   pChk = TRUE;
 
+  if ( elemtype_ == GE_2DEMBEDDED ) {
+    // |G| = | d_x_/dxi X d_x_/deta |, where cross prod 
+    // represents normal to 2d surface at (xi,eta)
+    if ( pind != NULLPTR ) {
+      for ( k=0; k<nind; k++ ) { // loop over desired indices only
+        n = pind[k];
+        Gx = G(1,0)[n]*G(2,1)[n] - G(2,0)[n]*G(1,1)[n]; 
+        Gy = G(2,0)[n]*G(0,1)[n] - G(0,0)[n]*G(2,1)[n]; 
+        Gz = G(0,0)[n]*G(1,1)[n] - G(1,0)[n]*G(0,1)[n]; 
+        jacv[k] = sqrt(Gx*Gx + Gy*Gy + Gz*Gz);
+        pChk = pChk && fabs(jacv[k]) > fabs(std::numeric_limits<GFTYPE>::epsilon());  // test for zero Jac 
+      }
+    }
+    else  {
+      for ( n=0; n<jacv.size(); n++ ) {
+        Gx = G(1,0)[n]*G(2,1)[n] - G(2,0)[n]*G(1,1)[n]; 
+        Gy = G(2,0)[n]*G(0,1)[n] - G(0,0)[n]*G(2,1)[n]; 
+        Gz = G(0,0)[n]*G(1,1)[n] - G(1,0)[n]*G(0,1)[n]; 
+        jacv[n] = sqrt(Gx*Gx + Gy*Gy + Gz*Gz);
+        pChk = pChk && fabs(jacv[n]) > fabs(std::numeric_limits<GFTYPE>::epsilon());  // test for zero Jac 
+      }
+    }
+    return;
+  }
 
   // Compute full determinant:
   if ( G.size(1) == 2 ) { // 2x2 matrix:
     if ( pind != NULLPTR ) {
       for ( k=0; k<nind; k++ ) { // loop over desired indices only
         n = pind[k];
-        detv[k] = G(0,0)[n]*G(1,1)[n] - G(0,1)[n]*G(1,0)[n];
-        pChk = pChk && fabs(detv[k]) > fabs(std::numeric_limits<GFTYPE>::epsilon());  // test for zero Jac 
+        jacv[k] = G(0,0)[n]*G(1,1)[n] - G(0,1)[n]*G(1,0)[n];
+        pChk = pChk && fabs(jacv[k]) > fabs(std::numeric_limits<GFTYPE>::epsilon());  // test for zero Jac 
       }
     }
     else  {
-      for ( n=0; n<detv.size(); n++ ) {
-        detv[n] = G(0,0)[n]*G(1,1)[n] - G(0,1)[n]*G(1,0)[n];
-        pChk = pChk && fabs(detv[n]) > fabs(std::numeric_limits<GFTYPE>::epsilon());  // test for zero Jac 
+      for ( n=0; n<jacv.size(); n++ ) {
+        jacv[n] = G(0,0)[n]*G(1,1)[n] - G(0,1)[n]*G(1,0)[n];
+        pChk = pChk && fabs(jacv[n]) > fabs(std::numeric_limits<GFTYPE>::epsilon());  // test for zero Jac 
       }
     }
     return;
@@ -1200,22 +1225,22 @@ void GElem_base::det(GMVFType &G, GTVector<GFTYPE> &detv, GBOOL &pChk, GINT *pin
   if ( pind != NULLPTR ) { // 3x3 matrix:
     for ( k=0; k<nind; k++ ) { // loop over desired indices only
       n = pind[k];
-      detv[k] = G(0,0)[n]*(G(1,1)[n]*G(2,2)[n] - G(1,2)[n]*G(2,1)[n])
+      jacv[k] = G(0,0)[n]*(G(1,1)[n]*G(2,2)[n] - G(1,2)[n]*G(2,1)[n])
               - G(0,1)[n]*(G(1,0)[n]*G(2,2)[n] - G(1,2)[n]*G(2,0)[n])
               + G(0,2)[n]*(G(1,0)[n]*G(2,1)[n] - G(1,1)[n]*G(2,0)[n]);
-      pChk = pChk && fabs(detv[k]) > std::numeric_limits<GFTYPE>::epsilon();  // test for zero det
+      pChk = pChk && fabs(jacv[k]) > std::numeric_limits<GFTYPE>::epsilon();  // test for zero det
     }
   }
   else {
-    for ( n=0; n<detv.size(); n++ ) {
-      detv[n] = G(0,0)[n]*(G(1,1)[n]*G(2,2)[n] - G(1,2)[n]*G(2,1)[n])
+    for ( n=0; n<jacv.size(); n++ ) {
+      jacv[n] = G(0,0)[n]*(G(1,1)[n]*G(2,2)[n] - G(1,2)[n]*G(2,1)[n])
               - G(0,1)[n]*(G(1,0)[n]*G(2,2)[n] - G(1,2)[n]*G(2,0)[n])
               + G(0,2)[n]*(G(1,0)[n]*G(2,1)[n] - G(1,1)[n]*G(2,0)[n]);
-      pChk = pChk && fabs(detv[n]) > std::numeric_limits<GFTYPE>::epsilon();  // test for zero det
+      pChk = pChk && fabs(jacv[n]) > std::numeric_limits<GFTYPE>::epsilon();  // test for zero det
     }
   }
 
-} // end of method det
+} // end of method Jac
 
 
 //***********************************************************************************
@@ -1289,21 +1314,21 @@ void GElem_base::Jac_embed(GMVFType &G, GTVector<GFTYPE> &jac, GBOOL &pChk, GINT
 // ARGS   : 
 //          G    : matrix to find inverse of. Each element of G is assumed
 //                 to have the same length
-//          jac  : Jacobian of G (computed prior to entry)
 //          iG   : Inverse. Each element must have the same length
 // RETURNS: none.
 //***********************************************************************************
-void GElem_base::inv(GMVFType &G, const GTVector<GFTYPE> &jac, GMVFType &iG)
+void GElem_base::inv(GMVFType &G, GMVFType &iG)
 {
   GString serr = "GElem_base::inv: ";
 
   assert(((G.size(1) == 2 && G.size(2) == 2) || 
           (G.size(1) == 3 || G.size(2) == 3)) && "Invalid matrix dimension");
 
-  GFTYPE ijac;
+  GFTYPE ijac, jac;
   if ( G.size(1) == 2 && G.size(2) == 2 ) {
-    for ( GSIZET n=0; n<jac.size(); n++ ) { // 2x2 matrix
-      ijac = 1.0/jac[n];
+    for ( GSIZET n=0; n<G(0,0).size(); n++ ) { // 2x2 matrix
+      jac  = G(0,0)[n]*G(1,1)[n] - G(1,0)[n]*G(0,1)[n];
+      ijac = 1.0/jac;
       iG(0,0)[n] =  G(1,1)[n]*ijac;
       iG(0,1)[n] = -G(1,0)[n]*ijac;
       iG(1,0)[n] = -G(0,1)[n]*ijac;
@@ -1312,8 +1337,11 @@ void GElem_base::inv(GMVFType &G, const GTVector<GFTYPE> &jac, GMVFType &iG)
     return;
   }
 
-  for ( GSIZET n=0; n<jac.size(); n++ ) { // 3x3 matrix
-    ijac = 1.0/jac[n];
+  for ( GSIZET n=0; n<G(0,0).size(); n++ ) { // 3x3 matrix
+    jac  = G(0,0)[n]*(G(1,1)[n]*G(2,2)[n]-G(1,2)[n]*G(2,1)[n])
+         - G(0,1)[n]*(G(1,0)[n]*G(2,2)[n]-G(2,0)[n]*G(1,2)[n])
+         + G(0,2)[n]*(G(1,0)[n]*G(2,1)[n]-G(2,0)[n]*G(1,1)[n]);
+    ijac = 1.0/jac;
     iG(0,0)[n] =  (G(1,1)[n]*G(2,2)[n]-G(1,2)[n]*G(2,1)[n])*ijac;
     iG(0,1)[n] = -(G(0,1)[n]*G(2,2)[n]-G(2,1)[n]*G(0,2)[n])*ijac;
     iG(0,2)[n] =  (G(0,1)[n]*G(1,2)[n]-G(0,2)[n]*G(1,1)[n])*ijac;
