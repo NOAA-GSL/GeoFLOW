@@ -39,6 +39,8 @@ public:
                       GBOOL    doOp(GTVector<T> &u,  GGFX_OP op);
                       GBOOL    doOp(GTVector<T> &u,  GSZBuffer &ind, GGFX_OP op);
                       GC_COMM  getComm() { return comm_; }
+                      GTVector<T>         
+                              &get_imult() { return imult_; }
 
                       void     resetTimes();
 
