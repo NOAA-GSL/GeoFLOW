@@ -956,6 +956,7 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
   GTVector<GFTYPE> tmp(nnodes);// tmp space
   GTVector<GINT>   I(2);       // tensor product index
 
+
   // Can have 'embedded' coords, so # Cartesian coordinates may be > GDIM;
   // but the total number of node points in each metrix element will 
   // still be (h1-order+1) X (h2-order+1):
@@ -969,12 +970,8 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
             I[0] = i; I[1] = j;
             gshapefcn_->dNdXi(I, l+1, xi_ev, dNi); // l+1-th deriv of shape function I
             tmp += dNi*xNodes_[k][n];  // multiply by spatial coord
-if ( l == 0 ) {
-cout << "GElemBase:dogeom2d: dNi/dx^" << l+1 << "=" << dNi << endl;
-}
           } // i-loop
         } // j-loop
-cout << "GElemBase:dogeom2d: tmp^" << l+1 << "=" << tmp << endl;
         rij(k,l) = tmp;
       } // k-loop
     } // l-loop
