@@ -14,10 +14,11 @@
 #include <gptl.h>
 #include <random>
 #include "gcomm.hpp"
+#include "ggfx.hpp"
 #include "gllbasis.hpp"
 #include "ggrid_icos.hpp"
+#include "ggrid_box.hpp"
 #include "gmass.hpp"
-#include "ggfx.hpp"
 #include "gmorton_keygen.hpp"
 #include "ggrid_factory.hpp"
 #include "gmtk.hpp"
@@ -29,65 +30,18 @@
 using namespace geoflow::tbox;
 using namespace std;
 
+void init_ggfx(GGrid &grid, GGFX<GFTYPE> &ggfx);
+
+GGrid       *grid_;
+GC_COMM      comm_=GC_COMM_WORLD ;      // communicator
+
 
 int main(int argc, char **argv)
 {
 
-    GString serr ="main: ";
-    GBOOL  bret;
-    GINT   iopt;
-    GINT   ilevel=0;// 2d ICOS refinement level
-    GINT   errcode, gerrcode;
-    GINT   nlat=10, nlong=20;
-    GFTYPE radiusi=1, radiuso=2;
-    GTVector<GINT> ne[3]; // # elements in each direction in 3d
-    GC_COMM comm = GC_COMM_WORLD;
-
-    for ( GSIZET j=0; j<3; j++ ) ne[j] = 10;
-
-
-#if 1
-
-    // Parse command line. ':' after char
-    // option indicates that it takes an argument:
-    while ((iopt = getopt(argc, argv, "i:j:k;l:o:q:r:v:h")) != -1) {
-      switch (iopt) {
-      case 'i': // get # elements in r
-          ne[0] = atoi(optarg);
-          break;
-      case 'j': // get # elements in lat
-          ne[1] = atoi(optarg);
-          break;
-      case 'k': // get # elements in long
-          ne[2] = atoi(optarg);
-          break;
-      case 'l': // # 2d refinement level
-          ilevel = atoi(optarg);
-          break;
-      case 'q': // inner radius for 2d/3d
-          radiusi = atoi(optarg);
-          break;
-      case 'r': // outer radius for 3d
-          radiuso = atoi(optarg);
-          break;
-      case 'h': // help
-          std::cout << "usage: " << std::endl <<
-          argv[0] << " [-h] [-i #Elems in r] [-j #Elems in lat]  [-k #Elems in long] [-l refine level] [-q rad_inner] [-r rad_outer] " << std::endl;
-          exit(1); 
-          break;
-      case ':': // missing option argument
-          std::cout << argv[0] << ": option " << optopt << " requires an argument" << std::endl;
-          exit(1); 
-          break;
-      case '?':
-      default: // invalid option
-          std::cout << argv[0] << ": option " << optopt << " invalid" << std::endl;
-          exit(1);
-          break;
-      }
-    }
-
-#endif
+    GString  serr ="main: ";
+    GINT     errcode, gerrcode;
+    GFTYPE   radiusi;
 
     errcode = 0;
 
@@ -105,16 +59,18 @@ int main(int argc, char **argv)
     GPTLinitialize();
 
     // Get minimal property tree:
-    PropertyTree ptree; 
+    PropertyTree gtree, ptree; 
     GString sgrid;
-    GGrid *grid;
     std::vector<GINT> pstd(GDIM);
 
     ptree.load_file("input.jsn");
     sgrid       = ptree.getValue<GString>("grid_type");
     pstd        = ptree.getArray<GINT>("exp_order");
+    gtree       = ptree.getPropertyTree(sgrid);
 
     assert(sgrid == "grid_icos" && "Must use ICOS grid for now");
+
+    radiusi = gtree.getValue<GFTYPE>("radius",1.0);
 
     // Create basis:
     GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis(GDIM);
@@ -124,24 +80,25 @@ int main(int argc, char **argv)
 
     // Generate grid:
     GPTLstart("gen_grid");
-    grid = GGridFactory::build(ptree, gbasis, comm);
+    grid_ = GGridFactory::build(ptree, gbasis, comm_);
     GPTLstop("gen_grid");
 
+    // Initialize gather/scatter operator:
+    GGFX<GFTYPE> ggfx;
+    init_ggfx(*grid_, ggfx);
 
     // Test some of the coord transformation methods:
     GFTYPE xlat, xlatc, xlong, xlongc;
     GFTYPE eps = std::numeric_limits<GFTYPE>::epsilon();
-    GTPoint<GFTYPE> pdiff;
-    GTVector<GTPoint<GFTYPE>> cart(1), cref(1), sph(1), tcart(1), tsph(1);
 
-    GTVector<GFTYPE> f(grid->ndof());
-    GTVector<GFTYPE> g(grid->ndof());
+    GTVector<GFTYPE> f(grid_->ndof());
+    GTVector<GFTYPE> g(grid_->ndof());
     GTVector<GTVector<GFTYPE>*> utmp(1);
-    GTVector<GFTYPE> imult(grid->ndof());
-    GMass massop(*grid);
-
+    GMass massop(*grid_);
 
     f = 1.0;
+    ggfx.doOp(f, GGFX_OP_SMOOTH);
+
     GPTLstart("massop_prod");
     massop.opVec_prod(f,utmp,g);
     GPTLstop("massop_prod");
@@ -154,7 +111,7 @@ int main(int argc, char **argv)
 
     GFTYPE integral=g.sum();
     GFTYPE gintegral;
-    GComm::Allreduce(&integral, &gintegral, 1, T2GCDatatype<GFTYPE>() , GC_OP_SUM, comm);
+    GComm::Allreduce(&integral, &gintegral, 1, T2GCDatatype<GFTYPE>() , GC_OP_SUM, comm_);
 
     std::ifstream itst;
     std::ofstream ios;
@@ -170,9 +127,9 @@ int main(int argc, char **argv)
 
     // Get global no elements and dof:
     GTVector<GSIZET> lsz(2), gsz(2);
-    lsz[0] = grid->nelems();
-    lsz[1] = grid->ndof();
-    GComm::Allreduce(lsz.data(), gsz.data(), 2, T2GCDatatype<GSIZET>() , GC_OP_SUM, comm);
+    lsz[0] = grid_->nelems();
+    lsz[1] = grid_->ndof();
+    GComm::Allreduce(lsz.data(), gsz.data(), 2, T2GCDatatype<GSIZET>() , GC_OP_SUM, comm_);
 
 
     GFTYPE aintegral;
@@ -193,7 +150,7 @@ int main(int argc, char **argv)
     
 
     // Accumulate errors:
-    GComm::Allreduce(&errcode, &gerrcode, 1, T2GCDatatype<GINT>() , GC_OP_MAX, comm);
+    GComm::Allreduce(&errcode, &gerrcode, 1, T2GCDatatype<GINT>() , GC_OP_MAX, comm_);
 
  
     GPTLpr_file("timing.txt");
@@ -202,12 +159,64 @@ int main(int argc, char **argv)
 
 term:
     if ( gerrcode != 0 ) {
-      GPP(comm,serr << " Error: code=" << errcode);
+      GPP(comm_,serr << " Error: code=" << errcode);
     }
     else {
-      GPP(comm,serr << "     Success!");
+      GPP(comm_,serr << "     Success!");
     }
 
     GComm::TermComm();
     return(gerrcode);
 } // end, main
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD: init_ggfx
+// DESC  : Initialize gather/scatter operator
+// ARGS  : grid    : GGrid object
+//         ggfx    : gather/scatter op, GGFX
+//**********************************************************************************
+void init_ggfx(GGrid &grid, GGFX<GFTYPE> &ggfx)
+{
+  GFTYPE                         delta;
+  GMorton_KeyGen<GNODEID,GFTYPE> gmorton;
+  GTPoint<GFTYPE>                dX, porigin, P0;
+  GTVector<GNODEID>              glob_indices;
+  GTVector<GTVector<GFTYPE>>    *xnodes;
+
+  // First, periodize coords if required to, 
+  // before labeling nodes:
+  if ( typeid(grid) == typeid(GGridBox) ) {
+    static_cast<GGridBox*>(&grid)->periodize();
+  }
+
+  delta  = grid.minnodedist();
+  dX     = 0.1*delta;
+  xnodes = &grid.xNodes();
+  glob_indices.resize(grid.ndof());
+
+  // Integralize *all* internal nodes
+  // using Morton indices:
+  gmorton.setIntegralLen(P0,dX);
+
+  gmorton.key(glob_indices, *xnodes);
+  GComm::Synch(comm_);
+
+#if 0
+  GPP(comm_,"init_ggfx: glob_indices=" << glob_indices);
+#endif
+
+  // Initialize gather/scatter operator:
+  GBOOL bret;
+  bret = ggfx.init(glob_indices);
+  assert(bret && "Initialization of GGFX operator failed");
+
+  // Unperiodize nodes now that connectivity map is
+  // generated, so that coordinates mean what they should:
+  if ( typeid(grid) == typeid(GGridBox) ) { // periodize coords
+    static_cast<GGridBox*>(&grid)->unperiodize();
+  }
+
+} // end method init_ggfx
+
