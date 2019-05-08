@@ -81,8 +81,8 @@ lshapefcn_             (NULLPTR)
     || global_bdy_types_[2] == GBDY_PERIODIC ) bPeriodic_[1] = TRUE;
   
   if ( GDIM==3 
-    && global_bdy_types_[1] == GBDY_PERIODIC
-    || global_bdy_types_[3] == GBDY_PERIODIC ) bPeriodic_[2] = TRUE;
+    &&(global_bdy_types_[1] == GBDY_PERIODIC
+    || global_bdy_types_[3] == GBDY_PERIODIC) ) bPeriodic_[2] = TRUE;
 
   ne_.resize(b.size());
   for ( GSIZET j=0; j<b.size(); j++ ) {
