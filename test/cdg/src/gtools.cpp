@@ -17,6 +17,7 @@
 //**********************************************************************************
 void init_ggfx(PropertyTree &ptree, GGrid &grid, GGFX<GFTYPE> &ggfx)
 {
+  GString                        serr = "init_ggfx: ";
   GFTYPE                         delta;
   GFTYPE                         rad;
   GMorton_KeyGen<GNODEID,GFTYPE> gmorton;
