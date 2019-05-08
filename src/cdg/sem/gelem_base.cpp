@@ -1166,7 +1166,7 @@ void GElem_base::dogeom3d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
 //***********************************************************************************
 void GElem_base::Jac(GMVFType &G, GTVector<GFTYPE> &jacv, GBOOL &pChk, GINT *pind, GINT nind )
 {
-  GString serr = "GElem_base::det: ";
+  GString serr = "GElem_base::Jac: ";
 
   assert( (G.size(1) == 2 && G.size(2) == 2)
        || (G.size(1) == 3 && G.size(2) == 3) 
