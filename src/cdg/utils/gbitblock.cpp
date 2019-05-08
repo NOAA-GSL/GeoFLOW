@@ -18,7 +18,7 @@
 // ARGS   : GINT NumOfBits: bit block size
 // RETURNS: none
 //**********************************************************************************
-GBitBlock::GBitBlock(GINT  NumOfBits=0)
+GBitBlock::GBitBlock(GINT  NumOfBits)
 :
 iBlock_                (NULL),
 bitFieldLength_        (NumOfBits),
