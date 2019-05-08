@@ -230,10 +230,6 @@ void GHelmholtz::embed_prod(GTVector<GFTYPE> &u,
   // Compute derivatives of u:
   GMTK::compute_grefderivs(*grid_, u, etmp1_, FALSE, utmp); // utmp stores tensor-prod derivatives, Dj u
 
-GPP(MPI_COMM_WORLD, serr << "du/dxi_x=" << *utmp[0]); 
-GPP(MPI_COMM_WORLD, serr << "du/dxi_y=" << *utmp[1]); 
-GPP(MPI_COMM_WORLD, serr << "du/dxi_z=" << *utmp[2]); 
-  
   // Compute Gij (D^j u). Recall, Gij contain mass: 
   for ( GSIZET i=0; i<GDIM+1; i++ ) { 
     *utmp[GDIM+1+i] = 0.0;
