@@ -98,13 +98,18 @@ int main(int argc, char **argv)
     GMass massop(*grid_);
 
     f = 1.0;
-#if 0
+#if 1
 //  ggfx.doOp(f, GGFX_OP_SMOOTH);
     imult = &ggfx.get_imult();
     // Multiply f by inverse multiplicity:
     f.pointProd(*imult);
+cout << serr << "imult=" << *imult << endl;
 #endif
 
+    GFTYPE integral;
+    GFTYPE gintegral;
+
+#if 0
     GPTLstart("massop_prod");
     massop.opVec_prod(f,utmp,g);
     GPTLstop("massop_prod");
@@ -117,9 +122,11 @@ int main(int argc, char **argv)
     g.pointProd(*imult);
 #endif
 
-    GFTYPE integral=g.sum();
-    GFTYPE gintegral;
+    integral=g.sum();
     GComm::Allreduce(&integral, &gintegral, 1, T2GCDatatype<GFTYPE>() , GC_OP_SUM, comm_);
+#else
+    gintegral = grid_->integrate(f, g);
+#endif
 
     std::ifstream itst;
     std::ofstream ios;
