@@ -32,7 +32,7 @@ void init_ggfx(PropertyTree &ptree, GGrid &grid, GGFX<GFTYPE> &ggfx)
 
   if ( sgrid == "grid_box" ) {
     pstd = gtree.getArray<GFTYPE>("xyz0");
-    P0   = std;
+    P0   = pstd;
   }
   if ( sgrid == "grid_icos" ) {
     rad   = gtree.getValue<GFTYPE>("radius");
@@ -49,8 +49,8 @@ void init_ggfx(PropertyTree &ptree, GGrid &grid, GGFX<GFTYPE> &ggfx)
 
   // First, periodize coords if required to, 
   // before labeling nodes:
-  if ( typeid(*grid_) == typeid(GGridBox) ) { 
-    static_cast<GGridBox*>(grid_)->periodize();
+  if ( typeid(grid) == typeid(GGridBox) ) { 
+    static_cast<GGridBox*>(&grid)->periodize();
   }
 
   delta  = grid.minnodedist();
@@ -63,11 +63,6 @@ void init_ggfx(PropertyTree &ptree, GGrid &grid, GGFX<GFTYPE> &ggfx)
   gmorton.setIntegralLen(P0,dX);
 
   gmorton.key(glob_indices, *xnodes);
-  GComm::Synch(comm_);
-
-#if 0
-  GPP(comm_,"init_ggfx: glob_indices=" << glob_indices);
-#endif
 
   // Initialize gather/scatter operator:
   GBOOL bret;
@@ -76,8 +71,8 @@ void init_ggfx(PropertyTree &ptree, GGrid &grid, GGFX<GFTYPE> &ggfx)
 
   // Unperiodize nodes now that connectivity map is
   // generated, so that coordinates mean what they should:
-  if ( typeid(*grid_) == typeid(GGridBox) ) { // periodize coords
-    static_cast<GGridBox*>(grid_)->unperiodize();
+  if ( typeid(grid) == typeid(GGridBox) ) { // periodize coords
+    static_cast<GGridBox*>(&grid)->unperiodize();
   }
 
 } // end method init_ggfx
