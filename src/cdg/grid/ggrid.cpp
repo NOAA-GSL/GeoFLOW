@@ -747,8 +747,8 @@ GFTYPE GGrid::find_min_dist()
 {
   assert(gelems_.size() > 0 && "Elements not set");
 
-  
  
+  GFTYPE           tiny = 1000.0*std::numeric_limits<GFTYPE>::epsilon();
   GTPoint<GFTYPE>  dx(3), p0(3), p1(3);
 
   // Find min node distance on grid:
@@ -772,7 +772,7 @@ GFTYPE GGrid::find_min_dist()
       p1[i] = xNodes_[i][j+1];
     }
     dx = p1 - p0; 
-    if ( dx.norm() > 0.0 ) xmin = MIN(xmin, dx.norm()); 
+    if ( dx.norm() > tiny ) xmin = MIN(xmin, dx.norm()); 
   }
   GComm::Allreduce(&xmin, &xgmin, 1, T2GCDatatype<GFTYPE>() , GC_OP_MIN, comm_);
   return xgmin;
