@@ -34,6 +34,7 @@
 #include "tbox/mpixx.hpp"
 #include "tbox/global_manager.hpp"
 #include "tbox/input_manager.hpp"
+#include "gtools.h"
 //#include "gio.h"
 
 using namespace geoflow::pdeint;
@@ -86,7 +87,6 @@ using ObsBase = ObserverBase<EqnBase>; // Observer Base Type
 
 void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVector<GTVector<GFTYPE>*> &u);
 void update_dirichlet(const GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u, GTVector<GTVector<GFTYPE>*> &ub);
-void init_ggfx(GGrid &grid, GGFX<GFTYPE> &ggfx);
 void create_observers(PropertyTree &ptree, GSIZET icycle, GFTYPE time, 
 std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers);
 void create_stirrer(PropertyTree &ptree, StirBasePtr &pStirrer);
@@ -262,7 +262,7 @@ int main(int argc, char **argv)
 
     // Initialize gather/scatter operator:
     GGFX<GFTYPE> ggfx;
-    init_ggfx(*grid_, ggfx);
+    init_ggfx(ptree, *grid_, ggfx);
 
     GTimerStop("init_ggfx_op");
     EH_MESSAGE("main: gather/scatter initialized.");
@@ -948,57 +948,6 @@ void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVecto
   }
 
 } // end, compute_analytic
-
-
-//**********************************************************************************
-//**********************************************************************************
-// METHOD: init_ggfx
-// DESC  : Initialize gather/scatter operator
-// ARGS  : grid    : GGrid object
-//         ggfx    : gather/scatter op, GGFX
-//**********************************************************************************
-void init_ggfx(GGrid &grid, GGFX<GFTYPE> &ggfx)
-{
-  GFTYPE                         delta;
-  GMorton_KeyGen<GNODEID,GFTYPE> gmorton;
-  GTPoint<GFTYPE>                dX, porigin, P0;
-  GTVector<GNODEID>              glob_indices;
-  GTVector<GTVector<GFTYPE>>    *xnodes;
-
-  // First, periodize coords if required to, 
-  // before labeling nodes:
-  if ( typeid(*grid_) == typeid(GGridBox) ) { 
-    static_cast<GGridBox*>(grid_)->periodize();
-  }
-
-  delta  = grid.minnodedist();
-  dX     = 0.1*delta;
-  xnodes = &grid.xNodes();
-  glob_indices.resize(grid.ndof());
-
-  // Integralize *all* internal nodes
-  // using Morton indices:
-  gmorton.setIntegralLen(P0,dX);
-
-  gmorton.key(glob_indices, *xnodes);
-  GComm::Synch(comm_);
-
-#if 0
-  GPP(comm_,"init_ggfx: glob_indices=" << glob_indices);
-#endif
-
-  // Initialize gather/scatter operator:
-  GBOOL bret;
-  bret = ggfx.init(glob_indices);
-  assert(bret && "Initialization of GGFX operator failed");
-
-  // Unperiodize nodes now that connectivity map is
-  // generated, so that coordinates mean what they should:
-  if ( typeid(*grid_) == typeid(GGridBox) ) { // periodize coords
-    static_cast<GGridBox*>(grid_)->unperiodize();
-  }
-
-} // end method init_ggfx
 
 
 //**********************************************************************************

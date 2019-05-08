@@ -32,6 +32,7 @@
 #include "tbox/global_manager.hpp"
 #include "tbox/input_manager.hpp"
 #include "gio.h"
+#include "gtools.h"
 
 using namespace geoflow::tbox;
 using namespace std;
@@ -64,7 +65,6 @@ void update_dirichlet(const Time &t, State &u, State &ub);
 void apply_bc(const Time &t, State &u, const State &ub);
 void dudt(const Time &t, const State &u,
           const Time &dt, State &dudt);
-void init_ggfx(GGrid &grid, GGFX &ggfx);
 
 
 int main(int argc, char **argv)
@@ -192,7 +192,7 @@ std::cout << "main: gbasis [" << k << "]_order=" << gbasis [k]->getOrder() << st
     GPTLstart("do_gather_op");
     // Initialize gather/scatter operator:
     ggfx_ = new GGFX();
-    init_ggfx(*grid_, *ggfx_);
+    init_ggfx(ptree, *grid_, *ggfx_);
     GPTLstop("do_gather_op");
 
 
@@ -560,40 +560,6 @@ void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVecto
   }
 
 } // end, compute_analytic
-
-
-//**********************************************************************************
-//**********************************************************************************
-// METHOD: init_ggfx
-// DESC  : Initialize gather scatter operator
-// ARGS  : grid    : GGrid object
-//         ggfx    : gather/scatter op, GGFX
-//**********************************************************************************
-void init_ggfx(GGrid &grid, GGFX &ggfx)
-{
-  GFTYPE                         delta;
-  GMorton_KeyGen<GNODEID,GFTYPE> gmorton;
-  GTPoint<GFTYPE>                dX, porigin, P0;
-  GTVector<GNODEID>              glob_indices;
-  GTVector<GTVector<GFTYPE>>    *xnodes;
-
-  delta  = grid.minnodedist();
-  dX     = 0.2*delta;
-  xnodes = &grid.xNodes();
-  glob_indices.resize(grid.ndof());
-
-  // Integralize *all* internal nodes
-  // using Morton indices:
-  gmorton.setIntegralLen(P0,dX);
-  gmorton.key(glob_indices, *xnodes);
-
-cout << "init_ggfx: glob_indices=" << glob_indices << endl;
-
-  // Initialize gather/scatter operator:
-  GBOOL bret = ggfx.init(glob_indices);
-  assert(bret && "Initialization of GGFX operator failed");
-
-} // end method init_ggfx
 
 
 //**********************************************************************************

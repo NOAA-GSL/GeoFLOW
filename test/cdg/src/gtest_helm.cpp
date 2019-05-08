@@ -27,13 +27,13 @@
 #include "tbox/mpixx.hpp"
 #include "tbox/global_manager.hpp"
 #include "tbox/input_manager.hpp"
+#include "gtools.h"
 
 using namespace geoflow::tbox;
 using namespace std;
 
 
 GGrid *grid_ = NULLPTR;
-void init_ggfx(GGrid &grid, GGFX &ggfx);
 
 int main(int argc, char **argv)
 {
@@ -144,7 +144,7 @@ int main(int argc, char **argv)
     GPTLstart("do_gather_op");
     // Initialize gather/scatter operator:
     GGFX ggfx;
-    init_ggfx(*grid_, ggfx);
+    init_ggfx(ptree, *grid_, ggfx);
     GPTLstop("do_gather_op");
 
 
@@ -255,36 +255,4 @@ int main(int argc, char **argv)
     return(0);
 
 } // end, main
-
-
-//**********************************************************************************
-//**********************************************************************************
-// METHOD: init_ggfx
-// DESC  : Initialize gather scatter operator
-// ARGS  : grid    : GGrid object
-//         ggfx    : gather/scatter op, GGFX
-//**********************************************************************************
-void init_ggfx(GGrid &grid, GGFX &ggfx)
-{
-  GFTYPE                         delta;
-  GMorton_KeyGen<GNODEID,GFTYPE> gmorton;
-  GTPoint<GFTYPE>                dX, porigin, P0;
-  GTVector<GNODEID>              glob_indices;
-  GTVector<GTVector<GFTYPE>>    *xnodes;
-
-  delta  = grid.minnodedist();
-  dX     = 0.5*delta;
-  xnodes = &grid.xNodes();
-  glob_indices.resize(grid.ndof());
-
-  // Integralize *all* internal nodes
-  // using Morton indices:
-  gmorton.setIntegralLen(P0,dX);
-  gmorton.key(glob_indices, *xnodes);
-
-  // Initialize gather/scatter operator:
-  GBOOL bret = ggfx.init(glob_indices);
-  assert(bret && "Initialization of GGFX operator failed");
-
-} // end method init_ggfx
 
