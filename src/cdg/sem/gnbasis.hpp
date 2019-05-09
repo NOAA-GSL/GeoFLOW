@@ -72,6 +72,7 @@ virtual  TE               evalBasis(GINT  i, TE eta)=0;
 virtual  GTVector<TE>    *evalBasis(GINT  i, GTVector<TE> &eta, GTVector<TE> &vret)=0;
 virtual  GTMatrix<TE>    *evalBasis(GTVector<TE> &eta, GTMatrix<TE> &mret)=0;
 virtual  GTMatrix<TE>    *evalBasis(TE eta[], GINT neta, GTMatrix<TE> &mret)=0;
+virtual  TE               evalDBasis(GINT i, TE eta)=0;
 virtual  GTMatrix<TE>    *evalDBasis(GTVector<TE> &eta, GTMatrix<TE> &mret)=0;
 virtual  GTMatrix<TE>    *evalDBasis(TE eta[], GINT n, GTMatrix<TE> &mret)=0;
 virtual  GTVector<TE>    *evalDBasis (GINT i, GTVector<TE> &eta, GTVector<TE> &vret)=0;

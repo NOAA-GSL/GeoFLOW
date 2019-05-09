@@ -1351,6 +1351,48 @@ GTMatrix<TE> *GLLBasis<T,TE>::evalBasis (TE eta[], GINT neta, GTMatrix<TE> &mret
 //************************************************************************************
 //************************************************************************************
 // METHOD : evalDBasis (1)
+// DESC   : Evaluates basis i, derivative at input parent domain point , eta
+//              Deriv. is derived from :
+//              dh_j(eta)/dxi =  -1/(Np_*(Np_-1)) * (1-eta**2) dL_Np_ (eta)dxi / (L_Np_(xi_j) (eta-xi_j))
+// ARGS   : 
+//           j   : basis function to evaluate derivative of
+//           eta : refereince interval at which evaluate
+// RETURNS: derivative value 
+//************************************************************************************
+template<typename T, typename TE>
+TE GLLBasis<T,TE>::evalDBasis (GINT j, TE eta)
+{
+  GString serr = "GLLBasis::evalDBasis(1): ";
+  T     ppn_j, pm1, pdm1, pm2, pdm2, ppn_xi, pder_xi, pdd;
+  T     fact=-1.0/(Np_*(Np_+1.0)), gfact, g1, g1i, g2, xi ;
+  TE    fRet;
+  
+  if ( !bInit_ && !init() ) {
+    std::cout << serr << "basis data incomplete" << std::endl;
+    exit(1);
+  }
+
+  fRet = 0.0;
+  xi     = eta;
+  g1     = xi - xiNodes_[j];
+  if ( xi < ximin_ || xi > ximax_ ) fRet = 0.0;
+  else if ( fabs(g1) > tetiny_) {
+    ppn_j = Pn_[j];
+    computeJacobi(Np_, alpha_, beta_, ppn_xi, pder_xi,pm1, pdm1, pm2, pdm2, xi);
+    gfact = fact / ppn_j;
+    g1i   = 1.0/g1;
+    g2    = (1.0 - xi*xi)*g1i;
+    pdd   = 2.*xi*pder_xi - Np_*(Np_ + 1.)*ppn_xi; 
+    fRet  = static_cast<TE>(gfact * g1i * ( pdd - (2.0*xi + g2 )*pder_xi) );
+  }
+  return fRet;
+
+} // end of method evalDBasis (1)
+
+
+//************************************************************************************
+//************************************************************************************
+// METHOD : evalDBasis (2)
 // DESC   : Evaluates basis derivative at input parent domain points , eta_i
 //              Deriv. is derived from :
 //              dh_j(eta)/dxi =  -1/(Np_*(Np_-1)) * (1-eta**2) dL_Np_ (eta)dxi / (L_Np_(xi_j) (eta-xi_j))
@@ -1361,14 +1403,14 @@ GTMatrix<TE> *GLLBasis<T,TE>::evalBasis (TE eta[], GINT neta, GTMatrix<TE> &mret
 template<typename T, typename TE>
 GTMatrix<TE> *GLLBasis<T,TE>::evalDBasis (GTVector<TE> &eta, GTMatrix<TE> &mret)
 {
-  GString serr = "GLLBasis::evalDBasis(1): ";
+  GString serr = "GLLBasis::evalDBasis(2): ";
   GINT  i, j, mm, nn;
   T     ppn_j, pm1, pdm1, pm2, pdm2, ppn_xi, pder_xi, pdd;
   T     fact=-1.0/(Np_*(Np_+1.0)), gfact, g1, g1i, g2, xi ;
   TE    fRet;
   
   if ( !bInit_ && !init() ) {
-    std::cout << serr << "evalDBasis: basis data incomplete" << std::endl;
+    std::cout << serr << "basis data incomplete" << std::endl;
     exit(1);
   }
 
@@ -1394,12 +1436,12 @@ GTMatrix<TE> *GLLBasis<T,TE>::evalDBasis (GTVector<TE> &eta, GTMatrix<TE> &mret)
   }
   return &mret;
 
-} // end of method evalDBasis (1)
+} // end of method evalDBasis (2)
 
 
 //************************************************************************************
 //************************************************************************************
-// METHOD : evalDBasis (2)
+// METHOD : evalDBasis (3)
 // DESC   : Evaluates basis derivative at input parent domain points , eta_i
 //          Deriv. is derived from :
 //          h_j(eta) =  -1/(Np_*(Np_-1)) * (1-eta**2) dL_Np_ (eta)dxi / (L_Np_(xi_j) (eta-xi_j))
@@ -1411,14 +1453,14 @@ GTMatrix<TE> *GLLBasis<T,TE>::evalDBasis (GTVector<TE> &eta, GTMatrix<TE> &mret)
 template<typename T, typename TE>
 GTMatrix<TE> *GLLBasis<T,TE>::evalDBasis (TE eta[], GINT n, GTMatrix<TE> &mret)
 {
-  GString serr = "GLLBasis::evalDBasis(2): ";
+  GString serr = "GLLBasis::evalDBasis(3): ";
   GINT  i, j, mm, nn;
   T     ppn_j, pm1, pdm1, pm2, pdm2, ppn_xi, pder_xi, pdd;
   T     fact=-1.0/(Np_*(Np_+1.0)), gfact, g1, g1i, g2, xi ;
   TE    fRet;
   
   if ( !bInit_ && !init() ) {
-    std::cout << serr << "evalDBasis: basis data incomplete" << std::endl;
+    std::cout << serr << "basis data incomplete" << std::endl;
     exit(1);
   }
 
@@ -1443,12 +1485,12 @@ GTMatrix<TE> *GLLBasis<T,TE>::evalDBasis (TE eta[], GINT n, GTMatrix<TE> &mret)
     }
   }
   return &mret;
-} // end of method evalDBasis
+} // end of method evalDBasis (3)
 
 
 //************************************************************************************
 //************************************************************************************
-// METHOD : evalDBasis (3)
+// METHOD : evalDBasis (4)
 // DESC   : Evaluates i-th basis derivative at input parent domain points , eta_i
 //          Deriv. is derived from :
 //          h_i(eta) =  -1/(Np_*(Np_-1)) * (1-eta**2) dL_Np_ (eta)dxi / (L_Np_(xi_j) (eta-xi_j))
@@ -1460,7 +1502,7 @@ GTMatrix<TE> *GLLBasis<T,TE>::evalDBasis (TE eta[], GINT n, GTMatrix<TE> &mret)
 template<typename T, typename TE>
 GTVector<TE> *GLLBasis<T,TE>::evalDBasis (GINT j, GTVector<TE> &eta, GTVector<TE> &vret)
 {
-  GString serr = "GLLBasis::evalDBasis(3): ";
+  GString serr = "GLLBasis::evalDBasis(4): ";
   GINT  i;
   T     ppn_j, pm1, pdm1, pm2, pdm2, ppn_xi, pder_xi, pdd;
   T     fact=-1.0/(Np_*(Np_+1.0)), gfact, g1, g1i, g2, xi ;
@@ -1490,6 +1532,6 @@ GTVector<TE> *GLLBasis<T,TE>::evalDBasis (GINT j, GTVector<TE> &eta, GTVector<TE
   }
 
   return &vret;
-} // end of method evalDBasis (3)
+} // end of method evalDBasis (4)
 
 
