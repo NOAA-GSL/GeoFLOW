@@ -38,11 +38,14 @@ GC_COMM      comm_=GC_COMM_WORLD ;      // communicator
 
 int main(int argc, char **argv)
 {
-
     GString  serr ="main: ";
     GINT     errcode, gerrcode;
     GFTYPE   radiusi;
 
+    if ( argc > 1 ) {
+      cout << "No arguments accepted" << endl;
+      exit(1);
+    }
     errcode = 0;
 
     // Initialize comm:
