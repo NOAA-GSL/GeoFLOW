@@ -969,7 +969,8 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
           for ( i=0; i<gbasis_[0]->getOrder()+1; i++, n++ ) { // evaluate gbasis at xi_ev
             I[0] = i; I[1] = j;
             gshapefcn_->dNdXi(I, l+1, xi_ev, dNi); // l+1-th deriv of shape function I
-            tmp += dNi*xNodes_[k][n];  // multiply by spatial coord
+            dNi *= xNodes_[k][n];  // multiply by spatial coord
+            tmp += dNi;
           } // i-loop
         } // j-loop
         rij(k,l) = tmp;
@@ -1337,6 +1338,7 @@ void GElem_base::inv(GMVFType &G, GMVFType &iG)
     return;
   }
 
+// GTMatrix<GFTYPE> A(3,3), B(3,3);
   for ( GSIZET n=0; n<G(0,0).size(); n++ ) { // 3x3 matrix
     jac  = G(0,0)[n]*(G(1,1)[n]*G(2,2)[n]-G(1,2)[n]*G(2,1)[n])
          - G(0,1)[n]*(G(1,0)[n]*G(2,2)[n]-G(2,0)[n]*G(1,2)[n])
@@ -1353,6 +1355,18 @@ void GElem_base::inv(GMVFType &G, GMVFType &iG)
     iG(2,0)[n] =  (G(1,0)[n]*G(2,1)[n]-G(1,1)[n]*G(2,0)[n])*ijac;
     iG(2,1)[n] = -(G(0,0)[n]*G(2,1)[n]-G(0,1)[n]*G(2,0)[n])*ijac;
     iG(2,2)[n] =  (G(0,0)[n]*G(1,1)[n]-G(1,0)[n]*G(0,1)[n])*ijac;
+#if 0
+A(0,0) = G(0,0)[n]; A(0,1) = G(0,1)[n]; A(0,2) = G(0,2)[n];
+A(1,0) = G(1,0)[n]; A(1,1) = G(1,1)[n]; A(1,2) = G(1,2)[n];
+A(2,0) = G(2,0)[n]; A(2,1) = G(2,1)[n]; A(2,2) = G(2,2)[n];
+
+B(0,0) = iG(0,0)[n]; B(0,1) = iG(0,1)[n]; B(0,2) = iG(0,2)[n];
+B(1,0) = iG(1,0)[n]; B(1,1) = iG(1,1)[n]; B(1,2) = iG(1,2)[n];
+B(2,0) = iG(2,0)[n]; B(2,1) = iG(2,1)[n]; B(2,2) = iG(2,2)[n];
+
+cout << serr << "A*B=" << A*B << endl;
+cout << serr << "B*A=" << B*A << endl;
+#endif
   }
 
 } // end of method inv
