@@ -1093,7 +1093,8 @@ void GElem_base::dogeom3d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
             for ( i=0; i<gbasis_[0]->getOrder()+1; i++, n++ ) {
               I[0] = i; I[1] = j; I[2] = k;
               gshapefcn_->dNdXi(I, m+1, xi_ev, dNi); // m-th deriv of shape function I
-              rij(l,m) += dNi*xNodes_[l][n]; // multiply by spatial coord
+              dNi *= xNodes_[l][n]; // multiply by spatial coord
+              rij(l,m) += dNi;
             } // i-loop
           } // j-loop
         } // k-loop
