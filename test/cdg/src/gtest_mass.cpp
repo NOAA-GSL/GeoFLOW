@@ -102,7 +102,7 @@ int main(int argc, char **argv)
     GMass massop(*grid_);
 
     f = 1.0;
-#if 1
+#if 0
 //  ggfx.doOp(f, GGFX_OP_SMOOTH);
     // Multiply f by inverse multiplicity:
     f.pointProd(*imult);

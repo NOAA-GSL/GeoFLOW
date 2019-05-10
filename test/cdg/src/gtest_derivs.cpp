@@ -168,7 +168,7 @@ int main(int argc, char **argv)
     // Create state and tmp space:
     GTVector<GTVector<GFTYPE>*> utmp(4);
     GTVector<GTVector<GFTYPE>*> u   (1);
-    GTVector<GTVector<GFTYPE>*> du (nc);
+    GTVector<GTVector<GFTYPE>*> du  (1);
     GTVector<GTVector<GFTYPE>*> da (nc);
     
     for ( GSIZET j=0; j<utmp.size(); j++ ) utmp[j] = new GTVector<GFTYPE>(grid_->size());
@@ -211,7 +211,7 @@ int main(int argc, char **argv)
     }
 #elif defined(_DO_REFDERIV)
     // Compute nc derivs on u, without weights: 
-    for ( GSIZET j=0; j<nc; j++ ) {  // do chain rule
+    for ( GSIZET j=0; j<du.size(); j++ ) {  // do chain rule
       if ( grid_->gtype() == GE_REGULAR ) {
         GMTK::compute_grefderiv (*grid_, *u[0], etmp1, j+1, FALSE, *du[j]);
         du[j]->pointProd((*dXidX)(j,0));
@@ -221,7 +221,7 @@ int main(int argc, char **argv)
       }
     } // end, j-loop
 #else
-    for ( GSIZET j=0; j<nc; j++ ) {
+    for ( GSIZET j=0; j<du.size(); j++ ) {
       grid_->deriv(*u[0], j+1, *utmp[0], *du[j]);
     }
 #endif
@@ -291,7 +291,7 @@ int main(int argc, char **argv)
 #else
     // Compute collocated  analytic solution, do comparisons:
     maxerror = 0.0;
-    for ( GSIZET j=0; j<nc; j++ ) { //local errors
+    for ( GSIZET j=0; j<du.size(); j++ ) { //local errors
       for ( GSIZET i=0; i<da[j]->size(); i++ ) (*utmp[0])[i] = pow((*da[j])[i],2);
       nnorm = grid_->integrate(*utmp[0], *utmp[1]);
       nnorm = nnorm > std::numeric_limits<GFTYPE>::epsilon() ? nnorm : 1.0;
