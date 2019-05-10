@@ -954,6 +954,7 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
   GBOOL   pChk;        // check for positive-difiniteness
   GTVector<GFTYPE> dNi(nnodes);// shape function derivative
   GTVector<GFTYPE> tmp(nnodes);// tmp space
+//GTVector<GFTYPE> tmp1(nnodes);// tmp space
   GTVector<GINT>   I(2);       // tensor product index
 
 
@@ -974,9 +975,18 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
           } // i-loop
         } // j-loop
         rij(k,l) = tmp;
-//if ( l == 2 ) cout << serr << "r(" << k << ",2)=" << rij(k,l) << endl;
+
       } // k-loop
     } // l-loop
+#if 0
+    // Note: if l= 3, then dX_i/dzeta = X_i, so do a check:
+    tmp1 = rij(0,2) - xNodes_[0];
+    cout << serr << " delta x=" << tmp1.amax() << endl;
+    tmp1 = rij(1,2) - xNodes_[1];
+    cout << serr << " delta y=" << tmp1.amax() << endl;
+    tmp1 = rij(2,2) - xNodes_[2];
+    cout << serr << " delta z=" << tmp1.amax() << endl;
+#endif
   } else if ( elemtype_ == GE_REGULAR) {  // dXi/dX are just constants for GE_REGULAR:
     // Set only diagonal elements of rij, irij:
     for ( k=0; k<nxy; k++ ) { // rij matrix element col
@@ -1179,12 +1189,15 @@ void GElem_base::Jac(GMVFType &G, GTVector<GFTYPE> &jacv, GBOOL &pChk, GINT *pin
   // Compute Jacobian, and check being positive-definite-ness:
   GSIZET  n, k;
   GFTYPE  Gx, Gy, Gz, r;
-  GFTYPE   x,  y,  z;
+  GFTYPE   x,  y,  z, cost, sint;
 
   pChk = TRUE;
-#if 1
+
+#if 0
   if ( elemtype_ == GE_2DEMBEDDED ) {
-    // |G| = | d_x_/dxi X d_x_/deta |, where cross prod 
+    // Total 3d Jacobian can be written as:
+    //   J = d_x_/dzeta \cdot G, where
+    //   G =  d_x_/dxi X d_x_/deta , and cross prod 
     // represents normal to 2d surface at (xi,eta)
     if ( pind != NULLPTR ) {
       for ( k=0; k<nind; k++ ) { // loop over desired indices only
@@ -1201,12 +1214,18 @@ void GElem_base::Jac(GMVFType &G, GTVector<GFTYPE> &jacv, GBOOL &pChk, GINT *pin
         Gx = G(1,0)[n]*G(2,1)[n] - G(2,0)[n]*G(1,1)[n]; 
         Gy = G(2,0)[n]*G(0,1)[n] - G(0,0)[n]*G(2,1)[n]; 
         Gz = G(0,0)[n]*G(1,1)[n] - G(1,0)[n]*G(0,1)[n]; 
+#if 0
+        jacv[n] = sqrt(Gx*Gx + Gy*Gy + Gz*Gz);
+#else
         x  = G(0,2)[n];
         y  = G(1,2)[n];
         z  = G(2,2)[n];
-//      jacv[n] = sqrt(Gx*Gx + Gy*Gy + Gz*Gz);
+        jacv[n] = sqrt(Gx*Gx + Gy*Gy + Gz*Gz);
         r   = sqrt( x*x + y*y + z*z );
+        cost = (Gx*x + Gy*y + Gz*z)/(r*jacv[n]); // cos(x,G)
+cout << serr << "cos(_x_, _G_)=" << cost << " |G|=" << jacv[n] << " xGx=" << x*Gx << " yGy=" << y*Gy << " zGz=" << z*Gz << endl;;
         jacv[n] = (Gx*x + Gy*y + Gz*z)/r;
+#endif
         pChk = pChk && fabs(jacv[n]) > fabs(std::numeric_limits<GFTYPE>::epsilon());  // test for zero Jac 
       }
     }
@@ -1246,6 +1265,14 @@ void GElem_base::Jac(GMVFType &G, GTVector<GFTYPE> &jacv, GBOOL &pChk, GINT *pin
       jacv[n] = G(0,0)[n]*(G(1,1)[n]*G(2,2)[n] - G(1,2)[n]*G(2,1)[n])
               - G(0,1)[n]*(G(1,0)[n]*G(2,2)[n] - G(1,2)[n]*G(2,0)[n])
               + G(0,2)[n]*(G(1,0)[n]*G(2,1)[n] - G(1,1)[n]*G(2,0)[n]);
+      if ( elemtype_ == GE_2DEMBEDDED ) {
+        // Divide out the d_x_/dzeta term to find Jacobian:
+        x  = G(0,2)[n];
+        y  = G(1,2)[n];
+        z  = G(2,2)[n];
+        r   = sqrt( x*x + y*y + z*z );
+        jacv[n] /= r;
+      }
       pChk = pChk && fabs(jacv[n]) > std::numeric_limits<GFTYPE>::epsilon();  // test for zero det
     }
   }
@@ -1334,6 +1361,8 @@ void GElem_base::inv(GMVFType &G, GMVFType &iG)
   assert(((G.size(1) == 2 && G.size(2) == 2) || 
           (G.size(1) == 3 || G.size(2) == 3)) && "Invalid matrix dimension");
 
+  GTMatrix<GFTYPE> A(3,3), B(3,3);
+
   GFTYPE ijac, jac;
   if ( G.size(1) == 2 && G.size(2) == 2 ) {
     for ( GSIZET n=0; n<G(0,0).size(); n++ ) { // 2x2 matrix
@@ -1353,6 +1382,8 @@ void GElem_base::inv(GMVFType &G, GMVFType &iG)
          - G(0,1)[n]*(G(1,0)[n]*G(2,2)[n]-G(2,0)[n]*G(1,2)[n])
          + G(0,2)[n]*(G(1,0)[n]*G(2,1)[n]-G(2,0)[n]*G(1,1)[n]);
     ijac = 1.0/jac;
+#if 1
+
     iG(0,0)[n] =  (G(1,1)[n]*G(2,2)[n]-G(1,2)[n]*G(2,1)[n])*ijac;
     iG(0,1)[n] = -(G(0,1)[n]*G(2,2)[n]-G(2,1)[n]*G(0,2)[n])*ijac;
     iG(0,2)[n] =  (G(0,1)[n]*G(1,2)[n]-G(0,2)[n]*G(1,1)[n])*ijac;
@@ -1364,17 +1395,34 @@ void GElem_base::inv(GMVFType &G, GMVFType &iG)
     iG(2,0)[n] =  (G(1,0)[n]*G(2,1)[n]-G(1,1)[n]*G(2,0)[n])*ijac;
     iG(2,1)[n] = -(G(0,0)[n]*G(2,1)[n]-G(0,1)[n]*G(2,0)[n])*ijac;
     iG(2,2)[n] =  (G(0,0)[n]*G(1,1)[n]-G(1,0)[n]*G(0,1)[n])*ijac;
+
+#else
+
+    // Use def from Giraldo:
+    iG(0,0)[n] =  (G(1,1)[n]*G(2,2)[n]-G(1,2)[n]*G(2,1)[n])*ijac;
+    iG(0,1)[n] =  (G(1,2)[n]*G(2,0)[n]-G(1,0)[n]*G(2,2)[n])*ijac;
+    iG(0,2)[n] =  (G(1,0)[n]*G(2,1)[n]-G(1,1)[n]*G(2,0)[n])*ijac;
+  
+    iG(1,0)[n] =  (G(0,2)[n]*G(2,1)[n]-G(0,1)[n]*G(2,2)[n])*ijac;
+    iG(1,1)[n] =  (G(0,0)[n]*G(2,2)[n]-G(0,2)[n]*G(2,0)[n])*ijac;
+    iG(1,2)[n] =  (G(0,1)[n]*G(2,0)[n]-G(0,0)[n]*G(2,1)[n])*ijac;
+
+    iG(2,0)[n] =  (G(0,1)[n]*G(1,2)[n]-G(0,2)[n]*G(1,1)[n])*ijac;
+    iG(2,1)[n] =  (G(0,2)[n]*G(1,0)[n]-G(0,0)[n]*G(1,2)[n])*ijac;
+    iG(2,2)[n] =  (G(0,0)[n]*G(1,1)[n]-G(0,1)[n]*G(1,0)[n])*ijac;
+
+#endif
 #if 0
-A(0,0) = G(0,0)[n]; A(0,1) = G(0,1)[n]; A(0,2) = G(0,2)[n];
-A(1,0) = G(1,0)[n]; A(1,1) = G(1,1)[n]; A(1,2) = G(1,2)[n];
-A(2,0) = G(2,0)[n]; A(2,1) = G(2,1)[n]; A(2,2) = G(2,2)[n];
+    A(0,0) = G(0,0)[n]; A(0,1) = G(0,1)[n]; A(0,2) = G(0,2)[n];
+    A(1,0) = G(1,0)[n]; A(1,1) = G(1,1)[n]; A(1,2) = G(1,2)[n];
+    A(2,0) = G(2,0)[n]; A(2,1) = G(2,1)[n]; A(2,2) = G(2,2)[n];
 
-B(0,0) = iG(0,0)[n]; B(0,1) = iG(0,1)[n]; B(0,2) = iG(0,2)[n];
-B(1,0) = iG(1,0)[n]; B(1,1) = iG(1,1)[n]; B(1,2) = iG(1,2)[n];
-B(2,0) = iG(2,0)[n]; B(2,1) = iG(2,1)[n]; B(2,2) = iG(2,2)[n];
+    B(0,0) = iG(0,0)[n]; B(0,1) = iG(0,1)[n]; B(0,2) = iG(0,2)[n];
+    B(1,0) = iG(1,0)[n]; B(1,1) = iG(1,1)[n]; B(1,2) = iG(1,2)[n];
+    B(2,0) = iG(2,0)[n]; B(2,1) = iG(2,1)[n]; B(2,2) = iG(2,2)[n];
 
-cout << serr << "A*B=" << A*B << endl;
-cout << serr << "B*A=" << B*A << endl;
+    cout << serr << "A*B=" << A*B << endl;
+    cout << serr << "B*A=" << B*A << endl;
 #endif
   }
 

@@ -883,12 +883,17 @@ void GGrid::deriv(GTVector<GFTYPE> &u, GINT idir, GTVector<GFTYPE> &utmp,
     du.pointProd((*dXidX)(idir-1, 0));
   }
   else {  // compute dXi_j/dX_idir D^j u:
-    GMTK::compute_grefderiv(*this, u, etmp_, 1, FALSE, du); // D_ri u
-    du.pointProd((*dXidX)(idir-1,0));
+    GMTK::compute_grefderiv(*this, u, etmp_, 1, FALSE, du); // D_x u
+    du.pointProd((*dXidX)(0,idir-1));
     for ( GSIZET j=1; j<dXidX->size(2); j++ ) {
-      GMTK::compute_grefderiv(*this, u, etmp_, j+1, FALSE, utmp); // D_ri u
-      utmp.pointProd((*dXidX)(idir-1,j));
+      GMTK::compute_grefderiv(*this, u, etmp_, j+1, FALSE, utmp); // D_j u
+      utmp.pointProd((*dXidX)(j,idir-1));
       du += utmp; 
+
+if ( j == 2 ) {
+cout << "GGrid::deriv: utmp=" << utmp << endl;
+cout << "GGrid::deriv: du  =" << du << endl;
+}
     }
   }
     
