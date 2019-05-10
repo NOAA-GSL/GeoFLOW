@@ -974,6 +974,7 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
           } // i-loop
         } // j-loop
         rij(k,l) = tmp;
+//if ( l == 2 ) cout << serr << "r(" << k << ",2)=" << rij(k,l) << endl;
       } // k-loop
     } // l-loop
   } else if ( elemtype_ == GE_REGULAR) {  // dXi/dX are just constants for GE_REGULAR:
@@ -1177,10 +1178,11 @@ void GElem_base::Jac(GMVFType &G, GTVector<GFTYPE> &jacv, GBOOL &pChk, GINT *pin
 
   // Compute Jacobian, and check being positive-definite-ness:
   GSIZET  n, k;
-  GFTYPE  Gx, Gy, Gz;
+  GFTYPE  Gx, Gy, Gz, r;
+  GFTYPE   x,  y,  z;
 
   pChk = TRUE;
-
+#if 1
   if ( elemtype_ == GE_2DEMBEDDED ) {
     // |G| = | d_x_/dxi X d_x_/deta |, where cross prod 
     // represents normal to 2d surface at (xi,eta)
@@ -1199,12 +1201,18 @@ void GElem_base::Jac(GMVFType &G, GTVector<GFTYPE> &jacv, GBOOL &pChk, GINT *pin
         Gx = G(1,0)[n]*G(2,1)[n] - G(2,0)[n]*G(1,1)[n]; 
         Gy = G(2,0)[n]*G(0,1)[n] - G(0,0)[n]*G(2,1)[n]; 
         Gz = G(0,0)[n]*G(1,1)[n] - G(1,0)[n]*G(0,1)[n]; 
-        jacv[n] = sqrt(Gx*Gx + Gy*Gy + Gz*Gz);
+        x  = G(0,2)[n];
+        y  = G(1,2)[n];
+        z  = G(2,2)[n];
+//      jacv[n] = sqrt(Gx*Gx + Gy*Gy + Gz*Gz);
+        r   = sqrt( x*x + y*y + z*z );
+        jacv[n] = (Gx*x + Gy*y + Gz*z)/r;
         pChk = pChk && fabs(jacv[n]) > fabs(std::numeric_limits<GFTYPE>::epsilon());  // test for zero Jac 
       }
     }
     return;
   }
+#endif
 
   // Compute full determinant:
   if ( G.size(1) == 2 ) { // 2x2 matrix:
