@@ -954,7 +954,6 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
   GBOOL   pChk;        // check for positive-difiniteness
   GTVector<GFTYPE> dNi(nnodes);// shape function derivative
   GTVector<GFTYPE> tmp(nnodes);// tmp space
-//GTVector<GFTYPE> tmp1(nnodes);// tmp space
   GTVector<GINT>   I(2);       // tensor product index
 
 
@@ -963,29 +962,30 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
   // still be (h1-order+1) X (h2-order+1):
   GSIZET nxy = elemtype_ == GE_2DEMBEDDED ? GDIM+1: GDIM;
   if ( elemtype_ == GE_2DEMBEDDED || elemtype_ == GE_DEFORMED ) {
-    for ( l=0; l<nxy; l++ ) { // rij col index: deriv wrt xi^l
+    for ( m=0; m<nxy; m++ ) { // rij col index: deriv wrt xi^l
       for ( k=0; k<nxy; k++ ) { // rij row index: Cart coord: x, y, z
+
         tmp  = 0.0;
         for ( j=0, n=0; j<gbasis_[1]->getOrder()+1; j++ ) { // evaluate gbasis at xi_ev
           for ( i=0; i<gbasis_[0]->getOrder()+1; i++, n++ ) { // evaluate gbasis at xi_ev
             I[0] = i; I[1] = j;
-            gshapefcn_->dNdXi(I, l+1, xi_ev, dNi); // l+1-th deriv of shape function I
+            gshapefcn_->dNdXi(I, m+1, xi_ev, dNi); // m+1-th deriv of shape function I
             dNi *= xNodes_[k][n];  // multiply by spatial coord
             tmp += dNi;
           } // i-loop
         } // j-loop
-        rij(k,l) = tmp;
+        rij(k,m) = tmp;
 
       } // k-loop
-    } // l-loop
-#if 0
+    } // m-loop
+#if 0 
     // Note: if l= 3, then dX_i/dzeta = X_i, so do a check:
-    tmp1 = rij(0,2) - xNodes_[0];
-    cout << serr << " delta x=" << tmp1.amax() << endl;
-    tmp1 = rij(1,2) - xNodes_[1];
-    cout << serr << " delta y=" << tmp1.amax() << endl;
-    tmp1 = rij(2,2) - xNodes_[2];
-    cout << serr << " delta z=" << tmp1.amax() << endl;
+    tmp = rij(0,2) - xNodes_[0];
+    cout << serr << " delta x=" << tmp.amax() << endl;
+    tmp = rij(1,2) - xNodes_[1];
+    cout << serr << " delta y=" << tmp.amax() << endl;
+    tmp = rij(2,2) - xNodes_[2];
+    cout << serr << " delta z=" << tmp.amax() << endl;
 #endif
   } else if ( elemtype_ == GE_REGULAR) {  // dXi/dX are just constants for GE_REGULAR:
     // Set only diagonal elements of rij, irij:
@@ -1376,7 +1376,6 @@ void GElem_base::inv(GMVFType &G, GMVFType &iG)
     return;
   }
 
-// GTMatrix<GFTYPE> A(3,3), B(3,3);
   for ( GSIZET n=0; n<G(0,0).size(); n++ ) { // 3x3 matrix
     jac  = G(0,0)[n]*(G(1,1)[n]*G(2,2)[n]-G(1,2)[n]*G(2,1)[n])
          - G(0,1)[n]*(G(1,0)[n]*G(2,2)[n]-G(2,0)[n]*G(1,2)[n])

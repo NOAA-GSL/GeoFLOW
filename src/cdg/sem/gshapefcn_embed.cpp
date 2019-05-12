@@ -338,6 +338,7 @@ void GShapeFcn_embed::dNdXi_2d(GTVector<GINT> &ishape, GINT jder,
                                GTVector<GTVector<GFTYPE>*> &xi, 
                                GTVector<GFTYPE> &dNdxi)
 {
+
   // Note: since 2d surface can be embedded, then we
   //       we can compute the derivative wrt xi_3 == zeta, so:
   assert(jder>0 && jder<=(GDIM+1) && "Invalid matrix element");
@@ -348,7 +349,7 @@ void GShapeFcn_embed::dNdXi_2d(GTVector<GINT> &ishape, GINT jder,
   d_.resizem(GDIM);
   for ( GSIZET j=0; j<GDIM; j++ ) { 
     d_[j].resizem(xi[j]->size());
-    if ( (j+1) == jder ) { // covers the case where jder=3
+    if ( j == (jder-1) ) { // covers the case where jder=3
       gbasis_[j]->evalDBasis(ishape[j], *xi[j], d_[j]);
     }
     else { 

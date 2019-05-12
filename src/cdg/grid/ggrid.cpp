@@ -540,8 +540,8 @@ void GGrid::def_init()
      faceNormal_[j].range_reset();
      bdyNormal_ [j].range_reset();
    }
-   for ( GSIZET j=0; j<dXidX_.size(2); j++ )  {
-     for ( GSIZET i=0; i<dXidX_.size(1); i++ )  {
+   for ( GSIZET j=0; j<nxy; j++ )  {
+     for ( GSIZET i=0; i<nxy; i++ )  {
        dXidX_(i,j).range_reset();
        rijtmp(i,j).range_reset();
      }
@@ -877,21 +877,24 @@ void GGrid::deriv(GTVector<GFTYPE> &u, GINT idir, GTVector<GFTYPE> &utmp,
 
   GTMatrix<GTVector<GFTYPE>> *dXidX = &this->dXidX();
 
+GTVector<GFTYPE> tmp(ndof());
+
   // du/dx_idir = Sum_j=[1:N] dxi_j/dx_idir D_j u:
   if ( this->gtype() == GE_REGULAR ) {
     GMTK::compute_grefderiv(*this, u, etmp_, idir, FALSE, du); // D_idir u
     du.pointProd((*dXidX)(idir-1, 0));
   }
   else {  // compute dXi_j/dX_idir D^j u:
-    GMTK::compute_grefderiv(*this, u, etmp_, 1, FALSE, du); // D_x u
+    GMTK::compute_grefderiv(*this, u, etmp_, 1, FALSE, du); // D_xi u
     du.pointProd((*dXidX)(0,idir-1));
     for ( GSIZET j=1; j<dXidX->size(2); j++ ) {
-      GMTK::compute_grefderiv(*this, u, etmp_, j+1, FALSE, utmp); // D_j u
+      GMTK::compute_grefderiv(*this, u, etmp_, j+1, FALSE, utmp); // D_xij u
       utmp.pointProd((*dXidX)(j,idir-1));
       du += utmp; 
 
-if ( j == 2 ) {
+if ( j >= 1 && FALSE ) {
 cout << "GGrid::deriv: utmp=" << utmp << endl;
+cout << "GGrid::deriv: u   =" << u  << endl;
 cout << "GGrid::deriv: du  =" << du << endl;
 }
     }
