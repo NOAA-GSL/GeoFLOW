@@ -874,10 +874,10 @@ void GGrid::deriv(GTVector<GFTYPE> &u, GINT idir, GTVector<GFTYPE> &utmp,
                   GTVector<GFTYPE> &du)
 {
   assert(bInitialized_ && "Object not inititaized");
+  assert(idir > 0 && idir < GDIM+1 && "Object not inititaized");
 
   GTMatrix<GTVector<GFTYPE>> *dXidX = &this->dXidX();
 
-GTVector<GFTYPE> tmp(ndof());
 
   // du/dx_idir = Sum_j=[1:N] dxi_j/dx_idir D_j u:
   if ( this->gtype() == GE_REGULAR ) {
@@ -888,15 +888,10 @@ GTVector<GFTYPE> tmp(ndof());
     GMTK::compute_grefderiv(*this, u, etmp_, 1, FALSE, du); // D_xi u
     du.pointProd((*dXidX)(0,idir-1));
     for ( GSIZET j=1; j<dXidX->size(2); j++ ) {
-      GMTK::compute_grefderiv(*this, u, etmp_, j+1, FALSE, utmp); // D_xij u
+      GMTK::compute_grefderiv(*this, u, etmp_, j+1, FALSE, utmp); // D_xi^j u
       utmp.pointProd((*dXidX)(j,idir-1));
       du += utmp; 
 
-if ( j >= 1 && FALSE ) {
-cout << "GGrid::deriv: utmp=" << utmp << endl;
-cout << "GGrid::deriv: u   =" << u  << endl;
-cout << "GGrid::deriv: du  =" << du << endl;
-}
     }
   }
     
