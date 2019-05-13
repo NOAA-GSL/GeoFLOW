@@ -212,13 +212,7 @@ int main(int argc, char **argv)
 #elif defined(_DO_REFDERIV)
     // Compute nc derivs on u, without weights: 
     for ( GSIZET j=0; j<du.size(); j++ ) {  // do chain rule
-      if ( grid_->gtype() == GE_REGULAR ) {
-        GMTK::compute_grefderiv (*grid_, *u[0], etmp1, j+1, FALSE, *du[j]);
-        du[j]->pointProd((*dXidX)(j,0));
-      }
-      else {
         grid_->deriv(*u[0], j+1, *utmp[0], *du[j]);
-      }
     } // end, j-loop
 #else
     for ( GSIZET j=0; j<du.size(); j++ ) {
@@ -297,8 +291,8 @@ int main(int argc, char **argv)
       nnorm = nnorm > std::numeric_limits<GFTYPE>::epsilon() ? nnorm : 1.0;
 cout << "main: nnorm=" << nnorm << endl;
 cout << "main: da[" << j << "]=" << *da[j] << endl;
-cout << "main: du[" << j << "]=" << *du[j] << endl;
       *utmp[0] = *du[j] - *da[j];
+cout << "main: du-da[" << j << "]=" << *utmp[0] << endl;
       for ( GSIZET i=0; i<da[j]->size(); i++ ) (*utmp[1])[i] = fabs((*utmp[0])[i]);
       for ( GSIZET i=0; i<da[j]->size(); i++ ) (*utmp[2])[i] = pow((*utmp[0])[i],2);
       lnorm[0]  = utmp[0]->infnorm (); // inf-norm
