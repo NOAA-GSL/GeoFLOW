@@ -39,6 +39,8 @@
 
 using namespace std;
 
+#define DO_TEST
+
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : Constructor method (1)
@@ -101,7 +103,11 @@ gshapefcn_       (NULLPTR)
   if ( b3 != NULLPTR ) b[2] = b3;
 
   if ( elemtype_ == GE_REGULAR || elemtype_ == GE_DEFORMED ) {
+#if defined(DO_TEST)
+    gshapefcn_ = new GShapeFcn_embed();
+#else
     gshapefcn_ = new GShapeFcn_hostd();
+#endif
   }
   else if ( elemtype_ == GE_2DEMBEDDED ) { 
     gshapefcn_ = new GShapeFcn_embed();
@@ -139,7 +145,11 @@ gshapefcn_       (NULLPTR)
   gbasis_ = NULLPTR;
 
   if ( elemtype_ == GE_REGULAR || elemtype_ == GE_DEFORMED ) {
+#if defined(DO_TEST)
+    gshapefcn_ = new GShapeFcn_embed();
+#else
     gshapefcn_ = new GShapeFcn_hostd();
+#endif
   }
   else if ( elemtype_ == GE_2DEMBEDDED ) { 
     gshapefcn_ = new GShapeFcn_embed();
@@ -258,7 +268,11 @@ void GElem_base::set_elemtype(GElemType etype)
   if ( gshapefcn_ != NULLPTR ) delete gshapefcn_; gshapefcn_ = NULLPTR;
 
   if ( elemtype_ == GE_REGULAR || elemtype_ == GE_DEFORMED ) {
+#if defined(DO_TEST)
+    gshapefcn_ = new GShapeFcn_embed();
+#else
     gshapefcn_ = new GShapeFcn_hostd();
+#endif
   }
   else if ( elemtype_ == GE_2DEMBEDDED ) {
     gshapefcn_ = new GShapeFcn_embed();
@@ -956,14 +970,25 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
   GTVector<GFTYPE> tmp(nnodes);// tmp space
   GTVector<GINT>   I(2);       // tensor product index
 
+#if defined(DO_TEST)
+  GTMatrix<GTVector<GFTYPE>> tij;
+  tij.resize(GDIM,GDIM);
+#endif
 
   // Can have 'embedded' coords, so # Cartesian coordinates may be > GDIM;
   // but the total number of node points in each metrix element will 
   // still be (h1-order+1) X (h2-order+1):
   GSIZET nxy = elemtype_ == GE_2DEMBEDDED ? GDIM+1: GDIM;
+#if defined(DO_TEST)
+  if ( elemtype_ == GE_REGULAR ) {
+#else
   if ( elemtype_ == GE_2DEMBEDDED || elemtype_ == GE_DEFORMED ) {
+#endif
     for ( m=0; m<nxy; m++ ) { // rij col index: deriv wrt xi^l
       for ( k=0; k<nxy; k++ ) { // rij row index: Cart coord: x, y, z
+#if defined(DO_TEST)
+       tij(k,m).resize(nnodes);
+#endif
 
         tmp  = 0.0;
         for ( j=0, n=0; j<gbasis_[1]->getOrder()+1; j++ ) { // evaluate gbasis at xi_ev
@@ -974,7 +999,12 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
             tmp += dNi;
           } // i-loop
         } // j-loop
+#if defined(DO_TEST)
+        tij(k,m) = tmp;
+cout << serr << "tij(" << k << "," << m << ")=" << tij(k,m) << endl;
+#else
         rij(k,m) = tmp;
+#endif
 
       } // k-loop
     } // m-loop
@@ -990,7 +1020,11 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
   } else if ( elemtype_ == GE_REGULAR) {  // dXi/dX are just constants for GE_REGULAR:
     // Set only diagonal elements of rij, irij:
     for ( k=0; k<nxy; k++ ) { // rij matrix element col
+#if defined(DO_TEST)
+      rij (k,0) = tij(k,k);
+#else
       rij (k,0) = 0.5*L[k]; 
+#endif
       irij(k,0) = 2.0/L[k];
     } // k-loop
   }
