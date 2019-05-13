@@ -996,6 +996,7 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
             I[0] = i; I[1] = j;
             gshapefcn_->dNdXi(I, m+1, xi_ev, dNi); // m+1-th deriv of shape function I
             dNi *= xNodes_[k][n];  // multiply by spatial coord
+cout << "dNi(" << i << "," << j << ")=" << dNi << endl;
             tmp += dNi;
           } // i-loop
         } // j-loop
@@ -1017,7 +1018,8 @@ cout << serr << "tij(" << k << "," << m << ")=" << tij(k,m) << endl;
     tmp = rij(2,2) - xNodes_[2];
     cout << serr << " delta z=" << tmp.amax() << endl;
 #endif
-  } else if ( elemtype_ == GE_REGULAR) {  // dXi/dX are just constants for GE_REGULAR:
+  } 
+  else if ( elemtype_ == GE_REGULAR) {  // dXi/dX are just constants for GE_REGULAR:
     // Set only diagonal elements of rij, irij:
     for ( k=0; k<nxy; k++ ) { // rij matrix element col
 #if defined(DO_TEST)

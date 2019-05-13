@@ -1491,7 +1491,7 @@ GTMatrix<TE> *GLLBasis<T,TE>::evalDBasis (TE eta[], GINT n, GTMatrix<TE> &mret)
 //************************************************************************************
 //************************************************************************************
 // METHOD : evalDBasis (4)
-// DESC   : Evaluates i-th basis derivative at input parent domain points , eta_i
+// DESC   : Evaluates j-th basis derivative at input parent domain points , eta_i
 //          Deriv. is derived from :
 //          h_i(eta) =  -1/(Np_*(Np_-1)) * (1-eta**2) dL_Np_ (eta)dxi / (L_Np_(xi_j) (eta-xi_j))
 // ARGS   : j   : which polynomial to evaluat (0,... Np_)

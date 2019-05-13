@@ -351,9 +351,11 @@ void GShapeFcn_embed::dNdXi_2d(GTVector<GINT> &ishape, GINT jder,
     d_[j].resizem(xi[j]->size());
     if ( j == (jder-1) ) { // covers the case where jder=3
       gbasis_[j]->evalDBasis(ishape[j], *xi[j], d_[j]);
+cout << "GShapeFcn_embed::dNdXi_2d: dh[" << j << "]=" << d_[j] << endl;
     }
     else { 
       gbasis_[j]->evalBasis (ishape[j], *xi[j], d_[j]);
+cout << "GShapeFcn_embed::dNdXi_2d:  h[" << j << "]=" << d_[j] << endl;
     }
   }
 
