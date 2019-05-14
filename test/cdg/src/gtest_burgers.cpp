@@ -315,7 +315,6 @@ int main(int argc, char **argv)
       icycle = 0;
       t      = 0.0; 
       compute_analytic(*grid_, t, ptree, u_);
-//    initialize_start(ptree, *grid_, t, u_);
       for ( GSIZET j=0; j<u_.size(); j++ ) {
         sprintf(stmp, "u%da", j+1);
         savars.push_back(stmp);
@@ -760,7 +759,6 @@ void compute_gauss_icoslump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  
     ufact[k] = u0*pow(sig0/sig[k],GDIM);
   }
 
-  // Ok, return to assumption of isotropic nu: 
   for ( GSIZET j=0; j<nxy; j++ ) {
     // Note: following c t is actually Integral_0^t c(t') dt', 
     //       so if c(t) above changes, change this term accordingly:
