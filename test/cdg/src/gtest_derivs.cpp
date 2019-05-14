@@ -32,13 +32,15 @@
 using namespace geoflow::tbox;
 using namespace std;
 
-#define  _DO_REFDERIV
+#undef   _DO_REFDERIV
 #undef   _DO_REFDERIVW
 #if defined(_DO_REFDERIVW) && defined(_DO_REFDERIV)
   #error "Cannot define both _DO_REFDERIVW AND _DO_REFDERIV"
 #endif
 
 GGrid *grid_ = NULLPTR;
+
+void shape_deriv(GGrid &grid_, GTVector<GFTYPE> &u, GINT jder, GTVector<GFTYPE> &utmp, GTVector<GFTYPE> &du);
 
 int main(int argc, char **argv)
 {
@@ -216,7 +218,7 @@ int main(int argc, char **argv)
     } // end, j-loop
 #else
     for ( GSIZET j=0; j<du.size(); j++ ) {
-      grid_->deriv(*u[0], j+1, *utmp[0], *du[j]);
+      shape_deriv(grid_, *u[0], j+1, *utmp[0], *du[j]);
     }
 #endif
 
@@ -343,11 +345,71 @@ cout << "main: gnorm[" << j << "]=" << gnorm << endl;
 
 } // end, main
 
+//**********************************************************************************
+//**********************************************************************************
+// METHOD: shape_deriv
+// DESC  : Compute derivative in j direction using shape function interface
+// ARGS  : grid    : GGrid object
+//         u       : field
+//         jder    : which direction to take deriv in
+//         utmp    : tmp space
+//         da      : return derivative
+//**********************************************************************************
+void shape_deriv(GGrid &grid, GTVector<GFTYPE> &u, GINT jder, GTVector<GFTYPE> &utmp, GTVector<GFTYPE> &du)
+{
+
+  GINT      nxy = grid.gtype()==GE_2DEMBEDDED ? GDIM+1 : GDIM;
+  GElemList *gelems = &grid.elems();
+  GShapeFcn_embed *gshapefcn = new GShapeFcn_embed();
+  GTMatrix<GTVector<GFTYPE>> *dXidX = &grid.dXidX();
+  GTVector<GNBasis*> gbasis(GDIM);
+  GTVector<GINT>     N(GDIM), I(GDIM);
+  GTVector<GFTYPE>   dNi(grid.ndof());
+  GTVector<GTVector<GFTYPE>>   *xNodes = &grid.xNodes();
+  GTVector<GTVector<GFTYPE>*>  xi_ev(GDIM);
+
+  for ( GSIZET e=0; e<grid.elems().size(); e++ ) {
+
+    ibeg = (*gelems)[e]->igbeg(); iend = (*gelems)[e]->igend();
+    u.range(ibeg, iend); // restrict global vecs to local range
+    du.range(ibeg, iend);
+    for ( GSIZET k=0; k<GDIM ; k++ ) {
+      gbasis[k] = (*gelems)[e]->gbasis(k);
+      N[k]= (*gelems)[e]->size(k);
+      xi_ev[k] = gbasis_[k]->getXiNodes();
+    }
+    gshapefcn->set_basis(gbasis);
+    utmp  = 0.0;
+    // Compute derivative in reference space:
+#if defined(_G_IS2D)
+    for ( GINT j=0, n=0; j<N[1]; j++ ) { 
+      for (GINT i=0; i<N[0]; i++, n++ ) { 
+        I[0] = i; I[1] = j;
+        gshapefcn->dNdXi(I, jder, xi_ev, dNi);
+        dNi *= u[n];  
+        utmp += dNi;
+      } // i-loop
+    } // j-loop
+    if ( grid.gtype() == GE_REGULAR ) {
+      du.pointProd((*dXidX)(jder-1, 0));
+    }
+    else {
+      du = 0.0;
+      for ( GINT j=0; j<dXidX->size(2); j++ ) {
+        utmp.pointProd((*dXidX)(j,jder-1),dNi);
+        du += dNi;
+      }
+    }
+#elif defined(_G_IS3D)
+  #error "3D code not provided"
+#endif
+
+  } // end, elem loop
+  u.range_reset();
+  du.range_reset();
 
 
+  delete gshapefcn;
 
-
-
-
-
+} // end, shape_deriv
 
