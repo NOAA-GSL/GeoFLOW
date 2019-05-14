@@ -7,13 +7,13 @@
 
  # Include only sources that contain main here:
  set(CDG_TEST_MAIN  
-#                   ${GTHOME}/gtest_burgers.cpp
+                    ${GTHOME}/gtest_burgers.cpp
 #                   ${GTHOME}/gtest_ggfx.cpp
 #                   ${GTHOME}/gtest_advect.cpp
 #                   ${GTHOME}/gtest_derivs.cpp
 #                   ${GTHOME}/gtest_rk.cpp
 #                   ${GTHOME}/gtest_helm.cpp
-                    ${GTHOME}/gtest_mass.cpp
+#                   ${GTHOME}/gtest_mass.cpp
 #                   ${GTHOME}/gtest_ggrid.cpp
 #                   ${GTHOME}/gtest_gmtk.cpp
 #                   ${GTHOME}/gtest_gll.cpp
