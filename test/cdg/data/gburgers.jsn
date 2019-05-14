@@ -88,7 +88,7 @@
     "indirectory"     : "outs",
     "outdirectory"    : "outs",
     "cadence_type"    : "cycle",
-    "cycle_interval"  : 1,
+    "cycle_interval"  : 100,
     "time_interval"   : 0.01,
     "state_index"     : [0],
     "state_names"     : ["u1", "u2", "u3"],
@@ -101,12 +101,12 @@
     "observer_name"      : "global_diag_basic",
     "indirectory"        : ".",
     "outdirectory"       : ".",
-    "interval_freq_fact" : 2.0
+    "interval_freq_fact" : 10.0
   },
   "time_integration": {
     "integ_type" : "cycle",
     "time_end"   : 0.5,
-    "cycle_end"  : 10,
+    "cycle_end"  : 100000,
     "dt"         : 1.0e-4
   }
 
