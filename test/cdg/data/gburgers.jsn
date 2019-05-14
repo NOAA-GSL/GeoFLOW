@@ -18,17 +18,17 @@
     "y0"     : 0.5,
     "z0"     : 0.5,
     "sigma"  : 0.05,
-    "u0"     : 1.0
+    "u0"     : 1.0,
     "adv_vel": [1.0, 0.0, 0.0]
   },
   "init_icoslump": {
     "latitude0"  : 0.0,
     "longitude0" : 0.0,
-    "sigma"      : 0.05,
+    "sigma"      : 0.15,
     "alpha"      : 0.0,
-    "u0"         : 1.0
-    "adv_vel"    : [1.0, 0.0, 0.0]
-    "adv_vel_mag": 4.0;
+    "u0"         : 1.0,
+    "adv_vel"    : [1.0, 0.0, 0.0],
+    "adv_vel_mag": 4.0
   },
   "init_nwave": {
     "x0"    : 0.5,
@@ -80,7 +80,7 @@
     "extrap_order"     : 2
   },
   "dissipation_traits": {
-    "nu"      : 1.0e-2,
+    "nu"      : 1.0e-3,
     "nu_type" : "constant"
   },
   "posixio_observer": {
