@@ -64,6 +64,7 @@ void gio_write_state(GIOTraits &traits, GGrid &grid,
     for ( auto i=0; i<traits.porder.size(1); i++ )  { // for each element
       for ( auto j=0; j<traits.porder.size(2); j++ ) traits.porder(i,j) = (*elems)[i]->order(j);
     }
+
  
     // Cycle over all fields, and write:
     for ( auto j=0; j<iu.size(); j++ ) {
@@ -189,7 +190,7 @@ void gio_restart(const geoflow::tbox::PropertyTree& ptree, GINT igrid,
     inputptree    = ptree.getPropertyTree       ("posixio_observer");
 
     // Set output cycle in observer traits:
-    inputptree.setValue<GINT>("start_ocycle",itindex);
+    inputptree.setValue<GSIZET>("start_ocycle",itindex);
 
     gio_resize(inputptree.getValue<GINT>("filename_size",2048));
     if ( igrid )  // use grid format
