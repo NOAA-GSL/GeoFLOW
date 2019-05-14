@@ -46,7 +46,7 @@
     "bconserved" : false,
     "use_forcing": false,
     "variable_dt": false,
-    "courant"    : 0.04 ,
+    "courant"    : 0.04 
   },
   "grid_icos": {
     "grid_name" : "grid_icos",
