@@ -18,7 +18,7 @@ GPosixIOObserver<EquationType>::GPosixIOObserver(typename ObserverBase<EquationT
 bprgrid_        (TRUE),
 bInit_          (FALSE),
 cycle_          (0),
-ocycle_         (1),
+ocycle_         (0),
 cycle_last_     (0),
 time_last_      (0.0)
 { 
@@ -56,7 +56,8 @@ void GPosixIOObserver<EquationType>::observe_impl(const Time &t, const State &u,
   if ( (this->traits_.itype == ObserverBase<EquationType>::OBS_CYCLE 
         && (cycle_-cycle_last_+1) >= this->traits_.cycle_interval)
     || (this->traits_.itype == ObserverBase<EquationType>::OBS_TIME  
-        &&  t-time_last_ >= this->traits_.time_interval) ) {
+        &&  t-time_last_ >= this->traits_.time_interval) 
+    ||  cycle_ == 0 ) {
     traits.prgrid = bprgrid_;
     traits.wtime  = wtime_;
     traits.wtask  = wtask_;
@@ -71,7 +72,7 @@ void GPosixIOObserver<EquationType>::observe_impl(const Time &t, const State &u,
     gio_write_state(traits, *(this->grid_), u, state_index_, state_names_,  comm);
     gio_write_grid (traits, *(this->grid_), grid_names_,  comm);
     bprgrid_      = FALSE;
-    cycle_last_   = cycle_+1;
+    cycle_last_   = cycle_;
     time_last_    = t;
     ocycle_++; // ouput cycle index
   }
