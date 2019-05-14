@@ -693,10 +693,11 @@ void compute_gauss_icoslump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  
   GString          serr = "compute_gauss_icoslump: ";
   GBOOL            bContin;
   GINT             j, k, n;
+  GSIZET           nxy;
   GFTYPE           alpha, argxp; 
   GFTYPE           lat, lon;
   GFTYPE           x, y, z, r;
-  GFTYPE           nxy, rad, sig0, u0, u, uc, v, vc;
+  GFTYPE           c0, rad, sig0, u0, u, uc, v, vc;
   GTVector<GFTYPE> xx(3), si(3), sig(3), ufact(3);
   GTPoint<GFTYPE>  r0(3);
 
@@ -722,6 +723,7 @@ void compute_gauss_icoslump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  
   lon   = lumpptree.getValue<GFTYPE>("longitude0"); 
   sig0  = lumpptree.getValue<GFTYPE>("sigma"); 
   alpha = lumpptree.getValue<GFTYPE>("alpha",0.0); 
+  c0    = lumpptree.getValue<GFTYPE>("adv_vel_mag"); 
   u0    = lumpptree.getValue<GFTYPE>("u0"); 
 
   // Compute initial position of lump in Cart coords:
@@ -746,9 +748,12 @@ void compute_gauss_icoslump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  
       vc  = u0*( cos(lat)*cos(alpha) + sin(lat)*cos(lon)*sin(alpha) ) / ( r*cos(lat) );
       // Compute Cartesian components from spherical components,
       // vi = dx_i/d\theta v^theta + dx_i/d\phi v^phi:
-      (*c_[0])[k] = -r*sin(lat)*cos(lon)*uc - r*cos(lat)*sin(lon)*vc;
-      (*c_[1])[k] = -r*sin(lat)*sin(lon)*uc + r*cos(lat)*cos(lon)*vc;
-      (*c_[2])[k] =  r*cos(lat)         *uc ;
+      (*c_[0])[k]  = -r*sin(lat)*cos(lon)*uc - r*cos(lat)*sin(lon)*vc;
+      (*c_[1])[k]  = -r*sin(lat)*sin(lon)*uc + r*cos(lat)*cos(lon)*vc;
+      (*c_[2])[k]  =  r*cos(lat)         *uc ;
+      (*c_[0])[k] *= c0;
+      (*c_[1])[k] *= c0;
+      (*c_[2])[k] *= c0;
     }
   }
 
