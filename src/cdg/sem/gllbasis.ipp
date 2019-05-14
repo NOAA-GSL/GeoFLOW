@@ -41,8 +41,8 @@ beta_                  (0.0),
 ximin_                 (-1.0),
 ximax_                 (1.0),
 eps_                   (1.0e-8),
-ttiny_                 (10.0*std::numeric_limits<T>::epsilon()),
-tetiny_                (10.0*std::numeric_limits<TE>::epsilon())
+ttiny_                 (100.0*std::numeric_limits<T>::epsilon()),
+tetiny_                (100.0*std::numeric_limits<TE>::epsilon())
 {
   if ( Np_ < 1 ) {
     std::cout << "GLLBasis<T,TE>::GLLBasis: invalid expansion order Np_=" << Np_ << std::endl;
@@ -74,8 +74,8 @@ beta_                  (0.0),
 ximin_                 (-1.0),
 ximax_                 (1.0),
 eps_                   (1.0e-8),
-ttiny_                 (10.0*std::numeric_limits<T>::epsilon()),
-tetiny_                (10.0*std::numeric_limits<TE>::epsilon())
+ttiny_                 (100.0*std::numeric_limits<T>::epsilon()),
+tetiny_                (100.0*std::numeric_limits<TE>::epsilon())
 {
 } // end of constructor method
 
@@ -100,8 +100,8 @@ beta_                  (0.0),
 ximin_                 (-1.0),
 ximax_                 (1.0),
 eps_                   (1.0e-8),
-ttiny_                 (10.0*std::numeric_limits<T>::epsilon()),
-tetiny_                (10.0*std::numeric_limits<TE>::epsilon())
+ttiny_                 (100.0*std::numeric_limits<T>::epsilon()),
+tetiny_                (100.0*std::numeric_limits<TE>::epsilon())
 {
   if ( Np_ < 1 ) {
     std::cout << "GLLBasis<T,TE>::GLLBasis: invalid expansion order Np_=" << Np_ << std::endl;
@@ -1351,7 +1351,7 @@ GTMatrix<TE> *GLLBasis<T,TE>::evalBasis (TE eta[], GINT neta, GTMatrix<TE> &mret
 //************************************************************************************
 //************************************************************************************
 // METHOD : evalDBasis (1)
-// DESC   : Evaluates basis i, derivative at input parent domain point , eta
+// DESC   : Evaluates basis j, derivative at input parent domain point , eta
 //              Deriv. is derived from :
 //              dh_j(eta)/dxi =  -1/(Np_*(Np_-1)) * (1-eta**2) dL_Np_ (eta)dxi / (L_Np_(xi_j) (eta-xi_j))
 // ARGS   : 
@@ -1375,14 +1375,19 @@ TE GLLBasis<T,TE>::evalDBasis (GINT j, TE eta)
   fRet = 0.0;
   xi     = eta;
   g1     = xi - xiNodes_[j];
-  if ( xi < ximin_ || xi > ximax_ ) fRet = 0.0;
+  if      ( xi == ximin_ && j == 0 ) {
+    fRet = -0.25*Np_*(Np_+1.0); 
+  }
+  else if ( xi == ximax_ && j == Np_ ) {
+    fRet = 0.25*Np_*(Np_+1.0); 
+  }
   else if ( fabs(g1) > tetiny_) {
     ppn_j = Pn_[j];
     computeJacobi(Np_, alpha_, beta_, ppn_xi, pder_xi,pm1, pdm1, pm2, pdm2, xi);
     gfact = fact / ppn_j;
     g1i   = 1.0/g1;
     g2    = (1.0 - xi*xi)*g1i;
-    pdd   = 2.*xi*pder_xi - Np_*(Np_ + 1.)*ppn_xi; 
+    pdd   = 2.0*xi*pder_xi - Np_*(Np_ + 1.)*ppn_xi; 
     fRet  = static_cast<TE>(gfact * g1i * ( pdd - (2.0*xi + g2 )*pder_xi) );
   }
   return fRet;
@@ -1417,18 +1422,23 @@ GTMatrix<TE> *GLLBasis<T,TE>::evalDBasis (GTVector<TE> &eta, GTMatrix<TE> &mret)
   nn = MIN(eta.size(),mret.size(1));
   mm = MIN(Np_+1,mret.size(2)); 
   for ( i=0; i<nn; i++) {
+    xi     = static_cast<T>(eta[i]);
     for ( j=0; j<mm;  j++) {
       fRet = 0.0;
-      xi     = static_cast<T>(eta[i]);
       g1     = xi - xiNodes_[j];
-      if ( xi < ximin_ || xi > ximax_ ) fRet = 0.0;
+      if      ( xi == ximin_ && j == 0 ) {
+        fRet = -0.25*Np_*(Np_+1.0); 
+      }
+      else if ( xi == ximax_ && j == Np_ ) {
+        fRet = 0.25*Np_*(Np_+1.0); 
+      }
       else if ( fabs(g1) > tetiny_) {
         ppn_j = Pn_[j];
         computeJacobi(Np_, alpha_, beta_, ppn_xi, pder_xi,pm1, pdm1, pm2, pdm2, xi);
         gfact = fact / ppn_j;
         g1i   = 1.0/g1;
         g2    = (1.0 - xi*xi)*g1i;
-        pdd   = 2.*xi*pder_xi - Np_*(Np_ + 1.)*ppn_xi; 
+        pdd   = 2.0*xi*pder_xi - Np_*(Np_ + 1.)*ppn_xi; 
         fRet  = static_cast<TE>(gfact * g1i * ( pdd - (2.0*xi + g2 )*pder_xi) );
       } 
       mret(i,j) = fRet;
@@ -1466,19 +1476,24 @@ GTMatrix<TE> *GLLBasis<T,TE>::evalDBasis (TE eta[], GINT n, GTMatrix<TE> &mret)
 
   nn = MIN(n,mret.size(1));
   mm = MIN(Np_+1,mret.size(2)); 
-  for ( i=0; i<nn; i++) {
-    for ( j=0; j<mm;  j++) {
+  for ( i=0; i<nn; i++) { // loop over nodes
+    xi     = static_cast<T>(eta[i]);
+    for ( j=0; j<mm;  j++) { // loop over modes
       fRet = 0.0;
-      xi     = static_cast<T>(eta[i]);
       g1     = xi - xiNodes_[j];
-      if ( xi < ximin_ || xi > ximax_ ) fRet = 0.0;
+      if      ( xi == ximin_ && j == 0 ) {
+        fRet = -0.25*Np_*(Np_+1.0); 
+      }
+      else if ( xi == ximax_ && j == Np_ ) {
+        fRet = 0.25*Np_*(Np_+1.0); 
+      }
       else if ( fabs(g1) > tetiny_ ) {
         ppn_j = Pn_[j];
         computeJacobi(Np_, alpha_, beta_, ppn_xi, pder_xi,pm1, pdm1, pm2, pdm2, xi);
         gfact = fact / ppn_j;
         g1i   = 1.0/g1;
         g2    = (1.0 - xi*xi)*g1i;
-        pdd   = 2.*xi*pder_xi - Np_*(Np_ + 1.)*ppn_xi; 
+        pdd   = 2.0*xi*pder_xi - Np_*(Np_ + 1.)*ppn_xi; 
         fRet  = static_cast<TE>( gfact * g1i * ( pdd - (2.0*xi + g2 )*pder_xi) );
       } 
       mret(i,j) = fRet;
@@ -1518,14 +1533,19 @@ GTVector<TE> *GLLBasis<T,TE>::evalDBasis (GINT j, GTVector<TE> &eta, GTVector<TE
     fRet = 0.0;
     xi     = static_cast<T>(eta[i]);
     g1     = xi - xiNodes_[j];
-    if ( xi < ximin_ || xi > ximax_ ) fRet = 0.0;
+    if      ( xi == ximin_ && j == 0 ) {
+      fRet = -0.25*Np_*(Np_+1.0); 
+    }
+    else if ( xi == ximax_ && j == Np_ ) {
+      fRet = 0.25*Np_*(Np_+1.0); 
+    }
     else if ( fabs(g1) > tetiny_) {
       ppn_j = Pn_[j];
       computeJacobi(Np_, alpha_, beta_, ppn_xi, pder_xi,pm1, pdm1, pm2, pdm2, xi);
       gfact = fact / ppn_j;
       g1i   = 1.0/g1;
       g2    = (1.0 - xi*xi)*g1i;
-      pdd   = 2.*xi*pder_xi - Np_*(Np_ + 1.)*ppn_xi; 
+      pdd   = 2.0*xi*pder_xi - Np_*(Np_ + 1.)*ppn_xi; 
       fRet  = static_cast<TE>(gfact * g1i * ( pdd - (2.0*xi + g2 )*pder_xi) );
     } 
     vret[i] = fRet;
