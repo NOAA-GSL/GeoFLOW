@@ -626,7 +626,7 @@ void compute_dirgauss_lump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
 
   std::vector<GFTYPE> cs;
   if ( bpureadv ) {
-    cs = advptree.getArray<GFTYPE>("adv_vel");
+    cs = heatptree.getArray<GFTYPE>("adv_vel");
   }
 
   // Check bdy conditioins:
@@ -712,7 +712,7 @@ void compute_gauss_icoslump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  
 
   std::vector<GFTYPE> cs;
   if ( bpureadv ) {
-    cs = advptree.getArray<GFTYPE>("adv_vel");
+    cs = lumpptree.getArray<GFTYPE>("adv_vel");
   }
 
   nxy = (*xnodes)[0].size(); // same size for x, y, z
@@ -751,6 +751,7 @@ void compute_gauss_icoslump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  
       (*c_[2])[k] =  r*cos(lat)         *uc ;
     }
   }
+
 
   // Prepare for case where sig is anisotropic (for later, maybe):
   for ( GSIZET k=0; k<3; k++ ) {
@@ -813,7 +814,7 @@ void compute_pergauss_lump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
 
   std::vector<GFTYPE> cs;
   if ( bpureadv ) {
-    cs = advptree.getArray<GFTYPE>("adv_vel");
+    cs = heatptree.getArray<GFTYPE>("adv_vel");
   }
 
   GTVector<GString> bc(6);
