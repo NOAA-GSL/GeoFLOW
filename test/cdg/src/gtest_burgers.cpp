@@ -269,7 +269,7 @@ int main(int argc, char **argv)
 
     // Create state and tmp space:
     EH_MESSAGE("main: set up tmp space...");
-    if      ( solver_traits.doheat   //) { nstate_ =  nsolve = 1; } 
+    if      ( solver_traits.doheat   
            || solver_traits.bpureadv ) { 
       nstate_ = sgrid == "grid_icos" ? 4 : GDIM + 1; nsolve_ = 1; // 1-state + no. v-components
     }
@@ -1029,7 +1029,7 @@ std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers
         // Set current time and output cycle so that observer can initialize itself
         // These should be hidden from the config file:
         if ( "posixio_observer" == obslist[j]  ) ofact = 1.0;
-        obsptree.setValue <GSIZET>("start_ocycle",MAX(1.0,rest_ocycle*ofact));
+        obsptree.setValue <GSIZET>("start_ocycle",MAX(0.0,rest_ocycle*ofact));
         obsptree.setValue <GFTYPE>("start_time"  ,time);
         obsptree.setValue <GFTYPE>("time_interval", MAX(0.0,deltat/ofact));
         obsptree.setValue <GSIZET>("cycle_interval",MAX(1.0,deltac/ofact));
