@@ -874,7 +874,7 @@ void GGrid::deriv(GTVector<GFTYPE> &u, GINT idir, GTVector<GFTYPE> &utmp,
                   GTVector<GFTYPE> &du)
 {
   assert(bInitialized_ && "Object not inititaized");
-  assert(idir > 0 && idir < GDIM+1 && "Object not inititaized");
+  assert(idir > 0 && idir <= GDIM+1 && "Object not inititaized");
 
   GTMatrix<GTVector<GFTYPE>> *dXidX = &this->dXidX();
 
