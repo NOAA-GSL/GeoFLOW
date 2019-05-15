@@ -51,6 +51,9 @@ int main(int argc, char **argv)
     GINT   ilevel=0;// 2d ICOS refinement level
     GINT   np=1;    // elem 'order'
     GINT   nc=GDIM; // no. coords
+    GFTYPE den, dphidx, dphidy, phi, psi, rad, theta;
+    GFTYPE gmax, lmax;
+    GFTYPE eps=10.0*std::numeric_limits<GFTYPE>::epsilon();
     std::vector<GINT> ne(3); // # elements in each direction in 3d
     std::vector<GINT> pstd(GDIM);  
     GString sgrid;// name of JSON grid object to use
@@ -170,7 +173,7 @@ int main(int argc, char **argv)
     // Create state and tmp space:
     GTVector<GTVector<GFTYPE>*> utmp(4);
     GTVector<GTVector<GFTYPE>*> u   (1);
-    GTVector<GTVector<GFTYPE>*> du  (1);
+    GTVector<GTVector<GFTYPE>*> du (nc);
     GTVector<GTVector<GFTYPE>*> da (nc);
     
     for ( GSIZET j=0; j<utmp.size(); j++ ) utmp[j] = new GTVector<GFTYPE>(grid_->size());
@@ -180,9 +183,10 @@ int main(int argc, char **argv)
 
     // Initialize u: set p, q, r exponents
     // (Can set up to read from input file):
-    GFTYPE p=polyptree.getValue("xpoly",1);
-    GFTYPE q=polyptree.getValue("ypoly",0);
-    GFTYPE r=polyptree.getValue("zpoly",0);
+    GFTYPE p  =polyptree.getValue<GFTYPE>("xpoly",1);
+    GFTYPE q  =polyptree.getValue<GFTYPE>("ypoly",0);
+    GFTYPE r  =polyptree.getValue<GFTYPE>("zpoly",0);
+    GFTYPE sig=polyptree.getValue<GFTYPE>("sigma",0.05);
     GFTYPE x, y, z=1.0;
     GTVector<GFTYPE> etmp1;
     GTVector<GTVector<GFTYPE>> *xnodes = &grid_->xNodes();   
@@ -196,11 +200,45 @@ int main(int argc, char **argv)
       x = (*xnodes)[0][j];
       y = (*xnodes)[1][j];
       if ( xnodes->size() > 2 ) z = (*xnodes)[2][j];
-      (*u [0])[j] = pow(x,p)*pow(y,q)*pow(z,r);
-      (*da[0])[j] = p==0 ? 0.0 : p*pow(x,p-1)*pow(y,q)*pow(z,r);
-      (*da[1])[j] = q==0 ? 0.0 : q*pow(x,p)*pow(y,q-1)*pow(z,r);
-      if ( xnodes->size() > 2 ) (*da[2])[j] = r==0 ? 0.0 : r*pow(x,p)*pow(y,q)*pow(z,r-1);
+      if ( sgrid != "grid_icos" ) {
+        (*u [0])[j] = pow(x,p)*pow(y,q)*pow(z,r);
+        (*da[0])[j] = p==0 ? 0.0 : p*pow(x,p-1)*pow(y,q)*pow(z,r);
+        (*da[1])[j] = q==0 ? 0.0 : q*pow(x,p)*pow(y,q-1)*pow(z,r);
+        if ( xnodes->size() > 2 ) (*da[2])[j] = r==0 ? 0.0 : r*pow(x,p)*pow(y,q)*pow(z,r-1);
+      }
+      else {
+        rad         = sqrt(pow(x,2)+pow(y,2)+pow(z,2));
+        theta       = asin(z/rad);
+        phi         = atan2(y,x);
+        den         = x*x + y*y;
+        dphidx      = den>eps ? -y/(x*x + y*y) : 0.0;
+        dphidy      = den>eps ?  x/(x*x + y*y) : 0.0;
+        #if 0
+        psi         = pow(sin(phi),2) + pow(sin(theta),2);
+        (*u [0])[j] = exp(-psi/(sig*sig));
+        (*da[0])[j] = -(2.0/(sig*sig))*exp(-psi/(sig*sig))*sin(phi)*cos(phi)*dphidx;
+        (*da[1])[j] = -(2.0/(sig*sig))*exp(-psi/(sig*sig))*sin(phi)*cos(phi)*dphidy;
+        if ( xnodes->size() > 2 ) 
+        (*da[2])[j] = -(2.0/(sig*sig))*exp(-psi/(sig*sig))*sin(theta)/rad;
+        #else
+        psi         = pow(sin(theta),2);
+        (*u [0])[j] = exp(-psi/(sig*sig));
+        (*da[0])[j] = 0.0;
+        (*da[1])[j] = 0.0;
+        if ( xnodes->size() > 2 ) 
+        (*da[2])[j] = -(2.0/(sig*sig))*exp(-psi/(sig*sig))*sin(theta)/rad;
+        #endif
+      }
     }
+
+    lmax = 0.0;
+    for ( GSIZET j=0; j<da.size(); j++ ) {  // find max of all derivs
+      lmax = MAX(lmax,da[j]->amax());
+    }
+    GComm::Allreduce(&lmax, &gmax, 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm);
+    cout << "main:  gmax=" << gmax << endl;
+    cout << "main: u.max=" << u[0]->amax() << endl;
+
 #if defined(_DO_REFDERIVW)
     assert(grid_->gtype() != GE_2DEMBEDDED && 
            "_DO_REFDERIVW not allowed with this grid");
@@ -225,7 +263,7 @@ int main(int argc, char **argv)
 
     GSIZET lnelems=grid_->nelems();
     GSIZET gnelems;
-    GFTYPE ftmp, nnorm, eps=10.0*std::numeric_limits<GFTYPE>::epsilon();
+    GFTYPE ftmp, nnorm;
     GFTYPE x0, x1, y0, y1, z0, z1;
     std::ifstream itst;
     std::ofstream ios;
@@ -285,22 +323,32 @@ int main(int argc, char **argv)
     ios.close();
 
 #else
+
+cout << "main: u=" << *u[0] << endl;
+
     // Compute collocated  analytic solution, do comparisons:
     maxerror = 0.0;
+   *utmp[0]  = gmax;
+    nnorm    = grid_->integrate(*utmp[0], *utmp[1]);
+    nnorm    = nnorm > std::numeric_limits<GFTYPE>::epsilon() ? nnorm : 1.0;
     for ( GSIZET j=0; j<du.size(); j++ ) { //local errors
-      for ( GSIZET i=0; i<da[j]->size(); i++ ) (*utmp[0])[i] = pow((*da[j])[i],2);
-      nnorm = grid_->integrate(*utmp[0], *utmp[1]);
-      nnorm = nnorm > std::numeric_limits<GFTYPE>::epsilon() ? nnorm : 1.0;
+     *utmp[0]  = *du[j] - *da[j];
+     *utmp[1]  = *utmp[0]; utmp[1]->abs();
+     *utmp[2]  = *utmp[0]; utmp[2]->pow(2);
+      lnorm[0] = utmp[0]->infnorm (); // inf-norm
+      gnorm[1] = grid_->integrate(*utmp[1],*utmp[0])/sqrt(nnorm);
+      gnorm[2] = sqrt(grid_->integrate(*utmp[2],*utmp[0])/nnorm);
+
+da  [j]->range(25,50);
+du  [j]->range(25,50);
+utmp[0]->range(25,50);
 cout << "main: nnorm=" << nnorm << endl;
 cout << "main: da[" << j << "]=" << *da[j] << endl;
-      *utmp[0] = *du[j] - *da[j];
 cout << "main: du[" << j << "]=" << *du[j] << endl;
-//cout << "main: du-da[" << j << "]=" << *utmp[0] << endl;
-      for ( GSIZET i=0; i<da[j]->size(); i++ ) (*utmp[1])[i] = fabs((*utmp[0])[i]);
-      for ( GSIZET i=0; i<da[j]->size(); i++ ) (*utmp[2])[i] = pow((*utmp[0])[i],2);
-      lnorm[0]  = utmp[0]->infnorm (); // inf-norm
-      gnorm[1]  = grid_->integrate(*utmp[1],*utmp[0])/sqrt(nnorm);
-      gnorm[2]  = sqrt(grid_->integrate(*utmp[2],*utmp[0])/nnorm);
+cout << "main: du-da[" << j << "]=" << *utmp[0] << endl;
+da  [j]->range_reset();
+du  [j]->range_reset();
+utmp[0]->range_reset();
        
       // Accumulate to find global errors for this field:
       GComm::Allreduce(lnorm.data()  , gnorm.data()  , 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm);
