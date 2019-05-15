@@ -218,7 +218,7 @@ int main(int argc, char **argv)
     } // end, j-loop
 #else
     for ( GSIZET j=0; j<du.size(); j++ ) {
-      shape_deriv(grid_, *u[0], j+1, *utmp[0], *du[j]);
+      shape_deriv(*grid_, *u[0], j+1, *utmp[0], *du[j]);
     }
 #endif
 
@@ -294,7 +294,8 @@ int main(int argc, char **argv)
 cout << "main: nnorm=" << nnorm << endl;
 cout << "main: da[" << j << "]=" << *da[j] << endl;
       *utmp[0] = *du[j] - *da[j];
-cout << "main: du-da[" << j << "]=" << *utmp[0] << endl;
+cout << "main: du[" << j << "]=" << *du[j] << endl;
+//cout << "main: du-da[" << j << "]=" << *utmp[0] << endl;
       for ( GSIZET i=0; i<da[j]->size(); i++ ) (*utmp[1])[i] = fabs((*utmp[0])[i]);
       for ( GSIZET i=0; i<da[j]->size(); i++ ) (*utmp[2])[i] = pow((*utmp[0])[i],2);
       lnorm[0]  = utmp[0]->infnorm (); // inf-norm
@@ -339,7 +340,6 @@ cout << "main: gnorm[" << j << "]=" << gnorm << endl;
     GPTLfinalize();
 
     GComm::TermComm();
-    if ( grid_ != NULLPTR ) delete grid_;
 
     return( errcode );
 
@@ -357,56 +357,88 @@ cout << "main: gnorm[" << j << "]=" << gnorm << endl;
 //**********************************************************************************
 void shape_deriv(GGrid &grid, GTVector<GFTYPE> &u, GINT jder, GTVector<GFTYPE> &utmp, GTVector<GFTYPE> &du)
 {
-
-  GINT      nxy = grid.gtype()==GE_2DEMBEDDED ? GDIM+1 : GDIM;
+  GString   serr = "shape_deriv: ";
+//GINT      nxy = grid.gtype()==GE_2DEMBEDDED ? GDIM+1 : GDIM;
+  GSIZET    ibeg, iend, nref;
   GElemList *gelems = &grid.elems();
-  GShapeFcn_embed *gshapefcn = new GShapeFcn_embed();
+  GShapeFcn_embed *gshapefcn;
   GTMatrix<GTVector<GFTYPE>> *dXidX = &grid.dXidX();
-  GTVector<GNBasis*> gbasis(GDIM);
+  GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis(GDIM);
   GTVector<GINT>     N(GDIM), I(GDIM);
   GTVector<GFTYPE>   dNi(grid.ndof());
   GTVector<GTVector<GFTYPE>>   *xNodes = &grid.xNodes();
   GTVector<GTVector<GFTYPE>*>  xi_ev(GDIM);
 
+  gshapefcn = new GShapeFcn_embed();
+
+  nref = grid.gtype()==GE_2DEMBEDDED ? GDIM+1 : 1;
+
+  du = 0.0;
   for ( GSIZET e=0; e<grid.elems().size(); e++ ) {
 
     ibeg = (*gelems)[e]->igbeg(); iend = (*gelems)[e]->igend();
     u.range(ibeg, iend); // restrict global vecs to local range
     du.range(ibeg, iend);
+    utmp.range(ibeg, iend);
+    for ( GSIZET j=0; j<dXidX->size(2); j++ ) {
+      for ( GSIZET i=0; i<dXidX->size(1); i++ ) { 
+        (*dXidX)(i,j).range(ibeg,iend);
+      }
+    }
     for ( GSIZET k=0; k<GDIM ; k++ ) {
       gbasis[k] = (*gelems)[e]->gbasis(k);
       N[k]= (*gelems)[e]->size(k);
-      xi_ev[k] = gbasis_[k]->getXiNodes();
+      xi_ev[k] = gbasis[k]->getXiNodes();
     }
     gshapefcn->set_basis(gbasis);
-    utmp  = 0.0;
-    // Compute derivative in reference space:
+    // Compute derivative in reference space, D_k then
+    // compute du/dx_j = Sum_k dXi_k/dx^j D_k u,
+    for ( GINT r=0; r<nref; r++ ) {
+
+      utmp  = 0.0;
 #if defined(_G_IS2D)
-    for ( GINT j=0, n=0; j<N[1]; j++ ) { 
-      for (GINT i=0; i<N[0]; i++, n++ ) { 
-        I[0] = i; I[1] = j;
-        gshapefcn->dNdXi(I, jder, xi_ev, dNi);
-        dNi *= u[n];  
-        utmp += dNi;
-      } // i-loop
-    } // j-loop
-    if ( grid.gtype() == GE_REGULAR ) {
-      du.pointProd((*dXidX)(jder-1, 0));
-    }
-    else {
-      du = 0.0;
-      for ( GINT j=0; j<dXidX->size(2); j++ ) {
-        utmp.pointProd((*dXidX)(j,jder-1),dNi);
-        du += dNi;
-      }
-    }
+      for ( GINT j=0, n=0; j<N[1]; j++ ) { 
+        for (GINT i=0; i<N[0]; i++, n++ ) { 
+          I[0] = i; I[1] = j;
+          gshapefcn->dNdXi(I, r+1, xi_ev, dNi);
+          dNi  *= u[n];  
+          utmp += dNi;
+        } // i-loop
+      } // j-loop
 #elif defined(_G_IS3D)
-  #error "3D code not provided"
+      for ( GINT k=0, n=0; k<N[2]; k++ ) { 
+        for ( GINT j=0; j<N[1]; j++ ) { 
+          for (GINT i=0; i<N[0]; i++, n++ ) { 
+            I[0] = i; I[1] = j; I[2] = k;
+            gshapefcn->dNdXi(I, r+1, xi_ev, dNi);
+            dNi  *= u[n];  
+            utmp += dNi;
+          } // i-loop
+        } // k-loop
+      } // k-loop
 #endif
+cout << serr << " ref_deriv[" << r << "]=" << utmp << endl;
+      if ( grid.gtype() == GE_REGULAR ) {
+        utmp.pointProd((*dXidX)(jder-1, 0));
+        du += utmp;
+      }
+      else {
+        utmp.pointProd((*dXidX)(r,jder-1));
+cout << serr << " du_partial[" << r << "]=" << utmp << endl;
+        du += utmp;
+      }
+
+    } // end, reference deriv loop
 
   } // end, elem loop
   u.range_reset();
   du.range_reset();
+  utmp.range_reset();
+  for ( GSIZET j=0; j<dXidX->size(2); j++ ) {
+    for ( GSIZET i=0; i<dXidX->size(1); i++ ) { 
+      (*dXidX)(i,j).range_reset();
+    }
+  }
 
 
   delete gshapefcn;
