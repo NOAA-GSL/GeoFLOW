@@ -23,6 +23,41 @@ extern GINT szVecCache_;
 namespace GMTK
 {
 
+#if 0
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : project2sphere(1)
+// DESC   : Project input 3-vector to sphere
+//          
+// ARGS   : grid : Grid. If not of the correct type, nothing is done
+//          v    : Array of vector components
+//          Pv   : Projected vector. May be the same as V, in which case
+//                 V is overwritten.
+// RETURNS: none
+//**********************************************************************************
+template<typename T>
+void project2sphere(GGrid &grid, GTVector<GTVector<T>*> &v, GTVector<GTVector<T>*> &Pv)
+{
+
+  if ( grid.gtype() != GE_2DEMBEDDED ) return;
+
+  assert( v.size() >= 3 && "Incompatible dimensionality");
+
+  GSIZET nxy = grid.ndof();
+  T      r2, x, y, z;
+  GTVector<GTVector<T>> *xnodes = &grid.xNodes();
+  for ( GSIZET j=0; j<nxy; j++ ) {
+    x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
+    r2 = x*x + y*y + z*z;
+    (*Pv[0])[j] =  (*v[0])[j]*(r2-x*x) - (*v[1])[j]*x*y      - (*v[2])[j]*x*z;
+    (*Pv[1])[j] = -(*v[0])[j]*y*x      + (*v[1])[j]*(r2-y*y) - (*v[2])[j]*y*z;
+    (*Pv[2])[j] = -(*v[0])[j]*z*x      - (*v[1])[j]*z*y      + (*v[2])[j]*(r2-z*z);
+   }
+
+} // end of method project2sphere (1)
+#endif
+
+
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : cross_prod_k (1)
@@ -354,6 +389,8 @@ void saxpby(GTVector<T> &x, T a, GTVector<T> &y, T b)
   void    curl(GGrid &grid, const GTVector<GTVector<T>*> &u, const GINT idir, 
                GTVector<GTVector<T>*> &tmp, GTVector<T> &curl);
 
+  template<typename T>  
+  void    project2sphere(GGrid &grid, GTVector<GTVector<T>*> &v, GTVector<GTVector<T>*    > &Pv);
 
 };
 

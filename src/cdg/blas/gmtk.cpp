@@ -26,6 +26,41 @@ namespace GMTK
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD : project2sphere(1)
+// DESC   : Project input 3-vector to sphere
+//          
+// ARGS   : grid : Grid. If not of the correct type, nothing is done
+//          v    : Array of vector components
+//          Pv   : Projected vector. May be the same as V, in which case
+//                 V is overwritten.
+// RETURNS: none
+//**********************************************************************************
+template<>
+void project2sphere(GGrid &grid, GTVector<GTVector<GFTYPE>*> &v, GTVector<GTVector<GFTYPE>*> &Pv)
+{
+
+  if ( grid.gtype() != GE_2DEMBEDDED ) return;
+
+  assert( v.size() >= 3 && "Incompatible dimensionality");
+
+  GSIZET nxy = grid.ndof();
+  GFTYPE r2, x, y, z;
+  GTVector<GTVector<GFTYPE>> *xnodes = &grid.xNodes();
+
+  for ( GSIZET j=0; j<nxy; j++ ) {
+    x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
+    r2 = x*x + y*y + z*z;
+    (*Pv[0])[j] =  (*v[0])[j]*(r2-x*x) - (*v[1])[j]*x*y      - (*v[2])[j]*x*z;
+    (*Pv[1])[j] = -(*v[0])[j]*y*x      + (*v[1])[j]*(r2-y*y) - (*v[2])[j]*y*z;
+    (*Pv[2])[j] = -(*v[0])[j]*z*x      - (*v[1])[j]*z*y      + (*v[2])[j]*(r2-z*z);
+   }
+
+} // end of method project2sphere (1)
+
+
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD : curl 
 // DESC   : Compute curl component, idir, of input vector field
 //          
