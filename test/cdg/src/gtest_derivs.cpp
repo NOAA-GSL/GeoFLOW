@@ -32,7 +32,7 @@
 using namespace geoflow::tbox;
 using namespace std;
 
-#undef   _DO_REFDERIV
+#define   _DO_REFDERIV
 #undef   _DO_REFDERIVW
 #if defined(_DO_REFDERIVW) && defined(_DO_REFDERIV)
   #error "Cannot define both _DO_REFDERIVW AND _DO_REFDERIV"
@@ -200,12 +200,16 @@ int main(int argc, char **argv)
       x = (*xnodes)[0][j];
       y = (*xnodes)[1][j];
       if ( xnodes->size() > 2 ) z = (*xnodes)[2][j];
+#if 0
       if ( sgrid != "grid_icos" ) {
-        (*u [0])[j] = pow(x,p)*pow(y,q)*pow(z,r);
-        (*da[0])[j] = p==0 ? 0.0 : p*pow(x,p-1)*pow(y,q)*pow(z,r);
+#endif
+//      (*u [0])[j] = pow(x,p)*pow(y,q)*pow(z,r);
+        (*u [0])[j] = -y*y*pow(x,p-1);
+        (*da[0])[j] = p==0 ? 0.0 : p*pow(x,p-2)*y;
         (*da[1])[j] = q==0 ? 0.0 : q*pow(x,p)*pow(y,q-1)*pow(z,r);
         if ( xnodes->size() > 2 ) (*da[2])[j] = r==0 ? 0.0 : r*pow(x,p)*pow(y,q)*pow(z,r-1);
-      }
+#if 0
+    }
       else {
         rad         = sqrt(pow(x,2)+pow(y,2)+pow(z,2));
         theta       = asin(z/rad);
@@ -229,7 +233,21 @@ int main(int argc, char **argv)
         (*da[2])[j] = -(2.0/(sig*sig))*exp(-psi/(sig*sig))*sin(theta)/rad;
         #endif
       }
+#endif
     }
+
+#if 0
+    //project gradient back to sphere, if necessary:
+    if ( sgrid != "grid_icos" ) { 
+      for ( GSIZET j=0; j<nxy; j++ ) {
+        x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
+        rad = x*x + y*y + z*z;
+        (*da[0])[j] =  (*da[0])[j]*(rad-x*x) - (*da[1])[j]*x*y       - (*da[2])[j]*x*z;
+        (*da[1])[j] = -(*da[0])[j]*x*y       + (*da[1])[j]*(rad-y*y) - (*da[2])[j]*y*z;
+        (*da[2])[j] = -(*da[0])[j]*x*z       - (*da[1])[j]*y*z       + (*da[2])[j]*(rad-z*z);
+      }
+    }
+#endif
 
     lmax = 0.0;
     for ( GSIZET j=0; j<da.size(); j++ ) {  // find max of all derivs
@@ -260,6 +278,14 @@ int main(int argc, char **argv)
     }
 #endif
 
+#if 0
+    for ( GSIZET j=0; j<du.size(); j++ ) {
+      ggfx.doOp(*du[j], GGFX_OP_SMOOTH);
+    }
+#endif
+
+
+// GMTK::project2sphere<GFTYPE>(*grid_, du, du);
 
     GSIZET lnelems=grid_->nelems();
     GSIZET gnelems;
@@ -345,7 +371,7 @@ cout << "main: u=" << *u[0] << endl;
 cout << "main: nnorm=" << nnorm << endl;
 cout << "main: da[" << j << "]=" << *da[j] << endl;
 cout << "main: du[" << j << "]=" << *du[j] << endl;
-cout << "main: du-da[" << j << "]=" << *utmp[0] << endl;
+//cout << "main: du-da[" << j << "]=" << *utmp[0] << endl;
 //da  [j]->range_reset();
 //du  [j]->range_reset();
 //utmp[0]->range_reset();
@@ -419,7 +445,7 @@ void shape_deriv(GGrid &grid, GTVector<GFTYPE> &u, GINT jder, GTVector<GFTYPE> &
 
   gshapefcn = new GShapeFcn_embed();
 
-  nref = grid.gtype()==GE_2DEMBEDDED ? GDIM+1 : 1;
+  nref = grid.gtype()==GE_2DEMBEDDED ? GDIM+1 : GDIM;
 
   du = 0.0;
   for ( GSIZET e=0; e<grid.elems().size(); e++ ) {
@@ -444,6 +470,7 @@ void shape_deriv(GGrid &grid, GTVector<GFTYPE> &u, GINT jder, GTVector<GFTYPE> &
     for ( GINT r=0; r<nref; r++ ) {
 
       if ( grid.gtype() == GE_REGULAR  && r != (jder-1) ) continue;
+
       utmp  = 0.0;
 #if defined(_G_IS2D)
       for ( GINT j=0, n=0; j<N[1]; j++ ) { 
