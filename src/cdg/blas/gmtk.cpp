@@ -27,7 +27,12 @@ namespace GMTK
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : project2sphere(1)
-// DESC   : Project input 3-vector to sphere
+// DESC   : Project input 3-vector to sphere:
+//          -   -     -                           -   -  -
+//          |Pvx|     |(r^2-x^2)   -xy     -xz    |   |vx|
+//          |Pvy| =   |   -yx    (r^2-x^2) -yz    |   |vy|
+//          |Pvz|     |   -zx      -zy   (r^2-z^2)|   |vz|
+//          -   -     -                           -   -  -
 //          
 // ARGS   : grid : Grid. If not of the correct type, nothing is done
 //          v    : Array of vector components
