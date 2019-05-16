@@ -183,9 +183,9 @@ int main(int argc, char **argv)
 
     // Initialize u: set p, q, r exponents
     // (Can set up to read from input file):
-    GFTYPE p  =polyptree.getValue<GFTYPE>("xpoly",1);
-    GFTYPE q  =polyptree.getValue<GFTYPE>("ypoly",0);
-    GFTYPE r  =polyptree.getValue<GFTYPE>("zpoly",0);
+    GFTYPE p = polyptree.getValue<GFTYPE>("xpoly",1);
+    GFTYPE q = polyptree.getValue<GFTYPE>("ypoly",0);
+    GFTYPE r = polyptree.getValue<GFTYPE>("zpoly",0);
     GFTYPE sig=polyptree.getValue<GFTYPE>("sigma",0.05);
     GFTYPE x, y, z=1.0;
     GTVector<GFTYPE> etmp1;
@@ -339,16 +339,16 @@ cout << "main: u=" << *u[0] << endl;
       gnorm[1] = grid_->integrate(*utmp[1],*utmp[0])/sqrt(nnorm);
       gnorm[2] = sqrt(grid_->integrate(*utmp[2],*utmp[0])/nnorm);
 
-da  [j]->range(25,50);
-du  [j]->range(25,50);
-utmp[0]->range(25,50);
+//da  [j]->range(25,50);
+//du  [j]->range(25,50);
+//utmp[0]->range(25,50);
 cout << "main: nnorm=" << nnorm << endl;
 cout << "main: da[" << j << "]=" << *da[j] << endl;
 cout << "main: du[" << j << "]=" << *du[j] << endl;
 cout << "main: du-da[" << j << "]=" << *utmp[0] << endl;
-da  [j]->range_reset();
-du  [j]->range_reset();
-utmp[0]->range_reset();
+//da  [j]->range_reset();
+//du  [j]->range_reset();
+//utmp[0]->range_reset();
        
       // Accumulate to find global errors for this field:
       GComm::Allreduce(lnorm.data()  , gnorm.data()  , 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm);
@@ -443,6 +443,7 @@ void shape_deriv(GGrid &grid, GTVector<GFTYPE> &u, GINT jder, GTVector<GFTYPE> &
     // compute du/dx_j = Sum_k dXi_k/dx^j D_k u,
     for ( GINT r=0; r<nref; r++ ) {
 
+      if ( grid.gtype() == GE_REGULAR  && r != (jder-1) ) continue;
       utmp  = 0.0;
 #if defined(_G_IS2D)
       for ( GINT j=0, n=0; j<N[1]; j++ ) { 
@@ -465,14 +466,15 @@ void shape_deriv(GGrid &grid, GTVector<GFTYPE> &u, GINT jder, GTVector<GFTYPE> &
         } // k-loop
       } // k-loop
 #endif
-cout << serr << " ref_deriv[" << r << "]=" << utmp << endl;
+//cout << serr << " ref_deriv[" << r << "]=" << utmp << endl;
       if ( grid.gtype() == GE_REGULAR ) {
+//cout << serr << " dXidX[" << jder << "]=" << (*dXidX)(jder-1, 0) << endl;
         utmp.pointProd((*dXidX)(jder-1, 0));
         du += utmp;
       }
       else {
         utmp.pointProd((*dXidX)(r,jder-1));
-cout << serr << " du_partial[" << r << "]=" << utmp << endl;
+//cout << serr << " du_partial[" << r << "]=" << utmp << endl;
         du += utmp;
       }
 
