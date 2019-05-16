@@ -979,15 +979,6 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
 
       } // k-loop
     } // m-loop
-#if 0 
-    // Note: if l= 3, then dX_i/dzeta = X_i, so do a check:
-    tmp = rij(0,2) - xNodes_[0];
-    cout << serr << " delta x=" << tmp.amax() << endl;
-    tmp = rij(1,2) - xNodes_[1];
-    cout << serr << " delta y=" << tmp.amax() << endl;
-    tmp = rij(2,2) - xNodes_[2];
-    cout << serr << " delta z=" << tmp.amax() << endl;
-#endif
   } 
   else if ( elemtype_ == GE_REGULAR) {  // dXi/dX are just constants for GE_REGULAR:
     // Set only diagonal elements of rij, irij:
