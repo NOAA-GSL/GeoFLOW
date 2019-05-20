@@ -183,9 +183,9 @@ int main(int argc, char **argv)
 
     // Initialize u: set p, q, r exponents
     // (Can set up to read from input file):
-    GFTYPE p = polyptree.getValue<GFTYPE>("xpoly",1);
-    GFTYPE q = polyptree.getValue<GFTYPE>("ypoly",0);
-    GFTYPE r = polyptree.getValue<GFTYPE>("zpoly",0);
+    GFTYPE p = polyptree.getValue<GFTYPE>("xpoly",2);
+    GFTYPE q = polyptree.getValue<GFTYPE>("ypoly",2);
+    GFTYPE r = polyptree.getValue<GFTYPE>("zpoly",2);
     GFTYPE sig=polyptree.getValue<GFTYPE>("sigma",0.05);
     GFTYPE x, y, z=1.0;
     GTVector<GFTYPE> etmp1;
@@ -200,40 +200,24 @@ int main(int argc, char **argv)
       x = (*xnodes)[0][j];
       y = (*xnodes)[1][j];
       if ( xnodes->size() > 2 ) z = (*xnodes)[2][j];
-#if 0
       if ( sgrid != "grid_icos" ) {
-#endif
-//      (*u [0])[j] = pow(x,p)*pow(y,q)*pow(z,r);
-        (*u [0])[j] = -y*y*pow(x,p-1);
+        (*u [0])[j] = pow(x,p)*pow(y,q)*pow(z,r);
         (*da[0])[j] = p==0 ? 0.0 : p*pow(x,p-2)*y;
         (*da[1])[j] = q==0 ? 0.0 : q*pow(x,p)*pow(y,q-1)*pow(z,r);
         if ( xnodes->size() > 2 ) (*da[2])[j] = r==0 ? 0.0 : r*pow(x,p)*pow(y,q)*pow(z,r-1);
-#if 0
-    }
+      }
       else {
         rad         = sqrt(pow(x,2)+pow(y,2)+pow(z,2));
         theta       = asin(z/rad);
         phi         = atan2(y,x);
-        den         = x*x + y*y;
-        dphidx      = den>eps ? -y/(x*x + y*y) : 0.0;
-        dphidy      = den>eps ?  x/(x*x + y*y) : 0.0;
-        #if 0
-        psi         = pow(sin(phi),2) + pow(sin(theta),2);
-        (*u [0])[j] = exp(-psi/(sig*sig));
-        (*da[0])[j] = -(2.0/(sig*sig))*exp(-psi/(sig*sig))*sin(phi)*cos(phi)*dphidx;
-        (*da[1])[j] = -(2.0/(sig*sig))*exp(-psi/(sig*sig))*sin(phi)*cos(phi)*dphidy;
-        if ( xnodes->size() > 2 ) 
-        (*da[2])[j] = -(2.0/(sig*sig))*exp(-psi/(sig*sig))*sin(theta)/rad;
-        #else
-        psi         = pow(sin(theta),2);
-        (*u [0])[j] = exp(-psi/(sig*sig));
-        (*da[0])[j] = 0.0;
-        (*da[1])[j] = 0.0;
-        if ( xnodes->size() > 2 ) 
-        (*da[2])[j] = -(2.0/(sig*sig))*exp(-psi/(sig*sig))*sin(theta)/rad;
-        #endif
+        (*u [0])[j] = rad*pow(cos(theta),p)*cos(q*phi);
+cout << "main: p=" << p << " q=" << q << endl;
+        (*da[0])[j] =  p*pow(cos(theta),p-1)*cos(q*phi)*cos(phi) 
+                    -  q*pow(cos(theta),p-1)*sin(q*phi)*sin(phi);
+        (*da[1])[j] =  p*pow(cos(theta),p-1)*cos(q*phi)*sin(phi) 
+                    +  q*pow(cos(theta),p-1)*sin(q*phi)*cos(phi);
+        (*da[2])[j] =  p*pow(cos(theta),p-2)*sin(theta)*cos(q*phi);
       }
-#endif
     }
 
 #if 0
@@ -354,10 +338,9 @@ cout << "main: u=" << *u[0] << endl;
 
     // Compute collocated  analytic solution, do comparisons:
     maxerror = 0.0;
-   *utmp[0]  = gmax;
-    nnorm    = grid_->integrate(*utmp[0], *utmp[1]);
-    nnorm    = nnorm > std::numeric_limits<GFTYPE>::epsilon() ? nnorm : 1.0;
     for ( GSIZET j=0; j<du.size(); j++ ) { //local errors
+      nnorm    = grid_->integrate(*da[j], *utmp[1]);
+      nnorm    = nnorm > std::numeric_limits<GFTYPE>::epsilon() ? nnorm : 1.0;
      *utmp[0]  = *du[j] - *da[j];
      *utmp[1]  = *utmp[0]; utmp[1]->abs();
      *utmp[2]  = *utmp[0]; utmp[2]->pow(2);
