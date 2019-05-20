@@ -210,6 +210,7 @@ int main(int argc, char **argv)
         rad         = sqrt(pow(x,2)+pow(y,2)+pow(z,2));
         theta       = asin(z/rad);
         phi         = atan2(y,x);
+        phi         = phi < 0.0 ? 2*PI - phi : phi;
         (*u [0])[j] = rad*pow(cos(theta),p)*cos(q*phi);
 cout << "main: p=" << p << " q=" << q << endl;
         (*da[0])[j] =  p*pow(cos(theta),p-1)*cos(q*phi)*cos(phi) 
@@ -339,7 +340,8 @@ cout << "main: u=" << *u[0] << endl;
     // Compute collocated  analytic solution, do comparisons:
     maxerror = 0.0;
     for ( GSIZET j=0; j<du.size(); j++ ) { //local errors
-      nnorm    = grid_->integrate(*da[j], *utmp[1]);
+     *utmp[0]  = *da[j]; utmp[0]->pow(2);
+      nnorm    = grid_->integrate(*utmp[0], *utmp[1]);
       nnorm    = nnorm > std::numeric_limits<GFTYPE>::epsilon() ? nnorm : 1.0;
      *utmp[0]  = *du[j] - *da[j];
      *utmp[1]  = *utmp[0]; utmp[1]->abs();
