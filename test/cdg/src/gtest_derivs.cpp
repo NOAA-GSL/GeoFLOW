@@ -28,6 +28,7 @@
 #include "tbox/global_manager.hpp"
 #include "tbox/input_manager.hpp"
 #include "gtools.h"
+#include "gio.h"
 
 using namespace geoflow::tbox;
 using namespace std;
@@ -40,7 +41,8 @@ using namespace std;
 
 GGrid *grid_ = NULLPTR;
 
-void shape_deriv(GGrid &grid_, GTVector<GFTYPE> &u, GINT jder, GTVector<GFTYPE> &utmp, GTVector<GFTYPE> &du);
+void shape_deriv(GGrid &grid, GTVector<GFTYPE> &u, GINT jder, GTVector<GFTYPE> &utmp, GTVector<GFTYPE> &du);
+void print(GGrid &grid, GTVector<GFTYPE> &u, const GString fpref, GC_COMM &comm);
 
 int main(int argc, char **argv)
 {
@@ -56,6 +58,8 @@ int main(int argc, char **argv)
     std::vector<GINT> ne(3); // # elements in each direction in 3d
     std::vector<GINT> pstd(GDIM);  
     GString sgrid;// name of JSON grid object to use
+    GString stmp ;
+    std::stringstream ss;
     GC_COMM comm = GC_COMM_WORLD;
 
     // Initialize comm:
@@ -203,11 +207,13 @@ int main(int argc, char **argv)
       x = (*xnodes)[0][j];
       y = (*xnodes)[1][j];
       if ( xnodes->size() > 2 ) z = (*xnodes)[2][j];
-      if ( sgrid != "grid_icos" ) {
+//    if ( sgrid != "grid_icos" ) {
         (*u [0])[j] = pow(x,p)*pow(y,q)*pow(z,r);
         (*da[0])[j] = p==0 ? 0.0 : p*pow(x,p-2)*y;
         (*da[1])[j] = q==0 ? 0.0 : q*pow(x,p)*pow(y,q-1)*pow(z,r);
         if ( xnodes->size() > 2 ) (*da[2])[j] = r==0 ? 0.0 : r*pow(x,p)*pow(y,q)*pow(z,r-1);
+
+#if 0
       }
       else {
         rad         = sqrt(pow(x,2)+pow(y,2)+pow(z,2));
@@ -224,6 +230,14 @@ cout << "main: p=" << p << " q=" << q << endl;
 if ( (*da[2])[j] > p ) 
 cout << "main: dadz[" << j << "]=" << (*da[2])[j] << " theta=" << theta*180/PI << " phi = " << phi*180/PI << endl;
       }
+#endif
+    }
+
+    print(*grid_, *u[0], "u", comm);
+    for ( GSIZET j=0; j<da.size(); j++ ) {
+      ss << "da" << j;
+      print(*grid_, *da[j], ss.str(), comm); 
+      ss.str("");
     }
 
 #if defined(_DO_REFDERIVW)
@@ -351,6 +365,10 @@ cout << "main: du[" << j << "]=" << *du[j] << endl;
 cout << "main: gnorm[" << j << "]=" << gnorm << endl;
       // now find max errors of each type for each field:
       for ( GSIZET i=0; i<maxerror.size(); i++ ) maxerror[i] = MAX(maxerror[i],gnorm[i]);
+
+      ss << "du" << j;
+      print(*grid_, *du[j], ss.str(), comm); 
+      ss.str("");
     }
 
     cout << "main: maxerror = " << maxerror << endl;
@@ -492,3 +510,25 @@ void shape_deriv(GGrid &grid, GTVector<GFTYPE> &u, GINT jder, GTVector<GFTYPE> &
 
 } // end, shape_deriv
 
+void print(GGrid &grid, GTVector<GFTYPE> &u, const GString fpref, GC_COMM &comm)
+{
+  GTVector<GINT>               istate(1);
+  GTVector<GString>            snames(1);
+  GTVector<GTVector<GFTYPE>*>  ustate(1);
+  GElemList                   *gelems = &grid.elems();
+  GIOTraits iot;
+
+  ustate[0] = &u;
+  snames[0] = fpref;
+
+  iot.nelems = grid_->nelems();
+  iot.gtype  = grid_->gtype();
+  iot.porder.resize(1,GDIM);
+
+  istate = 0;
+
+  for ( GSIZET j=0; j<GDIM; j++ ) iot.porder(0,j) = (*gelems)[0]->size(j)-1;
+
+  gio_write_state(iot, grid, ustate, istate, snames, comm);
+
+} // end, print method
