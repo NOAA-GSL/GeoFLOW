@@ -199,7 +199,7 @@ int main(int argc, char **argv)
     GSIZET nxy = (*xnodes)[0].size();
 
     if ( sgrid == "grid_icos" )
-      assert(p>=2 && q>=0 && r>=0 && "Polynomial order p>=2, and q>=0");
+      assert(p>=1 && q>=0 && r>=0 && "Polynomial order p>=1, and q>=0");
     else 
       assert(p>=0 && q>=0 && r>=0 && "Polynomial order must be >= 0");
 
@@ -544,5 +544,23 @@ void print(GGrid &grid, GTVector<GFTYPE> &u, const GString fpref, GC_COMM &comm)
     ss.str("");
   }
   gio_write_grid(iot, grid, gnames, comm);
+
+  GTMatrix<GTVector<GFTYPE>> *dxidx = &grid.dXidX();
+  for ( GSIZET j=0; j<dxidx->size(2); j++ ) {
+    for ( GSIZET i=0; i<dxidx->size(1); i++ ) {
+      ss << "dXidX" << i+1 << j+1;
+      snames[0] = ss.str();
+      ustate[0] = &(*dxidx)(i,j);
+      gio_write_state(iot, grid, ustate, istate, snames, comm);
+      ss.str("");
+    }
+  }
+
+  GTVector<GFTYPE> *jac= &grid.Jac();
+  ss << "Jac";
+  snames[0] = ss.str();
+  ustate[0] = jac;
+  gio_write_state(iot, grid, ustate, istate, snames, comm);
+  ss.str("");
 
 } // end, print method
