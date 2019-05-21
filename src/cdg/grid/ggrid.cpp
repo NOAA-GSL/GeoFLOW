@@ -634,6 +634,7 @@ void GGrid::reg_init()
       
      // Zero-out local xe; only global allowed now:
      for ( GSIZET j=0; j<nxy; j++ ) (*xe)[j].clear(); 
+
    } // end, element loop
 
    // Reset global scope:
@@ -650,11 +651,6 @@ void GGrid::reg_init()
    faceJac_.range_reset();
    for ( GSIZET j=0; j<nxy; j++ ) xNodes_[j].range_reset();
 
-#if 0
-   GPP( comm_, serr << "xNodes=" << xNodes_[0]);
-   GPP( comm_, serr << "yNodes=" << xNodes_[1]);
-   GPP( comm_, serr << "zNodes=" << xNodes_[2]);
-#endif
    GComm::Synch(comm_);
    
 } // end of method reg_init
