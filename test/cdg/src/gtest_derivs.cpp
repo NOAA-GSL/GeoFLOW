@@ -52,7 +52,6 @@ int main(int argc, char **argv)
     GINT   np=1;    // elem 'order'
     GINT   nc=GDIM; // no. coords
     GFTYPE den, dphidx, dphidy, phi, psi, rad, theta;
-    GFTYPE gmax, lmax;
     GFTYPE eps=10.0*std::numeric_limits<GFTYPE>::epsilon();
     std::vector<GINT> ne(3); // # elements in each direction in 3d
     std::vector<GINT> pstd(GDIM);  
@@ -173,7 +172,7 @@ int main(int argc, char **argv)
     // Create state and tmp space:
     GTVector<GTVector<GFTYPE>*> utmp(4);
     GTVector<GTVector<GFTYPE>*> u   (1);
-    GTVector<GTVector<GFTYPE>*> du (nc);
+    GTVector<GTVector<GFTYPE>*> du  (1);
     GTVector<GTVector<GFTYPE>*> da (nc);
     
     for ( GSIZET j=0; j<utmp.size(); j++ ) utmp[j] = new GTVector<GFTYPE>(grid_->size());
@@ -195,7 +194,11 @@ int main(int argc, char **argv)
     GMass                       mass(*grid_);
     GSIZET nxy = (*xnodes)[0].size();
 
-    assert(p>=0 && q>=0 && r>=0 && "Polynomial order must be >= 0");
+    if ( sgrid == "grid_icos" )
+      assert(p>=2 && q>=0 && r>=0 && "Polynomial order p>=2, and q>=0");
+    else 
+      assert(p>=0 && q>=0 && r>=0 && "Polynomial order must be >= 0");
+
     for ( GSIZET j=0; j<nxy; j++ ) {
       x = (*xnodes)[0][j];
       y = (*xnodes)[1][j];
@@ -210,7 +213,7 @@ int main(int argc, char **argv)
         rad         = sqrt(pow(x,2)+pow(y,2)+pow(z,2));
         theta       = asin(z/rad);
         phi         = atan2(y,x);
-        phi         = phi < 0.0 ? 2*PI - phi : phi;
+//      phi         = phi < 0.0 ? 2*PI - phi : phi;
         (*u [0])[j] = rad*pow(cos(theta),p)*cos(q*phi);
 cout << "main: p=" << p << " q=" << q << endl;
         (*da[0])[j] =  p*pow(cos(theta),p-1)*cos(q*phi)*cos(phi) 
@@ -218,29 +221,10 @@ cout << "main: p=" << p << " q=" << q << endl;
         (*da[1])[j] =  p*pow(cos(theta),p-1)*cos(q*phi)*sin(phi) 
                     +  q*pow(cos(theta),p-1)*sin(q*phi)*cos(phi);
         (*da[2])[j] =  p*pow(cos(theta),p-2)*sin(theta)*cos(q*phi);
+if ( (*da[2])[j] > p ) 
+cout << "main: dadz[" << j << "]=" << (*da[2])[j] << " theta=" << theta*180/PI << " phi = " << phi*180/PI << endl;
       }
     }
-
-#if 0
-    //project gradient back to sphere, if necessary:
-    if ( sgrid != "grid_icos" ) { 
-      for ( GSIZET j=0; j<nxy; j++ ) {
-        x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
-        rad = x*x + y*y + z*z;
-        (*da[0])[j] =  (*da[0])[j]*(rad-x*x) - (*da[1])[j]*x*y       - (*da[2])[j]*x*z;
-        (*da[1])[j] = -(*da[0])[j]*x*y       + (*da[1])[j]*(rad-y*y) - (*da[2])[j]*y*z;
-        (*da[2])[j] = -(*da[0])[j]*x*z       - (*da[1])[j]*y*z       + (*da[2])[j]*(rad-z*z);
-      }
-    }
-#endif
-
-    lmax = 0.0;
-    for ( GSIZET j=0; j<da.size(); j++ ) {  // find max of all derivs
-      lmax = MAX(lmax,da[j]->amax());
-    }
-    GComm::Allreduce(&lmax, &gmax, 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm);
-    cout << "main:  gmax=" << gmax << endl;
-    cout << "main: u.max=" << u[0]->amax() << endl;
 
 #if defined(_DO_REFDERIVW)
     assert(grid_->gtype() != GE_2DEMBEDDED && 
@@ -347,6 +331,7 @@ cout << "main: u=" << *u[0] << endl;
      *utmp[1]  = *utmp[0]; utmp[1]->abs();
      *utmp[2]  = *utmp[0]; utmp[2]->pow(2);
       lnorm[0] = utmp[0]->infnorm (); // inf-norm
+
       gnorm[1] = grid_->integrate(*utmp[1],*utmp[0])/sqrt(nnorm);
       gnorm[2] = sqrt(grid_->integrate(*utmp[2],*utmp[0])/nnorm);
 
