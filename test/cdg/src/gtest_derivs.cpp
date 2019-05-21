@@ -209,7 +209,7 @@ int main(int argc, char **argv)
       if ( xnodes->size() > 2 ) z = (*xnodes)[2][j];
 //    if ( sgrid != "grid_icos" ) {
         (*u [0])[j] = pow(x,p)*pow(y,q)*pow(z,r);
-        (*da[0])[j] = p==0 ? 0.0 : p*pow(x,p-2)*y;
+        (*da[0])[j] = p==0 ? 0.0 : p*pow(x,p-1)*pow(y,q)*pow(z,r);
         (*da[1])[j] = q==0 ? 0.0 : q*pow(x,p)*pow(y,q-1)*pow(z,r);
         if ( xnodes->size() > 2 ) (*da[2])[j] = r==0 ? 0.0 : r*pow(x,p)*pow(y,q)*pow(z,r-1);
 
