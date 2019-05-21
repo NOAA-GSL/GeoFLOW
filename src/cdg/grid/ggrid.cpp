@@ -550,6 +550,7 @@ void GGrid::def_init()
    faceJac_.range_reset();
    for ( GSIZET j=0; j<nxy; j++ ) xNodes_[j].range_reset();
 
+
    GComm::Synch(comm_);
    
 } // end of method def_init
