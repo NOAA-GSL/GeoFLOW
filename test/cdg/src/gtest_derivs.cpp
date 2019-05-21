@@ -512,11 +512,15 @@ void shape_deriv(GGrid &grid, GTVector<GFTYPE> &u, GINT jder, GTVector<GFTYPE> &
 
 void print(GGrid &grid, GTVector<GFTYPE> &u, const GString fpref, GC_COMM &comm)
 {
+  GINT                         nxy;
+  std::vector<GString>         scoord = {"x","y","z"};
   GTVector<GINT>               istate(1);
   GTVector<GString>            snames(1);
+  GTVector<GString>            gnames(GDIM+1);
   GTVector<GTVector<GFTYPE>*>  ustate(1);
   GElemList                   *gelems = &grid.elems();
-  GIOTraits iot;
+  GIOTraits                    iot;
+  std::stringstream            ss;
 
   ustate[0] = &u;
   snames[0] = fpref;
@@ -529,6 +533,16 @@ void print(GGrid &grid, GTVector<GFTYPE> &u, const GString fpref, GC_COMM &comm)
 
   for ( GSIZET j=0; j<GDIM; j++ ) iot.porder(0,j) = (*gelems)[0]->size(j)-1;
 
+  // Write state:
   gio_write_state(iot, grid, ustate, istate, snames, comm);
+
+  // Write grid:
+  nxy = grid.gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
+  for ( GSIZET j=0; j<nxy; j++ ) {
+    ss << scoord[j].c_str() << "grid";
+    gnames[j] = ss.str();
+    ss.str("");
+  }
+  gio_write_grid(iot, grid, gnames, comm);
 
 } // end, print method
