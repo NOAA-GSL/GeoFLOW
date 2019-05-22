@@ -2164,7 +2164,8 @@ GTVector<T>::sortdecreasing()
 //**********************************************************************************
 // METHOD : sortdecreasing (2)
 // DESC   : Sorts buffer in decreasing order, in place. 
-// ARGS   : none.
+// ARGS   : isort: integer array that contains indices in decreasing order.
+//                 resized if necessary. 
 // RETURNS: none
 //**********************************************************************************
 #pragma acc routine vector
