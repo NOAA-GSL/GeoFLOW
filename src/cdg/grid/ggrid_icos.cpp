@@ -1486,7 +1486,7 @@ void GGridIcos::order_triangles(GTVector<GTriangle<GFTYPE>> &tmesh)
 
     // Check vertices near 0-2pi axis; if triangle
     // spans it, subtract 2pi to make longitude negative:
-    if ( fabs(lon[isortlon[0]] - lon[isortlon[3]]) < PI ) {
+    if ( fabs(lon[isortlon[0]] - lon[isortlon[2]]) < PI ) {
       for ( GSIZET j=0; j<4; j++ ) {
         if ( lon[j] > 1.5*PI && lon[j] <= 2.0*PI ) lon[j] -= 2.0*PI;
       }
