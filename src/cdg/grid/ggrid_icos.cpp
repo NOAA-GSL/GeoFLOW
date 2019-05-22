@@ -13,7 +13,7 @@
 #include "gelem_base.hpp"
 #include "ggrid_icos.hpp"
 
-
+using namespace std;
 
 //**********************************************************************************
 //**********************************************************************************
@@ -318,6 +318,9 @@ void GGridIcos::lagrefine()
   // Project all vertices to unit sphere:
   project2sphere(tmesh_,1.0);
 
+  // Order triangles (set iup_ flags):
+  order_triangles(tmesh_);
+
   // Compute centroids of all triangles:
   ftcentroids_.clear();
   GFTYPE fact = 1.0/3.0;
@@ -504,6 +507,11 @@ void GGridIcos::do_elems2d(GINT irank)
     // (placement of +/-1 with physical point)?
     for ( GSIZET j=0; j<3; j++ ) { // 3 new elements for each triangle
       pelem = new GElem_base(GE_2DEMBEDDED, gbasis_);
+      cverts[0] = v1; cverts[1] = (v1+v2)*0.5; cverts[2] = ct; cverts[3] = (v1+v3)*0.5;
+#if 0
+      order_latlong2d(cverts);
+#else
+      if ( iup_[i] == 1 ) {
       switch (j) {
       case 0: 
       cverts[0] = v1; cverts[1] = (v1+v2)*0.5; cverts[2] = ct; cverts[3] = (v1+v3)*0.5; break;
@@ -512,6 +520,18 @@ void GGridIcos::do_elems2d(GINT irank)
       case 2: 
       cverts[0] = ct; cverts[1] = (v2+v3)*0.5; cverts[2] = v3; cverts[3] = (v1+v3)*0.5; break;
       }
+      }
+      else {
+      switch (j) {
+      case 0: 
+      cverts[0] = v1; cverts[1] = (v1+v2)*0.5; cverts[2] = ct; cverts[3] = (v2+v3)*0.5; break;
+      case 1: 
+      cverts[0] = ct; cverts[1] = (v1+v2)*0.5; cverts[2] = v2; cverts[3] = (v1+v3)*0.5; break;
+      case 2: 
+      cverts[0] = (v1+v3)*0.5; cverts[1] = ct; cverts[2] = (v2+v3)*0.5; cverts[3] = v3; break;
+      }
+      }
+#endif
       
       xNodes  = &pelem->xNodes();  // node spatial data
       xiNodes = &pelem->xiNodes(); // node ref interval data
@@ -521,6 +541,7 @@ void GGridIcos::do_elems2d(GINT irank)
       c = (cverts[0] + cverts[1] + cverts[2] + cverts[3])*0.25; // elem centroid
       xlatc  = asin(c.x3)         ; // reference lat/long
       xlongc = atan2(c.x2,c.x1);
+      xlongc = xlongc < 0.0 ? 2*PI+xlongc : xlongc;
 
       cart2gnomonic(cverts, 1.0, xlatc, xlongc, tverts); // gnomonic vertices of quads
       reorderverts2d(tverts, isort, gverts); // reorder vertices consistenet with shape fcn
@@ -860,6 +881,7 @@ void GGridIcos::print(const GString &filename, GCOORDSYST icoord)
         r = sqrt(pt.x1*pt.x1 + pt.x2*pt.x2 + pt.x3*pt.x3);
         xlat  = asin(pt.x3/r);
         xlong = atan2(pt.x2,pt.x1);
+        xlong = xlong < 0.0 ? 2*PI+xlong : xlong;
 #if defined(_G_IS2D)
         ios << xlat << " " <<  xlong << std::endl;
 #elif defined(_G_IS3D)
@@ -904,6 +926,7 @@ void GGridIcos::project2sphere(GTVector<GTriangle<GFTYPE>> &tmesh, GFTYPE rad)
       r = v.norm();
       xlat  = asin(v.x3/r);
       xlong = atan2(v.x2,v.x1);
+      xlong = xlong < 0.0 ? 2*PI+xlong : xlong;
       v.x1 = rad*cos(xlat)*cos(xlong);
       v.x2 = rad*cos(xlat)*sin(xlong);
       v.x3 = rad*sin(xlat);
@@ -935,6 +958,7 @@ void GGridIcos::project2sphere(GTVector<GTPoint<GFTYPE>> &plist, GFTYPE rad)
     r = v.norm();
     xlat  = asin(v.x3/r);
     xlong = atan2(v.x2,v.x1);
+    xlong = xlong < 0.0 ? 2*PI+xlong : xlong;
     v.x1 = rad*cos(xlat)*cos(xlong);
     v.x2 = rad*cos(xlat)*sin(xlong);
     v.x3 = rad*sin(xlat);
@@ -964,6 +988,7 @@ void GGridIcos::project2sphere(GTVector<GTVector<GFTYPE>> &plist, GFTYPE rad)
     r = sqrt(x*x + y*y + z*z);
     xlat  = asin(z/r);
     xlong = atan2(y,x);
+    xlong = xlong < 0.0 ? 2*PI+xlong : xlong;
     plist[0][i] = rad*cos(xlat)*cos(xlong);
     plist[1][i] = rad*cos(xlat)*sin(xlong);
     plist[2][i] = rad*sin(xlat);
@@ -1064,6 +1089,7 @@ void GGridIcos::xyz2spherical(GTVector<GTPoint<GFTYPE>*> &plist)
    plist[i]->x1 = r;
    plist[i]->x2 = asin(z/r);
    plist[i]->x3 = atan2(y,x);
+   plist[i]->x3 = plist[i]->x3 < 0.0 ? 2*PI+plist[i]->x3 : plist[i]->x3;
   }
 
 } // end of method xyz2spherical (1)
@@ -1089,6 +1115,7 @@ void GGridIcos::xyz2spherical(GTVector<GTPoint<GFTYPE>> &plist)
    plist[i].x1 = r;
    plist[i].x2 = asin(z/r);
    plist[i].x3 = atan2(y,x);
+   plist[i].x3 = plist[i].x3 < 0.0 ? 2*PI+plist[i].x3 : plist[i].x3;
   }
 
 } // end of method xyz2spherical (2)
@@ -1131,6 +1158,7 @@ void GGridIcos::cart2gnomonic(GTVector<GTPoint<GFTYPE>> &clist, GFTYPE rad, GFTY
     r      = clist[i].norm();
     xlat   = asin(clist[i].x3/r);
     xlong  = atan2(clist[i].x2,clist[i].x1);
+    xlong  = xlong < 0.0 ? 2*PI+xlong : xlong;
 #if 0
     den    = sin(xlatc)*sin(xlat) + cos(xlatc)*cos(xlat)*cos(xlong-xlongc);  
     xlatp  = asin( cos(xlatc)*sin(xlat) - sin(xlatc)*cos(xlat)*cos(xlong-xlongc) );
@@ -1355,3 +1383,130 @@ void GGridIcos::set_global_bdy_3d(GElem_base &pelem)
   }
 
 } // end, method set_global_bdy_3d
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : order_latlong2d
+// DESC   : Order 2d vertices on exit s.t. they roughly define a 'box' 
+//          in spherical coords. Used only for quad elements.
+// ARGS   : verts : Array of vertices, re-ordered on exit
+// RETURNS: none.
+//**********************************************************************************
+void GGridIcos::order_latlong2d(GTVector<GFPoint> &verts)
+{
+
+  assert(verts.size() == 4 && "4 vertices must be provided");
+
+  GString           serr = "GGridIcos::order_latlong2d: ";
+  GTVector<GSIZET>  isortlon(4);
+  GTVector<GFTYPE>  lon(4), lat(4);
+  GTVector<GFPoint> cverts(4);       // copy of input verts
+  GTVector<GFPoint> sverts(4);       // sverts in sph coords
+
+  cverts = verts;
+  sverts = verts;
+  xyz2spherical(sverts); // convert verts to latlon
+
+  // Isolate lat, lon:
+  for ( GSIZET j=0; j<4; j++ ) {
+    lat[j] = sverts[j].x2;
+    lon[j] = sverts[j].x3;
+  }
+
+  // Sort lon in increasing order:
+  lon.sortincreasing(isortlon);
+
+  // Check vertices near 0-2pi axis:
+  if ( fabs(lon[isortlon[0]] - lon[isortlon[3]]) < PI ) {
+    for ( GSIZET j=0; j<4; j++ ) {
+      if ( lon[j] > 1.5*PI && lon[j] <=2.0*PI ) lon[j] -= 2.0*PI;
+    }
+  }
+
+  lon.sortincreasing(isortlon);
+
+  // Find 2 points with smallest lon, set v0 and v3
+  // based on lat to define 'box':
+  if ( lat[isortlon[0]] < lat[isortlon[1]] ) {
+    verts[0] = cverts[isortlon[0]];
+    verts[3] = cverts[isortlon[1]];
+  }
+  else {
+    verts[0] = cverts[isortlon[1]];
+    verts[3] = cverts[isortlon[0]];
+  }
+  
+  // Find 2 points with largest lon, set v1 and v2
+  // based on lat to define 'box':
+  if ( lat[isortlon[2]] < lat[isortlon[3]] ) {
+    verts[1] = cverts[isortlon[2]];
+    verts[2] = cverts[isortlon[3]];
+  }
+  else {
+    verts[1] = cverts[isortlon[3]];
+    verts[2] = cverts[isortlon[2]];
+  }
+
+#if 0
+  cout << serr << " on entry: verts=" << cverts << endl;
+  cout << serr << " on exit : verts=" << verts << endl;
+#endif
+
+} // end, method order_latlong2d
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : order_triangles
+// DESC   : Order triangle vertices
+// ARGS   : tmesh: Array of vertices, re-ordered on exit
+// RETURNS: none.
+//**********************************************************************************
+void GGridIcos::order_triangles(GTVector<GTriangle<GFTYPE>> &tmesh)
+{
+
+  GString           serr = "GGridIcos::order_triangles: ";
+  GTVector<GSIZET>  isortlon(3);
+  GTVector<GFTYPE>  lon(3), lat(3);
+  GTVector<GFPoint> cverts(3);       // copy of input verts
+  GTVector<GFPoint> sverts(3);       // sverts in sph coords
+
+  iup_.resize(tmesh.size());
+  iup_ = 0;
+  for ( GSIZET i=0; i<tmesh.size(); i++ ) {
+    for ( GSIZET j=0; j<3; j++ ) cverts[j] = *tmesh[i].v[j];
+    sverts = cverts;
+    xyz2spherical(sverts); // convert verts to latlon
+    for ( GSIZET j=0; j<3; j++ ) {
+      lat[j] = sverts[j].x2;
+      lon[j] = sverts[j].x3;
+    }
+    lon.sortincreasing(isortlon);
+
+    // Check vertices near 0-2pi axis; if triangle
+    // spans it, subtract 2pi to make longitude negative:
+    if ( fabs(lon[isortlon[0]] - lon[isortlon[3]]) < PI ) {
+      for ( GSIZET j=0; j<4; j++ ) {
+        if ( lon[j] > 1.5*PI && lon[j] <= 2.0*PI ) lon[j] -= 2.0*PI;
+      }
+    }
+    lon.sortincreasing(isortlon);
+    
+    if ( lat[isortlon[1]] > lat[isortlon[0]]
+      && lat[isortlon[1]] > lat[isortlon[2]] ) { // pointing upwards
+     *tmesh[i].v[0] =  cverts[isortlon[0]];
+     *tmesh[i].v[1] =  cverts[isortlon[2]];
+     *tmesh[i].v[2] =  cverts[isortlon[1]];
+      iup_[i] = 1;
+    }
+
+    if ( lat[isortlon[1]] < lat[isortlon[0]]
+      && lat[isortlon[1]] < lat[isortlon[2]] ) { // pointing downwards
+     *tmesh[i].v[0] =  cverts[isortlon[1]];
+     *tmesh[i].v[1] =  cverts[isortlon[2]];
+     *tmesh[i].v[2] =  cverts[isortlon[0]];
+    }
+  }
+
+} // end, method order_triangles

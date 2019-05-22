@@ -99,6 +99,8 @@ friend  std::ostream&       operator<<(std::ostream&, GGridIcos &);       // Out
          void               interleave(GTVector<GTPoint<GFTYPE>> &R0,           // interleave rows of points for trianlges
                                     GTVector<GTPoint<GFTYPE>> &R1,
                                     GINT I, GTVector<GTPoint<GFTYPE>> &Rz);
+         void               order_latlong2d(GTVector<GFPoint> &verts);       // order vertics via lat-long
+         void               order_triangles(GTVector<GTriangle<GFTYPE>> &);    // order triangle verts
 
        
 
@@ -120,6 +122,7 @@ private:
          GFTYPE             radiuso_;       // outer radius (=radiusi in 2d)
          GDD_base          *gdd_;           // domain decomposition/partitioning object
          GShapeFcn_linear  *lshapefcn_;     // linear shape func to compute 2d coords
+         GTVector<GINT>     iup_;           // triangle pointing 'up' flag
          GTVector<GBdyType> global_bdy_types_;  // global types for each surface (in 3D only)
 
          GTVector<GTriangle<GFTYPE>>    
