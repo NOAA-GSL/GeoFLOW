@@ -172,6 +172,15 @@ int main(int argc, char **argv)
     init_ggfx(ptree, *grid_, ggfx);
     GPTLstop("do_gather_op");
 
+#if 0
+    GTMatrix<GTVector<GFTYPE>> *dXidX = &grid_->dXidX();
+    // Smooth dXidX elements:
+    for ( GSIZET j=0; j<dXidX->size(2); j++ ) {
+      for ( GSIZET i=0; i<dXidX->size(1); i++ ) {
+        ggfx.doOp((*dXidX)(i,j), GGFX_OP_SMOOTH);
+      }
+    }
+#endif
 
     // Create state and tmp space:
     GTVector<GTVector<GFTYPE>*> utmp(4);
@@ -194,7 +203,6 @@ int main(int argc, char **argv)
     GTVector<GFTYPE> etmp1;
     GTVector<GTVector<GFTYPE>> *xnodes = &grid_->xNodes();   
     GTVector<GFTYPE>           *jac    = &grid_->Jac();   
-    GTMatrix<GTVector<GFTYPE>> *dXidX  = &grid_->dXidX();   
     GMass                       mass(*grid_);
     GSIZET nxy = (*xnodes)[0].size();
 
