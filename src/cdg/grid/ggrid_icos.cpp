@@ -524,9 +524,9 @@ void GGridIcos::do_elems2d(GINT irank)
       else {
       switch (j) {
       case 0: 
-      cverts[0] = v1; cverts[1] = (v1+v2)*0.5; cverts[2] = ct; cverts[3] = (v2+v3)*0.5; break;
+      cverts[0] = v1; cverts[1] = (v1+v2)*0.5; cverts[2] = ct; cverts[3] = (v1+v3)*0.5; break;
       case 1: 
-      cverts[0] = ct; cverts[1] = (v1+v2)*0.5; cverts[2] = v2; cverts[3] = (v1+v3)*0.5; break;
+      cverts[0] = ct; cverts[1] = (v1+v2)*0.5; cverts[2] = v2; cverts[3] = (v2+v3)*0.5; break;
       case 2: 
       cverts[0] = (v1+v3)*0.5; cverts[1] = ct; cverts[2] = (v2+v3)*0.5; cverts[3] = v3; break;
       }
@@ -1487,7 +1487,7 @@ void GGridIcos::order_triangles(GTVector<GTriangle<GFTYPE>> &tmesh)
     // Check vertices near 0-2pi axis; if triangle
     // spans it, subtract 2pi to make longitude negative:
     if ( fabs(lon[isortlon[0]] - lon[isortlon[2]]) < PI ) {
-      for ( GSIZET j=0; j<4; j++ ) {
+      for ( GSIZET j=0; j<3; j++ ) {
         if ( lon[j] > 1.5*PI && lon[j] <= 2.0*PI ) lon[j] -= 2.0*PI;
       }
     }
