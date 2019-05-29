@@ -9,13 +9,15 @@ function h = sphereplot2d(svar, tindex, bwire, varargin)
 %  Input:
 %    s1var   : prefix for field file. Required
 %    tindex  : time index for output. Required
-%    bwire   : if > 0, print wire frame; if 0 
+%    bwire   : if > 0, print wire frame only; if 0 
 %              print color patches. Default is 0
 %    varargin: to pass to quadmesh: e.g. to plot
 %              wire mesh only and set to single color, 
 %              set bwire=1, and call:
 %
 %              sphereplot2d('u1', 1, 1, 'edgecolor','b')
+%                 or
+%              sphereplot2d('u1',1,0,'colorbarlims',[-2 2])
 %
 %  Output:
 %    h       : plot handle
@@ -29,6 +31,23 @@ if nargin < 3
   bwire = 0;
 end 
 
+vartmp = varargin;
+vartmp
+bcolorbarlims = 0;
+n = length(varargin)
+j = 1;
+while j <= n
+  if strcmpi(vartmp{j},'colorbarlims') == 1
+    if n < j+1
+      error(sprintf('colorbarlims variable requires array [a b] of limits'));
+    end
+    colorbarlims = vartmp{j+1}
+    bcolorbarlims = 1
+    varargin = { vartmp{1:j-1}, vartmp{j+2:end} }
+    j = j + 1
+  end
+  j = j + 1
+end
 
 scoord = {'xgrid','ygrid' 'zgrid'};
 
@@ -103,7 +122,9 @@ for itask = 0:ntasks-1
     hold on;
 
 %   set(p, 'FaceColor', 'blue', 'EdgeColor', 'none');
-    title(sprintf('%s t=%f', svar, time));
+    if bwire > 0
+      title(sprintf('%s t=%f', svar, time));
+    end
     icurr = icurr + lelem ; 
 
   end % end, elem loop
@@ -112,6 +133,10 @@ for itask = 0:ntasks-1
 
 end % end, task loop
 %close(hwait);
+
+if bcolorbarlims > 0 
+  caxis(colorbarlims);
+end
 
 umin
 umax
