@@ -195,9 +195,9 @@ int main(int argc, char **argv)
 
     // Initialize u: set p, q, r exponents
     // (Can set up to read from input file):
-    GFTYPE p = polyptree.getValue<GFTYPE>("xpoly",2);
-    GFTYPE q = polyptree.getValue<GFTYPE>("ypoly",2);
-    GFTYPE r = polyptree.getValue<GFTYPE>("zpoly",2);
+    GFTYPE p = polyptree.getValue<GFTYPE>("xpoly",1);
+    GFTYPE q = polyptree.getValue<GFTYPE>("ypoly",1);
+    GFTYPE r = polyptree.getValue<GFTYPE>("zpoly",1);
     GFTYPE sig=polyptree.getValue<GFTYPE>("sigma",0.05);
     GFTYPE x, y, z=1.0;
     GTVector<GFTYPE> etmp1;
