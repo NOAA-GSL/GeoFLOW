@@ -870,21 +870,23 @@ GFTYPE GGrid::integrate(GTVector<GFTYPE> &u, GTVector<GFTYPE> &tmp)
 void GGrid::deriv(GTVector<GFTYPE> &u, GINT idir, GTVector<GFTYPE> &utmp, 
                   GTVector<GFTYPE> &du)
 {
-  assert(bInitialized_ && "Object not inititaized");
-  assert(idir > 0 && idir <= GDIM+1 && "Object not inititaized");
+  assert(bInitialized_ && "Object not inititialized");
+
 
   GTMatrix<GTVector<GFTYPE>> *dXidX = &this->dXidX();
 
 
   // du/dx_idir = Sum_j=[1:N] dxi_j/dx_idir D_j u:
   if ( this->gtype() == GE_REGULAR ) {
+    assert(idir > 0 && idir <= GDIM && "Invalid derivative");
     GMTK::compute_grefderiv(*this, u, etmp_, idir, FALSE, du); // D_idir u
     du.pointProd((*dXidX)(idir-1, 0));
   }
   else {  // compute dXi_j/dX_idir D^j u:
+    assert(idir > 0 && idir <= GDIM+1 && "Invalid derivative");
     GMTK::compute_grefderiv(*this, u, etmp_, 1, FALSE, du); // D_xi u
     du.pointProd((*dXidX)(0,idir-1));
-    for ( GSIZET j=1; j<dXidX->size(2); j++ ) {
+    for ( GSIZET j=1; j<dXidX->size(1); j++ ) {
       GMTK::compute_grefderiv(*this, u, etmp_, j+1, FALSE, utmp); // D_xi^j u
       utmp.pointProd((*dXidX)(j,idir-1));
       du += utmp; 
