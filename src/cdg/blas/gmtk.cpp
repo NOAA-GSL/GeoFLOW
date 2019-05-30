@@ -24,122 +24,6 @@ using namespace std;
 namespace GMTK 
 {
 
-//**********************************************************************************
-//**********************************************************************************
-// METHOD : project2sphere(1)
-// DESC   : Project input 3-vector to sphere:
-//          -   -     -                           -   -  -
-//          |Pvx|     |(r^2-x^2)   -xy     -xz    |   |vx|
-//          |Pvy| =   |   -yx    (r^2-x^2) -yz    |   |vy|
-//          |Pvz|     |   -zx      -zy   (r^2-z^2)|   |vz|
-//          -   -     -                           -   -  -
-//          
-// ARGS   : grid : Grid. If not of the correct type, nothing is done
-//          v    : Array of vector components
-//          Pv   : Projected vector. May be the same as V, in which case
-//                 V is overwritten.
-// RETURNS: none
-//**********************************************************************************
-template<>
-void project2sphere(GGrid &grid, GTVector<GTVector<GFTYPE>*> &v, GTVector<GTVector<GFTYPE>*> &Pv)
-{
-
-  if ( grid.gtype() != GE_2DEMBEDDED ) return;
-
-  assert( v.size() >= 3 && "Incompatible dimensionality");
-
-  GSIZET nxy = grid.ndof();
-  GFTYPE r2, x, y, z;
-  GTVector<GTVector<GFTYPE>> *xnodes = &grid.xNodes();
-
-  for ( GSIZET j=0; j<nxy; j++ ) {
-    x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
-    r2 = x*x + y*y + z*z;
-    (*Pv[0])[j] =  (*v[0])[j]*(r2-x*x) - (*v[1])[j]*x*y      - (*v[2])[j]*x*z;
-    (*Pv[1])[j] = -(*v[0])[j]*y*x      + (*v[1])[j]*(r2-y*y) - (*v[2])[j]*y*z;
-    (*Pv[2])[j] = -(*v[0])[j]*z*x      - (*v[1])[j]*z*y      + (*v[2])[j]*(r2-z*z);
-   }
-
-} // end of method project2sphere (1)
-
-
-
-//**********************************************************************************
-//**********************************************************************************
-// METHOD : curl 
-// DESC   : Compute curl component, idir, of input vector field
-//          
-// ARGS   : grid : grid
-//          u    : input vector field. Must have >= GDIM components.
-//          idir : curl component to compute. Must be appropriate for 
-//                 problem dimension.
-//          tmp  : tmp vector; must be of at least length 2.
-//          curl : result
-// RETURNS: none.
-//**********************************************************************************
-template<>
-void curl(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &u, const GINT idir, 
-          GTVector<GTVector<GFTYPE>*> &tmp, GTVector<GFTYPE> &curl)
-{
-
-  if ( GDIM == 2 && u.size() > GDIM ) {
-    switch (idir) {
-      case 1:
-        grid.deriv(*u[2], 2, *tmp[0], curl);
-        curl *= -1.0;
-        break;
-      case 2:
-        grid.deriv(*u[2], 1, *tmp[0], curl);
-        break;
-      case 3:
-        grid.deriv(*u[1], 1, *tmp[0], curl);
-        grid.deriv(*u[0], 2, *tmp[0], *tmp[1]);
-        curl -= *tmp[1];
-        break;
-      default:
-        assert( FALSE && "Invalid component specified");
-        break;
-    }
-    return;
-  }
-
-  if ( GDIM == 2 ) {
-    switch (idir) {
-      case 3:
-        grid.deriv(*u[1], 1, *tmp[0], curl);
-        grid.deriv(*u[0], 2, *tmp[0], *tmp[1]);
-        curl -= *tmp[1];
-        break;
-      default:
-        assert( FALSE && "Invalid component specified");
-        break;
-    }
-    return;
-  }
-
-  if ( GDIM == 3 ) {
-    switch (idir) {
-      case 1:
-        grid.deriv(*u[1], 3, *tmp[0], curl);
-        grid.deriv(*u[2], 2, *tmp[0], *tmp[1]);
-        curl -= *tmp[1];
-        break;
-      case 2:
-        grid.deriv(*u[2], 1, *tmp[0], curl);
-        grid.deriv(*u[0], 3, *tmp[0], *tmp[1]);
-        curl -= *tmp[1];
-        break;
-      case 3:
-        grid.deriv(*u[1], 1, *tmp[0], curl);
-        grid.deriv(*u[0], 2, *tmp[0], *tmp[1]);
-        curl -= *tmp[1];
-        break;
-    }
-  }
-  return;
-
-} // end of method curl
-
 
 //**********************************************************************************
 //**********************************************************************************
@@ -290,6 +174,42 @@ void D2_X_D1<GQUAD>(GTMatrix<GQUAD> &D1, GTMatrix<GQUAD>  &D2T,
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD : I2_X_D1 (float)
+// DESC   : Apply tensor product operator to vector:
+//            y = I2 X D1 u
+//          where I2 is the 2-direction's identity, and D1 is 
+//          the deriv matrix in the 1-direction
+// ARGS   : D1  : 1-direction (dense) operator 
+//          u   : operand vector; of size N1 X N2
+//          y   : return vector result; must be at least of size
+//                N1 X N2
+// RETURNS: none
+//**********************************************************************************
+template<>
+void I2_X_D1<GFLOAT>(GTMatrix<GFLOAT> &D1, 
+           GTVector<GFLOAT> &u, GSIZET N1, GSIZET N2, GTVector<GFLOAT> &y)
+{
+  GSIZET ND1, ND2;
+
+  ND1 = D1.size(1);
+  ND2 = D1.size(2);
+
+  #if defined(_G_BOUNDS_CHK)
+  if ( !(u.size() >= N1*N2 && y.size() >= N1*N2) ) {
+    std::cout << "GMTK::I2_X_D1" << "incompatible size" << std::endl;
+    exit(1);
+  }
+  #endif
+
+  // Compute y = I2_X_D1 u:
+  fmxm(y.data(), D1.data().data(), &ND1, &ND2, u.data(), &N1, &N2, &szMatCache_);
+
+
+} // end of method I2_X_D1
+
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD : I2_X_D1 (double)
 // DESC   : Apply tensor product operator to vector:
 //            y = I2 X D1 u
@@ -322,6 +242,91 @@ void I2_X_D1<GDOUBLE>(GTMatrix<GDOUBLE> &D1,
 
 
 } // end of method I2_X_D1
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : I2_X_D1 (quad)
+// DESC   : Apply tensor product operator to vector:
+//            y = I2 X D1 u
+//          where I2 is the 2-direction's identity, and D1 is 
+//          the deriv matrix in the 1-direction
+// ARGS   : D1  : 1-direction (dense) operator 
+//          u   : operand vector; of size N1 X N2
+//          y   : return vector result; must be at least of size
+//                N1 X N2
+// RETURNS: none
+//**********************************************************************************
+template<>
+void I2_X_D1<GQUAD>(GTMatrix<GQUAD> &D1, 
+           GTVector<GQUAD> &u, GSIZET N1, GSIZET N2, GTVector<GQUAD> &y)
+{
+  GSIZET ND1, ND2;
+
+  ND1 = D1.size(1);
+  ND2 = D1.size(2);
+
+  #if defined(_G_BOUNDS_CHK)
+  if ( !(u.size() >= N1*N2 && y.size() >= N1*N2) ) {
+    std::cout << "GMTK::I2_X_D1" << "incompatible size" << std::endl;
+    exit(1);
+  }
+  #endif
+
+  // Compute y = I2_X_D1 u:
+  qmxm(y.data(), D1.data().data(), &ND1, &ND2, u.data(), &N1, &N2, &szMatCache_);
+
+
+} // end of method I2_X_D1
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : Dg2_X_D1 (float)
+// DESC   : Apply tensor product operator to vector:
+//            y = diag(D2) X D1 u
+//          where D2 is specified as a vector, and D1 is 
+//          the deriv matrix in the 1-direction
+// ARGS   : D1  : 1-direction (dense) operator 
+//          Dg2 : diag(D2), as a vector
+//          u   : operand vector; must be at least of size
+//                D1.size(2) x D2.size(2) = D1.size(2) x D2T.size(1)
+//          tmp : temp space; may be re-allocated, but only if 
+//                current size < required (must be at least 
+//                D1.size(1) x D2.size(2) = D1.size(1) x D2T.size(1)
+//                before reallocation is done).
+//          y   : return vector result; must be at least of size
+//                D1.size(1) x D2.size(1) = D1.size(1) x D2T.size(2)
+// RETURNS: none
+//**********************************************************************************
+template<>
+void Dg2_X_D1<GFLOAT>(GTMatrix<GFLOAT> &D1, GTVector<GFLOAT> &Dg2, GTVector<GFLOAT> &u, 
+                       GTVector<GFLOAT> &tmp, GTVector<GFLOAT> &y)
+{
+  GSIZET   N11, N12, N2;
+
+  N11 = D1.size(1);
+  N12 = D1.size(2);
+  N2  = Dg2.size();
+  #if defined(_G_BOUNDS_CHK)
+  if ( !(u.size() >= N11*N2 && y.size() >= N11*N2) ) {
+    std::cout << "GMTK::Dg_X_D1" << "incompatible size" << std::endl;
+    exit(1);
+  }
+  #endif
+
+  // Resize tmp only if its current size is less than required:
+  tmp.resizem(N11*N2);
+
+  // Compute y = Dg2_X_D1 u as (Dg2 X I) (I X D1) U:
+
+  // tmp = I2_X_D1 * u == D1 U (in mat form):
+  fmxm(tmp.data(), D1.data().data(), &N11, &N12, u.data(), &N12, &N2, &szMatCache_);
+
+  // y = Dg2_X_I1 * tmp == TMP diag(D2T) = TMP diag(D2)  (in mat form):
+  fmxDm(y.data(), tmp.data(), &N11, &N2, Dg2.data(), &N2, &szMatCache_);
+
+} // end of method Dg2_X_D1
 
 
 //**********************************************************************************
@@ -375,6 +380,90 @@ void Dg2_X_D1<GDOUBLE>(GTMatrix<GDOUBLE> &D1, GTVector<GDOUBLE> &Dg2, GTVector<G
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD : Dg2_X_D1 (double)
+// DESC   : Apply tensor product operator to vector:
+//            y = diag(D2) X D1 u
+//          where D2 is specified as a vector, and D1 is 
+//          the deriv matrix in the 1-direction
+// ARGS   : D1  : 1-direction (dense) operator 
+//          Dg2 : diag(D2), as a vector
+//          u   : operand vector; must be at least of size
+//                D1.size(2) x D2.size(2) = D1.size(2) x D2T.size(1)
+//          tmp : temp space; may be re-allocated, but only if 
+//                current size < required (must be at least 
+//                D1.size(1) x D2.size(2) = D1.size(1) x D2T.size(1)
+//                before reallocation is done).
+//          y   : return vector result; must be at least of size
+//                D1.size(1) x D2.size(1) = D1.size(1) x D2T.size(2)
+// RETURNS: none
+//**********************************************************************************
+template<>
+void Dg2_X_D1<GQUAD>(GTMatrix<GQUAD> &D1, GTVector<GQUAD> &Dg2, GTVector<GQUAD> &u, 
+                       GTVector<GQUAD> &tmp, GTVector<GQUAD> &y)
+{
+  GSIZET   N11, N12, N2;
+
+  N11 = D1.size(1);
+  N12 = D1.size(2);
+  N2  = Dg2.size();
+  #if defined(_G_BOUNDS_CHK)
+  if ( !(u.size() >= N11*N2 && y.size() >= N11*N2) ) {
+    std::cout << "GMTK::Dg_X_D1" << "incompatible size" << std::endl;
+    exit(1);
+  }
+  #endif
+
+  // Resize tmp only if its current size is less than required:
+  tmp.resizem(N11*N2);
+
+  // Compute y = Dg2_X_D1 u as (Dg2 X I) (I X D1) U:
+
+  // tmp = I2_X_D1 * u == D1 U (in mat form):
+  qmxm(tmp.data(), D1.data().data(), &N11, &N12, u.data(), &N12, &N2, &szMatCache_);
+
+  // y = Dg2_X_I1 * tmp == TMP diag(D2T) = TMP diag(D2)  (in mat form):
+  qmxDm(y.data(), tmp.data(), &N11, &N2, Dg2.data(), &N2, &szMatCache_);
+
+} // end of method Dg2_X_D1
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : D2_X_I1 (float)
+// DESC   : Apply tensor product operator to vector:
+//            y = D2 X I1 u
+//          where I1 is the 1-direction's identity, and D2
+//          the deriv matrix in the 2-direction
+// ARGS   : D2T : 2-direction (dense) operator transpose 
+//          u   : operand vector; must be at least of size
+//                D1.size(2) x D2.size(2) = D1.size(2) x D2T.size(1)
+//          y   : return vector result; must be at least of size
+//                D1.size(1) x D2.size(1) = D1.size(1) x D2T.size(2)
+// RETURNS: none
+//**********************************************************************************
+template<>
+void D2_X_I1<GFLOAT>(GTMatrix<GFLOAT> &D2T, 
+           GTVector<GFLOAT> &u, GSIZET N1, GSIZET N2, GTVector<GFLOAT> &y)
+{
+  GSIZET N21, N22;
+
+  N21 = D2T.size(1);
+  N22 = D2T.size(2);
+  #if defined(_G_BOUNDS_CHK)
+  if ( !(u.size() >= N1*N2 && y.size() >= N1*N2) ) {
+    std::cout << "GMTK::D2_X_I1" << "incompatible size" << std::endl;
+    exit(1);
+  }
+  #endif
+
+  // Compute y = I2_X_D1 u = u * D2T:
+  fmxm(y.data(), u.data(), &N1, &N2, D2T.data().data(), &N21, &N22, &szMatCache_);
+
+
+} // end of method D2_X_I1
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD : D2_X_I1 (double)
 // DESC   : Apply tensor product operator to vector:
 //            y = D2 X I1 u
@@ -406,7 +495,90 @@ void D2_X_I1<GDOUBLE>(GTMatrix<GDOUBLE> &D2T,
   dmxm(y.data(), u.data(), &N1, &N2, D2T.data().data(), &N21, &N22, &szMatCache_);
 
 
+} // end of method D2_X_I1
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : D2_X_I1 (quad)
+// DESC   : Apply tensor product operator to vector:
+//            y = D2 X I1 u
+//          where I1 is the 1-direction's identity, and D2
+//          the deriv matrix in the 2-direction
+// ARGS   : D2T : 2-direction (dense) operator transpose 
+//          u   : operand vector; must be at least of size
+//                D1.size(2) x D2.size(2) = D1.size(2) x D2T.size(1)
+//          y   : return vector result; must be at least of size
+//                D1.size(1) x D2.size(1) = D1.size(1) x D2T.size(2)
+// RETURNS: none
+//**********************************************************************************
+template<>
+void D2_X_I1<GQUAD>(GTMatrix<GQUAD> &D2T, 
+           GTVector<GQUAD> &u, GSIZET N1, GSIZET N2, GTVector<GQUAD> &y)
+{
+  GSIZET N21, N22;
+
+  N21 = D2T.size(1);
+  N22 = D2T.size(2);
+  #if defined(_G_BOUNDS_CHK)
+  if ( !(u.size() >= N1*N2 && y.size() >= N1*N2) ) {
+    std::cout << "GMTK::D2_X_I1" << "incompatible size" << std::endl;
+    exit(1);
+  }
+  #endif
+
+  // Compute y = I2_X_D1 u = u * D2T:
+  qmxm(y.data(), u.data(), &N1, &N2, D2T.data().data(), &N21, &N22, &szMatCache_);
+
+
 } // end of method I2_X_D1
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : D2_X_Dg1 (float)
+// DESC   : Apply tensor product operator to vector:
+//            y = D2 X diag(D1) u
+//          where Dg  is the 1-direction's operator expressed as a vector, and D2
+//          the dense matrix in the 2-direction
+// ARGS   : Dg1 : diag(D1), as a vector
+//          D2T : 2-direction (dense) operator transpose 
+//          u   : operand vector; must be at least of size
+//                D1.size(2) x D2.size(2) = D1.size(2) x D2T.size(1)
+//          tmp : temp space; may be re-allocated, but only if 
+//                current size < required (must be at least 
+//                D1.size(1) x D2.size(2) = D1.size(1) x D2T.size(1)
+//                before reallocation is done).
+//          y   : return vector result; must be at least of size
+//                D1.size(1) x D2.size(1) = D1.size(1) x D2T.size(2)
+// RETURNS: none
+//**********************************************************************************
+template<>
+void D2_X_Dg1<GFLOAT>(GTVector<GFLOAT> &Dg1, GTMatrix<GFLOAT> &D2T, GTVector<GFLOAT> &u, 
+                      GTVector<GFLOAT> &tmp, GTVector<GFLOAT> &y)
+{
+  GSIZET   N1, N21, N22;
+
+  N1  = Dg1.size();
+  N21 = D2T.size(1);
+  N22 = D2T.size(2);
+  #if defined(_G_BOUNDS_CHK)
+  if ( !(u.size() >= N1*N21 && y.size() >= N1*N21) ) {
+    std::cout << "GMTK::D2_X_Dg1" << "incompatible size" << std::endl;
+    exit(1);
+  }
+  #endif
+
+  // Compute y = D2_X_Dg u as: y = (D2_X_I)(I_X_Dg) U,
+  //  where U is u considered in matrix form:
+  tmp.resizem(N1*N21);
+  // y = D2_X_I1 * tmp == TMP D2T (in mat form):
+  fmxm(tmp.data(), u.data(), &N1, &N21, D2T.data().data(), &N21, &N22, &szMatCache_);
+
+  // tmp = I2_X_D1 * u == D1 U (in mat form):
+  fDmxm(y.data(), Dg1.data(), &N1, tmp.data(), &N1, &N21, &szMatCache_);
+
+} // end of method D2_X_Dg1
 
 
 //**********************************************************************************
@@ -452,6 +624,53 @@ void D2_X_Dg1<GDOUBLE>(GTVector<GDOUBLE> &Dg1, GTMatrix<GDOUBLE> &D2T, GTVector<
 
   // tmp = I2_X_D1 * u == D1 U (in mat form):
   dDmxm(y.data(), Dg1.data(), &N1, tmp.data(), &N1, &N21, &szMatCache_);
+
+} // end of method D2_X_Dg1
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : D2_X_Dg1 (quad)
+// DESC   : Apply tensor product operator to vector:
+//            y = D2 X diag(D1) u
+//          where Dg  is the 1-direction's operator expressed as a vector, and D2
+//          the dense matrix in the 2-direction
+// ARGS   : Dg1 : diag(D1), as a vector
+//          D2T : 2-direction (dense) operator transpose 
+//          u   : operand vector; must be at least of size
+//                D1.size(2) x D2.size(2) = D1.size(2) x D2T.size(1)
+//          tmp : temp space; may be re-allocated, but only if 
+//                current size < required (must be at least 
+//                D1.size(1) x D2.size(2) = D1.size(1) x D2T.size(1)
+//                before reallocation is done).
+//          y   : return vector result; must be at least of size
+//                D1.size(1) x D2.size(1) = D1.size(1) x D2T.size(2)
+// RETURNS: none
+//**********************************************************************************
+template<>
+void D2_X_Dg1<GQUAD>(GTVector<GQUAD> &Dg1, GTMatrix<GQUAD> &D2T, GTVector<GQUAD> &u, 
+                      GTVector<GQUAD> &tmp, GTVector<GQUAD> &y)
+{
+  GSIZET   N1, N21, N22;
+
+  N1  = Dg1.size();
+  N21 = D2T.size(1);
+  N22 = D2T.size(2);
+  #if defined(_G_BOUNDS_CHK)
+  if ( !(u.size() >= N1*N21 && y.size() >= N1*N21) ) {
+    std::cout << "GMTK::D2_X_Dg1" << "incompatible size" << std::endl;
+    exit(1);
+  }
+  #endif
+
+  // Compute y = D2_X_Dg u as: y = (D2_X_I)(I_X_Dg) U,
+  //  where U is u considered in matrix form:
+  tmp.resizem(N1*N21);
+  // y = D2_X_I1 * tmp == TMP D2T (in mat form):
+  qmxm(tmp.data(), u.data(), &N1, &N21, D2T.data().data(), &N21, &N22, &szMatCache_);
+
+  // tmp = I2_X_D1 * u == D1 U (in mat form):
+  qDmxm(y.data(), Dg1.data(), &N1, tmp.data(), &N1, &N21, &szMatCache_);
 
 } // end of method D2_X_Dg1
 
@@ -635,6 +854,43 @@ void D3_X_D2_X_D1<GQUAD>(GTMatrix<GQUAD> &D1, GTMatrix<GQUAD>  &D2T, GTMatrix<GQ
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD : I3_X_I2_X_D1 (float)
+// DESC   : Apply tensor product operator to vector:
+//            y = I3 X I2 X D1 u
+// ARGS   : D1      : 1-direction (dense) operator 
+//          u       : operand vector; must be at least of size
+//                    N1*N2*N3, with 1 changing most rapidly, then, 2, then 3
+//          N1,N2,N3: coord dimentions of u, y
+//          y   : return vector result of size >= N1 * N2 * N3
+// RETURNS: none
+//**********************************************************************************
+template<>
+void I3_X_I2_X_D1<GFLOAT>(GTMatrix<GFLOAT> &D1, GTVector<GFLOAT> &u,
+                           GSIZET N1, GSIZET N2, GSIZET N3,
+                           GTVector<GFLOAT> &y)
+{
+  GSIZET  N11, N12, NYZ, NN;
+
+  N11 = D1.size(1);
+  N12 = D1.size(2);
+  NYZ = N2*N3;
+  NN  = N1*N2*N3;
+
+#if defined(GARRAY_BOUNDS)
+  if ( u.size() < NN || y.size() < NN ) {
+    cout << "GMTK::I3_X_I2_X_D1: incompatible dimensions" << endl;
+    exit(1);
+  }
+#endif
+
+  fmxm(y.data(), D1.data().data(), &N11, &N12, u.data(), &N1, &NYZ, &szMatCache_);
+
+
+} // end of method I3_X_I2_X_D1
+
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD : I3_X_I2_X_D1 (double)
 // DESC   : Apply tensor product operator to vector:
 //            y = I3 X I2 X D1 u
@@ -668,6 +924,82 @@ void I3_X_I2_X_D1<GDOUBLE>(GTMatrix<GDOUBLE> &D1, GTVector<GDOUBLE> &u,
 
 
 } // end of method I3_X_I2_X_D1
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : I3_X_I2_X_D1 (quad)
+// DESC   : Apply tensor product operator to vector:
+//            y = I3 X I2 X D1 u
+// ARGS   : D1      : 1-direction (dense) operator 
+//          u       : operand vector; must be at least of size
+//                    N1*N2*N3, with 1 changing most rapidly, then, 2, then 3
+//          N1,N2,N3: coord dimentions of u, y
+//          y   : return vector result of size >= N1 * N2 * N3
+// RETURNS: none
+//**********************************************************************************
+template<>
+void I3_X_I2_X_D1<GQUAD>(GTMatrix<GQUAD> &D1, GTVector<GQUAD> &u,
+                           GSIZET N1, GSIZET N2, GSIZET N3,
+                           GTVector<GQUAD> &y)
+{
+  GSIZET  N11, N12, NYZ, NN;
+
+  N11 = D1.size(1);
+  N12 = D1.size(2);
+  NYZ = N2*N3;
+  NN  = N1*N2*N3;
+
+#if defined(GARRAY_BOUNDS)
+  if ( u.size() < NN || y.size() < NN ) {
+    cout << "GMTK::I3_X_I2_X_D1: incompatible dimensions" << endl;
+    exit(1);
+  }
+#endif
+
+  qmxm(y.data(), D1.data().data(), &N11, &N12, u.data(), &N1, &NYZ, &szMatCache_);
+
+
+} // end of method I3_X_I2_X_D1
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : I3_X_D2_X_I1 (float)
+// DESC   : Apply tensor product operator to vector:
+//            y = I3 X D2 X I1 u
+// ARGS   : D2T     : 2-direction (dense) operator transpose
+//          u       : operand vector; must be at least of size
+//                    N1*N2*N3, with 1 changing most rapidly, then, 2, then 3
+//          N1,N2,N3: coord dimentions of u, y
+//          y   : return vector result of size >= N1 * N2 * N3
+// RETURNS: none
+//**********************************************************************************
+template<>
+void I3_X_D2_X_I1<GFLOAT>(GTMatrix<GFLOAT> &D2T, GTVector<GFLOAT> &u, 
+                           GSIZET N1, GSIZET N2, GSIZET N3,
+                           GTVector<GFLOAT> &y)
+{
+  GSIZET  N21, N22, NXY, NN;
+
+  N21 = D2T.size(1);
+  N22 = D2T.size(2);
+  NXY = N1*N2;
+  NN  = N1*N2*N3;
+
+#if defined(GARRAY_BOUNDS)
+  if ( u.size() < NN || y.size() < NN ) {
+    cout << "GMTK::I3_X_D2_X_I1: incompatible dimensions" << endl;
+    exit(1);
+  }
+#endif
+
+ for ( GSIZET k=0; k<N3; k++ ) {
+    fmxm(y.data()+k*NXY, u.data()+k*NXY, &N1, &N2, D2T.data().data(), 
+         &N21, &N22, &szMatCache_);
+  }
+
+} // end of method I3_X_D2_X_I1
 
 
 //**********************************************************************************
@@ -711,6 +1043,82 @@ void I3_X_D2_X_I1<GDOUBLE>(GTMatrix<GDOUBLE> &D2T, GTVector<GDOUBLE> &u,
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD : I3_X_D2_X_I1 (quad)
+// DESC   : Apply tensor product operator to vector:
+//            y = I3 X D2 X I1 u
+// ARGS   : D2T     : 2-direction (dense) operator transpose
+//          u       : operand vector; must be at least of size
+//                    N1*N2*N3, with 1 changing most rapidly, then, 2, then 3
+//          N1,N2,N3: coord dimentions of u, y
+//          y   : return vector result of size >= N1 * N2 * N3
+// RETURNS: none
+//**********************************************************************************
+template<>
+void I3_X_D2_X_I1<GQUAD>(GTMatrix<GQUAD> &D2T, GTVector<GQUAD> &u, 
+                           GSIZET N1, GSIZET N2, GSIZET N3,
+                           GTVector<GQUAD> &y)
+{
+  GSIZET  N21, N22, NXY, NN;
+
+  N21 = D2T.size(1);
+  N22 = D2T.size(2);
+  NXY = N1*N2;
+  NN  = N1*N2*N3;
+
+#if defined(GARRAY_BOUNDS)
+  if ( u.size() < NN || y.size() < NN ) {
+    cout << "GMTK::I3_X_D2_X_I1: incompatible dimensions" << endl;
+    exit(1);
+  }
+#endif
+
+ for ( GSIZET k=0; k<N3; k++ ) {
+    qmxm(y.data()+k*NXY, u.data()+k*NXY, &N1, &N2, D2T.data().data(), 
+         &N21, &N22, &szMatCache_);
+  }
+
+} // end of method I3_X_D2_X_I1
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : D3_X_I2_X_I1 (float)
+// DESC   : Apply tensor product operator to vector:
+//            y = D3 X I2 X I1 u
+// ARGS   : D3T     : 3-direction (dense) operator transpose
+//          u       : operand vector; must be at least of size
+//                    N1*N2*N3, with 1 changing most rapidly, then, 2, then 3
+//          N1,N2,N3: coord dimentions of u, y
+//          y   : return vector result of size >= N1 * N2 * N3
+// RETURNS: none
+//**********************************************************************************
+template<>
+void D3_X_I2_X_I1<GFLOAT>(GTMatrix<GFLOAT> &D3T, GTVector<GFLOAT> &u,
+                           GSIZET N1, GSIZET N2, GSIZET N3, 
+                           GTVector<GFLOAT> &y)
+{
+  GSIZET  N31, N32, NXY, NN;
+
+  N31 = D3T.size(1);
+  N32 = D3T.size(2);
+  NXY = N1*N2;
+  NN  = N1*N2*N3;
+
+#if defined(GARRAY_BOUNDS)
+  if ( u.size() < NN || y.size() < NN ) {
+    cout << "GMTK::D3_X_I2_X_I1: incompatible dimensions" << endl;
+    exit(1);
+  }
+#endif
+
+ fmxm(y.data(), u.data(), &NXY, &N3, D3T.data().data(), 
+      &N31, &N32, &szMatCache_);
+
+} // end of method D3_X_I2_X_I1
+
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD : D3_X_I2_X_I1 (double)
 // DESC   : Apply tensor product operator to vector:
 //            y = D3 X I2 X I1 u
@@ -744,6 +1152,93 @@ void D3_X_I2_X_I1<GDOUBLE>(GTMatrix<GDOUBLE> &D3T, GTVector<GDOUBLE> &u,
       &N31, &N32, &szMatCache_);
 
 } // end of method D3_X_I2_X_I1
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : D3_X_I2_X_I1 (quad)
+// DESC   : Apply tensor product operator to vector:
+//            y = D3 X I2 X I1 u
+// ARGS   : D3T     : 3-direction (dense) operator transpose
+//          u       : operand vector; must be at least of size
+//                    N1*N2*N3, with 1 changing most rapidly, then, 2, then 3
+//          N1,N2,N3: coord dimentions of u, y
+//          y   : return vector result of size >= N1 * N2 * N3
+// RETURNS: none
+//**********************************************************************************
+template<>
+void D3_X_I2_X_I1<GQUAD>(GTMatrix<GQUAD> &D3T, GTVector<GQUAD> &u,
+                           GSIZET N1, GSIZET N2, GSIZET N3, 
+                           GTVector<GQUAD> &y)
+{
+  GSIZET  N31, N32, NXY, NN;
+
+  N31 = D3T.size(1);
+  N32 = D3T.size(2);
+  NXY = N1*N2;
+  NN  = N1*N2*N3;
+
+#if defined(GARRAY_BOUNDS)
+  if ( u.size() < NN || y.size() < NN ) {
+    cout << "GMTK::D3_X_I2_X_I1: incompatible dimensions" << endl;
+    exit(1);
+  }
+#endif
+
+ qmxm(y.data(), u.data(), &NXY, &N3, D3T.data().data(), 
+      &N31, &N32, &szMatCache_);
+
+} // end of method D3_X_I2_X_I1
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : Dg3_X_Dg2_X_D1 (float)
+// DESC   : Apply tensor product operator to vector:
+//            y = diag(D3) X diag(D2) X D1 u
+// ARGS   : D1   : GTMatrix of 1-operator
+//          Dg1  : diag(D2)
+//          Dg3  : diag(D3)
+//          u    : GVector argument
+//          tmp  : tmp space, resized here if necessary
+//          y    : GVector result
+// RETURNS: none
+//**********************************************************************************
+template<>
+void Dg3_X_Dg2_X_D1<GFLOAT>(GTMatrix<GFLOAT> &D1, GTVector<GFLOAT> &Dg2, GTVector<GFLOAT> &Dg3,
+                           GTVector<GFLOAT> &u, GTVector<GFLOAT> &tmp, GTVector<GFLOAT> &y)
+{
+  GSIZET N11, N12, N2, N3, NN, NXY, NYZ;
+
+  N11 = D1.size(1);
+  N12 = D1.size(2);
+  N2  = Dg2.size();
+  N3  = Dg3.size();
+  NXY = N11*N2;
+  NYZ = N2*N3;
+  NN  = N11*N2*N3;
+#if defined(GARRAY_BOUNDS)
+  if ( u.size() < NN  || y.size() < NN ) {
+    cout <<"Dg3_X_D2_X_Dg1: incompatible vectors" << endl;
+    exit(1);
+  }
+#endif
+
+  tmp.resizem(NXY*N3);
+
+  // tmp = I X I X D1 u:
+  fmxm(y.data(), D1.data().data(), &N11, &N12, u.data(), &N11, &NYZ, &szMatCache_);
+
+  // tmp1 = I X Diag(D2) X I tmp:
+  for ( GSIZET k=0; k<N3; k++ ) {
+    fmxDm(tmp.data()+k*NXY,  y.data()+k*NXY, &N11, &N12, Dg2.data(), &N2, &szMatCache_);
+  }
+
+  // y = Dg3 X I X I tmp1:
+  fmxDm(y.data(), tmp.data(), &NXY, &N3, Dg3.data(), &N3, &szMatCache_);
+
+
+} // end, method Dg3_X_Dg2_X_D1
 
 
 //**********************************************************************************
@@ -798,6 +1293,106 @@ void Dg3_X_Dg2_X_D1<GDOUBLE>(GTMatrix<GDOUBLE> &D1, GTVector<GDOUBLE> &Dg2, GTVe
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD : Dg3_X_Dg2_X_D1 (quad)
+// DESC   : Apply tensor product operator to vector:
+//            y = diag(D3) X diag(D2) X D1 u
+// ARGS   : D1   : GTMatrix of 1-operator
+//          Dg1  : diag(D2)
+//          Dg3  : diag(D3)
+//          u    : GVector argument
+//          tmp  : tmp space, resized here if necessary
+//          y    : GVector result
+// RETURNS: none
+//**********************************************************************************
+template<>
+void Dg3_X_Dg2_X_D1<GQUAD>(GTMatrix<GQUAD> &D1, GTVector<GQUAD> &Dg2, GTVector<GQUAD> &Dg3,
+                           GTVector<GQUAD> &u, GTVector<GQUAD> &tmp, GTVector<GQUAD> &y)
+{
+  GSIZET N11, N12, N2, N3, NN, NXY, NYZ;
+
+  N11 = D1.size(1);
+  N12 = D1.size(2);
+  N2  = Dg2.size();
+  N3  = Dg3.size();
+  NXY = N11*N2;
+  NYZ = N2*N3;
+  NN  = N11*N2*N3;
+#if defined(GARRAY_BOUNDS)
+  if ( u.size() < NN  || y.size() < NN ) {
+    cout <<"Dg3_X_D2_X_Dg1: incompatible vectors" << endl;
+    exit(1);
+  }
+#endif
+
+  tmp.resizem(NXY*N3);
+
+  // tmp = I X I X D1 u:
+  qmxm(y.data(), D1.data().data(), &N11, &N12, u.data(), &N11, &NYZ, &szMatCache_);
+
+  // tmp1 = I X Diag(D2) X I tmp:
+  for ( GSIZET k=0; k<N3; k++ ) {
+    qmxDm(tmp.data()+k*NXY,  y.data()+k*NXY, &N11, &N12, Dg2.data(), &N2, &szMatCache_);
+  }
+
+  // y = Dg3 X I X I tmp1:
+  qmxDm(y.data(), tmp.data(), &NXY, &N3, Dg3.data(), &N3, &szMatCache_);
+
+
+} // end, method Dg3_X_Dg2_X_D1
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : Dg3_X_D2_X_Dg1 (float)
+// DESC   : Apply tensor product operator to vector:
+//            y = diag(D3) X D2 X diag(D1) u
+// ARGS   : Dg1  : transpose of dense matrix, D1
+//          D2T  : GTMatrix for 2-operator, transpose
+//          Dg3  : diag(D3)
+//          u    : GVector argument
+//          tmp  : tmp space, resized here if necessary
+//          y    : GVector result
+// RETURNS: none
+//**********************************************************************************
+template<>
+void Dg3_X_D2_X_Dg1<GFLOAT>(GTVector<GFLOAT> &Dg1, GTMatrix<GFLOAT> &D2T, GTVector<GFLOAT> &Dg3,
+                           GTVector<GFLOAT> &u, GTVector<GFLOAT> &tmp, GTVector<GFLOAT> &y)
+{
+  GSIZET N1, N21, N22, N3, NN, NXY, NYZ;
+
+  N1  = Dg1.size();
+  N21 = D2T.size(1);
+  N22 = D2T.size(2);
+  N3  = Dg3.size();
+  NXY = N1*N21;
+  NYZ = N21*N3;
+  NN  = N1*N21*N3;
+#if defined(GARRAY_BOUNDS)
+  if ( u.size() < NN  || y.size() < NN ) {
+    cout <<"Dg3_X_D2_X_Dg1: incompatible vectors" << endl;
+    exit(1);
+  }
+#endif
+
+  tmp.resizem(NXY*N3);
+
+  // tmp = I X I X Diag(D1) u:
+  fDmxm(y.data(), Dg1.data(), &N1, u.data(), &N1, &NYZ, &szMatCache_);
+
+  // tmp1 = I X D2 X I tmp:
+  for ( GSIZET k=0; k<N3; k++ ) {
+    fmxm(tmp.data()+k*NXY, y.data()+k*NXY, &N1, &N21, D2T.data().data(), &N21, &N22, &szMatCache_);
+  }
+
+  // y = Dg3 X I X I tmp1:
+  fmxDm(y.data(),  tmp.data(), &NXY, &N3, Dg3.data(), &N3, &szMatCache_);
+
+
+} // end, method Dg3_X_D2_X_Dg1
+
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD : Dg3_X_D2_X_Dg1 (double)
 // DESC   : Apply tensor product operator to vector:
 //            y = diag(D3) X D2 X diag(D1) u
@@ -844,6 +1439,106 @@ void Dg3_X_D2_X_Dg1<GDOUBLE>(GTVector<GDOUBLE> &Dg1, GTMatrix<GDOUBLE> &D2T, GTV
 
 
 } // end, method Dg3_X_D2_X_Dg1
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : Dg3_X_D2_X_Dg1 (quad)
+// DESC   : Apply tensor product operator to vector:
+//            y = diag(D3) X D2 X diag(D1) u
+// ARGS   : Dg1  : transpose of dense matrix, D1
+//          D2T  : GTMatrix for 2-operator, transpose
+//          Dg3  : diag(D3)
+//          u    : GVector argument
+//          tmp  : tmp space, resized here if necessary
+//          y    : GVector result
+// RETURNS: none
+//**********************************************************************************
+template<>
+void Dg3_X_D2_X_Dg1<GQUAD>(GTVector<GQUAD> &Dg1, GTMatrix<GQUAD> &D2T, GTVector<GQUAD> &Dg3,
+                           GTVector<GQUAD> &u, GTVector<GQUAD> &tmp, GTVector<GQUAD> &y)
+{
+  GSIZET N1, N21, N22, N3, NN, NXY, NYZ;
+
+  N1  = Dg1.size();
+  N21 = D2T.size(1);
+  N22 = D2T.size(2);
+  N3  = Dg3.size();
+  NXY = N1*N21;
+  NYZ = N21*N3;
+  NN  = N1*N21*N3;
+#if defined(GARRAY_BOUNDS)
+  if ( u.size() < NN  || y.size() < NN ) {
+    cout <<"Dg3_X_D2_X_Dg1: incompatible vectors" << endl;
+    exit(1);
+  }
+#endif
+
+  tmp.resizem(NXY*N3);
+
+  // tmp = I X I X Diag(D1) u:
+  qDmxm(y.data(), Dg1.data(), &N1, u.data(), &N1, &NYZ, &szMatCache_);
+
+  // tmp1 = I X D2 X I tmp:
+  for ( GSIZET k=0; k<N3; k++ ) {
+    qmxm(tmp.data()+k*NXY, y.data()+k*NXY, &N1, &N21, D2T.data().data(), &N21, &N22, &szMatCache_);
+  }
+
+  // y = Dg3 X I X I tmp1:
+  qmxDm(y.data(),  tmp.data(), &NXY, &N3, Dg3.data(), &N3, &szMatCache_);
+
+
+} // end, method Dg3_X_D2_X_Dg1
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : D3_X_Dg2_X_Dg1 (float)
+// DESC   : Apply tensor product operator to vector:
+//            y = D3 X diag(D2) X diag(D1) u
+// ARGS   : Dg1  : diag(D1)
+//          Dg1  : diag(D2)
+//          D3T  : GMatrix for 3-operator, transpose
+//          u    : GVector argument
+//          tmp  : tmp space, resized here if necessary
+//          y    : GVector result
+// RETURNS: none
+//**********************************************************************************
+template<>
+void D3_X_Dg2_X_Dg1<GFLOAT>(GTVector<GFLOAT> &Dg1, GTVector<GFLOAT> &Dg2, GTMatrix<GFLOAT> &D3T,
+                           GTVector<GFLOAT> &u, GTVector<GFLOAT> &tmp, GTVector<GFLOAT> &y)
+{
+  GSIZET N1, N2, N31, N32, NN, NXY, NYZ;
+
+  N1  = Dg1.size();
+  N2  = Dg2.size();
+  N31 = D3T.size(1);
+  N32 = D3T.size(2);
+  NXY = N1*N2;
+  NYZ = N2*N31;
+  NN  = N1*N2*N31;
+#if defined(GARRAY_BOUNDS)
+  if ( u.size() < NN  || y.size() < NN ) {
+    cout <<"D3_X_Dg2_X_Dg1: incompatible vectors" << endl;
+    exit(1);
+  }
+#endif
+
+  tmp.resizem(NXY*N31);
+
+  // tmp = I X I X Diag(D1) u:
+  fDmxm(y.data(), Dg1.data(), &N1, u.data(), &N1, &NYZ, &szMatCache_);
+
+  // tmp1 = I X D2 X I tmp:
+  for ( GSIZET k=0; k<N31; k++ ) {
+    fmxDm(tmp.data()+k*NXY, y.data()+k*NXY, &N1, &N2, Dg2.data(), &N2, &szMatCache_);
+  }
+
+  // y = Dg3 X I X I tmp1:
+  fmxm(y.data(), tmp.data(), &NXY, &N31, D3T.data().data(), &N31, &N32, &szMatCache_);
+
+
+} // end, method D3_X_Dg2_X_Dg1
 
 
 //**********************************************************************************
@@ -898,7 +1593,57 @@ void D3_X_Dg2_X_Dg1<GDOUBLE>(GTVector<GDOUBLE> &Dg1, GTVector<GDOUBLE> &Dg2, GTM
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : add
+// METHOD : D3_X_Dg2_X_Dg1 (quad)
+// DESC   : Apply tensor product operator to vector:
+//            y = D3 X diag(D2) X diag(D1) u
+// ARGS   : Dg1  : diag(D1)
+//          Dg1  : diag(D2)
+//          D3T  : GMatrix for 3-operator, transpose
+//          u    : GVector argument
+//          tmp  : tmp space, resized here if necessary
+//          y    : GVector result
+// RETURNS: none
+//**********************************************************************************
+template<>
+void D3_X_Dg2_X_Dg1<GQUAD>(GTVector<GQUAD> &Dg1, GTVector<GQUAD> &Dg2, GTMatrix<GQUAD> &D3T,
+                           GTVector<GQUAD> &u, GTVector<GQUAD> &tmp, GTVector<GQUAD> &y)
+{
+  GSIZET N1, N2, N31, N32, NN, NXY, NYZ;
+
+  N1  = Dg1.size();
+  N2  = Dg2.size();
+  N31 = D3T.size(1);
+  N32 = D3T.size(2);
+  NXY = N1*N2;
+  NYZ = N2*N31;
+  NN  = N1*N2*N31;
+#if defined(GARRAY_BOUNDS)
+  if ( u.size() < NN  || y.size() < NN ) {
+    cout <<"D3_X_Dg2_X_Dg1: incompatible vectors" << endl;
+    exit(1);
+  }
+#endif
+
+  tmp.resizem(NXY*N31);
+
+  // tmp = I X I X Diag(D1) u:
+  qDmxm(y.data(), Dg1.data(), &N1, u.data(), &N1, &NYZ, &szMatCache_);
+
+  // tmp1 = I X D2 X I tmp:
+  for ( GSIZET k=0; k<N31; k++ ) {
+    qmxDm(tmp.data()+k*NXY, y.data()+k*NXY, &N1, &N2, Dg2.data(), &N2, &szMatCache_);
+  }
+
+  // y = Dg3 X I X I tmp1:
+  qmxm(y.data(), tmp.data(), &NXY, &N31, D3T.data().data(), &N31, &N32, &szMatCache_);
+
+
+} // end, method D3_X_Dg2_X_Dg1
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : add (float)
 // DESC   : point-by-point addition, returned in specified GTVector:
 //            vret = a*va + b*vb, for GFLOAT types
 // ARGS   : vret: GTVector<T> return vector
@@ -933,7 +1678,7 @@ while(1){};
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : add
+// METHOD : add (double)
 // DESC   : point-by-point addition, returned in specified GTVector:
 //            vret = a*va + b*vb, for GFLOAT types
 // ARGS   : vret: GTVector<T> return vector
@@ -968,7 +1713,7 @@ while(1){};
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : add
+// METHOD : add (quad)
 // DESC   : point-by-point addition, returned in specified GTVector:
 //            vret = a*va + b*vb, for GFLOAT types
 // ARGS   : vret: GTVector<T> return vector
@@ -1004,7 +1749,7 @@ while(1){};
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : operator * mat-vec
+// METHOD : operator * mat-vec (float)
 // DESC   : matrix-vector product, returns product,
 //          without destroying *this data, for GFLOAT type
 // ARGS   : GTVector &
@@ -1039,7 +1784,7 @@ void matvec_prod<GFLOAT>(GTVector<GFLOAT> &vret, GTMatrix<GFLOAT> &A, GTVector<G
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : operator * mat-vec
+// METHOD : operator * mat-vec (double)
 // DESC   : matrix-vector product, returns product,
 //          without destroying *this data, for GDOUBLE type
 // ARGS   : GTVector &
@@ -1074,7 +1819,7 @@ void matvec_prod<GDOUBLE>(GTVector<GDOUBLE> &vret, GTMatrix<GDOUBLE> &A, GTVecto
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : operator * mat-vec
+// METHOD : operator * mat-vec (quad)
 // DESC   : matrix-vector product, returns product,
 //          without destroying *this data, for GQUAD type
 // ARGS   : GTVector &
@@ -1110,7 +1855,7 @@ void matvec_prod<GQUAD>(GTVector<GQUAD> &vret, GTMatrix<GQUAD> &A, GTVector<GQUA
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : mat-mat prod
+// METHOD : mat-mat prod (float)
 // DESC   : Multiplies C = A * B and returns matrix prod C
 //          result, for GFLOAT types
 // ARGS   : GTMatrix m factor
@@ -1149,7 +1894,7 @@ void matmat_prod<GFLOAT>(GTMatrix<GFLOAT> &C, GTMatrix<GFLOAT> &A, GTMatrix<GFLO
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : mat-mat prod
+// METHOD : mat-mat prod (double)
 // DESC   : Multiplies C = A * B and returns matrix prod C
 //          result, for GDOUBLE types
 // ARGS   : GTMatrix m factor
@@ -1188,7 +1933,7 @@ void matmat_prod<GDOUBLE>(GTMatrix<GDOUBLE> &C, GTMatrix<GDOUBLE> &A, GTMatrix<G
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : mat-mat prod
+// METHOD : mat-mat prod (quad)
 // DESC   : Multiplies C = A * B and returns matrix prod C
 //          result, for GQUAD types
 // ARGS   : GTMatrix m factor
@@ -1227,6 +1972,126 @@ void matmat_prod<GQUAD>(GTMatrix<GQUAD> &C, GTMatrix<GQUAD> &A, GTMatrix<GQUAD> 
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD : curl 
+// DESC   : Compute curl component, idir, of input vector field
+//          
+// ARGS   : grid : grid
+//          u    : input vector field. Must have >= GDIM components.
+//          idir : curl component to compute. Must be appropriate for 
+//                 problem dimension.
+//          tmp  : tmp vector; must be of at least length 2.
+//          curl : result
+// RETURNS: none.
+//**********************************************************************************
+template<>
+void curl(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &u, const GINT idir, 
+          GTVector<GTVector<GFTYPE>*> &tmp, GTVector<GFTYPE> &curl)
+{
+
+  if ( GDIM == 2 && u.size() > GDIM ) {
+    switch (idir) {
+      case 1:
+        grid.deriv(*u[2], 2, *tmp[0], curl);
+        curl *= -1.0;
+        break;
+      case 2:
+        grid.deriv(*u[2], 1, *tmp[0], curl);
+        break;
+      case 3:
+        grid.deriv(*u[1], 1, *tmp[0], curl);
+        grid.deriv(*u[0], 2, *tmp[0], *tmp[1]);
+        curl -= *tmp[1];
+        break;
+      default:
+        assert( FALSE && "Invalid component specified");
+        break;
+    }
+    return;
+  }
+
+  if ( GDIM == 2 ) {
+    switch (idir) {
+      case 3:
+        grid.deriv(*u[1], 1, *tmp[0], curl);
+        grid.deriv(*u[0], 2, *tmp[0], *tmp[1]);
+        curl -= *tmp[1];
+        break;
+      default:
+        assert( FALSE && "Invalid component specified");
+        break;
+    }
+    return;
+  }
+
+  if ( GDIM == 3 ) {
+    switch (idir) {
+      case 1:
+        grid.deriv(*u[1], 3, *tmp[0], curl);
+        grid.deriv(*u[2], 2, *tmp[0], *tmp[1]);
+        curl -= *tmp[1];
+        break;
+      case 2:
+        grid.deriv(*u[2], 1, *tmp[0], curl);
+        grid.deriv(*u[0], 3, *tmp[0], *tmp[1]);
+        curl -= *tmp[1];
+        break;
+      case 3:
+        grid.deriv(*u[1], 1, *tmp[0], curl);
+        grid.deriv(*u[0], 2, *tmp[0], *tmp[1]);
+        curl -= *tmp[1];
+        break;
+    }
+  }
+  return;
+
+} // end of method curl
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : constrain2sphere(1)
+// DESC   : Project input 3-vector to sphere:
+//          -  -     -                           -   -  -
+//          |vx|     |(r^2-x^2)   -xy     -xz    |   |vx|
+//        P |vy| =   |   -yx    (r^2-x^2) -yz    |   |vy|
+//          |vz|     |   -zx      -zy   (r^2-z^2)|   |vz|
+//          -  -     -                           -   -  -
+//
+//        This is derived from a Lagrange multiplier constraint
+//        that requires all vectors, v, to be normal to radial
+//        vector, s.t. x.v = 0. 
+//          
+// ARGS   : grid : Grid. If not of the correct type, nothing is done
+//          v    : Array of vector components
+//          Pv   : Projected vector. May be the same as V, in which case
+//                 V is overwritten.
+// RETURNS: none
+//**********************************************************************************
+template<typename T>
+void constrain2sphere(GGrid &grid, GTVector<GTVector<GFTYPE>*> &v, GTVector<GTVector<GFTYPE>*> &Pv)
+{
+
+  if ( grid.gtype() != GE_2DEMBEDDED ) return;
+
+  assert( v.size() >= 3 && "Incompatible dimensionality");
+
+  GSIZET nxy = grid.ndof();
+  GFTYPE r2, x, y, z;
+  GTVector<GTVector<GFTYPE>> *xnodes = &grid.xNodes();
+
+  for ( GSIZET j=0; j<nxy; j++ ) {
+    x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
+    r2 = x*x + y*y + z*z;
+    (*Pv[0])[j] =  (*v[0])[j]*(r2-x*x) - (*v[1])[j]*x*y      - (*v[2])[j]*x*z;
+    (*Pv[1])[j] = -(*v[0])[j]*y*x      + (*v[1])[j]*(r2-y*y) - (*v[2])[j]*y*z;
+    (*Pv[2])[j] = -(*v[0])[j]*z*x      - (*v[1])[j]*z*y      + (*v[2])[j]*(r2-z*z);
+   }
+
+} // end of method constrain2sphere (1)
+
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD : compute_grefderiv
 // DESC   : Compute tensor product derivative in specified direction
 //          of specified field, u, in ref space, using grid object.
@@ -1251,13 +2116,13 @@ void matmat_prod<GQUAD>(GTMatrix<GQUAD> &C, GTMatrix<GQUAD> &A, GTMatrix<GQUAD> 
 // RETURNS:  none
 //**********************************************************************************
 template<>
-void compute_grefderiv(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &etmp,
-                       GINT idir, GBOOL dotrans, GTVector<GDOUBLE> &du)
+void compute_grefderiv(GGrid &grid, GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
+                       GINT idir, GBOOL dotrans, GTVector<GFTYPE> &du)
 {
   GSIZET               ibeg, iend; // beg, end indices for global array
   GBOOL                bembedded;
   GTVector<GSIZET>     N(GDIM);
-  GTMatrix<GDOUBLE>   *Di;         // element-based 1d derivative operators
+  GTMatrix<GFTYPE>     *Di;         // element-based 1d derivative operators
   GElemList           *gelems = &grid.elems();
 
   bembedded = grid.gtype() == GE_2DEMBEDDED;
@@ -1367,8 +2232,8 @@ void compute_grefderiv(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &etm
 // RETURNS:  none
 //**********************************************************************************
 template<>
-void compute_grefderivs(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &etmp,
-                        GBOOL dotrans, GTVector<GTVector<GDOUBLE>*> &du)
+void compute_grefderivs(GGrid &grid, GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
+                        GBOOL dotrans, GTVector<GTVector<GFTYPE>*> &du)
 {
   assert(du.size() >= GDIM
        && "Insufficient number of derivatives specified");
@@ -1379,7 +2244,7 @@ void compute_grefderivs(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &et
   GINT                         nxy;
   GSIZET                       ibeg, iend; // beg, end indices for global array
   GTVector<GSIZET>             N(GDIM);
-  GTVector<GTMatrix<GDOUBLE>*> Di(GDIM);   // element-based 1d derivative operators
+  GTVector<GTMatrix<GFTYPE>*>  Di(GDIM);   // element-based 1d derivative operators
   GElemList                   *gelems = &grid.elems();
 
   bembedded = grid.gtype() == GE_2DEMBEDDED;
@@ -1462,8 +2327,8 @@ void compute_grefderivs(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &et
 // RETURNS:  none
 //**********************************************************************************
 template<>
-void compute_grefderivsW(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &etmp,
-                         GBOOL dotrans, GTVector<GTVector<GDOUBLE>*> &du)
+void compute_grefderivsW(GGrid &grid, GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
+                         GBOOL dotrans, GTVector<GTVector<GFTYPE>*> &du)
 {
   assert(du.size() >= GDIM
        && "Insufficient number of derivatives specified");
@@ -1474,8 +2339,8 @@ void compute_grefderivsW(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &e
   GSIZET                        k;
   GSIZET                        ibeg, iend; // beg, end indices for global array
   GTVector<GSIZET>              N(GDIM);
-  GTVector<GTVector<GDOUBLE>*>  W(GDIM);    // element weights
-  GTVector<GTMatrix<GDOUBLE>*>  Di(GDIM);   // element-based 1d derivative operators
+  GTVector<GTVector<GFTYPE>*>   W(GDIM);    // element weights
+  GTVector<GTMatrix<GFTYPE>*>   Di(GDIM);   // element-based 1d derivative operators
   GElemList                    *gelems = &grid.elems();
 
   bembedded = grid.gtype() == GE_2DEMBEDDED;
@@ -1563,15 +2428,15 @@ void compute_grefderivsW(GGrid &grid, GTVector<GDOUBLE> &u, GTVector<GDOUBLE> &e
 // RETURNS:  none
 //**********************************************************************************
 template<>
-void compute_grefdiv(GGrid &grid, GTVector<GTVector<GDOUBLE>*> &u, GTVector<GDOUBLE> &etmp,
-                     GBOOL dotrans, GTVector<GDOUBLE> &divu)
+void compute_grefdiv(GGrid &grid, GTVector<GTVector<GFTYPE>*> &u, GTVector<GFTYPE> &etmp,
+                     GBOOL dotrans, GTVector<GFTYPE> &divu)
 {
 
   GBOOL                        bembedded;
   GSIZET                       ibeg, iend; // beg, end indices for global array
-  GTVector<GTVector<GDOUBLE>*> W(GDIM);    // element 1/weights
+  GTVector<GTVector<GFTYPE>*>  W(GDIM);    // element 1/weights
   GTVector<GSIZET>             N(GDIM);
-  GTVector<GTMatrix<GDOUBLE>*> Di(GDIM);   // element-based 1d derivative operators
+  GTVector<GTMatrix<GFTYPE>*>  Di(GDIM);   // element-based 1d derivative operators
   GElemList                   *gelems = &grid.elems();
 
   bembedded = grid.gtype() == GE_2DEMBEDDED;
@@ -1659,15 +2524,15 @@ void compute_grefdiv(GGrid &grid, GTVector<GTVector<GDOUBLE>*> &u, GTVector<GDOU
 // RETURNS:  none
 //**********************************************************************************
 template<>
-void compute_grefdiviW(GGrid &grid, GTVector<GTVector<GDOUBLE>*> &u, GTVector<GDOUBLE> &etmp,
-                     GBOOL dotrans, GTVector<GDOUBLE> &divu)
+void compute_grefdiviW(GGrid &grid, GTVector<GTVector<GFTYPE>*> &u, GTVector<GFTYPE> &etmp,
+                       GBOOL dotrans, GTVector<GFTYPE> &divu)
 {
 
   GBOOL                        bembedded;
   GSIZET                       ibeg, iend; // beg, end indices for global array
-  GTVector<GTVector<GDOUBLE>*> iW(GDIM);   // element 1/weights
+  GTVector<GTVector<GFTYPE>*>  iW(GDIM);   // element 1/weights
   GTVector<GSIZET>             N(GDIM);
-  GTVector<GTMatrix<GDOUBLE>*> Di(GDIM);   // element-based 1d derivative operators
+  GTVector<GTMatrix<GFTYPE>*>  Di(GDIM);   // element-based 1d derivative operators
   GElemList                   *gelems = &grid.elems();
 
   bembedded = grid.gtype() == GE_2DEMBEDDED;
@@ -1729,7 +2594,6 @@ void compute_grefdiviW(GGrid &grid, GTVector<GTVector<GDOUBLE>*> &u, GTVector<GD
 
 
 } // end, method compute_grefdiviW
-
 
 
 } // end, namespace GMTK
