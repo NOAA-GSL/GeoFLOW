@@ -212,7 +212,7 @@ int main(int argc, char **argv)
     GSIZET nxy = (*xnodes)[0].size();
 
     if ( sgrid == "grid_icos" )
-      assert(p>=0 && q>=0 && r>=0 && "Polynomial order p>=1, and q>=0");
+      assert(p>=0 && q>=0 && r>=0 && "Polynomial order p>=0, and q>=0");
     else 
       assert(p>=0 && q>=0 && r>=0 && "Polynomial order must be >= 0");
 
@@ -242,13 +242,13 @@ int main(int argc, char **argv)
         dphidx      =-sin(phi)/(rad*cos(theta));
         dphidy      = cos(phi)/(rad*cos(theta));
         mask[j]     = 0.5*PI - abs(theta) < dthetaex ? 0 : 1;
-        (*u [0])[j] = rad*pow(cos(theta),p)*cos(q*phi);
+        (*u [0])[j] = pow(cos(theta),p)*cos(q*phi);
 cout << "main: p=" << p << " q=" << q << endl;
-        (*da[0])[j] =  p*pow(cos(theta),p-1)*cos(q*phi)*cos(phi)*dthdx; 
-                    -  q*pow(cos(theta),p-1)*sin(q*phi)*sin(phi)*dphidx;
-        (*da[1])[j] =  p*pow(cos(theta),p-1)*cos(q*phi)*sin(phi)*dthdy 
-                    +  q*pow(cos(theta),p-1)*sin(q*phi)*cos(phi)*dphidy;
-        (*da[2])[j] =  p*pow(cos(theta),p-2)*sin(theta)*cos(q*phi)*dthdz;
+        (*da[0])[j] = -p*pow(cos(theta),p-1)*cos(q*phi)*sin(theta)*dthdx; 
+                    +  q*pow(cos(theta),p  )*sin(q*phi)           *dphidx;
+        (*da[1])[j] = -p*pow(cos(theta),p-1)*cos(q*phi)*sin(theta)*dthdy 
+                    -  q*pow(cos(theta),p  )*sin(q*phi)           *dphidy;
+        (*da[2])[j] = -p*pow(cos(theta),p-1)*cos(q*phi)*sin(theta)*dthdz;
 if ( (*da[2])[j] > p ) 
 cout << "main: dadz[" << j << "]=" << (*da[2])[j] << " theta=" << theta*180/PI << " phi = " << phi*180/PI << endl;
 //    }
@@ -394,6 +394,9 @@ cout << "main: gnorm[" << j << "]=" << gnorm << endl;
 
       ss << "diff" << j;
       print(*grid_, *diff[j], ss.str(), comm); 
+      ss.str("");
+      ss << "du" << j;
+      print(*grid_, *du[j], ss.str(), comm); 
       ss.str("");
     }
 
