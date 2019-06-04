@@ -189,11 +189,13 @@ int main(int argc, char **argv)
     GTVector<GTVector<GFTYPE>*> u   (1);
     GTVector<GTVector<GFTYPE>*> du  (1);
     GTVector<GTVector<GFTYPE>*> da (nc);
+    GTVector<GTVector<GFTYPE>*> diff(nc);
     
     for ( GSIZET j=0; j<utmp.size(); j++ ) utmp[j] = new GTVector<GFTYPE>(grid_->size());
     for ( GSIZET j=0; j<u   .size(); j++ ) u   [j] = new GTVector<GFTYPE>(grid_->size());
     for ( GSIZET j=0; j<du  .size(); j++ ) du  [j] = new GTVector<GFTYPE>(grid_->size());
     for ( GSIZET j=0; j<da  .size(); j++ ) da  [j] = new GTVector<GFTYPE>(grid_->size());
+    for ( GSIZET j=0; j<diff.size(); j++ ) diff[j] = new GTVector<GFTYPE>(grid_->size());
 
     // Initialize u: set p, q, r exponents
     // (Can set up to read from input file):
@@ -252,6 +254,7 @@ cout << "main: dadz[" << j << "]=" << (*da[2])[j] << " theta=" << theta*180/PI <
 //    }
     }
 
+cout << "main: mask=" << mask << endl;
     for ( GSIZET j=0; j<da.size(); j++ ) {
       da[j]->pointProd(mask);
     }
@@ -360,6 +363,7 @@ cout << "main: u=" << *u[0] << endl;
     // Compute collocated  analytic solution, do comparisons:
     maxerror = 0.0;
     for ( GSIZET j=0; j<du.size(); j++ ) { //local errors
+     *diff[j]  = (*da[j]) - (*du[0]);
      *utmp[0]  = *da[j]; utmp[0]->pow(2);
       nnorm    = grid_->integrate(*utmp[0], *utmp[1]);
       nnorm    = nnorm > std::numeric_limits<GFTYPE>::epsilon() ? nnorm : 1.0;
@@ -375,8 +379,8 @@ cout << "main: u=" << *u[0] << endl;
 //du  [j]->range(25,50);
 //utmp[0]->range(25,50);
 cout << "main: nnorm=" << nnorm << endl;
-cout << "main: da[" << j << "]=" << *da[j] << endl;
-cout << "main: du[" << j << "]=" << *du[j] << endl;
+//cout << "main: da[" << j << "]=" << *da[j] << endl;
+//cout << "main: du[" << j << "]=" << *du[j] << endl;
 //cout << "main: du-da[" << j << "]=" << *utmp[0] << endl;
 //da  [j]->range_reset();
 //du  [j]->range_reset();
@@ -388,8 +392,8 @@ cout << "main: gnorm[" << j << "]=" << gnorm << endl;
       // now find max errors of each type for each field:
       for ( GSIZET i=0; i<maxerror.size(); i++ ) maxerror[i] = MAX(maxerror[i],gnorm[i]);
 
-      ss << "du" << j;
-      print(*grid_, *du[j], ss.str(), comm); 
+      ss << "diff" << j;
+      print(*grid_, *diff[j], ss.str(), comm); 
       ss.str("");
     }
 
