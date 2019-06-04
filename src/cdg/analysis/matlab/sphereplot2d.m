@@ -122,7 +122,7 @@ for itask = 0:ntasks-1
     hold on;
 
 %   set(p, 'FaceColor', 'blue', 'EdgeColor', 'none');
-    if bwire > 0
+    if bwire == 0
       title(sprintf('%s t=%f', svar, time));
     end
     icurr = icurr + lelem ; 
