@@ -201,8 +201,9 @@ int main(int argc, char **argv)
     GFTYPE q = polyptree.getValue<GFTYPE>("ypoly",1);
     GFTYPE r = polyptree.getValue<GFTYPE>("zpoly",1);
     GFTYPE sig=polyptree.getValue<GFTYPE>("sigma",0.05);
+    GFTYPE dthetaex=0.1; // excise delta-theta
     GFTYPE x, y, z=1.0;
-    GTVector<GFTYPE> etmp1;
+    GTVector<GFTYPE> etmp1, mask;
     GTVector<GTVector<GFTYPE>> *xnodes = &grid_->xNodes();   
     GTVector<GFTYPE>           *jac    = &grid_->Jac();   
     GMass                       mass(*grid_);
@@ -213,6 +214,8 @@ int main(int argc, char **argv)
     else 
       assert(p>=0 && q>=0 && r>=0 && "Polynomial order must be >= 0");
 
+    mask.resize(nxy);
+    mask = 1.0;
     for ( GSIZET j=0; j<nxy; j++ ) {
       x = (*xnodes)[0][j];
       y = (*xnodes)[1][j];
@@ -236,6 +239,7 @@ int main(int argc, char **argv)
         dthdz       =-cos(theta)/rad;
         dphidx      =-sin(phi)/(rad*cos(theta));
         dphidy      = cos(phi)/(rad*cos(theta));
+        mask[j]     = 0.5*PI - abs(theta) < dthetaex ? 0 : 1;
         (*u [0])[j] = rad*pow(cos(theta),p)*cos(q*phi);
 cout << "main: p=" << p << " q=" << q << endl;
         (*da[0])[j] =  p*pow(cos(theta),p-1)*cos(q*phi)*cos(phi)*dthdx; 
@@ -246,6 +250,10 @@ cout << "main: p=" << p << " q=" << q << endl;
 if ( (*da[2])[j] > p ) 
 cout << "main: dadz[" << j << "]=" << (*da[2])[j] << " theta=" << theta*180/PI << " phi = " << phi*180/PI << endl;
 //    }
+    }
+
+    for ( GSIZET j=0; j<da.size(); j++ ) {
+      da[j]->pointProd(mask);
     }
 
     print(*grid_, *u[0], "u", comm);
@@ -276,11 +284,10 @@ cout << "main: dadz[" << j << "]=" << (*da[2])[j] << " theta=" << theta*180/PI <
     }
 #endif
 
-#if 0
     for ( GSIZET j=0; j<du.size(); j++ ) {
-      ggfx.doOp(*du[j], GGFX_OP_SMOOTH);
+      du[j]->pointProd(mask);
+//    ggfx.doOp(*du[j], GGFX_OP_SMOOTH);
     }
-#endif
 
 
 // GMTK::project2sphere<GFTYPE>(*grid_, du, du);
