@@ -886,7 +886,7 @@ void GGrid::deriv(GTVector<GFTYPE> &u, GINT idir, GTVector<GFTYPE> &utmp,
     assert(idir > 0 && idir <= GDIM+1 && "Invalid derivative");
     GMTK::compute_grefderiv(*this, u, etmp_, 1, FALSE, du); // D_xi u
     du.pointProd((*dXidX)(0,idir-1));
-    for ( GSIZET j=1; j<dXidX->size(1); j++ ) {
+    for ( GSIZET j=1; j<GDIM; j++ ) {
       GMTK::compute_grefderiv(*this, u, etmp_, j+1, FALSE, utmp); // D_xi^j u
       utmp.pointProd((*dXidX)(j,idir-1));
       du += utmp; 
