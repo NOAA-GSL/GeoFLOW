@@ -53,7 +53,9 @@ int main(int argc, char **argv)
     GINT   ilevel=0;// 2d ICOS refinement level
     GINT   np=1;    // elem 'order'
     GINT   nc=GDIM; // no. coords
-    GFTYPE den, dphidx, dphidy, phi, psi, rad, theta;
+    GFTYPE den, phi, psi, rad, theta;
+    GFTYPE dphidx, dphidy;
+    GFTYPE dthdx , dthdy , dthdz ;
     GFTYPE eps=10.0*std::numeric_limits<GFTYPE>::epsilon();
     std::vector<GINT> ne(3); // # elements in each direction in 3d
     std::vector<GINT> pstd(GDIM);  
@@ -207,7 +209,7 @@ int main(int argc, char **argv)
     GSIZET nxy = (*xnodes)[0].size();
 
     if ( sgrid == "grid_icos" )
-      assert(p>=1 && q>=0 && r>=0 && "Polynomial order p>=1, and q>=0");
+      assert(p>=0 && q>=0 && r>=0 && "Polynomial order p>=1, and q>=0");
     else 
       assert(p>=0 && q>=0 && r>=0 && "Polynomial order must be >= 0");
 
@@ -215,30 +217,35 @@ int main(int argc, char **argv)
       x = (*xnodes)[0][j];
       y = (*xnodes)[1][j];
       if ( xnodes->size() > 2 ) z = (*xnodes)[2][j];
+#if 0
 //    if ( sgrid != "grid_icos" ) {
         (*u [0])[j] = pow(x,p)*pow(y,q)*pow(z,r);
         (*da[0])[j] = p==0 ? 0.0 : p*pow(x,p-1)*pow(y,q)*pow(z,r);
         (*da[1])[j] = q==0 ? 0.0 : q*pow(x,p)*pow(y,q-1)*pow(z,r);
         if ( xnodes->size() > 2 ) (*da[2])[j] = r==0 ? 0.0 : r*pow(x,p)*pow(y,q)*pow(z,r-1);
 
-#if 0
       }
       else {
+#endif
         rad         = sqrt(pow(x,2)+pow(y,2)+pow(z,2));
         theta       = asin(z/rad);
         phi         = atan2(y,x);
 //      phi         = phi < 0.0 ? 2*PI - phi : phi;
+        dthdx       = sin(theta)*cos(phi)/rad;
+        dthdy       = sin(theta)*sin(phi)/rad;
+        dthdz       =-cos(theta)/rad;
+        dphidx      =-sin(phi)/(rad*cos(theta));
+        dphidy      = cos(phi)/(rad*cos(theta));
         (*u [0])[j] = rad*pow(cos(theta),p)*cos(q*phi);
 cout << "main: p=" << p << " q=" << q << endl;
-        (*da[0])[j] =  p*pow(cos(theta),p-1)*cos(q*phi)*cos(phi) 
-                    -  q*pow(cos(theta),p-1)*sin(q*phi)*sin(phi);
-        (*da[1])[j] =  p*pow(cos(theta),p-1)*cos(q*phi)*sin(phi) 
-                    +  q*pow(cos(theta),p-1)*sin(q*phi)*cos(phi);
-        (*da[2])[j] =  p*pow(cos(theta),p-2)*sin(theta)*cos(q*phi);
+        (*da[0])[j] =  p*pow(cos(theta),p-1)*cos(q*phi)*cos(phi)*dthdx; 
+                    -  q*pow(cos(theta),p-1)*sin(q*phi)*sin(phi)*dphidx;
+        (*da[1])[j] =  p*pow(cos(theta),p-1)*cos(q*phi)*sin(phi)*dthdy 
+                    +  q*pow(cos(theta),p-1)*sin(q*phi)*cos(phi)*dphidy;
+        (*da[2])[j] =  p*pow(cos(theta),p-2)*sin(theta)*cos(q*phi)*dthdz;
 if ( (*da[2])[j] > p ) 
 cout << "main: dadz[" << j << "]=" << (*da[2])[j] << " theta=" << theta*180/PI << " phi = " << phi*180/PI << endl;
-      }
-#endif
+//    }
     }
 
     print(*grid_, *u[0], "u", comm);
