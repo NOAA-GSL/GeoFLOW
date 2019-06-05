@@ -195,7 +195,6 @@ void GShapeFcn_embed::Ni_2d(GTVector<GINT> &ishape,
       N [n++] = d_[0][i]*d_[1][j];
     }
   }
-  if ( zeta_ != 1.0 ) N  *= zeta_;
 
 } // end of method Ni_2d
 
@@ -365,8 +364,9 @@ void GShapeFcn_embed::dNdXi_2d(GTVector<GINT> &ishape, GINT jder,
     }
   }
 
-  // In case we decide to set zeta != 1:
-  if ( zeta_ != 1.0 && jder != 3 ) dNdxi *= zeta_;
+#if 0
+  if ( jder == 3 ) dNdxi *= -1.0;
+#endif
 
  
 } // end of method dNdXi_2d
