@@ -8,9 +8,10 @@
   "benchmark"      : false,
   "observer_list"  : ["posixio_observer", "global_diag_basic"],
   "poly_test": {
-    "xpoly" : 1,
-    "ypoly" : 0,
+    "xpoly" : 0,
+    "ypoly" : 1,
     "zpoly" : 0,
+    "excise_angle" : 0.01,
     "u0"    : 1.0
   },
   "init_lump": {
@@ -50,7 +51,7 @@
   },
   "grid_icos": {
     "grid_name" : "grid_icos",
-    "ilevel"    : 0,
+    "ilevel"    : 1,
     "radius"    : 1.0,
     "num_elems" : [10, 10, 10]
   },
