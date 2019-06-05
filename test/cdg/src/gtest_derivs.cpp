@@ -197,19 +197,23 @@ int main(int argc, char **argv)
     for ( GSIZET j=0; j<da  .size(); j++ ) da  [j] = new GTVector<GFTYPE>(grid_->size());
     for ( GSIZET j=0; j<diff.size(); j++ ) diff[j] = new GTVector<GFTYPE>(grid_->size());
 
+    for ( GSIZET j=0; j<da  .size(); j++ ) *da  [j] = 0.0;
+
     // Initialize u: set p, q, r exponents
     // (Can set up to read from input file):
     GFTYPE p = polyptree.getValue<GFTYPE>("xpoly",1);
     GFTYPE q = polyptree.getValue<GFTYPE>("ypoly",1);
     GFTYPE r = polyptree.getValue<GFTYPE>("zpoly",1);
     GFTYPE sig=polyptree.getValue<GFTYPE>("sigma",0.05);
-    GFTYPE dthetaex=0.1; // excise delta-theta
+    GFTYPE dthetaex=polyptree.getValue<GFTYPE>("excise_angle",0.01); // excise delta-theta
     GFTYPE x, y, z=1.0;
     GTVector<GFTYPE> etmp1, mask;
     GTVector<GTVector<GFTYPE>> *xnodes = &grid_->xNodes();   
     GTVector<GFTYPE>           *jac    = &grid_->Jac();   
     GMass                       mass(*grid_);
     GSIZET nxy = (*xnodes)[0].size();
+
+    dthetaex *= (PI/180.0);
 
     if ( sgrid == "grid_icos" )
       assert(p>=0 && q>=0 && r>=0 && "Polynomial order p>=0, and q>=0");
@@ -222,8 +226,7 @@ int main(int argc, char **argv)
       x = (*xnodes)[0][j];
       y = (*xnodes)[1][j];
       if ( xnodes->size() > 2 ) z = (*xnodes)[2][j];
-#if 0
-//    if ( sgrid != "grid_icos" ) {
+      if ( sgrid != "grid_icos" ) {
         (*u [0])[j] = pow(x,p)*pow(y,q)*pow(z,r);
         (*da[0])[j] = p==0 ? 0.0 : p*pow(x,p-1)*pow(y,q)*pow(z,r);
         (*da[1])[j] = q==0 ? 0.0 : q*pow(x,p)*pow(y,q-1)*pow(z,r);
@@ -231,30 +234,25 @@ int main(int argc, char **argv)
 
       }
       else {
-#endif
         rad         = sqrt(pow(x,2)+pow(y,2)+pow(z,2));
         theta       = asin(z/rad);
         phi         = atan2(y,x);
-//      phi         = phi < 0.0 ? 2*PI - phi : phi;
-        dthdx       = sin(theta)*cos(phi)/rad;
-        dthdy       = sin(theta)*sin(phi)/rad;
-        dthdz       =-cos(theta)/rad;
+        (*u [0])[j] = pow(cos(theta),p)*cos(q*phi);
+        mask[j]     = 0.5*PI - abs(theta) < dthetaex ? 0 : 1;
+        if ( mask[j] == 0.0 ) continue;
+        dthdx       =-sin(theta)*cos(phi)/rad;
+        dthdy       =-sin(theta)*sin(phi)/rad;
+        dthdz       = cos(theta)/rad;
         dphidx      =-sin(phi)/(rad*cos(theta));
         dphidy      = cos(phi)/(rad*cos(theta));
-        mask[j]     = 0.5*PI - abs(theta) < dthetaex ? 0 : 1;
-        (*u [0])[j] = pow(cos(theta),p)*cos(q*phi);
-cout << "main: p=" << p << " q=" << q << endl;
-        (*da[0])[j] = -p*pow(cos(theta),p-1)*cos(q*phi)*sin(theta)*dthdx; 
-                    +  q*pow(cos(theta),p  )*sin(q*phi)           *dphidx;
+        (*da[0])[j] = -p*pow(cos(theta),p-1)*cos(q*phi)*sin(theta)*dthdx  
+                    -  q*pow(cos(theta),p  )*sin(q*phi)           *dphidx;
         (*da[1])[j] = -p*pow(cos(theta),p-1)*cos(q*phi)*sin(theta)*dthdy 
                     -  q*pow(cos(theta),p  )*sin(q*phi)           *dphidy;
         (*da[2])[j] = -p*pow(cos(theta),p-1)*cos(q*phi)*sin(theta)*dthdz;
-if ( (*da[2])[j] > p ) 
-cout << "main: dadz[" << j << "]=" << (*da[2])[j] << " theta=" << theta*180/PI << " phi = " << phi*180/PI << endl;
-//    }
-    }
+      }
+    } // end, loop over grid points
 
-cout << "main: mask=" << mask << endl;
     for ( GSIZET j=0; j<da.size(); j++ ) {
       da[j]->pointProd(mask);
     }
@@ -367,9 +365,9 @@ cout << "main: u=" << *u[0] << endl;
      *utmp[0]  = *da[j]; utmp[0]->pow(2);
       nnorm    = grid_->integrate(*utmp[0], *utmp[1]);
       nnorm    = nnorm > std::numeric_limits<GFTYPE>::epsilon() ? nnorm : 1.0;
-     *utmp[0]  = *du[j] - *da[j];
-     *utmp[1]  = *utmp[0]; utmp[1]->abs();
-     *utmp[2]  = *utmp[0]; utmp[2]->pow(2);
+     *utmp[0]  = *diff[j];
+     *utmp[1]  = *diff[j]; utmp[1]->abs();
+     *utmp[2]  = *diff[j]; utmp[2]->pow(2);
       lnorm[0] = utmp[0]->infnorm (); // inf-norm
 
       gnorm[1] = grid_->integrate(*utmp[1],*utmp[0])/sqrt(nnorm);
@@ -380,7 +378,7 @@ cout << "main: u=" << *u[0] << endl;
 //utmp[0]->range(25,50);
 cout << "main: nnorm=" << nnorm << endl;
 //cout << "main: da[" << j << "]=" << *da[j] << endl;
-//cout << "main: du[" << j << "]=" << *du[j] << endl;
+ //out << "main: du[" << j << "]=" << *du[j] << endl;
 //cout << "main: du-da[" << j << "]=" << *utmp[0] << endl;
 //da  [j]->range_reset();
 //du  [j]->range_reset();
