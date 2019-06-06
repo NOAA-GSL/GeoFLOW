@@ -14,6 +14,7 @@
 #include <typeinfo>
 #include "gelem_base.hpp"
 #include "ggrid.hpp"
+#include "gmass.hpp"
 #include "gcomm.hpp"
 #include "tbox/error_handler.hpp"
 
@@ -382,7 +383,8 @@ void GGrid::grid_init()
   }
   GPTLstop("GGrid::grid_init: reg_init");
 
-
+  mass_ = new GMass(*this);
+  
   GPTLstart("GGrid::grid_init: find_min_dist");
   minnodedist_ = find_min_dist();
   GPTLstop("GGrid::grid_init: find_min_dist");
@@ -685,6 +687,36 @@ GTVector<GFTYPE> &GGrid::dXidX(GSIZET i, GSIZET j)
    return dXidX_(i,j);
 
 } // end of method dXidX
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : vmass
+// DESC   : return global diagonal mass matrix data
+// ARGS   : none
+// RETURNS: GTVector<GFTYPE> &
+//**********************************************************************************
+GTVector<GFTYPE> &GGrid::vmass()
+{
+   assert(bInitialized_ && "Object not inititaized");
+   return *(mass_->data());
+
+} // end of method vmass
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : massop
+// DESC   : return global diagonal mass operator
+// ARGS   : none
+// RETURNS: GTVector<GFTYPE> &
+//**********************************************************************************
+GMass &GGrid::massop()
+{
+   assert(bInitialized_ && "Object not inititaized");
+   return *mass_;
+
+} // end of method massop
 
 
 //**********************************************************************************

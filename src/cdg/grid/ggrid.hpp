@@ -21,6 +21,7 @@
 #include "gcomm.hpp"
 #include "tbox/property_tree.hpp"
 
+class GMass;
 
 typedef GTVector<GElem_base*> GElemList;
 
@@ -78,6 +79,8 @@ virtual void                 print(const GString &filename){}          // print 
         GTVector<GFTYPE>    &xNodes(GSIZET i) { return xNodes_[i]; }  // get all nodes coords (Cart)
                             
 
+        GTVector<GFTYPE>    &vmass();                                  // global mass data
+        GMass               &massop();                                 // global mass op
         GTVector<GFTYPE>    &Jac();                                    // global Jacobian
         GTVector<GFTYPE>
                             &faceJac();                                // global face Jacobian
@@ -115,6 +118,7 @@ protected:
         GTVector<GSIZET>            ntype_;         // no. elems of each type on grid
         GTMatrix<GTVector<GFTYPE>>  dXidX_;         // matrix Rij = dXi^j/dX^i, global
         GTVector<GTVector<GFTYPE>>  xNodes_;        // Cart coords of all node points
+        GMass                      *mass_;          // mass operator
         GTVector<GFTYPE>            Jac_;           // interior Jacobian, global
         GTVector<GFTYPE>            faceJac_;       // face Jacobian, global
         GTVector<GTVector<GFTYPE>>  faceNormal_;    // normal to eleme faces each face node point (2d & 3d), global
