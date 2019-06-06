@@ -28,7 +28,7 @@
     "sigma"      : 0.15,
     "alpha"      : 0.0,
     "u0"         : 1.0,
-    "adv_vel"    : [1.0, 0.0, 0.0],
+    "Omega  "    : [0.0, 0.0, 1.0],
     "adv_vel_mag": 4.0
   },
   "init_nwave": {
