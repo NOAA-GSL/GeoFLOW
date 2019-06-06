@@ -711,9 +711,9 @@ void compute_gauss_icoslump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  
 
   assert(grid.gtype() == GE_2DEMBEDDED && "Invalid element types");
 
-  std::vector<GFTYPE> cs;
+  std::vector<GFTYPE> Omega;
   if ( bpureadv ) {
-    cs = lumpptree.getArray<GFTYPE>("adv_vel");
+    Omega = lumpptree.getArray<GFTYPE>("Omega");
   }
 
   nxy = (*xnodes)[0].size(); // same size for x, y, z
@@ -736,7 +736,6 @@ void compute_gauss_icoslump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  
   for ( j=0; j<3; j++ ) *c_ [j] = 0.0;
  
   if ( bpureadv ) {
-//  for ( j=0; j<3; j++ ) *c_[j] = cs[j];
     for ( k=0; k<nxy; k++ ) {
       x   = (*xnodes)[0][k]; y = (*xnodes)[1][k]; z = (*xnodes)[2][k];
       r   = sqrt(x*x + y*y + z*z);
@@ -744,16 +743,10 @@ void compute_gauss_icoslump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  
       lat = asin(z/r);
       lon = atan2(y,x);
       // Compute contravariant adv. vel components: vc_i = v_phys_i / sqrt(gii): 
-      uc  = u0*( cos(lat)*cos(alpha) + sin(lat)*cos(lon)*sin(alpha) ) / r;
-      vc  = u0*( cos(lat)*cos(alpha) + sin(lat)*cos(lon)*sin(alpha) ) / ( r*cos(lat) );
-      // Compute Cartesian components from spherical components,
-      // vi = dx_i/d\theta v^theta + dx_i/d\phi v^phi:
-      (*c_[0])[k]  = -r*sin(lat)*cos(lon)*uc - r*cos(lat)*sin(lon)*vc;
-      (*c_[1])[k]  = -r*sin(lat)*sin(lon)*uc + r*cos(lat)*cos(lon)*vc;
-      (*c_[2])[k]  =  r*cos(lat)         *uc ;
-      (*c_[0])[k] *= c0;
-      (*c_[1])[k] *= c0;
-      (*c_[2])[k] *= c0;
+      // _c_ = Omega X r:
+      (*c_[0])[k]  = y*Omega[2] - z*Omega[1];
+      (*c_[1])[k]  = z*Omega[0] - x*Omega[2];
+      (*c_[2])[k]  = x*Omega[1] - y*Omega[0];
     }
   }
 
