@@ -694,10 +694,10 @@ void compute_gauss_icoslump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  
   GBOOL            bContin;
   GINT             j, k, n;
   GSIZET           nxy;
-  GFTYPE           alpha, argxp; 
+  GFTYPE           argxp; 
   GFTYPE           lat, lon;
   GFTYPE           x, y, z, r;
-  GFTYPE           c0, rad, sig0, u0, u, uc, v, vc;
+  GFTYPE           rad, sig0, u0, u, uc, v, vc;
   GTVector<GFTYPE> xx(3), si(3), sig(3), ufact(3);
   GTPoint<GFTYPE>  r0(3);
 
@@ -722,8 +722,6 @@ void compute_gauss_icoslump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  
   lat   = lumpptree.getValue<GFTYPE>("latitude0"); 
   lon   = lumpptree.getValue<GFTYPE>("longitude0"); 
   sig0  = lumpptree.getValue<GFTYPE>("sigma"); 
-  alpha = lumpptree.getValue<GFTYPE>("alpha",0.0); 
-  c0    = lumpptree.getValue<GFTYPE>("adv_vel_mag"); 
   u0    = lumpptree.getValue<GFTYPE>("u0"); 
 
   // Compute initial position of lump in Cart coords:
@@ -744,9 +742,9 @@ void compute_gauss_icoslump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  
       lon = atan2(y,x);
       // Compute contravariant adv. vel components: vc_i = v_phys_i / sqrt(gii): 
       // _c_ = Omega X r:
-      (*c_[0])[k]  = y*Omega[2] - z*Omega[1];
-      (*c_[1])[k]  = z*Omega[0] - x*Omega[2];
-      (*c_[2])[k]  = x*Omega[1] - y*Omega[0];
+      (*c_[0])[k]  = Omega[1]*z - Omega[2]*y;
+      (*c_[1])[k]  = Omega[2]*x - Omega[0]*z;
+      (*c_[2])[k]  = Omega[0]*y - Omega[1]*x;
     }
   }
 
