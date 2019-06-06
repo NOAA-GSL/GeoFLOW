@@ -187,7 +187,7 @@ int main(int argc, char **argv)
     // Create state and tmp space:
     GTVector<GTVector<GFTYPE>*> utmp(4);
     GTVector<GTVector<GFTYPE>*> u   (1);
-    GTVector<GTVector<GFTYPE>*> du  (1);
+    GTVector<GTVector<GFTYPE>*> du (nc);
     GTVector<GTVector<GFTYPE>*> da (nc);
     GTVector<GTVector<GFTYPE>*> diff(nc);
     
@@ -361,7 +361,7 @@ cout << "main: u=" << *u[0] << endl;
     // Compute collocated  analytic solution, do comparisons:
     maxerror = 0.0;
     for ( GSIZET j=0; j<du.size(); j++ ) { //local errors
-     *diff[j]  = (*da[j]) - (*du[0]);
+     *diff[j]  = (*da[j]) - (*du[j]);
      *utmp[0]  = *da[j]; utmp[0]->pow(2);
       nnorm    = grid_->integrate(*utmp[0], *utmp[1]);
       nnorm    = nnorm > std::numeric_limits<GFTYPE>::epsilon() ? nnorm : 1.0;
