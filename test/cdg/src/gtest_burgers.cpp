@@ -276,7 +276,7 @@ int main(int argc, char **argv)
     utmp_.resize(24);
     uold_.resize(nsolve_);
     u_ .resize(nstate_);
-    ua_.resize(nstate_);
+    ua_.resize(nsolve_);
     ub_.resize(nsolve_);
     uf_.resize(nsolve_); uf_ = NULLPTR;
     c_ .resize(sgrid == "grid_icos" ? 3 : GDIM);
@@ -315,6 +315,7 @@ int main(int argc, char **argv)
       icycle = 0;
       t      = 0.0; 
       compute_analytic(*grid_, t, ptree, u_);
+      compute_analytic(*grid_, t, ptree, ua_); // for setting error norm
       for ( GSIZET j=0; j<u_.size(); j++ ) {
         sprintf(stmp, "u%da", j+1);
         savars.push_back(stmp);
@@ -350,9 +351,6 @@ int main(int argc, char **argv)
     GTimerStop("time_loop");
     GPP(comm_,"main: time stepping done.");
 
-    tt = 0.0;
-    compute_analytic(*grid_, tt, ptree, ua_); // analyt soln at t=0
-
 #if 1
     // Compute analytic solution, do comparisons:
     EH_MESSAGE("main: gather errors...");
@@ -366,17 +364,20 @@ int main(int argc, char **argv)
     nnorm    = 1.0;
 
 
+    cout << "main: t_end=" << t << endl;
+    compute_analytic(*grid_, t, ptree, ua_); // analyt soln at t
     for ( GSIZET j=0; j<nsolve_; j++ ) { //local errors
       ua_[j]->pow(2);
       nnorm[j] = grid_->integrate(*ua_  [j],*utmp_[0]) ; // L2 norm of analyt soln at t=0
+      nnorm[j] = nnorm[j] > std::numeric_limits<GFTYPE>::epsilon() ? nnorm[j] : 1.0;
+      cout << "main: nnorm[" << j << "]=" << nnorm[j] << endl;
     }
-    
-    compute_analytic(*grid_, t, ptree, ua_); // analyt soln at t
     
     GTVector<GINT> istate(nsolve_);
     for ( GSIZET j=0; j<nsolve_; j++ ) istate[j] = j;
 
 #if 1
+compute_analytic(*grid_, t, ptree, ua_); // analyt soln at t
 GIOTraits iot;
 iot.nelems = grid_->nelems();
 iot.gtype  = grid_->gtype();
@@ -385,7 +386,7 @@ for ( GSIZET j=0; j<GDIM; j++ ) iot.porder(0,j) = gbasis[j]->getOrder();
     gio_write_state(iot, *grid_, ua_, istate, savars, comm_);
 #endif
 
-    for ( GSIZET j=0; j<1; j++ ) { //local errors
+    for ( GSIZET j=0; j<nsolve_; j++ ) { //local errors
      *utmp_[0] = *u_[j] - *ua_[j];
 #if 0
       GPP(comm_,"main: diff=u-ua[" << j << "]=" << *utmp_[0]);
