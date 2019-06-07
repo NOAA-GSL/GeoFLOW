@@ -477,7 +477,7 @@ void GBurgers<TypePack>::init(State &u, GBurgers::Traits &traits)
   // If doing semi-implicit time stepping; handle viscous term 
   // (linear) inplicitly, which implies using full Helmholtz operator:
   if ( isteptype_ == GSTEPPER_BDFAB || isteptype_ == GSTEPPER_BDFEXT ) {
-    ghelm_->set_mass(*gmass_);
+    assert(FALSE && "Implicit time stepping not yet supported");
   }
 
   if ( bconserved_ && !doheat_ ) {
