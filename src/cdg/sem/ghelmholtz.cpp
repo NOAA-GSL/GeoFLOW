@@ -5,9 +5,8 @@
 //                  H = qM + pL,
 //                where M = mass operator, L is Laplacian operator, and
 //                q, p are scalars that may or may not be constant. 
-//                The mass term is added only if the mass operator is set
-//                via call to set_mass, and the scalars applied only
-//                if calls are made to set_Lap_scalar and set_mass_scalar,
+//                The mass term is added only if calls are made to 
+//                set_mass_scalar and p is applied only if set_Lap_scalar, 
 //                respectively. In fact, only if the mass operator is set
 //                is this operator a real Helmholtz operator; otherwise, it's
 //                really just a weak Laplacian operator. 
@@ -37,11 +36,9 @@ GHelmholtz::GHelmholtz(GGrid &grid)
 : GLinOp(grid),
 bown_p_        (TRUE),
 bown_q_       (FALSE),
-bown_mass_    (FALSE),
 bcompute_helm_(FALSE),
 p_          (NULLPTR),
-q_          (NULLPTR),
-massop_     (NULLPTR)
+q_          (NULLPTR)
 {
   grid_ = &grid;
   p_ = new GTVector<GFTYPE>(1);
@@ -66,7 +63,6 @@ GHelmholtz::~GHelmholtz()
   }
   if ( bown_q_ && q_ != NULLPTR ) delete q_;
   if ( bown_p_ && p_ != NULLPTR ) delete p_;
-  if ( bown_mass_ && massop_ != NULLPTR ) delete massop_;
 
 } // end, destructor
 
@@ -120,6 +116,7 @@ void GHelmholtz::def_prod(GTVector<GFTYPE> &u,
        && "Insufficient temp space specified");
 
   GTVector<GTVector<GFTYPE>*> gdu(GDIM);
+  GMass     *massop = &grid_->massop();                     
   GElemList *gelems=&grid_->elems();
 
   // Must compute:
@@ -145,26 +142,23 @@ void GHelmholtz::def_prod(GTVector<GFTYPE> &u,
   // Compute derivatives of u:
   GMTK::compute_grefderivs(*grid_, u, etmp1_, FALSE, utmp); // utmp stores tensor-prod derivatives, Dj u
 
-
   // Compute Gij (D^j u). Recall, Gij contain mass: 
-  for ( GSIZET i=0; i<GDIM; i++ ) { 
-    *utmp[i] = 0.0;
-    for ( GSIZET j=0; j<GDIM; j++ ) {
-      utmp[j]->pointProd(*G_(i,j),uo); // Gij * du^j
-      *gdu[i] += uo;
+  for ( GSIZET j=0; j<GDIM; j++ ) { 
+   *gdu[j] = 0.0;
+    for ( GSIZET i=0; i<GDIM; i++ ) {
+      utmp[i]->pointProd(*G_(i,j),uo); // Gij * du^j
+     *gdu[j] += uo;
     }
+    // Apply mass; recall that it contains Jacobian:
+//  gdu[j]->pointProd(*massop->data());
   }
 
-  // Apply p parameter ('viscosity') if necessary to Laplacian:
+  // Apply variable p parameter ('viscosity') 
+  // before final 'dovergence':
   if ( p_ != NULLPTR ) {
     if ( p_->size() >= grid_->ndof() ) {
       for ( GSIZET j=0; j<GDIM; j++ ) {
         gdu[j]->pointProd(*p_);
-      }
-    }
-    else if ( (*p_)[0] != 1.0 ) {
-      for ( GSIZET j=0; j<GDIM; j++ ) {
-        *gdu[j] *= (*p_)[0];
       }
     }
   }
@@ -172,11 +166,18 @@ void GHelmholtz::def_prod(GTVector<GFTYPE> &u,
   // Now compute DT^j ( T^j ):
   GMTK::compute_grefdiv(*grid_, gdu, etmp1_, TRUE, uo); // Compute 'divergence' with DT_j
 
+  // If p_ is constant, multiply at the end:
+  if ( p_ != NULLPTR ) {
+    if ( p_->size() < grid_->ndof() && (*p_)[0] != 1.0 ) {
+      uo *= (*p_)[0];
+    }
+  }
+
   // At this point, we have uo = L u
 
   // Apply Mass operator and q parameter if necessary:
   if ( bcompute_helm_ ) {
-    massop_->opVec_prod(u, utmp, *utmp[0]);
+    massop->opVec_prod(u, utmp, *utmp[0]);
     if ( q_ != NULLPTR ) {
       if ( q_->size() >= grid_->ndof() ) utmp[0]->pointProd(*q_);
       else if ( (*q_)[0] != 1.0)        *utmp[0] *= (*q_)[0];
@@ -207,7 +208,8 @@ void GHelmholtz::embed_prod(GTVector<GFTYPE> &u,
        && "Insufficient temp space specified");
 
   GString serr = "GHelmholtz::embed_prod: ";
-  GTVector<GTVector<GFTYPE>*> gdu(GDIM+1);
+  GTVector<GTVector<GFTYPE>*> gdu(GDIM);
+  GMass     *massop = &grid_->massop();                     
   GElemList *gelems=&grid_->elems();
 
   // Must compute:
@@ -232,44 +234,45 @@ void GHelmholtz::embed_prod(GTVector<GFTYPE> &u,
 // p is 'viscosity', M is mass matrix, and q a factor for M
 
   // Re-arrange local temp space for divergence:
-  for ( GSIZET i=0; i<GDIM+1; i++ ) gdu[i] = utmp[i+GDIM+1];
+  for ( GSIZET i=0; i<GDIM; i++ ) gdu[i] = utmp[i+GDIM+1];
 
-  // Compute derivatives of u:
+  // Compute reference-space gradient of u:
   GMTK::compute_grefderivs(*grid_, u, etmp1_, FALSE, utmp); // utmp stores tensor-prod derivatives, Dj u
 
-  // Compute Gij (D^j u). Recall, Gij contain mass: 
-  for ( GSIZET i=0; i<GDIM; i++ ) { 
-   *gdu[i] = 0.0;
-    for ( GSIZET j=0; j<GDIM; j++ ) {
-      utmp[j]->pointProd(*G_(i,j), uo); // Gij * du^j
-     *gdu[i] += uo;
+  // Compute Gij (D^j u). Recall, Gij contain mass, Jac: 
+  for ( GSIZET j=0; j<GDIM; j++ ) {
+   *gdu[j] = 0.0;
+    for ( GSIZET i=0; i<GDIM; i++ ) { 
+      utmp[i]->pointProd(*G_(i,j), uo); // Gij * du^j
+     *gdu[j] += uo;
     }
   }
 
-  // Apply p parameter ('viscosity') if necessary to Laplacian:
+  // Apply variable p parameter ('viscosity') 
+  // before final 'divergence':
   if ( p_ != NULLPTR ) {
     if ( p_->size() >= grid_->ndof() ) {
       for ( GSIZET j=0; j<GDIM; j++ ) {
         gdu[j]->pointProd(*p_);
       }
     }
-    else if ( (*p_)[0] != 1.0 ) {
-      for ( GSIZET j=0; j<GDIM; j++ ) {
-        *gdu[j] *= (*p_)[0];
-      }
-    }
   }
 
-  // {utmp[GDIM+1], utmp[GDIM+2], uo} now hold Ti = p Gij D^j u, i = 0, GDIM-1
+  // gdu now hold Ti = p Gij D^j u, i = 0, GDIM-1
   // Now compute DT^j ( t^j ):
   GMTK::compute_grefdiv(*grid_, gdu, etmp1_, TRUE, uo); // Compute 'divergence' with DT_j
 
-
+  // If p_ is constant, multiply at the end:
+  if ( p_ != NULLPTR ) {
+    if ( p_->size() < grid_->ndof() && (*p_)[0] != 1.0 ) {
+      uo *= (*p_)[0];
+    }
+  }
   // At this point, we have uo = L u
- 
+
   // Apply Mass operator and q parameter if necessary:
   if ( bcompute_helm_ ) {
-    massop_->opVec_prod(u, utmp, *utmp[0]); // middle arg unused
+    massop->opVec_prod(u, utmp, *utmp[0]); // middle arg unused
     if ( q_ != NULLPTR ) {
       if ( q_->size() >= grid_->ndof() ) utmp[0]->pointProd(*q_);
       else if ( (*q_)[0] != 1.0)        *utmp[0] *= (*q_)[0];
@@ -300,9 +303,9 @@ void GHelmholtz::reg_prod(GTVector<GFTYPE> &u,
   assert( utmp.size() >= GDIM
        && "Insufficient temp space specified");
 
-  GSIZET            ibeg, iend;
   GTVector<GTVector<GFTYPE>*> gdu(GDIM);
   GElemList        *gelems=&grid_->elems();
+  GMass             *massop = &grid_->massop();                     
   GElem_base       *elem;
 
   // Compute:
@@ -323,26 +326,32 @@ void GHelmholtz::reg_prod(GTVector<GFTYPE> &u,
 
   // Multiply by (element-size const) metric factors, possibly x-dependent 
   // 'viscosity', and mass:
-   GTVector<GFTYPE> *Jac = &grid_->Jac();
+  GTVector<GFTYPE> *Jac = &grid_->Jac();
   for ( GSIZET k=0; k<GDIM; k++ ) {
     gdu[k]->pointProd(*G_(k,0));
     // Apply p parameter ('viscosity') if necessary to Laplacian:
     if ( p_ != NULLPTR ) {
       if ( p_->size() >= grid_->ndof() ) gdu[k]->pointProd(*p_);
-      else if ( (*p_)[0] != 1.0 )  *gdu[k] *= (*p_)[0];
     }
-    massop_->opVec_prod(*gdu[k], gdu, uo); // tmp array does nothing
+    // massop contains mass already:
+    massop->opVec_prod(*gdu[k], gdu, uo); // tmp array does nothing
     *gdu[k] = uo;
   }
 
   // Take 'divergence' with D^T:
   GMTK::compute_grefdiv  (*grid_, gdu, etmp1_, TRUE, uo); // Compute 'divergence' with W^-1 D_j
 
+  // If p_ is constant, multiply at the end:
+  if ( p_ != NULLPTR ) {
+    if ( p_->size() < grid_->ndof() && (*p_)[0] != 1.0 ) {
+      uo *= (*p_)[0];
+    }
+  }
 
   // Add q X mass operator (this really defines the Helmholtz op)  if necessary:
   if ( bcompute_helm_ ) {
     if ( q_ != NULLPTR ) {
-      massop_->opVec_prod(u, gdu, *utmp[0]);
+      massop->opVec_prod(u, gdu, *utmp[0]);
       if ( q_->size() >= grid_->ndof() )  utmp[0]->pointProd(*q_);
       else if ( (*q_)[0] != 1.0)         *utmp[0] *= (*q_)[0];
     }
@@ -410,8 +419,8 @@ void GHelmholtz::def_init()
   GSIZET ibeg, iend; // beg, end indices for global array
   G_ .resize(nxy,nxy);
   G_ = NULLPTR;
-  for ( GSIZET j=0; j<nxy; j++ ) {
-    for ( GSIZET i=j; i<nxy; i++ ) {
+  for ( GSIZET j=0; j<GDIM; j++ ) {
+    for ( GSIZET i=j; i<GDIM; i++ ) {
       G_ (i,j) = new GTVector<GFTYPE>(grid_->ndof());
      *G_ (i,j) = 0.0;
     }
@@ -438,8 +447,8 @@ void GHelmholtz::def_init()
       N[j]= (*gelems)[e]->size(j);
     }
     Jac->range(ibeg, iend);
-    for ( GSIZET j=0; j<nxy; j++ ) 
-      for ( GSIZET i=0; i<nxy; i++ ) (*dXidX)(i,j).range(ibeg, iend);
+    for ( GSIZET j=0; j<dXidX->size(2); j++ ) 
+      for ( GSIZET i=0; i<dXidX->size(1); i++ ) (*dXidX)(i,j).range(ibeg, iend);
     
 
 #if defined(_G_IS2D)
@@ -448,10 +457,10 @@ void GHelmholtz::def_init()
     for ( GSIZET j=0; j<GDIM; j++ ) { // G matrix element col
       for ( GSIZET i=j; i<GDIM; i++ ) { // G matrix element row
         (*G_(i,j)).range(ibeg, iend); // restrict global vec to local range
-        for ( GSIZET k=0; k<nxy; k++ ) {
-          for ( GSIZET m=0, n=0; m<N[1]; m++ ) {
-            for ( GSIZET l=0; l<N[0]; l++,n++ ) {
-              (*G_(i,j))[n] += (*dXidX)(i,k)[n] * (*dXidX)(j,k)[n]
+        for ( GSIZET m=0, n=0; m<N[1]; m++ ) {
+          for ( GSIZET l=0; l<N[0]; l++,n++ ) {
+            for ( GSIZET k=0; k<nxy; k++ ) { // over x, y, z
+              (*G_(i,j))[n] += (*dXidX)(i,k)[n] * (*dXidX)(j,k)[n] 
                              * (*W[0])[l] * (*W[1])[m] * (*Jac)[n];
             }
           }
@@ -463,14 +472,14 @@ void GHelmholtz::def_init()
 #else
 
     // G = Sum_k dxi^i/dx^k dxi^j/dx^k * Jac * W.
-    for ( GSIZET j=0; j<nxy; j++ ) { // G matrix element col
-      for ( GSIZET i=0; i<nxy; i++ ) { // G matrix element row
+    for ( GSIZET j=0; j<GDIM; j++ ) { // G matrix element col
+      for ( GSIZET i=0; i<GDIM; i++ ) { // G matrix element row
         (*G_(i,j)).range(ibeg, iend); // restrict global vec to local range
-        for ( GSIZET k=0; k<nxy; k++ ) {
-          for ( GSIZET p=0, n=0; p<N[2]; p++ ) {
-            for ( GSIZET m=0; m<N[1]; m++ ) {
-              for ( GSIZET l=0; l<N[0]; l++,n++ ) {
-                (*G_(i,j))[n] += (*dXidX)(i,k)[n] * (*dXidX)(j,k)[n]
+        for ( GSIZET p=0, n=0; p<N[2]; p++ ) {
+          for ( GSIZET m=0; m<N[1]; m++ ) {
+            for ( GSIZET l=0; l<N[0]; l++,n++ ) {
+              for ( GSIZET k=0; k<GDIM; k++ ) {
+                (*G_(i,j))[n] += (*dXidX)(i,k)[n] * (*dXidX)(j,k)[n] 
                                * (*W[0])[l] * (*W[1])[m] * (*W[2])[p] * (*Jac)[n];
               }
             }
@@ -545,8 +554,6 @@ void GHelmholtz::reg_init()
     }
   }
 
-  massop_ = new GMass(*grid_, FALSE); // not inverse
-  bown_mass_ = TRUE;
 
 } // end of method reg_init
 
@@ -594,27 +601,5 @@ void GHelmholtz::set_mass_scalar(GTVector<GFTYPE> &q)
   bcompute_helm_ = TRUE;
 
 } // end of method set_mass_scalar
-
-
-//**********************************************************************************
-//**********************************************************************************
-// METHOD : set_mass
-// DESC   : Set mass operator. This method tell operator to compute full Helmholtz
-//          operator, and not just Laplacian
-// ARGS   : 
-//          mass: global mass operator
-//             
-// RETURNS:  none
-//**********************************************************************************
-void GHelmholtz::set_mass(GMass &m)
-{
-
-  if ( massop_ != NULL  && bown_mass_ ) delete massop_;
-  
-  if ( bown_mass_ && massop_ != NULLPTR ) delete massop_;
-  massop_ = &m;
-  bown_mass_ = FALSE;
-
-} // end of method set_mass
 
 

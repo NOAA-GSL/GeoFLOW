@@ -5,9 +5,8 @@
 //                  H = qM + pL,
 //                where M = mass operator, L is Laplacian operator, and
 //                q, p are scalars that may or may not be constant. 
-//                The mass term is added only if the mass operator is set
-//                via call to set_mass, and the scalars applied only
-//                if calls are made to set_Lap_scalar and set_mass_scalar,
+//                The mass term is added only if calls are made to 
+//                set_mass_scalar and p is applied only if set_Lap_scalar, 
 //                respectively. In fact, only if the mass operator is set
 //                is this operator a real Helmholtz operator; otherwise, it's
 //                really just a weak Laplacian operator. 
@@ -38,7 +37,6 @@ public:
                                      GTVector<GFTYPE> &out);                  // Operator-vector product 
         void              set_Lap_scalar(GTVector<GFTYPE> &p);                // Scalar multipliying Laplacian
         void              set_mass_scalar(GTVector<GFTYPE> &q);               // Scalar multiplying Mass
-        void              set_mass(GMass &m);                                 // Set mass op
         void              init();                                             // must call after all 'sets'
 //      void              set_tmp(GTVector<GTVector<GFTYPE>*> &utmp) 
 //                        { utmp_.resize(utmp.size()); utmp_ = utmp; }       // Set temp space 
@@ -73,7 +71,6 @@ private:
         GTVector<GTVector<GFTYPE>*>   utmp_; // global array of temp vectors
         GTMatrix<GTVector<GFTYPE>*>   G_;    // metric components
         GGrid                        *grid_; // grid set on construction
-        GMass                        *massop_; // mass operator
 
 
 };
