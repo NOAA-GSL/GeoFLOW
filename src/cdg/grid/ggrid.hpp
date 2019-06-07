@@ -79,7 +79,6 @@ virtual void                 print(const GString &filename){}          // print 
         GTVector<GFTYPE>    &xNodes(GSIZET i) { return xNodes_[i]; }  // get all nodes coords (Cart)
                             
 
-        GTVector<GFTYPE>    &vmass();                                  // global mass data
         GMass               &massop();                                 // global mass op
         GTVector<GFTYPE>    &Jac();                                    // global Jacobian
         GTVector<GFTYPE>

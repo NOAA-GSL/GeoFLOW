@@ -50,6 +50,7 @@ comm_                            (comm)
 //**********************************************************************************
 GGrid::~GGrid()
 {
+  if ( mass_ != NULLPTR ) delete mass_;
 } // end, destructor
 
 
@@ -383,13 +384,13 @@ void GGrid::grid_init()
   }
   GPTLstop("GGrid::grid_init: reg_init");
 
+  bInitialized_ = TRUE;
   mass_ = new GMass(*this);
   
   GPTLstart("GGrid::grid_init: find_min_dist");
   minnodedist_ = find_min_dist();
   GPTLstop("GGrid::grid_init: find_min_dist");
 
-  bInitialized_ = TRUE;
 
 } // end of method grid_init (1)
 
@@ -687,21 +688,6 @@ GTVector<GFTYPE> &GGrid::dXidX(GSIZET i, GSIZET j)
    return dXidX_(i,j);
 
 } // end of method dXidX
-
-
-//**********************************************************************************
-//**********************************************************************************
-// METHOD : vmass
-// DESC   : return global diagonal mass matrix data
-// ARGS   : none
-// RETURNS: GTVector<GFTYPE> &
-//**********************************************************************************
-GTVector<GFTYPE> &GGrid::vmass()
-{
-   assert(bInitialized_ && "Object not inititaized");
-   return *(mass_->data());
-
-} // end of method vmass
 
 
 //**********************************************************************************
