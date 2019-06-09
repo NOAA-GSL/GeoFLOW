@@ -365,8 +365,8 @@ int main(int argc, char **argv)
 
 
     cout << "main: t_end=" << t << endl;
-    compute_analytic(*grid_, t, ptree, ua_); // analyt soln at t
-    for ( GSIZET j=0; j<nsolve_; j++ ) { //local errors
+//  compute_analytic(*grid_, t, ptree, ua_); // analyt soln at t
+    for ( GSIZET j=0; j<nsolve_; j++ ) { // local errors
       ua_[j]->pow(2);
       nnorm[j] = grid_->integrate(*ua_  [j],*utmp_[0]) ; // L2 norm of analyt soln at t=0
       nnorm[j] = nnorm[j] > std::numeric_limits<GFTYPE>::epsilon() ? nnorm[j] : 1.0;
@@ -696,7 +696,9 @@ void compute_gauss_icoslump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  
   GINT             j, k, n;
   GSIZET           nxy;
   GFTYPE           argxp; 
+  GFTYPE           lat0, lon0, dlon;
   GFTYPE           lat, lon;
+  GFTYPE           den, num;
   GFTYPE           x, y, z, r;
   GFTYPE           rad, sig0, u0, u, uc, v, vc;
   GTVector<GFTYPE> xx(3), si(3), sig(3), ufact(3);
@@ -720,15 +722,15 @@ void compute_gauss_icoslump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  
   nxy = (*xnodes)[0].size(); // same size for x, y, z
   
   rad   = icosptree.getValue<GFTYPE>("radius"); 
-  lat   = lumpptree.getValue<GFTYPE>("latitude0"); 
-  lon   = lumpptree.getValue<GFTYPE>("longitude0"); 
+  lat0  = lumpptree.getValue<GFTYPE>("latitude0"); 
+  lon0  = lumpptree.getValue<GFTYPE>("longitude0"); 
   sig0  = lumpptree.getValue<GFTYPE>("sigma"); 
   u0    = lumpptree.getValue<GFTYPE>("u0"); 
 
   // Compute initial position of lump in Cart coords:
-  r0.x1 = rad * cos(lat*PI/180.0) * cos(lon*PI/180.0);
-  r0.x2 = rad * cos(lat*PI/180.0) * sin(lon*PI/180.0);
-  r0.x3 = rad * sin(lat*PI/180.0);
+  r0.x1 = rad * cos(lat0*PI/180.0) * cos(lon0*PI/180.0);
+  r0.x2 = rad * cos(lat0*PI/180.0) * sin(lon0*PI/180.0);
+  r0.x3 = rad * sin(lat0*PI/180.0);
 
   // Set velocity here. May be a function of time.
   // These point to components of state u_:
@@ -758,12 +760,25 @@ void compute_gauss_icoslump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  
   }
 
   for ( GSIZET j=0; j<nxy; j++ ) {
+    x   = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
+    r   = sqrt(x*x + y*y + z*z);
+    // Colmpute lat & long:
+    lat = asin(z/r);
+    lon = atan2(y,x);
+    dlon = lon - lon0;
     // Note: following c t is actually Integral_0^t c(t') dt', 
     //       so if c(t) above changes, change this term accordingly:
+#if 0
     for ( GSIZET i=0; i<3; i++ ) xx[i] = (*xnodes)[i][j] - r0[i] - (*c_[i])[j]*t;
     argxp = 0.0;
     for ( GSIZET i=0; i<3; i++ ) argxp += -pow(xx[i],2.0)*si[i];
    (*ua[0])[j] = ufact[0]*exp(argxp);
+#else
+    num   = sqrt( pow(cos(lat)*sin(dlon),2) + pow(cos(lat0)*sin(lat)-sin(lat0)*cos(lat)*cos(dlon),2) );
+    den   = sin(lat)*sin(lat0) + cos(lat)*cos(lat0)*cos(dlon);
+    argxp = -pow(r*atan(num/den),2)*si[0];
+   (*ua[0])[j] = ufact[0]*exp(argxp);
+#endif
   }
 
 //GPP(comm_,serr << "ua=" << *ua[0] );
