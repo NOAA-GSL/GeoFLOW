@@ -2628,14 +2628,15 @@ void compute_grefdiviW(GGrid &grid, GTVector<GTVector<GFTYPE>*> &u, GTVector<GFT
 // RETURNS: none
 //**********************************************************************************
 template<>
-void vsphere2cart(GGrid &grid, GTVector<GTVector<T>*> &vsph, GVectorType vtype, GTVector<GTVector<T>*> &vcart);
+void vsphere2cart(GGrid &grid, GTVector<GTVector<GFTYPE>*> &vsph, GVectorType vtype, GTVector<GTVector<GFTYPE>*> &vcart)
 {
 
-  if ( grid.gtype() != GE_2DEMBEDDED ) {
+  if      ( grid.gtype() != GE_2DEMBEDDED ) {
     assert( vsph.size() >= 2 && "GE_2DEMBEDDED grid requires 2 spherical components");
   }
   else if ( grid.gtype() != GE_DEFORMED ) {
     assert( vsph.size() >= 3 && "GE_DEFORMED grid requires 3 spherical components");
+  }
   else if ( grid.gtype() != GE_REGULAR ) {
     assert( FALSE && "GE_REGULAR grid will not allow this transformation");
   }
@@ -2648,13 +2649,13 @@ void vsphere2cart(GGrid &grid, GTVector<GTVector<T>*> &vsph, GVectorType vtype, 
   GFTYPE           vthcontra, vphicontra;
   GTVector<GTVector<GFTYPE>> *xnodes = &grid.xNodes();
 
-  tiny = std::numeric_limits<GFTY?PE>::epsilon();
+  tiny = std::numeric_limits<GFTYPE>::epsilon();
 
   if ( grid.gtype() == GE_2DEMBEDDED ) {
     for ( GSIZET j=0; j<nxy; j++ ) {
       x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
       r     = x*x + y*y + z*z;
-      theta = asin(z/rad);
+      theta = asin(z/r);
       phi   = atan2(y,x);
       vthcontra  = (*vsph[0])[j];
       vphicontra = (*vsph[1])[j];
@@ -2669,11 +2670,11 @@ void vsphere2cart(GGrid &grid, GTVector<GTVector<T>*> &vsph, GVectorType vtype, 
         vphicontra = (*vsph[1])[j]*(hpp+tiny);
       }
 
-      (*vcart[0])[j] = -(*v[0])[j]*r*sin(theta)*cos(phi) 
-                     -  (*v[1])[j]*r*cos(theta)*sin(phi);
-      (*vcart[1])[j] = -(*v[0])[j]*r*sin(theta)*sin(phi) 
-                     -  (*v[1])[j]*r*cos(theta)*cos(phi);
-      (*vcart[2])[j] =  (*v[0])[j]*r*cos(theta);
+      (*vcart[0])[j] = -(*vsph[0])[j]*r*sin(theta)*cos(phi) 
+                     -  (*vsph[1])[j]*r*cos(theta)*sin(phi);
+      (*vcart[1])[j] = -(*vsph[0])[j]*r*sin(theta)*sin(phi) 
+                     -  (*vsph[1])[j]*r*cos(theta)*cos(phi);
+      (*vcart[2])[j] =  (*vsph[0])[j]*r*cos(theta);
      }
      return;
    }
@@ -2682,7 +2683,7 @@ void vsphere2cart(GGrid &grid, GTVector<GTVector<T>*> &vsph, GVectorType vtype, 
     for ( GSIZET j=0; j<nxy; j++ ) {
       x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
       r     = x*x + y*y + z*z;
-      theta = asin(z/rad);
+      theta = asin(z/r);
       phi   = atan2(y,x);
       vthcontra  = (*vsph[0])[j];
       vphicontra = (*vsph[1])[j];
@@ -2697,14 +2698,14 @@ void vsphere2cart(GGrid &grid, GTVector<GTVector<T>*> &vsph, GVectorType vtype, 
         vphicontra = (*vsph[2])[j]/(hpp+tiny);
       }
 
-      (*vcart[0])[j] =  (*v[0])[j]*  cos(theta)*cos(phi)
-                     -  (*v[1])[j]*r*sin(theta)*cos(phi) 
-                     -  (*v[2])[j]*r*cos(theta)*sin(phi);
-      (*vcart[1])[j] =  (*v[0])[j]*  cos(theta)*sin(phi)
-                     -  (*v[1])[j]*r*sin(theta)*sin(phi) 
-                     -  (*v[2])[j]*r*cos(theta)*cos(phi);
-      (*vcart[2])[j] =  (*v[0])[j]*  sin(theta)
-                     +  (*v[1])[j]*r*cos(theta);
+      (*vcart[0])[j] =  (*vsph[0])[j]*  cos(theta)*cos(phi)
+                     -  (*vsph[1])[j]*r*sin(theta)*cos(phi) 
+                     -  (*vsph[2])[j]*r*cos(theta)*sin(phi);
+      (*vcart[1])[j] =  (*vsph[0])[j]*  cos(theta)*sin(phi)
+                     -  (*vsph[1])[j]*r*sin(theta)*sin(phi) 
+                     -  (*vsph[2])[j]*r*cos(theta)*cos(phi);
+      (*vcart[2])[j] =  (*vsph[0])[j]*  sin(theta)
+                     +  (*vsph[1])[j]*r*cos(theta);
      }
      return;
    }
