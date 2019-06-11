@@ -160,11 +160,10 @@ const char * const sGBdyType [] ={"GBDY_DIRICHLET"  ,"GBDY_NEUMANN","GBDY_NOSLIP
 enum GElemType           {GE_REGULAR=0, GE_DEFORMED, GE_2DEMBEDDED, GE_MAX}; // regular, deformed, embedded 2d
 #endif
 
-#if !defined(_G_STEPPERTYPE_DEF)
-#define _G_STEPPERTYPE_DEF
-enum GStepperType        {GSTEPPER_EXRK=0 , GSTEPPER_BDFAB , GSTEPPER_BDFEXT , GSTEPPER_OIFS , GSTEPPER_SISL , GSTEPPER_MAX}; 
-const char * const sGStepperType[] =    {
-                         "GSTEPPER_EXRK"  ,"GSTEPPER_BDFAB","GSTEPPER_BDFEXT","GSTEPPER_OIFS","GSTEPPER_SISL"};
+#if !defined(_G_VECTORTYPE_DEF)
+#if !defined(_G_VECTORTYPE_DEF)
+#define _G_VECTORTYPE_DEF
+enum GVectorType        {GVECTYPE_PHYS=0 , GVECTYPE_CONTRAVAR, GVECTYPE_COVAR};
 #endif
 
 // Variables used to set dimension & operational stack size:
