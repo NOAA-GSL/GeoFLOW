@@ -2609,4 +2609,107 @@ void compute_grefdiviW(GGrid &grid, GTVector<GTVector<GFTYPE>*> &u, GTVector<GFT
 } // end, method compute_grefdiviW
 
 
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : vsphere2cart 
+// DESC   : Convert vector field from spherical coords to Cartesian.
+//
+// ARGS   : grid : Grid. If not of the correct type, nothing is done
+//          vsph : Array of vector components. If we have GE_2DEMBEDDED grid,
+//                 there must be at least 2 components, and only the firs 2
+//                 are used, and assumed to be latitudual, and longitudinal
+//                 respectively. If grid is a 3D spherical grid, then
+//                 vector components are assumed to be (r, theta, phi).
+//                 If grid is REGULAR, then this transformation cannot be done.
+//          vtype: Vector type of spherical coords (PHYS, CONTRAVAR, COVAR)
+//          vcart: Cartesian vector field. Must have at least 3 components, and
+//                 are returned as (x, y, z).
+// RETURNS: none
+//**********************************************************************************
+template<>
+void vsphere2cart(GGrid &grid, GTVector<GTVector<T>*> &vsph, GVectorType vtype, GTVector<GTVector<T>*> &vcart);
+{
+
+  if ( grid.gtype() != GE_2DEMBEDDED ) {
+    assert( vsph.size() >= 2 && "GE_2DEMBEDDED grid requires 2 spherical components");
+  }
+  else if ( grid.gtype() != GE_DEFORMED ) {
+    assert( vsph.size() >= 3 && "GE_DEFORMED grid requires 3 spherical components");
+  else if ( grid.gtype() != GE_REGULAR ) {
+    assert( FALSE && "GE_REGULAR grid will not allow this transformation");
+  }
+
+
+  GSIZET           nxy = grid.ndof();
+  GFTYPE           x, y, z, tiny;
+  GFTYPE           phi, r, theta;
+  GFTYPE           hpp, hrr, htt;
+  GFTYPE           vthcontra, vphicontra;
+  GTVector<GTVector<GFTYPE>> *xnodes = &grid.xNodes();
+
+  tiny = std::numeric_limits<GFTY?PE>::epsilon();
+
+  if ( grid.gtype() == GE_2DEMBEDDED ) {
+    for ( GSIZET j=0; j<nxy; j++ ) {
+      x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
+      r     = x*x + y*y + z*z;
+      theta = asin(z/rad);
+      phi   = atan2(y,x);
+      vthcontra  = (*vsph[0])[j];
+      vphicontra = (*vsph[1])[j];
+      if ( vtype == GVECTYPE_PHYS ) {
+        htt        = r; hpp = r*cos(theta);
+        vthcontra  = (*vsph[0])[j]/(htt+tiny);
+        vphicontra = (*vsph[1])[j]/(hpp+tiny);
+      }
+      else if ( vtype == GVECTYPE_COVAR ) {
+        htt        = r*r; hpp = pow(r*cos(theta),2);
+        vthcontra  = (*vsph[0])[j]*(htt+tiny);
+        vphicontra = (*vsph[1])[j]*(hpp+tiny);
+      }
+
+      (*vcart[0])[j] = -(*v[0])[j]*r*sin(theta)*cos(phi) 
+                     -  (*v[1])[j]*r*cos(theta)*sin(phi);
+      (*vcart[1])[j] = -(*v[0])[j]*r*sin(theta)*sin(phi) 
+                     -  (*v[1])[j]*r*cos(theta)*cos(phi);
+      (*vcart[2])[j] =  (*v[0])[j]*r*cos(theta);
+     }
+     return;
+   }
+
+  if ( grid.gtype() == GE_DEFORMED ) {
+    for ( GSIZET j=0; j<nxy; j++ ) {
+      x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
+      r     = x*x + y*y + z*z;
+      theta = asin(z/rad);
+      phi   = atan2(y,x);
+      vthcontra  = (*vsph[0])[j];
+      vphicontra = (*vsph[1])[j];
+      if ( vtype == GVECTYPE_PHYS ) {
+        htt        = r; hpp = r*cos(theta);
+        vthcontra  = (*vsph[1])[j]/(htt+tiny);
+        vphicontra = (*vsph[2])[j]/(hpp+tiny);
+      }
+      else if ( vtype == GVECTYPE_COVAR ) {
+        htt        = r*r; hpp = pow(r*cos(theta),2);
+        vthcontra  = (*vsph[1])[j]/(htt+tiny);
+        vphicontra = (*vsph[2])[j]/(hpp+tiny);
+      }
+
+      (*vcart[0])[j] =  (*v[0])[j]*  cos(theta)*cos(phi)
+                     -  (*v[1])[j]*r*sin(theta)*cos(phi) 
+                     -  (*v[2])[j]*r*cos(theta)*sin(phi);
+      (*vcart[1])[j] =  (*v[0])[j]*  cos(theta)*sin(phi)
+                     -  (*v[1])[j]*r*sin(theta)*sin(phi) 
+                     -  (*v[2])[j]*r*cos(theta)*cos(phi);
+      (*vcart[2])[j] =  (*v[0])[j]*  sin(theta)
+                     +  (*v[1])[j]*r*cos(theta);
+     }
+     return;
+   }
+
+} // end of method vsphere2cart
+
+
 } // end, namespace GMTK

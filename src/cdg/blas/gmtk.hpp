@@ -112,6 +112,8 @@ namespace GMTK
 
   template<typename T>  
   void    constrain2sphere(GGrid &grid, GTVector<GTVector<T>*> &v, GTVector<GTVector<T>*    > &Pv);
+  template<typename T>  
+  void    vsphere2cart(GGrid &grid, GTVector<GTVector<T>*> &vsph, GVectorType vtype, GTVector<GTVector<T>*> &vcart);
 
 };
 
