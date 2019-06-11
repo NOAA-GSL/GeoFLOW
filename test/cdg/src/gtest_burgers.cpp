@@ -681,30 +681,29 @@ void compute_dirgauss_lump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD: compute_gauss_icoslump
+// METHOD: compute_icosbell
 // DESC  : Compute solution to pure advection equation with 
-//         a Gaussian 'lump' on icos grid.
+//         a cosine bell, from Williamson et al., JCP 102:211 (1992)
 // ARGS  : grid    : GGrid object
 //         t       : time
 //         ptree   : main property tree
 //         ua      : return solution
 //**********************************************************************************
-void compute_gauss_icoslump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVector<GTVector<GFTYPE>*>  &ua)
+void compute_icosbell(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVector<GTVector<GFTYPE>*>  &ua)
 {
-  GString          serr = "compute_gauss_icoslump: ";
+  GString          serr = "compute_icosbell: ";
   GBOOL            bContin;
   GINT             j, k, n;
   GSIZET           nxy;
   GFTYPE           argxp; 
-  GFTYPE           lat0, lon0, dlon;
+  GFTYPE           lat0, lon0, R, s;
   GFTYPE           lat, lon;
-  GFTYPE           den, num;
   GFTYPE           x, y, z, r;
-  GFTYPE           rad, sig0, u0, u, uc, v, vc;
+  GFTYPE           c0, rad, sig0, u0, u;
   GTVector<GFTYPE> xx(3), si(3), sig(3), ufact(3);
   GTPoint<GFTYPE>  r0(3);
 
-  PropertyTree lumpptree = ptree.getPropertyTree("init_icoslump");
+  PropertyTree lumpptree = ptree.getPropertyTree("init_icosbell");
   PropertyTree icosptree = ptree.getPropertyTree("grid_icos");
   PropertyTree advptree  = ptree.getPropertyTree("adv_equation_traits");
   GBOOL doheat   = advptree.getValue<GBOOL>("doheat");
@@ -715,17 +714,16 @@ void compute_gauss_icoslump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  
   assert(grid.gtype() == GE_2DEMBEDDED && "Invalid element types");
 
   std::vector<GFTYPE> Omega;
-  if ( bpureadv ) {
-    Omega = lumpptree.getArray<GFTYPE>("Omega");
-  }
 
   nxy = (*xnodes)[0].size(); // same size for x, y, z
   
   rad   = icosptree.getValue<GFTYPE>("radius"); 
-  lat0  = lumpptree.getValue<GFTYPE>("latitude0"); 
-  lon0  = lumpptree.getValue<GFTYPE>("longitude0"); 
-  sig0  = lumpptree.getValue<GFTYPE>("sigma"); 
-  u0    = lumpptree.getValue<GFTYPE>("u0"); 
+  lat0  = lumpptree.getValue<GFTYPE>("latitude0", 0.0); 
+  lon0  = lumpptree.getValue<GFTYPE>("longitude0",3.0*PI/2.0); 
+  sig0  = lumpptree.getValue<GFTYPE>("sigma", 0.15); 
+  alpha = lumpptree.getValue<GFTYPE>("alpha",0.0); 
+  u0    = lumpptree.getValue<GFTYPE>("u0", 1.0); 
+  c0    = lumpptree.getValue<GFTYPE>("c0", 1.0); 
 
   // Compute initial position of lump in Cart coords:
   r0.x1 = rad * cos(lat0*PI/180.0) * cos(lon0*PI/180.0);
@@ -743,12 +741,12 @@ void compute_gauss_icoslump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  
       // Colmpute lat & long:
       lat = asin(z/r);
       lon = atan2(y,x);
-      // Compute contravariant adv. vel components: vc_i = v_phys_i / sqrt(gii): 
-      // _c_ = Omega X r:
-      (*c_[0])[k]  = Omega[1]*z - Omega[2]*y;
-      (*c_[1])[k]  = Omega[2]*x - Omega[0]*z;
-      (*c_[2])[k]  = Omega[0]*y - Omega[1]*x;
+      // u_theta = -u0 sin(lon) sin(alpha)
+      // u_lamda =  u0 (cos(theta) cos(alpha) + sin(theta)cos(lon)sin(alpha) )
+      (*utmp_[0])[k]  = -u0*sin(phi)*sin(alpha)
+      (*utmp_[1])[k]  = u0*(cos(theta)*cos(alpha) + sin(theta)*cos(phi)*sin(alpha) );
     }
+    GMTK::vsphere2cart(*grid_, utmp_, GVECTYPE_PHYS, c_);
   }
 
 
@@ -762,28 +760,18 @@ void compute_gauss_icoslump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  
   for ( GSIZET j=0; j<nxy; j++ ) {
     x   = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
     r   = sqrt(x*x + y*y + z*z);
-    // Colmpute lat & long:
     lat = asin(z/r);
     lon = atan2(y,x);
-    dlon = lon - lon0;
+    R   = r/3.0;
+    s   = r*acos( sin(lat0)*sin(theta) + cos(lat0)*cos(theta)*cos(lon-lon0) );
     // Note: following c t is actually Integral_0^t c(t') dt', 
     //       so if c(t) above changes, change this term accordingly:
-#if 0
-    for ( GSIZET i=0; i<3; i++ ) xx[i] = (*xnodes)[i][j] - r0[i] - (*c_[i])[j]*t;
-    argxp = 0.0;
-    for ( GSIZET i=0; i<3; i++ ) argxp += -pow(xx[i],2.0)*si[i];
-   (*ua[0])[j] = ufact[0]*exp(argxp);
-#else
-    num   = sqrt( pow(cos(lat)*sin(dlon),2) + pow(cos(lat0)*sin(lat)-sin(lat0)*cos(lat)*cos(dlon),2) );
-    den   = sin(lat)*sin(lat0) + cos(lat)*cos(lat0)*cos(dlon);
-    argxp = -pow(r*atan(num/den),2)*si[0];
-   (*ua[0])[j] = ufact[0]*exp(argxp);
-#endif
+   (*ua[0])[j] = s < R ? 0.5*u0*(1.0+cos(PI*s/R)) : 0.0;
   }
 
 //GPP(comm_,serr << "ua=" << *ua[0] );
   
-} // end, compute_gauss_icoslump
+} // end, compute_icosbell
 
 
 //**********************************************************************************
@@ -921,8 +909,8 @@ void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVecto
       compute_dirgauss_lump(grid, t, ptree, ua);
       }
     }
-    else if ( sblock == "init_icoslump" ) {
-      compute_gauss_icoslump(grid, t, ptree, ua);
+    else if ( sblock == "init_icosbell" ) {
+      compute_icosbell(grid, t, ptree, ua);
     }
     else {
       assert(FALSE && "Invalid heat equation initialization specified");
@@ -941,8 +929,8 @@ void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVecto
       compute_dirgauss_lump(grid, t, ptree, ua);
       }
     }
-    else if ( sblock == "init_icoslump" ) {
-      compute_gauss_icoslump(grid, t, ptree, ua);
+    else if ( sblock == "init_icosbell" ) {
+      compute_gauss_icosbell(grid, t, ptree, ua);
     }
     else {
       assert(FALSE && "Invalid pure adv equation initialization specified");
