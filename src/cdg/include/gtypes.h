@@ -161,7 +161,6 @@ enum GElemType           {GE_REGULAR=0, GE_DEFORMED, GE_2DEMBEDDED, GE_MAX}; // 
 #endif
 
 #if !defined(_G_VECTORTYPE_DEF)
-#if !defined(_G_VECTORTYPE_DEF)
 #define _G_VECTORTYPE_DEF
 enum GVectorType        {GVECTYPE_PHYS=0 , GVECTYPE_CONTRAVAR, GVECTYPE_COVAR};
 #endif
