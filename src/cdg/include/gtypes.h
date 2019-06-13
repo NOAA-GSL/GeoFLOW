@@ -163,7 +163,7 @@ enum GElemType           {GE_REGULAR=0, GE_DEFORMED, GE_2DEMBEDDED, GE_MAX}; // 
 #if !defined(_G_STEPPERTYPE_DEF)
 #define _G_STEPPERTYPE_DEF
 enum GStepperType        { GSTEPPER_EXRK=0 , GSTEPPER_BDFAB , GSTEPPER_BDFEXT , GSTEPPER_MAX};
-const char *sGStepperType[] =  
+const char * const sGStepperType[] =  
                          {"GSTEPPER_EXRK"  ,"GSTEPPER_BDFAa","GSTEPPER_BDFEXT"};
 #endif
 
