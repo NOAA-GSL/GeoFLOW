@@ -695,7 +695,7 @@ void compute_icosbell(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVect
   GBOOL            bContin;
   GINT             j, k, n;
   GSIZET           nxy;
-  GFTYPE           argxp; 
+  GFTYPE           alpha, argxp; 
   GFTYPE           lat0, lon0, R, s;
   GFTYPE           lat, lon;
   GFTYPE           x, y, z, r;
@@ -743,8 +743,8 @@ void compute_icosbell(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVect
       lon = atan2(y,x);
       // u_theta = -u0 sin(lon) sin(alpha)
       // u_lamda =  u0 (cos(theta) cos(alpha) + sin(theta)cos(lon)sin(alpha) )
-      (*utmp_[0])[k]  = -u0*sin(phi)*sin(alpha)
-      (*utmp_[1])[k]  = u0*(cos(theta)*cos(alpha) + sin(theta)*cos(phi)*sin(alpha) );
+      (*utmp_[0])[k]  = -u0*sin(lon)*sin(alpha);
+      (*utmp_[1])[k]  = u0*(cos(lat)*cos(alpha) + sin(lat)*cos(lon)*sin(alpha) );
     }
     GMTK::vsphere2cart(*grid_, utmp_, GVECTYPE_PHYS, c_);
   }
@@ -758,14 +758,16 @@ void compute_icosbell(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVect
   }
 
   for ( GSIZET j=0; j<nxy; j++ ) {
-    x   = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
+    // Note: following c t is actually Integral_0^t c(t') dt', 
+    //       so if c(t) above changes, change this term accordingly:
+    x   = (*xnodes)[0][j] - (*c_[0])[j]*t; 
+    y   = (*xnodes)[1][j] - (*c_[1])[j]*t; 
+    z   = (*xnodes)[2][j] - (*c_[2])[j]*t;
     r   = sqrt(x*x + y*y + z*z);
     lat = asin(z/r);
     lon = atan2(y,x);
     R   = r/3.0;
-    s   = r*acos( sin(lat0)*sin(theta) + cos(lat0)*cos(theta)*cos(lon-lon0) );
-    // Note: following c t is actually Integral_0^t c(t') dt', 
-    //       so if c(t) above changes, change this term accordingly:
+    s   = r*acos( sin(lat0)*sin(lat) + cos(lat0)*cos(lat)*cos(lon-lon0) );
    (*ua[0])[j] = s < R ? 0.5*u0*(1.0+cos(PI*s/R)) : 0.0;
   }
 
@@ -930,7 +932,7 @@ void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVecto
       }
     }
     else if ( sblock == "init_icosbell" ) {
-      compute_gauss_icosbell(grid, t, ptree, ua);
+      compute_icosbell(grid, t, ptree, ua);
     }
     else {
       assert(FALSE && "Invalid pure adv equation initialization specified");
