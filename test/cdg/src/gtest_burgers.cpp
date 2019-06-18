@@ -111,7 +111,7 @@ int main(int argc, char **argv)
     std::vector<GINT> ne(3); // # elements in each direction in 3d
     std::vector<GINT> pstd(GDIM);  // order in each direction
     GString sgrid;// name of JSON grid object to use
-    GTVector<GString> savars;
+    GTVector<GString> savars, scvars;
     GTMatrix<GINT> p; // needed for restart, but is dummy
     char stmp[1024];
 
@@ -311,15 +311,19 @@ int main(int argc, char **argv)
     // Initialize state:
     EH_MESSAGE("main: Initializing state...");
 
+    for ( GSIZET j=0; j<u_.size(); j++ ) {
+      sprintf(stmp, "u%da", j+1);
+      savars.push_back(stmp);
+    }
+    for ( GSIZET j=0; j<c_.size(); j++ ) {
+      sprintf(stmp, "c%d", j+1);
+      scvars.push_back(stmp);
+    }
     if ( itindex == 0 ) { // start new run
       icycle = 0;
       t      = 0.0; 
       compute_analytic(*grid_, t, ptree, u_);
       compute_analytic(*grid_, t, ptree, ua_); // for setting error norm
-      for ( GSIZET j=0; j<u_.size(); j++ ) {
-        sprintf(stmp, "u%da", j+1);
-        savars.push_back(stmp);
-      }
     }
     else {              // restart run
       gio_restart(ptree, 0, u_, p, icycle, t, comm_);
@@ -374,7 +378,9 @@ int main(int argc, char **argv)
     }
     
     GTVector<GINT> istate(nsolve_);
+    GTVector<GINT> cstate(c_.size());
     for ( GSIZET j=0; j<nsolve_; j++ ) istate[j] = j;
+    for ( GSIZET j=0; j<c_.size(); j++ ) cstate[j] = j;
 
 #if 1
 compute_analytic(*grid_, t, ptree, ua_); // analyt soln at t
@@ -384,6 +390,8 @@ iot.gtype  = grid_->gtype();
 iot.porder.resize(1,GDIM);
 for ( GSIZET j=0; j<GDIM; j++ ) iot.porder(0,j) = gbasis[j]->getOrder();
     gio_write_state(iot, *grid_, ua_, istate, savars, comm_);
+for ( GSIZET j=0; j<GDIM; j++ ) 
+    gio_write_state(iot, *grid_, c_, cstate, scvars, comm_);
 #endif
 
     for ( GSIZET j=0; j<nsolve_; j++ ) { //local errors
@@ -681,6 +689,104 @@ void compute_dirgauss_lump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD: compute_icosgauss
+// DESC  : Compute solution to pure advection equation with 
+//         a Gaussian, but using, from Williamson et al., 
+//         JCP 102:211 (1992) adcectrion velocity
+// ARGS  : grid    : GGrid object
+//         t       : time
+//         ptree   : main property tree
+//         ua      : return solution
+//**********************************************************************************
+void compute_icosgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVector<GTVector<GFTYPE>*>  &ua)
+{
+  GString          serr = "compute_icosgauss: ";
+  GBOOL            bContin;
+  GINT             j, k, n;
+  GSIZET           nxy;
+  GFTYPE           alpha, argxp; 
+  GFTYPE           lat0, lon0, s;
+  GFTYPE           lat, lon;
+  GFTYPE           x, y, z, r;
+  GFTYPE           c0, rad, sig0, u0, u;
+  GTVector<GFTYPE> xx(3), si(3), sig(3), ufact(3);
+  GTPoint<GFTYPE>  r0(3);
+
+  PropertyTree lumpptree = ptree.getPropertyTree("init_icosgauss");
+  PropertyTree icosptree = ptree.getPropertyTree("grid_icos");
+  PropertyTree advptree  = ptree.getPropertyTree("adv_equation_traits");
+  GBOOL doheat   = advptree.getValue<GBOOL>("doheat");
+  GBOOL bpureadv = advptree.getValue<GBOOL>("bpureadv");
+
+  GTVector<GTVector<GFTYPE>> *xnodes = &grid_->xNodes();
+
+  assert(grid.gtype() == GE_2DEMBEDDED && "Invalid element types");
+
+  std::vector<GFTYPE> Omega;
+
+  nxy = (*xnodes)[0].size(); // same size for x, y, z
+  
+  rad   = icosptree.getValue<GFTYPE>("radius"); 
+  lat0  = lumpptree.getValue<GFTYPE>("latitude0", 0.0); 
+  lon0  = lumpptree.getValue<GFTYPE>("longitude0",3.0*PI/2.0); 
+  sig0  = lumpptree.getValue<GFTYPE>("sigma", 0.15); 
+  alpha = lumpptree.getValue<GFTYPE>("alpha",0.0); 
+  u0    = lumpptree.getValue<GFTYPE>("u0", 1.0); 
+  c0    = lumpptree.getValue<GFTYPE>("c0", 1.0); 
+
+  // Compute initial position of lump in Cart coords:
+  r0.x1 = rad * cos(lat0*PI/180.0) * cos(lon0*PI/180.0);
+  r0.x2 = rad * cos(lat0*PI/180.0) * sin(lon0*PI/180.0);
+  r0.x3 = rad * sin(lat0*PI/180.0);
+
+  // Set velocity here. May be a function of time.
+  // These point to components of state u_:
+  for ( j=0; j<3; j++ ) *c_ [j] = 0.0;
+ 
+  if ( bpureadv ) {
+    for ( k=0; k<nxy; k++ ) {
+      x   = (*xnodes)[0][k]; y = (*xnodes)[1][k]; z = (*xnodes)[2][k];
+      r   = sqrt(x*x + y*y + z*z);
+      // Colmpute lat & long:
+      lat = asin(z/r);
+      lon = atan2(y,x);
+      // u_theta = -u0 sin(lon) sin(alpha)
+      // u_lamda =  u0 (cos(theta) cos(alpha) + sin(theta)cos(lon)sin(alpha) )
+      (*utmp_[0])[k]  = -u0*sin(lon)*sin(alpha);
+      (*utmp_[1])[k]  = u0*(cos(lat)*cos(alpha) + sin(lat)*cos(lon)*sin(alpha) );
+    }
+    GMTK::vsphere2cart(*grid_, utmp_, GVECTYPE_PHYS, c_);
+  }
+
+
+  // Prepare for case where sig is anisotropic (for later, maybe):
+  for ( GSIZET k=0; k<3; k++ ) {
+    sig  [k] = sqrt(sig0*sig0 + 4.0*t*nu_[0]); // constant viscosity only
+    si   [k] = 1.0/(sig[k]*sig[k]);
+    ufact[k] = u0*pow(sig0/sig[k],GDIM);
+  }
+
+  for ( GSIZET j=0; j<nxy; j++ ) {
+    // Note: following c t is actually Integral_0^t c(t') dt', 
+    //       so if c(t) above changes, change this term accordingly:
+    x   = (*xnodes)[0][j] - (*c_[0])[j]*t; 
+    y   = (*xnodes)[1][j] - (*c_[1])[j]*t; 
+    z   = (*xnodes)[2][j] - (*c_[2])[j]*t;
+    r   = sqrt(x*x + y*y + z*z);
+    lat = asin(z/r);
+    lon = atan2(y,x);
+    s   = r*acos( sin(lat0)*sin(lat) + cos(lat0)*cos(lat)*cos(lon-lon0) );
+   (*ua[0])[j] = u0*exp(-s*s*si[0]);
+   (*ua[0])[j]*= pow(sig0,GDIM)/pow(sig[0],GDIM);
+  }
+
+//GPP(comm_,serr << "ua=" << *ua[0] );
+  
+} // end, compute_icosgauss
+
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD: compute_icosbell
 // DESC  : Compute solution to pure advection equation with 
 //         a cosine bell, from Williamson et al., JCP 102:211 (1992)
@@ -769,6 +875,7 @@ void compute_icosbell(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVect
     R   = r/3.0;
     s   = r*acos( sin(lat0)*sin(lat) + cos(lat0)*cos(lat)*cos(lon-lon0) );
    (*ua[0])[j] = s < R ? 0.5*u0*(1.0+cos(PI*s/R)) : 0.0;
+   (*ua[0])[j]*= pow(sig0,GDIM)/pow(sig[0],GDIM);
   }
 
 //GPP(comm_,serr << "ua=" << *ua[0] );
@@ -914,6 +1021,9 @@ void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVecto
     else if ( sblock == "init_icosbell" ) {
       compute_icosbell(grid, t, ptree, ua);
     }
+    else if ( sblock == "init_icosgauss" ) {
+      compute_icosgauss(grid, t, ptree, ua);
+    }
     else {
       assert(FALSE && "Invalid heat equation initialization specified");
     }
@@ -930,6 +1040,9 @@ void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVecto
       } else { // is DIRICHLET
       compute_dirgauss_lump(grid, t, ptree, ua);
       }
+    }
+    else if ( sblock == "init_icosgauss" ) {
+      compute_icosgauss(grid, t, ptree, ua);
     }
     else if ( sblock == "init_icosbell" ) {
       compute_icosbell(grid, t, ptree, ua);
