@@ -356,6 +356,7 @@ void GBurgers<TypePack>::step_exrk(const Time &t, State &uin, State &uf, State &
 
   // GExRK stepper steps entire state over one dt:
   gexrk_->step(t, uin, uf, ub, dt, urktmp_, uout);
+  GMTK::constrain2sphere(*grid_, uout);
 
 } // end of method step_exrk
 
