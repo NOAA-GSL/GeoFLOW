@@ -2050,7 +2050,7 @@ void curl(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &u, const GINT idir,
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : constrain2sphere(1)
-// DESC   : Project input 3-vector to sphere:
+// DESC   : Project/constrain input 3-vector to sphere:
 //          -  -     -                           -   -  -
 //          |vx|     |(r^2-x^2)   -xy     -xz    |   |vx|
 //        P |vy| =   |   -yx    (r^2-x^2) -yz    |   |vy|
@@ -2062,16 +2062,15 @@ void curl(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &u, const GINT idir,
 //        vector, s.t. x.v = 0. 
 //          
 // ARGS   : grid : Grid. If not of the correct type, nothing is done
-//          v    : Array of vector components
-//          Pv   : Projected vector. May be the same as V, in which case
-//                 V is overwritten.
+//          v    : Array of vector components to be constrained
+//          Pv   : Projected vector. Must be different from v
 // RETURNS: none
 //**********************************************************************************
-template<typename T>
-void constrain2sphere(GGrid &grid, GTVector<GTVector<GFTYPE>*> &v, GTVector<GTVector<GFTYPE>*> &Pv)
+template<>
+void constrain2sphere(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &v, GTVector<GTVector<GFTYPE>*> &Pv)
 {
 
-  if ( grid.gtype() != GE_2DEMBEDDED ) return;
+  if ( grid.gtype() != GE_2DEMBEDDED || v.size() != 3 ) return;
 
   assert( v.size() >= 3 && "Incompatible dimensionality");
 
@@ -2088,6 +2087,48 @@ void constrain2sphere(GGrid &grid, GTVector<GTVector<GFTYPE>*> &v, GTVector<GTVe
    }
 
 } // end of method constrain2sphere (1)
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : constrain2sphere(2)
+// DESC   : Project/constrain input 3-vector to sphere:
+//          -  -     -                           -   -  -
+//          |vx|     |(r^2-x^2)   -xy     -xz    |   |vx|
+//        P |vy| =   |   -yx    (r^2-x^2) -yz    |   |vy|
+//          |vz|     |   -zx      -zy   (r^2-z^2)|   |vz|
+//          -  -     -                           -   -  -
+//
+//        This is derived from a Lagrange multiplier constraint
+//        that requires all vectors, v, to be normal to radial
+//        vector, s.t. x.v = 0. 
+//          
+// ARGS   : grid : Grid. If not of the correct type, nothing is done
+//          v    : Array of vector components to be constrained, 
+//                 modified on output to be projected components
+// RETURNS: none
+//**********************************************************************************
+template<>
+void constrain2sphere(GGrid &grid, GTVector<GTVector<GFTYPE>*> &v)
+{
+
+  if ( grid.gtype() != GE_2DEMBEDDED || v.size() != 3 ) return;
+
+  assert( v.size() >= 3 && "Incompatible dimensionality");
+
+  GSIZET nxy = grid.ndof();
+  GFTYPE r2, x, y, z;
+  GTVector<GTVector<GFTYPE>> *xnodes = &grid.xNodes();
+
+  for ( GSIZET j=0; j<nxy; j++ ) {
+    x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
+    r2 = x*x + y*y + z*z;
+    (*v[0])[j] =  (*v[0])[j]*(r2-x*x) - (*v[1])[j]*x*y      - (*v[2])[j]*x*z;
+    (*v[1])[j] = -(*v[0])[j]*y*x      + (*v[1])[j]*(r2-y*y) - (*v[2])[j]*y*z;
+    (*v[2])[j] = -(*v[0])[j]*z*x      - (*v[1])[j]*z*y      + (*v[2])[j]*(r2-z*z);
+   }
+
+} // end of method constrain2sphere (2)
 
 
 //**********************************************************************************
@@ -2363,7 +2404,7 @@ void compute_grefderivsW(GGrid &grid, GTVector<GFTYPE> &u, GTVector<GFTYPE> &etm
     Di[1] = (*gelems)[e]->gbasis(1)->getDerivMatrixW(!dotrans);
     GMTK::Dg2_X_D1(*Di[0], *W [1], u, etmp, *du[0]); 
     GMTK::D2_X_Dg1(*W [0], *Di[1], u, etmp, *du[1]); 
-#if 1
+#if 0
     if ( bembedded ) { // ref 3-deriv is just W u:
       k = 0;
       for ( GSIZET j=0; j<N[1]; j++ ) {
@@ -2628,7 +2669,7 @@ void compute_grefdiviW(GGrid &grid, GTVector<GTVector<GFTYPE>*> &u, GTVector<GFT
 // RETURNS: none
 //**********************************************************************************
 template<>
-void vsphere2cart(GGrid &grid, GTVector<GTVector<GFTYPE>*> &vsph, GVectorType vtype, GTVector<GTVector<GFTYPE>*> &vcart)
+void vsphere2cart(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &vsph, GVectorType vtype, GTVector<GTVector<GFTYPE>*> &vcart)
 {
 
   if      ( grid.gtype() != GE_2DEMBEDDED ) {
@@ -2661,20 +2702,34 @@ void vsphere2cart(GGrid &grid, GTVector<GTVector<GFTYPE>*> &vsph, GVectorType vt
       vphicontra = (*vsph[1])[j];
       if ( vtype == GVECTYPE_PHYS ) {
         htt        = r; hpp = r*cos(theta);
-        vthcontra  = (*vsph[0])[j]/(htt+tiny);
-        vphicontra = (*vsph[1])[j]/(hpp+tiny);
+        vthcontra  = (*vsph[0])[j];
+        vphicontra = (*vsph[1])[j];
+        (*vcart[0])[j] = -(*vsph[0])[j]*  sin(theta)*cos(phi) 
+                       -  (*vsph[1])[j]*             sin(phi);
+        (*vcart[1])[j] = -(*vsph[0])[j]*  sin(theta)*sin(phi) 
+                       -  (*vsph[1])[j]*             cos(phi);
+        (*vcart[2])[j] =  (*vsph[0])[j]*  sin(theta);
       }
       else if ( vtype == GVECTYPE_COVAR ) {
         htt        = r*r; hpp = pow(r*cos(theta),2);
-        vthcontra  = (*vsph[0])[j]*(htt+tiny);
-        vphicontra = (*vsph[1])[j]*(hpp+tiny);
+        vthcontra  = (*vsph[0])[j]*htt;
+        vphicontra = (*vsph[1])[j]*hpp;
+        (*vcart[0])[j] = -vthcontra *r*sin(theta)*cos(phi) 
+                       -  vphicontra*r*cos(theta)*sin(phi);
+        (*vcart[1])[j] = -vthcontra *r*sin(theta)*sin(phi) 
+                       -  vphicontra*r*cos(theta)*cos(phi);
+        (*vcart[2])[j] =  vthcontra *r*cos(theta);
+      }
+      else if ( vtype == GVECTYPE_CONTRAVAR ) {
+        vthcontra  = (*vsph[0])[j];
+        vphicontra = (*vsph[1])[j];
+        (*vcart[0])[j] = -vthcontra *r*sin(theta)*cos(phi) 
+                       -  vphicontra*r*cos(theta)*sin(phi);
+        (*vcart[1])[j] = -vthcontra *r*sin(theta)*sin(phi) 
+                       -  vphicontra*r*cos(theta)*cos(phi);
+        (*vcart[2])[j] =  vthcontra *r*cos(theta);
       }
 
-      (*vcart[0])[j] = -(*vsph[0])[j]*r*sin(theta)*cos(phi) 
-                     -  (*vsph[1])[j]*r*cos(theta)*sin(phi);
-      (*vcart[1])[j] = -(*vsph[0])[j]*r*sin(theta)*sin(phi) 
-                     -  (*vsph[1])[j]*r*cos(theta)*cos(phi);
-      (*vcart[2])[j] =  (*vsph[0])[j]*r*cos(theta);
      }
      return;
    }

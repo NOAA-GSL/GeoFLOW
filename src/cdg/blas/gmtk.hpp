@@ -111,9 +111,11 @@ namespace GMTK
                GTVector<GTVector<T>*> &tmp, GTVector<T> &curl);
 
   template<typename T>  
-  void    constrain2sphere(GGrid &grid, GTVector<GTVector<T>*> &v, GTVector<GTVector<T>*    > &Pv);
+  void    constrain2sphere(GGrid &grid, const GTVector<GTVector<T>*> &v, GTVector<GTVector<T>*    > &Pv);
   template<typename T>  
-  void    vsphere2cart(GGrid &grid, GTVector<GTVector<T>*> &vsph, GVectorType vtype, GTVector<GTVector<T>*> &vcart);
+  void    constrain2sphere(GGrid &grid, GTVector<GTVector<T>*> &v);
+  template<typename T>  
+  void    vsphere2cart(GGrid &grid, const GTVector<GTVector<T>*> &vsph, GVectorType vtype, GTVector<GTVector<T>*> &vcart);
 
 };
 
