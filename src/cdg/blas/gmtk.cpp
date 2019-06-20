@@ -2112,20 +2112,20 @@ template<>
 void constrain2sphere(GGrid &grid, GTVector<GTVector<GFTYPE>*> &v)
 {
 
-  if ( grid.gtype() != GE_2DEMBEDDED || v.size() != 3 ) return;
-
-  assert( v.size() >= 3 && "Incompatible dimensionality");
+  if ( grid.gtype() != GE_2DEMBEDDED || v.size() < 3 ) return;
 
   GSIZET nxy = grid.ndof();
-  GFTYPE r2, x, y, z;
+  GFTYPE ri, r2, x, y, z;
   GTVector<GTVector<GFTYPE>> *xnodes = &grid.xNodes();
 
+  x = (*xnodes)[0][0]; y = (*xnodes)[1][0]; z = (*xnodes)[2][0];
+  r2 = x*x + y*y + z*z;
+  ri = 1.0/sqrt(r2);
   for ( GSIZET j=0; j<nxy; j++ ) {
-    x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
-    r2 = x*x + y*y + z*z;
-    (*v[0])[j] =  (*v[0])[j]*(r2-x*x) - (*v[1])[j]*x*y      - (*v[2])[j]*x*z;
-    (*v[1])[j] = -(*v[0])[j]*y*x      + (*v[1])[j]*(r2-y*y) - (*v[2])[j]*y*z;
-    (*v[2])[j] = -(*v[0])[j]*z*x      - (*v[1])[j]*z*y      + (*v[2])[j]*(r2-z*z);
+    
+    (*v[0])[j] = ( (*v[0])[j]*(r2-x*x) - (*v[1])[j]*x*y      - (*v[2])[j]*x*z )*ri;
+    (*v[1])[j] = (-(*v[0])[j]*y*x      + (*v[1])[j]*(r2-y*y) - (*v[2])[j]*y*z )*ri;
+    (*v[2])[j] = (-(*v[0])[j]*z*x      - (*v[1])[j]*z*y      + (*v[2])[j]*(r2-z*z) )*ri;
    }
 
 } // end of method constrain2sphere (2)
@@ -2692,6 +2692,11 @@ void vsphere2cart(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &vsph, GVectorT
 
   tiny = std::numeric_limits<GFTYPE>::epsilon();
 
+  //   v_i_cart = vtheta dx_i/dtheta + vphi dx_i/dphi
+  // where
+  //   vtheta, vhi are _contravariant_ (upper-index) components
+  // Note: Metric is orthogonal:
+  //   g_ij = (1, h_theta^2, h_phi^2) = (1, r^2, (r cos(theta))^2 )
   if ( grid.gtype() == GE_2DEMBEDDED ) {
     if ( vtype == GVECTYPE_PHYS ) { // vsph are physical components
       for ( GSIZET j=0; j<nxy; j++ ) {
