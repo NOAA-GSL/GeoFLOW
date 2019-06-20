@@ -2661,9 +2661,9 @@ void compute_grefdiviW(GGrid &grid, GTVector<GTVector<GFTYPE>*> &u, GTVector<GFT
 //                 there must be at least 2 components, and only the firs 2
 //                 are used, and assumed to be latitudual, and longitudinal
 //                 respectively. If grid is a 3D spherical grid, then
-//                 vector components are assumed to be (r, theta, phi).
+//                 vector components are assumed to be (r, lat, long).
 //                 If grid is REGULAR, then this transformation cannot be done.
-//          vtype: Vector type of spherical coords (PHYS, CONTRAVAR, COVAR)
+//          vtype: Vector type of spherical coords GVECTYPE_(PHYS, CONTRAVAR, COVAR)
 //          vcart: Cartesian vector field. Must have at least 3 components, and
 //                 are returned as (x, y, z).
 // RETURNS: none
@@ -2686,84 +2686,119 @@ void vsphere2cart(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &vsph, GVectorT
   GSIZET           nxy = grid.ndof();
   GFTYPE           x, y, z, tiny;
   GFTYPE           phi, r, theta;
-  GFTYPE           hpp, hrr, htt;
+  GFTYPE           gpp, gtt;
   GFTYPE           vthcontra, vphicontra;
   GTVector<GTVector<GFTYPE>> *xnodes = &grid.xNodes();
 
   tiny = std::numeric_limits<GFTYPE>::epsilon();
 
   if ( grid.gtype() == GE_2DEMBEDDED ) {
-    for ( GSIZET j=0; j<nxy; j++ ) {
-      x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
-      r     = x*x + y*y + z*z;
-      theta = asin(z/r);
-      phi   = atan2(y,x);
-      vthcontra  = (*vsph[0])[j];
-      vphicontra = (*vsph[1])[j];
-      if ( vtype == GVECTYPE_PHYS ) {
-        htt        = r; hpp = r*cos(theta);
-        vthcontra  = (*vsph[0])[j];
-        vphicontra = (*vsph[1])[j];
+    if ( vtype == GVECTYPE_PHYS ) { // vsph are physical components
+      for ( GSIZET j=0; j<nxy; j++ ) {
+        x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
+        r     = x*x + y*y + z*z;
+        theta = asin(z/r);
+        phi   = atan2(y,x);
         (*vcart[0])[j] = -(*vsph[0])[j]*  sin(theta)*cos(phi) 
                        -  (*vsph[1])[j]*             sin(phi);
         (*vcart[1])[j] = -(*vsph[0])[j]*  sin(theta)*sin(phi) 
-                       -  (*vsph[1])[j]*             cos(phi);
+                       +  (*vsph[1])[j]*             cos(phi);
         (*vcart[2])[j] =  (*vsph[0])[j]*  sin(theta);
       }
-      else if ( vtype == GVECTYPE_COVAR ) {
-        htt        = r*r; hpp = pow(r*cos(theta),2);
-        vthcontra  = (*vsph[0])[j]*htt;
-        vphicontra = (*vsph[1])[j]*hpp;
+    }
+    else if ( vtype == GVECTYPE_COVAR ) { // vsph are covar. components
+      for ( GSIZET j=0; j<nxy; j++ ) {
+        x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
+        r     = x*x + y*y + z*z;
+        theta = asin(z/r);
+        phi   = atan2(y,x);
+        vthcontra  = (*vsph[0])[j];
+        vphicontra = (*vsph[1])[j];
+        gtt        = r*r; gpp = pow(r*cos(theta),2);
+        vthcontra  = (*vsph[0])[j]/(gtt+tiny);
+        vphicontra = (*vsph[1])[j]/(gpp+tiny);
         (*vcart[0])[j] = -vthcontra *r*sin(theta)*cos(phi) 
                        -  vphicontra*r*cos(theta)*sin(phi);
         (*vcart[1])[j] = -vthcontra *r*sin(theta)*sin(phi) 
-                       -  vphicontra*r*cos(theta)*cos(phi);
+                       +  vphicontra*r*cos(theta)*cos(phi);
         (*vcart[2])[j] =  vthcontra *r*cos(theta);
       }
-      else if ( vtype == GVECTYPE_CONTRAVAR ) {
+    }
+    else if ( vtype == GVECTYPE_CONTRAVAR ) { // vsph are contravar. components
+      for ( GSIZET j=0; j<nxy; j++ ) {
+        x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
+        r     = x*x + y*y + z*z;
+        theta = asin(z/r);
+        phi   = atan2(y,x);
         vthcontra  = (*vsph[0])[j];
         vphicontra = (*vsph[1])[j];
         (*vcart[0])[j] = -vthcontra *r*sin(theta)*cos(phi) 
                        -  vphicontra*r*cos(theta)*sin(phi);
         (*vcart[1])[j] = -vthcontra *r*sin(theta)*sin(phi) 
-                       -  vphicontra*r*cos(theta)*cos(phi);
+                       +  vphicontra*r*cos(theta)*cos(phi);
         (*vcart[2])[j] =  vthcontra *r*cos(theta);
       }
-
-     }
-     return;
-   }
+    }
+  }
 
   if ( grid.gtype() == GE_DEFORMED ) {
-    for ( GSIZET j=0; j<nxy; j++ ) {
-      x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
-      r     = x*x + y*y + z*z;
-      theta = asin(z/r);
-      phi   = atan2(y,x);
-      vthcontra  = (*vsph[0])[j];
-      vphicontra = (*vsph[1])[j];
-      if ( vtype == GVECTYPE_PHYS ) {
-        htt        = r; hpp = r*cos(theta);
-        vthcontra  = (*vsph[1])[j]/(htt+tiny);
-        vphicontra = (*vsph[2])[j]/(hpp+tiny);
+    if      ( vtype == GVECTYPE_PHYS ) {
+      for ( GSIZET j=0; j<nxy; j++ ) {
+        x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
+        r     = x*x + y*y + z*z;
+        theta = asin(z/r);
+        phi   = atan2(y,x);
+        gtt        = r; gpp = r*cos(theta);
+        vthcontra  = (*vsph[1])[j]/(gtt+tiny);
+        vphicontra = (*vsph[2])[j]/(gpp+tiny);
+        (*vcart[0])[j] =  (*vsph[0])[j]*  cos(theta)*cos(phi)
+                       -  (*vsph[1])[j]*r*sin(theta)*cos(phi) 
+                       +  (*vsph[2])[j]*r*cos(theta)*sin(phi);
+        (*vcart[1])[j] =  (*vsph[0])[j]*  cos(theta)*sin(phi)
+                       -  (*vsph[1])[j]*r*sin(theta)*sin(phi) 
+                       +  (*vsph[2])[j]*r*cos(theta)*cos(phi);
+        (*vcart[2])[j] =  (*vsph[0])[j]*  sin(theta)
+                       +  (*vsph[1])[j]*r*cos(theta);
       }
-      else if ( vtype == GVECTYPE_COVAR ) {
-        htt        = r*r; hpp = pow(r*cos(theta),2);
-        vthcontra  = (*vsph[1])[j]/(htt+tiny);
-        vphicontra = (*vsph[2])[j]/(hpp+tiny);
+    }
+    else if ( vtype == GVECTYPE_COVAR ) {
+      for ( GSIZET j=0; j<nxy; j++ ) {
+        x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
+        r     = x*x + y*y + z*z;
+        theta = asin(z/r);
+        phi   = atan2(y,x);
+        gtt        = r*r; gpp = pow(r*cos(theta),2);
+        vthcontra  = (*vsph[1])[j]/(gtt+tiny);
+        vphicontra = (*vsph[2])[j]/(gpp+tiny);
+        (*vcart[0])[j] =  (*vsph[0])[j]*  cos(theta)*cos(phi)
+                       -  (*vsph[1])[j]*r*sin(theta)*cos(phi) 
+                       +  (*vsph[2])[j]*r*cos(theta)*sin(phi);
+        (*vcart[1])[j] =  (*vsph[0])[j]*  cos(theta)*sin(phi)
+                       -  (*vsph[1])[j]*r*sin(theta)*sin(phi) 
+                       +  (*vsph[2])[j]*r*cos(theta)*cos(phi);
+        (*vcart[2])[j] =  (*vsph[0])[j]*  sin(theta)
+                       +  (*vsph[1])[j]*r*cos(theta);
       }
-
-      (*vcart[0])[j] =  (*vsph[0])[j]*  cos(theta)*cos(phi)
-                     -  (*vsph[1])[j]*r*sin(theta)*cos(phi) 
-                     -  (*vsph[2])[j]*r*cos(theta)*sin(phi);
-      (*vcart[1])[j] =  (*vsph[0])[j]*  cos(theta)*sin(phi)
-                     -  (*vsph[1])[j]*r*sin(theta)*sin(phi) 
-                     -  (*vsph[2])[j]*r*cos(theta)*cos(phi);
-      (*vcart[2])[j] =  (*vsph[0])[j]*  sin(theta)
-                     +  (*vsph[1])[j]*r*cos(theta);
-     }
-     return;
-   }
+    }
+    else if ( vtype == GVECTYPE_CONTRAVAR ) {
+      for ( GSIZET j=0; j<nxy; j++ ) {
+        x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
+        r     = x*x + y*y + z*z;
+        theta = asin(z/r);
+        phi   = atan2(y,x);
+        vthcontra  = (*vsph[0])[j];
+        vphicontra = (*vsph[1])[j];
+        (*vcart[0])[j] =  (*vsph[0])[j]*  cos(theta)*cos(phi)
+                       -  (*vsph[1])[j]*r*sin(theta)*cos(phi) 
+                       +  (*vsph[2])[j]*r*cos(theta)*sin(phi);
+        (*vcart[1])[j] =  (*vsph[0])[j]*  cos(theta)*sin(phi)
+                       -  (*vsph[1])[j]*r*sin(theta)*sin(phi) 
+                       +  (*vsph[2])[j]*r*cos(theta)*cos(phi);
+        (*vcart[2])[j] =  (*vsph[0])[j]*  sin(theta)
+                       +  (*vsph[1])[j]*r*cos(theta);
+      }
+    }
+  }
 
 } // end of method vsphere2cart
 
