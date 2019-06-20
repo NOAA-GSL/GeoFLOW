@@ -111,7 +111,7 @@ int main(int argc, char **argv)
     std::vector<GINT> ne(3); // # elements in each direction in 3d
     std::vector<GINT> pstd(GDIM);  // order in each direction
     GString sgrid;// name of JSON grid object to use
-    GTVector<GString> savars, scvars;
+    GTVector<GString> savars, scvars, sdvars;
     GTMatrix<GINT> p; // needed for restart, but is dummy
     char stmp[1024];
 
@@ -318,6 +318,8 @@ int main(int argc, char **argv)
     for ( GSIZET j=0; j<c_.size(); j++ ) {
       sprintf(stmp, "c%d", j+1);
       scvars.push_back(stmp);
+      sprintf(stmp, "diff%d", j+1);
+      sdvars.push_back(stmp);
     }
     if ( itindex == 0 ) { // start new run
       icycle = 0;
@@ -392,6 +394,10 @@ for ( GSIZET j=0; j<GDIM; j++ ) iot.porder(0,j) = gbasis[j]->getOrder();
     gio_write_state(iot, *grid_, ua_, istate, savars, comm_);
 for ( GSIZET j=0; j<GDIM; j++ ) 
     gio_write_state(iot, *grid_, c_, cstate, scvars, comm_);
+for ( GSIZET j=0; j<nsolve_; j++ ) { 
+    *utmp_[j] = *u_[j] - *ua_[j];
+    }
+    gio_write_state(iot, *grid_, utmp_, istate, sdvars, comm_);
 #endif
 
     for ( GSIZET j=0; j<nsolve_; j++ ) { //local errors
@@ -753,9 +759,13 @@ void compute_icosgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVec
       // u_theta = -u0 sin(lon) sin(alpha)
       // u_lamda =  u0 (cos(theta) cos(alpha) + sin(theta)cos(lon)sin(alpha) )
       (*utmp_[0])[k]  = -u0*sin(lon)*sin(alpha);
-      (*utmp_[1])[k]  = u0*(cos(lat)*cos(alpha) + sin(lat)*cos(lon)*sin(alpha) );
+      (*utmp_[1])[k]  =  u0*(cos(lat)*cos(alpha) + sin(lat)*cos(lon)*sin(alpha) );
     }
     GMTK::vsphere2cart(*grid_, utmp_, GVECTYPE_PHYS, c_);
+    for ( k=0; k<MIN(nxy,10); k++ ) {
+      x   = (*xnodes)[0][k]; y = (*xnodes)[1][k]; z = (*xnodes)[2][k];
+      cout << serr << "x.c=" << x*(*c_[0])[j] + y*(*c_[1])[j] + z*(*c_[2])[j] << endl;
+    }
   }
 
 
@@ -769,15 +779,17 @@ void compute_icosgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVec
   for ( GSIZET j=0; j<nxy; j++ ) {
     // Note: following c t is actually Integral_0^t c(t') dt', 
     //       so if c(t) above changes, change this term accordingly:
-    x   = (*xnodes)[0][j] - (*c_[0])[j]*t; 
-    y   = (*xnodes)[1][j] - (*c_[1])[j]*t; 
-    z   = (*xnodes)[2][j] - (*c_[2])[j]*t;
+#if 0
+    x   = (*xnodes)[0][j] - r0.x1 - (*c_[0])[j]*t; 
+    y   = (*xnodes)[1][j] - r0.x2 - (*c_[1])[j]*t; 
+    z   = (*xnodes)[2][j] - r0.x3 - (*c_[2])[j]*t;
+#endif
     r   = sqrt(x*x + y*y + z*z);
+cout << "compute_icosgauss: r=" << r << endl;
     lat = asin(z/r);
     lon = atan2(y,x);
     s   = r*acos( sin(lat0)*sin(lat) + cos(lat0)*cos(lat)*cos(lon-lon0) );
-   (*ua[0])[j] = u0*exp(-s*s*si[0]);
-   (*ua[0])[j]*= pow(sig0,GDIM)/pow(sig[0],GDIM);
+   (*ua[0])[j] = ufact[0]*exp(-s*s*si[0]);
   }
 
 //GPP(comm_,serr << "ua=" << *ua[0] );
