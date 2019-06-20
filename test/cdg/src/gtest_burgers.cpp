@@ -711,10 +711,13 @@ void compute_icosgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVec
   GINT             j, k, n;
   GSIZET           nxy;
   GFTYPE           alpha, argxp; 
-  GFTYPE           lat0, lon0, s;
+  GFTYPE           lat0, lon0, s, sdot;
   GFTYPE           lat, lon;
   GFTYPE           x, y, z, r;
+  GFTYPE           xt, yt, zt;
   GFTYPE           c0, rad, sig0, u0, u;
+  GFTYPE           vtheta, vphi;
+  GFTYPE           tiny = std::numeric_limits<GFTYPE>::epsilon();
   GTVector<GFTYPE> xx(3), si(3), sig(3), ufact(3);
   GTPoint<GFTYPE>  r0(3);
 
@@ -756,16 +759,13 @@ void compute_icosgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVec
       // Colmpute lat & long:
       lat = asin(z/r);
       lon = atan2(y,x);
-      // u_theta = -u0 sin(lon) sin(alpha)
-      // u_lamda =  u0 (cos(theta) cos(alpha) + sin(theta)cos(lon)sin(alpha) )
+      // u_lat = u_theta = -u0 sin(lon) sin(alpha)
+      // u_lon = u_phi   =  u0 (cos(theta) cos(alpha) + sin(theta)cos(lon)sin(alpha) )
       (*utmp_[0])[k]  = -u0*sin(lon)*sin(alpha);
       (*utmp_[1])[k]  =  u0*(cos(lat)*cos(alpha) + sin(lat)*cos(lon)*sin(alpha) );
     }
     GMTK::vsphere2cart(*grid_, utmp_, GVECTYPE_PHYS, c_);
-    for ( k=0; k<MIN(nxy,10); k++ ) {
-      x   = (*xnodes)[0][k]; y = (*xnodes)[1][k]; z = (*xnodes)[2][k];
-      cout << serr << "x.c=" << x*(*c_[0])[j] + y*(*c_[1])[j] + z*(*c_[2])[j] << endl;
-    }
+//  GMTK::constrain2sphere(*grid_, c_);
   }
 
 
@@ -779,16 +779,21 @@ void compute_icosgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVec
   for ( GSIZET j=0; j<nxy; j++ ) {
     // Note: following c t is actually Integral_0^t c(t') dt', 
     //       so if c(t) above changes, change this term accordingly:
-#if 0
-    x   = (*xnodes)[0][j] - r0.x1 - (*c_[0])[j]*t; 
-    y   = (*xnodes)[1][j] - r0.x2 - (*c_[1])[j]*t; 
-    z   = (*xnodes)[2][j] - r0.x3 - (*c_[2])[j]*t;
-#endif
+    x   = (*xnodes)[0][j];
+    y   = (*xnodes)[1][j];
+    z   = (*xnodes)[2][j];
     r   = sqrt(x*x + y*y + z*z);
-cout << "compute_icosgauss: r=" << r << endl;
     lat = asin(z/r);
     lon = atan2(y,x);
-    s   = r*acos( sin(lat0)*sin(lat) + cos(lat0)*cos(lat)*cos(lon-lon0) );
+
+    // move origin:
+    xt   = r0.x1 + (*c_[0])[j]*t; 
+    yt   = r0.x2 + (*c_[1])[j]*t; 
+    zt   = r0.x3 + (*c_[2])[j]*t;
+    lat0 = asin(zt/r);
+    lon0 = atan2(yt,xt);
+    // Compute arc length along great circle from new lat0,lon0:
+    s      = r*acos( sin(lat0)*sin(lat) + cos(lat0)*cos(lat)*cos(lon-lon0) );
    (*ua[0])[j] = ufact[0]*exp(-s*s*si[0]);
   }
 
@@ -817,6 +822,7 @@ void compute_icosbell(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVect
   GFTYPE           lat0, lon0, R, s;
   GFTYPE           lat, lon;
   GFTYPE           x, y, z, r;
+  GFTYPE           xt, yt, zt;
   GFTYPE           c0, rad, sig0, u0, u;
   GTVector<GFTYPE> xx(3), si(3), sig(3), ufact(3);
   GTPoint<GFTYPE>  r0(3);
@@ -878,16 +884,23 @@ void compute_icosbell(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVect
   for ( GSIZET j=0; j<nxy; j++ ) {
     // Note: following c t is actually Integral_0^t c(t') dt', 
     //       so if c(t) above changes, change this term accordingly:
-    x   = (*xnodes)[0][j] - (*c_[0])[j]*t; 
-    y   = (*xnodes)[1][j] - (*c_[1])[j]*t; 
-    z   = (*xnodes)[2][j] - (*c_[2])[j]*t;
+    x   = (*xnodes)[0][j];
+    y   = (*xnodes)[1][j];
+    z   = (*xnodes)[2][j];
     r   = sqrt(x*x + y*y + z*z);
     lat = asin(z/r);
     lon = atan2(y,x);
+
+    // move origin:
+    xt   = r0.x1 + (*c_[0])[j]*t; 
+    yt   = r0.x2 + (*c_[1])[j]*t; 
+    zt   = r0.x3 + (*c_[2])[j]*t;
+    lat0 = asin(zt/r);
+    lon0 = atan2(yt,xt);
     R   = r/3.0;
     s   = r*acos( sin(lat0)*sin(lat) + cos(lat0)*cos(lat)*cos(lon-lon0) );
    (*ua[0])[j] = s < R ? 0.5*u0*(1.0+cos(PI*s/R)) : 0.0;
-   (*ua[0])[j]*= pow(sig0,GDIM)/pow(sig[0],GDIM);
+   (*ua[0])[j]*= ufact[0];
   }
 
 //GPP(comm_,serr << "ua=" << *ua[0] );
