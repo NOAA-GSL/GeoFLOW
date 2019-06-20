@@ -2120,9 +2120,9 @@ void constrain2sphere(GGrid &grid, GTVector<GTVector<GFTYPE>*> &v)
 
   x = (*xnodes)[0][0]; y = (*xnodes)[1][0]; z = (*xnodes)[2][0];
   r2 = x*x + y*y + z*z;
-  ri = 1.0/sqrt(r2);
+  ri = 1.0/r2;
   for ( GSIZET j=0; j<nxy; j++ ) {
-    
+    x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
     (*v[0])[j] = ( (*v[0])[j]*(r2-x*x) - (*v[1])[j]*x*y      - (*v[2])[j]*x*z )*ri;
     (*v[1])[j] = (-(*v[0])[j]*y*x      + (*v[1])[j]*(r2-y*y) - (*v[2])[j]*y*z )*ri;
     (*v[2])[j] = (-(*v[0])[j]*z*x      - (*v[1])[j]*z*y      + (*v[2])[j]*(r2-z*z) )*ri;
