@@ -849,6 +849,8 @@ void compute_icosbell(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVect
   u0    = lumpptree.getValue<GFTYPE>("u0", 1.0); 
   c0    = lumpptree.getValue<GFTYPE>("c0", 1.0); 
 
+  sig0  = 0.0;
+
   // Compute initial position of lump in Cart coords:
   r0.x1 = rad * cos(lat0*PI/180.0) * cos(lon0*PI/180.0);
   r0.x2 = rad * cos(lat0*PI/180.0) * sin(lon0*PI/180.0);
