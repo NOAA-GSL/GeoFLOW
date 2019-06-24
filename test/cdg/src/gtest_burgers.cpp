@@ -361,6 +361,7 @@ int main(int argc, char **argv)
     // Compute analytic solution, do comparisons:
     EH_MESSAGE("main: gather errors...");
     GPP(comm_,"main: gather errors...");
+    GFTYPE           dxmin, lmin;
     GTVector<GFTYPE> lnorm(3), gnorm(3), maxerror(3);
     GTVector<GFTYPE> nnorm(nsolve_);
     GString sdir = ".";
@@ -418,6 +419,8 @@ int main(int argc, char **argv)
       for ( GSIZET i=0; i<3; i++ ) maxerror[i] = MAX(maxerror[i],fabs(gnorm[i]));
     }
 
+    dxmin = grid_->minnodedist();
+    lmin  = grid_->minlength();
     if ( myrank == 0 ) 
       cout << "main: maxerror = " << maxerror << endl;
    
@@ -440,7 +443,7 @@ int main(int argc, char **argv)
         ios << "ncyc"    << "  ";
         ios << "var_dt"  << "  ";
         for ( GSIZET j=0; j<GDIM; j++ ) ios << "p" << j+1 << "  ";
-        ios << "num_elems      inf_err     L1_err      L2_err" << std::endl;
+        ios << "num_elems    dx_min   EL_min     inf_err     L1_err      L2_err" << std::endl;
       }
       itst.close();
   
@@ -448,7 +451,7 @@ int main(int argc, char **argv)
       ios << pIntegrator->get_numsteps()  << "  ";
       ios << solver_traits.variabledt << "  ";
       for ( GSIZET j=0; j<GDIM; j++ ) ios << pstd[j] << "  ";
-      ios << gsz[0] << "  "
+      ios << gsz[0] << "  " << dxmin << "  " << lmin
           << "  " << maxerror[0] << "  " << maxerror[1] << "  " << maxerror[2]
           << std::endl;
       ios.close();
