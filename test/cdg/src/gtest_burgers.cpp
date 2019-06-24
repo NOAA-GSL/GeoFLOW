@@ -371,10 +371,11 @@ int main(int argc, char **argv)
 
 
     cout << "main: t_end=" << t << endl;
-//  compute_analytic(*grid_, t, ptree, ua_); // analyt soln at t
+    tt = 0.0;
+    compute_analytic(*grid_, tt, ptree, ua_); // analyt soln at t=0
     for ( GSIZET j=0; j<nsolve_; j++ ) { // local errors
-      ua_[j]->pow(2);
-      nnorm[j] = grid_->integrate(*ua_  [j],*utmp_[0]) ; // L2 norm of analyt soln at t=0
+     *utmp_[1] = *ua_[j]; utmp_[1]->pow(2);
+      nnorm[j] = grid_->integrate(*utmp_  [1],*utmp_[0]) ; // L2 norm of analyt soln at t=0
       nnorm[j] = nnorm[j] > std::numeric_limits<GFTYPE>::epsilon() ? nnorm[j] : 1.0;
       cout << "main: nnorm[" << j << "]=" << nnorm[j] << endl;
     }
@@ -385,17 +386,17 @@ int main(int argc, char **argv)
     for ( GSIZET j=0; j<c_.size(); j++ ) cstate[j] = j;
 
 #if 1
-compute_analytic(*grid_, t, ptree, ua_); // analyt soln at t
-GIOTraits iot;
-iot.nelems = grid_->nelems();
-iot.gtype  = grid_->gtype();
-iot.porder.resize(1,GDIM);
-for ( GSIZET j=0; j<GDIM; j++ ) iot.porder(0,j) = gbasis[j]->getOrder();
+    compute_analytic(*grid_, t, ptree, ua_); // analyt soln at t
+    GIOTraits iot;
+    iot.nelems = grid_->nelems();
+    iot.gtype  = grid_->gtype();
+    iot.porder.resize(1,GDIM);
+    for ( GSIZET j=0; j<GDIM; j++ ) iot.porder(0,j) = gbasis[j]->getOrder();
     gio_write_state(iot, *grid_, ua_, istate, savars, comm_);
-for ( GSIZET j=0; j<GDIM; j++ ) 
+    for ( GSIZET j=0; j<GDIM; j++ ) 
     gio_write_state(iot, *grid_, c_, cstate, scvars, comm_);
-for ( GSIZET j=0; j<nsolve_; j++ ) { 
-    *utmp_[j] = *u_[j] - *ua_[j];
+    for ( GSIZET j=0; j<nsolve_; j++ ) { 
+      *utmp_[j] = *u_[j] - *ua_[j];
     }
     gio_write_state(iot, *grid_, utmp_, istate, sdvars, comm_);
 #endif
@@ -405,11 +406,11 @@ for ( GSIZET j=0; j<nsolve_; j++ ) {
 #if 0
       GPP(comm_,"main: diff=u-ua[" << j << "]=" << *utmp_[0]);
 #endif
-     *utmp_[1] = *utmp_[0]; utmp_[1]->abs();
-     *utmp_[2] = *utmp_[0]; utmp_[2]->pow(2);
-      lnorm   [0]  = utmp_[0]->infnorm (); // inf-norm
-      gnorm   [1]  = grid_->integrate(*utmp_[1],*utmp_[0])/sqrt(nnorm[j]) ; // L1-norm
-      gnorm   [2]  = grid_->integrate(*utmp_[2],*utmp_[0]) ; // L2-norm
+     *utmp_[1]  = *utmp_[0]; utmp_[1]->abs();
+     *utmp_[2]  = *utmp_[0]; utmp_[2]->pow(2);
+      lnorm[0]  = utmp_[0]->infnorm (); // inf-norm
+      gnorm[1]  = grid_->integrate(*utmp_[1],*utmp_[0])/sqrt(nnorm[j]) ; // L1-norm
+      gnorm[2]  = grid_->integrate(*utmp_[2],*utmp_[0]) ; // L2-norm
       // Accumulate to find global errors for this field:
       GComm::Allreduce(lnorm.data()  , gnorm.data()  , 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm_);
       gnorm[2] =  sqrt(gnorm[2]/nnorm[j]);
@@ -789,15 +790,13 @@ void compute_icosgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVec
   rt[1] = rad*cos(lat1)*sin(lon1); 
   rt[2] = rad*sin(lat1);
 
-  // Now, rotate rt about x-axis by alpha:
+  // Now, rotate rt about x-axis by alpha to
+  // find lat/lon of final position of lump:
   xx[0] =  rt[0];
   xx[1] =  cos(alpha)*rt[1] + sin(alpha)*rt[2];
   xx[2] = -sin(alpha)*rt[1] + cos(alpha)*rt[2];
   lat1  = asin(xx[2]/rad);
   lon1  = atan2(xx[1],xx[0]);
-cout << serr << "lat0=" << lat0 << " lon0=" << lon0 << " alpha=" << alpha << endl;
-cout << serr << "lat1=" << lat1 << " lon1=" << lon1 << endl;
-cout << serr << "rt=" << rt << " xx=" << xx << endl;
 
   for ( GSIZET j=0; j<nxy; j++ ) {
     // Note: following c t is actually Integral_0^t c(t') dt', 
@@ -809,18 +808,10 @@ cout << serr << "rt=" << rt << " xx=" << xx << endl;
     r   = sqrt(x*x + y*y + z*z);
     lat = asin(z/r);
     lon = atan2(y,x);
-#if 0
-    // Compute arc length along great circle from new lat0,lon0:
-    lat0 = asin(rt.x3/r);
-    lon0 = atan2(rt.x2,rt.x1);
-    s      = r*acos( sin(lat0)*sin(lat) + cos(lat0)*cos(lat)*cos(lon-lon0) );
-   (*ua[0])[j] = ufact[0]*exp(-s*s*si[0]);
-#else
     // move origin:
 //  for ( GSIZET i=0; i<3; i++ ) rt[i] = r0[i] + (*c_[i])[j]*t;
     s     = r*acos( sin(lat1)*sin(lat) + cos(lat1)*cos(lat)*cos(lon-lon1) );
    (*ua[0])[j] = ufact[0]*exp(-s*s*si[0]);
-#endif
   }
 
 //GPP(comm_,serr << "ua=" << *ua[0] );
