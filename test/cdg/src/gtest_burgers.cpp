@@ -712,14 +712,14 @@ void compute_icosgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVec
   GSIZET           nxy;
   GFTYPE           alpha, argxp; 
   GFTYPE           lat0, lon0, s, sdot;
+  GFTYPE           lat1, lon1;
   GFTYPE           lat, lon;
   GFTYPE           x, y, z, r;
-  GFTYPE           xt, yt, zt;
   GFTYPE           c0, rad, sig0, u0, u;
   GFTYPE           vtheta, vphi;
   GFTYPE           tiny = std::numeric_limits<GFTYPE>::epsilon();
   GTVector<GFTYPE> xx(3), si(3), sig(3), ufact(3);
-  GTPoint<GFTYPE>  r0(3);
+  GTPoint<GFTYPE>  r0(3), rt(3);
 
   PropertyTree lumpptree = ptree.getPropertyTree("init_icosgauss");
   PropertyTree icosptree = ptree.getPropertyTree("grid_icos");
@@ -743,15 +743,19 @@ void compute_icosgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVec
   u0    = lumpptree.getValue<GFTYPE>("u0", 1.0); 
   c0    = lumpptree.getValue<GFTYPE>("c0", 1.0); 
 
-  // Compute initial position of lump in Cart coords:
-  r0.x1 = rad * cos(lat0*PI/180.0) * cos(lon0*PI/180.0);
-  r0.x2 = rad * cos(lat0*PI/180.0) * sin(lon0*PI/180.0);
-  r0.x3 = rad * sin(lat0*PI/180.0);
+  // Convert from degrees to radians (for later):
+  lat0 *= PI/180.0;
+  lon0 *= PI/180.0;
 
-  // Set velocity here. May be a function of time.
+  // Compute initial position of lump in Cart coords:
+  r0.x1 = rad*cos(lat0)*cos(lon0);
+  r0.x2 = rad*cos(lat0)*sin(lon0);
+  r0.x3 = rad*sin(lat0);
+
+  // Set velocity here. May be a function of time,
+  // but, if so, analytic solution may have to
+  // change (see below).
   // These point to components of state u_:
-  for ( j=0; j<3; j++ ) *c_ [j] = 0.0;
- 
   if ( bpureadv ) {
     for ( k=0; k<nxy; k++ ) {
       x   = (*xnodes)[0][k]; y = (*xnodes)[1][k]; z = (*xnodes)[2][k];
@@ -776,25 +780,47 @@ void compute_icosgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVec
     ufact[k] = u0*pow(sig0/sig[k],GDIM);
   }
 
+  // Find where lat/lon endpoint would be at t, if alpha=0:
+  lat1  = lat0;
+  lon1  = lon0 + (u0/rad) * t;
+
+  // Find where Cart endpoint would be at t, if alpha=0:
+  rt[0] = rad*cos(lat1)*cos(lon1); 
+  rt[1] = rad*cos(lat1)*sin(lon1); 
+  rt[2] = rad*sin(lat1);
+
+  // Now, rotate rt about x-axis by alpha:
+  xx[0] =  rt[0];
+  xx[1] =  cos(alpha)*rt[1] + sin(alpha)*rt[2];
+  xx[2] = -sin(alpha)*rt[1] + cos(alpha)*rt[2];
+  lat1  = asin(xx[2]/rad);
+  lon1  = atan2(xx[1],xx[0]);
+cout << serr << "lat0=" << lat0 << " lon0=" << lon0 << " alpha=" << alpha << endl;
+cout << serr << "lat1=" << lat1 << " lon1=" << lon1 << endl;
+cout << serr << "rt=" << rt << " xx=" << xx << endl;
+
   for ( GSIZET j=0; j<nxy; j++ ) {
     // Note: following c t is actually Integral_0^t c(t') dt', 
-    //       so if c(t) above changes, change this term accordingly:
+    //       so if c becomes a function of t, this muct change:
+
     x   = (*xnodes)[0][j];
     y   = (*xnodes)[1][j];
     z   = (*xnodes)[2][j];
     r   = sqrt(x*x + y*y + z*z);
     lat = asin(z/r);
     lon = atan2(y,x);
-
-    // move origin:
-    xt   = r0.x1 + (*c_[0])[j]*t; 
-    yt   = r0.x2 + (*c_[1])[j]*t; 
-    zt   = r0.x3 + (*c_[2])[j]*t;
-    lat0 = asin(zt/r);
-    lon0 = atan2(yt,xt);
+#if 0
     // Compute arc length along great circle from new lat0,lon0:
+    lat0 = asin(rt.x3/r);
+    lon0 = atan2(rt.x2,rt.x1);
     s      = r*acos( sin(lat0)*sin(lat) + cos(lat0)*cos(lat)*cos(lon-lon0) );
    (*ua[0])[j] = ufact[0]*exp(-s*s*si[0]);
+#else
+    // move origin:
+//  for ( GSIZET i=0; i<3; i++ ) rt[i] = r0[i] + (*c_[i])[j]*t;
+    s     = r*acos( sin(lat1)*sin(lat) + cos(lat1)*cos(lat)*cos(lon-lon1) );
+   (*ua[0])[j] = ufact[0]*exp(-s*s*si[0]);
+#endif
   }
 
 //GPP(comm_,serr << "ua=" << *ua[0] );
