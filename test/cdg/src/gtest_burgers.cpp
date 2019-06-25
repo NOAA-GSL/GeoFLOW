@@ -702,7 +702,7 @@ void compute_dirgauss_lump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
 // METHOD: compute_icosgauss
 // DESC  : Compute solution to pure advection equation with 
 //         a Gaussian, but using, from Williamson et al., 
-//         JCP 102:211 (1992) adcectrion velocity
+//         JCP 102:211 (1992) advection velocity
 // ARGS  : grid    : GGrid object
 //         t       : time
 //         ptree   : main property tree
@@ -719,7 +719,7 @@ void compute_icosgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVec
   GFTYPE           lat1, lon1;
   GFTYPE           lat, lon;
   GFTYPE           x, y, z, r;
-  GFTYPE           c0, rad, sig0, u0, u;
+  GFTYPE           rad, sig0, u0, u;
   GFTYPE           vtheta, vphi;
   GFTYPE           tiny = std::numeric_limits<GFTYPE>::epsilon();
   GTVector<GFTYPE> xx(3), si(3), sig(3), ufact(3);
@@ -745,7 +745,6 @@ void compute_icosgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVec
   sig0  = lumpptree.getValue<GFTYPE>("sigma", 0.15); 
   alpha = lumpptree.getValue<GFTYPE>("alpha",0.0); 
   u0    = lumpptree.getValue<GFTYPE>("u0", 1.0); 
-  c0    = lumpptree.getValue<GFTYPE>("c0", 1.0); 
 
   // Convert from degrees to radians (for later):
   lat0 *= PI/180.0;
@@ -824,6 +823,114 @@ void compute_icosgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVec
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD: compute_icosdualgauss
+// DESC  : Compute solution to pure advection equation with 
+//         dual Gaussian lumps, but using adv. field from
+//         Nair & Lauritzen JCP 229:8868 (2010)
+// ARGS  : grid    : GGrid object
+//         t       : time
+//         ptree   : main property tree
+//         ua      : return solution
+//**********************************************************************************
+void compute_icosdualgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVector<GTVector<GFTYPE>*>  &ua)
+{
+  GString          serr = "compute_icosgauss: ";
+  GBOOL            bContin;
+  GINT             nlumps=2;
+  GSIZET           nxy;
+  GFTYPE           alpha, argxp; 
+  GFTYPE           lat0, lon0;
+  GFTYPE           lat1, lon1;
+  GFTYPE           lat, lon;
+  GFTYPE           x, y, z, r;
+  GFTYPE           rad, sig0, u0;
+  GFTYPE           vtheta, vphi, Tper;
+  GFTYPE           tiny = std::numeric_limits<GFTYPE>::epsilon();
+  GTVector<GFTYPE> xx(3), si(3), sig(3), ufact(3);
+  GTPoint<GFTYPE>  rt(3);
+  GTVector<GTPoint<GFTYPE>>  r0(nlumps);
+
+  PropertyTree lumpptree = ptree.getPropertyTree("init_icosdualgauss");
+  PropertyTree icosptree = ptree.getPropertyTree("grid_icos");
+  PropertyTree advptree  = ptree.getPropertyTree("adv_equation_traits");
+  GBOOL doheat           = advptree.getValue<GBOOL>("doheat");
+  GBOOL bpureadv         = advptree.getValue<GBOOL>("bpureadv");
+
+  GTVector<GTVector<GFTYPE>> *xnodes = &grid_->xNodes();
+
+  assert(grid.gtype() == GE_2DEMBEDDED && "Invalid element types");
+
+  std::vector<GFTYPE> Omega;
+
+  nxy = (*xnodes)[0].size(); // same size for x, y, z
+  
+  rad   = icosptree.getValue<GFTYPE>("radius"); 
+  lat0  = lumpptree.getValue<GFTYPE>("latitude0", 0.0); 
+  lon0  = lumpptree.getValue<GFTYPE>("longitude0",PI/3.0); 
+  lat1  = lumpptree.getValue<GFTYPE>("latitude1", 0.0); 
+  lon1  = lumpptree.getValue<GFTYPE>("longitude1",-PI/3.0); 
+  sig0  = lumpptree.getValue<GFTYPE>("sigma", 0.15); 
+  u0    = lumpptree.getValue<GFTYPE>("u0", 1.0); 
+  Tper  = lumpptree.getValue<GFTYPE>("Tper", 1.0); 
+
+  // Convert from degrees to radians (for later):
+  lat0 *= PI/180.0;
+  lon0 *= PI/180.0;
+  lat1 *= PI/180.0;
+  lon1 *= PI/180.0;
+
+  // Compute initial position of lumps in Cart coords:
+  r0[0].x1 = rad*cos(lat0)*cos(lon0);
+  r0[0].x2 = rad*cos(lat0)*sin(lon0);
+  r0[0].x3 = rad*sin(lat0);
+
+  r0[1].x1 = rad*cos(lat1)*cos(lon1);
+  r0[1].x2 = rad*cos(lat1)*sin(lon1);
+  r0[1].x3 = rad*sin(lat1);
+
+  // Set velocity here. Is a function of time,
+  // and must be called every timestep.
+  // These point to components of state u_:
+  if ( bpureadv ) {
+    for ( k=0; k<nxy; k++ ) {
+      x   = (*xnodes)[0][k]; y = (*xnodes)[1][k]; z = (*xnodes)[2][k];
+      r   = sqrt(x*x + y*y + z*z);
+      // Colmpute lat & long:
+      lat = asin(z/r);
+      lon = atan2(y,x);
+      (*utmp_[0])[k]  = u0*    sin(2.0*lon)*cos    (lat)*cos(PI*t/Tper);
+      (*utmp_[1])[k]  = u0*pow(sin (lon),2)*sin(2.0*lat)*cos(PI*t/Tper);
+    }
+    GMTK::vsphere2cart(*grid_, utmp_, GVECTYPE_PHYS, c_);
+//  GMTK::constrain2sphere(*grid_, c_);
+  }
+
+  // Prepare for case where sig is anisotropic (for later, maybe):
+  for ( GSIZET k=0; k<3; k++ ) {
+    sig  [k] = sqrt(sig0*sig0);
+    si   [k] = 1.0/(sig[k]*sig[k]);
+    ufact[k] = u0;
+  }
+
+  *ua[0] = 0.0;
+  for ( GSIZET j=0; j<nxy; j++ ) {
+    rt.x1  = (*xnodes)[0][j];
+    rt.x2  = (*xnodes)[1][j];
+    rt.x3  = (*xnodes)[2][j];
+    for ( GSIZET k=0; k<nlumps; k++ ) {
+      argxp = 0.0;
+      for ( GSIZET i=0; i<3; i++ ) argxp += pow(rt[i] - r0[k][i],2.0);
+     (*ua[0])[j] += ufact[0]*exp(-argxp*si[0]);
+    }
+  }
+
+//GPP(comm_,serr << "ua=" << *ua[0] );
+  
+} // end, compute_icosdualgauss
+
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD: compute_icosbell
 // DESC  : Compute solution to pure advection equation with 
 //         a cosine bell, from Williamson et al., JCP 102:211 (1992)
@@ -843,7 +950,7 @@ void compute_icosbell(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVect
   GFTYPE           lat, lon;
   GFTYPE           x, y, z, r;
   GFTYPE           xt, yt, zt;
-  GFTYPE           c0, rad, sig0, u0, u;
+  GFTYPE           rad, sig0, u0, u;
   GTVector<GFTYPE> xx(3), si(3), sig(3), ufact(3);
   GTPoint<GFTYPE>  r0(3);
 
@@ -867,7 +974,6 @@ void compute_icosbell(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVect
   sig0  = lumpptree.getValue<GFTYPE>("sigma", 0.15); 
   alpha = lumpptree.getValue<GFTYPE>("alpha",0.0); 
   u0    = lumpptree.getValue<GFTYPE>("u0", 1.0); 
-  c0    = lumpptree.getValue<GFTYPE>("c0", 1.0); 
 
   sig0  = 0.0;
 
