@@ -755,8 +755,10 @@ void compute_icosgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVec
   alpha = lumpptree.getValue<GFTYPE>("alpha",0.0); 
   nlumps= lumpptree.getValue<GINT>("nlumps",1); 
 
-  // Convert from degrees to radians (for later),
-  // & compute initial position of lumps in Cart coords:
+  alpha *= PI/180.0;
+
+  // Convert initial locations from degrees to radians,
+  // & compute initial positions of lumps in Cart coords:
   for ( GSIZET k=0; k<nlumps; k++ ) {
     lat0[k] *= PI/180.0;
     lon0[k] *= PI/180.0;

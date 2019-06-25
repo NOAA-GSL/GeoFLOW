@@ -1,7 +1,7 @@
 { 
-  "exp_order"      : [8, 8, 4],
+  "exp_order"      : [3, 3, 3],
   "exp_order_type" : "constant",
-  "grid_type"      : "grid_icos",
+  "grid_type"      : "grid_box",
   "init_block"     : "init_icosgauss",
   "bdy_conditions" : "DIRICHLET",
   "restart_index"  : 0,
@@ -26,24 +26,26 @@
     "latitude0"  : 0.0,
     "longitude0" :-30.0,
     "sigma"      : 0.15,
-    "alpha"      : 0.0,
+    "alpha"      : 20.0,
     "u0"         : 1.0
   },
   "init_icosgauss": {
-    "latitude0"  : 0.0,
-    "longitude0" :-90.0,
-    "sigma"      : 0.15,
-    "alpha"      : 0.0,
-    "u0"         : 1.0
+    "latitude0"  : [30.0, -30.0], 
+    "longitude0" : [-90.0,-90.0],
+    "sigma"      : [0.15, 0.15],
+    "c0"         : [1.0,1.0],
+    "alpha"      : 20.0,
+    "u0"         : 1.0,
+    "nlumps"     : 2
   },
-  "init_icosdualgauss": {
-    "latitude0"  : 30.0,
+  "init_icosdefgauss": {
+    "latitude0"  : 60.0,
     "longitude0" :180.0,
-    "latitude1"  :-30.0,
+    "latitude1"  :-60.0,
     "longitude1" :180.0,
-    "sigma"      : 0.15,
-    "u0"         : 2.4
-    "Tper"       : 0.5
+    "sigma"      : 0.4472,
+    "u0"         : 2.4,
+    "Tper"       : 5.0
   },
   "init_nwave": {
     "x0"    : 0.5,
@@ -65,7 +67,7 @@
   },
   "grid_icos": {
     "grid_name" : "grid_icos",
-    "ilevel"    : 1,
+    "ilevel"    : 2,
     "radius"    : 1.0,
     "num_elems" : [10, 10, 10]
   },
@@ -95,7 +97,7 @@
     "extrap_order"     : 2
   },
   "dissipation_traits": {
-    "nu"      : 0.03,
+    "nu"      : 5.0e-3,
     "nu_type" : "constant"
   },
   "posixio_observer": {
@@ -120,7 +122,7 @@
   },
   "time_integration": {
     "integ_type" : "time",
-    "time_end"   : 0.5,
+    "time_end"   : 1.001,
     "cycle_end"  : 10,
     "dt"         : 1.0e-4
   }
