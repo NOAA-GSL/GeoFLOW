@@ -87,6 +87,7 @@ using ObsBase = ObserverBase<EqnBase>; // Observer Base Type
 
 void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVector<GTVector<GFTYPE>*> &u);
 void update_dirichlet(const GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u, GTVector<GTVector<GFTYPE>*> &ub);
+void steptop_callback(const GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u, const GFTYPE &dt);
 void create_observers(PropertyTree &ptree, GSIZET icycle, GFTYPE time, 
 std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers);
 void create_stirrer(PropertyTree &ptree, StirBasePtr &pStirrer);
@@ -300,7 +301,10 @@ int main(int argc, char **argv)
     std::function<void(const GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u, 
                                         GTVector<GTVector<GFTYPE>*> &ub)>  
         fcallback = update_dirichlet; // set tmp function with proper signature for...
+    std::function<void(const GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u, const GFTYPE &dt)> 
+        stcallback = steptop_callback; // set tmp function with proper signature for...
     eqn_impl->set_bdy_update_callback(fcallback);
+    eqn_impl->set_steptop_callback(stcallback);
     eqn_impl->set_nu(nu_);
 
     // Create the stirrer (to update forcing)
@@ -892,7 +896,7 @@ void compute_icosdualgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
   // and must be called every timestep.
   // These point to components of state u_:
   if ( bpureadv ) {
-    for ( k=0; k<nxy; k++ ) {
+    for ( GSIZET k=0; k<nxy; k++ ) {
       x   = (*xnodes)[0][k]; y = (*xnodes)[1][k]; z = (*xnodes)[2][k];
       r   = sqrt(x*x + y*y + z*z);
       // Colmpute lat & long:
@@ -1145,6 +1149,27 @@ void compute_pergauss_lump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD: steptop_callback
+// DESC  : Top-of-time-step callback ('backdoor') function. 
+//         This function might, e.g. update the linear advection 
+//         vel. components as a function of time, since they
+//         are not solved for in a PDE, but are, rather, prescribed.
+// ARGS  : 
+//         t  : time
+//         u  : current state
+//         dt : time step
+//**********************************************************************************
+void steptop_callback(const GFTYPE &t, GTVector<GTVector<GFTYPE>*>  &u, const GFTYPE &dt)
+{
+  
+  GFTYPE tt = t;
+  compute_analytic(*grid_, tt, ptree, ua_);
+
+} // end, method steptop_callback
+
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD: compute_analytic
 // DESC  : Compute analytic solutions based on property tree
 // ARGS  : grid    : GGrid object
@@ -1177,6 +1202,9 @@ void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVecto
     else if ( sblock == "init_icosgauss" ) {
       compute_icosgauss(grid, t, ptree, ua);
     }
+    else if ( sblock == "init_icosdualgauss" ) {
+      compute_icosdualgauss(grid, t, ptree, ua);
+    }
     else {
       assert(FALSE && "Invalid heat equation initialization specified");
     }
@@ -1196,6 +1224,9 @@ void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVecto
     }
     else if ( sblock == "init_icosgauss" ) {
       compute_icosgauss(grid, t, ptree, ua);
+    }
+    else if ( sblock == "init_icosdualgauss" ) {
+      compute_icosdualgauss(grid, t, ptree, ua);
     }
     else if ( sblock == "init_icosbell" ) {
       compute_icosbell(grid, t, ptree, ua);
