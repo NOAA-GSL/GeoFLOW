@@ -100,7 +100,7 @@ for itask = 0:ntasks-1
 
     % Find indices defining quads between
     % node points:
-    imat = zeros(prod(pdorder)/nverts, nverts);
+    imat = zeros(int64(prod(pdorder)/nverts), nverts);
     n = 1;
     for k = 1:pdorder(2) % cycle over each quad
       for j = 1:pdorder(1)
