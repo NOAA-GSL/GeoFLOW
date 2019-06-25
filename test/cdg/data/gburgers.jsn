@@ -1,8 +1,8 @@
 { 
-  "exp_order"      : [4, 4, 2],
+  "exp_order"      : [8, 8, 4],
   "exp_order_type" : "constant",
   "grid_type"      : "grid_icos",
-  "init_block"     : "init_icosbell",
+  "init_block"     : "init_icosgauss",
   "bdy_conditions" : "DIRICHLET",
   "restart_index"  : 0,
   "benchmark"      : false,
@@ -24,10 +24,26 @@
   },
   "init_icosbell": {
     "latitude0"  : 0.0,
-    "longitude0" : 0.0,
+    "longitude0" :-30.0,
     "sigma"      : 0.15,
     "alpha"      : 0.0,
     "u0"         : 1.0
+  },
+  "init_icosgauss": {
+    "latitude0"  : 0.0,
+    "longitude0" :-90.0,
+    "sigma"      : 0.15,
+    "alpha"      : 0.0,
+    "u0"         : 1.0
+  },
+  "init_icosdualgauss": {
+    "latitude0"  : 30.0,
+    "longitude0" :180.0,
+    "latitude1"  :-30.0,
+    "longitude1" :180.0,
+    "sigma"      : 0.15,
+    "u0"         : 2.4
+    "Tper"       : 0.5
   },
   "init_nwave": {
     "x0"    : 0.5,
@@ -79,7 +95,7 @@
     "extrap_order"     : 2
   },
   "dissipation_traits": {
-    "nu"      : 1.0e-8,
+    "nu"      : 0.03,
     "nu_type" : "constant"
   },
   "posixio_observer": {
@@ -105,7 +121,7 @@
   "time_integration": {
     "integ_type" : "time",
     "time_end"   : 0.5,
-    "cycle_end"  : 100000,
+    "cycle_end"  : 10,
     "dt"         : 1.0e-4
   }
 
