@@ -63,6 +63,7 @@ bpureadv_      (traits.bpureadv),
 bconserved_  (traits.bconserved),
 bforced_        (traits.bforced),
 bupdatebc_               (FALSE),
+bsteptop_                (FALSE),
 bvariabledt_ (traits.variabledt),
 isteptype_     (traits.steptype),
 nsteps_                      (0),
@@ -77,7 +78,8 @@ gpdv_                  (NULLPTR),
 gbc_                   (NULLPTR),
 grid_                    (&grid),
 ggfx_                    (&ggfx),
-update_bdy_callback_   (NULLPTR)
+update_bdy_callback_   (NULLPTR),
+steptop_callback_      (NULLPTR)
 {
   static_assert(std::is_same<State,GTVector<GTVector<GFTYPE>*>>::value,
                 "State is of incorrect type"); 
@@ -264,6 +266,12 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const State &u
 template<typename TypePack>
 void GBurgers<TypePack>::step_impl(const Time &t, State &uin, State &uf, State &ub, const Time &dt)
 {
+
+  // If there's a top-of-the-timestep callback, 
+  // call it here:
+  if ( bsteptop_ ) {
+    steptop_callback_(t, uin, dt);
+  }
 
   // Set evolved state vars from input state:
   if ( bpureadv_ || doheat_ ) {

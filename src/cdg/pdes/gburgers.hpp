@@ -101,6 +101,11 @@ public:
                                if ( gexrk_ != NULLPTR ) 
                                  gexrk_->set_update_bdy_callback(callback);} // set bdy-update callback
 
+        void                set_steptop_callback(
+                            std::function<void(const Time &t, State &u, 
+                                               const Time &dt)> callback) 
+                             { steptop_callback_ = callback; bsteptop_ = TRUE;}
+                                            
 
 protected:
         void                step_impl(const Time &t, State &uin, State &uf, State &ub, 
@@ -129,6 +134,7 @@ private:
         GBOOL               bconserved_;    // use conservation form?
         GBOOL               bforced_;       // use forcing vectors
         GBOOL               bupdatebc_;     // bdy update callback set?
+        GBOOL               bsteptop_;      // is there a top-of-step callback?
         GBOOL               bvariabledt_;   // is dt allowed to vary?
         GStepperType        isteptype_;     // stepper type
         GINT                nsteps_ ;       // num steps taken
@@ -170,6 +176,8 @@ private:
         GGFX<GFTYPE>       *ggfx_;          // gather-scatter operator
         std::function<void(const Time &t, State &u,
                            State &ub)> update_bdy_callback_;
+        std::function<void(const Time &t, State &u, const Time &dt)>
+                           steptop_callback_;
 
 
 };
