@@ -828,9 +828,10 @@ void compute_icosgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVec
       lon = atan2(y,x);
       // Compute arclength from point to where center _should_ be:
       s     = r*acos( sin(latp[k])*sin(lat) + cos(latp[k])*cos(lat)*cos(lon-lonp[k]) );
-     (*ua[0])[j] = ufact[k]*exp(-s*s*si[k]);
-    }
-  }
+     (*ua[0])[j] += ufact[k]*exp(-s*s*si[k]);
+    } // end, grid-point loop
+
+  } // end, lump loop
 
 //GPP(comm_,serr << "ua=" << *ua[0] );
   

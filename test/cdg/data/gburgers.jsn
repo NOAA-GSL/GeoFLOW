@@ -1,7 +1,7 @@
 { 
   "exp_order"      : [3, 3, 3],
   "exp_order_type" : "constant",
-  "grid_type"      : "grid_box",
+  "grid_type"      : "grid_icos",
   "init_block"     : "init_icosgauss",
   "bdy_conditions" : "DIRICHLET",
   "restart_index"  : 0,
@@ -30,9 +30,9 @@
     "u0"         : 1.0
   },
   "init_icosgauss": {
-    "latitude0"  : [30.0, -30.0], 
+    "latitude0"  : [40.0, -40.0], 
     "longitude0" : [-90.0,-90.0],
-    "sigma"      : [0.15, 0.15],
+    "sigma"      : [0.25, 0.25],
     "c0"         : [1.0,1.0],
     "alpha"      : 20.0,
     "u0"         : 1.0,
