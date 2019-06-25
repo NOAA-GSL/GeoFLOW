@@ -705,8 +705,9 @@ void compute_dirgauss_lump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
 //**********************************************************************************
 // METHOD: compute_icosgauss
 // DESC  : Compute solution to pure advection equation with 
-//         a Gaussian, but using, from Williamson et al., 
-//         JCP 102:211 (1992) advection velocity
+//         a Gaussian, but using, advection vel. from Williamson et al., 
+//         JCP 102:211 (1992). May include multiple identical Gaussian
+//         'hills'
 // ARGS  : grid    : GGrid object
 //         t       : time
 //         ptree   : main property tree
@@ -716,18 +717,20 @@ void compute_icosgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVec
 {
   GString          serr = "compute_icosgauss: ";
   GBOOL            bContin;
-  GINT             j, k, n;
+  GINT             j, k, n, nlumps;
   GSIZET           nxy;
   GFTYPE           alpha, argxp; 
-  GFTYPE           lat0, lon0, s, sdot;
-  GFTYPE           lat1, lon1;
   GFTYPE           lat, lon;
-  GFTYPE           x, y, z, r;
-  GFTYPE           rad, sig0, u0, u;
+  GFTYPE           x, y, z, r, s;
+  GFTYPE           rad, u0 ;
   GFTYPE           vtheta, vphi;
   GFTYPE           tiny = std::numeric_limits<GFTYPE>::epsilon();
-  GTVector<GFTYPE> xx(3), si(3), sig(3), ufact(3);
-  GTPoint<GFTYPE>  r0(3), rt(3);
+  GTPoint<GFTYPE>           rt(3);
+  GTVector<GFTYPE>          xx(3);
+  GTVector<GFTYPE>          si(4), sig(4), ufact(4);
+  GTVector<GFTYPE>          latp(4), lonp(4);
+  std::vector<GFTYPE>       c0(4), r0(4), sig0(4);
+  std::vector<GFTYPE>       lat0(4), lon0(4); // up to 4 lumps
 
   PropertyTree lumpptree = ptree.getPropertyTree("init_icosgauss");
   PropertyTree icosptree = ptree.getPropertyTree("grid_icos");
@@ -743,31 +746,37 @@ void compute_icosgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVec
 
   nxy = (*xnodes)[0].size(); // same size for x, y, z
   
+  lat0  = lumpptree.getArray<GFTYPE>("latitude0"); // lat for each lump
+  lon0  = lumpptree.getArray<GFTYPE>("longitude0"); // lon for each lump
+  sig0  = lumpptree.getArray<GFTYPE>("sigma"); // sig for each lump
+  c0    = lumpptree.getArray<GFTYPE>("c0");  // initial concentrations for each lump
   rad   = icosptree.getValue<GFTYPE>("radius"); 
-  lat0  = lumpptree.getValue<GFTYPE>("latitude0", 0.0); 
-  lon0  = lumpptree.getValue<GFTYPE>("longitude0",3.0*PI/2.0); 
-  sig0  = lumpptree.getValue<GFTYPE>("sigma", 0.15); 
+  u0    = lumpptree.getValue<GFTYPE>("u0"); 
   alpha = lumpptree.getValue<GFTYPE>("alpha",0.0); 
-  u0    = lumpptree.getValue<GFTYPE>("u0", 1.0); 
+  nlumps= lumpptree.getValue<GINT>("nlumps",1); 
 
-  // Convert from degrees to radians (for later):
-  lat0 *= PI/180.0;
-  lon0 *= PI/180.0;
+  // Convert from degrees to radians (for later),
+  // & compute initial position of lumps in Cart coords:
+  for ( GSIZET k=0; k<nlumps; k++ ) {
+    lat0[k] *= PI/180.0;
+    lon0[k] *= PI/180.0;
+#if 0
+    r0[k].x1 = rad*cos(lat0[k])*cos(lon0[k]);
+    r0[k].x2 = rad*cos(lat0[k])*sin(lon0[k]);
+    r0[k].x3 = rad*sin(lat0[k]);
+#endif
+  }
 
-  // Compute initial position of lump in Cart coords:
-  r0.x1 = rad*cos(lat0)*cos(lon0);
-  r0.x2 = rad*cos(lat0)*sin(lon0);
-  r0.x3 = rad*sin(lat0);
 
-  // Set velocity here. May be a function of time,
-  // but, if so, analytic solution may have to
-  // change (see below).
-  // These point to components of state u_:
+  // Set velocity here. Taken to be solid body rotation,
+  // u = Omega X r, where rotation rate vector, Omega
+  // is computed by rotating u0 x (0, 0, 1) about x axis by
+  // an amount alpha. These point to components of state u_:
   if ( bpureadv ) {
     for ( k=0; k<nxy; k++ ) {
       x   = (*xnodes)[0][k]; y = (*xnodes)[1][k]; z = (*xnodes)[2][k];
       r   = sqrt(x*x + y*y + z*z);
-      // Colmpute lat & long:
+      // Compute lat & long:
       lat = asin(z/r);
       lon = atan2(y,x);
       // u_lat = u_theta = -u0 sin(lon) sin(alpha)
@@ -779,45 +788,46 @@ void compute_icosgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVec
 //  GMTK::constrain2sphere(*grid_, c_);
   }
 
+  
+  *ua[0] = 0.0;
+  for ( GSIZET k=0; k<nlumps; k++ ) {
 
-  // Prepare for case where sig is anisotropic (for later, maybe):
-  for ( GSIZET k=0; k<3; k++ ) {
-    sig  [k] = sqrt(sig0*sig0 + 4.0*t*nu_[0]); // constant viscosity only
+    // Allow different sigma/concentration for each lump:
+    sig  [k] = sqrt(sig0[k]*sig0[k] + 4.0*t*nu_[0]); // constant viscosity only
     si   [k] = 1.0/(sig[k]*sig[k]);
-    ufact[k] = u0*pow(sig0/sig[k],GDIM);
-  }
+    ufact[k] = c0[k]*pow(sig0[k]/sig[k],GDIM);
 
-  // Find where lat/lon endpoint would be at t, if alpha=0:
-  lat1  = lat0;
-  lon1  = lon0 + (u0/rad) * t;
+    // Find where lat/lon endpoint would be at t, if alpha=0:
+    latp[k]  = lat0[k];
+    lonp[k]  = lon0[k] + (u0/rad) * t;
 
-  // Find where Cart endpoint would be at t, if alpha=0:
-  rt[0] = rad*cos(lat1)*cos(lon1); 
-  rt[1] = rad*cos(lat1)*sin(lon1); 
-  rt[2] = rad*sin(lat1);
-
-  // Now, rotate rt about x-axis by alpha to
-  // find lat/lon of final position of lump:
-  xx[0] =  rt[0];
-  xx[1] =  cos(alpha)*rt[1] + sin(alpha)*rt[2];
-  xx[2] = -sin(alpha)*rt[1] + cos(alpha)*rt[2];
-  lat1  = asin(xx[2]/rad);
-  lon1  = atan2(xx[1],xx[0]);
-
-  for ( GSIZET j=0; j<nxy; j++ ) {
-    // Note: following c t is actually Integral_0^t c(t') dt', 
-    //       so if c becomes a function of t, this muct change:
-
-    x   = (*xnodes)[0][j];
-    y   = (*xnodes)[1][j];
-    z   = (*xnodes)[2][j];
-    r   = sqrt(x*x + y*y + z*z);
-    lat = asin(z/r);
-    lon = atan2(y,x);
-    // move origin:
-//  for ( GSIZET i=0; i<3; i++ ) rt[i] = r0[i] + (*c_[i])[j]*t;
-    s     = r*acos( sin(lat1)*sin(lat) + cos(lat1)*cos(lat)*cos(lon-lon1) );
-   (*ua[0])[j] = ufact[0]*exp(-s*s*si[0]);
+    // Find where Cart endpoint would be at t, if alpha=0:
+    rt[0] = rad*cos(latp[k])*cos(lonp[k]); 
+    rt[1] = rad*cos(latp[k])*sin(lonp[k]); 
+    rt[2] = rad*sin(latp[k]);
+  
+    // Now, rotate rt about x-axis by alpha to
+    // find lat/lon of final position of lump:
+    xx[0] =  rt[0];
+    xx[1] =  cos(alpha)*rt[1] + sin(alpha)*rt[2];
+    xx[2] = -sin(alpha)*rt[1] + cos(alpha)*rt[2];
+    latp[k]  = asin(xx[2]/rad);
+    lonp[k]  = atan2(xx[1],xx[0]);
+  
+    for ( GSIZET j=0; j<nxy; j++ ) {
+      // Note: following c t is actually Integral_0^t c(t') dt', 
+      //       so if c becomes a function of t, this muct change:
+  
+      x   = (*xnodes)[0][j];
+      y   = (*xnodes)[1][j];
+      z   = (*xnodes)[2][j];
+      r   = sqrt(x*x + y*y + z*z);
+      lat = asin(z/r);
+      lon = atan2(y,x);
+      // Compute arclength from point to where center _should_ be:
+      s     = r*acos( sin(latp[k])*sin(lat) + cos(latp[k])*cos(lat)*cos(lon-lonp[k]) );
+     (*ua[0])[j] = ufact[k]*exp(-s*s*si[k]);
+    }
   }
 
 //GPP(comm_,serr << "ua=" << *ua[0] );
@@ -827,16 +837,19 @@ void compute_icosgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVec
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD: compute_icosdualgauss
+// METHOD: compute_icosdefgauss
 // DESC  : Compute solution to pure advection equation with 
 //         dual Gaussian lumps, but using adv. field from
-//         Nair & Lauritzen JCP 229:8868 (2010)
+//         Nair & Lauritzen JCP 229:8868 (2010). NOTE:
+//         'Analytic' solution to this problem is not available;
+//         must integrate long enough for lumps to end up back
+//         where they started, then compate with the t=0 solution.
 // ARGS  : grid    : GGrid object
 //         t       : time
 //         ptree   : main property tree
 //         ua      : return solution
 //**********************************************************************************
-void compute_icosdualgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVector<GTVector<GFTYPE>*>  &ua)
+void compute_icosdefgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVector<GTVector<GFTYPE>*>  &ua)
 {
   GString          serr = "compute_icosgauss: ";
   GBOOL            bContin;
@@ -854,7 +867,7 @@ void compute_icosdualgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
   GTPoint<GFTYPE>  rt(3);
   GTVector<GTPoint<GFTYPE>>  r0(nlumps);
 
-  PropertyTree lumpptree = ptree.getPropertyTree("init_icosdualgauss");
+  PropertyTree lumpptree = ptree.getPropertyTree("init_icosdefgauss");
   PropertyTree icosptree = ptree.getPropertyTree("grid_icos");
   PropertyTree advptree  = ptree.getPropertyTree("adv_equation_traits");
   GBOOL doheat           = advptree.getValue<GBOOL>("doheat");
@@ -902,8 +915,8 @@ void compute_icosdualgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
       // Colmpute lat & long:
       lat = asin(z/r);
       lon = atan2(y,x);
-      (*utmp_[0])[k]  = u0*    sin(2.0*lon)*cos    (lat)*cos(PI*t/Tper);
-      (*utmp_[1])[k]  = u0*pow(sin (lon),2)*sin(2.0*lat)*cos(PI*t/Tper);
+      (*utmp_[0])[k]  = 0.5*u0*    sin(    lon)   *cos    (lat)*cos(PI*t/Tper);
+      (*utmp_[1])[k]  =     u0*pow(sin(0.5*lon),2)*sin(2.0*lat)*cos(PI*t/Tper);
     }
     GMTK::vsphere2cart(*grid_, utmp_, GVECTYPE_PHYS, c_);
 //  GMTK::constrain2sphere(*grid_, c_);
@@ -911,18 +924,18 @@ void compute_icosdualgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
 
   // Prepare for case where sig is anisotropic (for later, maybe):
   for ( GSIZET k=0; k<3; k++ ) {
-    sig  [k] = sqrt(sig0*sig0);
+    sig  [k] = sqrt(sig0*sig0 + 4.0*t*nu_[0]); // constant viscosity only
     si   [k] = 1.0/(sig[k]*sig[k]);
-    ufact[k] = u0;
+    ufact[k] = pow(sig0/sig[k],GDIM);
   }
 
   *ua[0] = 0.0;
-  for ( GSIZET j=0; j<nxy; j++ ) {
-    rt.x1  = (*xnodes)[0][j];
-    rt.x2  = (*xnodes)[1][j];
-    rt.x3  = (*xnodes)[2][j];
-    for ( GSIZET k=0; k<nlumps; k++ ) {
-      argxp = 0.0;
+  for ( GSIZET k=0; k<nlumps; k++ ) { // add each lump to solution
+    for ( GSIZET j=0; j<nxy; j++ ) {
+      rt.x1  = (*xnodes)[0][j];
+      rt.x2  = (*xnodes)[1][j];
+      rt.x3  = (*xnodes)[2][j];
+      argxp  = 0.0;
       for ( GSIZET i=0; i<3; i++ ) argxp += pow(rt[i] - r0[k][i],2.0);
      (*ua[0])[j] += ufact[0]*exp(-argxp*si[0]);
     }
@@ -930,7 +943,7 @@ void compute_icosdualgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
 
 //GPP(comm_,serr << "ua=" << *ua[0] );
   
-} // end, compute_icosdualgauss
+} // end, compute_icosdefgauss
 
 
 //**********************************************************************************
@@ -1202,8 +1215,8 @@ void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVecto
     else if ( sblock == "init_icosgauss" ) {
       compute_icosgauss(grid, t, ptree, ua);
     }
-    else if ( sblock == "init_icosdualgauss" ) {
-      compute_icosdualgauss(grid, t, ptree, ua);
+    else if ( sblock == "init_icosdefgauss" ) {
+      compute_icosdefgauss(grid, t, ptree, ua);
     }
     else {
       assert(FALSE && "Invalid heat equation initialization specified");
@@ -1225,8 +1238,8 @@ void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVecto
     else if ( sblock == "init_icosgauss" ) {
       compute_icosgauss(grid, t, ptree, ua);
     }
-    else if ( sblock == "init_icosdualgauss" ) {
-      compute_icosdualgauss(grid, t, ptree, ua);
+    else if ( sblock == "init_icosdefgauss" ) {
+      compute_icosdefgauss(grid, t, ptree, ua);
     }
     else if ( sblock == "init_icosbell" ) {
       compute_icosbell(grid, t, ptree, ua);
