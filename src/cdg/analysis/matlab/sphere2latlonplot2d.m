@@ -131,6 +131,7 @@ for itask = 0:ntasks-1
     cv = (uu - umin) / (umax - umin + eps);
     if bwire == 0 
       h = quadmesh(imat,xxx,yyy,uu,'FaceColor','interp');
+      colorbar('horizontal');
     else
       h = quadmesh(imat,xxx,yyy,varargin{:});
     end
@@ -147,7 +148,6 @@ for itask = 0:ntasks-1
 end % end, task loop
 %close(hwait);
 
-colorbar('horizontal');
 
 if bcolorbarlims > 0 
   caxis(colorbarlims);
