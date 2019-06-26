@@ -3,7 +3,7 @@ function [data dim nelems porder gtype icycle time ivers] = rgeoflow(filein, isz
 % Reads binary GeoFLOW data, and stores in local variable data.
 %
 %  Usage:
-%    data = rgeoflow(filename, 0, 8, 'ieee-be');
+%    data = rgeoflow(filename, 8, 'ieee-be');
 %
 %  Input:
 %    filein  : input file to read. Required.
