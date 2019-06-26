@@ -11,9 +11,7 @@ function h = mplot_geoglow2d(svar, tindex)
 %
 %  Output:
 %    h       : plot handle
-
 %
-
 if nargin < 2
   error('must specify svar and tindex');
 end 
