@@ -1,23 +1,26 @@
-function h = sphereplot2d(svar, tindex, bwire, varargin)
+function h = sphere2mercplot2d(svar, tindex, lon0, bwire, varargin)
 %
-% Plots 2d GeoFLOW data onto the sureface of a sphere. 
+% Plots 2d GeoFLOW spherical surface data to a plane via
+% a Mercator projection.o
+%
 % Grid type must be GE_2DEMBEDDED.
 %
 %  Usage:
-%    h  = sphereplot2d('u1',10)
+%    h  = sphere2mercplot2d('u1',10)
 %
 %  Input:
 %    svar    : prefix for field file. Required
 %    tindex  : time index for output. Required
+%    lon0    : reference longitude in degrees. Default is 0 degrees.
 %    bwire   : if > 0, print wire frame only; if 0 
 %              print color patches. Default is 0
 %    varargin: to pass to quadmesh: e.g. to plot
 %              wire mesh only and set to single color, 
 %              set bwire=1, and call:
 %
-%              sphereplot2d('u1', 1, 1, 'edgecolor','b')
+%              sphere2mercplot2d('u1', 1, 90, 1, 'edgecolor','b')
 %                 or
-%              sphereplot2d('u1',1,0,'colorbarlims',[-2 2])
+%              sphere2mercplot2d('u1',1, 90, 0,'colorbarlims',[-2 2])
 %
 %  Output:
 %    h       : plot handle
@@ -28,8 +31,14 @@ if nargin < 2
   error('must specify svar, tindex');
 end 
 if nargin < 3
+  lon0  = 0;
   bwire = 0;
 end 
+if nargin < 4
+  bwire = 0;
+end 
+
+lon0 = lon0 * pi/180.0;
 
 vartmp = varargin;
 vartmp
@@ -91,12 +100,20 @@ for itask = 0:ntasks-1
   % Cycle over elems, and plot 'patches':
   icurr = 1;
   for n = 1:nelems
-    xx = x{1}(icurr:icurr+lelem-1);
-    yy = x{2}(icurr:icurr+lelem-1);
-    zz = x{3}(icurr:icurr+lelem-1);
-    uu = u   (icurr:icurr+lelem-1);
+    xx  = x{1}(icurr:icurr+lelem-1);
+    yy  = x{2}(icurr:icurr+lelem-1);
+    zz  = x{3}(icurr:icurr+lelem-1);
+    uu  = u   (icurr:icurr+lelem-1);
+    r   = sqrt(xx.^2 + yy.^2 + zz.^2);
+    lat = asin(zz./r);
+    lon = atan2(yy, xx));
 
     pdorder = double(porder);
+
+    % Do mercator projection here:
+    xxx = lon - lon0; 
+    yyy = log2( tan(lat) + sec(lat) );
+
 
     % Find indices defining quads between
     % node points:
@@ -114,10 +131,10 @@ for itask = 0:ntasks-1
     cf = (cm - umin) / (umax - umin + eps);
     cv = (uu - umin) / (umax - umin + eps);
     if bwire == 0 
-      h = quadmesh(imat,xx,yy,zz,uu,'FaceColor','interp');
+      h = quadmesh(imat,xxx,yyy,uu,'FaceColor','interp');
       colorbar('vertical');
     else
-      h = quadmesh(imat,xx,yy,zz,varargin{:});
+      h = quadmesh(imat,xxx,yyy,varargin{:});
     end
     hold on;
 
