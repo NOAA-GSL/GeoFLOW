@@ -296,6 +296,7 @@ int main(int argc, char **argv)
     GSIZET lnelems=grid_->nelems();
     GSIZET gnelems;
     GFTYPE ftmp, nnorm;
+    GFTYPE dxmin, lmin;
     GFTYPE x0, x1, y0, y1, z0, z1;
     std::ifstream itst;
     std::ofstream ios;
@@ -314,6 +315,8 @@ int main(int argc, char **argv)
     }
 
     maxerror = 0.0;
+    dxmin = grid_->minnodedist();
+    lmin  = grid_->minlength();
 
 #if defined(_DO_REFDERIVW)
     assert(grid_->gtype()!=GE_2DEMBEDDED && "Do not set _DO_REFDERIVW with ICOS grid");
@@ -345,11 +348,11 @@ int main(int argc, char **argv)
 
     // Write header, if required:
     if ( itst.peek() == std::ofstream::traits_type::eof() ) {
-    ios << "# p  num_elems   rel_err_x   rel_err_y  rel_err_z " << std::endl;
+    ios << "# p  num_elems  dx_min  lmin   rel_err_x   rel_err_y  rel_err_z " << std::endl;
     }
     itst.close();
 
-    ios << np  << "  "  << "  " << gnelems << "  "
+    ios << np  << "  "  << "  " << gnelems << "  " << dxmin << "  " << lmin
         << "  " << maxerror[0] << "  " << maxerror[1] << "  " << maxerror[2]
         << std::endl;
     ios.close();
@@ -415,11 +418,11 @@ cout << "main: gnorm[" << j << "]=" << gnorm << endl;
 
     // Write header, if required:
     if ( itst.peek() == std::ofstream::traits_type::eof() ) {
-    ios << "# p  num_elems   inf_err   L1_err   L2_err" << std::endl;
+    ios << "# p  num_elems   dx_min   lmin  inf_err   L1_err   L2_err" << std::endl;
     }
     itst.close();
 
-    ios << np  << "  "  << "  " << gnelems << "  "
+    ios << np  << "  "  << "  " << gnelems << "  " << dxmin << "  " << lmin
         << "  " << maxerror[0] << "  " << maxerror[1] << "  " << maxerror[2]
         << std::endl;
     ios.close();
