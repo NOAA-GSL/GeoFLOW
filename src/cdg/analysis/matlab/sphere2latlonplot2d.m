@@ -71,8 +71,6 @@ end
 
 nverts = 4;
 
-%hwait = waitbar(0, 'Please wait...');
-
 for itask = 0:ntasks-1
 
   % Read node coords:
@@ -104,22 +102,23 @@ for itask = 0:ntasks-1
     yy  = x{2}(icurr:icurr+lelem-1);
     zz  = x{3}(icurr:icurr+lelem-1);
     uu  = u   (icurr:icurr+lelem-1);
-    r   = sqrt(xx.^2 + yy.^2 + zz.^2);
-    lat = asin(zz./r);
-    lon = atan2(yy, xx));
+    rr  = sqrt(xx.^2 + yy.^2 + zz.^2);
+    lat = asin(zz ./ rr);
+    lon = atan2(yy, xx);
 
     pdorder = double(porder);
 
     % Do mercator projection here:
-    xxx = lon - lon0; 
-    yyy = log2( tan(lat) + sec(lat) );
+    xxx = (lon - lon0)*180/pi; 
+%   yyy = log2( tan(lat) + sec(lat) ) 
+    yyy = lat*180/pi;
 
 
     % Find indices defining quads between
     % node points:
     imat = zeros(int64(prod(pdorder)/nverts), nverts);
     n = 1;
-    for k = 1:pdorder(2) % cycle over each quad
+    for k = 1:pdorder(2) % cycle over each 'sub-quad'
       for j = 1:pdorder(1)
         bb = [ j+(k-1)*NN(1) j+1+(k-1)*NN(1) j+1+k*NN(1) j+k*NN(1) ];   
         imat(n,:) = bb;
@@ -132,7 +131,6 @@ for itask = 0:ntasks-1
     cv = (uu - umin) / (umax - umin + eps);
     if bwire == 0 
       h = quadmesh(imat,xxx,yyy,uu,'FaceColor','interp');
-      colorbar('vertical');
     else
       h = quadmesh(imat,xxx,yyy,varargin{:});
     end
@@ -146,20 +144,18 @@ for itask = 0:ntasks-1
 
   end % end, elem loop
   
-% waitbar(itask/ntasks,hwait);
-
 end % end, task loop
 %close(hwait);
+
+colorbar('horizontal');
 
 if bcolorbarlims > 0 
   caxis(colorbarlims);
 end
-
+xlabel('Longtitude (degrees)');
+ylabel('Latitude (degrees)');
 umin
 umax
-view(30,30)
-axis equal
+view([0, 90 ]);
+%axis equal
 axis tight
-%camlight
-%lighting phong
-%lighting gouraud
