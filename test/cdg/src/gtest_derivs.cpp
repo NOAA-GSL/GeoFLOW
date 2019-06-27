@@ -205,7 +205,7 @@ int main(int argc, char **argv)
     GFTYPE q = polyptree.getValue<GFTYPE>("ypoly",1);
     GFTYPE r = polyptree.getValue<GFTYPE>("zpoly",1);
     GFTYPE sig=polyptree.getValue<GFTYPE>("sigma",0.05);
-    GFTYPE dthetaex=polyptree.getValue<GFTYPE>("excise_angle",0.01); // excise delta-theta
+    GFTYPE dthetaex=polyptree.getValue<GFTYPE>("excise_angle",5.0); // excise angle (deg)
     GFTYPE x, y, z=1.0;
     GTVector<GFTYPE> etmp1, mask;
     GTVector<GTVector<GFTYPE>> *xnodes = &grid_->xNodes();   
@@ -239,7 +239,6 @@ int main(int argc, char **argv)
         phi         = atan2(y,x);
         (*u [0])[j] = pow(cos(theta),p)*cos(q*phi);
         mask[j]     = 0.5*PI - abs(theta) < dthetaex ? 0 : 1;
-        if ( mask[j] == 0.0 ) continue;
         dthdx       =-sin(theta)*cos(phi)/rad;
         dthdy       =-sin(theta)*sin(phi)/rad;
         dthdz       = cos(theta)/rad;
@@ -366,8 +365,14 @@ cout << "main: u=" << *u[0] << endl;
     for ( GSIZET j=0; j<du.size(); j++ ) { //local errors
      *diff[j]  = (*da[j]) - (*du[j]);
      *utmp[0]  = *da[j]; utmp[0]->pow(2);
+#if 0
       nnorm    = grid_->integrate(*utmp[0], *utmp[1]);
       nnorm    = nnorm > std::numeric_limits<GFTYPE>::epsilon() ? nnorm : 1.0;
+#else
+      nnorm    = 1.0;
+#endif
+
+cout << "main: nnorm=" << nnorm << endl;
      *utmp[0]  = *diff[j];
      *utmp[1]  = *diff[j]; utmp[1]->abs();
      *utmp[2]  = *diff[j]; utmp[2]->pow(2);
@@ -376,16 +381,6 @@ cout << "main: u=" << *u[0] << endl;
       gnorm[1] = grid_->integrate(*utmp[1],*utmp[0])/sqrt(nnorm);
       gnorm[2] = sqrt(grid_->integrate(*utmp[2],*utmp[0])/nnorm);
 
-//da  [j]->range(25,50);
-//du  [j]->range(25,50);
-//utmp[0]->range(25,50);
-cout << "main: nnorm=" << nnorm << endl;
-//cout << "main: da[" << j << "]=" << *da[j] << endl;
- //out << "main: du[" << j << "]=" << *du[j] << endl;
-//cout << "main: du-da[" << j << "]=" << *utmp[0] << endl;
-//da  [j]->range_reset();
-//du  [j]->range_reset();
-//utmp[0]->range_reset();
        
       // Accumulate to find global errors for this field:
       GComm::Allreduce(lnorm.data()  , gnorm.data()  , 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm);
