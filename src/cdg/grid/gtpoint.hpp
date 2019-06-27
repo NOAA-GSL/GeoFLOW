@@ -88,6 +88,10 @@ public:
   { for ( GINT j=0; j<gdim_; j++ ) *px_[j] = p[j];
     if ( gdim_>0) x1 = p[0]; if ( gdim_>1) x2 = p[1]; if (gdim_>2) x3 = p[2]; if ( gdim_>3) x4 = p[3];}
 
+  inline void  operator=(const GTVector<T> &p)
+  { for ( GINT j=0; j<gdim_; j++ ) *px_[j] = p[j];
+    if ( gdim_>0) x1 = p[0]; if ( gdim_>1) x2 = p[1]; if (gdim_>2) x3 = p[2]; if ( gdim_>3) x4 = p[3];}
+
   inline GTPoint<T> &operator=(T f)
   { x1 = f;  x2 = f;  x3 = f;  x4 = f; return *this;}
 
