@@ -154,7 +154,6 @@ int main(int argc, char **argv)
     tintptree   = ptree.getPropertyTree("time_integration");
 
     ne          = gridptree.getArray<GINT>("num_elems");  // may be modified by command line
-
 #if 1
 
     // Parse command line. ':' after char
@@ -729,7 +728,7 @@ void compute_icosgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVec
   GTVector<GFTYPE>          xx(3);
   GTVector<GFTYPE>          si(4), sig(4), ufact(4);
   GTVector<GFTYPE>          latp(4), lonp(4);
-  std::vector<GFTYPE>       c0(4), r0(4), sig0(4);
+  std::vector<GFTYPE>       c0(4), sig0(4);
   std::vector<GFTYPE>       lat0(4), lon0(4); // up to 4 lumps
 
   PropertyTree lumpptree = ptree.getPropertyTree("init_icosgauss");
@@ -762,13 +761,7 @@ void compute_icosgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVec
   for ( GSIZET k=0; k<nlumps; k++ ) {
     lat0[k] *= PI/180.0;
     lon0[k] *= PI/180.0;
-#if 0
-    r0[k].x1 = rad*cos(lat0[k])*cos(lon0[k]);
-    r0[k].x2 = rad*cos(lat0[k])*sin(lon0[k]);
-    r0[k].x3 = rad*sin(lat0[k]);
-#endif
   }
-
 
   // Set velocity here. Taken to be solid body rotation,
   // u = Omega X r, where rotation rate vector, Omega
@@ -790,7 +783,6 @@ void compute_icosgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVec
 //  GMTK::constrain2sphere(*grid_, c_);
   }
 
-  
   *ua[0] = 0.0;
   for ( GSIZET k=0; k<nlumps; k++ ) {
 
@@ -811,7 +803,6 @@ void compute_icosgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVec
     // Now, rotate rt about x-axis by alpha to
     // find lat/lon of final position of lump:
     xx[0] = rt[0]; xx[1] = rt[1]; xx[2] = rt[2];
-cout << serr << " ...................t=" << t << endl;
     if ( t > 0 ) {
       xx[1] =  cos(alpha)*rt[1] + sin(alpha)*rt[2];
       xx[2] = -sin(alpha)*rt[1] + cos(alpha)*rt[2];
@@ -830,7 +821,7 @@ cout << serr << " ...................t=" << t << endl;
       x   = (*xnodes)[0][j];
       y   = (*xnodes)[1][j];
       z   = (*xnodes)[2][j];
-#if 0
+#if 1
       r   = sqrt(x*x + y*y + z*z);
       lat = asin(z/r);
       lon = atan2(y,x);
@@ -1190,8 +1181,10 @@ void compute_pergauss_lump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
 void steptop_callback(const GFTYPE &t, GTVector<GTVector<GFTYPE>*>  &u, const GFTYPE &dt)
 {
   
+#if 0
   GFTYPE tt = t;
   compute_analytic(*grid_, tt, ptree, ua_);
+#endif
 
 } // end, method steptop_callback
 
