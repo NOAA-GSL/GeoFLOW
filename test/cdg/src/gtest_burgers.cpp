@@ -234,10 +234,9 @@ int main(int argc, char **argv)
 #if defined(_G_USE_GPTL)
     // Set GTPL options:
     GPTLsetoption (GPTLcpu, 1);
-
-    // Initialize GPTL:
-    GPTLinitialize();
 #endif
+    // Initialize timer:
+    GTimerInit();
 
     // Create basis:
     GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis(GDIM);
@@ -350,9 +349,7 @@ int main(int argc, char **argv)
     // via observer(s)):
     EH_MESSAGE("main: do time stepping...");
     GPP(comm_,"main: do time stepping...");
-#if defined(_G_USE_GPTL)
-    GPTLreset();
-#endif
+    GTimerReset();
     GTimerStart("time_loop");
 
     pIntegrator->time_integrate(t, uf_, ub_, u_);
@@ -468,8 +465,8 @@ int main(int argc, char **argv)
 //  GPTLpr(myrank);
     GPTLpr_file("timings.txt");
     GPTLpr_summary();
-    GPTLfinalize();
 #endif
+    GTimerFinal();
 
     EH_MESSAGE("main: do shutdown...");
 //  GComm::TermComm();
