@@ -810,11 +810,18 @@ void compute_icosgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVec
   
     // Now, rotate rt about x-axis by alpha to
     // find lat/lon of final position of lump:
-    xx[0] =  rt[0];
-    xx[1] =  cos(alpha)*rt[1] + sin(alpha)*rt[2];
-    xx[2] = -sin(alpha)*rt[1] + cos(alpha)*rt[2];
+    xx[0] = rt[0]; xx[1] = rt[1]; xx[2] = rt[2];
+cout << serr << " ...................t=" << t << endl;
+    if ( t > 0 ) {
+      xx[1] =  cos(alpha)*rt[1] + sin(alpha)*rt[2];
+      xx[2] = -sin(alpha)*rt[1] + cos(alpha)*rt[2];
+    }
     latp[k]  = asin(xx[2]/rad);
     lonp[k]  = atan2(xx[1],xx[0]);
+
+    rt[0] = rad*cos(latp[k])*cos(lonp[k]); 
+    rt[1] = rad*cos(latp[k])*sin(lonp[k]); 
+    rt[2] = rad*sin(latp[k]);
   
     for ( GSIZET j=0; j<nxy; j++ ) {
       // Note: following c t is actually Integral_0^t c(t') dt', 
@@ -823,12 +830,17 @@ void compute_icosgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVec
       x   = (*xnodes)[0][j];
       y   = (*xnodes)[1][j];
       z   = (*xnodes)[2][j];
+#if 0
       r   = sqrt(x*x + y*y + z*z);
       lat = asin(z/r);
       lon = atan2(y,x);
       // Compute arclength from point to where center _should_ be:
       s     = r*acos( sin(latp[k])*sin(lat) + cos(latp[k])*cos(lat)*cos(lon-lonp[k]) );
      (*ua[0])[j] += ufact[k]*exp(-s*s*si[k]);
+#else
+     argxp = pow(x-rt[0],2) + pow(y-rt[1],2) + pow(z-rt[2],2);
+     (*ua[0])[j] += ufact[k]*exp(-argxp*si[k]);
+#endif
     } // end, grid-point loop
 
   } // end, lump loop
