@@ -37,7 +37,7 @@ void Integrator<EquationType>::time_integrate( Time&       t,
 	using std::min;
 
         Time t0 = t;
-        Size n  = traits_.cycle_end - traits_.cycle + 1;
+        Size n  = traits_.cycle_end - traits_.cycle ;
         if      ( traits_.integ_type == INTEG_CYCLE ) {
           steps( t0 
                , traits_.dt
