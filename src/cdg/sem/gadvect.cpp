@@ -131,6 +131,7 @@ void GAdvect::def_prod(GTVector<GFTYPE> &p, const GTVector<GTVector<GFTYPE>*> &u
       *utmp[nxy+1] += *utmp[nxy];
     }
     utmp[nxy+1]->pointProd(*Jac); // J Rij  Dj p
+    utmp[nxy+1]->pointProd(*u[j]); // do uj J Rij Dj p
     po += *utmp[nxy+1];
   }
 
