@@ -30,13 +30,13 @@
     "u0"         : 1.0
   },
   "init_icosgauss": {
-    "latitude0"  : [40.0, -40.0], 
+    "latitude0"  : [0.0, -40.0], 
     "longitude0" : [-90.0,-90.0],
     "sigma"      : [0.25, 0.25],
     "c0"         : [1.0,1.0],
-    "alpha"      : 20.0,
+    "alpha"      : 0.0,
     "u0"         : 1.0,
-    "nlumps"     : 2
+    "nlumps"     : 1
   },
   "init_icosdefgauss": {
     "latitude0"  : 60.0,
@@ -67,7 +67,7 @@
   },
   "grid_icos": {
     "grid_name" : "grid_icos",
-    "ilevel"    : 2,
+    "ilevel"    : 0,
     "radius"    : 1.0,
     "num_elems" : [10, 10, 10]
   },
@@ -105,7 +105,7 @@
     "indirectory"     : "outs",
     "outdirectory"    : "outs",
     "cadence_type"    : "cycle",
-    "cycle_interval"  : 100,
+    "cycle_interval"  : 1,
     "time_interval"   : 0.01,
     "state_index"     : [0],
     "state_names"     : ["u1", "u2", "u3"],
@@ -121,10 +121,10 @@
     "interval_freq_fact" : 10.0
   },
   "time_integration": {
-    "integ_type" : "time",
+    "integ_type" : "cycle",
     "time_end"   : 1.001,
-    "cycle_end"  : 10,
-    "dt"         : 1.0e-4
+    "cycle_end"  : 1,
+    "dt"         : 1.0e-6
   }
 
 }
