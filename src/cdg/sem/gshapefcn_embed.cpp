@@ -12,9 +12,10 @@
 //                where v_i is the ith vertex of the element, and v^j_i
 //                represents the jth component of the ith vertex and, in 2d
 //
-//                  Ni = zeta Psi_I(xi,eta),
+//                  Ni = Psi_I(xi,eta) delta(1-zeta),
 //
-//                (where zeta in [0,1]), while in 1d & 3d, 
+//                (where zeta-->1, and delta is the Dirac delta fcn), 
+//                while in 1d & 3d, 
 //
 //                  Ni = Psi_I(xi,eta,zeta),
 //
@@ -43,8 +44,6 @@ using namespace std;
 // RETURNS: none
 //**********************************************************************************
 GShapeFcn_embed::GShapeFcn_embed()
-:
-zeta_   (1.0) 
 {
   gbasis_.resize(GDIM);
   gbasis_ = NULLPTR;
@@ -59,8 +58,6 @@ zeta_   (1.0)
 // RETURNS: none
 //**********************************************************************************
 GShapeFcn_embed::GShapeFcn_embed(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b)
-:
-zeta_   (1.0) 
 {
   gbasis_.resize(GDIM);
   gbasis_ = b;
@@ -87,9 +84,8 @@ GShapeFcn_embed::~GShapeFcn_embed()
 //          (array of indices), so that 
 //              Psi_ishape = h_ishape[0] h_ishape[1] ...
 //          Shape functions are based on these high-order basis functions: 
-//          In 2d:
-//              N_i = zeta * Psi_i(xi, eta)
-//          Variable zeta is set in call to set_zeta method, if used.
+//          In 2d (embeded):
+//              N_i = Psi_i(xi, eta) delta(1-zeta)
 //          In 3d:
 //              N_i =  Psi_i(xi, eta, zeta)
 // ARGS   : ishape: which shape function to take derivative of. Is a
@@ -161,8 +157,10 @@ void GShapeFcn_embed::Ni_1d(GTVector<GINT> &ishape,
 //          (array of indices), so that 
 //              Psi_ishape = h_ishape[0] h_ishape[1] ...
 //          Shape functions are based on these high-order basis functions:
-//              N_i = zeta * Psi_i(xi, eta, zeta)
-//          Variable zeta is set in call to set_zeta method, if used.
+//          In 2d (embeded):
+//              N_i = Psi_i(xi, eta) delta(1-zeta)
+//          In 3d:
+//              N_i =  Psi_i(xi, eta, zeta)
 // ARGS   : ishape: which shape function to take derivative of. Is a
 //                  tensor product index comprised of 1, 2, or 3 coordinate
 //                  indices that define the basis functions in the product.
@@ -317,9 +315,13 @@ void GShapeFcn_embed::dNdXi_1d(GTVector<GINT> &ishape, GINT jder,
 // METHOD : dNdXi_2d
 // DESC   : Compute jth derivative in reference space for ishape-th shape
 //          function in 2d. The shape fcn in 2d is
-//                 N = zeta * h0(xi) * h1(eta)
-//          so 3-derivative exists, and will be
-//                 dN/dzeta = h0(xi) * h1(eta)
+//                 N = h0(xi) * h1(eta) * delta(1-zeta)
+//          It's clear that the 1- and 2-derivatives work fine. But
+//          the 3-derivative exists, too:
+//                 dN/dzeta = h0(xi) * h1(eta) * -delta(1-zeta)/(1-zeta),
+//          except at zeta=1. We set the -delta(1-zeta)/(1-zeta) to 1
+//          when computing the 3-derivative here.
+//          
 //
 // ARGS   : ishape: which shape function to take derivative of. Is a
 //                  tensor product index comprised of 2  coordinate
@@ -363,10 +365,6 @@ void GShapeFcn_embed::dNdXi_2d(GTVector<GINT> &ishape, GINT jder,
       dNdxi[n++] = d_[0][i]*d_[1][j];
     }
   }
-
-#if 0
-  if ( jder == 3 ) dNdxi *= -1.0;
-#endif
 
  
 } // end of method dNdXi_2d
