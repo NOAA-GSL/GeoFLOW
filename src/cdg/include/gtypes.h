@@ -203,11 +203,17 @@ enum GVectorType        {GVECTYPE_PHYS=0 , GVECTYPE_CONTRAVAR, GVECTYPE_COVAR};
 #if !defined(GTIMER_DEFINED)
   #define GTIMER_DEFINED 
   #if defined(_G_USE_GPTL)
+    #define GTimerInit(a) GPTLinitialize()
+    #define GTimerFinal(a) GPTLfinalize();
     #define GTimerStart(a) GPTLstart(a)
     #define GTimerStop(a)  GPTLstop(a)
+    #define GTimerReset(a)  GPTLreset()
   #else
+    #define GTimerInit(a) 
+    #define GTimerFinal(a) 
     #define GTimerStart(a)
     #define GTimerStop(a) 
+    #define GTimerReset(a) 
   #endif
 #endif
 

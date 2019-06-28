@@ -230,7 +230,9 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const State &u
   if ( bpureadv_ ) { // pure linear advection
     // Remember: adv. velocity, c_ should already be set in
     //           main entry point, step_impl() method:
+    GTimerStart("advection_time");
     gadvect_->apply   (*u[0], c_ , uoptmp_, *dudt[0]); // apply advection
+    GTimerStop("advection_time");
     ghelm_->opVec_prod(*u[0], uoptmp_, *urhstmp_[0]);  // apply diffusion
     GMTK::saxpby<GFTYPE>(*urhstmp_[0], -1.0, *dudt[0], -1.0);
     gimass_->opVec_prod(*urhstmp_[0], uoptmp_, *dudt[0]); // apply M^-1

@@ -154,7 +154,6 @@ int main(int argc, char **argv)
     tintptree   = ptree.getPropertyTree("time_integration");
 
     ne          = gridptree.getArray<GINT>("num_elems");  // may be modified by command line
-
 #if 1
 
     // Parse command line. ':' after char
@@ -235,10 +234,9 @@ int main(int argc, char **argv)
 #if defined(_G_USE_GPTL)
     // Set GTPL options:
     GPTLsetoption (GPTLcpu, 1);
-
-    // Initialize GPTL:
-    GPTLinitialize();
 #endif
+    // Initialize timer:
+    GTimerInit();
 
     // Create basis:
     GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis(GDIM);
@@ -351,9 +349,7 @@ int main(int argc, char **argv)
     // via observer(s)):
     EH_MESSAGE("main: do time stepping...");
     GPP(comm_,"main: do time stepping...");
-#if defined(_G_USE_GPTL)
-    GPTLreset();
-#endif
+    GTimerReset();
     GTimerStart("time_loop");
 
     pIntegrator->time_integrate(t, uf_, ub_, u_);
@@ -469,8 +465,8 @@ int main(int argc, char **argv)
 //  GPTLpr(myrank);
     GPTLpr_file("timings.txt");
     GPTLpr_summary();
-    GPTLfinalize();
 #endif
+    GTimerFinal();
 
     EH_MESSAGE("main: do shutdown...");
 //  GComm::TermComm();
@@ -729,7 +725,7 @@ void compute_icosgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVec
   GTVector<GFTYPE>          xx(3);
   GTVector<GFTYPE>          si(4), sig(4), ufact(4);
   GTVector<GFTYPE>          latp(4), lonp(4);
-  std::vector<GFTYPE>       c0(4), r0(4), sig0(4);
+  std::vector<GFTYPE>       c0(4), sig0(4);
   std::vector<GFTYPE>       lat0(4), lon0(4); // up to 4 lumps
 
   PropertyTree lumpptree = ptree.getPropertyTree("init_icosgauss");
@@ -762,13 +758,7 @@ void compute_icosgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVec
   for ( GSIZET k=0; k<nlumps; k++ ) {
     lat0[k] *= PI/180.0;
     lon0[k] *= PI/180.0;
-#if 0
-    r0[k].x1 = rad*cos(lat0[k])*cos(lon0[k]);
-    r0[k].x2 = rad*cos(lat0[k])*sin(lon0[k]);
-    r0[k].x3 = rad*sin(lat0[k]);
-#endif
   }
-
 
   // Set velocity here. Taken to be solid body rotation,
   // u = Omega X r, where rotation rate vector, Omega
@@ -790,7 +780,6 @@ void compute_icosgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVec
 //  GMTK::constrain2sphere(*grid_, c_);
   }
 
-  
   *ua[0] = 0.0;
   for ( GSIZET k=0; k<nlumps; k++ ) {
 
@@ -811,7 +800,6 @@ void compute_icosgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVec
     // Now, rotate rt about x-axis by alpha to
     // find lat/lon of final position of lump:
     xx[0] = rt[0]; xx[1] = rt[1]; xx[2] = rt[2];
-cout << serr << " ...................t=" << t << endl;
     if ( t > 0 ) {
       xx[1] =  cos(alpha)*rt[1] + sin(alpha)*rt[2];
       xx[2] = -sin(alpha)*rt[1] + cos(alpha)*rt[2];
@@ -830,7 +818,7 @@ cout << serr << " ...................t=" << t << endl;
       x   = (*xnodes)[0][j];
       y   = (*xnodes)[1][j];
       z   = (*xnodes)[2][j];
-#if 0
+#if 1
       r   = sqrt(x*x + y*y + z*z);
       lat = asin(z/r);
       lon = atan2(y,x);
@@ -1190,8 +1178,10 @@ void compute_pergauss_lump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
 void steptop_callback(const GFTYPE &t, GTVector<GTVector<GFTYPE>*>  &u, const GFTYPE &dt)
 {
   
+#if 0
   GFTYPE tt = t;
   compute_analytic(*grid_, tt, ptree, ua_);
+#endif
 
 } // end, method steptop_callback
 
