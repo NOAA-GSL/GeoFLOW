@@ -123,6 +123,8 @@ inline  GVVFType           &xNodes(){ return xNodes_;}
 inline  GTVector<GFTYPE>   &xNodes(GINT i){ return xNodes_[i];}
 inline  GTVector<GTVector<GFTYPE>*>
                            &xiNodes(){ return xiNodes_;}
+inline  GTVector<GFTYPE>
+                           &xiNodes(GINT i){ return *xiNodes_[i];}
 inline  GTVector<GFPoint>  &xVertices(){ return xVertices_;}
 inline  GFPoint            &xVertices(GINT i){ return xVertices_[i];}
 
