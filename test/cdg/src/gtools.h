@@ -33,4 +33,5 @@ using namespace std;
 
 void init_ggfx(PropertyTree &ptree, GGrid &grid, GGFX<GFTYPE> &ggfx);
 
+
 #endif
