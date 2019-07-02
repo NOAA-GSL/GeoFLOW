@@ -54,9 +54,8 @@ lshapefcn_             (NULLPTR)
     radiuso_   = ptree.getValue<GFTYPE>("radiuso");
     bdytype[0] = geoflow::str2bdytype(ptree.getValue<GString>("bdy_inner"));
     bdytype[1] = geoflow::str2bdytype(ptree.getValue<GString>("bdy_outer"));
-    ne         = ptree.getArray<GINT>("num_elems");
+    nradelem_  = ptree.getValue<GINT>("num_radial_elems");
     global_bdy_types_ = bdytype;
-    ne_     = ne;
     init3d();
   }
   else {
@@ -220,46 +219,7 @@ void GGridIcos::init3d()
 {
   GString serr = "GridIcos::init3d: ";
 
-  GINT nelems = ne_[0]*ne_[1]*ne_[2];
-  hmesh_.resize(nelems);
-
-  GFTYPE dr    = (radiuso_ - radiusi_) / static_cast<GFTYPE>(ne_[0]);  // delta r
-  GFTYPE dlat  = (PI/2.0) / static_cast<GFTYPE>(ne_[1]); // delta lat 
-  GFTYPE dlong = (2.0*PI) / static_cast<GFTYPE>(ne_[2]); // delta  long
-
-  // Compute vertices of all hexes ('cubes'), starting 
-  // at (r, lat, long) = (radiusi_, 0, 0):
-  GINT   n=0;
-  GTPoint<GFTYPE> v0(3);     // starting sph. point of elem
-  GTPoint<GFTYPE> dv(3);     // delta-point
-  for ( GSIZET k=0; k<ne_[2]; k++ ) { 
-    for ( GSIZET j=0; j<ne_[1]; j++ ) { 
-      for ( GSIZET i=0; i<ne_[0]; i++ ) { 
-        v0.x1 = i*dr + radiusi_; v0.x2 = j*dlat - 0.5*PI; v0.x3 = k*dlong - 0.5*PI; 
-         
-        dv.x1 = 0.0; dv.x2 = dlat; dv.x3 = 0.0  ;  hmesh_[n].v1 = v0 + dv;
-        dv.x1 = 0.0; dv.x2 = dlat; dv.x3 = dlong;  hmesh_[n].v2 = v0 + dv;
-        dv.x1 = 0.0; dv.x2 = 0.0 ; dv.x3 = dlong;  hmesh_[n].v3 = v0 + dv;
-        dv.x1 = dr ; dv.x2 = 0.0 ; dv.x3 = 0.0  ;  hmesh_[n].v4 = v0 + dv;
-        dv.x1 = dr ; dv.x2 = dlat; dv.x3 = 0.0  ;  hmesh_[n].v5 = v0 + dv;
-        dv.x1 = dr ; dv.x2 = dlat; dv.x3 = dlong;  hmesh_[n].v6 = v0 + dv;
-        dv.x1 = dr ; dv.x2 = 0.0 ; dv.x3 = dlong;  hmesh_[n].v7 = v0 + dv;
-
-        spherical2xyz(hmesh_[n].v);  
-        n++;
-      }
-    }
-  }
-  
-  // Compute centroids of all hexes ('cubes'):
-  GTPoint<GFTYPE> a(3);
-
-  ftcentroids_.clear();
-  for ( GSIZET j=0; j<hmesh_.size(); j++ ) { // for each cube
-    for ( GSIZET k=0; k<hmesh_[j].v.size(); k++ ) a += *hmesh_[j].v[k];
-    a *= (1.0/hmesh_[j].v.size());
-    ftcentroids_.push_back(a);
-  }
+  init2d();
 
 } // end, method init3d
 
@@ -586,95 +546,174 @@ void GGridIcos::do_elems2d(GINT irank)
 //**********************************************************************************
 // METHOD : do_elems3d (1)
 // DESC   : Build 3d elemental grid. It's assumed that init3d has been called
-//          prior to entry, and that the hmesh_ has beed set. This arrays
-//          of hexagonal 3d elements provides for each hex its vertices in Cartesian
-//          coordinates. Also, the centroids of these hexes (in Cartesian coords)
-//          should also have been computed. The Cartesian hex vertices will be
-//          converted into sherical coordinates, and the GShapeFcn_linear
-//          will be used in spherical coords to compute the interior nodes. These
-//          will then be converted to Cartesian coords.
+//          prior to entry, and that the icos base grid has been set.
 // ARGS   : 
 //          irank: MPI rank or partition id
 // RETURNS: none.
 //**********************************************************************************
 void GGridIcos::do_elems3d(GINT irank)
 {
-  GString                      serr = "GridIcos::do_elems3d (1): ";
-  GTVector<GINT>               iind;
-  GTVector<GINT>               I(3);
-  GTVector<GINT>              *bdy_ind;
-  GTVector<GINT>              *face_ind;
-  GTVector<GFTYPE>             Ni;
-  GElem_base                  *pelem;
+  GString           serr = "GridIcos::do_elems3d (1): ";
+  GSIZET            nxy;
+  GFTYPE            fact, r0, rdelta, xlatc, xlongc;
+  GTVector<GFPoint> cverts(4), gverts(4), tverts(4);
+  GTPoint<GFTYPE>   c(3), ct(3), v1(3), v2(3), v3(3); // 3d points
+  GElem_base        *pelem;
+  GElem_base        *pelem2d;
+  GTVector<GINT>    iind;
+  GTVector<GINT>    I(1);
+  GTVector<GFTYPE>  Ni;
   GTVector<GTVector<GFTYPE>>  *xNodes;
-  GTVector<GTVector<GFTYPE>*> *xiNodes;
+  GTVector<GTVector<GFTYPE>>   xNodes2d(2);
+  GTVector<GTVector<GFTYPE>*>  xiNodes2d(2);
+  GTVector<GFTYPE>            *xiNodesr;
   GTVector<GTVector<GFTYPE>>   xgtmp(3);
 
+  // Do eveything on unit sphere, then project to radiusi_
+  // as a final step.
 
   assert(gbasis_.size()>0 && "Must set basis first");
 
-  if ( gdd_       == NULLPTR ) gdd_ = new GDD_base(nprocs_);
+  if ( gdd_ == NULLPTR ) gdd_ = new GDD_base(nprocs_);
+
+  // Resize points to appropriate size:
+  for ( GSIZET j=0; j<tmesh_.size(); j++ ) tmesh_[j].resize(3);
+  for ( GSIZET j=0; j<4; j++ ) {
+    cverts[j].resize(3); // is a 3d point
+    gverts[j].resize(2); // is only a 2d point
+    tverts[j].resize(2); // is only a 2d point
+  }
 
   // Get indirection indices to create elements
   // only for this task:
   gdd_->doDD(ftcentroids_, irank, iind);
 
-  GSIZET i, n;
+  GTVector<GSIZET> isort;
+
+  // Make radial dimension of elements the same:
+  rdelta = (radiuso_ - radiusi_)/nradelem_;
+
+
+  // When setting elements, must first construct Cartesian
+  // coordinates at interior node points. This is done in
+  // following steps:
+  //   (0) find element vertices from triangular mesh
+  //   (1) find centroid of element
+  //   (2) use centroid to find gnomonic (2d) vertices of element
+  //   (3) construct interior node points from gnomonic vertices and basis
+  //   (4) transform inter node coords back to 3D Cartesian space from gnomonic space
+  //   (5) project the node coords to sphere in sph. coords 
+  //   (6) extend 'patch' in radial direction for all nodes in each
+  //       radial element, transforming each element to Cartesian coords
+  fact = 1.0/3.0;
+  GSIZET i;
   GSIZET nfnodes;   // no. face nodes
   GSIZET icurr = 0; // current global index
   GSIZET fcurr = 0; // current global face index
-  for ( GSIZET n=0; n<iind.size(); n++ ) { // for each hex in irank's mesh
+  // For each triangle in base mesh owned by this rank...
+  for ( GSIZET n=0; n<iind.size(); n++ ) { 
     i = iind[n];
-
-    // Transform hex vertices to (r,lat,long):
-    xyz2spherical(hmesh_[i].v);
-
-    pelem = new GElem_base(GE_DEFORMED, gbasis_);
-    xNodes  = &pelem->xNodes();  // node spatial data
-    xiNodes = &pelem->xiNodes(); // node ref interval data
-    Ni.resize(pelem->nnodes()); // tensor product shape function
-    bdy_ind = &pelem->bdy_indices(); // get bdy indices data member
-    bdy_ind->clear();
-    for ( GSIZET l=0; l<3; l++ ) { // loop over sph coords 
-      (*xNodes)[l] = 0.0;
-      for ( GSIZET m=0; m<8; m++ ) { // loop over verts given in sph coords
-        I[0] = m;
-        lshapefcn_->Ni(I, *xiNodes, Ni);
-        (*xNodes)[l] += Ni * (*(hmesh_[i].v[m]))[l];
+    v1 = *tmesh_[i].v[0];
+    v2 = *tmesh_[i].v[1];
+    v3 = *tmesh_[i].v[2];       
+    ct = (v1 + (v2 + v3)) * fact;  // triangle centroid; don't overwrite later on
+    // Compute element vertices:
+    // NOTE: Is this ordering compatible with shape functions 
+    // (placement of +/-1 with physical point)?
+    for ( GSIZET j=0; j<3; j++ ) { // 3 new elements for each triangle
+      pelem2d = new GElem_base(GE_2DEMBEDDED, gbasis_);
+      cverts[0] = v1; cverts[1] = (v1+v2)*0.5; cverts[2] = ct; cverts[3] = (v1+v3)*0.5;
+      if ( iup_[i] == 1 ) {
+      switch (j) {
+      case 0: 
+      cverts[0] = v1; cverts[1] = (v1+v2)*0.5; cverts[2] = ct; cverts[3] = (v1+v3)*0.5; break;
+      case 1: 
+      cverts[0] = (v1+v2)*0.5; cverts[1] = v2; cverts[2] = (v2+v3)*0.5; cverts[3] = ct; break;
+      case 2: 
+      cverts[0] = ct; cverts[1] = (v2+v3)*0.5; cverts[2] = v3; cverts[3] = (v1+v3)*0.5; break;
       }
-    }
-
-    // Set element's bdy indices:
-    // ... need to check only vertex 0 for this:
-    if ( hmesh_[i].v[0]->x1 == radiusi_ || hmesh_[i].v[0]->x1 == radiuso_ ) { 
-      face_ind = &pelem->face_indices(0);
-      for ( GSIZET k=0; k<face_ind->size(); k++ ) {
-        // Do not allow face indices to be repeated in bdy list:
-        if ( !bdy_ind->contains((*face_ind)[k]) ) 
-          bdy_ind->push_back((*face_ind)[k]); 
       }
-    }
+      else {
+      switch (j) {
+      case 0: 
+      cverts[0] = v1; cverts[1] = (v1+v2)*0.5; cverts[2] = ct; cverts[3] = (v1+v3)*0.5; break;
+      case 1: 
+      cverts[0] = ct; cverts[1] = (v1+v2)*0.5; cverts[2] = v2; cverts[3] = (v2+v3)*0.5; break;
+      case 2: 
+      cverts[0] = (v1+v3)*0.5; cverts[1] = ct; cverts[2] = (v2+v3)*0.5; cverts[3] = v3; break;
+      }
+      }
+#endif
+      
+      nxy     = pelem2d->nnodes
+      Ni.resize(nxy);
+      for ( GINT m=0; m<2; m++ ) {
+        xiNodes2d[m] = &pelem2d->xiNodes(m);
+        xNodes2d [m].resizem(nxy);
+      }
 
-    spherical2xyz(*xNodes); // convert nodal coords to Cartesian coords
-    pelem->init(*xNodes);
-    gelems_.push_back(pelem);
+      project2sphere(cverts, 1.0); // project verts to unit sphere     
+      c = (cverts[0] + cverts[1] + cverts[2] + cverts[3])*0.25; // elem centroid
+      xlatc  = asin(c.x3)         ; // reference lat/long
+      xlongc = atan2(c.x2,c.x1);
+      xlongc = xlongc < 0.0 ? 2*PI+xlongc : xlongc;
 
-    // Set global bdy types at each bdy_ind (this is a coarse
-    // application; finer control may be exercised in callback):
-    set_global_bdy_3d(*pelem);
+      cart2gnomonic(cverts, 1.0, xlatc, xlongc, tverts); // gnomonic vertices of quads
+      reorderverts2d(tverts, isort, gverts); // reorder vertices consistenet with shape fcn
+      for ( GINT l=0; l<2; l++ ) { // loop over available gnomonic coords
+        xgtmp[l].resizem(nxy);
+        xgtmp[l] = 0.0;
+        xNodes2d[l] = 0.0;
+        for ( GSIZET m=0; m<4; m++ ) { // loop over gnomonic vertices
+          I[0] = m;
+          lshapefcn_->Ni(I, xiNodes2d, Ni);
+          xgtmp[l] += (Ni * (gverts[m][l]*0.25)); // gnomonic node coordinate
+        }
+      }
 
-    nfnodes = 0;
-    for ( GSIZET j=0; j<gelems_[n]->nfaces(); j++ )  // get # face nodes
-      nfnodes += gelems_[n]->face_indices(j).size();
-    pelem->igbeg() = icurr;      // beginning global index
-    pelem->igend() = icurr + pelem->nnodes()-1; // end global index
-    pelem->ifbeg() = fcurr;
-    pelem->ifend() = fcurr+nfnodes-1; // end global face index
-    icurr += pelem->nnodes();
-    fcurr += nfnodes;
-  } // end of hex mesh loop
+      // Convert 2d plane back to Cart coords and project to 
+      // surface of inner sphere:
+      gnomonic2cart(xgtmp, 1.0, xlatc, xlongc, xNodes2d); 
+      project2sphere(xNodes2d, radiusi_);
+      xyz2spherical(xNodes2d, radiusi_);
 
-  // If we have a callback function, set the boundary conditions here:
+      // Loop over radial elements and build all elements 
+      // based on this patch:
+      for ( GSIZET e=0; e<nradelem_; e++ ) {
+        pelem = new GElem_base(GE_DEFORMED, gbasis_);
+        xiNodesr = &pelem->xiNodes(2); // get radial reference nodes
+        xNodes   = &pelem->xNodes();  // node spatial data
+        r0       = radiusi_ + e*rdelta;
+        for
+        for ( GSIZET m=0; m<pelem->size(2); m++ ) { // for each radial node
+          for ( GSIZET n=0; n<nxy; n++ ) { // find sph coords for each horizontal node
+            (*xNodes)[0][n+m*nxy] =  0.5*rdelta*((*xiNodesr)[m] + 1.0);
+            (*xNodes)[1][n+m*nxy] =  xNodes2d[1][n];
+            (*xNodes)[2][n+m*nxy] =  xNodes2d[2][n];
+          }
+        }
+        spherical2xyz(*xNodes);
+
+        pelem->init(*xNodes);
+        gelems_.push_back(pelem);
+
+        nfnodes = 0;
+        for ( GSIZET j=0; j<gelems_[e]->nfaces(); j++ )  // get # face nodes
+          nfnodes += gelems_[e]->face_indices(j).size();
+        pelem->igbeg() = icurr;      // beginning global index
+        pelem->igend() = icurr+pelem->nnodes()-1; // end global index
+        pelem->ifbeg() = fcurr;
+        pelem->ifend() = fcurr+nfnodes-1; // end global face index
+        icurr += pelem->nnodes();
+        fcurr += nfnodes;
+      }
+      delete pelem2d;
+
+    } // end of element loop for this triangle
+  } // end of triangle base mesh loop
+
+  // Can set individual nodes and internal bdy conditions
+  // with callback here:
   if ( bdycallback_ != NULLPTR ) {
     (*bdycallback_)(gelems_);
   }
@@ -765,13 +804,7 @@ void GGridIcos::do_elems2d(GTMatrix<GINT> &p,
 //**********************************************************************************
 // METHOD : do_elems3d (2)
 // DESC   : Build 3d elemental grid. It's assumed that init3d has been called
-//          prior to entry, and that the hmesh_ has beed set. This arrays
-//          of hexagonal 3d elements provides for each hex its vertices in Cartesian
-//          coordinates. Also, the centroids of these hexes (in Cartesian coords)
-//          should also have been computed. The Cartesian hex vertices will be
-//          converted into sherical coordinates, and the GShapeFcn_linear
-//          will be used in spherical coords to compute the interior nodes. These
-//          will then be converted to Cartesian coords.
+//          prior to entry, and that the base icos grid has beed set. 
 // ARGS   : p      : matrix of size the number of elements X GDIM containing 
 //                   the poly expansion order in each direction
 //          gxnodes: vector of GDIM vectors containing Cartesian coords of elements
@@ -789,66 +822,8 @@ void GGridIcos::do_elems3d(GTMatrix<GINT> &p,
                                gb(GDIM);
   GTVector<GINT>               ppool(gbasis_.size());
 
+  assert(FALSE && "Not yet available");
   assert(gbasis_.size()>0 && "Must set basis first");
-
-  // Now, treat the gbasis_ as a pool that we search
-  // to find bases we need:
-  for ( GSIZET j=0; j<ppool.size(); j++ ) ppool[j] = gbasis_[j]->getOrder();
-
-  GSIZET i, iwhere, n;
-  GSIZET nvnodes;   // no. vol nodes
-  GSIZET nfnodes;   // no. face nodes
-  GSIZET icurr = 0; // current global index
-  GSIZET fcurr = 0; // current global face index
-  for ( GSIZET i=0; i<p.size(1); i++ ) { // for each hex in irank's mesh
-    nvnodes = 1;
-    for ( GSIZET j=0; j<GDIM; j++ ) { // set basis from pool
-      assert(ppool.contains(p(i,j),iwhere) && "Expansion order not found");
-      gb[j] = gbasis_[iwhere];
-      nvnodes *= (p(i,j) + 1);
-    }
-
-    // Set internal node positions from input data.
-    // Note that gxnodes are 'global' and xNodes is
-    // element-local:
-    for ( GSIZET j=0; j<GDIM; j++ ) {
-       gxnodes[j].range(icurr, icurr+nvnodes-1);
-      (*xNodes)[j] = gxnodes[j];
-    }
-    for ( GSIZET j=0; j<GDIM; j++ ) gxnodes[j].range_reset();
-
-    // Set element's bdy indices:
-    // ... need to check only vertex 0 for this:
-    if ( hmesh_[i].v[0]->x1 == radiusi_ || hmesh_[i].v[0]->x1 == radiuso_ ) { 
-      face_ind = &pelem->face_indices(0);
-      for ( GSIZET k=0; k<face_ind->size(); k++ ) {
-        // Do not allow face indices to be repeated in bdy list:
-        if ( !bdy_ind->contains((*face_ind)[k]) ) 
-          bdy_ind->push_back((*face_ind)[k]); 
-      }
-    }
-
-    pelem->init(*xNodes);
-    gelems_.push_back(pelem);
-
-    // Set global bdy types at each bdy_ind (this is a coarse
-    // application; finer control may be exercised in callback):
-    set_global_bdy_3d(*pelem);
-
-    assert(nvnodes == gelems_[i]->nnodes() && "Incompatible node count");
-    nfnodes = gelems_[i]->nfnodes();
-    pelem->igbeg() = icurr;      // beginning global index
-    pelem->igend() = icurr + nvnodes; // end global index
-    pelem->ifbeg() = fcurr;
-    pelem->ifend() = fcurr+nfnodes-1; // end global face index
-    icurr += nvnodes;
-    fcurr += nfnodes;
-  } // end of hex mesh loop
-
-  // If we have a callback function, set the boundary conditions here:
-  if ( bdycallback_ != NULLPTR ) {
-    (*bdycallback_)(gelems_);
-  }
 
 } // end of method do_elems3d (2)
 
