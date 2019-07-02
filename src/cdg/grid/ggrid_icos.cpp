@@ -758,7 +758,7 @@ void GGridIcos::do_elems2d(GTMatrix<GINT> &p,
       gb[j] = gbasis_[iwhere];
       nvnodes *= (p(i,j) + 1);
     }
-    pelem = new GElem_base(GE_REGULAR, gb);
+    pelem = new GElem_base(GE_2DEMBEDDED, gb);
     xNodes  = &pelem->xNodes();  // node spatial data
     xiNodes = &pelem->xiNodes(); // node ref interval data
 #if 0
@@ -812,16 +812,68 @@ void GGridIcos::do_elems3d(GTMatrix<GINT> &p,
                            GTVector<GTVector<GFTYPE>> &gxnodes)
 {
   GString                      serr = "GridIcos::do_elems3d (2): ";
-  GTVector<GINT>              *bdy_ind;
-  GTVector<GINT>              *face_ind;
   GElem_base                  *pelem;
   GTVector<GTVector<GFTYPE>>  *xNodes;
+  GTVector<GTVector<GFTYPE>*> *xiNodes;
   GTVector<GNBasis<GCTYPE,GFTYPE>*>
                                gb(GDIM);
   GTVector<GINT>               ppool(gbasis_.size());
 
-  assert(FALSE && "Not yet available");
-  assert(gbasis_.size()>0 && "Must set basis first");
+  // Now, treat the gbasis_ as a pool that we search
+  // to find bases we need:
+  for ( GSIZET j=0; j<ppool.size(); j++ ) ppool[j] = gbasis_[j]->getOrder();
+
+
+  // Set element internal dof from input data:
+  GSIZET iwhere ;
+  GSIZET nvnodes;   // no. vol nodes
+  GSIZET nfnodes;   // no. face nodes
+  GSIZET icurr = 0; // current global index
+  GSIZET fcurr = 0; // current global face index
+  // For each triangle in base mesh owned by this rank...
+  for ( GSIZET i=0; i<p.size(1); i++ ) { 
+    nvnodes = 1;
+    for ( GSIZET j=0; j<GDIM; j++ ) { // set basis from pool
+      assert(ppool.contains(p(i,j),iwhere) && "Expansion order not found");
+      gb[j] = gbasis_[iwhere];
+      nvnodes *= (p(i,j) + 1);
+    }
+    pelem = new GElem_base(GE_DEFORMED, gb);
+    xNodes  = &pelem->xNodes();  // node spatial data
+    xiNodes = &pelem->xiNodes(); // node ref interval data
+#if 0
+    bdy_ind = &pelem->bdy_indices(); // get bdy indices data member
+    bdy_typ = &pelem->bdy_types  (); // get bdy types data member
+    bdy_ind->clear(); bdy_typ->clear();
+#endif
+
+    // Set internal node positions from input data.
+    // Note that gxnodes are 'global' and xNodes is
+    // element-local:
+    for ( GSIZET j=0; j<GDIM; j++ ) {
+       gxnodes[j].range(icurr, icurr+nvnodes-1);
+      (*xNodes)[j] = gxnodes[j];
+    }
+    for ( GSIZET j=0; j<GDIM; j++ ) gxnodes[j].range_reset();
+
+    pelem->init(*xNodes);
+    gelems_.push_back(pelem);
+
+    assert(nvnodes == gelems_[i]->nnodes() && "Incompatible node count");
+    nfnodes = gelems_[i]->nfnodes();
+    pelem->igbeg() = icurr;      // beginning global index
+    pelem->igend() = icurr+nvnodes-1; // end global index
+    pelem->ifbeg() = fcurr;
+    pelem->ifend() = fcurr+nfnodes-1; // end global face index
+    icurr += nvnodes;
+    fcurr += nfnodes;
+  } // end of triangle base mesh loop
+
+  // Can set individual nodes and internal bdy conditions
+  // with callback here:
+  if ( bdycallback_ != NULLPTR ) {
+    (*bdycallback_)(gelems_);
+  }
 
 } // end of method do_elems3d (2)
 
