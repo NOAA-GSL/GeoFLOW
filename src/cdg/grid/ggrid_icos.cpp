@@ -643,9 +643,8 @@ void GGridIcos::do_elems3d(GINT irank)
       cverts[0] = (v1+v3)*0.5; cverts[1] = ct; cverts[2] = (v2+v3)*0.5; cverts[3] = v3; break;
       }
       }
-#endif
       
-      nxy     = pelem2d->nnodes
+      nxy     = pelem2d->nnodes();
       Ni.resize(nxy);
       for ( GINT m=0; m<2; m++ ) {
         xiNodes2d[m] = &pelem2d->xiNodes(m);
@@ -675,7 +674,7 @@ void GGridIcos::do_elems3d(GINT irank)
       // surface of inner sphere:
       gnomonic2cart(xgtmp, 1.0, xlatc, xlongc, xNodes2d); 
       project2sphere(xNodes2d, radiusi_);
-      xyz2spherical(xNodes2d, radiusi_);
+      xyz2spherical(xNodes2d);
 
       // Loop over radial elements and build all elements 
       // based on this patch:
@@ -684,7 +683,6 @@ void GGridIcos::do_elems3d(GINT irank)
         xiNodesr = &pelem->xiNodes(2); // get radial reference nodes
         xNodes   = &pelem->xNodes();  // node spatial data
         r0       = radiusi_ + e*rdelta;
-        for
         for ( GSIZET m=0; m<pelem->size(2); m++ ) { // for each radial node
           for ( GSIZET n=0; n<nxy; n++ ) { // find sph coords for each horizontal node
             (*xNodes)[0][n+m*nxy] =  0.5*rdelta*((*xiNodesr)[m] + 1.0);
@@ -1078,9 +1076,35 @@ void GGridIcos::xyz2spherical(GTVector<GTPoint<GFTYPE>*> &plist)
 //                 (x,y,z) to be converted to (r, lat, long), in-place
 // RETURNS: none.
 //**********************************************************************************
-void GGridIcos::xyz2spherical(GTVector<GTPoint<GFTYPE>> &plist)
+void GGridIcos::xyz2spherical(GTVector<GTVector<GFTYPE>> &plist)
 {
   GString serr = "GridIcos::xyz2spherica(2): ";
+
+  GFTYPE r, x, y, z;
+
+  for ( GSIZET i=0; i<plist.size(); i++ ) { // loop over all points
+   x = plist[i][0]; y = plist[i][1]; z = plist[i][2];
+   r = sqrt(x*x + y*y + z*z);
+   plist[i][0] = r;
+   plist[i][1] = asin(z/r);
+   plist[i][2] = atan2(y,x);
+   plist[i][2] = plist[i][2] < 0.0 ? 2*PI+plist[i][2] : plist[i][2];
+  }
+
+} // end of method xyz2spherical (2)
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : xyz2spherical (3)
+// DESC   : Transform from Cartesian coords to spherical-polar
+// ARGS   : plist: Vector of points, representing Cartesian coordinates 
+//                 (x,y,z) to be converted to (r, lat, long), in-place
+// RETURNS: none.
+//**********************************************************************************
+void GGridIcos::xyz2spherical(GTVector<GTPoint<GFTYPE>> &plist)
+{
+  GString serr = "GridIcos::xyz2spherica(3): ";
 
   GFTYPE r, x, y, z;
 
@@ -1093,7 +1117,7 @@ void GGridIcos::xyz2spherical(GTVector<GTPoint<GFTYPE>> &plist)
    plist[i].x3 = plist[i].x3 < 0.0 ? 2*PI+plist[i].x3 : plist[i].x3;
   }
 
-} // end of method xyz2spherical (2)
+} // end of method xyz2spherical (3)
 
 
 //**********************************************************************************

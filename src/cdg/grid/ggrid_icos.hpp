@@ -80,6 +80,7 @@ friend  std::ostream&       operator<<(std::ostream&, GGridIcos &);       // Out
          void               spherical2xyz(GTVector<GTPoint<GFTYPE>>  &);    // (r,lat,long) to (x,y,z)
          void               spherical2xyz(GTVector<GTVector<GFTYPE>> &);    // (r,lat,long) to (x,y,z)
          void               xyz2spherical(GTVector<GTPoint<GFTYPE>*> &);    // (x,y,z) to (r, lat, long) 
+         void               xyz2spherical(GTVector<GTVector<GFTYPE>> &);    // (x,y,z) to (r, lat, long) 
          void               xyz2spherical(GTVector<GTPoint<GFTYPE>>  &);    // (x,y,z) to (r, lat, long) 
          void               cart2gnomonic(GTVector<GTPoint<GFTYPE>> &, GFTYPE, GFTYPE, GFTYPE, 
                                           GTVector<GTPoint<GFTYPE>> &);     // transform to gnomonic space
@@ -118,6 +119,7 @@ private:
 
          GINT               ilevel_;        // refinement level (>= 0)
          GINT               ndim_;          // grid dimensionality (2 or 3)
+         GSIZET             nradelem_;      // # radial elements
          GFTYPE             radiusi_;       // inner radius
          GFTYPE             radiuso_;       // outer radius (=radiusi in 2d)
          GDD_base          *gdd_;           // domain decomposition/partitioning object
@@ -137,7 +139,6 @@ private:
                              hmesh_;        // list of vertices for each 3d (hex) element
          GTMatrix<GFTYPE>    fv0_;          // vertex list for base icosahedron
          GIMatrix            ifv0_;         // indices into fv0_ for each face of base icosahedron 
-         GTVector<GINT>      ne_;           // # elems in each coord direction in 3d
 
 };
 
