@@ -147,7 +147,7 @@ int main(int argc, char **argv)
     // Create other prop trees for various objects:
     sgrid       = ptree.getValue<GString>("grid_type");
     pstd        = ptree.getArray<GINT>("exp_order");
-    eqptree     = ptree.getPropertyTree("adv_equation_traits");
+    eqptree     = ptree.getPropertyTree("burgers_traits");
     gridptree   = ptree.getPropertyTree(sgrid);
     stepptree   = ptree.getPropertyTree("stepper_props");
     dissptree   = ptree.getPropertyTree("dissipation_traits");
@@ -635,7 +635,7 @@ void compute_dirgauss_lump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
 
   PropertyTree heatptree = ptree.getPropertyTree("init_lump");
   PropertyTree boxptree = ptree.getPropertyTree("grid_box");
-  PropertyTree advptree  = ptree.getPropertyTree("adv_equation_traits");
+  PropertyTree advptree  = ptree.getPropertyTree("burgers_traits");
   GBOOL doheat   = advptree.getValue<GBOOL>("doheat");
   GBOOL bpureadv = advptree.getValue<GBOOL>("bpureadv");
 
@@ -730,7 +730,7 @@ void compute_icosgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVec
 
   PropertyTree lumpptree = ptree.getPropertyTree("init_icosgauss");
   PropertyTree icosptree = ptree.getPropertyTree("grid_icos");
-  PropertyTree advptree  = ptree.getPropertyTree("adv_equation_traits");
+  PropertyTree advptree  = ptree.getPropertyTree("burgers_traits");
   GBOOL doheat   = advptree.getValue<GBOOL>("doheat");
   GBOOL bpureadv = advptree.getValue<GBOOL>("bpureadv");
 
@@ -872,7 +872,7 @@ void compute_icosdefgauss(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GT
 
   PropertyTree lumpptree = ptree.getPropertyTree("init_icosdefgauss");
   PropertyTree icosptree = ptree.getPropertyTree("grid_icos");
-  PropertyTree advptree  = ptree.getPropertyTree("adv_equation_traits");
+  PropertyTree advptree  = ptree.getPropertyTree("burgers_traits");
   GBOOL doheat           = advptree.getValue<GBOOL>("doheat");
   GBOOL bpureadv         = advptree.getValue<GBOOL>("bpureadv");
 
@@ -976,7 +976,7 @@ void compute_icosbell(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  GTVect
 
   PropertyTree lumpptree = ptree.getPropertyTree("init_icosbell");
   PropertyTree icosptree = ptree.getPropertyTree("grid_icos");
-  PropertyTree advptree  = ptree.getPropertyTree("adv_equation_traits");
+  PropertyTree advptree  = ptree.getPropertyTree("burgers_traits");
   GBOOL doheat   = advptree.getValue<GBOOL>("doheat");
   GBOOL bpureadv = advptree.getValue<GBOOL>("bpureadv");
 
@@ -1079,7 +1079,7 @@ void compute_pergauss_lump(GGrid &grid, GFTYPE &t, const PropertyTree& ptree,  G
 
   PropertyTree heatptree = ptree.getPropertyTree("init_lump");
   PropertyTree boxptree = ptree.getPropertyTree("grid_box");
-  PropertyTree advptree  = ptree.getPropertyTree("adv_equation_traits");
+  PropertyTree advptree  = ptree.getPropertyTree("burgers_traits");
   GBOOL doheat   = advptree.getValue<GBOOL>("doheat");
   GBOOL bpureadv = advptree.getValue<GBOOL>("bpureadv");
 
@@ -1197,7 +1197,7 @@ void steptop_callback(const GFTYPE &t, GTVector<GTVector<GFTYPE>*>  &u, const GF
 //**********************************************************************************
 void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVector<GTVector<GFTYPE>*>  &ua)
 {
-  PropertyTree advptree  = ptree.getPropertyTree("adv_equation_traits");
+  PropertyTree advptree  = ptree.getPropertyTree("burgers_traits");
   GBOOL doheat   = advptree.getValue<GBOOL>("doheat");
   GBOOL bpureadv = advptree.getValue<GBOOL>("bpureadv");
 
