@@ -1,7 +1,7 @@
 /*
  * stirrer_factory.hpp
  *
- *  Created on: MAr 27, 2019 
+ *  Created on: Mar 27, 2019 
  *      Author: bryan.flynt, d.rosenberg
  */
 
