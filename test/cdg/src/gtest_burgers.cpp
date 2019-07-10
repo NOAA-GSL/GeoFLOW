@@ -211,26 +211,19 @@ int main(int argc, char **argv)
     // Set solver traits from prop tree:
     GFTYPE nu_scalar;
     GBurgers<MyTypes>::Traits solver_traits;
-    solver_traits.doheat     = eqptree  .getValue<GBOOL>("doheat", FALSE);
-    solver_traits.bpureadv   = eqptree  .getValue<GBOOL>("bpureadv", FALSE);
-    solver_traits.bconserved = eqptree  .getValue<GBOOL>("bconserved", FALSE);
-    solver_traits.bforced    = eqptree  .getValue<GBOOL>("use_forcing", FALSE);
-    solver_traits.variabledt = eqptree  .getValue<GBOOL>("variable_dt", FALSE);
-    solver_traits.courant    = eqptree  .getValue<GFTYPE>("courant", 0.5);
-    solver_traits.itorder    = stepptree.getValue <GINT>("time_deriv_order");
-    solver_traits.inorder    = stepptree.getValue <GINT>("extrap_order");
-    nu_scalar                = dissptree.getValue<GFTYPE>("nu");
+    solver_traits.doheat     = eqptree  .getValue<GBOOL>  ("doheat", FALSE);
+    solver_traits.bpureadv   = eqptree  .getValue<GBOOL>  ("bpureadv", FALSE);
+    solver_traits.bconserved = eqptree  .getValue<GBOOL>  ("bconserved", FALSE);
+    solver_traits.bforced    = eqptree  .getValue<GBOOL>  ("use_forcing", FALSE);
+    solver_traits.variabledt = eqptree  .getValue<GBOOL>  ("variable_dt", FALSE);
+    solver_traits.courant    = eqptree  .getValue<GFTYPE> ("courant", 0.5);
+    solver_traits.ssteptype  = stepptree.getValue<GString>("stepping_method");
+    solver_traits.itorder    = stepptree.getValue <GINT>  ("time_deriv_order");
+    solver_traits.inorder    = stepptree.getValue <GINT>  ("extrap_order");
+    nu_scalar                = dissptree.getValue<GFTYPE> ("nu");
     nu_.resize(1); 
     nu_ = nu_scalar; 
-    GTVector<GString> ssteppers;
-    for ( GSIZET j=0; j<GSTEPPER_MAX; j++ ) ssteppers.push_back(sGStepperType[j]);
-    GSIZET itype; 
-    GString stepmthd = stepptree.getValue<GString>("stepping_method");
-    GBOOL  bfound = ssteppers.contains(stepmthd,itype);
-    assert( bfound && "Invalid stepping method in JSON file");
     
-    solver_traits.steptype   = static_cast<GStepperType>(itype);
-
 #if defined(_G_USE_GPTL)
     // Set GTPL options:
     GPTLsetoption (GPTLcpu, 1);
