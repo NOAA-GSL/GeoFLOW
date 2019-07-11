@@ -89,10 +89,10 @@ GC_COMM      comm_ ;      // communicator
 
 void allocate(const PropertyTree &ptree);
 void deallocate();
-void update_dirichlet(const GFTYPE &t, State &u, State &ub);
-void update_forcing(const GFTYPE &t, State &u, State &uf);
-void steptop_callback(const GFTYPE &t, State &u, const GFTYPE &dt);
-void create_observers(PropertyTree &ptree, GSIZET icycle, GFTYPE time, 
+void update_dirichlet(const Time &t, State &u, State &ub);
+void update_forcing(const Time &t, State &u, State &uf);
+void steptop_callback(const Time &t, State &u, const Time &dt);
+void create_observers(PropertyTree &ptree, GSIZET icycle, Time time, 
 std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers);
 void create_equation(PropertyTree &ptree, EqnBasePtr &pEqn);
 void create_stirrer(PropertyTree &ptree, StirBasePtr &pStirrer);
@@ -288,25 +288,24 @@ int main(int argc, char **argv)
 //          ub   : bdy vectors (one for each state element)
 // RETURNS: none.
 //**********************************************************************************
-void update_dirichlet(const GFTYPE &t, State &u, State &ub)
+void update_dirichlet(const Time &t, State &u, State &ub)
 {
 
-  GFTYPE tt = t;
-  State *igbdy = &grid_->igbdy();
+  Time  tt = t;
   
-  // If bc is time dependent, update it here.
-  // Note: grid_ ptree, and ua_ are global:
+/*
   if ( (*igbdy)[GBDY_DIRICHLET].size() > 0 ) {
     compute_analytic(*grid_, tt, ptree,  ua_);
   }
 
   // ...GBDY_DIRICHLET:
   // Set from State vector, ua_:
-  for ( GSIZET k=0; k<nsolve_; k++ ) { 
-    for ( GSIZET j=0; j<(*igbdy)[GBDY_DIRICHLET].size(); j++ ) {
+  for ( auto k=0; k<u.size(); k++ ) { 
+    for ( auto j=0; j<(*igbdy)[GBDY_DIRICHLET].size(); j++ ) {
       (*ub[k])[j] = (*ua_[k])[(*igbdy)[GBDY_DIRICHLET][j]];
     }
   }
+*/
 
 } // end of method update_dirichlet
 
@@ -323,11 +322,11 @@ void update_dirichlet(const GFTYPE &t, State &u, State &ub)
 //         u  : current state
 //         dt : time step
 //**********************************************************************************
-void steptop_callback(const GFTYPE &t, State &u, const GFTYPE &dt)
+void steptop_callback(const Time &t, State &u, const Time &dt)
 {
   
 #if 0
-  GFTYPE tt = t;
+  Time tt = t;
   compute_analytic(*grid_, tt, ptree, ua_);
 #endif
 
@@ -346,10 +345,10 @@ void create_equation(PropertyTree &ptree, EqnBasePtr &pEqn)
   pEqn = EquationFactory<MyTypes>::build(ptree, *grid_, utmp_);
 
   // Set PDE callback functions, misc:
-  std::function<void(const GFTYPE &t, State &u, 
+  std::function<void(const Time &t, State &u, 
                                       State &ub)>  
       fcallback = update_dirichlet; // set tmp function with proper signature for...
-  std::function<void(const GFTYPE &t, State &u, const GFTYPE &dt)> 
+  std::function<void(const Time &t, State &u, const Time &dt)> 
       stcallback = steptop_callback; // set tmp function with proper signature for...
   pEqn->set_bdy_update_callback(fcallback); // bdy update callback
   pEqn->set_steptop_callback(stcallback);   // 'back-door' callback
@@ -371,7 +370,7 @@ void create_stirrer(PropertyTree &ptree, StirBasePtr &pStirrer)
   pStirrer = StirrerFactory<MyTypes>::build(ptree, *grid_);
 
   // Set stirrer update callback functions:
-  std::function<void(const GFTYPE &t, State &u, State &uf)>  
+  std::function<void(const Time &t, State &u, State &uf)>  
       fcallback = update_forcing; // set tmp function with proper signature for...
   pStirrer->set_update_callback(fcallback); // forcing update callback
 
@@ -387,14 +386,14 @@ void create_stirrer(PropertyTree &ptree, StirBasePtr &pStirrer)
 //         time      : initial time
 //         pObservers: gather/scatter op, GGFX
 //**********************************************************************************
-void create_observers(PropertyTree &ptree, GSIZET icycle, GFTYPE time,
+void create_observers(PropertyTree &ptree, GSIZET icycle, Time time,
 std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers)
 {
     GINT    ivers;
     GSIZET  rest_ocycle;       // restart output cycle
     GSIZET  deltac;            // cycle interval
     GFTYPE  ofact;             // output freq in terms of restart output
-    GFTYPE  deltat;            // time interval
+    Time    deltat;            // time interval
     PropertyTree obsptree;     // observer props 
     GString dstr = "none";
     GString ptype;
@@ -456,7 +455,7 @@ void create_basis_pool(PropertyTree &ptree, BasisBase &gbasis);
     
   // Eventually, this may become an actual pool, from which
   // solvers will determine basis in each direction. For now...
-  for ( GSIZET j=0; j<GDIM; j++ ) {
+  for ( auto j=0; j<GDIM; j++ ) {
     gbasis [j] = new GLLBasis<GCTYPE,GFTYPE>(pstd[j]);
   }
 
@@ -540,31 +539,66 @@ void do_bench(GString fname, GSIZET ncyc)
 //**********************************************************************************
 //**********************************************************************************
 // METHOD: allocate
-// DESC  : Set state, tmp arrays
-//         ptree:  main prop tree
+// DESC  : Allocate state, tmp arrays
+// ARGS  : ptree:  main prop tree
 //**********************************************************************************
 void allocate(const PropertyTree &ptree)
 {
 
-  u_ .resize(nstate_);                          // state
-  ub_.resize(nsolve_);                          // bdy state array
-  uf_.resize(nsolve_); uf_ = NULLPTR;           // forcing array
-  utmp_.resize(ntmp_);                          // tmp array
-  c_ .resize(sgrid == "grid_icos" ? 3 : GDIM);  // adv. velocity
+  GBOOL        doheat, bpureadv, bforced;
+  GINT         nadv, nforced;
+  std::vector<GINT>
+               ibounded, iforced, diforced;
+  std::string  sgrid;
+  std::string  eq_name   = ptree.getValue("pde_name");
+  PropertyTree eqn_ptree = ptree.getPropertyTree(equation_name);
+  PropertyTree stp_ptree = ptree.getPropertyTree("stepper_props");
 
-  for ( GSIZET j=0; j<u_   .size(); j++ ) u_   [j] = new GTVector<GFTYPE>(grid_->size());
+  assert("3##$%!62ahTze32934Plq1C4" != eq_name
+      && "pde_name required");
 
-  for ( GSIZET j=0; j<ub_  .size(); j++ ) ub_  [j] = new GTVector<GFTYPE>(grid_->nbdydof());
+  if ( "pde_burgers" == eq_name ) {
+    sgrid     = ptree.getValue<GString>  ("grid_type");
+    doheat    = eqn_ptree.getValue<bool> ("doheat",false);
+    bpureadv  = eqn_ptree.getValue<bool> ("bpureadv",false);
+    bforced   = eqn_ptree.getValue<bool> ("use_forcing",false);
+    for ( auto i=0; i<GDIM; i++ ) diforced.push_back(i);
+    iforced   = eqn_ptree.getArray<GINT> ("forcing_comp", diforced);
+    nadv      = sgrid == "grid_icos" ? 3 : GDIM;
+    nsolve_   = GDIM;
+    nstate_   = GDIM;
+    if ( doheat || bpureadv ) {
+      nsolve_   = 1;
+      nstate_   = nadv + nsolve_;
+    }
+    if ( "grid_icos" != sgrid ) {
+      ibounded.resize(nsolve_);
+      for ( auto i=0; i<nsolve_; i++ ) ibounded.push_back(i);
+    }
+    ntmp_     = 24;
+  }
+  
+  nforced = MIN(nsolved_,iforced.size());
 
-  if ( solver_traits.bforced ) {
-    for ( GSIZET j=0; j<ub_  .size(); j++ ) uf_  [j] = new GTVector<GFTYPE>(grid_->nbdydof());
+  u_   .resize(nstate_);                // state
+  ub_  .resize(nstate_); ub_ = NULLPTR  // bdy state array
+  uf_  .resize(nstate_); uf_ = NULLPTR; // forcing array
+  utmp_.resize(ntmp_);                  // tmp array
+  c_   .resize(nadv);                   // adv. velocity
+
+  for ( auto j=0; j<u_      .size(); j++ ) u_             [j] = new GTVector<GFTYPE>(grid_->size());
+
+  for ( auto j=0; j<ibounded.size(); j++ ) ub_  [ibounded[j]] = new GTVector<GFTYPE>(grid_->nbdydof());
+
+  if ( bforced ) {
+    for ( auto j=0; j<nforced      ; j++ ) uf_  [iforced[j]] = new GTVector<GFTYPE>(grid_->ndof());
   }
 
-  for ( GSIZET j=0; j<utmp_.size(); j++ ) utmp_[j] = new GTVector<GFTYPE>(grid_->size());
+  for ( auto j=0; j<utmp_    .size(); j++ ) utmp_        [j] = new GTVector<GFTYPE>(grid_->size());
 
-    if ( solver_traits.bpureadv || solver_traits.doheat ) {
-      for ( GSIZET j=0; j<c_   .size(); j++ ) c_   [j] = u_[j+1];
-    }
+  if ( doheat || bpureadv ) { // assign linear adv velocity:
+    for ( auto j=0; j<c_.size(); j++ ) c_   [j] = u_[j+1];
+  }
 
 } // end method allocate
 
@@ -578,10 +612,10 @@ void deallocate()
 {
 
   if ( grid_ != NULLPTR )                   delete grid_;
-  for ( GSIZET j=0; j<gbasis_.size(); j++ ) delete gbasis_[j];
-  for ( GSIZET j=0; j<utmp_  .size(); j++ ) delete utmp_  [j];
-  for ( GSIZET j=0; j<u_     .size(); j++ ) delete u_     [j];
-  for ( GSIZET j=0; j<ub_    .size(); j++ ) delete ub_    [j];
-  for ( GSIZET j=0; j<uf_    .size(); j++ ) delete uf_    [j];
+  for ( auto j=0; j<gbasis_.size(); j++ ) delete gbasis_[j];
+  for ( auto j=0; j<utmp_  .size(); j++ ) delete utmp_  [j];
+  for ( auto j=0; j<u_     .size(); j++ ) delete u_     [j];
+  for ( auto j=0; j<ub_    .size(); j++ ) delete ub_    [j];
+  for ( auto j=0; j<uf_    .size(); j++ ) delete uf_    [j];
 
 } // end method deallocate
