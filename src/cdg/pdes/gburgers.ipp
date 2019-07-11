@@ -217,7 +217,7 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const State &u
       ghelm_->opVec_prod(*u[k], uoptmp_, *urhstmp_[0]); // apply diffusion
      *urhstmp_[0] *= -1.0; // weak Lap op is neg on RHS
       gimass_->opVec_prod(*urhstmp_[0], uoptmp_, *dudt[k]); // apply M^-1
-      if ( bforced_ ) *dudt[k] += *uf[k];
+      if ( bforced_ && uf[k] != NULLPTR ) *dudt[k] += *uf[k];
     }
     return;
   }
@@ -589,6 +589,7 @@ void GBurgers<TypePack>::apply_bc_impl(const Time &t, State &u, const State &ub)
      ||  itype == GBDY_SPONGE 
      ||  itype == GBDY_NONE   ) continue;
     for ( GSIZET k=0; k<u.size(); k++ ) { // for each state component
+      if ( ( ub[k] == NULLPTR ) continue;
       for ( GSIZET j=0; j<(*igbdy)[m].size(); j++ ) { // set Dirichlet-like value
         (*u[k])[(*igbdy)[m][j]] = (*ub[k])[j];
       } 

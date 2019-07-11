@@ -75,18 +75,19 @@ public:
 
         // Burgers solver traits:
         struct Traits {
-          GBOOL        doheat      = FALSE;
-          GBOOL        bpureadv    = FALSE;
-          GBOOL        bconserved  = FALSE;
-          GBOOL        bforced     = FALSE;
-          GBOOL        variabledt  = FALSE;
-          GINT         nstate      = GDIM; // no. vars in state vec
-          GINT         nsolve      = GDIM; // no. vars to solve for
-          GINT         ntmp        = 8;
-          GINT         itorder     = 2;
-          GINT         inorder     = 2;
-          GFTYPE       courant     = 0.5;
-          GString      ssteptype   = "GSTEPPER_EXRK";
+          GBOOL          doheat      = FALSE;
+          GBOOL          bpureadv    = FALSE;
+          GBOOL          bconserved  = FALSE;
+          GBOOL          bforced     = FALSE;
+          GBOOL          variabledt  = FALSE;
+          GINT           nstate      = GDIM; // no. vars in state vec
+          GINT           nsolve      = GDIM; // no. vars to solve for
+          GINT           ntmp        = 8;
+          GINT           itorder     = 2;
+          GINT           inorder     = 2;
+          GFTYPE         courant     = 0.5;
+          GTVector<GINT> iforced;
+          GString        ssteptype   = "GSTEPPER_EXRK";
         };
 
         GBurgers() = delete; 
@@ -149,18 +150,12 @@ private:
         GTVector<GFTYPE>    dthist_;        // coeffs for NL adv term
         GTVector<GTVector<GFTYPE>*>  
                             uevolve_;       // helper array to specify evolved sstate components
-        GTVector<GTVector<GFTYPE>*>  
-                            utmp_;
-        GTVector<GTVector<GFTYPE>*>  
-                            uold_;          // helper arrays set from utmp
-        GTVector<GTVector<GFTYPE>*>  
-                            urhstmp_;       // helper arrays set from utmp
-        GTVector<GTVector<GFTYPE>*>  
-                            uoptmp_;        // helper arrays set from utmp
-        GTVector<GTVector<GFTYPE>*>  
-                            urktmp_;        // helper arrays set from utmp
-        GTVector<GTVector<GFTYPE>*>  
-                            c_;             // linear velocity if bpureadv = TRUE
+        State               utmp_;
+        State               uold_;          // helper arrays set from utmp
+        State               urhstmp_;       // helper arrays set from utmp
+        State               uoptmp_;        // helper arrays set from utmp
+        State               urktmp_;        // helper arrays set from utmp
+        State               c_;             // linear velocity if bpureadv = TRUE
         GTVector<State>     ukeep_;         // state at prev. time levels
         GTVector<GString>
                             valid_types_;   // valid stepping methods supported
