@@ -97,6 +97,12 @@ public:
 		utmp_ = &utmp;
         } 
 
+        /**
+         * Get traits.
+         *
+         */
+        Traits &get_traits() {return traits_;}
+
 protected:
         Traits traits_;
         Grid  *grid_;
