@@ -49,7 +49,7 @@ typename ValueType = GFTYPE,
 typename DerivType = StateType,
 typename TimeType  = ValueType,
 typename JacoType  = StateType,
-typename SizeType  = GSIZET
+typename SizeType  = GSIZET,
 >
 struct EquationTypes {
         using State      = StateType;
@@ -78,12 +78,12 @@ GC_COMM      comm_ ;      // communicator
 
 
 using MyTypes = EquationTypes<>;       // Define types used
-using EqnBase = EquationBase<MyTypes>; // Equation Base Type
-using EqnImpl = GBurgers<MyTypes>;     // Equation Implementa
-using StirBase= StirrerBase<MyTypes>;  // Stirring Base Type
+using EqnBase = EquationBase<MyTypes>; // Equation base type
+using EqnImpl = GBurgers<MyTypes>;     // Equation implementation
+using StirBase= StirrerBase<MyTypes>;  // Stirring base Type
 using StirBasePtr 
-              = std::shared_ptr<StirBase>; // Stirring Base ptr
-using ObsBase = ObserverBase<EqnBase>; // Observer Base Type
+              = std::shared_ptr<StirBase>; // Stirring base ptr
+using ObsBase = ObserverBase<EqnBase>; // Observer base Type
 
 void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVector<GTVector<GFTYPE>*> &u);
 void update_dirichlet(const GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u, GTVector<GTVector<GFTYPE>*> &ub);
