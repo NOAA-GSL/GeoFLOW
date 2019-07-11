@@ -137,7 +137,6 @@ void gio_write_grid(GIOTraits &traits, GGrid &grid, const GTVector<GString> &sva
 //          
 // ARGS   : ptree : main property tree
 //          igrid : if > 0, uses grid format; else uses state format
-//          tindex: time index to restart
 //          u     : state object
 //          p     : matrix of polynomial orders of size nelems X GDIM if 
 //                  order isn't constant, and of size x X GDIM if it is
