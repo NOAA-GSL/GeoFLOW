@@ -14,7 +14,6 @@ template<typename ET>
 typename StirrerFactory<ET>::StirBasePtr
 StirrerFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid){
 
-
 	// Set the default stirrer type
 	const std::string default_stirrer = "none";
 
