@@ -2,6 +2,7 @@
   "exp_order"      : [3, 3, 3],
   "exp_order_type" : "constant",
   "grid_type"      : "grid_icos",
+  "pde_name"       : "pde_burgers",
   "init_block"     : "init_icosgauss",
   "bdy_conditions" : "DIRICHLET",
   "restart_index"  : 0,
@@ -57,13 +58,11 @@
     "planar": false,
     "prop_dir": [1.0, 2.0, 0.0]
   },
-  "adv_equation_traits": {
+  "pde_burgers": {
     "doheat"     : false,
     "bpureadv"   : true,
     "bconserved" : false,
     "use_forcing": false,
-    "variable_dt": false,
-    "courant"    : 0.04 
   },
   "grid_icos": {
     "grid_name" : "grid_icos",
@@ -95,6 +94,8 @@
     "stepping_method"  : "GSTEPPER_EXRK",
     "time_deriv_order" : 4,
     "extrap_order"     : 2
+    "variable_dt"      : false,
+    "courant"          : 0.04 
   },
   "dissipation_traits": {
     "nu"      : 5.0e-3,
