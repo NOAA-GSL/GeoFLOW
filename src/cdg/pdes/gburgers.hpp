@@ -80,14 +80,17 @@ public:
           GBOOL        bconserved  = FALSE;
           GBOOL        bforced     = FALSE;
           GBOOL        variabledt  = FALSE;
-          GStepperType steptype    = GSTEPPER_EXRK;
+          GINT         nstate      = GDIM; // no. vars in state vec
+          GINT         nsolve      = GDIM; // no. vars to solve for
+          GINT         ntmp        = 8;
           GINT         itorder     = 2;
           GINT         inorder     = 2;
           GFTYPE       courant     = 0.5;
+          GString      ssteptype   = "GSTEPPER_EXRK";
         };
 
         GBurgers() = delete; 
-        GBurgers(GGFX<GFTYPE> &ggfx, Grid &grid, State &u, GBurgers<TypePack>::Traits &traits, GTVector<GTVector<GFTYPE>*> &tmp);
+        GBurgers(GGFX<GFTYPE> &ggfx, Grid &grid, GBurgers<TypePack>::Traits &traits, GTVector<GTVector<GFTYPE>*> &tmp);
        ~GBurgers();
         GBurgers(const GBurgers &bu) = default;
         GBurgers &operator=(const GBurgers &bu) = default;
@@ -118,7 +121,7 @@ protected:
                                           const State &ub);               // Apply bdy conditions
 private:
 
-        void                init(State &u, GBurgers::Traits &);           // initialize 
+        void                init(GBurgers::Traits &);                     // initialize 
         GINT                req_tmp_size();                               // required tmp size
         void                dudt_impl  (const Time &t, const State &u, const State &uf, const State &ub,
                                         const Time &dt, Derivative &dudt);
@@ -159,7 +162,7 @@ private:
         GTVector<GTVector<GFTYPE>*>  
                             c_;             // linear velocity if bpureadv = TRUE
         GTVector<State>     ukeep_;         // state at prev. time levels
-        GTVector<GStepperType>
+        GTVector<GString>
                             valid_types_;   // valid stepping methods supported
         GTVector<GFTYPE>   *nu_   ;         // dissipoation
         GGrid              *grid_;          // GGrid object
