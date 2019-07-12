@@ -87,17 +87,21 @@ GGFX<GFTYPE> ggfx_;       // DSS operator
 GC_COMM      comm_ ;      // communicator
 
 
-void allocate(const PropertyTree &ptree);
-void deallocate();
-void update_dirichlet(const Time &t, State &u, State &ub);
-void update_forcing(const Time &t, State &u, State &uf);
-void steptop_callback(const Time &t, State &u, const Time &dt);
+// Callback functions:
+void update_boundary (const Time &t, State &u, State &ub);     // bdy vector update
+void update_forcing  (const Time &t, State &u, State &uf);     // forcing vec update
+void steptop_callback(const Time &t, State &u, const Time &dt);// backdoor function
+
+// Public methods:
+void init_state      (Time &t, State &u, State &ub);
+void init_force      (Time &t, State &u, State &uf);
+void allocate        (const PropertyTree &ptree);
+void deallocate      ();
 void create_observers(PropertyTree &ptree, GSIZET icycle, Time time, 
-std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers);
-void create_equation(PropertyTree &ptree, EqnBasePtr &pEqn);
-void create_stirrer(PropertyTree &ptree, StirBasePtr &pStirrer);
-void gresetart(PropertyTree &ptree);
-void do_bench(GString sbench, GSIZET ncyc);
+void create_equation (PropertyTree &ptree, EqnBasePtr &pEqn);
+void create_stirrer  (PropertyTree &ptree, StirBasePtr &pStirrer);
+void gresetart       (PropertyTree &ptree);
+void do_bench        (GString sbench, GSIZET ncyc);
 
 //#include "init_pde.h"
 
@@ -220,7 +224,8 @@ int main(int argc, char **argv)
     EH_MESSAGE("geoflow: Initializing state...");
     if ( itindex == 0 ) { // start new run
       icycle = 0; t = 0.0; 
-      compute_analytic(*grid_, t, ptree, u_);
+      init_state  (t, u_, ub_);
+      init_forcing(t, u_, ub_);
     }
     else {                // restart run
       gio_restart(ptree, 0, u_, p, icycle, t, comm_);
@@ -281,14 +286,14 @@ int main(int argc, char **argv)
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : update_dirichlet
-// DESC   : update/set Dirichlet vectors, ub
+// METHOD : update_boundary
+// DESC   : update/set boundary vectors, ub
 // ARGS   : t    : time
 //          u    : current state
 //          ub   : bdy vectors (one for each state element)
 // RETURNS: none.
 //**********************************************************************************
-void update_dirichlet(const Time &t, State &u, State &ub)
+void update_boundary(const Time &t, State &u, State &ub)
 {
 
   Time  tt = t;
@@ -307,7 +312,7 @@ void update_dirichlet(const Time &t, State &u, State &ub)
   }
 */
 
-} // end of method update_dirichlet
+} // end of method update_boundary
 
 
 //**********************************************************************************
@@ -607,6 +612,7 @@ void allocate(const PropertyTree &ptree)
 //**********************************************************************************
 // METHOD: deallocate
 // DESC  : De-allocate state, tmp arrays
+// ARGS  : none.
 //**********************************************************************************
 void deallocate()
 {
@@ -619,3 +625,43 @@ void deallocate()
   for ( auto j=0; j<uf_    .size(); j++ ) delete uf_    [j];
 
 } // end method deallocate
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD: init_state
+// DESC  : top-level method to set initial conditions.
+// ARGS  : ptree: main prop tree
+//         t    : initial time
+//         u    : full state vector
+//         ub   : full boundary state vector
+//**********************************************************************************
+void init_state(const PropertyTree &ptree, Time &t, State &u, State &ub)
+{
+  GBOOL bret;
+
+  bret = ginit_state(ptree, t, u, ub);
+
+  assert(bret && "state initialization failed");
+
+} // end method init_state
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD: init_force
+// DESC  : top-level method to set initial forcing.
+// ARGS  : ptree: main prop tree
+//         t   : initial time
+//         u   : full state vector
+//         uf  : full boundary state vector
+//**********************************************************************************
+void init_force(const PropertyTree &ptree, Time &t, State &u, State &uf);
+{
+  GBOOL bret;
+
+  bret = ginit_force(ptree, t, u, uf);
+
+  assert(bret && "forcing initialization failed");
+  
+} // end method init_force
