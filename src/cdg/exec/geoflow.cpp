@@ -124,7 +124,7 @@ int main(int argc, char **argv)
     //***************************************************
     EH_MESSAGE("geoflow: create observers...");
     std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> pObservers(new std::vector<std::shared_ptr<ObserverBase<MyTypes>>>());
-    create_observers(ptree, icycle, t, pObservers);
+    create_observers(pEqn, ptree, icycle, t, pObservers);
 
     //***************************************************
     // Create integrator:
@@ -287,7 +287,7 @@ void create_mixer(PropertyTree &ptree, MixBasePtr &pMixer)
 //         time      : initial time
 //         pObservers: gather/scatter op, GGFX
 //**********************************************************************************
-void create_observers(PropertyTree &ptree, GSIZET icycle, Time time,
+void create_observers(EqnBasePtr &pEqn, PropertyTree &ptree, GSIZET icycle, Time time,
 std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers)
 {
     GINT    ivers;
@@ -335,7 +335,7 @@ std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers
         obsptree.setValue <GSIZET>("cycle_interval",MAX(1.0,deltac/ofact));
         obsptree.setValue<GString>("cadence_type",ctype);
 
-        pObservers->push_back(ObserverFactory<MyTypes>::build(obsptree,*grid_));
+        pObservers->push_back(ObserverFactory<MyTypes>::build(obsptree, pEqn, *grid_));
       }
     }
 

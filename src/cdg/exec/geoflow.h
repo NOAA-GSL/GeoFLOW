@@ -100,7 +100,7 @@ void init_state      (Time &t, State &u, State &ub);
 void init_force      (Time &t, State &u, State &uf);
 void allocate        (const PropertyTree &ptree);
 void deallocate      ();
-void create_observers(PropertyTree &ptree, GSIZET icycle, Time time, 
+void create_observers(EqnBasePtr &eqn_ptr, PropertyTree &ptree, GSIZET icycle, Time time, 
 void create_equation (PropertyTree &ptree, EqnBasePtr &pEqn);
 void create_mixer  (PropertyTree &ptree, MixBasePtr &pMixer);
 void gresetart       (PropertyTree &ptree);
