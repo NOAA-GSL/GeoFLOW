@@ -329,7 +329,7 @@ int main(int argc, char **argv)
     // Create the observers: 
     EH_MESSAGE("main: create observers...");
     std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> pObservers(new std::vector<std::shared_ptr<ObserverBase<MyTypes>>>());
-    create_observers(ptree, icycle, t, pObservers);
+    create_observers(ptree, icycle, t, eqn_base, pObservers);
     for ( GSIZET j=0; j<pObservers->size(); j++ ) (*pObservers)[j]->set_tmp(utmp_);
 
     // Create integrator:
@@ -1261,12 +1261,12 @@ void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVecto
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD: create_observers
-// DESC  : Create observer list from main ptree
+// METHOD: create_mixer
+// DESC  : Create mixer from main ptree
 // ARGS  : grid    : GGrid object
 //         ggfx    : gather/scatter op, GGFX
 //**********************************************************************************
-void create_mixer(PropertyTree &ptree, MixBasePtr  &pMixer)
+void create_mixer(PropertyTree &ptree, MixBasePtr &pMixer)
 {
     PropertyTree     mixptree;    // observer props 
     MixBase::Traits traits;
@@ -1290,9 +1290,11 @@ void create_mixer(PropertyTree &ptree, MixBasePtr  &pMixer)
 // ARGS  : grid      : GGrid object
 //         icycle    : initial icycle
 //         time      : initial time
+//         equation  : shared ptr to EqnBasePtr type
 //         pObservers: gather/scatter op, GGFX
 //**********************************************************************************
 void create_observers(PropertyTree &ptree, GSIZET icycle, GFTYPE time,
+std::shared_ptr<EqnBase> &equation,
 std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers)
 {
     GINT    ivers;
@@ -1340,7 +1342,7 @@ std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers
         obsptree.setValue <GSIZET>("cycle_interval",MAX(1.0,deltac/ofact));
         obsptree.setValue<GString>("cadence_type",ctype);
 
-        pObservers->push_back(ObserverFactory<MyTypes>::build(obsptree,*grid_));
+        pObservers->push_back(ObserverFactory<MyTypes>::build(obsptree, equation, *grid_));
       }
     }
 
