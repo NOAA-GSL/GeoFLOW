@@ -27,7 +27,7 @@
 #include "gposixio_observer.hpp"
 #include "pdeint/equation_base.hpp"
 #include "pdeint/integrator_factory.hpp"
-#include "pdeint/stirrer_factory.hpp"
+#include "pdeint/mixer_factory.hpp"
 #include "pdeint/observer_factory.hpp"
 #include "pdeint/null_observer.hpp"
 #include "tbox/property_tree.hpp"
@@ -80,9 +80,9 @@ GC_COMM      comm_ ;      // communicator
 using MyTypes = EquationTypes<>;       // Define types used
 using EqnBase = EquationBase<MyTypes>; // Equation base type
 using EqnImpl = GBurgers<MyTypes>;     // Equation implementation
-using StirBase= StirrerBase<MyTypes>;  // Stirring base Type
-using StirBasePtr 
-              = std::shared_ptr<StirBase>; // Stirring base ptr
+using MixBase= MixerBase<MyTypes>;  // Mixing base Type
+using MixBasePtr 
+              = std::shared_ptr<MixBase>; // Mixing base ptr
 using ObsBase = ObserverBase<EqnBase>; // Observer base Type
 
 void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVector<GTVector<GFTYPE>*> &u);
@@ -90,7 +90,7 @@ void update_dirichlet(const GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u, GTVector<
 void steptop_callback(const GFTYPE &t, GTVector<GTVector<GFTYPE>*> &u, const GFTYPE &dt);
 void create_observers(PropertyTree &ptree, GSIZET icycle, GFTYPE time, 
 std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers);
-void create_stirrer(PropertyTree &ptree, StirBasePtr &pStirrer);
+void create_mixer(PropertyTree &ptree, MixBasePtr &pMixer);
 void gresetart(PropertyTree &ptree);
 void do_bench(GString sbench, GSIZET ncyc);
 
@@ -298,10 +298,10 @@ int main(int argc, char **argv)
     eqn_impl->set_steptop_callback(stcallback);
     eqn_impl->set_nu(nu_);
 
-    // Create the stirrer (to update forcing)
-    EH_MESSAGE("main: create stirrer...");
-    StirBasePtr pStirrer;
-    create_stirrer(ptree, pStirrer);
+    // Create the mixer (to update forcing)
+    EH_MESSAGE("main: create mixer...");
+    MixBasePtr pMixer;
+    create_mixer(ptree, pMixer);
 
     // Initialize state:
     EH_MESSAGE("main: Initializing state...");
@@ -334,7 +334,7 @@ int main(int argc, char **argv)
 
     // Create integrator:
     EH_MESSAGE("main: create integrator...");
-    auto pIntegrator = IntegratorFactory<MyTypes>::build(tintptree, eqn_base, pStirrer, pObservers, *grid_);
+    auto pIntegrator = IntegratorFactory<MyTypes>::build(tintptree, eqn_base, pMixer, pObservers, *grid_);
     pIntegrator->get_traits().cycle = icycle;
 
 
@@ -1266,21 +1266,21 @@ void compute_analytic(GGrid &grid, GFTYPE &t, const PropertyTree& ptree, GTVecto
 // ARGS  : grid    : GGrid object
 //         ggfx    : gather/scatter op, GGFX
 //**********************************************************************************
-void create_stirrer(PropertyTree &ptree, StirBasePtr  &pStirrer)
+void create_mixer(PropertyTree &ptree, MixBasePtr  &pMixer)
 {
-    PropertyTree     stirptree;    // observer props 
-    StirBase::Traits traits;
+    PropertyTree     mixptree;    // observer props 
+    MixBase::Traits traits;
 
-    GString sstirrer = ptree.getValue<GString>("default_stirrer","none");
-    if ( "none" == sstirrer ) {
-      pStirrer= std::make_shared<NullStirrer<MyTypes>>(traits, *grid_);
+    GString smixer = ptree.getValue<GString>("default_mixer","none");
+    if ( "none" == smixer ) {
+      pMixer= std::make_shared<NullMixer<MyTypes>>(traits, *grid_);
     }
     else {
-      stirptree = ptree.getPropertyTree(sstirrer);
-      pStirrer = StirrerFactory<MyTypes>::build(stirptree, *grid_);
+      mixptree = ptree.getPropertyTree(smixer);
+      pMixer = MixerFactory<MyTypes>::build(mixptree, *grid_);
     }
 
-} // end method create_stirrer
+} // end method create_mixer
 
 
 //**********************************************************************************
