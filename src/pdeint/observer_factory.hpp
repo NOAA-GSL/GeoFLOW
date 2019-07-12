@@ -25,11 +25,13 @@ namespace pdeint {
 template<typename EquationType>
 struct ObserverFactory {
 	using Equation    = EquationType;
+        using EqnBase     = EquationBase<EquationType>;
+        using EqnBasePtr  = std::shared_ptr<EqnBase>;
 	using ObsBase     = ObserverBase<Equation>;
 	using ObsBasePtr  = std::shared_ptr<ObsBase>;
 	using Grid        = typename EquationType::Grid;
 
-	static ObsBasePtr build(const tbox::PropertyTree& ptree, Grid& grid);
+	static ObsBasePtr build(const tbox::PropertyTree& ptree, EqnBasePtr& equation, Grid& grid);
 
 };
 

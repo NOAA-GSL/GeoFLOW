@@ -12,7 +12,7 @@ namespace pdeint {
 
 template<typename ET>
 typename ObserverFactory<ET>::ObsBasePtr
-ObserverFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid){
+ObserverFactory<ET>::build(const tbox::PropertyTree& ptree, EqnBasePtr& equation, Grid& grid){
 
 
 	// Set the default observer type
@@ -51,7 +51,7 @@ ObserverFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid){
 		using ObsImpl = NullObserver<Equation>;
 
 		// Allocate observer Implementation
-		std::shared_ptr<ObsImpl> obs_impl(new ObsImpl(traits, grid));
+		std::shared_ptr<ObsImpl> obs_impl(new ObsImpl(eqation, grid, traits));
 
 		// Set any parameters we need to set
 		// NA
@@ -67,7 +67,7 @@ ObserverFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid){
                 traits.itag3  = ptree.getValue <GINT>("filename_size",2048);  
 
 		// Allocate observer Implementation
-		std::shared_ptr<ObsImpl> obs_impl(new ObsImpl(traits, grid));
+		std::shared_ptr<ObsImpl> obs_impl(new ObsImpl(equation, grid, traits));
 
 		// Set back to base type
 		base_ptr = obs_impl;
@@ -76,7 +76,7 @@ ObserverFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid){
 		using ObsImpl = GGlobalDiag_basic<Equation>;
 
 		// Allocate observer Implementation
-		std::shared_ptr<ObsImpl> obs_impl(new ObsImpl(traits, grid));
+		std::shared_ptr<ObsImpl> obs_impl(new ObsImpl(equation, grid, traits));
 
 		// Set back to base type
 		base_ptr = obs_impl;
