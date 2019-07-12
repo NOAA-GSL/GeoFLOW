@@ -63,20 +63,22 @@ public:
 private:
 // Private methods:
         void               init(const Time t, const State &u);
-        void               do_L2 (const Time t, const State &u, const State &uf, const GString file);
-        void               do_max(const Time t, const State &u, const State &uf, const GString file);
+        void               do_kinetic_L2 (const Time t, const State &u, const State &uf, const GString file);
+        void               do_kinetic_max(const Time t, const State &u, const State &uf, const GString file);
 // Private data:
         GBOOL              bInit_;
         GINT               myrank_;     // MPI rank
         GSIZET             cycle_last_; // most recent output cycle
         GSIZET             cycle_;      // continuously-running cycle
         GSIZET             ocycle_;     // output cycle number
+        GSIZET             ikinetic_;   // stores GSC_KINETIC component types
         GFTYPE             time_last_;  // most recent output time
         GFTYPE             ivol_;       // inverse of grid volume
         GTVector<GINT>     state_index_;// list of state indices to print
         GTVector<GString>  state_names_;// list of names of states to print
         GString            sidir_;      // directory from which to read
         GString            sodir_;      // directory in which to write
+        State              ku_;         // vector of pointers to kinetic components
 
 };
 
