@@ -5,106 +5,7 @@
 // Copyright    : Copyright 2019. Colorado State University. All rights reserved.
 // Derived From : 
 //==================================================================================
-#include "gexec.h"
-#include "gtypes.h"
-#include <stdio.h>
-#include <math.h>
-#include <unistd.h>
-#include <iostream>
-#include <gptl.h>
-#include <memory>
-#include <cstdlib>
-#include <cassert>
-#include <random>
-#include <typeinfo>
-#include "gcomm.hpp"
-#include "ggfx.hpp"
-#include "gllbasis.hpp"
-#include "gmorton_keygen.hpp"
-#include "gburgers.hpp"
-#include "ggrid_box.hpp"
-#include "ggrid_factory.hpp"
-#include "gposixio_observer.hpp"
-#include "pdeint/equation_base.hpp"
-#include "pdeint/integrator_factory.hpp"
-#include "pdeint/stirrer_factory.hpp"
-#include "pdeint/observer_factory.hpp"
-#include "pdeint/null_observer.hpp"
-#include "tbox/property_tree.hpp"
-#include "tbox/mpixx.hpp"
-#include "tbox/global_manager.hpp"
-#include "tbox/input_manager.hpp"
-#include "gtools.h"
-
-using namespace geoflow::pdeint;
-using namespace geoflow::tbox;
-using namespace std;
-
-
-template< // default template arg types
-typename StateType = GTVector<GTVector<GFTYPE>*>,
-typename GridType  = GGrid,
-typename ValueType = GFTYPE,
-typename DerivType = StateType,
-typename TimeType  = ValueType,
-typename JacoType  = StateType,
-typename SizeType  = GSIZET
->
-struct EquationTypes {
-        using State      = StateType;
-        using Grid       = GridType;
-        using Value      = ValueType;
-        using Derivative = DerivType;
-        using Time       = TimeType;
-        using Jacobian   = JacoType;
-        using Size       = SizeType;
-};
-
-using MyTypes     = EquationTypes<>;           // Define types used
-using EqnBase     = EquationBase<MyTypes>;     // Equation Base Type
-using EqnBasePtr  = std::shared_ptr<EqnBase>;  // Equation Base Ptr
-using EqnImpl     = GBurgers<MyTypes>;         // Equation Implementa
-using StirBase    = StirrerBase<MyTypes>;      // Stirring Base Type
-using StirBasePtr = std::shared_ptr<StirBase>; // Stirring Base Ptr
-using ObsBase     = ObserverBase<EqnBase>;     // Observer Base Type
-using BasisBase   = GTVector<GNBasis<GCTYPE,GFTYPE>*>; // Basis pool type
-
-
-GBOOL  bench_=FALSE;
-GINT   nsolve_;  // number *solved* 'state' arrays
-GINT   nstate_;  // number 'state' arrays
-GINT   ntmp_  ;  // number tmp arrays
-GGrid *grid_;
-State u_;
-State c_;
-State ub_;
-State uf_;
-State utmp_;
-GTVector<GFTYPE> nu_(3);
-BasisBase gbasis_(GDIM);
-PropertyTree ptree;       // main prop tree
-GGFX<GFTYPE> ggfx_;       // DSS operator
-GC_COMM      comm_ ;      // communicator
-
-
-// Callback functions:
-void update_boundary (const Time &t, State &u, State &ub);     // bdy vector update
-void update_forcing  (const Time &t, State &u, State &uf);     // forcing vec update
-void steptop_callback(const Time &t, State &u, const Time &dt);// backdoor function
-
-// Public methods:
-void init_state      (Time &t, State &u, State &ub);
-void init_force      (Time &t, State &u, State &uf);
-void allocate        (const PropertyTree &ptree);
-void deallocate      ();
-void create_observers(PropertyTree &ptree, GSIZET icycle, Time time, 
-void create_equation (PropertyTree &ptree, EqnBasePtr &pEqn);
-void create_stirrer  (PropertyTree &ptree, StirBasePtr &pStirrer);
-void gresetart       (PropertyTree &ptree);
-void do_bench        (GString sbench, GSIZET ncyc);
-
-//#include "init_pde.h"
-
+#include "geoflow.h"
 
 int main(int argc, char **argv)
 {
@@ -212,24 +113,11 @@ int main(int argc, char **argv)
     create_equation(ptree, pEqn);
 
     //***************************************************
-    // Create the stirrer (to update forcing)
+    // Create the mixer (to update forcing)
     //***************************************************
-    EH_MESSAGE("geoflow: create stirrer...");
-    StirBasePtr pStirrer;
-    create_stirrer(ptree, pStirrer);
-
-    //***************************************************
-    // Initialize state:
-    //***************************************************
-    EH_MESSAGE("geoflow: Initializing state...");
-    if ( itindex == 0 ) { // start new run
-      icycle = 0; t = 0.0; 
-      init_state  (t, u_, ub_);
-      init_forcing(t, u_, ub_);
-    }
-    else {                // restart run
-      gio_restart(ptree, 0, u_, p, icycle, t, comm_);
-    }
+    EH_MESSAGE("geoflow: create mixer...");
+    MixBasePtr pMixer;
+    create_mixer(ptree, pMixer);
 
     //***************************************************
     // Create observers: 
@@ -242,9 +130,21 @@ int main(int argc, char **argv)
     // Create integrator:
     //***************************************************
     EH_MESSAGE("geoflow: create integrator...");
-    auto pIntegrator = IntegratorFactory<MyTypes>::build(ptree, eqn_base, pStirrer, pObservers, *grid_);
+    auto pIntegrator = IntegratorFactory<MyTypes>::build(ptree, pEqn, pMixer, pObservers, *grid_);
     pIntegrator->get_traits().cycle = icycle;
 
+    //***************************************************
+    // Initialize state:
+    //***************************************************
+    EH_MESSAGE("geoflow: Initializing state...");
+    if ( itindex == 0 ) { // start new run
+      icycle = 0; t = 0.0; 
+      init_state  (t, u_, ub_);
+      init_forcing(t, u_, uf_);
+    }
+    else {                // restart run
+      gio_restart(ptree, 0, u_, p, icycle, t, comm_);
+    }
 
     //***************************************************
     // Do time integration (output included
@@ -330,10 +230,6 @@ void update_boundary(const Time &t, State &u, State &ub)
 void steptop_callback(const Time &t, State &u, const Time &dt)
 {
   
-#if 0
-  Time tt = t;
-  compute_analytic(*grid_, tt, ptree, ua_);
-#endif
 
 } // end, method steptop_callback
 
@@ -364,22 +260,22 @@ void create_equation(PropertyTree &ptree, EqnBasePtr &pEqn)
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD: create_stirrer
+// METHOD: create_mixer
 // DESC  : Create forcing functions from main ptree
 // ARGS  : ptree   : Main property tree
-//         pStirrer: StirBasePtr pointer that is configured and returned
+//         pMixer: MixBasePtr pointer that is configured and returned
 //**********************************************************************************
-void create_stirrer(PropertyTree &ptree, StirBasePtr &pStirrer)
+void create_mixer(PropertyTree &ptree, MixBasePtr &pMixer)
 {
 
-  pStirrer = StirrerFactory<MyTypes>::build(ptree, *grid_);
+  pMixer = MixerFactory<MyTypes>::build(ptree, *grid_);
 
-  // Set stirrer update callback functions:
+  // Set mixer update callback functions:
   std::function<void(const Time &t, State &u, State &uf)>  
       fcallback = update_forcing; // set tmp function with proper signature for...
-  pStirrer->set_update_callback(fcallback); // forcing update callback
+  pMixer->set_update_callback(fcallback); // forcing update callback
 
-} // end method create_stirrer
+} // end method create_mixer
 
 
 //**********************************************************************************
@@ -588,22 +484,18 @@ void allocate(const PropertyTree &ptree)
   u_   .resize(nstate_);                // state
   ub_  .resize(nstate_); ub_ = NULLPTR  // bdy state array
   uf_  .resize(nstate_); uf_ = NULLPTR; // forcing array
-  utmp_.resize(ntmp_);                  // tmp array
-  c_   .resize(nadv);                   // adv. velocity
+  utmp_.resize  (ntmp_);                // tmp array
 
-  for ( auto j=0; j<u_      .size(); j++ ) u_             [j] = new GTVector<GFTYPE>(grid_->size());
+  for ( auto j=0; j<u_. size(); j++ ) u_.          [j] = new GTVector<GFTYPE>(grid_->size());
 
-  for ( auto j=0; j<ibounded.size(); j++ ) ub_  [ibounded[j]] = new GTVector<GFTYPE>(grid_->nbdydof());
+  for ( auto j=0; j<ibounded.size(); j++ ) ub_[ibounded[j]] = new GTVector<GFTYPE>(grid_->nbdydof());
 
   if ( bforced ) {
-    for ( auto j=0; j<nforced      ; j++ ) uf_  [iforced[j]] = new GTVector<GFTYPE>(grid_->ndof());
+    for ( auto j=0; j<nforced      ; j++ ) uf_.[iforced[j]] = new GTVector<GFTYPE>(grid_->ndof());
   }
 
-  for ( auto j=0; j<utmp_    .size(); j++ ) utmp_        [j] = new GTVector<GFTYPE>(grid_->size());
+  for ( auto j=0; j<utmp_   .size(); j++ ) utmp_.       [j] = new GTVector<GFTYPE>(grid_->size());
 
-  if ( doheat || bpureadv ) { // assign linear adv velocity:
-    for ( auto j=0; j<c_.size(); j++ ) c_   [j] = u_[j+1];
-  }
 
 } // end method allocate
 
