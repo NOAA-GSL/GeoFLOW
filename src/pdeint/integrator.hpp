@@ -180,7 +180,7 @@ public:
 protected:
         size_t      cycle_; // no. time cycles taken so far
 	Traits      traits_;
-	EqnBasePtr  eqn_ptr_;
+        EqnBasePtr  eqn_ptr_;
 	StirBasePtr stir_ptr_;
 	ObsBasePtr  obs_ptr_;
         Grid*       grid_;
