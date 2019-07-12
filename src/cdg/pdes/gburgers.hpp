@@ -72,6 +72,8 @@ public:
                "Derivative is of incorrect type");
         static_assert(std::is_same<Grid,GGrid>::value,
                "Grid is of incorrect type");
+        GTVector<GStateCompType> 
+                         icomptype_; // descriptions of each state component
 
         // Burgers solver traits:
         struct Traits {
