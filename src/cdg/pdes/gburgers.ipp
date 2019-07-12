@@ -237,7 +237,7 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const State &u
     ghelm_->opVec_prod(*u[0], uoptmp_, *urhstmp_[0]);  // apply diffusion
     GMTK::saxpby<GFTYPE>(*urhstmp_[0], -1.0, *dudt[0], -1.0);
     gimass_->opVec_prod(*urhstmp_[0], uoptmp_, *dudt[0]); // apply M^-1
-    if ( bforced_ ) *dudt[0] += *uf[0];
+    if ( bforced_ && uf[0] != NULLPTR ) *dudt[0] += *uf[0];
   }
   else {             // nonlinear advection
     for ( auto k=0; k<GDIM; k++ ) {
@@ -245,7 +245,7 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const State &u
       ghelm_->opVec_prod(*u[k], uoptmp_, *urhstmp_[0]); // apply diffusion
       GMTK::saxpby<GFTYPE>(*urhstmp_[0], -1.0, *dudt[k], -1.0);
       gimass_->opVec_prod(*urhstmp_[0], uoptmp_, *dudt[k]); // apply M^-1
-      if ( bforced_ ) *dudt[k] += *uf[k];
+      if ( bforced_ && uf[k] != NULLPTR ) *dudt[k] += *uf[k];
     }
   }
   
