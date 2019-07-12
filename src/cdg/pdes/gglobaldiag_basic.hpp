@@ -53,7 +53,7 @@ public:
                "Grid is of incorrect type");
 
                            GGlobalDiag_basic() = delete;
-                           GGlobalDiag_basic(typename ObserverBase<EquationType>::Traits &traits, Grid &grid);
+                           GGlobalDiag_basic(EquationPtr &equation, Grid &grid, typename ObserverBase<EquationType>::Traits &traits);
                           ~GGlobalDiag_basic() = default;
                            GGlobalDiag_basic(const GGlobalDiag_basic &a) = default;
                            GGlobalDiag_basic &operator=(const GGlobalDiag_basic &bu) = default;
