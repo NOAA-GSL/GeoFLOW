@@ -104,9 +104,10 @@ public:
         Traits &get_traits() {return traits_;}
 
 protected:
-        Traits traits_;
-        Grid  *grid_;
-        State *utmp_;
+        Traits       traits_;
+        Grid        *grid_;
+        State       *utmp_;
+        EquationPtr  eqn_ptr_;
 	/**
 	 * Must be provided by implementation
 	 */
