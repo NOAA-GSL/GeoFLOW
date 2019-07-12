@@ -172,6 +172,12 @@ const char * const sGStepperType[] =
 enum GVectorType        {GVECTYPE_PHYS=0 , GVECTYPE_CONTRAVAR, GVECTYPE_COVAR};
 #endif
 
+#if !defined(_G_STATE_COMP_TYPE_DEF)
+#define _G_STATE_COMP_TYPE_DEF
+enum GStateCompType     {GSC_KINETIC=0, GSC_MAGNETIC, GSC_ACTIVE_SCALAR, GSC_PASSIVE_SCALAR, GSC_PRESCRIBED, GSC_NONE,  GSC_MAX};
+#endif
+
+
 // Variables used to set dimension & operational stack size:
 #undef GDIM
 #define G_MEMLOCNULL             -1     // Memblk index NULL value (<0)
