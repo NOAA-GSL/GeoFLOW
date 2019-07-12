@@ -1,12 +1,12 @@
 /*
- * stirrer_base.hpp
+ * mixrer_base.hpp
  *
  *  Created on: Mar 27, 2019
  *      Author: bflynt, d.rosemnerg
  */
 
-#ifndef SRC_PDEINT_STIRRER_BASE_HPP_
-#define SRC_PDEINT_STIRRER_BASE_HPP_
+#ifndef SRC_PDEINT_MIXER_BASE_HPP_
+#define SRC_PDEINT_MIXER_BASE_HPP_
 
 #include <memory>
 #include <vector>
@@ -16,18 +16,18 @@ namespace geoflow {
 namespace pdeint {
 
 /**
- * Base class to provided an interface for all 'stirrers'
+ * Base class to provided an interface for all 'mixrers'
  *
  * The base class provides the interface using the strategy pattern
- * for all stirrer types.  Stirrers take the forcing after
+ * for all mixrer types.  Mixrers take the forcing after
  * every time step and determine if it should 'randomized', and
  * how.
  */
 template<typename EquationType>
-class StirrerBase {
+class MixrerBase {
 
 public:
-        enum StirType     {STIR_CYCLE=0, STIR_TIME};
+        enum MixType     {STIR_CYCLE=0, STIR_TIME};
 	using Equation    = EquationType;
 	using State       = typename Equation::State;
 	using Grid        = typename Equation::Grid;
@@ -42,28 +42,28 @@ public:
          * Data structure to hold user selected parameters
          */
         struct Traits {
-                StirType  itype          = STIR_TIME; // stir cadence type
+                MixType  itype          = STIR_TIME; // mix cadence type
                 std::vector<int>     
-                          state_index;                // which state members to 'stir'
+                          state_index;                // which state members to 'mix'
                 size_t    corr_cycle     = 10;        // correlation cycle interval 
                 double    corr_time      = 1.0;       // correlation time interval 
         };
 
-        StirrerBase() = default;
-	StirrerBase(Traits& traits, Grid& grid){traits_=traits; grid_= &grid;}
-	StirrerBase(const StirrerBase& obs) = default;
-	virtual ~StirrerBase() = default;
-	StirrerBase& operator=(const StirrerBase& obs) = default;
+        MixrerBase() = default;
+	MixrerBase(Traits& traits, Grid& grid){traits_=traits; grid_= &grid;}
+	MixrerBase(const MixrerBase& obs) = default;
+	virtual ~MixrerBase() = default;
+	MixrerBase& operator=(const MixrerBase& obs) = default;
 
 	/**
-	 * Stir the forcing state at time
+	 * Mix the forcing state at time
 	 *
 	 * @param[in] t Time of current state
 	 * @param[in] u State at the current time
 	 * @param[in] uf forcing tendency at the current time
 	 */
-	void stir(const Time t, const State& u, State& uf){
-		this->stir_impl(t,u,uf);
+	void mix(const Time t, const State& u, State& uf){
+		this->mix_impl(t,u,uf);
 	}
 
         /**
@@ -83,11 +83,11 @@ protected:
 	/**
 	 * Must be provided by implementation
 	 */
-	virtual void stir_impl(const Time& t, const State& u, State &uf) = 0;
+	virtual void mix_impl(const Time& t, const State& u, State &uf) = 0;
 
 };
 
 } // namespace pdeint
 } // namespace geoflow
 
-#endif /* SRC_PDEINT_STIRRER_BASE_HPP_ */
+#endif /* SRC_PDEINT_MIXER_BASE_HPP_ */
