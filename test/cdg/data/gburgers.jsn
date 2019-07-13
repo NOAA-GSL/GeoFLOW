@@ -59,10 +59,11 @@
     "prop_dir": [1.0, 2.0, 0.0]
   },
   "pde_burgers": {
-    "doheat"     : false,
-    "bpureadv"   : true,
-    "bconserved" : false,
-    "use_forcing": false,
+    "doheat"      : false,
+    "bpureadv"    : true,
+    "bconserved"  : false,
+    "use_forcing" : false,
+    "forcing_comp": [0 1 2];
   },
   "grid_icos": {
     "grid_name" : "grid_icos",
