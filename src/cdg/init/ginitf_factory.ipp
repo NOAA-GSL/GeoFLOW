@@ -27,14 +27,14 @@ void GInitFFactory::static void init(const geoflow::tbox::PropertyTree& ptree, E
 {
   GBOOL         bforced = ptree.getValue<GString>("use_forcing", FALSE);
   GString       sinit   = ptree.getValue<GString>("initf_block");
-  PropertyTree  vtree   = ptree.getPropertyTree(sinit);
+  PropertyTree  ftree   = ptree.getPropertyTree(sinit);
 
   if ( !bforced ) return;
 
   if      ( "initf_null"        == sinit ) {
-    ginitf::initf_impl_null     (vtree, eqn_ptr, grid, time, ub, u);
+    ginitf::impl_null     (ftree, eqn_ptr, grid, time, u, uf);
   else if ( "initf_rand"        == sinit ) {
-    ginitf::initf_impl_icosgauss(vtree, eqn_ptr, grid, time, ub, u);
+    ginitf::impl_rand     (ftree, eqn_ptr, grid, time, u, uf);
   }
   else                                        {
     assert(FALSET & "Specified forcing initialization unknown");
