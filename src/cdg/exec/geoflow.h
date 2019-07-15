@@ -33,6 +33,8 @@
 #include "pdeint/mixer_factory.hpp"
 #include "pdeint/observer_factory.hpp"
 #include "pdeint/null_observer.hpp"
+#include "ginitf_factory.hpp"
+#include "ginits_factory.hpp"
 #include "tbox/property_tree.hpp"
 #include "tbox/mpixx.hpp"
 #include "tbox/global_manager.hpp"

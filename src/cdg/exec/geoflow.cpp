@@ -532,7 +532,7 @@ void init_state(const PropertyTree &ptree, Time &t, State &u, State &ub)
 {
   GBOOL bret;
 
-  bret = ginit_state(ptree, t, u, ub);
+  bret = GInitFactory::init(ptree, *grid_, t, utmp_, ub, u);
 
   assert(bret && "state initialization failed");
 
@@ -552,7 +552,7 @@ void init_force(const PropertyTree &ptree, Time &t, State &u, State &uf);
 {
   GBOOL bret;
 
-  bret = ginit_force(ptree, t, u, uf);
+  bret = GInitFactory::init(ptree, *grid_, t, utmp_, u, uf);
 
   assert(bret && "forcing initialization failed");
   
