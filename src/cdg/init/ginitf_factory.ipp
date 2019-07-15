@@ -24,7 +24,7 @@ namespace pdeint {
 //          uf     : forcing components set from call
 // RETURNS: none.
 //**********************************************************************************
-void GInitFFactory::static void init(const geoflow::tbox::PropertyTree& ptree, EqnBasePtr &eqn_ptr, GGrid &grid, Time &time, State &utmp, State &u, State &uf)
+void GInitFFactory::static void init(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, Time &time, State &utmp, State &u, State &uf)
 {
   GBOOL         bforced = ptree.getValue<GString>("use_forcing", FALSE);
   GString       sinit   = ptree.getValue<GString>("initf_block");

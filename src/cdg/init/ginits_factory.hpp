@@ -29,7 +29,7 @@ class GInitSFactory
         using Time          = typename Equation::Time;
 
 
-	static void init(const geoflow::tbox::PropertyTree& ptree, EqnBasePtr &eqn_ptr, GGrid &grid,  Time &time, State &utmp, State &ub, State &u);
+	static void init(const geoflow::tbox::PropertyTree& ptree, GGrid &grid,  Time &time, State &utmp, State &ub, State &u);
 
   private:
 }; // class GInitSFactory

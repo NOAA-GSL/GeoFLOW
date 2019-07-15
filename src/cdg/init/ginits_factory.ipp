@@ -17,15 +17,13 @@ namespace pdeint {
 // METHOD : init
 // DESC   : Do init of state components
 // ARGS   : ptree  : main property tree
-//          eqn_ptr: pointer to equation
 //          time   : initialization time
 //          utmp   : tmp arrays
 //          ub     : boundary state (also initialized here)
-//          u      : state to be initialized. Each component must be 
-//                   labelled in EqnBasePtr::icomptype_.
+//          u      : state to be initialized. 
 // RETURNS: none.
 //**********************************************************************************
-void GInitSFactory::static void init(const geoflow::tbox::PropertyTree& ptree, EqnBasePtr &eqn_ptr, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
+void GInitSFactory::static void init(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
 {
   GString       sinit   = ptree.getValue<GString>("inits_block");
   PropertyTree  vtree   = ptree.getPropertyTree(sinit);
