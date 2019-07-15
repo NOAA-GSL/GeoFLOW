@@ -33,10 +33,10 @@ void GInitVFactory::static void init(const geoflow::tbox::PropertyTree& ptree, E
     ginitv::initv_impl_icosgauss(vtree, eqn_ptr, grid, time, ub, u);
   }
   else if ( "initv_lump"           == sinit ) {
-    ginitv::initv_impl_lump(vtree, eqn_ptr, grid, time, ub, u);
+    ginitv::initv_impl_lump     (vtree, eqn_ptr, grid, time, ub, u);
   }
   else if ( "initv_nwave"          == sinit ) {
-    ginitv::initv_impl_nwave(vtree, eqn_ptr, grid, time, ub, u);
+    ginitv::initv_impl_nwave    (vtree, eqn_ptr, grid, time, ub, u);
   }
   else                                        {
     assert(FALSET & "Specified state initialization unknown");

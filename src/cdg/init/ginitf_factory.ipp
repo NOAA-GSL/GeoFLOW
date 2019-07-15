@@ -31,7 +31,9 @@ void GInitFFactory::static void init(const geoflow::tbox::PropertyTree& ptree, E
 
   if ( !bforced ) return;
 
-  if      ( "initf_rand"        == sinit ) {
+  if      ( "initf_null"        == sinit ) {
+    ginitf::initf_impl_null     (vtree, eqn_ptr, grid, time, ub, u);
+  else if ( "initf_rand"        == sinit ) {
     ginitf::initf_impl_icosgauss(vtree, eqn_ptr, grid, time, ub, u);
   }
   else                                        {
