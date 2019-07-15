@@ -1,0 +1,36 @@
+This is the 'user' directory, for adding new state and forcing initialization
+methods. 
+
+There are two main steps for adding a new initialization routine. There are 2
+initializations that may be done: (A) state initialization (always required);
+(B) forcing initialization (only required if 'use_forcing' == TRUE in configuration
+file.
+
+For example, to add a new state initialization, first
+
+> cd state
+
+Then,
+
+(1) Use the following namespace template (or one of the existing namespaces), and 
+    replace XXX with a new function name; fill out the function, and save it
+    as 'ginits_XXX.ipp' (the 'XXX' on the filename is arbitrary, but should
+    relate the the XXX in the function name. Then, open 'ginits.hpp', and add
+    the new .ipp name to the include list at the bottom:
+       
+      ...
+    #include "finits_XXX.ipp"
+      ...
+
+
+(2) Open '../init/ginits_factory.ipp' and 'wire' the new initialization
+    method in to the JSON property tree input, by following the existing
+    pattern. The name in the conditionals to the left of ' ...  == sinit'
+    is the name that will appear in the JSON configuration file.
+
+To add a new forcing initialization, you would first
+
+> cd force
+
+then follow the same procedure as above, substituting 'ginitf' for 'ginits'
+(the f is for 'forcing'; the s, for 'state').
