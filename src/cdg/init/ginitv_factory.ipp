@@ -1,5 +1,5 @@
 //==================================================================================
-// Module       : ginit_factory
+// Module       : ginitv_factory
 // Date         : 7/11/19 (DLR)
 // Description  : GeoFLOW state initialization factory
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
@@ -24,62 +24,24 @@ namespace pdeint {
 //                   labelled in EqnBasePtr::icomptype_.
 // RETURNS: none.
 //**********************************************************************************
-void GInitFactory::static void init(const geoflow::tbox::PropertyTree& ptree, EqnBasePtr &eqn_ptr,  Time &time, State *ub, State &u)
+void GInitVFactory::static void init(const geoflow::tbox::PropertyTree& ptree, EqnBasePtr &eqn_ptr, GGrid &grid, Time &time, State &ub, State &u)
 {
-  GSIZET  itindex = ptree.getValue<GSIZET>   ("restart_index", 0);
-  GString sdef    = "grid_box";
-  GString gname   = ptree.getValue<GString>("grid_type", sdef);
-  sdef            = "constant";
-  GString ptype   = ptree.getValue<GString>("exp_order_type", sdef);
-  geoflow::tbox::PropertyTree gridptree = ptree.getPropertyTree(gname);
-  GGrid *grid;
-  GTMatrix<GINT> p;
-  GTVector<GTVector<GFTYPE>> xnodes;
+  GString       sinit   = ptree.getValue<GString>("initv_block");
+  PropertyTree  vtree   = ptree.getPropertyTree(sinit);
 
-
-
-  if ( itindex == 0 
-    || "constant" == ptype ) { // not doing a restart, or p doesn't change
-
-    // In this case, gbasis is assumed to contain the basis
-    // functions for all elements; these are assumed to be 
-    // constant:
-    if      ( "grid_icos"   == gname   // 2d or 3d Icos grid
-        ||    "grid_sphere" == gname ) {
-      grid = new GGridIcos(gridptree, gbasis, comm);
-      grid->grid_init();
-    }
-    else if ( "grid_box"    ==  gname) { // 2d or 3D Cart grid
-      grid = new GGridBox(gridptree, gbasis, comm);
-      grid->grid_init();
-    }
-    else {
-      assert(FALSE && "Invalid PropertyTree grid specification");
-    }
-
+  if      ( "initv_icosgauss"      == sinit ) {
+    ginitv::initv_impl_icosgauss(vtree, eqn_ptr, grid, time, ub, u);
   }
-  else {                       // doing restart w/ variable p
-
-    // In this case, gbasis is interpreted as a 'pool' of 
-    // basis functions with various orders. It is an error
-    // if correct order is not found on restart:
-    read_grid(ptree, comm, p, xnodes);
-    if      ( "grid_icos"   == gname   // 2d or 3d Icos grid
-        ||    "grid_sphere" == gname ) {
-      grid = new GGridIcos(gridptree, gbasis, comm);
-      grid->grid_init(p, xnodes);
-    }
-    else if ( "grid_box"    ==  gname) { // 2d or 3D Cart grid
-      grid = new GGridBox(gridptree, gbasis, comm);
-      grid->grid_init(p, xnodes);
-    }
-    else {
-      assert(FALSE && "Invalid PropertyTree grid specification");
-    }
-
+  else if ( "initv_lump"           == sinit ) {
+    ginitv::initv_impl_lump(vtree, eqn_ptr, grid, time, ub, u);
+  }
+  else if ( "initv_nwave"          == sinit ) {
+    ginitv::initv_impl_nwave(vtree, eqn_ptr, grid, time, ub, u);
+  }
+  else                                        {
+    assert(FALSET & "Specified state initialization unknown");
   }
 
-  return grid;
 } // end, init method
 
 

@@ -1,12 +1,12 @@
 //==================================================================================
-// Module       : ginit_factory.hpp
+// Module       : ginitf_factory.hpp
 // Date         : 7/11/19 (DLR)
-// Description  : GeoFLOW state variable initialization factory object. 
+// Description  : GeoFLOW forcing initialization factory object. 
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
-#if !defined(_GINITV_FACTORY_HPP)
-#define _GINITV_FACTORY_HPP 
+#if !defined(_GINITF_FACTORY_HPP)
+#define _GINITF_FACTORY_HPP 
 
 #include "tbox/property_tree.hpp"
 #include "gcomm.hpp"
@@ -17,7 +17,7 @@ namespace geoflow {
 namespace pdeint {
 
 
-class GInitVFactory
+class GInitFFactory
 {
   public:
         using Equation      = EquationType;
@@ -29,10 +29,10 @@ class GInitVFactory
         using Time          = typename Equation::Time;
 
 
-	static void init(const geoflow::tbox::PropertyTree& ptree, EqnBasePtr &eqn_ptr, GGrid &grid,  Time &time, State &ub, State &u);
+	static void init(const geoflow::tbox::PropertyTree& ptree, EqnBasePtr &eqn_ptr, GGrid &grid,  Time &time, State &u, State &uf);
 
   private:
-}; // class GInitVFactory
+}; // class GInitFFactory
 
 
 
