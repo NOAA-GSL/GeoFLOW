@@ -8,12 +8,12 @@ file.
 
 For example, to add a new state initialization, first
 
-> cd state
+> cd src/cdg/user/state
 
 Then,
 
-(1) Use the following namespace template (or one of the existing namespaces), and 
-    replace XXX with a new function name; fill out the function, and save it
+(1)(a)  Use the namespace template below (or one of the existing files), 
+    and replace XXX with a new function name; fill out the function, and save it
     as 'ginits_XXX.ipp' (the 'XXX' on the filename is arbitrary, but should
     relate the the XXX in the function name. Then, open 'ginits.hpp', and add
     the new .ipp name to the include list at the bottom:
@@ -21,6 +21,33 @@ Then,
       ...
     #include "finits_XXX.ipp"
       ...
+
+   (b)  Open up the file 'ginits.hpp', and add the new function name, to the list
+    of available initialization functions:
+
+      ...
+    GBOOL impl_XXX (const PropertyTree& stree, EqnBasePtr &eqn_ptr, GGrid &grid,  Time &time, State &ub, State &u);
+
+      ...
+      
+
+   -----------------------------begin .ipp template contents: 
+ 
+    #include "ginits.hpp"
+
+    namespace ginits {
+
+      GBOOL impl_XXX(const PropertyTree &stree, const Time &t, State &u, State &ub)
+      {
+
+        return TRUE; // or FALSE
+
+      } // end, new function name
+
+    }  // end, namespace ginits
+
+   -----------------------------end .ipp template contents: 
+
 
 
 (2) Open '../init/ginits_factory.ipp' and 'wire' the new initialization
