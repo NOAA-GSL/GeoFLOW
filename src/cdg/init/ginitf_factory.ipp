@@ -25,8 +25,11 @@ namespace pdeint {
 //**********************************************************************************
 void GInitFFactory::static void init(const geoflow::tbox::PropertyTree& ptree, EqnBasePtr &eqn_ptr, GGrid &grid, Time &time, State &u, State &uf)
 {
+  GBOOL         bforced = ptree.getValue<GString>("use_forcing", FALSE);
   GString       sinit   = ptree.getValue<GString>("initf_block");
   PropertyTree  vtree   = ptree.getPropertyTree(sinit);
+
+  if ( !bforced ) return;
 
   if      ( "initf_rand"        == sinit ) {
     ginitf::initf_impl_icosgauss(vtree, eqn_ptr, grid, time, ub, u);
