@@ -20,10 +20,10 @@ using namespace pdeint;
 namespace ginits
 {
 
-GBOOL impl_boxnwaveburgers      (const PropertyTree& stree, EqnBasePtr &eqn_ptr, GGrid &grid,  Time &time, State &ub, State &u);
-GBOOL impl_boxdirgauss          (const PropertyTree& stree, EqnBasePtr &eqn_ptr, GGrid &grid,  Time &time, State &ub, State &u);
-GBOOL impl_boxpergauss          (const PropertyTree& stree, EqnBasePtr &eqn_ptr, GGrid &grid,  Time &time, State &ub, State &u);
-GBOOL impl_icosgauss      (const PropertyTree& stree, EqnBasePtr &eqn_ptr, GGrid &grid,  Time &time, State &ub, State &u);
+GBOOL impl_boxnwaveburgers      (const PropertyTree& stree, GGrid &grid,  Time &time, State &utmp, State &ub, State &u);
+GBOOL impl_boxdirgauss          (const PropertyTree& stree, GGrid &grid,  Time &time, State &utmp, State &ub, State &u);
+GBOOL impl_boxpergauss          (const PropertyTree& stree, GGrid &grid,  Time &time, State &utmp, State &ub, State &u);
+GBOOL impl_icosgauss            (const PropertyTree& stree, GGrid &grid,  Time &time, State &utmp, State &ub, State &u);
 };
 
 #include "ginits_burgers.ipp"

@@ -12,12 +12,14 @@ namespace ginits {
 // DESC   : Initialize state for Burgers with N-wave on box grids with
 //          Dirichlet or periodic boundaries
 // ARGS   : stree: state prop tree
+//          grid   : grid
 //          t    : time
-//          u    : current state
+//          utmp : tmp arrays
 //          ub   : bdy vectors (one for each state element)
+//          u    : current state
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_boxplaneburgers(const PropertyTree &stree, const Time &t, State &u, State &ub)
+GBOOL impl_boxplaneburgers(const PropteryTree &ptree, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
 {
   GString          serr = "impl_boxnwaveburgers: ";
   GBOOL            bContin;
@@ -33,7 +35,8 @@ GBOOL impl_boxplaneburgers(const PropertyTree &stree, const Time &t, State &u, S
   GBOOL doheat   = advptree.getValue<GBOOL>("doheat");
   GBOOL bpureadv = advptree.getValue<GBOOL>("bpureadv");
 
-  GTVector<GTVector<GFTYPE>> *xnodes = &grid_->xNodes();
+  GTVector<GTVector<GFTYPE>> *xnodes = grid.xNodes();
+  GTVector<GTVector<GFTYPE>> c(GDIM) 
 
   assert(grid.gtype() == GE_REGULAR && "Invalid element types");
 
@@ -63,10 +66,10 @@ GBOOL impl_boxplaneburgers(const PropertyTree &stree, const Time &t, State &u, S
 
   // Set velocity here. May be a function of time.
   // These point to components of state u_:
-  for ( j=0; j<GDIM; j++ ) *c_ [j] = 0.0;
+  for ( j=0; j<GDIM; j++ ) *c [j] = 0.0;
 
   if ( bpureadv ) {
-     for ( j=0; j<GDIM; j++ ) *c_[j] = cs[j];
+     for ( j=0; j<GDIM; j++ ) *c[j] = cs[j];
   }
 
   // Prepare for case where sig is anisotropic (for later, maybe):
@@ -80,7 +83,7 @@ GBOOL impl_boxplaneburgers(const PropertyTree &stree, const Time &t, State &u, S
   for ( GSIZET j=0; j<nxy; j++ ) {
     // Note: following c t is actually Integral_0^t c(t') dt', 
     //       so if c(t) changes, change this term accordingly:
-    for ( GSIZET i=0; i<GDIM; i++ ) xx[i] = (*xnodes)[i][j] - r0[i] - (*c_[i])[j]*t;
+    for ( GSIZET i=0; i<GDIM; i++ ) xx[i] = (*xnodes)[i][j] - r0[i] - (*c[i])[j]*t;
     argxp = 0.0;
     for ( GSIZET i=0; i<GDIM; i++ ) argxp += -pow(xx[i],2.0)*si[i];
    (*ua[0])[j] = ufact[0]*exp(argxp);
@@ -97,12 +100,14 @@ GBOOL impl_boxplaneburgers(const PropertyTree &stree, const Time &t, State &u, S
 // DESC   : Initialize state for Burgers with Gauss lump on box grids with
 //          Dirichlet boundaries
 // ARGS   : stree: state prop tree
+//          grid   : grid
 //          t    : time
-//          u    : current state
+//          utmp : tmp arrays
 //          ub   : bdy vectors (one for each state element)
+//          u    : current state
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_boxdirgauss(const PropertyTree &stree, const Time &t, State &u, State &ub)
+GBOOL impl_boxdirgauss(const PropteryTree &ptree, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
 {
   GString          serr = "impl_boxdirgauss: ";
   GBOOL            bContin;
@@ -118,7 +123,8 @@ GBOOL impl_boxdirgauss(const PropertyTree &stree, const Time &t, State &u, State
   GBOOL doheat   = advptree.getValue<GBOOL>("doheat");
   GBOOL bpureadv = advptree.getValue<GBOOL>("bpureadv");
 
-  GTVector<GTVector<GFTYPE>> *xnodes = &grid_->xNodes();
+  GTVector<GTVector<GFTYPE>> *xnodes = grid.xNodes();
+  GTVector<GTVector<GFTYPE>> c(GDIM) 
 
   assert(grid.gtype() == GE_REGULAR && "Invalid element types");
 
@@ -148,10 +154,10 @@ GBOOL impl_boxdirgauss(const PropertyTree &stree, const Time &t, State &u, State
 
   // Set velocity here. May be a function of time.
   // These point to components of state u_:
-  for ( j=0; j<GDIM; j++ ) *c_ [j] = 0.0;
+  for ( j=0; j<GDIM; j++ ) *c [j] = 0.0;
 
   if ( bpureadv ) {
-     for ( j=0; j<GDIM; j++ ) *c_[j] = cs[j];
+     for ( j=0; j<GDIM; j++ ) *c[j] = cs[j];
   }
 
   // Prepare for case where sig is anisotropic (for later, maybe):
@@ -165,7 +171,7 @@ GBOOL impl_boxdirgauss(const PropertyTree &stree, const Time &t, State &u, State
   for ( GSIZET j=0; j<nxy; j++ ) {
     // Note: following c t is actually Integral_0^t c(t') dt', 
     //       so if c(t) changes, change this term accordingly:
-    for ( GSIZET i=0; i<GDIM; i++ ) xx[i] = (*xnodes)[i][j] - r0[i] - (*c_[i])[j]*t;
+    for ( GSIZET i=0; i<GDIM; i++ ) xx[i] = (*xnodes)[i][j] - r0[i] - (*c[i])[j]*t;
     argxp = 0.0;
     for ( GSIZET i=0; i<GDIM; i++ ) argxp += -pow(xx[i],2.0)*si[i];
    (*ua[0])[j] = ufact[0]*exp(argxp);
@@ -181,12 +187,14 @@ GBOOL impl_boxdirgauss(const PropertyTree &stree, const Time &t, State &u, State
 // DESC   : Initialize state for Burgers with Gauss lump on box grids with
 //          periodic boundaries
 // ARGS   : stree: state prop tree
+//          grid : grid
 //          t    : time
-//          u    : current state
+//          utmp : tmp arrays
 //          ub   : bdy vectors (one for each state element)
+//          u    : current state
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_boxpergauss(const PropertyTree &stree, const Time &t, State &u, State &ub)
+GBOOL impl_boxpergauss((const PropteryTree &ptree, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
 {
   GString          serr = "impl_boxpergauss: ";
   GBOOL            bContin;
@@ -204,7 +212,8 @@ GBOOL impl_boxpergauss(const PropertyTree &stree, const Time &t, State &u, State
   GBOOL doheat   = advptree.getValue<GBOOL>("doheat");
   GBOOL bpureadv = advptree.getValue<GBOOL>("bpureadv");
 
-  GTVector<GTVector<GFTYPE>> *xnodes = &grid_->xNodes();
+  GTVector<GTVector<GFTYPE>> *xnodes = grid.xNodes();
+  GTVector<GTVector<GFTYPE>> c(GDIM) 
 
   assert(grid.gtype() == GE_REGULAR && "Invalid element types");
 
@@ -245,12 +254,12 @@ GBOOL impl_boxpergauss(const PropertyTree &stree, const Time &t, State &u, State
   for ( j=0; j<GDIM; j++ ) {
     sig[j] = sqrt(sig0*sig0 + 4.0*t*nu_[0]);
     si [j] = 1.0/(sig[j]*sig[j]);
-   *c_ [j] = 0.0;
+   *c  [j] = 0.0;
   }
 
   // Set velocity here. May be a function of time.
   // These point to components of state u_:
-  if ( bpureadv ) for ( j=0; j<GDIM; j++ ) *c_[j] = cs[j];
+  if ( bpureadv ) for ( j=0; j<GDIM; j++ ) *c[j] = cs[j];
 
   for ( n=0; n<nxy; n++ ) {
 
@@ -258,8 +267,8 @@ GBOOL impl_boxpergauss(const PropertyTree &stree, const Time &t, State &u, State
     for ( k=0; k<GDIM; k++ ) {
       // Note: following c t is actually Integral_0^t c(t') dt', 
       //       so if c(t) changes, change this term accordingly:
-      f [k]  = modf((*c_[k])[j]*t/gL[k],&pint);
-//    f [k]  = (*c_[k])[n]*t/gL[k];
+      f [k]  = modf((*c[k])[j]*t/gL[k],&pint);
+//    f [k]  = (*c[k])[n]*t/gL[k];
       xx[k]  = (*xnodes)[k][n] - r0[k] - f[k]*gL[k];
 
       isum    = 0.0;
@@ -289,12 +298,14 @@ GBOOL impl_boxpergauss(const PropertyTree &stree, const Time &t, State &u, State
 // METHOD : impl_icosgauss
 // DESC   : Initialize state for Burgers with Gauss lump on ICOS grid
 // ARGS   : stree: state prop tree
-//          t    : time
-//          u    : current state
-//          ub   : bdy vectors (one for each state element)
+//          grid   : grid
+//          t      : time
+//          utmp   : tmp arrays
+//          ub     : bdy vectors (one for each state element)
+//          u      : current state
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_gauss(const PropertyTree &stree, const Time &t, State &u, State &ub)
+GBOOL impl_icosgauss(const PropteryTree &ptree, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
 {
 
   GString          serr = "impl_icosgauss: ";
@@ -320,8 +331,9 @@ GBOOL impl_gauss(const PropertyTree &stree, const Time &t, State &u, State &ub)
   GBOOL doheat   = advptree.getValue<GBOOL>("doheat");
   GBOOL bpureadv = advptree.getValue<GBOOL>("bpureadv");
 
-  GTVector<GTVector<GFTYPE>> *xnodes = &grid_->xNodes();
+  GTVector<GTVector<GFTYPE>> *xnodes = grid.xNodes();
   assert(grid.gtype() == GE_2DEMBEDDED && "Invalid element types");
+  GTVector<GTVector<GFTYPE>> c(GDIM) 
 
   std::vector<GFTYPE> Omega;
 
@@ -358,11 +370,11 @@ GBOOL impl_gauss(const PropertyTree &stree, const Time &t, State &u, State &ub)
       lon = atan2(y,x);
       // u_lat = u_theta = -u0 sin(lon) sin(alpha)
       // u_lon = u_phi   =  u0 (cos(theta) cos(alpha) + sin(theta)cos(lon)sin(alpha) )
-      (*utmp_[0])[k]  = -u0*sin(lon)*sin(alpha);
-      (*utmp_[1])[k]  =  u0*(cos(lat)*cos(alpha) + sin(lat)*cos(lon)*sin(alpha) );
+      (*utmp[0])[k]  = -u0*sin(lon)*sin(alpha);
+      (*utmp[1])[k]  =  u0*(cos(lat)*cos(alpha) + sin(lat)*cos(lon)*sin(alpha) );
     }
-    GMTK::vsphere2cart(*grid_, utmp_, GVECTYPE_PHYS, c_);
-//  GMTK::constrain2sphere(*grid_, c_);
+    GMTK::vsphere2cart(grid, utmp, GVECTYPE_PHYS, c);
+//  GMTK::constrain2sphere(grid, c);
   }
 
   *ua[0] = 0.0;
