@@ -454,6 +454,7 @@ void allocate(const PropertyTree &ptree)
   std::string  eq_name   = ptree.getValue("pde_name");
   PropertyTree eqn_ptree = ptree.getPropertyTree(equation_name);
   PropertyTree stp_ptree = ptree.getPropertyTree("stepper_props");
+  bforced                = ptree.getValue<bool> ("use_forcing",false);
 
   assert("3##$%!62ahTze32934Plq1C4" != eq_name
       && "pde_name required");
@@ -462,7 +463,6 @@ void allocate(const PropertyTree &ptree)
     sgrid     = ptree.getValue<GString>  ("grid_type");
     doheat    = eqn_ptree.getValue<bool> ("doheat",false);
     bpureadv  = eqn_ptree.getValue<bool> ("bpureadv",false);
-    bforced   = eqn_ptree.getValue<bool> ("use_forcing",false);
     for ( auto i=0; i<GDIM; i++ ) diforced.push_back(i);
     iforced   = eqn_ptree.getArray<GINT> ("forcing_comp", diforced);
     nadv      = sgrid == "grid_icos" ? 3 : GDIM;
