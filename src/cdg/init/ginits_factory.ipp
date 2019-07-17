@@ -5,8 +5,6 @@
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
-#include "ginits_factory.hpp"
-#include "ginits_impl.hpp"
 
 namespace geoflow {
 namespace pdeint {
@@ -31,9 +29,6 @@ void GInitSFactory::static void init(const geoflow::tbox::PropertyTree& ptree, G
   if      ( "inits_icosgaussburgers"  == sinit ) {
     ginits::impl_icosgauss       (vtree, eqn_ptr, grid, time, utmp, ub, u);
   }
-  else if ( "inits_boxplaneburgers"   == sinit ) {
-    ginits::impl_boxplaneburgers (vtree, eqn_ptr, grid, time, utmp, ub, u);
-  }
   else if ( "inits_boxdirgauss"        == sinit ) {
     ginits::impl_boxdirgauss     (vtree, eqn_ptr, grid, time, utmp, ub, u);
   }
@@ -44,7 +39,7 @@ void GInitSFactory::static void init(const geoflow::tbox::PropertyTree& ptree, G
     ginits::impl_nwave           (vtree, eqn_ptr, grid, time, utmp, ub, u);
   }
   else                                        {
-    assert(FALSET & "Specified state initialization unknown");
+    assert(FALSE & "Specified state initialization unknown");
   }
 
 } // end, init method

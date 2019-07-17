@@ -12,6 +12,7 @@
 #include "gcomm.hpp"
 #include "gtvector.hpp"
 #include "ggrid.hpp"
+#include "ginitf_impl.hpp"
 
 namespace geoflow {
 namespace pdeint {

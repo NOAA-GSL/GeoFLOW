@@ -5,8 +5,6 @@
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
-#include "ginitf_factory.hpp"
-#include "ginitf_impl.hpp"
 
 namespace geoflow {
 namespace pdeint {
@@ -38,7 +36,7 @@ void GInitFFactory::static void init(const geoflow::tbox::PropertyTree& ptree, G
     ginitf::impl_rand     (ftree, eqn_ptr, grid, time, utmp, u, uf);
   }
   else                                        {
-    assert(FALSET & "Specified forcing initialization unknown");
+    assert(FALSE & "Specified forcing initialization unknown");
   }
 
 } // end, init method
