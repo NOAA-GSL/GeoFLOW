@@ -10,7 +10,8 @@ For example, to add a new state initialization, first
 
 > cd src/cdg/user/state
 
-Then,
+There are 2 main steps to add the new initialization method: (1) implementation,
+(2) configuration or 'wiring' as described here:
 
 (1)(a)  Use the namespace template below (or one of the existing files), 
     and replace XXX with a new function name; fill out the function, and save it
