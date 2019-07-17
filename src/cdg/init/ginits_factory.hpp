@@ -41,6 +41,6 @@ class GInitSFactory
 } // namespace geoflow
 
 
-#include "ginit_factory.ipp"
+#include "ginits_factory.ipp"
 
 #endif 
