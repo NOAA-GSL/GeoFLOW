@@ -25,7 +25,7 @@ using namespace std;
 // DESC   : Instantiate with box lengths (x, y, z), directional basis, and
 //          domain decompoisition object. This generates a 2d or 3d grid
 //          depending on whether b.size = 2 or 3..
-// ARGS   : ptree  : proptery tree
+// ARGS   : ptree  : main proptery tree
 //          b      : vector of basis pointers. Number of elements in b is
 //                   what _must_ be in L, and ne.
 //          comm   : communicator
@@ -43,6 +43,11 @@ lshapefcn_             (NULLPTR)
   irank_  = GComm::WorldRank(comm_);
   nprocs_ = GComm::WorldSize(comm_);
 
+  GString gname   = ptree.getValue<GString>("grid_type");
+  assert(gname == "grid_box");
+  geoflow::tbox::PropertyTree gridptree = ptree.getPropertyTree(gname);
+
+
   gbasis_.resize(GDIM);
   gbasis_ = b;
   Lbox_.resize(GDIM);
@@ -50,23 +55,23 @@ lshapefcn_             (NULLPTR)
 
   std::vector<GFTYPE> spt(3); // tmp array
   std::vector  <int> sne   ; // tmp array
-  spt = ptree.getArray<GFTYPE>("xyz0");
+  spt = gridptree.getArray<GFTYPE>("xyz0");
   P0_ = spt;
-  spt = ptree.getArray<GFTYPE>("delxyz");
-  sne = ptree.getArray<int>("num_elems");
+  spt = gridptree.getArray<GFTYPE>("delxyz");
+  sne = gridptree.getArray<int>("num_elems");
 
   GTPoint<GFTYPE> dP(3);
   dP  = spt;
   P1_ = P0_ + dP;
 
   GTVector<GBdyType> bdytype(2*GDIM);
-  bdytype[0] = geoflow::str2bdytype(ptree.getValue<GString>("bdy_y_0"));
-  bdytype[1] = geoflow::str2bdytype(ptree.getValue<GString>("bdy_x_1"));
-  bdytype[2] = geoflow::str2bdytype(ptree.getValue<GString>("bdy_y_1"));
-  bdytype[3] = geoflow::str2bdytype(ptree.getValue<GString>("bdy_x_0"));
+  bdytype[0] = geoflow::str2bdytype(gridptree.getValue<GString>("bdy_y_0"));
+  bdytype[1] = geoflow::str2bdytype(gridptree.getValue<GString>("bdy_x_1"));
+  bdytype[2] = geoflow::str2bdytype(gridptree.getValue<GString>("bdy_y_1"));
+  bdytype[3] = geoflow::str2bdytype(gridptree.getValue<GString>("bdy_x_0"));
   if ( GDIM == 3 ) {
-  bdytype[4] = geoflow::str2bdytype(ptree.getValue<GString>("bdy_z_0"));
-  bdytype[5] = geoflow::str2bdytype(ptree.getValue<GString>("bdy_z_1"));
+  bdytype[4] = geoflow::str2bdytype(gridptree.getValue<GString>("bdy_z_0"));
+  bdytype[5] = geoflow::str2bdytype(gridptree.getValue<GString>("bdy_z_1"));
   }
   global_bdy_types_ = bdytype;
 

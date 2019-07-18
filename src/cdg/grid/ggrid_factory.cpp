@@ -27,7 +27,6 @@ GGrid *GGridFactory::build(const geoflow::tbox::PropertyTree& ptree, GTVector<GN
   GString gname   = ptree.getValue<GString>("grid_type", sdef);
   sdef            = "constant";
   GString ptype   = ptree.getValue<GString>("exp_order_type", sdef);
-  geoflow::tbox::PropertyTree gridptree = ptree.getPropertyTree(gname);
   GGrid *grid;
   GTMatrix<GINT> p;
   GTVector<GTVector<GFTYPE>> xnodes;
@@ -47,11 +46,11 @@ GGrid *GGridFactory::build(const geoflow::tbox::PropertyTree& ptree, GTVector<GN
     // constant:
     if      ( "grid_icos"   == gname   // 2d or 3d Icos grid
         ||    "grid_sphere" == gname ) {
-      grid = new GGridIcos(gridptree, gbasis, comm);
+      grid = new GGridIcos(ptree, gbasis, comm);
       grid->grid_init();
     }
     else if ( "grid_box"    ==  gname) { // 2d or 3D Cart grid
-      grid = new GGridBox(gridptree, gbasis, comm);
+      grid = new GGridBox(ptree, gbasis, comm);
       grid->grid_init();
     }
     else {
@@ -67,11 +66,11 @@ GGrid *GGridFactory::build(const geoflow::tbox::PropertyTree& ptree, GTVector<GN
     read_grid(ptree, comm, p, xnodes);
     if      ( "grid_icos"   == gname   // 2d or 3d Icos grid
         ||    "grid_sphere" == gname ) {
-      grid = new GGridIcos(gridptree, gbasis, comm);
+      grid = new GGridIcos(ptree, gbasis, comm);
       grid->grid_init(p, xnodes);
     }
     else if ( "grid_box"    ==  gname) { // 2d or 3D Cart grid
-      grid = new GGridBox(gridptree, gbasis, comm);
+      grid = new GGridBox(ptree, gbasis, comm);
       grid->grid_init(p, xnodes);
     }
     else {

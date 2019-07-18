@@ -19,7 +19,7 @@ using namespace std;
 //**********************************************************************************
 // METHOD : Constructor method (1)
 // DESC   : Instantiate for 2d grid
-// ARGS   : ptree: Property tree
+// ARGS   : ptree: main property tree
 //          b     : vector of basis pointers, of size at least ndim=2.Determies 
 //                  dimensionality
 //          comm  : communicator
@@ -35,26 +35,30 @@ gdd_                   (NULLPTR),
 lshapefcn_             (NULLPTR)
 {
   assert(b.size() == GDIM && "Basis has incorrect dimensionality");
+  
+  GString gname   = ptree.getValue<GString>("grid_type");
+  assert(gname == "grid_icos" || gname == "grid_sphere");
+  geoflow::tbox::PropertyTree gridptree = ptree.getPropertyTree(gname);
 
   gbasis_.resize(b.size());
   gbasis_ = b;
   lshapefcn_ = new GShapeFcn_linear();
-  ilevel_  = ptree.getValue<GINT>("ilevel");
+  ilevel_  = gridptree.getValue<GINT>("ilevel");
   
   if ( ndim_ == 2 ) {
     assert(GDIM == 2 && "GDIM must be 2");
-    radiusi_ = ptree.getValue<GFTYPE>("radius");
+    radiusi_ = gridptree.getValue<GFTYPE>("radius");
     init2d();
   }
   else if ( ndim_ == 3 ) {
     assert(GDIM == 3 && "GDIM must be 3");
     GTVector<GBdyType> bdytype(2);
     std::vector<GINT> ne(3);
-    radiusi_   = ptree.getValue<GFTYPE>("radiusi");
-    radiuso_   = ptree.getValue<GFTYPE>("radiuso");
-    bdytype[0] = geoflow::str2bdytype(ptree.getValue<GString>("bdy_inner"));
-    bdytype[1] = geoflow::str2bdytype(ptree.getValue<GString>("bdy_outer"));
-    nradelem_  = ptree.getValue<GINT>("num_radial_elems");
+    radiusi_   = gridptree.getValue<GFTYPE>("radiusi");
+    radiuso_   = gridptree.getValue<GFTYPE>("radiuso");
+    bdytype[0] = geoflow::str2bdytype(gridptree.getValue<GString>("bdy_inner"));
+    bdytype[1] = geoflow::str2bdytype(gridptree.getValue<GString>("bdy_outer"));
+    nradelem_  = gridptree.getValue<GINT>("num_radial_elems");
     global_bdy_types_ = bdytype;
     init3d();
   }
