@@ -399,7 +399,7 @@ void GGrid::grid_init()
 //**********************************************************************************
 // METHOD : grid_init (2)
 // DESC   : Initialize global (metric) variables. All elements are assumed to be
-//          of the same type.
+//          of the same type. Called for restart.
 // ARGS   : none
 // RETURNS: none
 //**********************************************************************************
