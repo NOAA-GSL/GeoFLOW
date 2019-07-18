@@ -19,33 +19,25 @@ namespace ginits {
 //          u    : current state
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_boxplaneburgers(const PropteryTree &ptree, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
+GBOOL impl_boxnwaveburgers(const PropteryTree &ptree, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
 {
   GString          serr = "impl_boxnwaveburgers: ";
-  GBOOL            bContin;
-  GINT             j, n;
-  GFTYPE           argxp;
-  GFTYPE           nxy, sig0, u0;
-  GTVector<GFTYPE> xx(GDIM), si(GDIM), sig(GDIM), ufact(GDIM);
-  GTPoint<GFTYPE>  r0(3), P0(3);
+  GBOOL            bplanar=TRUE; // planar or circularized
+  GBOOL            brot   =FALSE;
+  GSIZET           i, j, idir, nxy;
+  GFTYPE           A, K2, Re, r2, t0, tdenom;
+  GFTYPE           efact, sum, tfact, xfact;
+  GTVector<GFTYPE> K(GDIM), xx(GDIM), si(GDIM), sig(GDIM);
+  GTPoint<GFTYPE>  r0(3), P0(3), gL(3);
+  std::vector<GFTYPE> kprop;
 
-  PropertyTree heatptree = ptree.getPropertyTree("init_lump");
-  PropertyTree boxptree = ptree.getPropertyTree("grid_box");
-  PropertyTree advptree  = ptree.getPropertyTree("burgers_traits");
-  GBOOL doheat   = advptree.getValue<GBOOL>("doheat");
-  GBOOL bpureadv = advptree.getValue<GBOOL>("bpureadv");
+  PropertyTree nwaveptree = ptree.getPropertyTree("init_nwave");
+  PropertyTree boxptree   = ptree.getPropertyTree("grid_box");
 
-  GTVector<GTVector<GFTYPE>> *xnodes = grid.xNodes();
-  GTVector<GTVector<GFTYPE>> c(GDIM) 
+  GTVector<GTVector<GFTYPE>> *xnodes = &grid_->xNodes();
 
   assert(grid.gtype() == GE_REGULAR && "Invalid element types");
 
-  std::vector<GFTYPE> cs;
-  if ( bpureadv ) {
-    cs = heatptree.getArray<GFTYPE>("adv_vel");
-  }
-
-  // Check bdy conditioins:
   GTVector<GString> bc(6);
   bc[0] = boxptree.getValue<GString>("bdy_x_0");
   bc[1] = boxptree.getValue<GString>("bdy_x_1");
@@ -53,43 +45,61 @@ GBOOL impl_boxplaneburgers(const PropteryTree &ptree, GGrid &grid, Time &time, S
   bc[3] = boxptree.getValue<GString>("bdy_y_1");
   bc[4] = boxptree.getValue<GString>("bdy_z_0");
   bc[5] = boxptree.getValue<GString>("bdy_z_1");
-  assert(bc.multiplicity("GBDY_DIRICHLET") >= 2*GDIM
-      && "Dirichlet boundaries must be set on all boundaries");
+//assert(bc.multiplicity("GBDY_DIRICHLET") >= 2*GDIM
+//    && "Dirichlet boundaries must be set on all boundaries");
 
   nxy = (*xnodes)[0].size(); // same size for x, y, z
 
-  r0.x1 = heatptree.getValue<GFTYPE>("x0");
-  r0.x2 = heatptree.getValue<GFTYPE>("y0");
-  r0.x3 = heatptree.getValue<GFTYPE>("z0");
-  sig0  = heatptree.getValue<GFTYPE>("sigma");
-  u0    = heatptree.getValue<GFTYPE>("u0");
+  // From Whitham's book, in 1d:
+  // u(x,t) = (x/t) [ 1 + sqrt(t/t0) (e^Re - 1)^-1 exp(x^2/(4 nu t))i ]^-1
+  // were Re is 'Reynolds' number: Re = A / 2nu; can think of
+  // A ~ U L scaling.
+  // Set some parameters:
+  r0.x1  = nwaveptree.getValue<GFTYPE>("x0"); 
+  r0.x2  = nwaveptree.getValue<GFTYPE>("y0"); 
+  r0.x3  = nwaveptree.getValue<GFTYPE>("z0"); 
+  A      = nwaveptree.getValue<GFTYPE>("ULparm",1.0);
+  Re     = nwaveptree.getValue<GFTYPE>("Re",100.0);
+  t0     = nwaveptree.getValue<GFTYPE>("t0",0.04);
+  bplanar= nwaveptree.getValue<GBOOL>("planar",TRUE);
+  kprop  = nwaveptree.getArray<GFTYPE>("prop_dir");
+  K      = kprop;
+  K     *= 1.0/K.Eucnorm();
 
-  // Set velocity here. May be a function of time.
-  // These point to components of state u_:
-  for ( j=0; j<GDIM; j++ ) *c [j] = 0.0;
+  K2     = 0.0 ; for ( GSIZET i=0; i<GDIM; i++ ) K2 += K[i]*K[i];
 
-  if ( bpureadv ) {
-     for ( j=0; j<GDIM; j++ ) *c[j] = cs[j];
+  // If prop direction has more than one component != 0. then
+  // front is rotated (but still planar):
+  for ( i=0, brot=TRUE; i<GDIM; i++ ) brot = brot && K[i] != 0.0 ;
+  for ( i=0, idir=0; i<GDIM; i++ ) if ( K[i] > 0 ) {idir=i; break;}
+
+  if ( t == 0.0 ) t = K2 * t0;
+  nu_[0] = A/(2.0*Re); // set nu from Re
+
+
+  for ( j=0; j<nxy; j++ ) {
+    for ( i=0; i<GDIM; i++ ) {
+      xx[i] = (*xnodes)[i][j] - r0[i];
+      (*ua[i])[j] = 0.0;
+    }
+    if ( bplanar ) { // compute k.r for planar wave
+      for ( i=0, sum=0.0; i<GDIM; i++ ) { 
+        sum += K[i]*xx[i];
+        xx[i] = 0.0;
+      }
+      xx[0] = sum;
+    }
+    for ( i=0, r2=0.0; i<GDIM; i++ ) r2 += xx[i]*xx[i];  
+
+    // u(x,t) = (x/t) [ 1 + sqrt(t/t0) (e^Re - 1)^-1 exp(x^2/(4 nu t)) ]^-1
+    tdenom = 1.0/(4.0*nu_[0]*t);
+    tfact  = bplanar ? sqrt(t/t0): t/t0;
+    efact  = tfact * exp(r2*tdenom) / ( exp(Re) - 1.0 );
+    xfact  = 1.0 /( t * (  1.0 + efact ) );
+    for ( i=0; i<GDIM; i++ ) (*ua[i])[j] = xx[i]*xfact;
+    // dU1max = 1.0 / ( t * (sqrt(t/A) + 1.0) );
+    // aArea  = 4.0*nu_[0]*log( 1.0 + sqrt(A/t) );
   }
-
-  // Prepare for case where sig is anisotropic (for later, maybe):
-  for ( GSIZET k=0; k<GDIM; k++ ) {
-    sig  [k] = sqrt(sig0*sig0 + 4.0*t*nu_[0]); // constant viscosity only
-    si   [k] = 1.0/(sig[k]*sig[k]);
-    ufact[k] = u0*pow(sig0/sig[k],GDIM);
-  }
-
-  // Ok, return to assumption of isotropic nu: 
-  for ( GSIZET j=0; j<nxy; j++ ) {
-    // Note: following c t is actually Integral_0^t c(t') dt', 
-    //       so if c(t) changes, change this term accordingly:
-    for ( GSIZET i=0; i<GDIM; i++ ) xx[i] = (*xnodes)[i][j] - r0[i] - (*c[i])[j]*t;
-    argxp = 0.0;
-    for ( GSIZET i=0; i<GDIM; i++ ) argxp += -pow(xx[i],2.0)*si[i];
-   (*ua[0])[j] = ufact[0]*exp(argxp);
-  }
-
-  return TRUE;
 } // end, impl_boxnwaveburgers
 
 
