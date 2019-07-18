@@ -32,8 +32,16 @@ class GBdyFactory
 
 
 	static void init(const geoflow::tbox::PropertyTree& ptree, GGrid &grid,  Time &time, State &utmp, State &u, State &ub);
-
+      
+         GBOOL      is_time_dep() { return btime_dep_; }
+         std::function<void(GGrid &grid, const Time &t, State &utmp,
+                     State &u   , State &ub)>
+                    get_update_callback() { return update_bdy_callback_; }
   private:
+  GBOOL                                       btime_dep_;
+  std::function<void(GGrid &grid, const Time &t, State &utmp, 
+                     State &u   , State &ub)> 
+                  update_bdy_callback_;
 }; // class GBdyFactory
 
 

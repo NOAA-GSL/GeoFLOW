@@ -23,12 +23,13 @@ namespace pdeint {
 // RETURNS: none.
 //**********************************************************************************
 void GBdyFactory::static void init(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, Time &time, State &utmp, State &u, State &ub)
+btime_dep_           (FALSE),
+update_bdy_callback_ (NULLPTR)
 {
   GBOOL         bforced = ptree.getValue<GString>("use_forcing", FALSE);
   GString       sinit   = ptree.getValue<GString>("initf_block");
   PropertyTree  ftree   = ptree.getPropertyTree(sinit);
 
-  if ( !bforced ) return;
 
   if      ( "initf_null"        == sinit ) {
     ginitf::impl_null     (ftree, eqn_ptr, grid, time, utmp, u, ub);
