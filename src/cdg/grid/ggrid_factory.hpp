@@ -20,8 +20,20 @@ class GGridFactory
 
 	static GGrid *build(const geoflow::tbox::PropertyTree& ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis, GC_COMM &comm);
 
+         GBOOL      is_time_dep_bdy() { return btime_dep_bdy_; }
+         std::function<void(GGrid &grid, const Time &t, State &utmp,
+                     State &u   , State &ub)>
+                    get_bdy_update_callback() { return update_bdy_callback_; }
+
+
   private:
         static void   read_grid(const geoflow::tbox::PropertyTree& ptree, GC_COMM comm,  GTMatrix<GINT> &p, GTVector<GTVector<GFTYPE>> &xnodes);
+
+         GBOOL   btime_dep_bdy_;
+  std::function<void(GGrid &grid, const Time &t, State &utmp,
+                     State &u   , State &ub)>
+                  update_bdy_callback_;
+
 }; // class GGridFactory
 
 //#include "ggrid_factory.ipp"

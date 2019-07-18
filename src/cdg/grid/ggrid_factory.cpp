@@ -21,6 +21,10 @@
 // RETURNS: GGrid object ptr
 //**********************************************************************************
 GGrid *GGridFactory::build(const geoflow::tbox::PropertyTree& ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis, GC_COMM &comm)
+:
+btime_dep_bdy_       (FALSE),
+update_bdy_callback_ (NULLPTR)
+
 {
   GSIZET  itindex = ptree.getValue<GSIZET>   ("restart_index", 0);
   GString sdef    = "grid_box";
@@ -121,3 +125,5 @@ void GGridFactory::read_grid(const geoflow::tbox::PropertyTree& ptree, GC_COMM c
   gio_restart(ptree, 1, u, p, cycle, time, comm);
 
 } // end, read_grid method
+
+
