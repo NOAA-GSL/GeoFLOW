@@ -3,7 +3,7 @@
   "exp_order_type" : "constant",
   "grid_type"      : "grid_icos",
   "pde_name"       : "pde_burgers",
-  "inits_block"    : "inits_icosgauss",
+  "inits_block"    : "inits_icosgaussburgers",
   "initf_block"    : "initf_rand",
   "use_forcing"    : false,
   "bdy_conditions" : "DIRICHLET",
@@ -13,14 +13,6 @@
   "initf_rand": {
     "seed"   : 10000
   },
-  "inits_lump": {
-    "x0"     : 0.5,
-    "y0"     : 0.5,
-    "z0"     : 0.5,
-    "sigma"  : 0.05,
-    "u0"     : 1.0,
-    "adv_vel": [1.0, 0.0, 0.0]
-  },
   "inits_icosbell": {
     "latitude0"  : 0.0,
     "longitude0" :-30.0,
@@ -28,7 +20,7 @@
     "alpha"      : 20.0,
     "u0"         : 1.0
   },
-  "inits_icosgauss": {
+  "inits_icosgaussburgers": {
     "latitude0"  : [0.0, -40.0], 
     "longitude0" : [-90.0,-90.0],
     "sigma"      : [0.25, 0.25],
@@ -37,14 +29,21 @@
     "u0"         : 1.0,
     "nlumps"     : 1
   },
-  "inits_icosdefgauss": {
-    "latitude0"  : 60.0,
-    "longitude0" :180.0,
-    "latitude1"  :-60.0,
-    "longitude1" :180.0,
-    "sigma"      : 0.4472,
-    "u0"         : 2.4,
-    "Tper"       : 5.0
+  "inits_boxpergauss": {
+    "x0"     : 0.5,
+    "y0"     : 0.5,
+    "z0"     : 0.5,
+    "sigma"  : 0.05,
+    "u0"     : 1.0,
+    "adv_vel": [1.0, 0.0, 0.0]
+  },
+  "inits_boxdirgauss": {
+    "x0"     : 0.5,
+    "y0"     : 0.5,
+    "z0"     : 0.5,
+    "sigma"  : 0.05,
+    "u0"     : 1.0,
+    "adv_vel": [1.0, 0.0, 0.0]
   },
   "inits_nwave": {
     "x0"    : 0.5,
@@ -69,24 +68,45 @@
     "num_elems" : [10, 10, 10]
   },
   "grid_sphere" : {
-    "grid_name" : "grid_sphere",
-    "radiusi"   : 1.0,
-    "radiuso"   : 2.0,
-    "num_elems" : [10, 10, 10],
-    "bdy_inner": "GBDY_DIRICHLET",
-    "bdy_outer": "GBDY_SPONGE"
+    "grid_name"        : "grid_sphere",
+    "radiusi"          : 1.0,
+    "radiuso"          : 2.0,
+    "num_radial_elems" : 10,
+    "bdy_inner"        : "GBDY_DIRICHLET",
+    "bdy_outer"        : "GBDY_SPONGE"
+  },
+  "circular_jet": {
+    "vel_normal"       : 10.0,
+    "position"         : [0, 0.5, 0.5],
+    "radius"           : 0.1
+    "is_time_dependent": false,
+    "base_type"        : "GBDY_INFLOW", 
+  },
+  compound_inflow_example": {
+    "bdy_class"         : "compound",
+    "base_type"         : "GBDY_DIRICHLET", 
+    "init_method"       : "circular_jet", 
+    "is_time_dependent" : false,
+    "update_method"     : "", 
+  },
+  "burgers_inflow": {
+    "bdy_class"        : "uniform",
+    "base_type"        : "GBDY_INFLOW",
+    "is_time_dependent": true,
+    "use_init_method"  : true,
+    "update_method"    : ""
   },
   "grid_box": {
     "grid_name" : "grid_box",
     "xyz0"      : [1.0, 1.0, 1.0],
     "delxyz"    : [1.0, 1.0, 1.0],
     "num_elems" : [4, 4, 1],
-    "bdy_x_0"   : "GBDY_DIRICHLET",
-    "bdy_x_1"   : "GBDY_DIRICHLET",
-    "bdy_y_0"   : "GBDY_DIRICHLET",
-    "bdy_y_1"   : "GBDY_DIRICHLET",
-    "bdy_z_0"   : "GBDY_DIRICHLET",
-    "bdy_z_1"   : "GBDY_DIRICHLET"
+    "bdy_x_0"   : "burgers_inflow",
+    "bdy_x_1"   : "burgers_inflow",
+    "bdy_y_0"   : "burgers_inflow",
+    "bdy_y_1"   : "burgers_inflow",
+    "bdy_z_0"   : "burgers_inflow",
+    "bdy_z_1"   : "burgers_inflow"
   },
   "stepper_props": {
     "stepping_method"  : "GSTEPPER_EXRK",
