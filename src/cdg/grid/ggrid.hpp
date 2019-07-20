@@ -93,6 +93,20 @@ virtual void                 print(const GString &filename){}          // print 
                             &igbdy() { return igbdy_;}                 // global dom bdy indices into u for eacb GBdyType
 
         GC_COMM              get_comm() { return comm_; }              // get communicator
+        GBOOL                is_time_dep() { return btime_dep_; }
+        std::function<void(GGrid &grid, const Time &t, State &utmp,
+                           State &u   , State &ub)>
+                             get_update_callback() 
+                             { return update_callback_; }              // get bdy update callback from config
+        std::function<void(GGrid &grid, const Time &t, State &utmp,
+                           State &u   , State &ub)>
+                             get_bdy_init_callback() 
+                             { return init_bdy_callback_; }            // get bdy initialization callback from config
+        std::function<void(GGrid &grid, const Time &t, State &utmp,
+                           State &u   , State &ub)>
+                             get_bdy_update_callback() 
+                             { return update_bdy_callback_; }          // get bdy update callback from config
+
 
 friend  std::ostream&        operator<<(std::ostream&, GGrid &);       // Output stream operator
  
@@ -107,6 +121,7 @@ protected:
         void                        init_bc_info(); 
 
         GBOOL                       bInitialized_;  // object initialized?
+        GBOOL                       is_bbdy_time_dep_; // time-dep bdy vals?
         GElemType                   gtype_;         // element types comprising grid
         GINT                        irank_;         // MPI task id
         GINT                        nprocs_;        // number of MPI tasks
@@ -126,6 +141,12 @@ protected:
         GFTYPE                      minnodedist_;   // min node length array (for each elem)
         GTVector<GTVector<GSIZET>>  igbdy_;         // index into global field indicating a domain bdy
         GTVector<GBdyType>          igbdytypes_;    // global domain bdy types for each igbdy index
+        std::function<void(PropertyTree &ptree, GGrid &grid, const Time &t, 
+                           State &utmp, State &u   , State &ub)>
+                                    init_bdy_callback_;  //  bdy init method
+        std::function<void(PropertyTree &ptree, GGrid &grid, const Time &t, 
+                           State &utmp, State &u   , State &ub)>
+                                    update_bdy_callback_; //  bdy update method
         std::function<void(GElemList &)> 
                                    *bdycallback_;   // bdy callback function (e.g., for internal bdy types)
 
