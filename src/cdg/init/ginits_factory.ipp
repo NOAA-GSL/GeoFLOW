@@ -39,7 +39,7 @@ void GInitSFactory::static void init(const geoflow::tbox::PropertyTree& ptree, G
     ginits::impl_nwave           (vtree, eqn_ptr, grid, time, utmp, ub, u);
   }
   else                                        {
-    assert(FALSE & "Specified state initialization unknown");
+    assert(FALSE & "Specified state initialization method unknown");
   }
 
 } // end, init method
