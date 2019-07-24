@@ -52,14 +52,11 @@ lshapefcn_             (NULLPTR)
   }
   else if ( ndim_ == 3 ) {
     assert(GDIM == 3 && "GDIM must be 3");
-    GTVector<GBdyType> bdytype(2);
     std::vector<GINT> ne(3);
     radiusi_   = gridptree.getValue<GFTYPE>("radiusi");
     radiuso_   = gridptree.getValue<GFTYPE>("radiuso");
-    bdytype[0] = geoflow::str2bdytype(gridptree.getValue<GString>("bdy_inner"));
-    bdytype[1] = geoflow::str2bdytype(gridptree.getValue<GString>("bdy_outer"));
     nradelem_  = gridptree.getValue<GINT>("num_radial_elems");
-    global_bdy_types_ = bdytype;
+    global_bdy_types_ = GBDY_NONE;
     init3d();
   }
   else {
