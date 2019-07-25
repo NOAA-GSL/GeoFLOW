@@ -1,6 +1,3 @@
-#include "ginits.hpp"
-#include "ginits_factory.hpp"
-
 
 namespace ginitb {
 
@@ -29,6 +26,8 @@ GBOOL impl_bystateinit(const PropteryTree &ptree, GGrid &grid, Time &time, State
 
   GInitSFactory::init(ptree, grid, tt, utmp, ub, u);
 
+  GTVector<GTVector<GSIZET>> *igbdy = &grid.igbdy();
+
 
   // Set from State vector, u and others that we _can_ set:
   for ( auto k=0; k<u.size(); k++ ) { 
@@ -36,22 +35,13 @@ GBOOL impl_bystateinit(const PropteryTree &ptree, GGrid &grid, Time &time, State
        && ub[k] != NULLPTR; j++ ) {
       (*ub[k])[j] = (*u[k])[(*igbdy)[GBDY_DIRICHLET][j]];
     }
-    for ( auto j=0; j<(*igbdy)[GBDY_INFLOW].size() 
-       && ub[k] != NULLPTR; j++ ) {
-      (*ub[k])[j] = (*u[k])[(*igbdy)[GBDY_INFLOW][j]];
-    }
-    for ( auto j=0; j<(*igbdy)[GBDY_0FLUX].size() 
-       && ub[k] != NULLPTR; j++ ) {
-      (*ub[k])[j] = 0.0;
-    }
     for ( auto j=0; j<(*igbdy)[GBDY_NOSLIP].size() 
        && ub[k] != NULLPTR; j++ ) {
       (*ub[k])[j] = 0.0;
     }
   }
 
-
-  
+  return TRUE;
 
 } // end, impl_bystateinit
 

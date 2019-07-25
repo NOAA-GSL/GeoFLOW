@@ -23,6 +23,8 @@ namespace gupdateb
 {
 
 GBOOL impl_bystateinit          (const PropertyTree& stree, GGrid &grid,  Time &time, State &utmp, State &u, State &ub);
+GBOOL impl_simple_outflow       (const PropertyTree& stree, GGrid &grid,  Time &time, State &utmp, State &u, State &ub);
+GBOOL impl_noslip               (const PropertyTree& stree, GGrid &grid,  Time &time, State &utmp, State &u, State &ub);
 };
 
 #include "gupdateb.ipp"
