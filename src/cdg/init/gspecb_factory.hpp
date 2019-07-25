@@ -1,25 +1,25 @@
 //==================================================================================
-// Module       : ginitf_factory.hpp
+// Module       : gspecb_factory.hpp
 // Date         : 7/11/19 (DLR)
-// Description  : GeoFLOW forcing initialization factory object. 
+// Description  : GeoFLOW boundary specification factory object. 
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
-#if !defined(_GINITF_FACTORY_HPP)
-#define _GINITF_FACTORY_HPP 
+#if !defined(_GSPECB_FACTORY_HPP)
+#define _GSPECB_FACTORY_HPP 
 
 #include "tbox/property_tree.hpp"
 #include "gcomm.hpp"
 #include "gtvector.hpp"
 #include "ggrid.hpp"
-#include "ginitf_impl.hpp"
+#include "gbdyinit_impl.hpp"
 
 namespace geoflow {
 namespace pdeint {
 
 
 template<typename EquationType>
-class GInitFFactory
+class GSpecBFactory
 {
   public:
         using Equation      = EquationType;
@@ -31,10 +31,10 @@ class GInitFFactory
         using Time          = typename Equation::Time;
 
 
-	static void init(const geoflow::tbox::PropertyTree& ptree, GGrid &grid,  Time &time, State &utmp, State &u, State &uf);
+	static void init(const geoflow::tbox::PropertyTree& ptree, GGrid &grid,  Time &time, State &utmp, State &ub, State &u);
 
   private:
-}; // class GInitFFactory
+}; // class GSpecBFactory
 
 
 
@@ -43,6 +43,6 @@ class GInitFFactory
 } // namespace geoflow
 
 
-#include "ginitf_factory.ipp"
+#include "ginitb_factory.ipp"
 
 #endif 

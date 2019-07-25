@@ -22,6 +22,7 @@ namespace pdeint {
 //          uf     : forcing components set from call
 // RETURNS: none.
 //**********************************************************************************
+template<typename EquationType>
 void GInitFFactory::static void init(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, Time &time, State &utmp, State &u, State &uf)
 {
   GBOOL         bforced = ptree.getValue<GString>("use_forcing", FALSE);
@@ -30,13 +31,18 @@ void GInitFFactory::static void init(const geoflow::tbox::PropertyTree& ptree, G
 
   if ( !bforced ) return;
 
-  if      ( "initf_null"        == sinit ) {
+  if ( "initf_none" == sinit
+    || "none"       == sinit
+    || ""           == sinit ) {
+    return;
+  }
+  else if ( "initf_null"        == sinit ) {
     ginitf::impl_null     (ftree, eqn_ptr, grid, time, utmp, u, uf);
   else if ( "initf_rand"        == sinit ) {
     ginitf::impl_rand     (ftree, eqn_ptr, grid, time, utmp, u, uf);
   }
   else                                        {
-    assert(FALSE & "Specified forcing initialization unknown");
+    assert(FALSE && "Specified forcing initialization unknown");
   }
 
 } // end, init method
