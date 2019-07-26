@@ -310,11 +310,9 @@ void GGridBox::do_elems2d()
 
     gelems_.push_back(pelem);
 
-#if 0
     // Set global bdy types at each bdy_ind (this is a coarse 
     // application; finer control may be exercised in callback):
     init_periodic_bdytypes_2d(*pelem);
-#endif
 
     // Find global global interior and bdy start & stop indices represented 
     // locally within element:
@@ -440,11 +438,9 @@ void GGridBox::do_elems3d()
 
     gelems_.push_back(pelem);
 
-#if 0
     // Set global bdy types at each bdy_ind (this is a coarse 
     // application; finer control may be exercised in callback):
     init_periodic_bdytypes_3d(*pelem);
-#endif
 
     nvnodes = gelems_[i]->nnodes();
     nfnodes = gelems_[i]->nfnodes();
@@ -564,11 +560,9 @@ void GGridBox::do_elems2d(GTMatrix<GINT> &p,
 
     gelems_.push_back(pelem);
 
-#if 0
     // Set global bdy types at each bdy_ind (this is a coarse 
     // application; finer control may be exercised in callback):
     init_periodic_bdytypes_2d(*pelem);
-#endif
 
     // Find global global interior and bdy start & stop indices represented 
     // locally within element:
@@ -699,11 +693,9 @@ void GGridBox::do_elems3d(GTMatrix<GINT> &p,
 
     gelems_.push_back(pelem);
 
-#if 0
     // Set global bdy types at each bdy_ind (this is a coarse 
     // application; finer control may be exercised in callback):
     init_periodic_bdytypes_3d(*pelem);
-#endif
 
     assert(nvnodes == gelems_[i]->nnodes() && "Incompatible node count");
     nfnodes = gelems_[i]->nfnodes();
@@ -1041,17 +1033,17 @@ void GGridBox::find_subdomain()
 //**********************************************************************************
 // METHOD : config_bdy
 // DESC   : Configure box boundary 
-// ARGS   : none.
+// ARGS   : ibdy : which nodes indices represent global boundaries
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::config_bdy()
+void GGridBox::config_bdy(GTVector<GSIZET> &ibdy)
 {
 
   if      ( ndim_ == 2 ) {
-    config_bdy2d();
+    config_bdy2d(ibdy);
   }
   else if ( ndim_ == 3 ) {
-    config_bdy3d();
+    config_bdy3d(ibdy);
   }
 
 
@@ -1062,10 +1054,10 @@ void GGridBox::config_bdy()
 //**********************************************************************************
 // METHOD : config_bdy2d
 // DESC   : Configure 2d box boundary from ptree_
-// ARGS   : none.
+// ARGS   : ibdy : which nodes indices represent global boundaries
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::config_bdy2d()
+void GGridBox::config_bdy2d(GTVector<GSIZET> &ibdy)
 {
 
 } // end of method config_bdy2d
@@ -1075,10 +1067,10 @@ void GGridBox::config_bdy2d()
 //**********************************************************************************
 // METHOD : config_bdy3d
 // DESC   : Configure 3d box boundary from ptree_
-// ARGS   : none.
+// ARGS   : ibdy : which nodes indices represent global boundaries
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::config_bdy3d()
+void GGridBox::config_bdy3d(GTVector<GSIZET> &ibdy)
 {
 
 

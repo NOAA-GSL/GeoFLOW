@@ -47,7 +47,7 @@ public:
         void                set_basis(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b); // set element basis
         void                periodize();                                     // periodize coords, if allowed
         void                unperiodize();                                   // un-periodize coords, if allow
-        void                config_bdy();                                    // configure bdy
+        void                config_bdy(GTVector<GSIZET> &);                  // configure bdy
 
         void                print(const GString &filename);                  // print grid to file
 
@@ -68,8 +68,8 @@ private:
          void               init_periodic_bdytypes_2d(GElem_base &);        // set 2d bdy type info
          void               init_periodic_bdytypes_3d(GElem_base &);        // set 3d bdy type info
          void               find_subdomain();                               // find task's default subdomain
-         void               config_bdy2d();                                 // config bdy
-         void               config_bdy3d();                                 // config bdy
+         void               config_bdy2d(GTVector<GSIZET> &);               // config bdy
+         void               config_bdy3d(GTVector<GSIZET> &);               // config bdy
 
          GINT                ndim_;          // grid dimensionality (2 or 3)
          GDD_base           *gdd_;           // domain decomposition/partitioning object

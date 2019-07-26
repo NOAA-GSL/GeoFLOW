@@ -93,7 +93,9 @@ virtual void                 print(const GString &filename){}          // print 
         GTVector<GTVector<GFTYPE>>
                             &bdyNormal();                              // global bdy normals
         GTVector<GTVector<GSIZET>>
-                            &igbdy() { return igbdy_;}                 // global dom bdy indices into u for eacb GBdyType
+                            &igbdyt() { return igbdyt_;}               // global dom bdy indices into u for each GBdyType
+        GTVector<GTVector<GSIZET>>
+                            &igbdy() { return igbdy_;}                 // global dom bdy indices into u
 
         GC_COMM              get_comm() { return comm_; }              // get communicator
         GBOOL                is_time_dep() { return btime_dep_; }
@@ -119,7 +121,7 @@ protected:
         void                        def_init();                       // iniitialze deformed elems
         void                        reg_init();                       // initialize regular elems
         GFTYPE                      find_min_dist(); 
-virtual void                        config_bdy()=0;                   // configure bdy
+virtual void                        config_bdy(GTVector<GSIZET> &)=0; // configure bdy
 
         GBOOL                       bInitialized_;  // object initialized?
         GBOOL                       is_bdy_time_dep_; // time-dep bdy vals?
@@ -140,6 +142,7 @@ virtual void                        config_bdy()=0;                   // configu
         GTVector<GTVector<GSIZET>>  igface_;        // index into global field indicating elem face node
         GTVector<GTVector<GFTYPE>>  bdyNormal_;     // normal to surface at each bdy node point (2d & 3d), global
         GFTYPE                      minnodedist_;   // min node length array (for each elem)
+        GTVector<GTVector<GSIZET>>  igbdyt_;        // index into global field indicating a domain bdy--by type
         GTVector<GTVector<GSIZET>>  igbdy_;         // index into global field indicating a domain bdy
         GTVector<GBdyType>          igbdytypes_;    // global domain bdy types for each igbdy index
         PropertyTree               *ptree_;         // main prop tree
