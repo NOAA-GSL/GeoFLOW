@@ -165,50 +165,7 @@ void GGridBox::set_partitioner(GDD_base *gdd)
 void GGridBox::init2d()
 {
 
-#if 1
   find_subdomain();
-#else
-
-  GString serr = "GGridBox::init2d: ";
-
-  assert(gbasis_.size() == 2 && "Invalid dimension");
-
-  GINT nelems = ne_[0]*ne_[1];
-  qmesh_.resize(nelems);
-
-
-  // Get uniform element sizes:
-  GTPoint<GFTYPE> dx(ndim_);
-  for ( GSIZET j=0; j<ndim_; j++ ) 
-    dx[j] = Lbox_[j] / static_cast<GFTYPE>(ne_[j]);
-
-  // Compute vertices of all hexes ('cubes'), starting 
-  GINT   n=0;
-  GTPoint<GFTYPE> v0(2);     // starting sph. point of elem
-  GTPoint<GFTYPE> dv(2);     // delta-point
-  for ( GSIZET j=0; j<ne_[1]; j++ ) { 
-    for ( GSIZET i=0; i<ne_[0]; i++ ) { 
-      v0.x1 = P0_.x1+i*dx.x1; v0.x2 = P0_.x2+j*dx.x2; 
-      qmesh_[n].v1 = v0;
-      dv.x1 = dx.x1 ; dv.x2 = 0.0  ;   qmesh_[n].v2 = v0 + dv;
-      dv.x1 = dx.x1 ; dv.x2 = dx.x2;   qmesh_[n].v3 = v0 + dv;
-      dv.x1 = 0.0   ; dv.x2 = dx.x2;   qmesh_[n].v4 = v0 + dv;
-      n++;
-    }
-  }
-  
-  // Compute centroids of all hexes ('cubes'):
-  GTPoint<GFTYPE> a(3);
-  ftcentroids_.clear();
- 
-  a = 0.0;
-  for ( GSIZET j=0; j<qmesh_.size(); j++ ) { // for each quad polygon
-    for ( GSIZET k=0; k<qmesh_[j].v.size(); k++ )
-       a += qmesh_[j][k];
-    a *= (1.0/static_cast<GFTYPE>(qmesh_[j].v.size()));
-    ftcentroids_.push_back(a);
-  }
-#endif
 
 } // end of method init2d
 
@@ -224,52 +181,6 @@ void GGridBox::init3d()
 {
 
   find_subdomain();
-
-#if 0
-  GString serr = "GGridBox::init3d: ";
-
-  assert(gbasis_.size() == 3 && "Invalid dimension");
-
-  GINT nelems = ne_[0]*ne_[1]*ne_[2];
-  hmesh_.resize(nelems);
-
-
-  // Get uniform element sizes:
-  GTPoint<GFTYPE> dx(ndim_);
-  for ( GSIZET j=0; j<ndim_; j++ ) 
-    dx[j] = Lbox_[j] / static_cast<GFTYPE>(ne_[j]);
-
-  // Compute vertices of all hexes ('cubes'), starting 
-  GINT   n=0;
-  GTPoint<GFTYPE> v0(3);     // starting sph. point of elem
-  GTPoint<GFTYPE> dv(3);     // delta-point
-  for ( GSIZET k=0; k<ne_[2]; k++ ) { 
-    for ( GSIZET j=0; j<ne_[1]; j++ ) { 
-      for ( GSIZET i=0; i<ne_[0]; i++ ) { 
-        v0.x1 = P0_.x1+i*dx.x1; v0.x2 = P0_.x2+j*dx.x2; v0.x2 = P0_.x3+k*dx.x3; 
-        hmesh_[n].v1 = v0;
-        dv.x1 = dx.x1 ; dv.x2 = 0.0  ; dv.x3 = 0.0   ;  hmesh_[n].v2 = v0 + dv;
-        dv.x1 = dx.x1 ; dv.x2 = dx.x2; dv.x3 = 0.0   ;  hmesh_[n].v3 = v0 + dv;
-        dv.x1 = 0.0   ; dv.x2 = dx.x2; dv.x3 = 0.0   ;  hmesh_[n].v4 = v0 + dv;
-        dv.x1 = v0.x1 ; dv.x2 = 0.0  ; dv.x3 = dx.x3 ;  hmesh_[n].v5 = v0 + dv;
-        dv.x1 = v0.x1 ; dv.x2 = dx.x2; dv.x3 = dx.x3 ;  hmesh_[n].v6 = v0 + dv;
-        dv.x1 = v0.x1 ; dv.x2 = dx.x2; dv.x3 = dx.x3 ;  hmesh_[n].v7 = v0 + dv;
-        dv.x1 = v0.x1 ; dv.x2 = 0.0  ; dv.x3 = dx.x3 ;  hmesh_[n].v8 = v0 + dv;
-        n++;
-      }
-    }
-  }
-  
-  // Compute centroids of all hexes ('cubes'):
-  GTPoint<GFTYPE> a(3);
-
-  ftcentroids_.clear();
-  for ( GSIZET j=0; j<hmesh_.size(); j++ ) { // for each cube
-    for ( GSIZET k=0; k<hmesh_[j].v.size(); k++ ) a += *hmesh_[j].v[k];
-    a *= (1.0/static_cast<GFTYPE>(hmesh_[j].v.size()));
-    ftcentroids_.push_back(a);
-  }
-#endif
 
 } // end, method init3d
 
@@ -358,9 +269,6 @@ void GGridBox::do_elems2d()
   GSIZET bcurr = 0; // current global bdy index
 
   for ( GSIZET i=0; i<qmesh_.size(); i++ ) { // for each quad in irank's mesh
-#if 0
-cout << GComm::WorldRank() << ": GGrid::do_elems2d: qmesh[" << i << "]=" << qmesh_[i] << endl;
-#endif
     pelem = new GElem_base(GE_REGULAR, gbasis_);
     xNodes  = &pelem->xNodes();  // node spatial data
     xiNodes = &pelem->xiNodes(); // node ref interval data
@@ -400,12 +308,13 @@ cout << GComm::WorldRank() << ": GGrid::do_elems2d: qmesh[" << i << "]=" << qmes
       }
     }
 
-
     gelems_.push_back(pelem);
 
+#if 0
     // Set global bdy types at each bdy_ind (this is a coarse 
     // application; finer control may be exercised in callback):
-    set_global_bdytypes_2d(*pelem);
+    init_periodic_bdytypes_2d(*pelem);
+#endif
 
     // Find global global interior and bdy start & stop indices represented 
     // locally within element:
@@ -423,13 +332,14 @@ cout << GComm::WorldRank() << ": GGrid::do_elems2d: qmesh[" << i << "]=" << qmes
     bcurr += nbnodes;
   } // end of quad mesh loop
 
-
+#if 0
   // Can set individual nodes and internal bdy conditions
   // with callback here: NOTE: Must re-globalize bdy_indices!!!
   if ( bdycallback_ != NULLPTR ) {
     assert(FALSE && "Re-globalization of bdy data not done");
     (*bdycallback_)(gelems_);
   }
+#endif
 
 } // end of method do_elems2d (1)
 
@@ -485,9 +395,6 @@ void GGridBox::do_elems3d()
   GSIZET bcurr = 0; // current global bdy index
   for ( GSIZET i=0; i<hmesh_.size(); i++ ) { // for each hex in irank's mesh
 
-cout << serr << " hmesh[" << i << "]=" << hmesh_[i] << endl;
-
-
     pelem = new GElem_base(GE_REGULAR, gbasis_);
     xNodes  = &pelem->xNodes();  // node spatial data
     xiNodes = &pelem->xiNodes(); // node ref interval data
@@ -532,9 +439,12 @@ cout << serr << " hmesh[" << i << "]=" << hmesh_[i] << endl;
     }
 
     gelems_.push_back(pelem);
+
+#if 0
     // Set global bdy types at each bdy_ind (this is a coarse 
     // application; finer control may be exercised in callback):
-    set_global_bdytypes_3d(*pelem);
+    init_periodic_bdytypes_3d(*pelem);
+#endif
 
     nvnodes = gelems_[i]->nnodes();
     nfnodes = gelems_[i]->nfnodes();
@@ -550,11 +460,13 @@ cout << serr << " hmesh[" << i << "]=" << hmesh_[i] << endl;
     bcurr += nbnodes;
   } // end of hex mesh loop
 
+#if 0
   // Can set individual nodes and internal bdy conditions
   // with callback here:
   if ( bdycallback_ != NULLPTR ) {
     (*bdycallback_)(gelems_);
   }
+#endif
 
 } // end of method do_elems3d (1)
 
@@ -627,6 +539,7 @@ void GGridBox::do_elems2d(GTMatrix<GINT> &p,
 
     pelem->init(*xNodes);
 
+
     // With face/edge centroids computed, compute 
     // global boundary nodes:
     GFTYPE eps=100*std::numeric_limits<GFTYPE>::epsilon();
@@ -651,9 +564,11 @@ void GGridBox::do_elems2d(GTMatrix<GINT> &p,
 
     gelems_.push_back(pelem);
 
+#if 0
     // Set global bdy types at each bdy_ind (this is a coarse 
     // application; finer control may be exercised in callback):
-    set_global_bdytypes_2d(*pelem);
+    init_periodic_bdytypes_2d(*pelem);
+#endif
 
     // Find global global interior and bdy start & stop indices represented 
     // locally within element:
@@ -672,12 +587,14 @@ void GGridBox::do_elems2d(GTMatrix<GINT> &p,
   } // end of quad mesh loop
 
 
+#if 0
   // Can set individual nodes and internal bdy conditions
   // with callback here: NOTE: Must re-globalize bdy_indices!!!
   if ( bdycallback_ != NULLPTR ) {
     assert(FALSE && "Re-globalization of bdy data not done");
     (*bdycallback_)(gelems_);
   }
+#endif
 
 } // end of method do_elems2d (2)
 
@@ -781,9 +698,12 @@ void GGridBox::do_elems3d(GTMatrix<GINT> &p,
     }
 
     gelems_.push_back(pelem);
+
+#if 0
     // Set global bdy types at each bdy_ind (this is a coarse 
     // application; finer control may be exercised in callback):
-    set_global_bdytypes_3d(*pelem);
+    init_periodic_bdytypes_3d(*pelem);
+#endif
 
     assert(nvnodes == gelems_[i]->nnodes() && "Incompatible node count");
     nfnodes = gelems_[i]->nfnodes();
@@ -799,11 +719,13 @@ void GGridBox::do_elems3d(GTMatrix<GINT> &p,
     bcurr += nbnodes;
   } // end of hex mesh loop
 
+#if 0
   // Can set individual nodes and internal bdy conditions
   // with callback here:
   if ( bdycallback_ != NULLPTR ) {
     (*bdycallback_)(gelems_);
   }
+#endif
 
 } // end of method do_elems3d (2)
 
@@ -853,7 +775,7 @@ void GGridBox::print(const GString &filename)
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : set_global_bdytypes_2d
+// METHOD : init_periodic_bdytypes_2d
 // DESC   : Set global element boundary condition types in 2d 
 //            NOTE: element node coordinate may change in this call! Also,
 //                  bdy indices must already have been set prior to 
@@ -861,7 +783,7 @@ void GGridBox::print(const GString &filename)
 // ARGS   : pelem : Element under consideration
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::set_global_bdytypes_2d(GElem_base &pelem)
+void GGridBox::init_periodic_bdytypes_2d(GElem_base &pelem)
 {
 
   GTVector<GINT>              *bdy_ind=&pelem.bdy_indices();
@@ -877,18 +799,7 @@ void GGridBox::set_global_bdytypes_2d(GElem_base &pelem)
       if ( (FUZZYEQ(P0_.x1,(*xNodes)[0][ib],eps) 
         ||  FUZZYEQ(P1_.x1,(*xNodes)[0][ib],eps)) ) {
           (*bdy_typ)[k] = GBDY_PERIODIC;
-//      // Set right x-coord equal to that on left-most bdy:
-//      if ( FUZZYEQ(P1_.x1,(*xNodes)[0][ib],eps) ) (*xNodes)[0][ib] = P0_.x1;
       }
-    }
-  }
-  else {                                         // not x-periodic
-    for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
-      ib = (*bdy_ind)[k];
-      if ( FUZZYEQ(P0_.x1,(*xNodes)[0][ib],eps)  )
-          (*bdy_typ)[k] = global_bdy_types_[3];
-      if ( FUZZYEQ(P1_.x1,(*xNodes)[0][ib],eps)  )
-          (*bdy_typ)[k] = global_bdy_types_[1];
     }
   }
 
@@ -898,28 +809,17 @@ void GGridBox::set_global_bdytypes_2d(GElem_base &pelem)
       if ( FUZZYEQ(P0_.x2,(*xNodes)[1][ib],eps)  
         || FUZZYEQ(P1_.x2,(*xNodes)[1][ib],eps) ) {
           (*bdy_typ)[k] = GBDY_PERIODIC;
-//      // Set top y-coord equal to that on bottom-most bdy:
-//      if ( FUZZYEQ(P1_.x2,(*xNodes)[1][ib],eps) ) (*xNodes)[1][ib] = P0_.x2;
       }
-    }
-  }
-  else {                                         // not y-periodic
-    for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
-      ib = (*bdy_ind)[k];
-      if ( FUZZYEQ(P0_.x2,(*xNodes)[1][ib],eps) )
-          (*bdy_typ)[k] = global_bdy_types_[0];
-      if ( FUZZYEQ(P1_.x2,(*xNodes)[1][ib],eps) ) 
-          (*bdy_typ)[k] = global_bdy_types_[2];
     }
   }
 
   return;
-} // end, method set_global_bdytypes_2d
+} // end, method init_periodic_bdytypes_2d
 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : set_global_bdytypes_3d
+// METHOD : init_periodic_bdytypes_3d
 // DESC   : Set global element boundary conditions in 3d
 //            NOTE: element node coordinate may change in this call! Also,
 //                  bdy indices must already have been set prior to 
@@ -927,7 +827,7 @@ void GGridBox::set_global_bdytypes_2d(GElem_base &pelem)
 // ARGS   : pelem : Element under consideration
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::set_global_bdytypes_3d(GElem_base &pelem)
+void GGridBox::init_periodic_bdytypes_3d(GElem_base &pelem)
 {
   GTVector<GINT>              *bdy_ind=&pelem.bdy_indices();
   GTVector<GINT>              *face_ind=&pelem.bdy_indices();
@@ -942,18 +842,7 @@ void GGridBox::set_global_bdytypes_3d(GElem_base &pelem)
       if ( FUZZYEQ(P0_.x1,(*xNodes)[0][ib],eps)
         || FUZZYEQ(P1_.x1,(*xNodes)[0][ib],eps) ) {
           (*bdy_typ)[k] = GBDY_PERIODIC;
-//      // Set right x-coord equal to that on left-most bdy:
-//      if ( FUZZYEQ(P1_.x1,(*xNodes)[0][ib],eps) ) (*xNodes)[0][ib] = P0_.x1;
       }
-    }
-  }
-  else {                                         // not x-periodic
-    for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
-      ib = (*bdy_ind)[k];
-      if ( FUZZYEQ(P0_.x1,(*xNodes)[0][ib],eps) )
-          (*bdy_typ)[k] = global_bdy_types_[3];
-      if (  FUZZYEQ(P1_.x1,(*xNodes)[0][ib],eps) )
-          (*bdy_typ)[k] = global_bdy_types_[1];
     }
   }
 
@@ -963,18 +852,7 @@ void GGridBox::set_global_bdytypes_3d(GElem_base &pelem)
       if ( (FUZZYEQ(P0_.x2,(*xNodes)[1][ib],eps) 
        ||   FUZZYEQ(P1_.x2,(*xNodes)[1][ib],eps)) ) {
           (*bdy_typ)[k] = GBDY_PERIODIC;
-//      // Set top y-coord equal to that on bottom-most bdy:
-//      if ( FUZZYEQ(P1_.x2,(*xNodes)[1][ib],eps) ) (*xNodes)[1][ib] = P0_.x2;
       }
-    }
-  }
-  else {                                         // not y-periodic
-    for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
-      ib = (*bdy_ind)[k];
-      if ( FUZZYEQ(P0_.x2,(*xNodes)[1][ib],eps) ) 
-          (*bdy_typ)[k] = global_bdy_types_[0];
-      if ( FUZZYEQ(P1_.x2,(*xNodes)[1][ib],eps) )
-          (*bdy_typ)[k] = global_bdy_types_[2];
     }
   }
 
@@ -984,21 +862,11 @@ void GGridBox::set_global_bdytypes_3d(GElem_base &pelem)
       if ( FUZZYEQ(P0_.x3,(*xNodes)[2][ib],eps) 
        ||  FUZZYEQ(P1_.x3,(*xNodes)[2][ib],eps) ) {
           (*bdy_typ)[k] = GBDY_PERIODIC;
-//      // Set top z-coord equal to that on bottom-most bdy:
-//      if ( FUZZYEQ(P1_.x3,(*xNodes)[2][ib],eps) ) (*xNodes)[2][ib] = P0_.x3;
       }
     }
   }
-  else {                                         // not z-periodic
-    for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
-      ib = (*bdy_ind)[k];
-      if ( FUZZYEQ(P0_.x3,(*xNodes)[2][ib],eps) )
-          (*bdy_typ)[k] = global_bdy_types_[4];
-      if ( FUZZYEQ(P1_.x3,(*xNodes)[2][ib],eps) )  
-          (*bdy_typ)[k] = global_bdy_types_[5];
-    }
-  }
-} // end, method set_global_bdytypes_3d
+  
+} // end, method init_periodic_bdytypes_3d
 
 
 //**********************************************************************************
@@ -1036,11 +904,6 @@ void GGridBox::periodize()
     }
     n++;
   }
-
-#if 0
-  GPP(comm_, "GGridBox::periodize: igbdy_[GBDY_PERIODIC]=" << igbdy_[GBDY_PERIODIC]);
-  GPP(comm_, "GGridBox::periodize: periodicdirs_=" << periodicdirs_);
-#endif
 
   // Now, cycle through periodic nodes and periodize coordinates:
   for ( GSIZET k=0; k<periodicids_.size(); k++ ) { // for each periodic node
@@ -1172,4 +1035,52 @@ void GGridBox::find_subdomain()
 
 
 } // end of method find_subdomain
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : config_bdy
+// DESC   : Configure box boundary 
+// ARGS   : none.
+// RETURNS: none.
+//**********************************************************************************
+void GGridBox::config_bdy()
+{
+
+  if      ( ndim_ == 2 ) {
+    config_bdy2d();
+  }
+  else if ( ndim_ == 3 ) {
+    config_bdy3d();
+  }
+
+
+} // end of method config_bdy
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : config_bdy2d
+// DESC   : Configure 2d box boundary from ptree_
+// ARGS   : none.
+// RETURNS: none.
+//**********************************************************************************
+void GGridBox::config_bdy2d()
+{
+
+} // end of method config_bdy2d
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : config_bdy3d
+// DESC   : Configure 3d box boundary from ptree_
+// ARGS   : none.
+// RETURNS: none.
+//**********************************************************************************
+void GGridBox::config_bdy3d()
+{
+
+
+} // end of method config_bdy3d
 

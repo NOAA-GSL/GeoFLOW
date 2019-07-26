@@ -104,8 +104,6 @@ friend  std::ostream&       operator<<(std::ostream&, GGridIcos &);       // Out
          void               order_triangles(GTVector<GTriangle<GFTYPE>> &);    // order triangle verts
 
        
-
-private:
          void               do_elems2d(GINT rank);              // do 2d grid
          void               do_elems3d(GINT rank);              // do 3d grid
          void               do_elems2d(GTMatrix<GINT> &p,
@@ -115,6 +113,8 @@ private:
 
          void               set_global_bdy_2d(GElem_base &);    // set 2d bdy info
          void               set_global_bdy_3d(GElem_base &);    // set 3d bdy info
+        void                config_bdy();                       // configure bdy
+
 
 
          GINT               ilevel_;        // refinement level (>= 0)

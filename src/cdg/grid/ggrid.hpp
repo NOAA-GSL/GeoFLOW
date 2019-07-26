@@ -39,9 +39,12 @@ virtual void                 do_elems() = 0;                            // compu
 virtual void                 do_elems(GTMatrix<GINT> &p,
                                GTVector<GTVector<GFTYPE>> &xnodes) = 0; // compute grid on restart
 virtual void                 set_partitioner(GDD_base *d) = 0;         // set and use GDD object
+
+#if 0
 virtual void                 set_bdy_callback(
                              std::function<void(GElemList &)> *callback) 
                              {bdycallback_ =  callback; }              // set bdy-set callback
+#endif
 
 virtual void                 print(const GString &filename){}          // print grid to file
 
@@ -115,13 +118,11 @@ protected:
        
         void                        def_init();                       // iniitialze deformed elems
         void                        reg_init();                       // initialize regular elems
-
-         
         GFTYPE                      find_min_dist(); 
-        void                        init_bc_info(); 
+virtual void                        config_bdy()=0;                   // configure bdy
 
         GBOOL                       bInitialized_;  // object initialized?
-        GBOOL                       is_bbdy_time_dep_; // time-dep bdy vals?
+        GBOOL                       is_bdy_time_dep_; // time-dep bdy vals?
         GElemType                   gtype_;         // element types comprising grid
         GINT                        irank_;         // MPI task id
         GINT                        nprocs_;        // number of MPI tasks
@@ -141,14 +142,15 @@ protected:
         GFTYPE                      minnodedist_;   // min node length array (for each elem)
         GTVector<GTVector<GSIZET>>  igbdy_;         // index into global field indicating a domain bdy
         GTVector<GBdyType>          igbdytypes_;    // global domain bdy types for each igbdy index
+        PropertyTree               *ptree_;         // main prop tree
         std::function<void(PropertyTree &ptree, GGrid &grid, const Time &t, 
                            State &utmp, State &u   , State &ub)>
                                     init_bdy_callback_;  //  bdy init method
         std::function<void(PropertyTree &ptree, GGrid &grid, const Time &t, 
                            State &utmp, State &u   , State &ub)>
                                     update_bdy_callback_; //  bdy update method
-        std::function<void(GElemList &)> 
-                                   *bdycallback_;   // bdy callback function (e.g., for internal bdy types)
+//      std::function<void(GElemList &)> 
+//                                 *bdycallback_;   // bdy callback function (e.g., for internal bdy types)
 
 };
 

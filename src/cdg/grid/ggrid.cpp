@@ -36,7 +36,8 @@ nprocs_        (GComm::WorldSize(comm)),
 irank_         (GComm::WorldRank(comm)),
 minnodedist_   (std::numeric_limits<GFTYPE>::max()),
 bdycallback_                  (NULLPTR),
-comm_                            (comm)
+comm_                            (comm),
+ptree_                         (&ptree)
 {
 } // end of constructor method (1)
 
@@ -938,6 +939,9 @@ void GGrid::init_bc_info()
   GTVector <GBdyType> btmp; 
   GTVector   <GSIZET> itmp; 
 
+  // First, configure bdy types from prop tree, elem-by-elem:
+  config_bdy();
+
   // Set some array sizes. Note: we could use
   // push_back, but this is slow:
   n = 0;
@@ -951,7 +955,7 @@ void GGrid::init_bc_info()
   n = 0;
   for ( GSIZET e=0; e<gelems_.size(); e++ ) { // get global # face nodes
     ieface = &gelems_[e]->face_indices(); // set in child class
-    for ( GSIZET j=0; j<ieface->size(); j++ ) { // elem faces
+    for ( GSIZET j=0; j<ieface->size(); j++ ) { // count elem face nodes
       for ( GSIZET k=0; k<(*ieface)[j].size(); k++) n++; 
     }
   }
@@ -972,7 +976,7 @@ void GGrid::init_bc_info()
       n++;
     }
 
-    for ( GSIZET j=0; j<ieface->size(); j++ ) { // get global elem face node idices
+    for ( GSIZET j=0; j<ieface->size(); j++ ) { // get global elem face node indices
       for ( GSIZET k=0; k<(*ieface)[j].size(); k++ ) {
         ig = nn + (*ieface)[j][k];
         igface_[m] = ig;
@@ -982,6 +986,7 @@ void GGrid::init_bc_info()
     nn += gelems_[e]->nnodes();
   } // end, element loop
  
+
   // Create bdy type-bins (one bin for each GBdyType), and
   // for each type, set the indirection indices into global
   // vectors that have that type:
