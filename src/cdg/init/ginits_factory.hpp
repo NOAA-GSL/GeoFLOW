@@ -18,6 +18,7 @@ namespace geoflow {
 namespace pdeint {
 
 
+template<typename EquationType>
 class GInitSFactory
 {
   public:
@@ -30,7 +31,7 @@ class GInitSFactory
         using Time          = typename Equation::Time;
 
 
-	static void init(const geoflow::tbox::PropertyTree& ptree, GGrid &grid,  Time &time, State &utmp, State &ub, State &u);
+	static GBOOL init(const geoflow::tbox::PropertyTree& ptree, GGrid &grid,  Time &time, State &utmp, State &ub, State &u);
 
   private:
 }; // class GInitSFactory

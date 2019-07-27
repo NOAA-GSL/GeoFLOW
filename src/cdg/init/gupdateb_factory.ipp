@@ -22,7 +22,7 @@ namespace pdeint {
 // RETURNS: none.
 //**********************************************************************************
 template<typename EquationType>
-void GInitBFactory::static void update(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
+void GInitBFactory<EquationType>::update(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
 {
   GString       sinit   = ptree.getValue<GString>("updateb_block");
   PropertyTree  vtree   = ptree.getPropertyTree(sinit);

@@ -31,7 +31,7 @@ class GInitFFactory
         using Time          = typename Equation::Time;
 
 
-	static void init(const geoflow::tbox::PropertyTree& ptree, GGrid &grid,  Time &time, State &utmp, State &u, State &uf);
+	static GBOOL init(const geoflow::tbox::PropertyTree& ptree, GGrid &grid,  Time &time, State &utmp, State &u, State &uf);
 
   private:
 }; // class GInitFFactory

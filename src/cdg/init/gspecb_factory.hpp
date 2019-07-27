@@ -31,7 +31,7 @@ class GSpecBFactory
         using Time          = typename Equation::Time;
 
 
-	static void init(const geoflow::tbox::PropertyTree& ptree, GGrid &grid,  Time &time, State &utmp, State &ub, State &u);
+        static GBOOL init(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, const GTVector<GSIZET> &ibdy, GTVector<GBdyType> &tbdy);
 
   private:
 }; // class GSpecBFactory

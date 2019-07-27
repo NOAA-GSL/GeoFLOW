@@ -15,31 +15,34 @@ namespace pdeint {
 // METHOD : init
 // DESC   : Do bdy initialization
 // ARGS   : ptree  : main property tree
-//          time   : initialization time
-//          utmp   : tmp arrays
-//          ub     : boundary state 
-//          u      : state to be initialized. 
+//          grid   : GGrid object
+//          ibdy   : indirection array into state indicating global bdy
+//          tbdy   : array of size ibdy.size giving bdy condition type, returned
 // RETURNS: none.
 //**********************************************************************************
-void GSpecBFactory::static void init(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
+template<typename EquationType>
+GBOOL GSpecBFactory<EquationType>::init(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, const GTVector<GSIZET> &ibdy, GTVector<GBdyType> &tbdy)
 {
+  GBOOL         bret    = FALSE;
   GString       sinit   = ptree.getValue<GString>("specb_block");
-  PropertyTree  vtree   = ptree.getPropertyTree(sinit);
 
   if ( "specb_none" == sinit
     || "none"       == sinit
-    || ""           == init ) {
+    || ""           == init 
+    || ibdy.size()  == 0   ) {
     return;
   }
-  else if ( "specb_icosgaussburgers"  == sinit ) {
-    gspecb::impl_icosgauss       (vtree, eqn_ptr, grid, time, utmp, ub, u);
+  else if ( "specb_box_uniform"    == sinit ) {
+    bret = gspecb::impl_box_uniform      (ptree, grid, ibdy, tbdy);
   }
-  else if ( "specb_nwave"              == sinit ) {
-    gspecb::impl_nwave           (vtree, eqn_ptr, grid, time, utmp, ub, u);
+  else if ( "specb_icos_uniform"   == sinit ) {
+    bret = gspecb::impl_icos_uniform     (ptree, grid, ibdy, tbdy);
   }
   else                                        {
-    assert(FALSE && "Specified state initialization method unknown");
+    bret = assert(FALSE && "Boundary specification method unknown");
   }
+
+  return bret;
 
 } // end, init method
 

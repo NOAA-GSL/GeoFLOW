@@ -21,26 +21,30 @@ namespace pdeint {
 //          u      : state to be initialized. 
 // RETURNS: none.
 //**********************************************************************************
-void GInitSFactory::static void init(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
+template<typename EquationType>
+GBOOL GInitBFactory<EquationType>::init(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
 {
+  GBOOL         bret    = FALSE;
   GString       sinit   = ptree.getValue<GString>("inits_block");
   PropertyTree  vtree   = ptree.getPropertyTree(sinit);
 
   if      ( "inits_icosgaussburgers"  == sinit ) {
-    ginits::impl_icosgauss       (vtree, eqn_ptr, grid, time, utmp, ub, u);
+    bret = ginits::impl_icosgauss       (vtree, eqn_ptr, grid, time, utmp, ub, u);
   }
   else if ( "inits_boxdirgauss"        == sinit ) {
-    ginits::impl_boxdirgauss     (vtree, eqn_ptr, grid, time, utmp, ub, u);
+    bret = ginits::impl_boxdirgauss     (vtree, eqn_ptr, grid, time, utmp, ub, u);
   }
   else if ( "inits_boxpergauss"        == sinit ) {
-    ginits::impl_boxpergauss     (vtree, eqn_ptr, grid, time, utmp, ub, u);
+    bret = ginits::impl_boxpergauss     (vtree, eqn_ptr, grid, time, utmp, ub, u);
   }
   else if ( "inits_nwave"              == sinit ) {
-    ginits::impl_nwave           (vtree, eqn_ptr, grid, time, utmp, ub, u);
+    bret = ginits::impl_nwave           (vtree, eqn_ptr, grid, time, utmp, ub, u);
   }
   else                                        {
     assert(FALSE & "Specified state initialization method unknown");
   }
+
+  return bret;
 
 } // end, init method
 

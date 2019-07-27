@@ -22,20 +22,22 @@ namespace pdeint {
 // RETURNS: none.
 //**********************************************************************************
 template<typename EquationType>
-void GInitBFactory::static void init(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
+GBOOL GInitBFactory<EquationType>::init(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
 {
+  GBOOL         bret=FALSE;
   GString       sinit   = ptree.getValue<GString>("initb_block");
   PropertyTree  vtree   = ptree.getPropertyTree(sinit);
 
   if ( "initb_none" == sinit
     || "none"       == sinit 
     || ""           == sinit ) {
-    return;
+    return TRUE;;
   }
   else                                        {
     assert(FALSE && "Specified bdy initialization method unknown");
   }
 
+  return bret;
 } // end, init method
 
 

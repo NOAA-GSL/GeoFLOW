@@ -23,8 +23,9 @@ namespace pdeint {
 // RETURNS: none.
 //**********************************************************************************
 template<typename EquationType>
-void GInitFFactory::static void init(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, Time &time, State &utmp, State &u, State &uf)
+GBOOL GInitFFactory<EquationType>::init(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, Time &time, State &utmp, State &u, State &uf)
 {
+  GBOOL         bret=FALSE;
   GBOOL         bforced = ptree.getValue<GString>("use_forcing", FALSE);
   GString       sinit   = ptree.getValue<GString>("initf_block");
   PropertyTree  ftree   = ptree.getPropertyTree(sinit);
@@ -34,16 +35,18 @@ void GInitFFactory::static void init(const geoflow::tbox::PropertyTree& ptree, G
   if ( "initf_none" == sinit
     || "none"       == sinit
     || ""           == sinit ) {
-    return;
+    return TRUE;
   }
   else if ( "initf_null"        == sinit ) {
-    ginitf::impl_null     (ftree, eqn_ptr, grid, time, utmp, u, uf);
+    bret = ginitf::impl_null     (ftree, eqn_ptr, grid, time, utmp, u, uf);
   else if ( "initf_rand"        == sinit ) {
-    ginitf::impl_rand     (ftree, eqn_ptr, grid, time, utmp, u, uf);
+    bret = ginitf::impl_rand     (ftree, eqn_ptr, grid, time, utmp, u, uf);
   }
   else                                        {
     assert(FALSE && "Specified forcing initialization unknown");
   }
+
+  return bret;
 
 } // end, init method
 
