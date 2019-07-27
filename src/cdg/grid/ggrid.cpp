@@ -237,8 +237,8 @@ GSIZET GGrid::nbdydof()
    // face indices, may conatin embedded booundary 
    // surfaces too:
    GSIZET nftot=0;
-   for ( GSIZET j=0; j<igbdyt_.size(); j++ ) 
-     nftot += igbdyt_[j].size();
+   for ( GSIZET j=0; j<igbdy_binned_.size(); j++ ) 
+     nftot += igbdy_binned_[j].size();
        
    return nftot;
 } // end of method nbdydof
@@ -367,11 +367,6 @@ void GGrid::grid_init()
   else if ( itype_[GE_DEFORMED]  .size() > 0 ) gtype_ = GE_DEFORMED;
   else if ( itype_[GE_REGULAR]   .size() > 0 ) gtype_ = GE_REGULAR;
 
-  GPTLstart("GGrid::grid_init: init_bc_info");
-  // All element bdy/face data should have been set by now:
-  init_bc_info();
-  GPTLstop("GGrid::grid_init: init_bc_info");
-
   GPTLstart("GGrid::grid_init: def_init");
   if ( itype_[GE_2DEMBEDDED].size() > 0
     || itype_  [GE_DEFORMED].size() > 0 ) {
@@ -384,6 +379,12 @@ void GGrid::grid_init()
     reg_init();
   }
   GPTLstop("GGrid::grid_init: reg_init");
+
+  GPTLstart("GGrid::grid_init: init_bc_info");
+  // All element bdy/face data should have been set by now:
+  init_bc_info();
+  GPTLstop("GGrid::grid_init: init_bc_info");
+
 
   bInitialized_ = TRUE;
   mass_ = new GMass(*this);
@@ -926,10 +927,11 @@ void GGrid::deriv(GTVector<GFTYPE> &u, GINT idir, GTVector<GFTYPE> &utmp,
 //**********************************************************************************
 void GGrid::init_bc_info()
 {
+  GBOOL                        bret;
   GSIZET                       ibeg, iend; // beg, end indices for global array
   GTVector<GINT>              *iebdy;  // domain bdy indices
   GTVector<GTVector<GINT>>    *ieface; // domain face indices
-  GTVector<GBdyType>          *iebdyt; // domain bdy types
+//GTVector<GBdyType>          *iebdyt; // domain bdy types
 
   // Collect all element bdy types and indicection indices
   // into global vectors (so we can use the GTVector 
@@ -937,9 +939,6 @@ void GGrid::init_bc_info()
   GSIZET        m, n, nn=0; 
   GSIZET                ig; 
   GTVector <GBdyType> btmp; 
-
-  // First, configure bdy types from prop tree, elem-by-elem:
-  config_bdy();
 
   // Set some array sizes. Note: we could use
   // push_back, but this is slow:
@@ -967,11 +966,11 @@ void GGrid::init_bc_info()
     ibeg   = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
     iebdy  = &gelems_[e]->bdy_indices();  // set in child class
     ieface = &gelems_[e]->face_indices(); // set in child class
-    iebdyt = &gelems_[e]->bdy_types();    // set in child class
+//  iebdyt = &gelems_[e]->bdy_types();    // set in child class
     for ( GSIZET j=0; j<iebdy->size(); j++ ) { // elem bdys (if any)
       ig = nn + (*iebdy)[j];
       igbdy_[n] = ig; // index in global arrays
-      btmp  [n] = (*iebdyt)[j];
+//    btmp  [n] = (*iebdyt)[j];
       n++;
     }
 
@@ -985,6 +984,10 @@ void GGrid::init_bc_info()
     nn += gelems_[e]->nnodes();
   } // end, element loop
  
+  // Find boundary types from config file specification.
+  // btmp will contain a 'flat' array of bdy types, one
+  // for each element of igbdy_ array:
+  config_bdy(*ptree_, igbdy_, btmp);
 
   // Create bdy type-bins (one bin for each GBdyType), and
   // for each type, set the indirection indices into global
@@ -992,12 +995,12 @@ void GGrid::init_bc_info()
   GBdyType         itype;
   GSIZET    *ind=NULLPTR;
   GSIZET      nind, nw=0;
-  igbdyt_.resize(GBDY_NONE); // set of bdy indices for each type
+  igbdy_binned_.resize(GBDY_NONE); // set of bdy indices for each type
   for ( GSIZET k=0; k<GBDY_NONE; k++ ) { // cycle over each bc type
     itype = static_cast<GBdyType>(k);
     nind = btmp.contains(itype, ind, nw);
-    igbdyt_[k].resize(nind);
-    for ( GSIZET j=0; j<nind; j++ ) igbdyt_[k][j] = igbdy_[ind[j]];
+    igbdy_binned_[k].resize(nind);
+    for ( GSIZET j=0; j<nind; j++ ) igbdy_binned_[k][j] = igbdy_[ind[j]];
     nind = 0;
   } // end, element loop
 

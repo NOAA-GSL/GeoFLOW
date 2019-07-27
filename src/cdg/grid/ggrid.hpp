@@ -93,7 +93,7 @@ virtual void                 print(const GString &filename){}          // print 
         GTVector<GTVector<GFTYPE>>
                             &bdyNormal();                              // global bdy normals
         GTVector<GTVector<GSIZET>>
-                            &igbdyt() { return igbdyt_;}               // global dom bdy indices into u for each GBdyType
+                            &igbdy_binned() { return igbdy_binned_;}   // global dom bdy indices binned into GBdyType
         GTVector<GTVector<GSIZET>>
                             &igbdy() { return igbdy_;}                 // global dom bdy indices into u
 
@@ -112,6 +112,9 @@ virtual void                 print(const GString &filename){}          // print 
                              get_bdy_update_callback() 
                              { return update_bdy_callback_; }          // get bdy update callback from config
 
+virtual void                 config_bdy(const PropertyTree &ptree, 
+                                        GTVector<GSIZET> &igbdy, 
+                                        GTVector<GSIZET> &igbdyt)=0;   // config bdy
 
 friend  std::ostream&        operator<<(std::ostream&, GGrid &);       // Output stream operator
  
@@ -121,7 +124,6 @@ protected:
         void                        def_init();                       // iniitialze deformed elems
         void                        reg_init();                       // initialize regular elems
         GFTYPE                      find_min_dist(); 
-virtual void                        config_bdy(GTVector<GSIZET> &)=0; // configure bdy
 
         GBOOL                       bInitialized_;  // object initialized?
         GBOOL                       is_bdy_time_dep_; // time-dep bdy vals?
@@ -142,7 +144,7 @@ virtual void                        config_bdy(GTVector<GSIZET> &)=0; // configu
         GTVector<GTVector<GSIZET>>  igface_;        // index into global field indicating elem face node
         GTVector<GTVector<GFTYPE>>  bdyNormal_;     // normal to surface at each bdy node point (2d & 3d), global
         GFTYPE                      minnodedist_;   // min node length array (for each elem)
-        GTVector<GTVector<GSIZET>>  igbdyt_;        // index into global field indicating a domain bdy--by type
+        GTVector<GTVector<GSIZET>>  igbdy_binned_;  // index into global field indicating a domain bdy--by type
         GTVector<GTVector<GSIZET>>  igbdy_;         // index into global field indicating a domain bdy
         GTVector<GBdyType>          igbdytypes_;    // global domain bdy types for each igbdy index
         PropertyTree               *ptree_;         // main prop tree

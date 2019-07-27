@@ -18,6 +18,8 @@
 
 
 using namespace std;
+using namespace geoflow;
+using namespace toolbox;
 
 //**********************************************************************************
 //**********************************************************************************
@@ -879,7 +881,7 @@ void GGridBox::periodize()
   periodicids_.clear();
   periodicdirs_.clear();
 
-  // Coords to set to correspond to bottom-most domain point:
+  // Coords set to correspond to bottom-most domain point:
   for ( GSIZET k=0; k<x.size(); k++ ) x[k] = P0_[k];
 
   GUINT  bit;
@@ -1036,14 +1038,16 @@ void GGridBox::find_subdomain()
 // ARGS   : ibdy : which nodes indices represent global boundaries
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::config_bdy(GTVector<GSIZET> &ibdy)
+void GGridBox::config_bdy(const PropertyTree &ptree, 
+                          GTVector<GSIZET> &igbdy, 
+                          GTVector<GSIZET> &igbdyt)
 {
 
   if      ( ndim_ == 2 ) {
-    config_bdy2d(ibdy);
+    config_bdy2d(ptree, igbdy, igbdyt);
   }
   else if ( ndim_ == 3 ) {
-    config_bdy3d(ibdy);
+    config_bdy3d(ptree, igbdy, igbdyt);
   }
 
 
@@ -1057,8 +1061,61 @@ void GGridBox::config_bdy(GTVector<GSIZET> &ibdy)
 // ARGS   : ibdy : which nodes indices represent global boundaries
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::config_bdy2d(GTVector<GSIZET> &ibdy)
+void GGridBox::config_bdy2d(const PropertyTree &ptree, 
+                            GTVector<GSIZET> &igbdy, 
+                            GTVector<GSIZET> &igbdyt)
 {
+  // Cycle over all geometric boundaries, and configure:
+
+  GBOOL              buniform(2*GDIM);
+  GBOOL              btimedep(2*GDIM);
+  GSIZET             iwhere;
+  GFTYPE             eps=100*std::numeric_limits<GFTYPE>::epsilon();
+  GTVector<GBdyType> bdytype(2*GDIM);
+  GTVector<GString>  bdynames(2*GDIM);
+  GString            gname, sbdy(2*GDIM), bdyclass;
+  PropertyTree       gridptree, bdytree;
+
+  assert(gname == "grid_box");
+
+  bdynames[0] = "bdy_x_0";
+  bdynames[1] = "bdy_x_1";
+  bdynames[2] = "bdy_y_0";
+  bdynames[3] = "bdy_y_1";
+
+  gname     = ptree.getValue<GString>("grid_type");
+  gridptree = ptree.getPropertyTree(gname);
+
+  bret = GSpecBFactory::init(*ptree_, *this, igbdy, btmp);
+  assert(bret && "Boundary specification configuration failed");
+
+  for ( auto j=0; j<2*GDIM; j++ ) {
+    sbdy    [j] = gridptree.getValue<GString>(bdynames[j]);
+    bdytree     = gridtree.getPropertyTree(sbdy);
+    bdyclass    = bdytree.getValue<GString>("bdy_class", "uniform");
+    bdytype [j] = geoflow::str2bdytype(bdytree.getValue<GString>("base_type"));
+    buniform[j] = bdyclass == "uniform" ? TRUE : FALSE;
+    btimedep[j] = bdytree.getValue<GBOOL>("is_time_dep", FALSE);
+    assert(bdytype[j] == GBDY_PERIODIC && !buniform[j] && "GBDY_PERIODIC boundary must have bdy_class = uniform");
+  }
+
+  assert( (  (bdytype[0] == GBDY_PERIODIC && bdytype[2] != GBDY_PERIODIC)
+         ||  (bdytype[3] == GBDY_PERIODIC && bdytype[1] != GBDY_PERIODIC) )
+         &&  "Incompatible GBDY_PERIODIC boundary specification");
+       
+  // Fill in uniform bdy types:
+  for ( auto j=0; j<2*GDIM; j++ ) { 
+    if ( !buniform[j] ) continue;
+    find_bdy_indices(j, itmp); // find indices for bdy j
+    for ( auto i=0; i<itmp.size(); i++ ) {
+      assert(igbdy.contains(itmp[i],iwhere) && "Boundary index not found");
+      ibdyt[iwhere] = bdytype[j]; 
+    }
+  }
+
+         
+
+
 
 } // end of method config_bdy2d
 
@@ -1070,9 +1127,110 @@ void GGridBox::config_bdy2d(GTVector<GSIZET> &ibdy)
 // ARGS   : ibdy : which nodes indices represent global boundaries
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::config_bdy3d(GTVector<GSIZET> &ibdy)
+void GGridBox::config_bdy3d(const PropertyTree &ptree, 
+                            GTVector<GSIZET> &igbdy, 
+                            GTVector<GSIZET> &igbdyt)
 {
 
 
 } // end of method config_bdy3d
 
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : find_bdy_ind2d
+// DESC   : find global bdy indices (indices into xNodes_ arrays) that
+//          corresp to specified bdy in 2d
+// ARGS   : bdyid    : box-boundary id
+//          incl_vert: include vertex points on bdy that are shared 
+//                     with another bdy
+//          ibdy     : array of indices into xNodes that comprise this boundary
+// RETURNS: none.
+//**********************************************************************************
+void GGridBox::find_bdy_ind2d(GINT bdyid, GBOOL incl_vert, GTVector<GSIZET> &ibdy)
+{
+
+  assert(bdyid >=0 && bdyid < 2*GDIM);
+
+  ibdy.clear();
+
+  switch ( bdyid ) {
+  case: // lower horiz bdy:
+    for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { 
+      if ( FUZZYEQ(P0_.x2,xNodes[1][i],eps) ) {
+        if ( incl_vert  || !FUZZYEQ(P0_.x2,xNodes[1][i],eps) ) ibdy.push_back(i);
+      }
+    }
+    break;
+
+  case: // right vert bdy:
+    for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // bdy 1
+      if ( FUZZYEQ(P1_.x1,xNodes[0][i],eps) ) {
+        if ( incl_vert  || !FUZZYEQ(P0_.x2,xNodes[1][i],eps) ) ibdy.push_back(i);
+      }
+    }
+    break;
+
+  case: // top horiz bdy:
+    for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // bdy 2
+      if ( FUZZYEQ(P1_.x2,xNodes[1][i],eps) ) {
+        if ( incl_vert  || !FUZZYEQ(P0_.x2,xNodes[1][i],eps) ) ibdy.push_back(i);
+      }
+    }
+    break;
+
+  case: // left vert bdy:
+    for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // bdy 3
+      if ( FUZZYEQ(P0_.x1,xNodes[0][i],eps) ) {
+        if ( incl_vert  || !FUZZYEQ(P0_.x2,xNodes[1][i],eps) ) ibdy.push_back(i);
+      }
+    }
+    break;
+
+} // end, method find_bdy_ind2d
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : find_bdy_ind3d
+// DESC   : find global bdy indices (indices into xNodes_ arrays) that
+//          corresp to specified bdy in 3d
+// ARGS   : bdyid    : box-boundary id
+//          incl_edge: include edge points on bdy that are shared 
+//                     with another bdy
+//          ibdy     : array of indices into xNodes that comprise this boundary
+// RETURNS: none.
+//**********************************************************************************
+void GGridBox::find_bdy_ind3d(GINT bdyid, GBOOL incl_edge, GTVector<GSIZET> &ibdy)
+{
+
+  assert(bdyid >=0 && bdyid < 2*GDIM);
+
+  ibdy.clear();
+
+  for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // bdy 0
+    if ( FUZZYEQ(P0_.x2,xNodes[1][i],eps) ) ibdy.push_back(i);
+  }
+
+  for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // bdy 1
+    if ( FUZZYEQ(P1_.x1,xNodes[0][i],eps) ) ibdy.push_back(i);
+  }
+
+  for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // bdy 2
+    if ( FUZZYEQ(P1_.x2,xNodes[1][i],eps) ) ibdy.push_back(i);
+  }
+
+  for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // bdy 3
+    if ( FUZZYEQ(P0_.x1,xNodes[0][i],eps) ) ibdy.push_back(i);
+  }
+
+  for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // bdy 4
+    if ( FUZZYEQ(P1_.x3,xNodes[1][i],eps) ) ibdy.push_back(i);
+  }
+
+  for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // bdy 5
+    if ( FUZZYEQ(P1_.x3,xNodes[1][i],eps) ) ibdy.push_back(i);
+  }
+
+
+} // end, method find_bdy_ind3d
