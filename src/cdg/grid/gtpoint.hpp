@@ -95,6 +95,10 @@ public:
   inline GTPoint<T> &operator=(T f)
   { x1 = f;  x2 = f;  x3 = f;  x4 = f; return *this;}
 
+  inline void assign(GTVector<GTVector<T>> &v, GSIZET i)
+  { for ( GINT j=0; j<gdim_; j++ ) *px_[j] = v[j][i];
+    if ( gdim_>0) x1 = v[0][i]; if ( gdim_>1) x2 = v[1][i]; if (gdim_>2) x3 = v[2][i]; if ( gdim_>3) x4 = v[3][i];}
+
   inline void  operator-(T f)
   { GTPoint<T> *ret = new GTPoint<T>(gdim_);
     for ( GINT j=0; j<gdim_; j++ ) (*ret)[j] = *px_[j] - f; return *ret; }
