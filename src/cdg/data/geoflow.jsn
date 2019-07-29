@@ -80,18 +80,18 @@
     "position"         : [0, 0.5, 0.5],
     "radius"           : 0.1
     "is_time_dependent": false,
-    "base_type"        : "GBDY_INFLOW", 
+    "base_type"        : "GBDY_DIRICHLET", 
   },
   compound_inflow_example": {
-    "bdy_class"         : "compound",
+    "bdy_class"         : "user",
     "base_type"         : "GBDY_DIRICHLET", 
-    "init_method"       : "circular_jet", 
+    "config_method"      : "circular_jet", 
     "is_time_dependent" : false,
     "update_method"     : "", 
   },
   "burgers_inflow": {
     "bdy_class"        : "uniform",
-    "base_type"        : "GBDY_INFLOW",
+    "base_type"        : "GBDY_DIRICHLET",
     "is_time_dependent": true,
     "use_init_method"  : true,
     "update_method"    : ""
