@@ -24,7 +24,7 @@ template<typename EquationType>
 GBOOL GSpecBFactory<EquationType>::init(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, const GTVector<GSIZET> &ibdy, GTVector<GBdyType> &tbdy)
 {
   GBOOL         bret    = FALSE;
-  GString       sinit   = ptree.getValue<GString>("specb_block");
+  GString       sinit   = ptree.getValue<GString>("specb_block","");
 
   if ( "specb_none" == sinit
     || "none"       == sinit
