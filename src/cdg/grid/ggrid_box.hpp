@@ -78,12 +78,17 @@ private:
                             GTVector<GSIZET> &igbdyt)                       // config bdy 3d
          void               find_bdy_ind2d(GINT, GBOOL, GTVector<GSIZET> &);// find global bdy indices for specified bdy in 2d
          void               find_bdy_ind3d(GINT, GBOOL, GTVector<GSIZET> &);// find global bdy indices for specified bdy in 3d
+         GBOOL              is_global_vertex(GTPoint<GFTYPE> &pt);          // pt on global vertex?
+         GBOOL              on_global_edge(GINT iface, GTPoint<GFTYPE> &pt);// pt on global edge?
 
          GINT                ndim_;          // grid dimensionality (2 or 3)
          GDD_base           *gdd_;           // domain decomposition/partitioning object
          GShapeFcn_linear   *lshapefcn_;     // linear shape func to compute 2d coords
          GTPoint<GFTYPE>     P0_;            // P0 = starting point of box origin
          GTPoint<GFTYPE>     P1_;            // P1 = diagonally-opposing box point
+         GTPoint<GFTYPE>     dP_;            // box size
+         GTVector<GTPoint<GFTYPE>>
+                             gverts_;        // global bdy vertices
          GTVector<GTPoint<GFTYPE>>
                              ftcentroids_;   // centroids of finest elements
          GTVector<GNBasis<GCTYPE,GFTYPE>*> 

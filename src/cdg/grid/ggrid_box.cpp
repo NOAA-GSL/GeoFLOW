@@ -55,6 +55,7 @@ lshapefcn_             (NULLPTR)
   Lbox_.resize(GDIM);
   ne_.resize(GDIM);
 
+  GTPoint<GFTYPE> gp(ndim_); 
   std::vector<GFTYPE> spt(3); // tmp array
   std::vector  <int> sne   ; // tmp array
   spt = gridptree.getArray<GFTYPE>("xyz0");
@@ -62,9 +63,27 @@ lshapefcn_             (NULLPTR)
   spt = gridptree.getArray<GFTYPE>("delxyz");
   sne = gridptree.getArray<int>("num_elems");
 
-  GTPoint<GFTYPE> dP(3);
-  dP  = spt;
-  P1_ = P0_ + dP;
+  // compute global bdy range, and global vertices:
+  dP_  = spt;
+  P1_ = P0_ + dP_;
+  gverts_.resize(ndim_);
+  if ( ndim_ == 2 ) {
+    gverts_[0] = P0_; 
+    gp = P0_; gp.x1 += dP_.x1; gverts_[1] = gp; 
+    gverts_[2] = P1_; 
+    gp = P0_; gp.x2 += dP_.x2; gverts_[3] = gp;
+  }
+  else if ( ndim_ == 3 ) {
+    gverts_[0] = P0_; 
+    gp = P0_; gp.x1 += dP_.x1; gverts_[1] = gp; 
+    gverts_[2] = P1_; 
+    gp = P0_; gp.x2 += dP_.x2; gverts_[3] = gp;
+
+    gp = P0_; gp.x3 += dP_.x3; gverts_[0] = gp; 
+    gp.x1 += dP_.x1; gverts_[1] = gp; 
+    gverts_[2] = P1_; 
+    gp = P0_; gp.x3 += dP.x3; gp.x2 += dP_.x2; gverts_[3] = gp;
+  }
 
   GTVector<GBdyType> bdytype(2*GDIM);
   bdytype[0] = geoflow::str2bdytype(gridptree.getValue<GString>("bdy_y_0"));
@@ -93,7 +112,7 @@ lshapefcn_             (NULLPTR)
 
   ne_.resize(b.size());
   for ( GSIZET j=0; j<b.size(); j++ ) {
-    Lbox_[j] = fabs(P1_[j] - P0_[j]);
+    Lbox_[j] = fabs(dP_[j]);
     ne_  [j] = sne[j];
   }
 
@@ -1069,12 +1088,17 @@ void GGridBox::config_bdy2d(const PropertyTree &ptree,
 
   GBOOL              buniform(2*GDIM);
   GBOOL              btimedep(2*GDIM);
+  GBOOL              bperiodic=FALSE;
   GSIZET             iwhere;
   GFTYPE             eps=100*std::numeric_limits<GFTYPE>::epsilon();
   GTVector<GBdyType> bdytype(2*GDIM);
   GTVector<GString>  bdynames(2*GDIM);
+  GTVector<GString>  bdyconf (2*GDIM);
+  GTVector<GString>  bdyupdate(2*GDIM);
+  GTVector<PeopertyTree> 
+                     spectree(2*GDIM);
   GString            gname, sbdy(2*GDIM), bdyclass;
-  PropertyTree       gridptree, bdytree;
+  PropertyTree       bdytree, gridptree, spectree;
 
   assert(gname == "grid_box");
 
@@ -1089,31 +1113,52 @@ void GGridBox::config_bdy2d(const PropertyTree &ptree,
   bret = GSpecBFactory::init(*ptree_, *this, igbdy, btmp);
   assert(bret && "Boundary specification configuration failed");
 
+  // Get quantities from the main prop tree. 
+  // Note: bdys are configured by way of geometry's
+  //       natural decomposition: here, by face (3d) or
+  //       edge (2d).
   for ( auto j=0; j<2*GDIM; j++ ) {
-    sbdy    [j] = gridptree.getValue<GString>(bdynames[j]);
-    bdytree     = gridtree.getPropertyTree(sbdy);
-    bdyclass    = bdytree.getValue<GString>("bdy_class", "uniform");
-    bdytype [j] = geoflow::str2bdytype(bdytree.getValue<GString>("base_type"));
-    buniform[j] = bdyclass == "uniform" ? TRUE : FALSE;
-    btimedep[j] = bdytree.getValue<GBOOL>("is_time_dep", FALSE);
-    assert(bdytype[j] == GBDY_PERIODIC && !buniform[j] && "GBDY_PERIODIC boundary must have bdy_class = uniform");
+    sbdy     [j] = gridptree.getValue<GString>(bdynames[j]);
+    bdytree      = gridtree.getPropertyTree(sbdy);
+    bdyclass     = bdytree.getValue<GString>("bdy_class", "uniform");
+    bdytype  [j] = geoflow::str2bdytype(bdytree.getValue<GString>("base_type", GBDY_NONE));
+    buniform [j] = bdyclass == "uniform" ? TRUE : FALSE;
+    btimedep [j] = bdytree.getValue<GBOOL>("is_time_dep", FALSE);
+    bdyupdate[j] = bdytree.getValue<GString>("update_method","");
+    bdyconf  [j] = bdytree.getValue<GString>("config_method","");
+    bperiodic    = bperiodic || bdytype[j] == GBDY_PERIODIC;
+    assert(bperiodic && !buniform[j] && "GBDY_PERIODIC boundary must have bdy_class = uniform");
   }
 
   assert( (  (bdytype[0] == GBDY_PERIODIC && bdytype[2] != GBDY_PERIODIC)
          ||  (bdytype[3] == GBDY_PERIODIC && bdytype[1] != GBDY_PERIODIC) )
          &&  "Incompatible GBDY_PERIODIC boundary specification");
        
+  // Handle non-uniform (user-configured) bdy types first:
+  for ( auto j=0; j<2*GDIM; j++ ) { 
+    // First, find global bdy indices:
+    find_bdy_indices2d(j, TRUE, itmp); // include vertices
+    spectree  = ptree->getPropertyTree(bdyconf[j]);
+    GSpecB::init(spectree, *this, itmp, ibdyt);
+  }
+  
+
   // Fill in uniform bdy types:
   for ( auto j=0; j<2*GDIM; j++ ) { 
     if ( !buniform[j] ) continue;
-    find_bdy_indices(j, itmp); // find indices for bdy j
+    // First, find global bdy indices:
+    if ( bperiodic && bdytype[j] != GBDY_PERIODIC  ) {
+      find_bdy_indices2d(j, FALSE, itmp); // doesn't include vertices
+    }
+    else {
+      find_bdy_indices2d(j, TRUE, itmp); // include vertices
+    }
+    // Set type for each bdy index:
     for ( auto i=0; i<itmp.size(); i++ ) {
-      assert(igbdy.contains(itmp[i],iwhere) && "Boundary index not found");
-      ibdyt[iwhere] = bdytype[j]; 
+      ibdyt[i] = bdytype[j]; 
     }
   }
 
-         
 
 
 
@@ -1154,38 +1199,49 @@ void GGridBox::find_bdy_ind2d(GINT bdyid, GBOOL incl_vert, GTVector<GSIZET> &ibd
 
   ibdy.clear();
 
+  GTPoint<GFTYPE> pt(ndim_);
+
   switch ( bdyid ) {
-  case: // lower horiz bdy:
-    for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { 
-      if ( FUZZYEQ(P0_.x2,xNodes[1][i],eps) ) {
-        if ( incl_vert  || !FUZZYEQ(P0_.x2,xNodes[1][i],eps) ) ibdy.push_back(i);
+    case 0: // lower horiz bdy:
+      for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { 
+        if ( FUZZYEQ(P0_.x2,xNodes[1][i],eps) ) {
+          pt.assign(xNodes_, i);
+          if ( incl_vert  || !is_global_vertex(pt) ) ibdy.push_back(i);
+        }
       }
-    }
-    break;
+      break;
 
-  case: // right vert bdy:
-    for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // bdy 1
-      if ( FUZZYEQ(P1_.x1,xNodes[0][i],eps) ) {
-        if ( incl_vert  || !FUZZYEQ(P0_.x2,xNodes[1][i],eps) ) ibdy.push_back(i);
+    case 1: // right vert bdy:
+      for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // bdy 1
+        if ( FUZZYEQ(P1_.x1,xNodes[0][i],eps) ) {
+          pt.assign(xNodes_, i);
+          if ( incl_vert  || !is_global_vertex(pt) ) ibdy.push_back(i);
+        }
       }
-    }
-    break;
+      break;
 
-  case: // top horiz bdy:
-    for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // bdy 2
-      if ( FUZZYEQ(P1_.x2,xNodes[1][i],eps) ) {
-        if ( incl_vert  || !FUZZYEQ(P0_.x2,xNodes[1][i],eps) ) ibdy.push_back(i);
+    case 2: // top horiz bdy:
+      for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // bdy 2
+        if ( FUZZYEQ(P1_.x2,xNodes[1][i],eps) ) {
+          pt.assign(xNodes_, i);
+          if ( incl_vert  || !!is_global_vertex(pt) ) ibdy.push_back(i);
+        }
       }
-    }
-    break;
+      break;
 
-  case: // left vert bdy:
-    for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // bdy 3
-      if ( FUZZYEQ(P0_.x1,xNodes[0][i],eps) ) {
-        if ( incl_vert  || !FUZZYEQ(P0_.x2,xNodes[1][i],eps) ) ibdy.push_back(i);
+    case 3: // left vert bdy:
+      for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // bdy 3
+        if ( FUZZYEQ(P0_.x1,xNodes[0][i],eps) ) {
+          pt.assign(xNodes_, i);
+          if ( incl_vert  || !is_global_vertex(pt) ) ibdy.push_back(i);
+        }
       }
-    }
-    break;
+      break;
+
+    default : // error:
+      assert(FALSE && "Invalid 2D global bdy id");
+    
+  } // end, switch 
 
 } // end, method find_bdy_ind2d
 
@@ -1208,29 +1264,142 @@ void GGridBox::find_bdy_ind3d(GINT bdyid, GBOOL incl_edge, GTVector<GSIZET> &ibd
 
   ibdy.clear();
 
-  for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // bdy 0
-    if ( FUZZYEQ(P0_.x2,xNodes[1][i],eps) ) ibdy.push_back(i);
-  }
+  GTPoint<GFTYPE> pt(ndim_);
 
-  for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // bdy 1
-    if ( FUZZYEQ(P1_.x1,xNodes[0][i],eps) ) ibdy.push_back(i);
-  }
+  switch ( bdyid ) {
+    case 0: // southern vert face:
+      for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // face 0
+        if ( FUZZYEQ(P0_.x1,xNodes[0][i],eps) ) {
+          if ( incl_edge || !on_global_edge(0,pt) ) ibdy.push_back(i);
+        }
+      }
+      break;
 
-  for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // bdy 2
-    if ( FUZZYEQ(P1_.x2,xNodes[1][i],eps) ) ibdy.push_back(i);
-  }
+    case 1: // eastern vert. face:
+      for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // face 1
+        if ( FUZZYEQ(P1_.x1,xNodes[1][i],eps) ) {
+          if ( incl_edge || !on_global_edge(1,pt) ) ibdy.push_back(i);
+        }
+      }
+      break;
 
-  for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // bdy 3
-    if ( FUZZYEQ(P0_.x1,xNodes[0][i],eps) ) ibdy.push_back(i);
-  }
+    case 2: // northern vert. face:
+        for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // face 2
+          if ( FUZZYEQ(P1_.x1,xNodes[0][i],eps) ) {
+            if ( incl_edge || !on_global_edge(2,pt) ) ibdy.push_back(i);
+          }
+        }
+        break;
 
-  for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // bdy 4
-    if ( FUZZYEQ(P1_.x3,xNodes[1][i],eps) ) ibdy.push_back(i);
-  }
+    case 3: // western vertical face:
+      for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // face 3
+        if ( FUZZYEQ(P0_.x1,xNodes[1][i],eps) ) {
+          if ( incl_edge || !on_global_edge(3,pt) ) ibdy.push_back(i);
+        }
+      }
+      break;
 
-  for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // bdy 5
-    if ( FUZZYEQ(P1_.x3,xNodes[1][i],eps) ) ibdy.push_back(i);
-  }
+    case 4: // bottom horiz face:
+      for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // face 4
+        if ( FUZZYEQ(P0_.x1,xNodes[2][i],eps) ) {
+          if ( incl_edge || !on_global_edge(4,pt) ) ibdy.push_back(i);
+        }
+      }
+      break;
 
+    case 5: // top horiz face:
+      for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // face 5
+        if ( FUZZYEQ(P1_.x1,xNodes[2][i],eps) ) {
+          if ( incl_edge || !on_global_edge(5,pt) ) ibdy.push_back(i);
+        }
+      }
+      break;
+
+    default : // error:
+      assert(FALSE && "Invalid 3D globa bdy id");
+
+  } // end, switch
 
 } // end, method find_bdy_ind3d
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : is_global_vertex
+// DESC   : Utilitiy method to determine of specified point is one of the 
+//          global 2d boundar vertices
+// ARGS   : pt : point to check
+// RETURNS: TRUE on yes, else FALSE
+//**********************************************************************************
+GBOOL GGridBox::is_global_vertex(GTPoint<GFTYPE> &pt)
+{
+  GBOOL           bret = FALSE;
+
+  for ( GSIZET j=0; j<pow(2,GDIM) && !bret; j++ ) {
+    bret = bret || ( pt == gverts_[j] );
+  }
+
+  return bret;
+
+} // end, method is_global_vertex
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : on_global_edge
+// DESC   : Utilitiy method to determine of specified point is on 
+//          edge of global 3d boundary
+// ARGS   : iface: face index to check
+//          pt   : point to check
+// RETURNS: TRUE on yes, else FALSE
+//**********************************************************************************
+GBOOL GGridBox::on_global_edge(GINT iface, GTPoint<GFTYPE> &pt)
+{
+
+  assert( iface >=0 && iface <=5 && "Invalid face ID specification");
+
+  GBOOL           bret = FALSE;
+  GINT            nface=0;
+  GTVector<GINT>  iface(3); // at most 3 faces that point _can_ belong to
+  GFTYPE          eps_ = 100*std::numeric_limits<GFTYPE>::min();
+  GTPoint<GFTYPE> pt(ndim_);
+
+  // Find faces point belongs to:
+  for ( GINT j=0; j<ndim_; j++ ) {
+    if     ( FUZZYEQ(P0_.x1,eps) && !face.containsn(0,nface) ) 
+      { iface[nface] = 0; nface++; }
+    else if( FUZZYEQ(P1_.x2,eps) && !face.containsn(1,nface) ) 
+      { iface[nface] = 1; nface++; } 
+    else if( FUZZYEQ(P1_.x1,eps) && !face.containsn(2,nface) ) 
+      { iface[nface] = 2; nface++; }
+    else if( FUZZYEQ(P0_.x2,eps) && !face.containsn(3,nface) ) 
+      { iface[nface] = 3; nface++; }
+    else if( FUZZYEQ(P0_.x3,eps) && !face.containsn(4,nface) ) 
+      { iface[nface] = 4; nface++; }
+    else if( FUZZYEQ(P1_.x3,eps) && !face.containsn(5,nface) ) 
+      { iface[nface] = 5; nface++; }
+  }
+
+  if ( nface == 0 ) return FALSE; // in volume somewhere
+
+  if ( nface == 1 ) return FALSE; // on some face, not on and edge
+
+  GINT iedges[][4][2] = { // for each face, faces comprising each edge 
+                         { {0,4},{0,1},{0,5},{2,3} },
+                         { {1,4},{1,2},{1,5},{0,1} },
+                         { {2,4},{2,3},{2,5},{1,2} },
+                         { {3,4},{3,0},{3,5},{2,3} },
+                         { {0,4},{1,4},{2,4},{3,4} },
+                         { {0,5},{1,5},{2,5},{3,5} },
+                       };
+   
+  
+ 
+  // Find which, if any, edge point sits in:
+  for ( GINT j=0; j<4 && !bret; j++ ) {
+    bret = bret || ( iface.contains(iedges[iface][j][0]) && 
+                     iface.contains(iedges[iface][j][1]) );
+  }
+  
+  return bret;
+} // end, method on_global_edge
