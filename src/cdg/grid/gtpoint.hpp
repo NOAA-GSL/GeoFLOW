@@ -25,15 +25,9 @@ template<typename T> class GTPoint
 {
 private:
   GINT           gdim_;
-  GTVector<GINT> nexp_;
   T              eps_;
-  GTVector<T>    lr_;
   GTVector<T*>   px_;
 
-  template<typename U=T> typename std::enable_if<std::is_floating_point<U>::value, void>::type
-  decompose()
-  { for ( GINT i=0; i<gdim_; i++ ) {
-    lr_[i] = roundl(frexp((*px_[i]), &nexp_[i])* 1.0e8); } }
 
 public:
                   GTPoint(); 
@@ -61,11 +55,9 @@ public:
 
   template<typename U=T> typename std::enable_if<std::is_floating_point<U>::value, GBOOL>::type
   operator==(const GTPoint<T> &pp) // Add 'fuzziness' to equality check
-  { GINT  i, n; GBOOL b; T r, del; GTPoint pq=pp;    
-    // p.x_i = g * 2^n = g * 10^m, where m=n log_10(2):
-    decompose();
-    for ( i=0,b=TRUE;i<gdim_;i++) { r=frexp(pq[i],&n); ; // scale bracket to point
-      b = b && ( nexp_[i]==n && lr_[i]==lround(r*1.0e8) ); }      // do check for equality
+  { GBOOL b;     
+    for ( GINT i=0,b=TRUE;i<gdim_;i++) { 
+      b = b && FUZZYEQ(*px_[i], pp[i], eps_); }  // do check for 'equality'
     return b; }
 
   template<typename U=T> typename std::enable_if<!std::is_floating_point<U>::value, GBOOL>::type

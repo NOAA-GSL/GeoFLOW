@@ -19,14 +19,14 @@
 template<typename T>
 GTPoint<T>::GTPoint() :
 gdim_     (3),
-eps_      (100*std::numeric_limits<T>::min()),
 x1        (0),
 x2        (0),
 x3        (0),
 x4        (0)
 {
-  lr_.resize(gdim_);
-  nexp_.resize(gdim_);
+  if ( std::is_floating_point<T>::value ) {
+    eps_ = 100*std::numeric_limits<T>::min();
+  }
   px_.resize(gdim_); 
   if ( gdim_ > 0 ) px_[0] = &x1;
   if ( gdim_ > 1 ) px_[1] = &x2;
@@ -45,14 +45,14 @@ x4        (0)
 template<typename T>
 GTPoint<T>::GTPoint(GINT dim) :
 gdim_     (dim),
-eps_      (100*std::numeric_limits<T>::min()),
 x1        (0),
 x2        (0),
 x3        (0),
 x4        (0)
 {
-  lr_.resize(gdim_);
-  nexp_.resize(gdim_);
+  if ( std::is_floating_point<T>::value ) {
+    eps_ = 100*std::numeric_limits<T>::min();
+  }
   px_.resize(gdim_); 
   if ( gdim_ > 0 ) px_[0] = &x1;
   if ( gdim_ > 1 ) px_[1] = &x2;
@@ -77,8 +77,6 @@ x2        (0),
 x3        (0),
 x4        (0)
 {
-  lr_.resize(gdim_);
-  nexp_.resize(gdim_);
   px_.resize(gdim_); 
   if ( gdim_ > 0 ) px_[0] = &x1;
   if ( gdim_ > 1 ) px_[1] = &x2;
@@ -157,8 +155,6 @@ template<typename T>
 void GTPoint<T>::resize(GINT dim)
 {
   gdim_ = dim;
-  lr_.resize(gdim_);
-  nexp_.resize(gdim_);
   px_.resize(gdim_); 
   if ( gdim_ > 0 ) px_[0] = &x1;
   if ( gdim_ > 1 ) px_[1] = &x2;
