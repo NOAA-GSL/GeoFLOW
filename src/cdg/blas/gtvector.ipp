@@ -437,7 +437,7 @@ void GTVector<T>::reserve(GSIZET nnew)
     this->data_ = new T [ibeg+nnew+ipad];
     assert(this->data_ != NULLPTR );
 
-    // Copy only what of the original amount fills new buffer:
+    // Copy only what of the original fills fills new buffer:
     n_ = nnew;
     for ( GSIZET j=0; j<n_; j++ ) this->data_[j] = ttmp[j];
     gindex_(n_, n_, ibeg, MIN(n_-1,iend), istride, ipad);
@@ -2375,3 +2375,38 @@ GTVector<T>::sub_impl_(GTVector<T> &obj, std::true_type d)
 
   return *vret;
 } // end, sub_impl_
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : concat
+// DESC   : Concatenate input array with existing vector. This vector
+//          must have stride 1, and input array is also taken to have 
+//          no structure/stride.
+// ARGS   : arr : input array
+//          narr: no. elements in array
+// RETURNS: GTVector &
+//**********************************************************************************
+template<class T>
+void GTVector<T>::concat(T *arr, GSIZET narr)
+{
+
+  GLLONG istride = gindex_.stride();
+  GLLONG ipad    = gindex_.pad();
+
+  assert(istride       == 1 
+      && ipad           > 0 
+      && gindex_.beg() == 0
+      && gindex_.end() == n_-1
+      &&  "Global index structure not allowed in 'concat'");
+
+  this->reserve(this->size()+narr);
+  
+  for ( GSIZET j=0; j<narr; j++ ) {
+    data_[n_+j] = array[j];
+  }
+
+  #if defined(_G_AUTO_UPDATE_DEV)
+  updatedev();
+  #endif
+} // end, concat

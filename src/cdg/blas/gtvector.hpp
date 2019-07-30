@@ -200,6 +200,8 @@ inline    T operator[](const GSIZET i) const {
     #pragma acc routine vector
     void   sortdecreasing(GTVector<GSIZET> &);
 
+    #pragma acc routine vector
+    void concat(T *array, GSIZET n);
 
   private:
 
