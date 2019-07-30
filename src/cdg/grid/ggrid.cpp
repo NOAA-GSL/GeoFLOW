@@ -37,7 +37,9 @@ irank_         (GComm::WorldRank(comm)),
 minnodedist_   (std::numeric_limits<GFTYPE>::max()),
 bdycallback_                  (NULLPTR),
 comm_                            (comm),
-ptree_                         (&ptree)
+ptree_                         (&ptree),
+init_bdy_callback_            (NULLPTR),
+update_bdy_callback_          (NULLPTR)
 {
 } // end of constructor method (1)
 

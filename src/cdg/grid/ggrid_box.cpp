@@ -1077,7 +1077,11 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
 //**********************************************************************************
 // METHOD : config_bdy2d
 // DESC   : Configure 2d box boundary from ptree_
-// ARGS   : ibdy : which nodes indices represent global boundaries
+// ARGS   : 
+//          ptree : main prop tree 
+//          igbdy : which nodes indices represent global boundaries. This contains
+//                  indices for all bdys this task owns
+//          igbdyt: bdy type ids for each index in igbdy
 // RETURNS: none.
 //**********************************************************************************
 void GGridBox::config_bdy2d(const PropertyTree &ptree, 
@@ -1086,18 +1090,18 @@ void GGridBox::config_bdy2d(const PropertyTree &ptree,
 {
   // Cycle over all geometric boundaries, and configure:
 
-  GBOOL              buniform(2*GDIM);
-  GBOOL              btimedep(2*GDIM);
-  GBOOL              bperiodic=FALSE;
+  GBOOL              bperiodic=FALSE, btimedep=FALSE, buniform=FALSE, buseinit;
   GSIZET             iwhere;
-  GFTYPE             eps=100*std::numeric_limits<GFTYPE>::epsilon();
+  GTVector<GBOOL>    uniform(2*GDIM);
   GTVector<GBdyType> bdytype(2*GDIM);
+  GTVector<GBdyType> btmp;
+  GTVector<GSIZET>   itmp;
   GTVector<GString>  bdynames(2*GDIM);
   GTVector<GString>  bdyconf (2*GDIM);
   GTVector<GString>  bdyupdate(2*GDIM);
   GTVector<PeopertyTree> 
                      spectree(2*GDIM);
-  GString            gname, sbdy(2*GDIM), bdyclass;
+  GString            gname, sbdy, bdyclass, bdyinit;
   PropertyTree       bdytree, gridptree, spectree;
 
   assert(gname == "grid_box");
@@ -1113,20 +1117,30 @@ void GGridBox::config_bdy2d(const PropertyTree &ptree,
   bret = GSpecBFactory::init(*ptree_, *this, igbdy, btmp);
   assert(bret && "Boundary specification configuration failed");
 
-  // Get quantities from the main prop tree. 
+  // Clear input arrays:
+  igbdy .clear();
+  igbdyt.clear();
+
+  btimedep  = gridtree.getValue<GBOOL>  ("is_time_dep", FALSE);
+  bdyupdate = gridtree.getValue<GString>("update_method","");
+  bdyinit   = gridtree.getValue<GString>("bdy_init_method","");
+  buseinit  = gridtree.getValue<GBOOL>  ("use_state_init_method",FALSE);
+
+
+  // Get properties from the main prop tree. 
   // Note: bdys are configured by way of geometry's
   //       natural decomposition: here, by face (3d) or
-  //       edge (2d).
+  //       edge (2d). But the bdy indices and types
+  //       returned contain info for all bdys:
   for ( auto j=0; j<2*GDIM; j++ ) {
-    sbdy     [j] = gridptree.getValue<GString>(bdynames[j]);
+    sbdy         = gridptree.getValue<GString>(bdynames[j]);
     bdytree      = gridtree.getPropertyTree(sbdy);
     bdyclass     = bdytree.getValue<GString>("bdy_class", "uniform");
     bdytype  [j] = geoflow::str2bdytype(bdytree.getValue<GString>("base_type", GBDY_NONE));
-    buniform [j] = bdyclass == "uniform" ? TRUE : FALSE;
-    btimedep [j] = bdytree.getValue<GBOOL>("is_time_dep", FALSE);
-    bdyupdate[j] = bdytree.getValue<GString>("update_method","");
-    bdyconf  [j] = bdytree.getValue<GString>("config_method","");
+    uniform  [j] = bdyclass == "uniform" ? TRUE : FALSE;
+    bdyconf  [j] = bdytree.getValue<GString>("bdy_config_method","");
     bperiodic    = bperiodic || bdytype[j] == GBDY_PERIODIC;
+    buniform     = buniform || uniform[j];
     assert(bperiodic && !buniform[j] && "GBDY_PERIODIC boundary must have bdy_class = uniform");
   }
 
@@ -1134,12 +1148,17 @@ void GGridBox::config_bdy2d(const PropertyTree &ptree,
          ||  (bdytype[3] == GBDY_PERIODIC && bdytype[1] != GBDY_PERIODIC) )
          &&  "Incompatible GBDY_PERIODIC boundary specification");
        
-  // Handle non-uniform (user-configured) bdy types first:
+  // Handle non-uniform (user-configured) bdy types first;
+  // Note: if "uniform" not specified for a boundary, then
+  //       user MUST supply a method to configure it:
   for ( auto j=0; j<2*GDIM; j++ ) { 
     // First, find global bdy indices:
+    if ( buniform[j] ) continue;
     find_bdy_indices2d(j, TRUE, itmp); // include vertices
     spectree  = ptree->getPropertyTree(bdyconf[j]);
-    GSpecB::init(spectree, *this, itmp, ibdyt);
+    GSpecB::init(spectree, *this, itmp, btmp); // get user-defined bdy spec
+    igbdy .concat(itmp);
+    igbdyt.concat(btmp);
   }
   
 
@@ -1155,10 +1174,19 @@ void GGridBox::config_bdy2d(const PropertyTree &ptree,
     }
     // Set type for each bdy index:
     for ( auto i=0; i<itmp.size(); i++ ) {
-      ibdyt[i] = bdytype[j]; 
+      btmp[i] = bdytype[j]; 
     }
+    igbdy .concat(itmp);
+    igbdyt.concat(btmp);
   }
 
+  // Get callback functions for bdy initialization and updating:
+//btimedep  = gridtree.getValue<GBOOL>  ("is_time_dep", FALSE);
+//bdyupdate = gridtree.getValue<GString>("update_method","");
+//bdyinit   = gridtree.getValue<GString>("bdy_init_method","");
+//buseinit  = gridtree.getValue<GBOOL>  ("use_state_init_method",FALSE);
+
+  
 
 
 
@@ -1335,7 +1363,7 @@ GBOOL GGridBox::is_global_vertex(GTPoint<GFTYPE> &pt)
 {
   GBOOL           bret = FALSE;
 
-  for ( GSIZET j=0; j<pow(2,GDIM) && !bret; j++ ) {
+  for ( GSIZET j=0; j<pow(2,ndim_) && !bret; j++ ) {
     bret = bret || ( pt == gverts_[j] );
   }
 
@@ -1382,7 +1410,7 @@ GBOOL GGridBox::on_global_edge(GINT iface, GTPoint<GFTYPE> &pt)
 
   if ( nface == 0 ) return FALSE; // in volume somewhere
 
-  if ( nface == 1 ) return FALSE; // on some face, not on and edge
+  if ( nface == 1 ) return FALSE; // on some face, not on an edge or vertex
 
   GINT iedges[][4][2] = { // for each face, faces comprising each edge 
                          { {0,4},{0,1},{0,5},{2,3} },
@@ -1393,9 +1421,7 @@ GBOOL GGridBox::on_global_edge(GINT iface, GTPoint<GFTYPE> &pt)
                          { {0,5},{1,5},{2,5},{3,5} },
                        };
    
-  
- 
-  // Find which, if any, edge point sits in:
+  // Find which, if any, edge edge-point sits in:
   for ( GINT j=0; j<4 && !bret; j++ ) {
     bret = bret || ( iface.contains(iedges[iface][j][0]) && 
                      iface.contains(iedges[iface][j][1]) );
