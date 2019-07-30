@@ -5,6 +5,7 @@
   "pde_name"       : "pde_burgers",
   "inits_block"    : "inits_icosgaussburgers",
   "initf_block"    : "initf_rand",
+  "initb_block"    : "initb_burgers",
   "use_forcing"    : false,
   "bdy_conditions" : "DIRICHLET",
   "restart_index"  : 0,
@@ -76,26 +77,26 @@
     "bdy_outer"        : "GBDY_SPONGE"
   },
   "circular_jet": {
-    "vel_normal"       : 10.0,
     "position"         : [0, 0.5, 0.5],
-    "radius"           : 0.1
-    "is_time_dependent": false,
-    "base_type"        : "GBDY_DIRICHLET", 
+    "radius"           : 0.1,
+    "base_type"        : "GBDY_USER0"
   },
   compound_inflow_example": {
-    "bdy_class"         : "user",
-    "base_type"         : "GBDY_DIRICHLET", 
-    "config_method"      : "circular_jet", 
-    "is_time_dependent" : false,
-    "update_method"     : "", 
+    "bdy_class"        : "user",
+    "base_type"        : "GBDY_DIRICHLET", 
+    "bdy_config_method": "circular_jet", 
   },
   "burgers_inflow": {
     "bdy_class"        : "uniform",
     "base_type"        : "GBDY_DIRICHLET",
-    "is_time_dependent": true,
-    "use_init_method"  : true,
-    "update_method"    : ""
+    "bdy_config_method": ""
   },
+  "initb_burgers": {
+    "is_time_dependent": true,
+    "update_method"    : "", 
+    "use_state_init"   : true,
+    "bdy_init_method"  : ""
+  }
   "grid_box": {
     "grid_name" : "grid_box",
     "xyz0"      : [1.0, 1.0, 1.0],
