@@ -32,12 +32,6 @@ class GInitBFactory
 
 
 	static GBOOL init   (const geoflow::tbox::PropertyTree& ptree, GGrid &grid,  Time &time, State &utmp, State &u, State &ub);
-	static std::function<void(PropertyTree &ptree, GGrid &grid, const Time &t,
-                           State &utmp, State &u   , State &ub)>
-                     initfcn(const geoflow::tbox::PropertyTree& ptree, GGrid &grid,  Time &time, State &utmp, State &ub, State &u);
-
-  private:
-         GBOOL       doinits(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, Time &time, State &utmp, State &u, State &ub);
 
 }; // class GInitBFactory
 
