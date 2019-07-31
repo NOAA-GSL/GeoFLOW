@@ -1053,30 +1053,7 @@ void GGridBox::find_subdomain()
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : config_bdy
-// DESC   : Configure box boundary 
-// ARGS   : ibdy : which nodes indices represent global boundaries
-// RETURNS: none.
-//**********************************************************************************
-void GGridBox::config_bdy(const PropertyTree &ptree, 
-                          GTVector<GSIZET> &igbdy, 
-                          GTVector<GSIZET> &igbdyt)
-{
-
-  if      ( ndim_ == 2 ) {
-    config_bdy2d(ptree, igbdy, igbdyt);
-  }
-  else if ( ndim_ == 3 ) {
-    config_bdy3d(ptree, igbdy, igbdyt);
-  }
-
-
-} // end of method config_bdy
-
-
-//**********************************************************************************
-//**********************************************************************************
-// METHOD : config_bdy2d
-// DESC   : Configure 2d box boundary from ptree_
+// DESC   : Configure 2d & 3d box boundary from ptree
 // ARGS   : 
 //          ptree : main prop tree 
 //          igbdy : which nodes indices represent global boundaries. This contains
@@ -1084,7 +1061,7 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
 //          igbdyt: bdy type ids for each index in igbdy
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::config_bdy2d(const PropertyTree &ptree, 
+void GGridBox::config_bdy(const PropertyTree &ptree, 
                             GTVector<GSIZET> &igbdy, 
                             GTVector<GSIZET> &igbdyt)
 {
@@ -1110,6 +1087,8 @@ void GGridBox::config_bdy2d(const PropertyTree &ptree,
   bdynames[1] = "bdy_x_1";
   bdynames[2] = "bdy_y_0";
   bdynames[3] = "bdy_y_1";
+  bdynames[4] = "bdy_z_0";
+  bdynames[5] = "bdy_z_1";
 
   gname     = ptree.getValue<GString>("grid_type");
   gridptree = ptree.getPropertyTree(gname);
@@ -1154,59 +1133,49 @@ void GGridBox::config_bdy2d(const PropertyTree &ptree,
   for ( auto j=0; j<2*GDIM; j++ ) { 
     // First, find global bdy indices:
     if ( buniform[j] ) continue;
-    find_bdy_indices2d(j, TRUE, itmp); // include vertices
+    if ( ndim_ == 2 ) {
+      find_bdy_indices2d(j, TRUE, itmp); // include vertices
+    }
+    else {
+      find_bdy_indices3d(j, TRUE, itmp); // include edges
+    }
     spectree  = ptree->getPropertyTree(bdyconf[j]);
     GSpecB::init(spectree, *this, itmp, btmp); // get user-defined bdy spec
-    igbdy .concat(itmp);
-    igbdyt.concat(btmp);
+    igbdy .concat(itmp.data(), itmp.size());
+    igbdyt.concat(btmp.data(), btmp.size());
   }
   
-
   // Fill in uniform bdy types:
   for ( auto j=0; j<2*GDIM; j++ ) { 
     if ( !buniform[j] ) continue;
     // First, find global bdy indices:
     if ( bperiodic && bdytype[j] != GBDY_PERIODIC  ) {
-      find_bdy_indices2d(j, FALSE, itmp); // doesn't include vertices
+      if ( ndim_ == 2 ) {
+        find_bdy_indices2d(j, FALSE, itmp); // doesn't include vertices
+      }
+      else {
+        find_bdy_indices3d(j, FALSE, itmp); // doesn't include edges
+      }
+
     }
     else {
-      find_bdy_indices2d(j, TRUE, itmp); // include vertices
+      if ( ndim_ == 2 ) {
+        find_bdy_indices2d(j, TRUE, itmp); // include vertices
+      }
+      else {
+        find_bdy_indices3d(j, TRUE, itmp); // include edges
+      }
     }
     // Set type for each bdy index:
     for ( auto i=0; i<itmp.size(); i++ ) {
       btmp[i] = bdytype[j]; 
     }
-    igbdy .concat(itmp);
-    igbdyt.concat(btmp);
+    igbdy .concat(itmp.data(), itmp.size());
+    igbdyt.concat(btmp.data(), btmp.size());
   }
 
-  // Get callback functions for bdy initialization and updating:
-//btimedep  = gridtree.getValue<GBOOL>  ("is_time_dep", FALSE);
-//bdyupdate = gridtree.getValue<GString>("update_method","");
-//bdyinit   = gridtree.getValue<GString>("bdy_init_method","");
-//buseinit  = gridtree.getValue<GBOOL>  ("use_state_init_method",FALSE);
 
-  
-
-
-
-} // end of method config_bdy2d
-
-
-//**********************************************************************************
-//**********************************************************************************
-// METHOD : config_bdy3d
-// DESC   : Configure 3d box boundary from ptree_
-// ARGS   : ibdy : which nodes indices represent global boundaries
-// RETURNS: none.
-//**********************************************************************************
-void GGridBox::config_bdy3d(const PropertyTree &ptree, 
-                            GTVector<GSIZET> &igbdy, 
-                            GTVector<GSIZET> &igbdyt)
-{
-
-
-} // end of method config_bdy3d
+} // end of method config_bdy
 
 
 //**********************************************************************************

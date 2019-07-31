@@ -70,12 +70,6 @@ private:
          void               init_periodic_bdytypes_2d(GElem_base &);        // set 2d bdy type info
          void               init_periodic_bdytypes_3d(GElem_base &);        // set 3d bdy type info
          void               find_subdomain();                               // find task's default subdomain
-         void               config_bdy2d(const PropertyTree &ptree, 
-                            GTVector<GSIZET> &igbdy, 
-                            GTVector<GSIZET> &igbdyt)                       // config bdy 2d
-         void               config_bdy3d(const PropertyTree &ptree, 
-                            GTVector<GSIZET> &igbdy, 
-                            GTVector<GSIZET> &igbdyt)                       // config bdy 3d
          void               find_bdy_ind2d(GINT, GBOOL, GTVector<GSIZET> &);// find global bdy indices for specified bdy in 2d
          void               find_bdy_ind3d(GINT, GBOOL, GTVector<GSIZET> &);// find global bdy indices for specified bdy in 3d
          GBOOL              is_global_vertex(GTPoint<GFTYPE> &pt);          // pt on global vertex?
