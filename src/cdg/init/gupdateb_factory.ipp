@@ -17,12 +17,12 @@ namespace pdeint {
 // ARGS   : ptree  : main property tree
 //          time   : initialization time
 //          utmp   : tmp arrays
-//          ub     : boundary state 
 //          u      : state to be initialized. 
+//          ub     : boundary state 
 // RETURNS: none.
 //**********************************************************************************
 template<typename EquationType>
-void GInitBFactory<EquationType>::update(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
+void GUpdateBFactory<EquationType>::update(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, Time &time, State &utmp, State &u, State &ub)
 {
   GString       sinit   = ptree.getValue<GString>("updateb_block");
   PropertyTree  vtree   = ptree.getPropertyTree(sinit);
@@ -36,7 +36,7 @@ void GInitBFactory<EquationType>::update(const geoflow::tbox::PropertyTree& ptre
     assert(FALSE && "Specified bdy update method unknown");
   }
 
-} // end, init method
+} // end, init method update
 
 
 
