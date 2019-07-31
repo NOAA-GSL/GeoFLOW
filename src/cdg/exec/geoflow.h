@@ -93,7 +93,7 @@ GC_COMM          comm_ ;      // communicator
 
 
 // Callback functions:
-void update_boundary (const Time &t, State &u, State &ub);     // bdy vector update
+void update_boundary (const PropertyTree &ptree, const Time &t, State &u, State &ub);     // bdy vector update
 void update_forcing  (const Time &t, State &u, State &uf);     // forcing vec update
 void steptop_callback(const Time &t, State &u, const Time &dt);// backdoor function
 

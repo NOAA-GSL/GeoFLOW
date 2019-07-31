@@ -188,30 +188,19 @@ int main(int argc, char **argv)
 //**********************************************************************************
 // METHOD : update_boundary
 // DESC   : update/set boundary vectors, ub
-// ARGS   : t    : time
+// ARGS   : ptree: main prop tree
+//          t    : time
 //          u    : current state
 //          ub   : bdy vectors (one for each state element)
 // RETURNS: none.
 //**********************************************************************************
-void update_boundary(const Time &t, State &u, State &ub)
+void update_boundary(const PropertyTree &ptree, const Time &t, State &u, State &ub)
 {
 
   Time  tt = t;
+
+  assert(FALSE);
   
-/*
-  if ( (*igbdy)[GBDY_DIRICHLET].size() > 0 ) {
-    compute_analytic(*grid_, tt, ptree,  ua_);
-  }
-
-  // ...GBDY_DIRICHLET:
-  // Set from State vector, ua_:
-  for ( auto k=0; k<u.size(); k++ ) { 
-    for ( auto j=0; j<(*igbdy)[GBDY_DIRICHLET].size(); j++ ) {
-      (*ub[k])[j] = (*ua_[k])[(*igbdy)[GBDY_DIRICHLET][j]];
-    }
-  }
-*/
-
 } // end of method update_boundary
 
 
