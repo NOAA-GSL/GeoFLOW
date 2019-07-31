@@ -9,7 +9,7 @@ namespace ginitb {
 // METHOD : impl_bystateinit
 // DESC   : Initialize bdy using state initialization method 
 //          specified by ptree
-// ARGS   : ptree: state prop tree
+// ARGS   : ptree: main prop tree
 //          grid : grid
 //          t    : time
 //          utmp : tmp arrays
