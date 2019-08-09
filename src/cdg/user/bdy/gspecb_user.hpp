@@ -1,13 +1,13 @@
 //==================================================================================
-// Module       : gupdateb_user.hpp
+// Module       : gspecb_user.hpp
 // Date         : 7/11/19 (DLR)
-// Description  : Boundary update function implementations specified by
+// Description  : Boundary specification function implementations specified by
 //                user
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
-#if !defined(_GUPDATEB_USER_HPP)
-#define _GUPDATEB_USER_HPP
+#if !defined(_GSPECB_USER_HPP)
+#define _GSPECB_USER_HPP
 
 #include "tbox/property_tree.hpp"
 #include "gtypes.h"
@@ -18,13 +18,13 @@
 using namespace geoflow;
 using namespace pdeint;
 
-namespace gupdateb
+namespace gspecb
 {
 
-GBOOL impl_mybdyupdate          (const PropertyTree& stree, GGrid &grid,  Time &time, State &utmp, State &u, State &ub);
+GBOOL impl_mybdyspec          (const PropertyTree& stree, GGrid &grid,  GTVector<GSIZET> &ibdy, GTVector<GBdyType> &tbdy);
 
 };
 
-#include "gupdateb_user.ipp"
+#include "gspecb_user.ipp"
 
 #endif

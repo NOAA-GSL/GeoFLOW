@@ -43,6 +43,13 @@ GBOOL impl_mybdyinit(const PropteryTree &ptree, GGrid &grid, Time &time, State &
 
 #else
 
+  /* 
+     Fill in here; change function name 
+     if desired. Add (unique) function name to 
+     ginitb_factory.ipp.
+  */
+
+
   return FALSE;
 #endif
 

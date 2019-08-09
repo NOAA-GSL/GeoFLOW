@@ -37,6 +37,12 @@ GBOOL impl_mybdyupdate(const PropteryTree &ptree, GGrid &grid, Time &time, State
 
   return TRUE;
 #else
+  /* 
+     Fill in here; change function name 
+     if desired. Add (unique) function name to 
+     gupdateb_factory.ipp.
+  */
+
   return FALSE;
 #endif
 
