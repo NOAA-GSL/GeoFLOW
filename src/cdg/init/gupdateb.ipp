@@ -26,7 +26,7 @@ GBOOL impl_bystateinit(const PropteryTree &ptree, GGrid &grid, Time &time, State
   Time  tt = t;
 
   // Use tmp from back end, so that 'init' isn't 
-  // disturbed:
+  // disturbed. NOTE: this could still be a problem!
   for ( auto j=0; j<u.size(); j++ ) {
     uu[j] = utmp[utmp.size()-1-j];
   }

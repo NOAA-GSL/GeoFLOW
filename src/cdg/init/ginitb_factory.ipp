@@ -42,7 +42,10 @@ GBOOL GInitBFactory<EquationType>::init(const geoflow::tbox::PropertyTree& ptree
     bret = TRUE;
   }
   else if ( use_inits ) { // initialize from state initialization
-    bret = ginitb::impl_bystateinit(ptree, grid, tt, utmp, u, ub);;
+    bret = ginitb::impl_bystateinit(ptree, grid, tt, utmp, u, ub);
+  }
+  else if ( "mybdyinit" == sinit ) { // initialize from user-specified fcn
+    bret = ginitb::impl_mybdyinit  (ptree, grid, tt, utmp, u, ub);
   }
   else                                        {
     assert(FALSE && "Specified bdy initialization method unknown");

@@ -13,7 +13,6 @@
 #include "gtypes.h"
 #include "gtvector.hpp"
 #include "ggrid.hpp"
-#include "gcomm.hpp"
 #include "ginitb_user.hpp"
 
 

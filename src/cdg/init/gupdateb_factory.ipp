@@ -24,18 +24,23 @@ namespace pdeint {
 template<typename EquationType>
 void GUpdateBFactory<EquationType>::update(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, Time &time, State &utmp, State &u, State &ub)
 {
+  GBOOL         bret = FALSE;
   GString       sinit   = ptree.getValue<GString>("updateb_block");
   PropertyTree  vtree   = ptree.getPropertyTree(sinit);
 
   if ( "updateb_none" == sinit
     || "none"       == sinit 
     || ""           == sinit ) {
-    return;
+    bret = FALSE;
+  }
+  else if ( "mybdyupdate" == sinit ) {
+    bret = gupdateb::impl_mybdyupdate   (ptree, grid, time, utmp, u, ub);
   }
   else                                        {
     assert(FALSE && "Specified bdy update method unknown");
   }
 
+  return bret;
 } // end, init method update
 
 
