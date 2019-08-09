@@ -22,7 +22,7 @@ using namespace pdeint;
 namespace gspecb
 {
 
-GBOOL impl_mybdyspec          (const PropertyTree& stree, GGrid &grid,  GTVector<GSIZET> &ibdy, GTVector<GBdyType> &tbdy);
+GBOOL impl_mybdyspec          (const PropertyTree& stree, GGrid &grid,  const GINT id, GTVector<GSIZET> &ibdy, GTVector<GBdyType> &tbdy);
 
 };
 
