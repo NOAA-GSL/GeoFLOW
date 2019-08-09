@@ -147,13 +147,6 @@ public:
 #endif
     return *px_[i]; }
 
-  template<typename U=T> typename std::enable_if<std::is_floating_point<U>::value, void >::type
-  truncate()
-  { GINT  i, n; T del, is;
-    // p.x_i = g * 2^n = g * 10^m, where m=n log_10(2):
-    for ( i=0;i<gdim_;i++ ) { frexp(*px_[i],&n); del=eps_*pow(10.0,0.30103*n); // scale bracket to point
-      is = *px_[i]>0?1.0:-1.0; *px_[i] = *px_[i]!=0.0 ? is*(fabs(*px_[i])-del): 0.0;} }
-
   inline T mag() { T v=0.0; for ( GINT j=0; j<gdim_; j++ ) v += pow(*px_[j],2.0); return sqrt(v); }
 
   friend std::ostream &operator<<(std::ostream &str, GTPoint<T> &obj) {
