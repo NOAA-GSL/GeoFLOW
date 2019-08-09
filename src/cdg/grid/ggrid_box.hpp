@@ -67,8 +67,6 @@ private:
                               GTVector<GTVector<GFTYPE>> &xnodes);          // do 2d grid restart
          void               do_elems3d(GTMatrix<GINT> &p, 
                               GTVector<GTVector<GFTYPE>> &xnodes);          // do 3d grid restart
-         void               init_periodic_bdytypes_2d(GElem_base &);        // set 2d bdy type info
-         void               init_periodic_bdytypes_3d(GElem_base &);        // set 3d bdy type info
          void               find_subdomain();                               // find task's default subdomain
          void               find_bdy_ind2d(GINT, GBOOL, GTVector<GSIZET> &);// find global bdy indices for specified bdy in 2d
          void               find_bdy_ind3d(GINT, GBOOL, GTVector<GSIZET> &);// find global bdy indices for specified bdy in 3d
@@ -76,6 +74,7 @@ private:
          GBOOL              on_global_edge(GINT iface, GTPoint<GFTYPE> &pt);// pt on global edge?
 
          GINT                ndim_;          // grid dimensionality (2 or 3)
+         GFTYPE              eps_;           // float epsilon for comparisons
          GDD_base           *gdd_;           // domain decomposition/partitioning object
          GShapeFcn_linear   *lshapefcn_;     // linear shape func to compute 2d coords
          GTPoint<GFTYPE>     P0_;            // P0 = starting point of box origin
@@ -95,7 +94,6 @@ private:
          GTVector<GBOOL>     bPeriodic_;     // is periodic in x, y, or z?
          GTVector<GSIZET>    periodicids_;   // node ids that were made periodic in 1 or more dirs
          GTVector<GUINT>     periodicdirs_;  // integer with bits 1, 2, 3 set for direction of periodiscity
-         GTVector<GBdyType>  global_bdy_types_;  // global types for each direction
          GTVector<GFTYPE>    Lbox_;          // length of box edges (x, y, [and z])
 
 };

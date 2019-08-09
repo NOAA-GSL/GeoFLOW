@@ -63,6 +63,9 @@ public:
                            &get_hmesh(){ return hmesh_;}                  // get complete hex  mesh
         void                print(const GString &filename, 
                             GCOORDSYST icoord=GICOS_LATLONG);             // print grid to file
+        void                config_bdy(const PropertyTree &ptree,
+                                       GTVector<GSIZET> &igbdy,
+                                       GTVector<GSIZET> &igbdyt);         // config dy cond
 
 friend  std::ostream&       operator<<(std::ostream&, GGridIcos &);       // Output stream operator
  
@@ -110,12 +113,11 @@ friend  std::ostream&       operator<<(std::ostream&, GGridIcos &);       // Out
                               GTVector<GTVector<GFTYPE>> &xnodes); // do 2d grid restart
          void               do_elems3d(GTMatrix<GINT> &p,
                               GTVector<GTVector<GFTYPE>> &xnodes); // do 3d grid restart
-
-         void               set_global_bdy_2d(GElem_base &);    // set 2d bdy info
-         void               set_global_bdy_3d(GElem_base &);    // set 3d bdy info
-        void                config_bdy();                       // configure bdy
-
-
+         void               config_bdy(const PropertyTree &ptree,
+                                       GTVector<GSIZET> &igbdy,
+                                       GTVector<GSIZET> &igbdyt);  // configure bdy
+         void               find_bdy_ind3d(GFTYPE radius, 
+                                           GTVector<GSIZET> &ibdy);// find bdy indices for bdy=radius
 
          GINT               ilevel_;        // refinement level (>= 0)
          GINT               ndim_;          // grid dimensionality (2 or 3)
@@ -125,7 +127,6 @@ friend  std::ostream&       operator<<(std::ostream&, GGridIcos &);       // Out
          GDD_base          *gdd_;           // domain decomposition/partitioning object
          GShapeFcn_linear  *lshapefcn_;     // linear shape func to compute 2d coords
          GTVector<GINT>     iup_;           // triangle pointing 'up' flag
-         GTVector<GBdyType> global_bdy_types_;  // global types for each surface (in 3D only)
 
          GTVector<GTriangle<GFTYPE>>    
                             tmesh_;         // array of final mesh triangles

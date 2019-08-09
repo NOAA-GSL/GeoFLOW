@@ -63,6 +63,7 @@ lshapefcn_             (NULLPTR)
   spt = gridptree.getArray<GFTYPE>("delxyz");
   sne = gridptree.getArray<int>("num_elems");
 
+  eps_ = 100*std::numeric_limits<GFTYPE>::epsilon();
   // compute global bdy range, and global vertices:
   dP_  = spt;
   P1_ = P0_ + dP_;
@@ -84,31 +85,6 @@ lshapefcn_             (NULLPTR)
     gverts_[2] = P1_; 
     gp = P0_; gp.x3 += dP.x3; gp.x2 += dP_.x2; gverts_[3] = gp;
   }
-
-  GTVector<GBdyType> bdytype(2*GDIM);
-  bdytype[0] = geoflow::str2bdytype(gridptree.getValue<GString>("bdy_y_0"));
-  bdytype[1] = geoflow::str2bdytype(gridptree.getValue<GString>("bdy_x_1"));
-  bdytype[2] = geoflow::str2bdytype(gridptree.getValue<GString>("bdy_y_1"));
-  bdytype[3] = geoflow::str2bdytype(gridptree.getValue<GString>("bdy_x_0"));
-  if ( GDIM == 3 ) {
-  bdytype[4] = geoflow::str2bdytype(gridptree.getValue<GString>("bdy_z_0"));
-  bdytype[5] = geoflow::str2bdytype(gridptree.getValue<GString>("bdy_z_1"));
-  }
-  global_bdy_types_ = bdytype;
-
-
-  bPeriodic_.resize(3);
-  bPeriodic_ = FALSE;
-  assert(P0_.size() >= ndim_ && P1_.size() >= ndim_ && ne_.size() >= b.size()
-        && "Grid length and/or element count arrays of insufficient size");
-  if ( global_bdy_types_[1] == GBDY_PERIODIC
-    || global_bdy_types_[3] == GBDY_PERIODIC ) bPeriodic_[0] = TRUE;
-  if ( global_bdy_types_[0] == GBDY_PERIODIC
-    || global_bdy_types_[2] == GBDY_PERIODIC ) bPeriodic_[1] = TRUE;
-  
-  if ( GDIM==3 
-    &&(global_bdy_types_[1] == GBDY_PERIODIC
-    || global_bdy_types_[3] == GBDY_PERIODIC) ) bPeriodic_[2] = TRUE;
 
   ne_.resize(b.size());
   for ( GSIZET j=0; j<b.size(); j++ ) {
@@ -310,14 +286,13 @@ void GGridBox::do_elems2d()
 
     // With face/edge centroids computed, compute 
     // global boundary nodes:
-    GFTYPE eps=100*std::numeric_limits<GFTYPE>::epsilon();
     for ( GSIZET j=0; j<2*ndim_; j++ ) { // cycle over all edges
       cent = pelem->edgeCentroid(j);
       face_ind = NULLPTR;
-      if ( FUZZYEQ(P0_.x2,cent.x2,eps) ) face_ind = &pelem->edge_indices(0);
-      if ( FUZZYEQ(P1_.x1,cent.x1,eps) ) face_ind = &pelem->edge_indices(1);
-      if ( FUZZYEQ(P1_.x2,cent.x2,eps) ) face_ind = &pelem->edge_indices(2);
-      if ( FUZZYEQ(P0_.x1,cent.x1,eps) ) face_ind = &pelem->edge_indices(3);
+      if ( FUZZYEQ(P0_.x2,cent.x2,eps_) ) face_ind = &pelem->edge_indices(0);
+      if ( FUZZYEQ(P1_.x1,cent.x1,eps_) ) face_ind = &pelem->edge_indices(1);
+      if ( FUZZYEQ(P1_.x2,cent.x2,eps_) ) face_ind = &pelem->edge_indices(2);
+      if ( FUZZYEQ(P0_.x1,cent.x1,eps_) ) face_ind = &pelem->edge_indices(3);
       // For now, we don't allow corner nodes to be repeated, 
       // and we'll have to choose the best way to define the 
       // normal vectors at the 'corner' nodes:
@@ -435,16 +410,15 @@ void GGridBox::do_elems3d()
     pelem->init(*xNodes);
 
     // With edge/face centroids set, compute bdy_nodes:
-    GFTYPE eps=100*std::numeric_limits<GFTYPE>::epsilon();
     for ( GSIZET j=0; j<2*ndim_; j++ ) { // cycle over faces
       cent = pelem->faceCentroid(j);
       face_ind = NULLPTR;
-      if ( FUZZYEQ(P0_.x2,cent.x2,eps) ) face_ind = &pelem->edge_indices(0);
-      if ( FUZZYEQ(P1_.x1,cent.x1,eps) ) face_ind = &pelem->edge_indices(1);
-      if ( FUZZYEQ(P1_.x2,cent.x2,eps) ) face_ind = &pelem->edge_indices(2);
-      if ( FUZZYEQ(P0_.x1,cent.x1,eps) ) face_ind = &pelem->edge_indices(3);
-      if ( FUZZYEQ(P0_.x3,cent.x3,eps) ) face_ind = &pelem->edge_indices(4);
-      if ( FUZZYEQ(P1_.x3,cent.x3,eps) ) face_ind = &pelem->edge_indices(5);
+      if ( FUZZYEQ(P0_.x2,cent.x2,eps_) ) face_ind = &pelem->edge_indices(0);
+      if ( FUZZYEQ(P1_.x1,cent.x1,eps_) ) face_ind = &pelem->edge_indices(1);
+      if ( FUZZYEQ(P1_.x2,cent.x2,eps_) ) face_ind = &pelem->edge_indices(2);
+      if ( FUZZYEQ(P0_.x1,cent.x1,eps_) ) face_ind = &pelem->edge_indices(3);
+      if ( FUZZYEQ(P0_.x3,cent.x3,eps_) ) face_ind = &pelem->edge_indices(4);
+      if ( FUZZYEQ(P1_.x3,cent.x3,eps_) ) face_ind = &pelem->edge_indices(5);
       face_ind = &pelem->face_indices(0);
       // For now, we don't allow corner nodes to be repeated, 
       // and we'll have to choose the best way to define the 
@@ -559,14 +533,13 @@ void GGridBox::do_elems2d(GTMatrix<GINT> &p,
 
     // With face/edge centroids computed, compute 
     // global boundary nodes:
-    GFTYPE eps=100*std::numeric_limits<GFTYPE>::epsilon();
     for ( GSIZET j=0; j<2*ndim_; j++ ) { // cycle over all edges
       cent = pelem->edgeCentroid(j);
       face_ind = NULLPTR;
-      if ( FUZZYEQ(P0_.x2,cent.x2,eps) ) face_ind = &pelem->edge_indices(0);
-      if ( FUZZYEQ(P1_.x1,cent.x1,eps) ) face_ind = &pelem->edge_indices(1);
-      if ( FUZZYEQ(P1_.x2,cent.x2,eps) ) face_ind = &pelem->edge_indices(2);
-      if ( FUZZYEQ(P0_.x1,cent.x1,eps) ) face_ind = &pelem->edge_indices(3);
+      if ( FUZZYEQ(P0_.x2,cent.x2,eps_) ) face_ind = &pelem->edge_indices(0);
+      if ( FUZZYEQ(P1_.x1,cent.x1,eps_) ) face_ind = &pelem->edge_indices(1);
+      if ( FUZZYEQ(P1_.x2,cent.x2,eps_) ) face_ind = &pelem->edge_indices(2);
+      if ( FUZZYEQ(P0_.x1,cent.x1,eps_) ) face_ind = &pelem->edge_indices(3);
       // For now, we don't allow corner nodes to be repeated, 
       // and we'll have to choose the best way to define the 
       // normal vectors at the 'corner' nodes:
@@ -689,16 +662,15 @@ void GGridBox::do_elems3d(GTMatrix<GINT> &p,
     pelem->init(*xNodes);
 
     // With edge/face centroids set, compute bdy_nodes:
-    GFTYPE eps=100*std::numeric_limits<GFTYPE>::epsilon();
     for ( GSIZET j=0; j<2*ndim_; j++ ) { // cycle over faces
       cent = pelem->faceCentroid(j);
       face_ind = NULLPTR;
-      if ( FUZZYEQ(P0_.x2,cent.x2,eps) ) face_ind = &pelem->edge_indices(0);
-      if ( FUZZYEQ(P1_.x1,cent.x1,eps) ) face_ind = &pelem->edge_indices(1);
-      if ( FUZZYEQ(P1_.x2,cent.x2,eps) ) face_ind = &pelem->edge_indices(2);
-      if ( FUZZYEQ(P0_.x1,cent.x1,eps) ) face_ind = &pelem->edge_indices(3);
-      if ( FUZZYEQ(P0_.x3,cent.x3,eps) ) face_ind = &pelem->edge_indices(4);
-      if ( FUZZYEQ(P1_.x3,cent.x3,eps) ) face_ind = &pelem->edge_indices(5);
+      if ( FUZZYEQ(P0_.x2,cent.x2,eps_) ) face_ind = &pelem->edge_indices(0);
+      if ( FUZZYEQ(P1_.x1,cent.x1,eps_) ) face_ind = &pelem->edge_indices(1);
+      if ( FUZZYEQ(P1_.x2,cent.x2,eps_) ) face_ind = &pelem->edge_indices(2);
+      if ( FUZZYEQ(P0_.x1,cent.x1,eps_) ) face_ind = &pelem->edge_indices(3);
+      if ( FUZZYEQ(P0_.x3,cent.x3,eps_) ) face_ind = &pelem->edge_indices(4);
+      if ( FUZZYEQ(P1_.x3,cent.x3,eps_) ) face_ind = &pelem->edge_indices(5);
       face_ind = &pelem->face_indices(0);
 
       // For now, we don't allow corner nodes to be repeated, 
@@ -788,102 +760,6 @@ void GGridBox::print(const GString &filename)
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : init_periodic_bdytypes_2d
-// DESC   : Set global element boundary condition types in 2d 
-//            NOTE: element node coordinate may change in this call! Also,
-//                  bdy indices must already have been set prior to 
-//                  entry.
-// ARGS   : pelem : Element under consideration
-// RETURNS: none.
-//**********************************************************************************
-void GGridBox::init_periodic_bdytypes_2d(GElem_base &pelem)
-{
-
-  GTVector<GINT>              *bdy_ind=&pelem.bdy_indices();
-  GTVector<GBdyType>          *bdy_typ=&pelem.bdy_types  ();
-  GTVector<GTVector<GFTYPE>>  *xNodes =&pelem.xNodes();
-  GTVector<GTVector<GINT>>    *face_ind;
-
-  GSIZET ib;
-  GFTYPE eps=100*std::numeric_limits<GFTYPE>::epsilon();
-  if ( bPeriodic_[0] ) { // check for periodicity in x
-    for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each face index
-      ib = (*bdy_ind)[k];
-      if ( (FUZZYEQ(P0_.x1,(*xNodes)[0][ib],eps) 
-        ||  FUZZYEQ(P1_.x1,(*xNodes)[0][ib],eps)) ) {
-          (*bdy_typ)[k] = GBDY_PERIODIC;
-      }
-    }
-  }
-
-  if ( bPeriodic_[1] ) { // check for periodicity in y
-    for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
-      ib = (*bdy_ind)[k];
-      if ( FUZZYEQ(P0_.x2,(*xNodes)[1][ib],eps)  
-        || FUZZYEQ(P1_.x2,(*xNodes)[1][ib],eps) ) {
-          (*bdy_typ)[k] = GBDY_PERIODIC;
-      }
-    }
-  }
-
-  return;
-} // end, method init_periodic_bdytypes_2d
-
-
-//**********************************************************************************
-//**********************************************************************************
-// METHOD : init_periodic_bdytypes_3d
-// DESC   : Set global element boundary conditions in 3d
-//            NOTE: element node coordinate may change in this call! Also,
-//                  bdy indices must already have been set prior to 
-//                  entry.
-// ARGS   : pelem : Element under consideration
-// RETURNS: none.
-//**********************************************************************************
-void GGridBox::init_periodic_bdytypes_3d(GElem_base &pelem)
-{
-  GTVector<GINT>              *bdy_ind=&pelem.bdy_indices();
-  GTVector<GINT>              *face_ind=&pelem.bdy_indices();
-  GTVector<GBdyType>          *bdy_typ=&pelem.bdy_types  ();
-  GTVector<GTVector<GFTYPE>>  *xNodes =&pelem.xNodes();
-
-  GSIZET ib;
-  GFTYPE eps=100*std::numeric_limits<GFTYPE>::epsilon();
-  if ( bPeriodic_[0] ) { // check for periodicity in x
-    for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
-      ib = (*bdy_ind)[k];
-      if ( FUZZYEQ(P0_.x1,(*xNodes)[0][ib],eps)
-        || FUZZYEQ(P1_.x1,(*xNodes)[0][ib],eps) ) {
-          (*bdy_typ)[k] = GBDY_PERIODIC;
-      }
-    }
-  }
-
-  if ( bPeriodic_[1] ) { // check for periodicity in y
-    for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
-      ib = (*bdy_ind)[k];
-      if ( (FUZZYEQ(P0_.x2,(*xNodes)[1][ib],eps) 
-       ||   FUZZYEQ(P1_.x2,(*xNodes)[1][ib],eps)) ) {
-          (*bdy_typ)[k] = GBDY_PERIODIC;
-      }
-    }
-  }
-
-  if ( bPeriodic_[2] ) { // check for periodicity in z
-    for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
-      ib = (*bdy_ind)[k];
-      if ( FUZZYEQ(P0_.x3,(*xNodes)[2][ib],eps) 
-       ||  FUZZYEQ(P1_.x3,(*xNodes)[2][ib],eps) ) {
-          (*bdy_typ)[k] = GBDY_PERIODIC;
-      }
-    }
-  }
-  
-} // end, method init_periodic_bdytypes_3d
-
-
-//**********************************************************************************
-//**********************************************************************************
 // METHOD : periodize
 // DESC   : Periodize grid coordinates, by making x_2 = x_1 for all
 //          periodic coordinate directions, x.
@@ -905,13 +781,12 @@ void GGridBox::periodize()
 
   GUINT  bit;
   GSIZET id, n=0;
-  GFTYPE eps=100*std::numeric_limits<GFTYPE>::epsilon();
   for ( GSIZET k=0; k<igbdy_[GBDY_PERIODIC].size(); k++ ) { // for each blobal bdy node
     id = igbdy_[GBDY_PERIODIC][k];
     periodicids_.push_back(id);       
     periodicdirs_.push_back(0);
     for ( GSIZET i=0; i<xNodes_.size(); i++ ) { // for x, y, z dirs
-      if ( FUZZYEQ(P1_[i],xNodes_[i][id],eps) ) { // right/top-most coord will change
+      if ( FUZZYEQ(P1_[i],xNodes_[i][id],eps_) ) { // right/top-most coord will change
         periodicdirs_[n] |= 1U << i;  // position right-most direction bit  
       }
     }
@@ -951,7 +826,6 @@ void GGridBox::unperiodize()
   // Cycle through periodic nodes and un-periodize coordinates:
   GUINT  bit;
   GSIZET id;
-  GFTYPE eps=100*std::numeric_limits<GFTYPE>::epsilon();
   for ( GSIZET k=0; k<periodicids_.size(); k++ ) { // for each periodic node
     id = periodicids_[k];
     for ( GSIZET i= 0; i<xNodes_.size(); i++ ) { // coord direction
@@ -1062,19 +936,19 @@ void GGridBox::find_subdomain()
 // RETURNS: none.
 //**********************************************************************************
 void GGridBox::config_bdy(const PropertyTree &ptree, 
-                            GTVector<GSIZET> &igbdy, 
-                            GTVector<GSIZET> &igbdyt)
+                          GTVector<GSIZET> &igbdy, 
+                          GTVector<GSIZET> &igbdyt)
 {
   // Cycle over all geometric boundaries, and configure:
 
-  GBOOL              bperiodic=FALSE, btimedep=FALSE, buniform=FALSE, buseinit;
+  GBOOL              bperiodic=FALSE, buniform=FALSE, buseinit;
   GSIZET             iwhere;
   GTVector<GBOOL>    uniform(2*GDIM);
   GTVector<GBdyType> bdytype(2*GDIM);
   GTVector<GBdyType> btmp;
   GTVector<GSIZET>   itmp;
-  GTVector<GString>  bdynames(2*GDIM);
-  GTVector<GString>  bdyconf (2*GDIM);
+  GTVector<GString>  bdynames (2*GDIM);
+  GTVector<GString>  confmthd (2*GDIM);
   GTVector<GString>  bdyupdate(2*GDIM);
   GString            gname, sbdy, bdyclass, bdyinit;
   PropertyTree       bdytree, gridptree, spectree;
@@ -1096,7 +970,6 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
   igbdy .clear();
   igbdyt.clear();
 
-  btimedep  = gridtree.getValue<GBOOL>  ("is_time_dep", FALSE);
   bdyupdate = gridtree.getValue<GString>("update_method","");
   bdyinit   = gridtree.getValue<GString>("bdy_init_method","");
   buseinit  = gridtree.getValue<GBOOL>  ("use_state_init_method",FALSE);
@@ -1106,14 +979,14 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
   // Note: bdys are configured by way of geometry's
   //       natural decomposition: here, by face (3d) or
   //       edge (2d). But the bdy indices and types
-  //       returned contain info for all bdys:
+  //       returned on exist contain info for all bdys:
   for ( auto j=0; j<2*GDIM; j++ ) { // cycle over faces
     sbdy         = gridptree.getValue<GString>(bdynames[j]);
     bdytree      = gridtree.getPropertyTree(sbdy);
     bdyclass     = bdytree.getValue<GString>("bdy_class", "uniform");
     bdytype  [j] = geoflow::str2bdytype(bdytree.getValue<GString>("base_type", GBDY_NONE));
     uniform  [j] = bdyclass == "uniform" ? TRUE : FALSE;
-    bdyconf  [j] = bdytree.getValue<GString>("bdy_config_method","");
+    confmthd  [j] = bdytree.getValue<GString>("bdy_config_method","");
     bperiodic    = bperiodic || bdytype[j] == GBDY_PERIODIC;
     buniform     = buniform || uniform[j];
     assert(bperiodic && !buniform[j] && "GBDY_PERIODIC boundary must have bdy_class = uniform");
@@ -1138,8 +1011,8 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
     else {
       find_bdy_indices3d(j, TRUE, itmp); // include edges
     }
-    spectree  = ptree->getPropertyTree(bdyconf[j]);
-    bret = GSpecBFactory::dospec(spectree, *this, itmp, btmp); // get user-defined bdy spec
+    spectree  = ptree->getPropertyTree(confmthd[j]);
+    bret = GSpecBFactory::dospec(spectree, *this, j, itmp, btmp); // get user-defined bdy spec
     assert(bret && "Boundary specification failed");
     igbdy .concat(itmp.data(), itmp.size());
     igbdyt.concat(btmp.data(), btmp.size());
@@ -1191,17 +1064,17 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
 //**********************************************************************************
 void GGridBox::find_bdy_ind2d(GINT bdyid, GBOOL incl_vert, GTVector<GSIZET> &ibdy)
 {
-
   assert(bdyid >=0 && bdyid < 2*GDIM);
 
-  ibdy.clear();
-
   GTPoint<GFTYPE> pt(ndim_);
+  
+  ibdy.clear();
+  pt.setBracket(eps_);
 
   switch ( bdyid ) {
     case 0: // lower horiz bdy:
       for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { 
-        if ( FUZZYEQ(P0_.x2,xNodes[1][i],eps) ) {
+        if ( FUZZYEQ(P0_.x2,xNodes[1][i],eps_) ) {
           pt.assign(xNodes_, i);
           if ( incl_vert  || !is_global_vertex(pt) ) ibdy.push_back(i);
         }
@@ -1210,7 +1083,7 @@ void GGridBox::find_bdy_ind2d(GINT bdyid, GBOOL incl_vert, GTVector<GSIZET> &ibd
 
     case 1: // right vert bdy:
       for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // bdy 1
-        if ( FUZZYEQ(P1_.x1,xNodes[0][i],eps) ) {
+        if ( FUZZYEQ(P1_.x1,xNodes[0][i],eps_) ) {
           pt.assign(xNodes_, i);
           if ( incl_vert  || !is_global_vertex(pt) ) ibdy.push_back(i);
         }
@@ -1219,7 +1092,7 @@ void GGridBox::find_bdy_ind2d(GINT bdyid, GBOOL incl_vert, GTVector<GSIZET> &ibd
 
     case 2: // top horiz bdy:
       for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // bdy 2
-        if ( FUZZYEQ(P1_.x2,xNodes[1][i],eps) ) {
+        if ( FUZZYEQ(P1_.x2,xNodes[1][i],eps_) ) {
           pt.assign(xNodes_, i);
           if ( incl_vert  || !!is_global_vertex(pt) ) ibdy.push_back(i);
         }
@@ -1228,7 +1101,7 @@ void GGridBox::find_bdy_ind2d(GINT bdyid, GBOOL incl_vert, GTVector<GSIZET> &ibd
 
     case 3: // left vert bdy:
       for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // bdy 3
-        if ( FUZZYEQ(P0_.x1,xNodes[0][i],eps) ) {
+        if ( FUZZYEQ(P0_.x1,xNodes[0][i],eps_) ) {
           pt.assign(xNodes_, i);
           if ( incl_vert  || !is_global_vertex(pt) ) ibdy.push_back(i);
         }
@@ -1263,10 +1136,13 @@ void GGridBox::find_bdy_ind3d(GINT bdyid, GBOOL incl_edge, GTVector<GSIZET> &ibd
 
   GTPoint<GFTYPE> pt(ndim_);
 
+  pt.setBracket(eps_);
+
   switch ( bdyid ) {
     case 0: // southern vert face:
       for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // face 0
-        if ( FUZZYEQ(P0_.x1,xNodes[0][i],eps) ) {
+        if ( FUZZYEQ(P0_.x1,xNodes[0][i],eps_) ) {
+          pt.assign(xNodes_, i);
           if ( incl_edge || !on_global_edge(0,pt) ) ibdy.push_back(i);
         }
       }
@@ -1274,23 +1150,26 @@ void GGridBox::find_bdy_ind3d(GINT bdyid, GBOOL incl_edge, GTVector<GSIZET> &ibd
 
     case 1: // eastern vert. face:
       for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // face 1
-        if ( FUZZYEQ(P1_.x1,xNodes[1][i],eps) ) {
+        if ( FUZZYEQ(P1_.x1,xNodes[1][i],eps_) ) {
+          pt.assign(xNodes_, i);
           if ( incl_edge || !on_global_edge(1,pt) ) ibdy.push_back(i);
         }
       }
       break;
 
     case 2: // northern vert. face:
-        for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // face 2
-          if ( FUZZYEQ(P1_.x1,xNodes[0][i],eps) ) {
-            if ( incl_edge || !on_global_edge(2,pt) ) ibdy.push_back(i);
-          }
+      for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // face 2
+        if ( FUZZYEQ(P1_.x1,xNodes[0][i],eps_) ) {
+          pt.assign(xNodes_, i);
+          if ( incl_edge || !on_global_edge(2,pt) ) ibdy.push_back(i);
         }
-        break;
+      }
+      break;
 
     case 3: // western vertical face:
       for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // face 3
-        if ( FUZZYEQ(P0_.x1,xNodes[1][i],eps) ) {
+        if ( FUZZYEQ(P0_.x1,xNodes[1][i],eps_) ) {
+          pt.assign(xNodes_, i);
           if ( incl_edge || !on_global_edge(3,pt) ) ibdy.push_back(i);
         }
       }
@@ -1298,7 +1177,8 @@ void GGridBox::find_bdy_ind3d(GINT bdyid, GBOOL incl_edge, GTVector<GSIZET> &ibd
 
     case 4: // bottom horiz face:
       for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // face 4
-        if ( FUZZYEQ(P0_.x1,xNodes[2][i],eps) ) {
+        if ( FUZZYEQ(P0_.x1,xNodes[2][i],eps_) ) {
+          pt.assign(xNodes_, i);
           if ( incl_edge || !on_global_edge(4,pt) ) ibdy.push_back(i);
         }
       }
@@ -1306,7 +1186,8 @@ void GGridBox::find_bdy_ind3d(GINT bdyid, GBOOL incl_edge, GTVector<GSIZET> &ibd
 
     case 5: // top horiz face:
       for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // face 5
-        if ( FUZZYEQ(P1_.x1,xNodes[2][i],eps) ) {
+        if ( FUZZYEQ(P1_.x1,xNodes[2][i],eps_) ) {
+          pt.assign(xNodes_, i);
           if ( incl_edge || !on_global_edge(5,pt) ) ibdy.push_back(i);
         }
       }
@@ -1358,22 +1239,21 @@ GBOOL GGridBox::on_global_edge(GINT iface, GTPoint<GFTYPE> &pt)
   GBOOL           bret = FALSE;
   GINT            nface=0;
   GTVector<GINT>  face(3); // at most 3 faces that point _can_ belong to
-  GFTYPE          eps_ = 100*std::numeric_limits<GFTYPE>::min();
   GTPoint<GFTYPE> pt(ndim_);
 
   // Find faces point belongs to:
   for ( GINT j=0; j<ndim_; j++ ) {
-    if     ( FUZZYEQ(P0_.x1,eps) && !face.containsn(0,nface) ) 
+    if     ( FUZZYEQ(P0_.x1,eps_) && !face.containsn(0,nface) ) 
       { face[nface] = 0; nface++; }
-    else if( FUZZYEQ(P1_.x2,eps) && !face.containsn(1,nface) ) 
+    else if( FUZZYEQ(P1_.x2,eps_) && !face.containsn(1,nface) ) 
       { face[nface] = 1; nface++; } 
-    else if( FUZZYEQ(P1_.x1,eps) && !face.containsn(2,nface) ) 
+    else if( FUZZYEQ(P1_.x1,eps_) && !face.containsn(2,nface) ) 
       { face[nface] = 2; nface++; }
-    else if( FUZZYEQ(P0_.x2,eps) && !face.containsn(3,nface) ) 
+    else if( FUZZYEQ(P0_.x2,eps_) && !face.containsn(3,nface) ) 
       { face[nface] = 3; nface++; }
-    else if( FUZZYEQ(P0_.x3,eps) && !face.containsn(4,nface) ) 
+    else if( FUZZYEQ(P0_.x3,eps_) && !face.containsn(4,nface) ) 
       { face[nface] = 4; nface++; }
-    else if( FUZZYEQ(P1_.x3,eps) && !face.containsn(5,nface) ) 
+    else if( FUZZYEQ(P1_.x3,eps_) && !face.containsn(5,nface) ) 
       { face[nface] = 5; nface++; }
   }
 

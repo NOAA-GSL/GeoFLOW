@@ -1397,46 +1397,6 @@ void GGridIcos::reorderverts2d(GTVector<GTPoint<GFTYPE>> &uverts, GTVector<GSIZE
 } // end of method reorderverts2d
 
 
-
-//**********************************************************************************
-//**********************************************************************************
-// METHOD : set_global_bdy_3d
-// DESC   : Set global boundary conditions in 3d
-//            NOTE: element node coordinate may change in this call!
-// ARGS   : pelem : Element under consideration
-// RETURNS: none.
-//**********************************************************************************
-void GGridIcos::set_global_bdy_3d(GElem_base &pelem)
-{
-  GTVector<GINT>              *bdy_ind=&pelem.bdy_indices();
-  GTVector<GBdyType>          *bdy_typ=&pelem.bdy_types  ();
-  GTVector<GTVector<GFTYPE>>  *xNodes =&pelem.xNodes();
-
-  GSIZET ib;
-  GFTYPE x, y, z, r;
-  for ( GSIZET m=0; m<2; m++ ) { // for each radiusi face
-    for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
-      ib = (*bdy_ind)[k];
-      x = (*xNodes)[0][ib]; y = (*xNodes)[1][ib]; z = (*xNodes)[2][ib];
-      r = sqrt( x*x + y*y + z*z );
-      if ( r == radiusi_  )
-        bdy_typ->push_back( global_bdy_types_[0] );
-    }
-  }
-
-  for ( GSIZET m=0; m<2; m++ ) { // for each radiuso face
-    for ( GSIZET k=0; k<bdy_ind->size(); k++ ) { // for each bdy index
-      ib = (*bdy_ind)[k];
-      x = (*xNodes)[0][ib]; y = (*xNodes)[1][ib]; z = (*xNodes)[2][ib];
-      r = sqrt( x*x + y*y + z*z );
-      if ( r == radiuso_  )
-        bdy_typ->push_back( global_bdy_types_[1] );
-    }
-  }
-
-} // end, method set_global_bdy_3d
-
-
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : order_latlong2d
@@ -1562,3 +1522,130 @@ void GGridIcos::order_triangles(GTVector<GTriangle<GFTYPE>> &tmesh)
   }
 
 } // end, method order_triangles
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : config_bdy
+// DESC   : Configure 3d spherical boundaries from ptree
+// ARGS   : 
+//          ptree : main prop tree 
+//          igbdy : which nodes indices represent global boundaries. This contains
+//                  indices for all bdys this task owns
+//          igbdyt: bdy type ids for each index in igbdy
+// RETURNS: none.
+//**********************************************************************************
+void GGridIcos::config_bdy(const PropertyTree &ptree, 
+                           GTVector<GSIZET> &igbdy, 
+                           GTVector<GSIZET> &igbdyt)
+{
+  // Cycle over all geometric boundaries, and configure:
+
+  GBOOL              buniform=FALSE;
+  GSIZET             iwhere;
+  GTVector<GBOOL>    uniform(2);
+  GTVector<GBdyType> bdytype(2);
+  GTVector<GBdyType> btmp;
+  GTVector<GSIZET>   itmp;
+  GTVector<GFTYPE>   rbdy(2);
+  GTVector<GString>  bdynames(2);
+  GTVector<GString>  confmthd (2);
+  GTVector<GString>  bdyupdate(2);
+  GString            gname, sbdy, bdyclass;
+  PropertyTree       bdytree, gridptree, spectree;
+
+  // Clear input arrays:
+  igbdy .clear();
+  igbdyt.clear();
+
+  if ( ndim_ == 2 ) return; // no boundaries to configure
+ 
+  bdynames[0] = "bdy_inner";
+  bdynames[1] = "bdy_outer";
+
+  gname     = ptree.getValue<GString>("grid_type");
+  gridptree = ptree.getPropertyTree(gname);
+
+
+  bdyupdate = gridtree.getValue<GString>("update_method","");
+  rbdy[0] = radiusi_;
+  rbdy[1] = radiuso_;
+
+  // Get properties from the main prop tree. 
+  // Note: bdys are configured by way of geometry's
+  //       natural decomposition: here, by inner and
+  //       outer spherical surfaces. But the bdy indices 
+  //       and types returned on exist contain info for all bdys:
+  for ( auto j=0; j<2; j++ ) { // cycle over 2 spherical surfaces
+    sbdy         = gridptree.getValue<GString>(bdynames[j]);
+    bdytree      = gridtree.getPropertyTree(sbdy);
+    bdyclass     = bdytree.getValue<GString>("bdy_class", "uniform");
+    bdytype  [j] = geoflow::str2bdytype(bdytree.getValue<GString>("base_type", GBDY_NONE));
+    assert(bdytype  [j] == GBDY_PERIODIC && "Invalid boundary condition");
+    uniform  [j] = bdyclass == "uniform" ? TRUE : FALSE;
+    confmthd [j] = bdytree.getValue<GString>("bdy_config_method","");
+    buniform     = buniform || uniform[j];
+  }
+
+  // Handle non-uniform (user-configured) bdy types first;
+  // Note: If "uniform" not specified for a boundary, then
+  //       user MUST supply a method to configure it.
+  //       Also, each natural face may be configured independently,
+  //       but the bdy indices & corresp. types are concatenated into 
+  //       single arrays:
+  for ( auto j=0; j<2; j++ ) { 
+    // First, find global bdy indices:
+    if ( buniform[j] ) continue;
+    find_bdy_indices3d(rbdy[j], itmp); 
+    spectree  = ptree->getPropertyTree(confmthd[j]);
+    bret = GSpecBFactory::dospec(spectree, *this, j, itmp, btmp); // get user-defined bdy spec
+    assert(bret && "Boundary specification failed");
+    igbdy .concat(itmp.data(), itmp.size());
+    igbdyt.concat(btmp.data(), btmp.size());
+  }
+  
+  // Fill in uniform bdy types:
+  for ( auto j=0; j<2; j++ ) { 
+    if ( !buniform[j] ) continue;
+    // First, find global bdy indices:
+    find_bdy_indices3d(rbdy[j], itmp); 
+    // Set type for each bdy index:
+    for ( auto i=0; i<itmp.size(); i++ ) {
+      btmp[i] = bdytype[j]; 
+    }
+    igbdy .concat(itmp.data(), itmp.size());
+    igbdyt.concat(btmp.data(), btmp.size());
+  }
+
+
+} // end of method config_bdy
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : find_bdy_ind3d
+// DESC   : Find global bdy indices (indices into xNodes_ arrays) that
+//          corresp to specified radius
+// ARGS   : radius   : radius
+//          ibdy     : array of indices into xNodes that comprise this boundary
+// RETURNS: none.
+//**********************************************************************************
+void GGridIcos::find_bdy_ind3d(GFTYPE radius, GTVector<GSIZET> &ibdy)
+{
+
+  GFTYPE          eps, r;
+  GTPoint<GFTYPE> pt(ndim_);
+
+  ibdy.clear();
+  eps = 100*std::numeric_limits<GFTYPE>::epsilon();
+
+  for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // face 0
+      r = sqrt(pow(xNodes[0][i],2)+pow(xNodes[1][i],2)+pow(xNodes[2][i],2));
+      if ( FUZZYEQ(r, radius, eps) ) {
+        ibdy.push_back(i);
+      }
+  }
+
+} // end, method find_bdy_ind3d
+
+
