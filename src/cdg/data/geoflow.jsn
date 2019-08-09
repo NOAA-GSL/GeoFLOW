@@ -64,7 +64,7 @@
   "sponge_layer": {
     "bdy_class"        : "uniform",
     "base_type"        : "GBDY_DIRICHLET",
-    "value"            : 0.0,
+    "value"            : [0.0, 0.0, 0.0],
     "beg_radius_frac"  : 0.95,
     "decimation_type"  : "linear",
     "bdy_config_method": ""
@@ -72,7 +72,7 @@
   "dirichlet_fixed": {
     "bdy_class"        : "uniform",
     "base_type"        : "GBDY_DIRICHLET",
-    "value"            : 0.0,
+    "value"            : [0.0, 0.0, 0.0],
     "bdy_config_method": ""
   },
   "grid_icos": {
