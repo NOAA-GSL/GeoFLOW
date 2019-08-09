@@ -35,7 +35,7 @@ GBOOL GInitFFactory<EquationType>::init(const geoflow::tbox::PropertyTree& ptree
   if ( "initf_none" == sinit
     || "none"       == sinit
     || ""           == sinit ) {
-    return TRUE;
+    bret = TRUE;
   }
   else if ( "initf_null"        == sinit ) {
     bret = ginitf::impl_null     (ftree, eqn_ptr, grid, time, utmp, u, uf);

@@ -14,10 +14,10 @@ namespace pdeint {
 //**********************************************************************************
 // METHOD : init
 // DESC   : Do bdy initialization
-// ARGS   : ptree  : main property tree
-//          grid   : GGrid object
-//          ibdy   : indirection array into state indicating global bdy
-//          tbdy   : array of size ibdy.size giving bdy condition type, returned
+// ARGS   : ptree : specification property tree; not main prop tree
+//          grid  : GGrid object
+//          ibdy  : indirection array into state indicating global bdy
+//          tbdy  : array of size ibdy.size giving bdy condition type, returned
 // RETURNS: none.
 //**********************************************************************************
 template<typename EquationType>
@@ -26,11 +26,15 @@ GBOOL GSpecBFactory<EquationType>::init(const geoflow::tbox::PropertyTree& ptree
   GBOOL         bret    = FALSE;
   GString       sinit   = ptree.getValue<GString>("specb_block","");
 
+  // ibdy and tbdy should not come in empty. But they
+  // may refer to only canonical boundarys (individual faces
+  // for boxes, spherical surfaces for icos spheres:
+
   if ( "specb_none" == sinit
     || "none"       == sinit
-    || ""           == init 
-    || ibdy.size()  == 0   ) {
-    return;
+    || ""           == sinit 
+    || ibdy.size()  == 0     ) {
+    bret = TRUE;
   }
   else if ( "specb_box_uniform"    == sinit ) {
     bret = gspecb::impl_box_uniform      (ptree, grid, ibdy, tbdy);

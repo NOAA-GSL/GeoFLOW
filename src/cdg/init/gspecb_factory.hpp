@@ -12,7 +12,7 @@
 #include "gcomm.hpp"
 #include "gtvector.hpp"
 #include "ggrid.hpp"
-#include "gbdyinit_impl.hpp"
+#include "gspecb.hpp"
 
 namespace geoflow {
 namespace pdeint {
@@ -43,6 +43,6 @@ class GSpecBFactory
 } // namespace geoflow
 
 
-#include "ginitb_factory.ipp"
+#include "gspecb_factory.ipp"
 
 #endif 
