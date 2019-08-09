@@ -61,6 +61,20 @@
     "bconserved"  : false,
     "forcing_comp": [0 1 2];
   },
+  "sponge_layer": {
+    "bdy_class"        : "uniform",
+    "base_type"        : "GBDY_DIRICHLET",
+    "value"            : 0.0,
+    "beg_radius_frac"  : 0.95,
+    "decimation_type"  : "linear",
+    "bdy_config_method": ""
+  },
+  "dirichlet_fixed": {
+    "bdy_class"        : "uniform",
+    "base_type"        : "GBDY_DIRICHLET",
+    "value"            : 0.0,
+    "bdy_config_method": ""
+  },
   "grid_icos": {
     "grid_name" : "grid_icos",
     "ilevel"    : 0,
@@ -72,8 +86,8 @@
     "radiusi"          : 1.0,
     "radiuso"          : 2.0,
     "num_radial_elems" : 10,
-    "bdy_inner"        : "GBDY_DIRICHLET",
-    "bdy_outer"        : "GBDY_SPONGE"
+    "bdy_inner"        : "dirichlet_fixed",
+    "bdy_outer"        : "sponge_layer"
   },
   "circular_jet": {
     "position"         : [0, 0.5, 0.5],
