@@ -1139,7 +1139,7 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
       find_bdy_indices3d(j, TRUE, itmp); // include edges
     }
     spectree  = ptree->getPropertyTree(bdyconf[j]);
-    bret = GSpecBFactory::init(spectree, *this, itmp, btmp); // get user-defined bdy spec
+    bret = GSpecBFactory::dospec(spectree, *this, itmp, btmp); // get user-defined bdy spec
     assert(bret && "Boundary specification failed");
     igbdy .concat(itmp.data(), itmp.size());
     igbdyt.concat(btmp.data(), btmp.size());
