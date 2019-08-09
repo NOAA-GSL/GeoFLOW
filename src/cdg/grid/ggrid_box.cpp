@@ -1076,8 +1076,6 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
   GTVector<GString>  bdynames(2*GDIM);
   GTVector<GString>  bdyconf (2*GDIM);
   GTVector<GString>  bdyupdate(2*GDIM);
-  GTVector<PeopertyTree> 
-                     spectree(2*GDIM);
   GString            gname, sbdy, bdyclass, bdyinit;
   PropertyTree       bdytree, gridptree, spectree;
 
@@ -1093,8 +1091,6 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
   gname     = ptree.getValue<GString>("grid_type");
   gridptree = ptree.getPropertyTree(gname);
 
-  bret = GSpecBFactory::init(*ptree_, *this, igbdy, btmp);
-  assert(bret && "Boundary specification configuration failed");
 
   // Clear input arrays:
   igbdy .clear();
@@ -1111,7 +1107,7 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
   //       natural decomposition: here, by face (3d) or
   //       edge (2d). But the bdy indices and types
   //       returned contain info for all bdys:
-  for ( auto j=0; j<2*GDIM; j++ ) {
+  for ( auto j=0; j<2*GDIM; j++ ) { // cycle over faces
     sbdy         = gridptree.getValue<GString>(bdynames[j]);
     bdytree      = gridtree.getPropertyTree(sbdy);
     bdyclass     = bdytree.getValue<GString>("bdy_class", "uniform");
@@ -1128,8 +1124,11 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
          &&  "Incompatible GBDY_PERIODIC boundary specification");
        
   // Handle non-uniform (user-configured) bdy types first;
-  // Note: if "uniform" not specified for a boundary, then
-  //       user MUST supply a method to configure it:
+  // Note: If "uniform" not specified for a boundary, then
+  //       user MUST supply a method to configure it.
+  //       Also, each natural face may be configured independently,
+  //       but the bdy indices & corresp. types are concatenated into 
+  //       single arrays:
   for ( auto j=0; j<2*GDIM; j++ ) { 
     // First, find global bdy indices:
     if ( buniform[j] ) continue;
@@ -1140,7 +1139,8 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
       find_bdy_indices3d(j, TRUE, itmp); // include edges
     }
     spectree  = ptree->getPropertyTree(bdyconf[j]);
-    GSpecB::init(spectree, *this, itmp, btmp); // get user-defined bdy spec
+    bret = GSpecBFactory::init(spectree, *this, itmp, btmp); // get user-defined bdy spec
+    assert(bret && "Boundary specification failed");
     igbdy .concat(itmp.data(), itmp.size());
     igbdyt.concat(btmp.data(), btmp.size());
   }
@@ -1181,7 +1181,7 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : find_bdy_ind2d
-// DESC   : find global bdy indices (indices into xNodes_ arrays) that
+// DESC   : Find global bdy indices (indices into xNodes_ arrays) that
 //          corresp to specified bdy in 2d
 // ARGS   : bdyid    : box-boundary id
 //          incl_vert: include vertex points on bdy that are shared 
@@ -1246,7 +1246,7 @@ void GGridBox::find_bdy_ind2d(GINT bdyid, GBOOL incl_vert, GTVector<GSIZET> &ibd
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : find_bdy_ind3d
-// DESC   : find global bdy indices (indices into xNodes_ arrays) that
+// DESC   : Find global bdy indices (indices into xNodes_ arrays) that
 //          corresp to specified bdy in 3d
 // ARGS   : bdyid    : box-boundary id
 //          incl_edge: include edge points on bdy that are shared 
@@ -1324,7 +1324,7 @@ void GGridBox::find_bdy_ind3d(GINT bdyid, GBOOL incl_edge, GTVector<GSIZET> &ibd
 //**********************************************************************************
 // METHOD : is_global_vertex
 // DESC   : Utilitiy method to determine of specified point is one of the 
-//          global 2d boundar vertices
+//          global 2d boundary vertices
 // ARGS   : pt : point to check
 // RETURNS: TRUE on yes, else FALSE
 //**********************************************************************************
@@ -1333,7 +1333,7 @@ GBOOL GGridBox::is_global_vertex(GTPoint<GFTYPE> &pt)
   GBOOL           bret = FALSE;
 
   for ( GSIZET j=0; j<pow(2,ndim_) && !bret; j++ ) {
-    bret = bret || ( pt == gverts_[j] );
+    bret = bret || ( pt == gverts_[j] ); // There is fuzziness in ==
   }
 
   return bret;
@@ -1357,24 +1357,24 @@ GBOOL GGridBox::on_global_edge(GINT iface, GTPoint<GFTYPE> &pt)
 
   GBOOL           bret = FALSE;
   GINT            nface=0;
-  GTVector<GINT>  iface(3); // at most 3 faces that point _can_ belong to
+  GTVector<GINT>  face(3); // at most 3 faces that point _can_ belong to
   GFTYPE          eps_ = 100*std::numeric_limits<GFTYPE>::min();
   GTPoint<GFTYPE> pt(ndim_);
 
   // Find faces point belongs to:
   for ( GINT j=0; j<ndim_; j++ ) {
     if     ( FUZZYEQ(P0_.x1,eps) && !face.containsn(0,nface) ) 
-      { iface[nface] = 0; nface++; }
+      { face[nface] = 0; nface++; }
     else if( FUZZYEQ(P1_.x2,eps) && !face.containsn(1,nface) ) 
-      { iface[nface] = 1; nface++; } 
+      { face[nface] = 1; nface++; } 
     else if( FUZZYEQ(P1_.x1,eps) && !face.containsn(2,nface) ) 
-      { iface[nface] = 2; nface++; }
+      { face[nface] = 2; nface++; }
     else if( FUZZYEQ(P0_.x2,eps) && !face.containsn(3,nface) ) 
-      { iface[nface] = 3; nface++; }
+      { face[nface] = 3; nface++; }
     else if( FUZZYEQ(P0_.x3,eps) && !face.containsn(4,nface) ) 
-      { iface[nface] = 4; nface++; }
+      { face[nface] = 4; nface++; }
     else if( FUZZYEQ(P1_.x3,eps) && !face.containsn(5,nface) ) 
-      { iface[nface] = 5; nface++; }
+      { face[nface] = 5; nface++; }
   }
 
   if ( nface == 0 ) return FALSE; // in volume somewhere
@@ -1390,10 +1390,10 @@ GBOOL GGridBox::on_global_edge(GINT iface, GTPoint<GFTYPE> &pt)
                          { {0,5},{1,5},{2,5},{3,5} },
                        };
    
-  // Find which, if any, edge edge-point sits in:
+  // Find which edge, if any, edge-point sits in:
   for ( GINT j=0; j<4 && !bret; j++ ) {
-    bret = bret || ( iface.contains(iedges[iface][j][0]) && 
-                     iface.contains(iedges[iface][j][1]) );
+    bret = bret || ( face.contains(iedges[iface][j][0]) && 
+                     face.contains(iedges[iface][j][1]) );
   }
   
   return bret;
