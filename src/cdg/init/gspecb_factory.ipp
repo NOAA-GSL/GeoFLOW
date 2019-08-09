@@ -28,7 +28,7 @@ GBOOL GSpecBFactory<EquationType>::init(const geoflow::tbox::PropertyTree& ptree
 
   // ibdy and tbdy should not come in empty. But they
   // may refer to only canonical boundarys (individual faces
-  // for boxes, spherical surfaces for icos spheres:
+  // for boxes, spherical surfaces for icos spheres):
 
   if ( "specb_none" == sinit
     || "none"       == sinit
