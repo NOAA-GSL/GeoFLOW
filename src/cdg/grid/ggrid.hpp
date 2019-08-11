@@ -95,13 +95,17 @@ virtual void                 print(const GString &filename){}          // print 
         GTVector<GTVector<GSIZET>>
                             &igbdy_binned() { return igbdy_binned_;}   // global dom bdy indices binned into GBdyType
         GTVector<GTVector<GSIZET>>
+                            &igbdy_byface() { return igbdy_byface_;}   // global dom bdy indices for each face
+        GTVector<GTVector<GSIZET>>
+                            &igbdyt_byface(){ return igbdyt_byface_;}  // global dom bdy indices for each face
+        GTVector<GTVector<GSIZET>>
                             &igbdy() { return igbdy_;}                 // global dom bdy indices into u
 
         GC_COMM              get_comm() { return comm_; }              // get communicator
 
 virtual void                 config_bdy(const PropertyTree &ptree, 
-                                        GTVector<GSIZET> &igbdy, 
-                                        GTVector<GSIZET> &igbdyt)=0;   // config bdy
+                                        GTVector<GTVector<GSIZET>> &igbdy, 
+                                        GTVector<GTVector<GSIZET>> &igbdyt)=0;   // config bdy
 
 friend  std::ostream&        operator<<(std::ostream&, GGrid &);       // Output stream operator
  
@@ -133,7 +137,9 @@ protected:
         GFTYPE                      minnodedist_;   // min node length array (for each elem)
         GTVector<GTVector<GSIZET>>  igbdy_binned_;  // index into global field indicating a domain bdy--by type
         GTVector<GTVector<GSIZET>>  igbdy_;         // index into global field indicating a domain bdy
-        GTVector<GBdyType>          igbdytypes_;    // global domain bdy types for each igbdy index
+        GTVector<GTVector<GSIZET>>  igbdy_byface_;  // index into global field indicating a domain bdy
+        GTVector<GBdyType>          igbdyt_;        // global domain bdy types for each igbdy index
+        GTVector<GBdyType>          igbdyt_byface_; // global domain bdy types for each igbdy index
         PropertyTree               *ptree_;         // main prop tree
 
 };

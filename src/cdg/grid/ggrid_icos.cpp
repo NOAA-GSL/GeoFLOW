@@ -1530,14 +1530,14 @@ void GGridIcos::order_triangles(GTVector<GTriangle<GFTYPE>> &tmesh)
 // DESC   : Configure 3d spherical boundaries from ptree
 // ARGS   : 
 //          ptree : main prop tree 
-//          igbdy : which nodes indices represent global boundaries. This contains
-//                  indices for all bdys this task owns
+//          igbdy : For each natural/canonical global boundary face,
+//                  gives vector of global bdy ids
 //          igbdyt: bdy type ids for each index in igbdy
 // RETURNS: none.
 //**********************************************************************************
 void GGridIcos::config_bdy(const PropertyTree &ptree, 
-                           GTVector<GSIZET> &igbdy, 
-                           GTVector<GSIZET> &igbdyt)
+                           GTVector<GTVector<GSIZET>> &igbdy, 
+                           GTVector<GTVector<GSIZET>> &igbdyt)
 {
   // Cycle over all geometric boundaries, and configure:
 
@@ -1600,8 +1600,9 @@ void GGridIcos::config_bdy(const PropertyTree &ptree,
     spectree  = ptree->getPropertyTree(confmthd[j]);
     bret = GSpecBFactory::dospec(spectree, *this, j, itmp, btmp); // get user-defined bdy spec
     assert(bret && "Boundary specification failed");
-    igbdy .concat(itmp.data(), itmp.size());
-    igbdyt.concat(btmp.data(), btmp.size());
+    igbdy [j].resize(itmp.size()); igbdy [j] = itmp;
+    igbdyt[j].resize(itmp.size()); igbdyt[j] = btmp;
+
   }
   
   // Fill in uniform bdy types:
@@ -1613,8 +1614,8 @@ void GGridIcos::config_bdy(const PropertyTree &ptree,
     for ( auto i=0; i<itmp.size(); i++ ) {
       btmp[i] = bdytype[j]; 
     }
-    igbdy .concat(itmp.data(), itmp.size());
-    igbdyt.concat(btmp.data(), btmp.size());
+    igbdy [j].resize(itmp.size()); igbdy [j] = itmp;
+    igbdyt[j].resize(itmp.size()); igbdyt[j] = btmp;
   }
 
 

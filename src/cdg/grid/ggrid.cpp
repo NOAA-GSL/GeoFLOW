@@ -940,8 +940,8 @@ void GGrid::init_bc_info()
   // to do sorting):
   GSIZET        m, n, nn=0; 
   GSIZET                ig; 
-  GTVector <GBdyType> btmp; 
 
+#if 0
   // Set some array sizes. Note: we could use
   // push_back, but this is slow:
   n = 0;
@@ -950,7 +950,7 @@ void GGrid::init_bc_info()
     n += iebdy->size();
   }
   igbdy_.resize(n);
-  btmp.resize(n);
+#endif
 
   n = 0;
   for ( GSIZET e=0; e<gelems_.size(); e++ ) { // get global # face nodes
@@ -966,15 +966,15 @@ void GGrid::init_bc_info()
   m  = 0;
   for ( GSIZET e=0; e<gelems_.size(); e++ ) { // get global bdy ind and types
     ibeg   = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
-    iebdy  = &gelems_[e]->bdy_indices();  // set in child class
+//  iebdy  = &gelems_[e]->bdy_indices();  // set in child class
     ieface = &gelems_[e]->face_indices(); // set in child class
-//  iebdyt = &gelems_[e]->bdy_types();    // set in child class
+#if 0
     for ( GSIZET j=0; j<iebdy->size(); j++ ) { // elem bdys (if any)
       ig = nn + (*iebdy)[j];
       igbdy_[n] = ig; // index in global arrays
-//    btmp  [n] = (*iebdyt)[j];
       n++;
     }
+#endif
 
     for ( GSIZET j=0; j<ieface->size(); j++ ) { // get global elem face node indices
       for ( GSIZET k=0; k<(*ieface)[j].size(); k++ ) {
@@ -986,21 +986,36 @@ void GGrid::init_bc_info()
     nn += gelems_[e]->nnodes();
   } // end, element loop
  
-  // Find boundary types from config file specification.
-  // btmp will contain a 'flat' array of bdy types, one
-  // for each element of igbdy_ array:
-  config_bdy(*ptree_, igbdy_, btmp);
+  // Find boundary indices & types from config file 
+  // specification, for _each_ natural/canonical face:
+  config_bdy(*ptree_, igbdy_byface_, igbdyt_byface_);
+
+  // Flatten these 2 bdy index & types indirection arrays:
+  GSIZET      nind=0, nw=0;
+  for ( auto j=0; j<igbdy_byface_.size(): j++ ) {
+    nind += igbdy_byface_[j].size();
+  }
+  igbdy_ .resize(nind);
+  igbdyt_.resize(nind);
+  nind = 0;
+  for ( auto j=0; j<igbdy_byface_.size(): j++ ) {
+    for ( auto i=0; i<igbdy_byface_.size(); i++ ) {
+      igbdy_ [nind  ] = igbdy_byface_ [j][i];
+      igbdyt_[nind++] = igbdyt_byface_[j][i];
+    }
+  }
+ 
+  
 
   // Create bdy type-bins (one bin for each GBdyType), and
   // for each type, set the indirection indices into global
   // vectors that have that type:
   GBdyType         itype;
   GSIZET    *ind=NULLPTR;
-  GSIZET      nind, nw=0;
   igbdy_binned_.resize(GBDY_NONE); // set of bdy indices for each type
   for ( GSIZET k=0; k<GBDY_NONE; k++ ) { // cycle over each bc type
     itype = static_cast<GBdyType>(k);
-    nind = btmp.contains(itype, ind, nw);
+    nind = igbdyt_.contains(itype, ind, nw);
     igbdy_binned_[k].resize(nind);
     for ( GSIZET j=0; j<nind; j++ ) igbdy_binned_[k][j] = igbdy_[ind[j]];
     nind = 0;

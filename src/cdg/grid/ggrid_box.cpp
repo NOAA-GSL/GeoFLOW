@@ -930,14 +930,14 @@ void GGridBox::find_subdomain()
 // DESC   : Configure 2d & 3d box boundary from ptree
 // ARGS   : 
 //          ptree : main prop tree 
-//          igbdy : which nodes indices represent global boundaries. This contains
-//                  indices for all bdys this task owns
+//          igbdy : For each natural/canonical global boundary face,
+//                  gives vector of global bdy ids
 //          igbdyt: bdy type ids for each index in igbdy
 // RETURNS: none.
 //**********************************************************************************
 void GGridBox::config_bdy(const PropertyTree &ptree, 
-                          GTVector<GSIZET> &igbdy, 
-                          GTVector<GSIZET> &igbdyt)
+                          GTVector<GTVector<GSIZET>> &igbdy, 
+                          GTVector<GTVector<GSIZET>> &igbdyt)
 {
   // Cycle over all geometric boundaries, and configure:
 
@@ -970,6 +970,9 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
   igbdy .clear();
   igbdyt.clear();
 
+  igbdy .resize(2*GDIM);
+  igbdyt.resize(2*GDIM);
+
   bdyupdate = gridtree.getValue<GString>("update_method","");
   bdyinit   = gridtree.getValue<GString>("bdy_init_method","");
   buseinit  = gridtree.getValue<GBOOL>  ("use_state_init_method",FALSE);
@@ -992,9 +995,17 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
     assert(bperiodic && !buniform[j] && "GBDY_PERIODIC boundary must have bdy_class = uniform");
   }
 
-  assert( (  (bdytype[0] == GBDY_PERIODIC && bdytype[2] != GBDY_PERIODIC)
-         ||  (bdytype[3] == GBDY_PERIODIC && bdytype[1] != GBDY_PERIODIC) )
-         &&  "Incompatible GBDY_PERIODIC boundary specification");
+  if ( ndim_ == 2 ) {
+    assert( (  (bdytype[0] == GBDY_PERIODIC && bdytype[2] != GBDY_PERIODIC)
+           ||  (bdytype[3] == GBDY_PERIODIC && bdytype[1] != GBDY_PERIODIC) )
+           &&  "Incompatible GBDY_PERIODIC boundary specification");
+  }
+  else if ( ndim_ == 3 ) {
+    assert( (  (bdytype[0] == GBDY_PERIODIC && bdytype[2] != GBDY_PERIODIC)
+           ||  (bdytype[3] == GBDY_PERIODIC && bdytype[1] != GBDY_PERIODIC) )
+           ||  (bdytype[4] == GBDY_PERIODIC && bdytype[5] != GBDY_PERIODIC) )
+           &&  "Incompatible GBDY_PERIODIC boundary specification");
+  }
        
   // Handle non-uniform (user-configured) bdy types first;
   // Note: If "uniform" not specified for a boundary, then
@@ -1014,8 +1025,8 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
     spectree  = ptree->getPropertyTree(confmthd[j]);
     bret = GSpecBFactory::dospec(spectree, *this, j, itmp, btmp); // get user-defined bdy spec
     assert(bret && "Boundary specification failed");
-    igbdy .concat(itmp.data(), itmp.size());
-    igbdyt.concat(btmp.data(), btmp.size());
+    igbdy [j].resize(itmp.size()); igbdy [j] = itmp;
+    igbdyt[j].resize(itmp.size()); igbdyt[j] = btmp;
   }
   
   // Fill in uniform bdy types:
@@ -1043,8 +1054,8 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
     for ( auto i=0; i<itmp.size(); i++ ) {
       btmp[i] = bdytype[j]; 
     }
-    igbdy .concat(itmp.data(), itmp.size());
-    igbdyt.concat(btmp.data(), btmp.size());
+    igbdy [j].resize(itmp.size()); igbdy [j] = itmp;
+    igbdyt[j].resize(itmp.size()); igbdyt[j] = btmp;
   }
 
 
