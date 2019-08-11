@@ -101,15 +101,12 @@
   },
   "burgers_inflow": {
     "bdy_class"        : "uniform",
-    "base_type"        : "GBDY_DIRICHLET",
+    "base_type"        : "GBDY_INFLOWT",
     "bdy_config_method": ""
-  },
-  "initb_burgers": {
-    "is_time_dependent": true,
     "update_method"    : "", 
     "use_state_init"   : true,
     "bdy_init_method"  : ""
-  }
+  },
   "grid_box": {
     "grid_name" : "grid_box",
     "xyz0"      : [1.0, 1.0, 1.0],
