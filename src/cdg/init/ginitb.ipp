@@ -35,6 +35,10 @@ GBOOL impl_bystateinit(const PropteryTree &ptree, GGrid &grid, Time &time, State
        && ub[k] != NULLPTR; j++ ) {
       (*ub[k])[j] = (*u[k])[(*igbdy)[GBDY_DIRICHLET][j]];
     }
+    for ( auto j=0; j<(*igbdy)[GBDY_INFLOWT].size() 
+       && ub[k] != NULLPTR; j++ ) {
+      (*ub[k])[j] = (*u[k])[(*igbdy)[GBDY_INFLOWTT][j]];
+    }
     for ( auto j=0; j<(*igbdy)[GBDY_NOSLIP].size() 
        && ub[k] != NULLPTR; j++ ) {
       (*ub[k])[j] = 0.0;

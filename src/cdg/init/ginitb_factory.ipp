@@ -57,7 +57,6 @@ GBOOL GInitBFactory<EquationType>::init(const geoflow::tbox::PropertyTree& ptree
 
 
 
-
 } // namespace pdeint
 } // namespace geoflow
 
