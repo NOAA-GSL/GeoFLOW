@@ -941,9 +941,9 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
 {
   // Cycle over all geometric boundaries, and configure:
 
-  GBOOL              bperiodic=FALSE, buniform=FALSE, buseinit;
+  GBOOL              bperiodic=FALSE, buseinit;
   GSIZET             iwhere;
-  GTVector<GBOOL>    uniform(2*GDIM);
+  GTVector<GBOOL>    buniform(2*GDIM);
   GTVector<GBdyType> bdytype(2*GDIM);
   GTVector<GBdyType> btmp;
   GTVector<GSIZET>   itmp;
@@ -988,10 +988,9 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
     bdytree      = gridtree.getPropertyTree(sbdy);
     bdyclass     = bdytree.getValue<GString>("bdy_class", "uniform");
     bdytype  [j] = geoflow::str2bdytype(bdytree.getValue<GString>("base_type", GBDY_NONE));
-    uniform  [j] = bdyclass == "uniform" ? TRUE : FALSE;
-    confmthd  [j] = bdytree.getValue<GString>("bdy_config_method","");
+    buniform [j] = bdyclass == "uniform" ? TRUE : FALSE;
+    confmthd [j] = bdytree.getValue<GString>("bdy_config_method","");
     bperiodic    = bperiodic || bdytype[j] == GBDY_PERIODIC;
-    buniform     = buniform || uniform[j];
     assert(bperiodic && !buniform[j] && "GBDY_PERIODIC boundary must have bdy_class = uniform");
   }
 

@@ -1012,8 +1012,8 @@ void GGrid::init_bc_info()
   // vectors that have that type:
   GBdyType         itype;
   GSIZET    *ind=NULLPTR;
-  igbdy_binned_.resize(GBDY_NONE); // set of bdy indices for each type
-  for ( GSIZET k=0; k<GBDY_NONE; k++ ) { // cycle over each bc type
+  igbdy_binned_.resize(GBDY_MAX); // set of bdy indices for each type
+  for ( GSIZET k=0; k<GBDY_MAX; k++ ) { // cycle over each bc type
     itype = static_cast<GBdyType>(k);
     nind = igbdyt_.contains(itype, ind, nw);
     igbdy_binned_[k].resize(nind);

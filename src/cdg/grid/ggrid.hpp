@@ -98,7 +98,7 @@ virtual void                 print(const GString &filename){}          // print 
                             &igbdy_byface() { return igbdy_byface_;}   // global dom bdy indices for each face
         GTVector<GTVector<GSIZET>>
                             &igbdyt_byface(){ return igbdyt_byface_;}  // global dom bdy indices for each face
-        GTVector<GTVector<GSIZET>>
+        GTVector<GSIZET>
                             &igbdy() { return igbdy_;}                 // global dom bdy indices into u
 
         GC_COMM              get_comm() { return comm_; }              // get communicator
