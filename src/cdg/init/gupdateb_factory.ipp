@@ -43,7 +43,11 @@ void GUpdateBFactory<EquationType>::update(const geoflow::tbox::PropertyTree& pt
   else if ( use_inits ) {
     bret = gupdateb::impl_bystateinit(ptree, grid, tt, utmp, u, ub);
   }
-  else if ( "mybdyupdate" == supdate ) {
+  else if ( "simple_outflow" == supdate ) {
+    bret = gupdateb::impl_simple_output  (ptree, grid, tt, utmp, u, ub);
+  }
+
+  else if ( "mybdyupdate"    == supdate ) {
     bret = gupdateb::impl_mybdyupdate   (ptree, grid, tt, utmp, u, ub);
   }
   else                                        {
