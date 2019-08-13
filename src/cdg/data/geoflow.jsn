@@ -5,7 +5,6 @@
   "pde_name"       : "pde_burgers",
   "inits_block"    : "inits_icosgaussburgers",
   "initf_block"    : "",
-  "initb_block"    : "initb_burgers",
   "use_forcing"    : false,
   "restart_index"  : 0,
   "benchmark"      : false,
@@ -82,12 +81,15 @@
     "num_elems" : [10, 10, 10]
   },
   "grid_sphere" : {
-    "grid_name"        : "grid_sphere",
-    "radiusi"          : 1.0,
-    "radiuso"          : 2.0,
-    "num_radial_elems" : 10,
-    "bdy_inner"        : "dirichlet_fixed",
-    "bdy_outer"        : "sponge_layer"
+    "grid_name"         : "grid_sphere",
+    "radiusi"           : 1.0,
+    "radiuso"           : 2.0,
+    "num_radial_elems"  : 10,
+    "bdy_inner"         : "dirichlet_fixed",
+    "bdy_outer"         : "sponge_layer"
+    "bdy_init_method  " : ""
+    "bdy_update_method" : "", 
+    "use_state_init"    : false
   },
   "circular_jet": {
     "position"         : [0, 0.5, 0.5],
@@ -97,15 +99,12 @@
   compound_inflow_example": {
     "bdy_class"        : "user",
     "base_type"        : "GBDY_DIRICHLET", 
-    "bdy_config_method": "circular_jet", 
+    "bdy_config_method": "circular_jet"
   },
   "burgers_inflow": {
     "bdy_class"        : "uniform",
     "base_type"        : "GBDY_INFLOWT",
     "bdy_config_method": ""
-    "update_method"    : "", 
-    "use_state_init"   : true,
-    "bdy_init_method"  : ""
   },
   "grid_box": {
     "grid_name" : "grid_box",
@@ -118,6 +117,9 @@
     "bdy_y_1"   : "burgers_inflow",
     "bdy_z_0"   : "burgers_inflow",
     "bdy_z_1"   : "burgers_inflow"
+    "bdy_init_method  " : ""
+    "bdy_update_method" : "", 
+    "use_state_init"    : true
   },
   "stepper_props": {
     "stepping_method"  : "GSTEPPER_EXRK",
