@@ -18,8 +18,8 @@
 namespace ginitf
 {
 
-GBOOL impl_null    (const PropertyTree &ftree, const Time &t, State &u, State &ub);
-GBOOL impl_rand    (const PropertyTree &ftree, const Time &t, State &u, State &ub);
+GBOOL impl_null    (const PropertyTree &ftree, const Time &t, State &u, State &uf);
+GBOOL impl_rand    (const PropertyTree &ftree, const Time &t, State &u, State &uf);
 
 };
 

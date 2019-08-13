@@ -11,10 +11,10 @@ namespace ginitf {
 // ARGS   : ftree: force prop tree
 //          t    : time
 //          u    : current state
-//          ub   : bdy vectors (one for each state element)
+//          uf   : force vectors (one for each state element)
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL initf_impl_rand(const PropertyTree &ftree, const Time &t, State &u, State &ub)
+GBOOL initf_impl_rand(const PropertyTree &ftree, const Time &t, State &u, State &uf)
 {
 
   assert(FALSE);
