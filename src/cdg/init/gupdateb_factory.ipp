@@ -24,17 +24,27 @@ namespace pdeint {
 template<typename EquationType>
 void GUpdateBFactory<EquationType>::update(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, Time &time, State &utmp, State &u, State &ub)
 {
-  GBOOL         bret = FALSE;
-  GString       sinit   = ptree.getValue<GString>("updateb_block");
-  PropertyTree  vtree   = ptree.getPropertyTree(sinit);
+  GBOOL         bret = FALSE, use_inits;
+  Time          tt;
+  GString       sgrid, supdate;
+  PropertyTree  gtree;
 
-  if ( "updateb_none" == sinit
-    || "none"       == sinit 
-    || ""           == sinit ) {
-    bret = FALSE;
+  sgrid    = ptree.getValue<GString>("grid_type");
+  gtree    = ptree.getPropertyTree(sgrid);
+  supdate  = gtree.getValue<GStrig>("bdy_update_method","none");
+  use_inits= gtree.getValue<GStrig>("use_state_init",FALSE);
+  tt       = time;
+
+  if ( "updateb_none" == supdate
+    || "none"         == supdate
+    || ""             == supdate ) {
+    bret = TRUE;
   }
-  else if ( "mybdyupdate" == sinit ) {
-    bret = gupdateb::impl_mybdyupdate   (ptree, grid, time, utmp, u, ub);
+  else if ( use_inits ) {
+    bret = gupdateb::impl_bystateinit(ptree, grid, tt, utmp, u, ub);
+  }
+  else if ( "mybdyupdate" == supdate ) {
+    bret = gupdateb::impl_mybdyupdate   (ptree, grid, tt, utmp, u, ub);
   }
   else                                        {
     assert(FALSE && "Specified bdy update method unknown");

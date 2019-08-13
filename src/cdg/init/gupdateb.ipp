@@ -27,18 +27,23 @@ GBOOL impl_bystateinit(const PropteryTree &ptree, GGrid &grid, Time &time, State
 
   // Use tmp from back end, so that 'init' isn't 
   // disturbed. NOTE: this could still be a problem!
+  assert(utmp.size() >= 2*u.size() && "Insufficient temp space");
   for ( auto j=0; j<u.size(); j++ ) {
     uu[j] = utmp[utmp.size()-1-j];
   }
   GInitSFactory::init(ptree, grid, tt, utmp, ub, uu);
 
-  GTVector<GTVector<GSIZET>> *igbdy = &grid.igbdy();
+  GTVector<GTVector<GSIZET>> *igbdy = &grid.igbdy_binned();
 
   // Set from State vector, u and others that we _can_ set:
   for ( auto k=0; k<u.size(); k++ ) { 
     for ( auto j=0; j<(*igbdy)[GBDY_DIRICHLET].size() 
        && ub[k] != NULLPTR; j++ ) {
       (*ub[k])[j] = (*uu[k])[(*igbdy)[GBDY_DIRICHLET][j]];
+    }
+    for ( auto j=0; j<(*igbdy)[GBDY_INFLOWT].size() 
+       && ub[k] != NULLPTR; j++ ) {
+      (*ub[k])[j] = (*uu[k])[(*igbdy)[GBDY_INFLOWT][j]];
     }
     for ( auto j=0; j<(*igbdy)[GBDY_NOSLIP].size() 
        && ub[k] != NULLPTR; j++ ) {

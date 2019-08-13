@@ -4,7 +4,7 @@ namespace gspecb {
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : impl_mybdyspec
+// METHOD : impl_uniform
 // DESC   : Do bdy specification assuming that base_type bdy condition
 //          in property tree is to be set for all indices
 // ARGS   : ptree : specification prop tree

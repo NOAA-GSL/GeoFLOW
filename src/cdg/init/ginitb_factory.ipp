@@ -27,14 +27,14 @@ GBOOL GInitBFactory<EquationType>::init(const geoflow::tbox::PropertyTree& ptree
   GBOOL         bret=FALSE;
   GBOOL         use_inits; // use state init method to set bdy?
   GFTYPE        tt;
-  GString       sinitb    = ptree.getValue<GString>("initb_block");
-  GString       sinits    = ptree.getValue<GString>("inits_block");
-  PropertyTree  vtreeb    = ptree.getPropertyTree(sinitb);
-  PropertyTree  vtrees    = ptree.getPropertyTree(sinits);
+  GString       sgrid, supdate;
+  PropertyTree  gtree;  
 
-  use_inits = vtree.getValue<GBOOL>("use_state_init",FALSE);
-
-  tt = time;
+  sgrid     = ptree.getValue<GString>("grid_type");
+  gtree     = ptree.getPropertyTree(sgrid);
+  supdate   = gtree.getValue<GStrig>("bdy_init_method","none");
+  use_inits = gtree.getValue<GStrig>("use_state_init",FALSE);
+  tt        = time;
 
   if ( "initb_none" == sinitb
     || "none"       == sinitb 

@@ -14,7 +14,7 @@ namespace pdeint {
 //**********************************************************************************
 // METHOD : dospec
 // DESC   : Do bdy specification (ids and types)
-// ARGS   : ptree : specification property tree; not main prop tree
+// ARGS   : sptree: specification property tree; not main prop tree
 //          grid  : GGrid object
 //          id    : can serve as boundary id (which canonical bdy)
 //          ibdy  : indirection array into state indicating global bdy
@@ -22,10 +22,11 @@ namespace pdeint {
 // RETURNS: none.
 //**********************************************************************************
 template<typename EquationType>
-GBOOL GSpecBFactory<EquationType>::dospec(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, const GINT id, GTVector<GSIZET> &ibdy, GTVector<GBdyType> &tbdy)
+GBOOL GSpecBFactory<EquationType>::dospec(const geoflow::tbox::PropertyTree& sptree, GGrid &grid, const GINT id, GTVector<GSIZET> &ibdy, GTVector<GBdyType> &tbdy)
 {
   GBOOL         bret    = FALSE;
-  GString       sinit   = ptree.getValue<GString>("specb_block","");
+  GSIZET        nbdy;
+  GString       sinit   = sptree.getValue<GString>("specb_block","");
 
   // ibdy and tbdy should not come in empty. But they
   // generally refer to only individual canonical boundaries 
@@ -39,14 +40,15 @@ GBOOL GSpecBFactory<EquationType>::dospec(const geoflow::tbox::PropertyTree& ptr
     bret = TRUE;
   }
   else if ( "specb_uniform"    == sinit ) {
-    bret = gspecb::impl_uniform      (ptree, grid, id, ibdy, tbdy);
+    bret = gspecb::impl_uniform    (sptree, grid, id, ibdy, tbdy);
   }
   else if ( "mybdyspec    "    == sinit ) {
-    bret = gspecb::impl_mybdyspec    (ptree, grid, id, ibdy, tbdy);
+    bret = gspecb::impl_mybdyspec  (sptree, grid, id, ibdy, tbdy);
   }
   else                                        {
     bret = assert(FALSE && "Boundary specification method unknown");
   }
+
 
   return bret;
 

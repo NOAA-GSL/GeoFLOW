@@ -1,7 +1,7 @@
 //==================================================================================
 // Module       : gspecb.hpp
 // Date         : 7/11/19 (DLR)
-// Description  : Boundary specification function implementations specified by
+// Description  : Boundary specification function implementations provided by
 //                system
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none.
@@ -22,7 +22,7 @@ using namespace pdeint;
 namespace gspecb
 {
 
-GBOOL impl_mybdyspec          (const PropertyTree& stree, GGrid &grid,  const GINT id, GTVector<GSIZET> &ibdy, GTVector<GBdyType> &tbdy);
+GBOOL impl_uniform        (const PropertyTree& stree, GGrid &grid,  const GINT id, GTVector<GSIZET> &ibdy, GTVector<GBdyType> &tbdy);
 
 };
 

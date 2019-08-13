@@ -22,7 +22,7 @@ using namespace pdeint;
 namespace ginitb
 {
 
-GBOOL impl_bystateinit          (const PropertyTree& stree, GGrid &grid,  Time &time, State &utmp, State &u, State &ub);
+GBOOL impl_mystateinit          (const PropertyTree& stree, GGrid &grid,  Time &time, State &utmp, State &u, State &ub);
 };
 
 #include "ginitb.ipp"
