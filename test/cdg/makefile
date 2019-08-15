@@ -11,7 +11,6 @@ all:
 	make         ; \
 	make install ; \
 	cd ../test/cdg
-        
 clean:  
 	cd ../../build ; \
 	make clean  ; \
@@ -19,8 +18,15 @@ clean:
 dist: 
 	/bin/rm -rf ../../build/* ; \
 	cd ../../build            ; \
+	cmake ../src/cdg          ; \
+	make                      ; \
+	make install              ; \
+	cd ../test/cdg
+tdist: 
+	/bin/rm -rf ../../build/* ; \
+	cd ../../build            ; \
 	cmake ../test/cdg         ; \
-	make                   ; \
-	make install           ; \
+	make                      ; \
+	make install              ; \
 	cd ../test/cdg
 
