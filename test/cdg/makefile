@@ -25,7 +25,9 @@ dist:
 tdist: 
 	/bin/rm -rf ../../build/* ; \
 	cd ../../build            ; \
-	cmake ../test/cdg         ; \
+	cmake -DDO_TESTS=TRUE       \
+              -DDO_GEOFLOW=FALSE    \
+              ../test/cdg         ; \
 	make                      ; \
 	make install              ; \
 	cd ../test/cdg
