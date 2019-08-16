@@ -10,7 +10,7 @@ cmake_minimum_required(VERSION 2.8)
 # Note: call locale first, since compiler specification
 #       must be done bfore setting project. This sets 
 #       the compilers, and lib paths. Sets vars:
-#       BOOST_INC_PATH, GPTL_LIB_PATH, GPTL_PAPI_PATH,
+#       BOOST_INC_PATH, GPTL_LIB(INCLUDE)_PATH, GPTL_PAPI_PATH,
 #       MPI_INC_PATH, MPI_LIB_PATH:
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/glocale.cmake)
 
@@ -97,6 +97,9 @@ set(CDG_COMMON_INC ${CDG_COMMON_INC}
 if (USE_GPTL)
   set(CDG_COMMON_LIBS ${CDG_COMMON_LIBS} 
     ${GPTL_LIB_PATH}
+     )
+  set(CDG_COMMON_INC ${CDG_COMMON_INC}
+      ${GPTL_INC_PATH}
      )
   if (HAVE_PAPI)
     set(CDG_COMMON_LIBS ${CDG_COMMON_LIBS} 
