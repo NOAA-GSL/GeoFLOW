@@ -7,10 +7,10 @@
 
 set   (GDIM "3")                           # Dimensionality
 
-option(DO_TESTS       "DO_TESTS"    OFF)   # Build testing targets
-option(DO_GEOFLOW     "DO_GEOFLOW"  ON)    # Build GeoFLOW target
+option(DO_TESTS       "DO_TESTS"    ON)   # Build testing targets
+option(DO_GEOFLOW     "DO_GEOFLOW" OFF)    # Build GeoFLOW target
 
-option(DO_DEBUG       "DO_DEBUG"    OFF)   # Compile for DEBUG
+option(DO_DEBUG       "DO_DEBUG"     ON)   # Compile for DEBUG
 option(DO_OPENMP      "DO_OPENMP"    ON)   # Compile for OpenMP
 option(DO_OPENACC     "DO_OPENACC"  OFF)   # Compile for OpenACC
 option(USE_GBLAS      "USE_GBLAS"    ON)   # Use GBlas instead of C 
@@ -20,7 +20,7 @@ option(HAVE_PAPI      "HAVE_PAPI"   OFF)   # Is GPTL built with PAPI support?
 option(DO_AUTO_PROF   "DO_AUTO_PROF" OFF)  # Do auto-profing with GPTL?
 
 
-if(NOT DO_TESTS OR DO_GEOFLOW)
+if(NOT (DO_TESTS OR DO_GEOFLOW))
   message( FATAL_ERROR "Must set at least one of DO_GEOFLOW or DO_TESTS to bulid" )
 endif()
 

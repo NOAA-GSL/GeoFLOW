@@ -15,7 +15,7 @@ cmake_minimum_required(VERSION 2.8)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/glocale.cmake)
 
 
-project(GeoFLOW)
+project(GeoFLOW_CDG)
 
 # The version number.
 set(GTest_VERSION_MAJOR 1)
@@ -84,11 +84,11 @@ set(Boost_USE_MULTITHREADED OFF)  # Use Boost multi-threaded code
 # Set misc. variables....
 ########################################################################
 set(CDG_COMMON_LIBS  
-    ${BOOST_ROOT}/lib/libboost_chrono.a
-    ${BOOST_ROOT}/lib/libboost_mpi.a
-    ${BOOST_ROOT}/lib/libboost_serialization.a
-    ${BOOST_ROOT}/lib/libboost_wserialization.a
-    ${BOOST_ROOT}/lib/libboost_system.a
+    ${GLOCALE_BOOST_ROOT}/lib/libboost_chrono.a
+    ${GLOCALE_BOOST_ROOT}/lib/libboost_mpi.a
+    ${GLOCALE_BOOST_ROOT}/lib/libboost_serialization.a
+    ${GLOCALE_BOOST_ROOT}/lib/libboost_wserialization.a
+    ${GLOCALE_BOOST_ROOT}/lib/libboost_system.a
    )
 set(CDG_COMMON_INC ${CDG_COMMON_INC}
     ${BOOST_INC_PATH}
