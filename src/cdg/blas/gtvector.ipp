@@ -2403,7 +2403,7 @@ void GTVector<T>::concat(T *arr, GSIZET narr)
   this->reserve(this->size()+narr);
   
   for ( GSIZET j=0; j<narr; j++ ) {
-    data_[n_+j] = array[j];
+    data_[n_+j] = arr[j];
   }
 
   #if defined(_G_AUTO_UPDATE_DEV)
