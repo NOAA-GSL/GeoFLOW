@@ -48,8 +48,8 @@ public:
         void                periodize();                                     // periodize coords, if allowed
         void                unperiodize();                                   // un-periodize coords, if allow
          void               config_bdy(const PropertyTree &ptree,
-                            GTVector<GTVector<GSIZET>> &igbdy, 
-                            GTVector<GTVector<GSIZET>> &igbdyt);             // config bdy
+                            GTVector<GTVector<GSIZET>>   &igbdy, 
+                            GTVector<GTVector<GBdyType>> &igbdyt);          // config bdy
 
         void                print(const GString &filename);                  // print grid to file
 

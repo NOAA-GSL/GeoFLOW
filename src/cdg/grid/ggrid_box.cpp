@@ -937,7 +937,7 @@ void GGridBox::find_subdomain()
 //**********************************************************************************
 void GGridBox::config_bdy(const PropertyTree &ptree, 
                           GTVector<GTVector<GSIZET>> &igbdy, 
-                          GTVector<GTVector<GSIZET>> &igbdyt)
+                          GTVector<GTVector<GBdyType>> &igbdyt)
 {
   // Cycle over all geometric boundaries, and configure:
 

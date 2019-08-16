@@ -18,7 +18,6 @@
 #include "gcomm.hpp"
 #include "tbox/error_handler.hpp"
 
-using namespace std;
 
 //**********************************************************************************
 //**********************************************************************************
@@ -35,11 +34,8 @@ bInitialized_                   (FALSE),
 nprocs_        (GComm::WorldSize(comm)),
 irank_         (GComm::WorldRank(comm)),
 minnodedist_   (std::numeric_limits<GFTYPE>::max()),
-bdycallback_                  (NULLPTR),
 comm_                            (comm),
-ptree_                         (&ptree),
-init_bdy_callback_            (NULLPTR),
-update_bdy_callback_          (NULLPTR)
+ptree_                          (ptree)
 {
 } // end of constructor method (1)
 
@@ -988,17 +984,17 @@ void GGrid::init_bc_info()
  
   // Find boundary indices & types from config file 
   // specification, for _each_ natural/canonical face:
-  config_bdy(*ptree_, igbdy_byface_, igbdyt_byface_);
+  config_bdy(ptree_, igbdy_byface_, igbdyt_byface_);
 
   // Flatten these 2 bdy index & types indirection arrays:
   GSIZET      nind=0, nw=0;
-  for ( auto j=0; j<igbdy_byface_.size(): j++ ) {
+  for ( auto j=0; j<igbdy_byface_.size(); j++ ) {
     nind += igbdy_byface_[j].size();
   }
   igbdy_ .resize(nind);
   igbdyt_.resize(nind);
   nind = 0;
-  for ( auto j=0; j<igbdy_byface_.size(): j++ ) {
+  for ( auto j=0; j<igbdy_byface_.size(); j++ ) {
     for ( auto i=0; i<igbdy_byface_.size(); i++ ) {
       igbdy_ [nind  ] = igbdy_byface_ [j][i];
       igbdyt_[nind++] = igbdyt_byface_[j][i];

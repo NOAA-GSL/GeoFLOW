@@ -21,6 +21,9 @@
 #include "gcomm.hpp"
 #include "tbox/property_tree.hpp"
 
+using namespace geoflow::tbox;
+using namespace std;
+
 class GMass;
 
 typedef GTVector<GElem_base*> GElemList;
@@ -96,7 +99,7 @@ virtual void                 print(const GString &filename){}          // print 
                             &igbdy_binned() { return igbdy_binned_;}   // global dom bdy indices binned into GBdyType
         GTVector<GTVector<GSIZET>>
                             &igbdy_byface() { return igbdy_byface_;}   // global dom bdy indices for each face
-        GTVector<GTVector<GSIZET>>
+        GTVector<GTVector<GBdyType>>
                             &igbdyt_byface(){ return igbdyt_byface_;}  // global dom bdy indices for each face
         GTVector<GSIZET>
                             &igbdy() { return igbdy_;}                 // global dom bdy indices into u
@@ -104,14 +107,15 @@ virtual void                 print(const GString &filename){}          // print 
         GC_COMM              get_comm() { return comm_; }              // get communicator
 
 virtual void                 config_bdy(const PropertyTree &ptree, 
-                                        GTVector<GTVector<GSIZET>> &igbdy, 
-                                        GTVector<GTVector<GSIZET>> &igbdyt)=0;   // config bdy
+                             GTVector<GTVector<GSIZET>>   &igbdy, 
+                             GTVector<GTVector<GBdyType>> &igbdyt)=0;  // config bdy
 
 friend  std::ostream&        operator<<(std::ostream&, GGrid &);       // Output stream operator
  
 
 protected:
        
+        void                        init_bc_info();                   // configure bdys
         void                        def_init();                       // iniitialze deformed elems
         void                        reg_init();                       // initialize regular elems
         GFTYPE                      find_min_dist(); 
@@ -136,11 +140,12 @@ protected:
         GTVector<GTVector<GFTYPE>>  bdyNormal_;     // normal to surface at each bdy node point (2d & 3d), global
         GFTYPE                      minnodedist_;   // min node length array (for each elem)
         GTVector<GTVector<GSIZET>>  igbdy_binned_;  // index into global field indicating a domain bdy--by type
-        GTVector<GTVector<GSIZET>>  igbdy_;         // index into global field indicating a domain bdy
+        GTVector<GSIZET>            igbdy_;         // index into global field indicating a domain bdy
         GTVector<GTVector<GSIZET>>  igbdy_byface_;  // index into global field indicating a domain bdy
         GTVector<GBdyType>          igbdyt_;        // global domain bdy types for each igbdy index
-        GTVector<GBdyType>          igbdyt_byface_; // global domain bdy types for each igbdy index
-        PropertyTree               *ptree_;         // main prop tree
+        GTVector<GTVector<GBdyType>>
+                                    igbdyt_byface_; // global domain bdy types for each igbdy index
+        PropertyTree                ptree_;         // main prop tree
 
 };
 

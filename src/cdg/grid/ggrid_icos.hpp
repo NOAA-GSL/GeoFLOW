@@ -114,8 +114,8 @@ friend  std::ostream&       operator<<(std::ostream&, GGridIcos &);       // Out
          void               do_elems3d(GTMatrix<GINT> &p,
                               GTVector<GTVector<GFTYPE>> &xnodes); // do 3d grid restart
          void               config_bdy(const PropertyTree &ptree,
-                            GTVector<GTVector<GSIZET>> &igbdy,
-                            GTVector<GTVector<GSIZET>> &igbdyt);   // configure bdy
+                            GTVector<GTVector<GSIZET>>   &igbdy,
+                            GTVector<GTVector<GBdyType>> &igbdyt); // configure bdy
          void               find_bdy_ind3d(GFTYPE radius, 
                                            GTVector<GSIZET> &ibdy);// find bdy indices for bdy=radius
 
