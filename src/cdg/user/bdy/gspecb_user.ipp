@@ -12,7 +12,7 @@ namespace gspecb {
 //          tbdy  : array of size ibdy.size giving bdy condition type, returned
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_mybdyspec(const PropteryTree &ptree, GGrid &grid, const GINT id, GTVector<GSIZET> &ibdy, GTVector<GBdyType> &tbdy)
+GBOOL impl_mybdyspec(const PropertyTree &ptree, GGrid &grid, const GINT id, GTVector<GSIZET> &ibdy, GTVector<GBdyType> &tbdy)
 {
 
   /* 
@@ -26,4 +26,4 @@ GBOOL impl_mybdyspec(const PropteryTree &ptree, GGrid &grid, const GINT id, GTVe
 } // end, method impl_mybdyspec
 
 
-} // end, gupdateb namespace
+} // end, gspecb namespace

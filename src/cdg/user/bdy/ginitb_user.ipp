@@ -17,7 +17,7 @@ namespace ginitb {
 //          ub   : bdy vectors (one for each state element)
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_mybdyinit(const PropteryTree &ptree, GGrid &grid, Time &time, State &utmp, State &u, State &ub)
+GBOOL impl_mybdyinit(const PropertyTree &ptree, GGrid &grid, Time &time, State &utmp, State &u, State &ub)
 {
 #if 0
   Time             tt = t;

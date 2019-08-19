@@ -19,7 +19,7 @@ namespace ginits {
 //          u    : current state
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_boxnwaveburgers(const PropteryTree &ptree, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
+GBOOL impl_boxnwaveburgers(const PropertyTree &ptree, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
 {
   GString          serr = "impl_boxnwaveburgers: ";
   GBOOL            bplanar=TRUE; // planar or circularized
@@ -117,7 +117,7 @@ GBOOL impl_boxnwaveburgers(const PropteryTree &ptree, GGrid &grid, Time &time, S
 //          u    : current state
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_boxdirgauss(const PropteryTree &ptree, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
+GBOOL impl_boxdirgauss(const PropertyTree &ptree, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
 {
   GString          serr = "impl_boxdirgauss: ";
   GBOOL            bContin;
@@ -204,7 +204,7 @@ GBOOL impl_boxdirgauss(const PropteryTree &ptree, GGrid &grid, Time &time, State
 //          u    : current state
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_boxpergauss((const PropteryTree &ptree, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
+GBOOL impl_boxpergauss((const PropertyTree &ptree, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
 {
   GString          serr = "impl_boxpergauss: ";
   GBOOL            bContin;
@@ -315,7 +315,7 @@ GBOOL impl_boxpergauss((const PropteryTree &ptree, GGrid &grid, Time &time, Stat
 //          u      : current state
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_icosgauss(const PropteryTree &ptree, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
+GBOOL impl_icosgauss(const PropertyTree &ptree, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
 {
 
   GString          serr = "impl_icosgauss: ";
