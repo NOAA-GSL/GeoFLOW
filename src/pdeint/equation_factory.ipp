@@ -15,7 +15,7 @@ template<typename ET>
 typename EquationFactory<ET>::EqnBasePtr
 EquationFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid, State& utmp){
 
-
+        
 	// Set the default eqution type
 	const std::string default_equation = "none";
 
@@ -30,6 +30,7 @@ EquationFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid, State& u
 
         PropertyTree eqn_ptree = ptree.getPropertyTree(equation_name);
         PropertyTree stp_ptree = ptree.getPropertyTree("stepper_props");
+        PropertyTree dis_ptree = ptree.getPropertyTree("dissipation_traits");
 
      
 	// Create the equation and cast to base type
@@ -46,12 +47,14 @@ EquationFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid, State& u
                 traits.itorder   = stp_ptree.getValue<int>     ("time_deriv_order",4);
                 traits.inorder   = stp_ptree.getValue<int>     ("extrap_order",2);
                 traits.steptype  = stp_ptree.getValue<int>     ("stepping_method","GSTEPPER_EXRK");
+                traits.nu        = dis_ptree.getValue<int>     ("nu");
                 for ( auto i=0; i<GDIM; i++ ) default_comps.push_back(i);
                 comps            = eqn_ptree.getArray<int>     ("forcing_comp",default_comps);
                 traits.iforced.resize(comps.size);
                 traits.iforced   = comps; // traits.iforced may be a different d.structure
 		// Allocate equation Implementation
 		std::shared_ptr<EqnImpl> eqn_impl(new EqnImpl(traits, grid, utmp));
+                eqn_impl->set_nu(nu);
 
 		// Set back to base type
 		base_ptr = eqn_impl;
