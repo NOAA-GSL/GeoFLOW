@@ -68,7 +68,6 @@ nsteps_                      (0),
 itorder_        (traits.itorder),
 inorder_        (traits.inorder),
 courant_        (traits.courant),
-nu_                    (NULLPTR),
 gadvect_               (NULLPTR),
 gmass_                  (NULLPTR),
 gpdv_                  (NULLPTR),
@@ -92,6 +91,13 @@ steptop_callback_      (NULLPTR)
   valid_types_[2] = "GSTEPPER_BDFEXT";
   bfound = valid_types_.contains(traits.steptype, isteptype_);
   assert( bfound && "Invalid stepping method specified");
+
+  // Set dissipation from traits. Note that
+  // this is set to be constant, based on configuration,
+  // even though the solver can accommodate spatially 
+  // variable dissipation:
+  nu_.resize(1);
+  nu_ = traits.nu; 
 
   comm_ = ggfx_->getComm();
 
@@ -484,6 +490,9 @@ void GBurgers<TypePack>::init(GBurgers::Traits &traits)
   // Instantiate spatial discretization operators:
   gmass_   = new GMass(*grid_);
   ghelm_   = new GHelmholtz(*grid_);
+
+  ghelm_->set_Lap_scalar(*nu_);
+
   
   if ( isteptype_ ==  GSTEPPER_EXRK ) {
     gimass_ = new GMass(*grid_, TRUE); // create inverse of mass
@@ -547,6 +556,7 @@ void GBurgers<TypePack>::cycle_keep(State &u)
 } // end of method cycle_keep
 
 
+/*
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : set_nu
@@ -565,6 +575,8 @@ void GBurgers<TypePack>::set_nu(GTVector<GFTYPE> &nu)
   ghelm_->set_Lap_scalar(*nu_);
 
 } // end of method set_nu
+
+*/
 
 
 //**********************************************************************************

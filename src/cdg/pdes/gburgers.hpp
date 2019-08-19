@@ -88,6 +88,8 @@ public:
           GINT           itorder     = 2;
           GINT           inorder     = 2;
           GFTYPE         courant     = 0.5;
+          GTVector<GFTYPE> 
+                         nu          = 0.0;
           GTVector<GINT> iforced;
           GString        ssteptype   = "GSTEPPER_EXRK";
         };
@@ -98,7 +100,7 @@ public:
         GBurgers(const GBurgers &bu) = default;
         GBurgers &operator=(const GBurgers &bu) = default;
 
-        void                 set_nu(GTVector<GFTYPE> &nu);                  // Set nu/viscosity
+        GTVector<GFTYPE>    &get_nu() { return nu_; };                       // Set nu/viscosity
         void                 set_bdy_update_callback(
                              std::function<void(const Time &t, State &u,
                                            State &ub)> callback) 
@@ -161,7 +163,7 @@ private:
         GTVector<State>     ukeep_;         // state at prev. time levels
         GTVector<GString>
                             valid_types_;   // valid stepping methods supported
-        GTVector<GFTYPE>   *nu_   ;         // dissipoation
+        GTVector<GFTYPE>    nu_   ;         // dissipoation
         GGrid              *grid_;          // GGrid object
         GExRKStepper<GFTYPE>
                            *gexrk_;         // ExRK stepper, if needed
