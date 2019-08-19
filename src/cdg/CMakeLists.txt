@@ -23,7 +23,7 @@ set(GTest_VERSION_MAJOR 1)
 message("CMAKE_VERSION: ${CMAKE_VERSION}")
 
 
-set(GEOFLOW_SRC "geoflow.cpp")
+set(GEOFLOW_SRC "${CMAKE_CURRENT_SOURCE_DIR}/exec/geoflow.cpp")
 set(GEOFLOW_EXE "geoflow")
 
 enable_testing()
@@ -125,12 +125,12 @@ endif()
 # if required to:
 if (DO_GEOFLOW)
   message(STATUS "Process executable ${GEOFLOW_EXE}..." )
-  add_executable(${GEXE} ${CDG_SRC} ${GEOFLOW_SRC})
-  target_include_directories(${GEXE} PUBLIC ${CDG_INC} ${CDG_COMMON_INC})
+  add_executable(${GEOFLOW_EXE} ${CDG_SRC} ${GEOFLOW_SRC})
+  target_include_directories(${GEOFLOW_EXE} PUBLIC ${CDG_INC} ${CDG_COMMON_INC})
   target_link_libraries(${GEOFLOW_EXE} ${CDG_COMMON_LIBS} )
 
   # Set install directory for main target:
-  install(TARGETS ${GEXE} RUNTIME DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/../../bin)
+  install(TARGETS ${GEOFLOW_EXE} RUNTIME DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/../../bin)
 endif()
 
 # Add the tests executable, if required to:
