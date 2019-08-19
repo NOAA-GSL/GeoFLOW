@@ -35,6 +35,8 @@
 #include "pdeint/null_observer.hpp"
 #include "ginitf_factory.hpp"
 #include "ginits_factory.hpp"
+#include "ginitb_factory.hpp"
+#include "gupdateb_factory.hpp"
 #include "tbox/property_tree.hpp"
 #include "tbox/mpixx.hpp"
 #include "tbox/global_manager.hpp"
@@ -100,6 +102,7 @@ void steptop_callback(const Time &t, State &u, const Time &dt);// backdoor funct
 // Public methods:
 void init_state      (Time &t, State &u, State &ub);
 void init_force      (Time &t, State &u, State &uf);
+void init_bdy        (Time &t, State &u, State &ub);
 void allocate        (const PropertyTree &ptree);
 void deallocate      ();
 void create_observers(EqnBasePtr &eqn_ptr, PropertyTree &ptree, GSIZET icycle, Time time, 

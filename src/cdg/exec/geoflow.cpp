@@ -140,6 +140,7 @@ int main(int argc, char **argv)
     if ( itindex == 0 ) { // start new run
       icycle = 0; t = 0.0; 
       init_state  (t, u_, ub_);
+      init_bdy    (t, u_, ub_);
       init_forcing(t, u_, uf_);
     }
     else {                // restart run
@@ -186,26 +187,6 @@ int main(int argc, char **argv)
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : update_boundary
-// DESC   : update/set boundary vectors, ub
-// ARGS   : ptree: main prop tree
-//          t    : time
-//          u    : current state
-//          ub   : bdy vectors (one for each state element)
-// RETURNS: none.
-//**********************************************************************************
-void update_boundary(const PropertyTree &ptree, const Time &t, State &u, State &ub)
-{
-
-  Time  tt = t;
-
-  assert(FALSE);
-  
-} // end of method update_boundary
-
-
-//**********************************************************************************
-//**********************************************************************************
 // METHOD: steptop_callback
 // DESC  : Top-of-time-step callback ('backdoor') function. 
 //         This function might, e.g. update the linear advection 
@@ -237,12 +218,11 @@ void create_equation(PropertyTree &ptree, EqnBasePtr &pEqn)
   // Set PDE callback functions, misc:
   std::function<void(const Time &t, State &u, 
                                       State &ub)>  
-      fcallback = update_dirichlet; // set tmp function with proper signature for...
+      fcallback = update_bdy; // set tmp function with proper signature for...
   std::function<void(const Time &t, State &u, const Time &dt)> 
       stcallback = steptop_callback; // set tmp function with proper signature for...
   pEqn->set_bdy_update_callback(fcallback); // bdy update callback
   pEqn->set_steptop_callback(stcallback);   // 'back-door' callback
-  pEqn->set_nu(nu_);                        // dissipation (may be altered in initial conditions)
 
 } // end method create_equation
 
@@ -521,7 +501,7 @@ void init_state(const PropertyTree &ptree, Time &t, State &u, State &ub)
 {
   GBOOL bret;
 
-  bret = GInitFactory::init(ptree, *grid_, t, utmp_, ub, u);
+  bret = GInitSFactory<EquationTypes>::init(ptree, *grid_, t, utmp_, ub, u);
 
   assert(bret && "state initialization failed");
 
@@ -541,8 +521,52 @@ void init_force(const PropertyTree &ptree, Time &t, State &u, State &uf);
 {
   GBOOL bret;
 
-  bret = GInitFactory::init(ptree, *grid_, t, utmp_, u, uf);
+  bret = GInitFFactory::init(ptree, *grid_, t, utmp_, u, uf);
 
   assert(bret && "forcing initialization failed");
   
 } // end method init_force
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD: init_bdy
+// DESC  : top-level method to set initial bdy conditions.
+// ARGS  : ptree: main prop tree
+//         t   : initial time
+//         u   : full state vector
+//         ub  : full boundary state vector
+//**********************************************************************************
+void init_bdy(const PropertyTree &ptree, Time &t, State &u, State &ub);
+{
+  GBOOL bret;
+
+  bret = GInitBFactory::init(ptree, *grid_, t, utmp_, u, ub);
+
+  assert(bret && "boundary initialization failed");
+  
+} // end method init_bdy
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : update_boundary
+// DESC   : update/set boundary vectors, ub
+// ARGS   : ptree: main prop tree
+//          t    : time
+//          u    : current state
+//          ub   : bdy vectors (one for each state element)
+// RETURNS: none.
+//**********************************************************************************
+void update_boundary(const PropertyTree &ptree, const Time &t, State &u, State &ub)
+{
+  GBOOL bret;
+  Time  tt = t;
+
+  bret = GUpdateBFactory::update(ptree, *grid_, t, utmp_, u, ub);
+  
+  assert(bret && "boundary update failed");
+  
+} // end of method update_boundary
+
+

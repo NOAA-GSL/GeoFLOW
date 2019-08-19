@@ -10,6 +10,7 @@
 #include <math.h>
 #include <omp.h>
 #include "geoflow.hpp"
+#include "gspecb_factory.hpp"
 #include "gelem_base.hpp"
 #include "ggrid_icos.hpp"
 
@@ -56,7 +57,6 @@ lshapefcn_             (NULLPTR)
     radiusi_   = gridptree.getValue<GFTYPE>("radiusi");
     radiuso_   = gridptree.getValue<GFTYPE>("radiuso");
     nradelem_  = gridptree.getValue<GINT>("num_radial_elems");
-    global_bdy_types_ = GBDY_NONE;
     init3d();
   }
   else {
@@ -534,12 +534,6 @@ void GGridIcos::do_elems2d(GINT irank)
     } // end of element loop for this triangle
   } // end of triangle base mesh loop
 
-  // Can set individual nodes and internal bdy conditions
-  // with callback here:
-  if ( bdycallback_ != NULLPTR ) {
-    (*bdycallback_)(gelems_);
-  }
-
 } // end of method do_elems2d (1)
 
 
@@ -711,12 +705,6 @@ void GGridIcos::do_elems3d(GINT irank)
     } // end of element loop for this triangle
   } // end of triangle base mesh loop
 
-  // Can set individual nodes and internal bdy conditions
-  // with callback here:
-  if ( bdycallback_ != NULLPTR ) {
-    (*bdycallback_)(gelems_);
-  }
-
 } // end of method do_elems3d (1)
 
 
@@ -789,12 +777,6 @@ void GGridIcos::do_elems2d(GTMatrix<GINT> &p,
     icurr += nvnodes;
     fcurr += nfnodes;
   } // end of triangle base mesh loop
-
-  // Can set individual nodes and internal bdy conditions
-  // with callback here:
-  if ( bdycallback_ != NULLPTR ) {
-    (*bdycallback_)(gelems_);
-  }
 
 } // end of method do_elems2d (2)
 
@@ -869,12 +851,6 @@ void GGridIcos::do_elems3d(GTMatrix<GINT> &p,
     icurr += nvnodes;
     fcurr += nfnodes;
   } // end of triangle base mesh loop
-
-  // Can set individual nodes and internal bdy conditions
-  // with callback here:
-  if ( bdycallback_ != NULLPTR ) {
-    (*bdycallback_)(gelems_);
-  }
 
 } // end of method do_elems3d (2)
 
@@ -1541,7 +1517,7 @@ void GGridIcos::config_bdy(const PropertyTree &ptree,
 {
   // Cycle over all geometric boundaries, and configure:
 
-  GBOOL              buniform=FALSE;
+  GBOOL              bret, buniform=FALSE;
   GSIZET             iwhere;
   GTVector<GBOOL>    uniform(2);
   GTVector<GBdyType> bdytype(2);
@@ -1567,7 +1543,7 @@ void GGridIcos::config_bdy(const PropertyTree &ptree,
   gridptree = ptree.getPropertyTree(gname);
 
 
-  bdyupdate = gridtree.getValue<GString>("update_method","");
+  bdyupdate = gridptree.getValue<GString>("update_method","");
   rbdy[0] = radiusi_;
   rbdy[1] = radiuso_;
 
@@ -1578,9 +1554,9 @@ void GGridIcos::config_bdy(const PropertyTree &ptree,
   //       and types returned on exist contain info for all bdys:
   for ( auto j=0; j<2; j++ ) { // cycle over 2 spherical surfaces
     sbdy         = gridptree.getValue<GString>(bdynames[j]);
-    bdytree      = gridtree.getPropertyTree(sbdy);
+    bdytree      = gridptree.getPropertyTree(sbdy);
     bdyclass     = bdytree.getValue<GString>("bdy_class", "uniform");
-    bdytype  [j] = geoflow::str2bdytype(bdytree.getValue<GString>("base_type", GBDY_NONE));
+    bdytype  [j] = geoflow::str2bdytype(bdytree.getValue<GString>("base_type", "GBDY_NONE"));
     assert(bdytype  [j] == GBDY_PERIODIC && "Invalid boundary condition");
     uniform  [j] = bdyclass == "uniform" ? TRUE : FALSE;
     confmthd [j] = bdytree.getValue<GString>("bdy_config_method","");
@@ -1595,9 +1571,9 @@ void GGridIcos::config_bdy(const PropertyTree &ptree,
   //       single arrays:
   for ( auto j=0; j<2; j++ ) { 
     // First, find global bdy indices:
-    if ( buniform[j] ) continue;
-    find_bdy_indices3d(rbdy[j], itmp); 
-    spectree  = ptree->getPropertyTree(confmthd[j]);
+    if ( uniform[j] ) continue;
+    find_bdy_ind3d(rbdy[j], itmp); 
+    spectree  = ptree.getPropertyTree(confmthd[j]);
     bret = GSpecBFactory::dospec(spectree, *this, j, itmp, btmp); // get user-defined bdy spec
     assert(bret && "Boundary specification failed");
     igbdy [j].resize(itmp.size()); igbdy [j] = itmp;
@@ -1607,9 +1583,9 @@ void GGridIcos::config_bdy(const PropertyTree &ptree,
   
   // Fill in uniform bdy types:
   for ( auto j=0; j<2; j++ ) { 
-    if ( !buniform[j] ) continue;
+    if ( !uniform[j] ) continue;
     // First, find global bdy indices:
-    find_bdy_indices3d(rbdy[j], itmp); 
+    find_bdy_ind3d(rbdy[j], itmp); 
     // Set type for each bdy index:
     for ( auto i=0; i<itmp.size(); i++ ) {
       btmp[i] = bdytype[j]; 
@@ -1640,8 +1616,8 @@ void GGridIcos::find_bdy_ind3d(GFTYPE radius, GTVector<GSIZET> &ibdy)
   ibdy.clear();
   eps = 100*std::numeric_limits<GFTYPE>::epsilon();
 
-  for ( GSIZET i=0; i<xNodes[0].size(); i++ ) { // face 0
-      r = sqrt(pow(xNodes[0][i],2)+pow(xNodes[1][i],2)+pow(xNodes[2][i],2));
+  for ( GSIZET i=0; i<xNodes_[0].size(); i++ ) { // face 0
+      r = sqrt(pow(xNodes_[0][i],2)+pow(xNodes_[1][i],2)+pow(xNodes_[2][i],2));
       if ( FUZZYEQ(r, radius, eps) ) {
         ibdy.push_back(i);
       }

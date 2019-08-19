@@ -326,15 +326,6 @@ void GGridBox::do_elems2d()
     bcurr += nbnodes;
   } // end of quad mesh loop
 
-#if 0
-  // Can set individual nodes and internal bdy conditions
-  // with callback here: NOTE: Must re-globalize bdy_indices!!!
-  if ( bdycallback_ != NULLPTR ) {
-    assert(FALSE && "Re-globalization of bdy data not done");
-    (*bdycallback_)(gelems_);
-  }
-#endif
-
 } // end of method do_elems2d (1)
 
 
@@ -451,14 +442,6 @@ void GGridBox::do_elems3d()
     bcurr += nbnodes;
   } // end of hex mesh loop
 
-#if 0
-  // Can set individual nodes and internal bdy conditions
-  // with callback here:
-  if ( bdycallback_ != NULLPTR ) {
-    (*bdycallback_)(gelems_);
-  }
-#endif
-
 } // end of method do_elems3d (1)
 
 
@@ -573,16 +556,6 @@ void GGridBox::do_elems2d(GTMatrix<GINT> &p,
     fcurr += nfnodes;
     bcurr += nbnodes;
   } // end of quad mesh loop
-
-
-#if 0
-  // Can set individual nodes and internal bdy conditions
-  // with callback here: NOTE: Must re-globalize bdy_indices!!!
-  if ( bdycallback_ != NULLPTR ) {
-    assert(FALSE && "Re-globalization of bdy data not done");
-    (*bdycallback_)(gelems_);
-  }
-#endif
 
 } // end of method do_elems2d (2)
 
@@ -703,14 +676,6 @@ void GGridBox::do_elems3d(GTMatrix<GINT> &p,
     fcurr += nfnodes;
     bcurr += nbnodes;
   } // end of hex mesh loop
-
-#if 0
-  // Can set individual nodes and internal bdy conditions
-  // with callback here:
-  if ( bdycallback_ != NULLPTR ) {
-    (*bdycallback_)(gelems_);
-  }
-#endif
 
 } // end of method do_elems3d (2)
 

@@ -1,8 +1,8 @@
 { 
+  "pde_name"       : "pde_burgers",
   "exp_order"      : [3, 3, 3],
   "exp_order_type" : "constant",
   "grid_type"      : "grid_icos",
-  "pde_name"       : "pde_burgers",
   "inits_block"    : "inits_icosgaussburgers",
   "initf_block"    : "",
   "use_forcing"    : false,
