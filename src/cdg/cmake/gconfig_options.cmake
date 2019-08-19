@@ -7,8 +7,8 @@
 
 set   (GDIM "3")                           # Dimensionality
 
-option(DO_TESTS       "DO_TESTS"    ON)   # Build testing targets
-option(DO_GEOFLOW     "DO_GEOFLOW" OFF)    # Build GeoFLOW target
+option(DO_TESTS       "DO_TESTS"    OFF)   # Build testing targets
+option(DO_GEOFLOW     "DO_GEOFLOW"   ON)   # Build GeoFLOW target
 
 option(DO_DEBUG       "DO_DEBUG"     ON)   # Compile for DEBUG
 option(DO_OPENMP      "DO_OPENMP"    ON)   # Compile for OpenMP
