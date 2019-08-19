@@ -6,10 +6,6 @@
 // Derived From : none.
 //==================================================================================
 
-namespace geoflow {
-namespace pdeint {
-
-
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : update
@@ -56,9 +52,4 @@ void GUpdateBFactory<EquationType>::update(const geoflow::tbox::PropertyTree& pt
 
   return bret;
 } // end, init method update
-
-
-
-} // namespace pdeint
-} // namespace geoflow
 

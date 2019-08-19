@@ -14,9 +14,9 @@
 #include "ggrid.hpp"
 #include "ginitf_impl.hpp"
 
-namespace geoflow {
-namespace pdeint {
-
+using namespace geoflow;
+using namespace geoflow::tbox;
+using namespace std;
 
 template<typename EquationType>
 class GInitFFactory
@@ -35,12 +35,6 @@ class GInitFFactory
 
   private:
 }; // class GInitFFactory
-
-
-
-
-} // namespace pdeint
-} // namespace geoflow
 
 
 #include "ginitf_factory.ipp"

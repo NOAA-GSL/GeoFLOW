@@ -14,9 +14,9 @@ namespace gspecb {
 //          tbdy  : array of size ibdy.size giving bdy condition type, returned
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_uniform(const PropteryTree &ptree, GGrid &grid, const GINT id, GTVector<GSIZET> &ibdy, GTVector<GBdyType> &tbdy)
+GBOOL impl_uniform(const PropertyTree &ptree, GGrid &grid, const GINT id, GTVector<GSIZET> &ibdy, GTVector<GBdyType> &tbdy)
 {
-  GBdyType btype = ptree.value<GBdyType>("base_type");
+  GBdyType btype = geoflow::str2bdytype(bdytree.getValue<GString>("base_type", "GBDY_NONE"));
 
   tbdy = btype;
 

@@ -6,9 +6,6 @@
 // Derived From : none.
 //==================================================================================
 
-namespace geoflow {
-namespace pdeint {
-
 
 //**********************************************************************************
 //**********************************************************************************
@@ -21,7 +18,6 @@ namespace pdeint {
 //          tbdy  : array of size ibdy.size giving bdy condition type, returned
 // RETURNS: none.
 //**********************************************************************************
-template<typename EquationType>
 GBOOL GSpecBFactory<EquationType>::dospec(const geoflow::tbox::PropertyTree& sptree, GGrid &grid, const GINT id, GTVector<GSIZET> &ibdy, GTVector<GBdyType> &tbdy)
 {
   GBOOL         bret    = FALSE;
@@ -54,8 +50,4 @@ GBOOL GSpecBFactory<EquationType>::dospec(const geoflow::tbox::PropertyTree& spt
 
 } // end, init method
 
-
-
-} // namespace pdeint
-} // namespace geoflow
 

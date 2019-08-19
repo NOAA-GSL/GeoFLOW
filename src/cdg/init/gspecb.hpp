@@ -17,7 +17,7 @@
 
 
 using namespace geoflow;
-using namespace pdeint;
+using namespace geoflow::tbox;
 
 namespace gspecb
 {

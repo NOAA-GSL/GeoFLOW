@@ -14,11 +14,10 @@
 #include "ggrid.hpp"
 #include "gspecb.hpp"
 
-namespace geoflow {
-namespace pdeint {
+using namespace geoflow;
+using namespace geoflow::tbox;
+using namespace std;
 
-
-template<typename EquationType>
 class GSpecBFactory
 {
   public:
@@ -31,16 +30,10 @@ class GSpecBFactory
         using Time          = typename Equation::Time;
 
 
-        static GBOOL dospec(const geoflow::tbox::PropertyTree& ptree, const GINT id, GGrid &grid, GTVector<GSIZET> &ibdy, GTVector<GBdyType> &tbdy);
+        static GBOOL dospec(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, const GINT id,  GTVector<GSIZET> &ibdy, GTVector<GBdyType> &tbdy);
 
   private:
 }; // class GSpecBFactory
-
-
-
-
-} // namespace pdeint
-} // namespace geoflow
 
 
 #include "gspecb_factory.ipp"

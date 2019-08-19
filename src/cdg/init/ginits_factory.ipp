@@ -6,10 +6,6 @@
 // Derived From : none.
 //==================================================================================
 
-namespace geoflow {
-namespace pdeint {
-
-
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : init
@@ -47,9 +43,4 @@ GBOOL GInitBFactory<EquationType>::init(const geoflow::tbox::PropertyTree& ptree
   return bret;
 
 } // end, init method
-
-
-
-} // namespace pdeint
-} // namespace geoflow
 

@@ -14,9 +14,9 @@
 #include "ggrid.hpp"
 #include "gupdateb.hpp"
 
-namespace geoflow {
-namespace pdeint {
-
+using namespace geoflow;
+using namespace geoflow::tbox;
+using namespace std;
 
 template<typename EquationType>
 class GUpdateBFactory
@@ -35,12 +35,6 @@ class GUpdateBFactory
 
   private:
 }; // class GUpdateBFactory
-
-
-
-
-} // namespace pdeint
-} // namespace geoflow
 
 
 #include "ginits_factory.ipp"
