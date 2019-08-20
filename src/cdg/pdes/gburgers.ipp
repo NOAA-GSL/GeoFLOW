@@ -72,7 +72,6 @@ gadvect_               (NULLPTR),
 gmass_                  (NULLPTR),
 gpdv_                  (NULLPTR),
 //gflux_                 (NULLPTR),
-gbc_                   (NULLPTR),
 grid_                    (&grid),
 ggfx_                    (&ggfx),
 update_bdy_callback_   (NULLPTR),
@@ -101,7 +100,6 @@ steptop_callback_      (NULLPTR)
 
   comm_ = ggfx_->getComm();
 
-  gbc_ = new GBC(*grid_);
   utmp_.resize(tmp.size()); utmp_ = tmp;
   init(traits);
   
@@ -124,7 +122,6 @@ GBurgers<TypePack>::~GBurgers()
   if ( ghelm_   != NULLPTR ) delete ghelm_;
   if ( gadvect_ != NULLPTR ) delete gadvect_;
   if ( gpdv_    != NULLPTR ) delete gpdv_;
-  if ( gbc_     != NULLPTR ) delete gbc_;
   if ( gexrk_   != NULLPTR ) delete gexrk_;
 
 } // end, destructor

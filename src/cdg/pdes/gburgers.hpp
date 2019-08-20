@@ -42,7 +42,6 @@
 #include "gmass.hpp"
 #include "gadvect.hpp"
 #include "ghelmholtz.hpp"
-#include "gbc.hpp"
 //#include "gflux.hpp"
 #include "gexrk_stepper.hpp"
 #include "gbutcherrk.hpp"
@@ -105,7 +104,6 @@ public:
                              std::function<void(const Time &t, State &u,
                                            State &ub)> callback) 
                              { update_bdy_callback_ = callback; bupdatebc_ = TRUE;
-                               if ( gbc_ != NULLPTR ) gbc_->set_update_callback(callback); 
                                if ( gexrk_ != NULLPTR ) 
                                  gexrk_->set_update_bdy_callback(callback);} // set bdy-update callback
 
@@ -173,7 +171,6 @@ private:
         GHelmholtz         *ghelm_;         // Helmholz and Laplacian op
         GpdV               *gpdv_;          // pdV op
 //      GFlux              *gflux_;         // flux op
-        GBC                *gbc_;           // bdy conditions operator
         GC_COMM             comm_;          // communicator
         GGFX<GFTYPE>       *ggfx_;          // gather-scatter operator
         std::function<void(const Time &t, State &u,
