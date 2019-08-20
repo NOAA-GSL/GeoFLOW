@@ -147,6 +147,15 @@ public:
 #endif
     return *px_[i]; }
 
+  inline T operator[](const GINT i) const
+  { 
+#if defined(_G_BOUNDS_CHK)
+    if ( i<0 || i>=gdim_ ) { 
+      while(1);
+      std::cout << "GTPoint::[]: access error; bad index: " << i << std::endl; exit(1); }
+#endif
+    return *px_[i]; }
+
   inline T mag() { T v=0.0; for ( GINT j=0; j<gdim_; j++ ) v += pow(*px_[j],2.0); return sqrt(v); }
 
   friend std::ostream &operator<<(std::ostream &str, GTPoint<T> &obj) {
