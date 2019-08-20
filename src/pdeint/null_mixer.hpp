@@ -1,23 +1,23 @@
 /*
- * null_stirrer.hpp
+ * null_mixer.hpp
  *
  *  Created on: Mar 27, 2019
  *      Author: bflynt, d.rosenberg
  */
 
-#ifndef SRC_PDEINT_NULL_STIR_HPP_
-#define SRC_PDEINT_NULL_STIR_HPP_
+#ifndef SRC_PDEINT_NULL_MIXER_HPP_
+#define SRC_PDEINT_NULL_MIXER_HPP_
 
 
-#include "pdeint/stirrer_base.hpp"
+#include "pdeint/mixer_base.hpp"
 
 namespace geoflow {
 namespace pdeint {
 
 /**
- * Do nothing Stir implementation
+ * Do nothing mixer implementation
  *
- * The NullMixer is the default stirrer when nothing else is
+ * The NullMixer is the default mixer when nothing else is
  * provided and does nothing when called.
  *
  * @see MixerBase
@@ -36,7 +36,7 @@ public:
 
 protected:
 
-	void stir_impl(const Time& /* t */, const State& /* u */, State& /* uf */){
+	void mix_impl(const Time& /* t */, const State& /* u */, State& /* uf */){
 		// Do nothing ...
 	}
 
@@ -48,4 +48,4 @@ protected:
 
 
 
-#endif /* SRC_PDEINT_NULL_STIR_HPP_ */
+#endif /* SRC_PDEINT_NULL_MIXER_HPP_ */
