@@ -20,7 +20,6 @@
                     ${GHOME}/grid/ggrid.cpp
                     ${GHOME}/grid/ggrid_icos.cpp
                     ${GHOME}/grid/ggrid_box.cpp
-                    ${GHOME}/grid/gbc.cpp
                     ${GHOME}/grid/ggrid_factory.cpp
     )
 
