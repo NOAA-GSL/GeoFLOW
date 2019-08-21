@@ -59,6 +59,7 @@ typename GridType   = GGrid,
 typename ValueType  = GFTYPE,
 typename DerivType  = StateType,
 typename TimeType   = ValueType,
+typename CompType   = GTVector<GStateCompType>,
 typename JacoType   = StateType,
 typename SizeType   = GSIZET
 >
@@ -68,6 +69,7 @@ struct EquationTypes {
         using Value      = ValueType;
         using Derivative = DerivType;
         using Time       = TimeType;
+        using CompDesc   = CompType;
         using Jacobian   = JacoType;
         using Size       = SizeType;
 };

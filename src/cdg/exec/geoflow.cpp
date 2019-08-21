@@ -139,9 +139,9 @@ int main(int argc, char **argv)
     EH_MESSAGE("geoflow: Initializing state...");
     if ( itindex == 0 ) { // start new run
       icycle = 0; t = 0.0; 
-      init_state(ptree, t, u_, ub_);
-      init_bdy  (ptree, t, u_, ub_);
-      init_force(ptree, t, u_, uf_);
+      init_state(ptree, *grid_, pEqn, t, utmp_, u_, ub_);
+      init_bdy  (ptree, *grid_,       t, utmp_, u_, ub_);
+      init_force(ptree, *grid_,       t, utmp_, u_, uf_);
     }
     else {                // restart run
       gio_restart(ptree, 0, u_, p, icycle, t, comm_);
@@ -218,7 +218,7 @@ void create_equation(PropertyTree &ptree, EqnBasePtr &pEqn)
   // Set PDE callback functions, misc:
   std::function<void(const Time &t, State &u, 
                                       State &ub)>  
-      fcallback = update_bdy; // set tmp function with proper signature for...
+      fcallback = update_boundary; // set tmp function with proper signature for...
   std::function<void(const Time &t, State &u, const Time &dt)> 
       stcallback = steptop_callback; // set tmp function with proper signature for...
   pEqn->set_bdy_update_callback(fcallback); // bdy update callback
@@ -493,15 +493,18 @@ void deallocate()
 // METHOD: init_state
 // DESC  : top-level method to set initial conditions.
 // ARGS  : ptree: main prop tree
+//         grid : grid object
+//         peqn : pointer to EqnBase 
 //         t    : initial time
+//         utmp : vector of tmp vectors
 //         u    : full state vector
 //         ub   : full boundary state vector
 //**********************************************************************************
-void init_state(const PropertyTree &ptree, Time &t, State &u, State &ub)
+void init_state(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &t, State &utmp, State &u, State &ub)
 {
   GBOOL bret;
 
-  bret = GInitSFactory<EquationTypes>::init(ptree, *grid_, t, utmp_, ub, u);
+  bret = GInitSFactory<EquationTypes>::init(ptree, grid, t, utmp, ub, u);
 
   assert(bret && "state initialization failed");
 
@@ -513,15 +516,17 @@ void init_state(const PropertyTree &ptree, Time &t, State &u, State &ub)
 // METHOD: init_force
 // DESC  : top-level method to set initial forcing.
 // ARGS  : ptree: main prop tree
+//         grid : grid object
 //         t   : initial time
+//         utmp: vector of tmp vectors 
 //         u   : full state vector
 //         uf  : full boundary state vector
 //**********************************************************************************
-void init_force(const PropertyTree &ptree, Time &t, State &u, State &uf);
+void init_force(const PropertyTree &ptree, GGrid &grid, Time &t, State &utmp, State &u, State &uf);
 {
   GBOOL bret;
 
-  bret = GInitFFactory::init(ptree, *grid_, t, utmp_, u, uf);
+  bret = GInitFFactory<EquationTypes>::init(ptree, grid, t, utmp, u, uf);
 
   assert(bret && "forcing initialization failed");
   
@@ -533,15 +538,17 @@ void init_force(const PropertyTree &ptree, Time &t, State &u, State &uf);
 // METHOD: init_bdy
 // DESC  : top-level method to set initial bdy conditions.
 // ARGS  : ptree: main prop tree
-//         t   : initial time
-//         u   : full state vector
-//         ub  : full boundary state vector
+//         grid : grid object
+//         t    : initial time
+//         utmp : vector of tmp vectors 
+//         u    : full state vector
+//         ub   : full boundary state vector
 //**********************************************************************************
-void init_bdy(const PropertyTree &ptree, Time &t, State &u, State &ub);
+void init_bdy(const PropertyTree &ptree, GGrid &grid, Time &t, State &utmp, State &u, State &ub);
 {
   GBOOL bret;
 
-  bret = GInitBFactory::init(ptree, *grid_, t, utmp_, u, ub);
+  bret = GInitBFactory<EquationTypes>::init(ptree, grid, t, utmp, u, ub);
 
   assert(bret && "boundary initialization failed");
   
@@ -553,17 +560,19 @@ void init_bdy(const PropertyTree &ptree, Time &t, State &u, State &ub);
 // METHOD : update_boundary
 // DESC   : update/set boundary vectors, ub
 // ARGS   : ptree: main prop tree
+//          grid : grid object
 //          t    : time
+//          utmp : vector of tmp vectors 
 //          u    : current state
 //          ub   : bdy vectors (one for each state element)
 // RETURNS: none.
 //**********************************************************************************
-void update_boundary(const PropertyTree &ptree, const Time &t, State &u, State &ub)
+void update_boundary(const PropertyTree &ptree, GGrid &grid, const Time &t, State &utmp, State &u, State &ub)
 {
   GBOOL bret;
   Time  tt = t;
 
-  bret = GUpdateBFactory::update(ptree, *grid_, t, utmp_, u, ub);
+  bret = GUpdateBFactory::update(ptree, grid, t, utmp, u, ub);
   
   assert(bret && "boundary update failed");
   
