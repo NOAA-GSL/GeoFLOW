@@ -15,7 +15,7 @@
 #include "gcomm.hpp"
 
 using namespace geoflow;
-using namespace pdeint;
+using namespace geoflow::tbox;
 
 typedef GFTYPE                      Time;
 typedef GTVector<GTVector<GFTYPE>*> State;

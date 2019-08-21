@@ -13,10 +13,15 @@
 #include "gtypes.h"
 #include "gtvector.hpp"
 #include "ggrid.hpp"
+#include "geoflow.hpp"
 
 
 using namespace geoflow;
 using namespace geoflow::tbox;
+
+typedef GFTYPE                      Time;
+typedef GTVector<GTVector<GFTYPE>*> State;
+
 
 namespace gspecb
 {

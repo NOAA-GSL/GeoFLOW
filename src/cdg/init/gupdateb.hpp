@@ -13,11 +13,15 @@
 #include "gtypes.h"
 #include "gtvector.hpp"
 #include "ggrid.hpp"
+#include "ginits_factory.hpp"
 #include "gupdateb_user.hpp"
 
 
 using namespace geoflow;
-using namespace geoflow:tbox;
+using namespace geoflow::tbox;
+
+typedef GFTYPE                      Time;
+typedef GTVector<GTVector<GFTYPE>*> State;
 
 namespace gupdateb
 {

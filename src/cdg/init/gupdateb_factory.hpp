@@ -13,6 +13,7 @@
 #include "gtvector.hpp"
 #include "ggrid.hpp"
 #include "gupdateb.hpp"
+#include "gupdateb_user.hpp"
 
 using namespace geoflow;
 using namespace geoflow::tbox;

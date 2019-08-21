@@ -21,8 +21,7 @@ cycle_          (0),
 ocycle_         (1),
 cycle_last_     (0),
 time_last_      (0.0),
-ivol_           (1.0),
-ikinetic_       (NULLPTR)
+ivol_           (1.0)
 { 
   traits_ = traits;
   grid_   = &grid;

@@ -15,7 +15,7 @@ namespace gupdateb {
 //          ub   : bdy vectors (one for each state element, unless NULL)
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_mybdyupdate(const PropteryTree &ptree, GGrid &grid, Time &time, State &utmp, const State &u, State &ub)
+GBOOL impl_mybdyupdate(const PropertyTree &ptree, GGrid &grid, Time &time, State &utmp, const State &u, State &ub)
 {
 
 #if 0

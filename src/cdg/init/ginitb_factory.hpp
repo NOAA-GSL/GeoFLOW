@@ -13,6 +13,7 @@
 #include "gtvector.hpp"
 #include "ggrid.hpp"
 #include "ginitb.hpp"
+#include "ginitb_user.hpp"
 
 using namespace geoflow;
 using namespace geoflow::tbox;

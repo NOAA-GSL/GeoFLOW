@@ -1,8 +1,7 @@
-#include "ginits.hpp"
+#include "ginits_user.hpp"
 
 
 namespace ginits {
-
 
 
 
@@ -158,7 +157,7 @@ GBOOL impl_boxdirgauss(const PropertyTree &ptree, GGrid &grid, Time &time, State
   bc[3] = boxptree.getValue<GString>("bdy_y_1");
   bc[4] = boxptree.getValue<GString>("bdy_z_0");
   bc[5] = boxptree.getValue<GString>("bdy_z_1");
-  assert(bc.multiplicity("GBDY_s) >= 2*GDIM
+  assert(bc.multiplicity("GBDY_INFLOWT") >= 2*GDIM
       && "GBDY_INFLOW boundaries must be set on all boundaries");
 
   nxy = (*xnodes)[0].size(); // same size for x, y, z

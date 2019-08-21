@@ -17,13 +17,12 @@ namespace gupdateb {
 //          ub   : bdy vectors (one for each state element, unless NULL)
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_bystateinit(const PropteryTree &ptree, GGrid &grid, Time &time, State &utmp, const State &u, State &ub)
+GBOOL impl_bystateinit(const PropertyTree &ptree, GGrid &grid, Time &time, State &utmp, const State &u, State &ub)
 {
-  Time             tt = t;
+  Time             tt = time;
   State            uu(u.size());
   GString          serr = "impl_bystateinit: ";
 
-  Time  tt = t;
 
   // Use tmp from back end, so that 'init' isn't 
   // disturbed. NOTE: this could still be a problem!
@@ -68,7 +67,7 @@ GBOOL impl_bystateinit(const PropteryTree &ptree, GGrid &grid, Time &time, State
 //          ub   : bdy vectors (one for each state element, unless NULL)
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_simple_outflow(const PropteryTree &ptree, GGrid &grid, Time &time, State &utmp, State &u, State &ub)
+GBOOL impl_simple_outflow(const PropertyTree &ptree, GGrid &grid, Time &time, State &utmp, State &u, State &ub)
 {
   Time             tt = t;
   State            uu(u.size());
@@ -104,7 +103,7 @@ GBOOL impl_simple_outflow(const PropteryTree &ptree, GGrid &grid, Time &time, St
 //          ub   : bdy vectors (one for each state element, unless NULL)
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_noslip(const PropteryTree &ptree, GGrid &grid, Time &time, State &utmp, State &u, State &ub)
+GBOOL impl_noslip(const PropertyTree &ptree, GGrid &grid, Time &time, State &utmp, State &u, State &ub)
 {
   Time             tt = t;
   State            uu(u.size());
