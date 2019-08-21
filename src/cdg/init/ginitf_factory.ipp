@@ -35,10 +35,11 @@ GBOOL GInitFFactory<EquationType>::init(const geoflow::tbox::PropertyTree& ptree
   }
   else if ( "initf_null"        == sinit ) {
     bret = ginitf::impl_null     (ftree, grid, time, utmp, u, uf);
+  }
   else if ( "initf_rand"        == sinit ) {
     bret = ginitf::impl_rand     (ftree, grid, time, utmp, u, uf);
   }
-  else                                        {
+  else {                                        {
     assert(FALSE && "Specified forcing initialization unknown");
   }
 
