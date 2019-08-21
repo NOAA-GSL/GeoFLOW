@@ -30,6 +30,7 @@ public:
 	using Value      = typename TypePack::Value;
 	using Derivative = typename TypePack::Derivative;
 	using Time       = typename TypePack::Time;
+	using CompDesc   = typename TypePack::CompDesc;
 	using Jacobian   = typename TypePack::Jacobian;
 	using Size       = typename TypePack::Size;
 
@@ -111,7 +112,12 @@ public:
 		this->step_impl(t,uin,uf,ub,dt,uout);
 	}
 
-
+	/** Return State component description data
+         * 
+         */
+        CompDesc& compdesc() {
+                return icompdesc_;
+        }
 
 protected:
 
@@ -139,6 +145,8 @@ protected:
 	 * Must be provided by implementation
 	 */
 	virtual void step_impl(const Time& t, const State& uin, State& uf, State& ub, const Time& dt, State& uout) = 0;
+  
+        CompDesc icomptype_;
 };
 
 
