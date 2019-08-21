@@ -488,7 +488,7 @@ void GBurgers<TypePack>::init(GBurgers::Traits &traits)
   gmass_   = new GMass(*grid_);
   ghelm_   = new GHelmholtz(*grid_);
 
-  ghelm_->set_Lap_scalar(*nu_);
+  ghelm_->set_Lap_scalar(nu_);
 
   
   if ( isteptype_ ==  GSTEPPER_EXRK ) {
@@ -553,7 +553,7 @@ void GBurgers<TypePack>::cycle_keep(State &u)
 } // end of method cycle_keep
 
 
-/*
+#if 0
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : set_nu
@@ -568,12 +568,12 @@ template<typename TypePack>
 void GBurgers<TypePack>::set_nu(GTVector<GFTYPE> &nu)
 {
   assert(ghelm_ != NULLPTR && "Init must be called first");
-  nu_ = &nu; // Not sure this class actually needs this. May be removed later
-  ghelm_->set_Lap_scalar(*nu_);
+  nu_ = nu; // Not sure this class actually needs this. May be removed later
+  ghelm_->set_Lap_scalar(nu_);
 
 } // end of method set_nu
 
-*/
+#endif
 
 
 //**********************************************************************************
@@ -585,7 +585,7 @@ void GBurgers<TypePack>::set_nu(GTVector<GFTYPE> &nu)
 template<typename TypePack>
 void GBurgers<TypePack>::apply_bc_impl(const Time &t, State &u, const State &ub)
 {
-  GTVector<GTVector<GSIZET>>  *igbdy = &grid_->igbdy();
+  GTVector<GTVector<GSIZET>>  *igbdy = &grid_->igbdy_binned();
 
   // Use indirection to set the global field node values
   // with domain boundary data. ub must be updated outside 
@@ -599,13 +599,13 @@ void GBurgers<TypePack>::apply_bc_impl(const Time &t, State &u, const State &ub)
   GBdyType itype; 
   for ( GSIZET m=0; m<igbdy->size(); m++ ) { // for each type of bdy in gtypes.h
     itype = static_cast<GBdyType>(m);
-    if ( itype == GBDY_NEUMANN
-     ||  itype == GBDY_PERIODIC
+    if (// itype == GBDY_NEUMANN
+         itype == GBDY_PERIODIC
      ||  itype == GBDY_OUTFLOW
      ||  itype == GBDY_SPONGE 
      ||  itype == GBDY_NONE   ) continue;
     for ( GSIZET k=0; k<u.size(); k++ ) { // for each state component
-      if ( ( ub[k] == NULLPTR ) continue;
+      if ( ub[k] == NULLPTR ) continue;
       for ( GSIZET j=0; j<(*igbdy)[m].size(); j++ ) { // set Dirichlet-like value
         (*u[k])[(*igbdy)[m][j]] = (*ub[k])[j];
       } 

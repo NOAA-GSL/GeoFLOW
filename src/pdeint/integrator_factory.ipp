@@ -14,7 +14,7 @@ namespace pdeint {
 
 template<typename EquationType>
 typename IntegratorFactory<EquationType>::IntegratorPtr
-IntegratorFactory<EquationType>::build(const tbox::PropertyTree& ptree, const EqnBasePtr& eqn, const StirBasePtr& stir, const ObsBasePtr& obs,
+IntegratorFactory<EquationType>::build(const tbox::PropertyTree& ptree, const EqnBasePtr& eqn, const MixerBasePtr& mixer, const ObsBasePtr& obs,
                                                                                Grid&       grid){
 
 	// Get the integrator traits
@@ -33,7 +33,7 @@ IntegratorFactory<EquationType>::build(const tbox::PropertyTree& ptree, const Eq
 	traits.time_end   = subtree.getValue<Value>("time_end",  std::numeric_limits<Time>::max() );
 
 	// Allocate Integrator Implementation
-	IntegratorPtr integrator_ptr(new Integrator<Equation>(eqn, stir, obs, grid, traits));
+	IntegratorPtr integrator_ptr(new Integrator<Equation>(eqn, mixer, obs, grid, traits));
 
 	// Set any parameters we need to set
 	// NA

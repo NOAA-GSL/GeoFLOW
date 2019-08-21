@@ -71,7 +71,7 @@ private:
         GSIZET             cycle_last_; // most recent output cycle
         GSIZET             cycle_;      // continuously-running cycle
         GSIZET             ocycle_;     // output cycle number
-        GSIZET             ikinetic_;   // stores GSC_KINETIC component types
+        GTVector<GINT>     ikinetic_;   // stores GSC_KINETIC component types
         GFTYPE             time_last_;  // most recent output time
         GFTYPE             ivol_;       // inverse of grid volume
         GTVector<GINT>     state_index_;// list of state indices to print

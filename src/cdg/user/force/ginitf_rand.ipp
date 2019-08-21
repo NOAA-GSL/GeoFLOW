@@ -1,5 +1,3 @@
-#include "ginitf.hpp"
-
 
 namespace ginitf {
 

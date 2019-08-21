@@ -11,7 +11,7 @@
 // METHOD : init
 // DESC   : Do init of forcing components
 // ARGS   : ptree  : main property tree
-//          eqn_ptr: pointer to equation
+//          grid   : grid object
 //          time   : initialization time
 //          utmp   : tmp arrays
 //          u      : current state vector
@@ -34,9 +34,9 @@ GBOOL GInitFFactory<EquationType>::init(const geoflow::tbox::PropertyTree& ptree
     bret = TRUE;
   }
   else if ( "initf_null"        == sinit ) {
-    bret = ginitf::impl_null     (ftree, eqn_ptr, grid, time, utmp, u, uf);
+    bret = ginitf::impl_null     (ftree, grid, time, utmp, u, uf);
   else if ( "initf_rand"        == sinit ) {
-    bret = ginitf::impl_rand     (ftree, eqn_ptr, grid, time, utmp, u, uf);
+    bret = ginitf::impl_rand     (ftree, grid, time, utmp, u, uf);
   }
   else                                        {
     assert(FALSE && "Specified forcing initialization unknown");

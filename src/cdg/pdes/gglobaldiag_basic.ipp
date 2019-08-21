@@ -15,7 +15,7 @@
 //**********************************************************************************
 template<typename EquationType>
 GGlobalDiag_basic<EquationType>::GGlobalDiag_basic(EquationPtr &equation, Grid &grid, typename ObserverBase<EquationType>::Traits &traits):
-ObserverBase(equation, grid, traits),
+ObserverBase<EquationType>(equation, grid, traits),
 bInit_          (FALSE),
 cycle_          (0),
 ocycle_         (1),

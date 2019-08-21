@@ -17,6 +17,9 @@
 using namespace geoflow;
 using namespace pdeint;
 
+typedef GFTYPE                      Time;
+typedef GTVector<GTVector<GFTYPE>*> State;
+
 namespace ginits
 {
 

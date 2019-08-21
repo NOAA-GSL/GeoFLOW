@@ -139,9 +139,9 @@ int main(int argc, char **argv)
     EH_MESSAGE("geoflow: Initializing state...");
     if ( itindex == 0 ) { // start new run
       icycle = 0; t = 0.0; 
-      init_state  (t, u_, ub_);
-      init_bdy    (t, u_, ub_);
-      init_forcing(t, u_, uf_);
+      init_state(ptree, t, u_, ub_);
+      init_bdy  (ptree, t, u_, ub_);
+      init_force(ptree, t, u_, uf_);
     }
     else {                // restart run
       gio_restart(ptree, 0, u_, p, icycle, t, comm_);

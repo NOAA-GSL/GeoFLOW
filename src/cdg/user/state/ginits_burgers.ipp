@@ -25,16 +25,18 @@ GBOOL impl_boxnwaveburgers(const PropertyTree &ptree, GGrid &grid, Time &time, S
   GBOOL            bplanar=TRUE; // planar or circularized
   GBOOL            brot   =FALSE;
   GSIZET           i, j, idir, nxy;
-  GFTYPE           A, K2, Re, r2, t0, tdenom;
+  GFTYPE           A, K2, nu, Re, r2, t, t0, tdenom;
   GFTYPE           efact, sum, tfact, xfact;
   GTVector<GFTYPE> K(GDIM), xx(GDIM), si(GDIM), sig(GDIM);
   GTPoint<GFTYPE>  r0(3), P0(3), gL(3);
   std::vector<GFTYPE> kprop;
+  GString          snut;
 
-  PropertyTree nwaveptree = ptree.getPropertyTree("init_nwave");
-  PropertyTree boxptree   = ptree.getPropertyTree("grid_box");
+  PropertyTree nwaveptree = ptree   .getPropertyTree("init_nwave");
+  PropertyTree boxptree   = ptree   .getPropertyTree("grid_box");
+  PropertyTree nuptree    = ptree.getPropertyTree("dissipation_traits");
 
-  GTVector<GTVector<GFTYPE>> *xnodes = &grid_->xNodes();
+  GTVector<GTVector<GFTYPE>> *xnodes = &grid.xNodes();
 
   assert(grid.gtype() == GE_REGULAR && "Invalid element types");
 
@@ -44,43 +46,46 @@ GBOOL impl_boxnwaveburgers(const PropertyTree &ptree, GGrid &grid, Time &time, S
   bc[2] = boxptree.getValue<GString>("bdy_y_0");
   bc[3] = boxptree.getValue<GString>("bdy_y_1");
   bc[4] = boxptree.getValue<GString>("bdy_z_0");
-  bc[5] = boxptree.getValue<GString>("bdy_z_1");
-//assert(bc.multiplicity("GBDY_DIRICHLET") >= 2*GDIM
-//    && "Dirichlet boundaries must be set on all boundaries");
+//    && "INFLOWT boundaries must be set on all boundaries");
 
   nxy = (*xnodes)[0].size(); // same size for x, y, z
 
   // From Whitham's book, in 1d:
   // u(x,t) = (x/t) [ 1 + sqrt(t/t0) (e^Re - 1)^-1 exp(x^2/(4 nu t))i ]^-1
   // were Re is 'Reynolds' number: Re = A / 2nu; can think of
-  // A ~ U L scaling.
+  // A ~ U L scaling. But we won't parameterize in terms of Re, 
+  // but rather, nu.
   // Set some parameters:
   r0.x1  = nwaveptree.getValue<GFTYPE>("x0"); 
   r0.x2  = nwaveptree.getValue<GFTYPE>("y0"); 
   r0.x3  = nwaveptree.getValue<GFTYPE>("z0"); 
   A      = nwaveptree.getValue<GFTYPE>("ULparm",1.0);
-  Re     = nwaveptree.getValue<GFTYPE>("Re",100.0);
+//Re     = nwaveptree.getValue<GFTYPE>("Re",6.0);
   t0     = nwaveptree.getValue<GFTYPE>("t0",0.04);
   bplanar= nwaveptree.getValue<GBOOL>("planar",TRUE);
   kprop  = nwaveptree.getArray<GFTYPE>("prop_dir");
+  nu     = nuptree   .getValue<GFTYPE>("nu",0.0833);
+  snut   = nuptree   .getValue<GString>("nu_type","constant");
   K      = kprop;
   K     *= 1.0/K.Eucnorm();
 
   K2     = 0.0 ; for ( GSIZET i=0; i<GDIM; i++ ) K2 += K[i]*K[i];
 
-  // If prop direction has more than one component != 0. then
+  assert( snut == "constant" && "nu_type must bet set to 'constant')");
+
+  // If prop direction has more than one component != 0. Then
   // front is rotated (but still planar):
   for ( i=0, brot=TRUE; i<GDIM; i++ ) brot = brot && K[i] != 0.0 ;
   for ( i=0, idir=0; i<GDIM; i++ ) if ( K[i] > 0 ) {idir=i; break;}
 
   if ( t == 0.0 ) t = K2 * t0;
-  nu_[0] = A/(2.0*Re); // set nu from Re
+  Re = A/(2.0*nu); // set Re from nu
 
 
   for ( j=0; j<nxy; j++ ) {
     for ( i=0; i<GDIM; i++ ) {
       xx[i] = (*xnodes)[i][j] - r0[i];
-      (*ua[i])[j] = 0.0;
+      (*u[i])[j] = 0.0;
     }
     if ( bplanar ) { // compute k.r for planar wave
       for ( i=0, sum=0.0; i<GDIM; i++ ) { 
@@ -92,13 +97,13 @@ GBOOL impl_boxnwaveburgers(const PropertyTree &ptree, GGrid &grid, Time &time, S
     for ( i=0, r2=0.0; i<GDIM; i++ ) r2 += xx[i]*xx[i];  
 
     // u(x,t) = (x/t) [ 1 + sqrt(t/t0) (e^Re - 1)^-1 exp(x^2/(4 nu t)) ]^-1
-    tdenom = 1.0/(4.0*nu_[0]*t);
-    tfact  = bplanar ? sqrt(t/t0): t/t0;
+    tdenom = 1.0/(4.0*nu*time);
+    tfact  = bplanar ? sqrt(t/t0): time/t0;
     efact  = tfact * exp(r2*tdenom) / ( exp(Re) - 1.0 );
     xfact  = 1.0 /( t * (  1.0 + efact ) );
-    for ( i=0; i<GDIM; i++ ) (*ua[i])[j] = xx[i]*xfact;
-    // dU1max = 1.0 / ( t * (sqrt(t/A) + 1.0) );
-    // aArea  = 4.0*nu_[0]*log( 1.0 + sqrt(A/t) );
+    for ( i=0; i<GDIM; i++ ) (*u[i])[j] = xx[i]*xfact;
+    // dU1max = 1.0 / ( time * (sqrt(time/A) + 1.0) );
+    // aArea  = 4.0*nu*log( 1.0 + sqrt(A/time) );
   }
 } // end, impl_boxnwaveburgers
 
@@ -123,18 +128,20 @@ GBOOL impl_boxdirgauss(const PropertyTree &ptree, GGrid &grid, Time &time, State
   GBOOL            bContin;
   GINT             j, n;
   GFTYPE           argxp;
-  GFTYPE           nxy, sig0, u0;
+  GFTYPE           nxy, nu, sig0, u0;
   GTVector<GFTYPE> xx(GDIM), si(GDIM), sig(GDIM), ufact(GDIM);
   GTPoint<GFTYPE>  r0(3), P0(3);
+  GString          snut;
 
   PropertyTree heatptree = ptree.getPropertyTree("init_lump");
-  PropertyTree boxptree = ptree.getPropertyTree("grid_box");
+  PropertyTree boxptree  = ptree.getPropertyTree("grid_box");
   PropertyTree advptree  = ptree.getPropertyTree("burgers_traits");
+  PropertyTree nuptree   = ptree.getPropertyTree("dissipation_traits");
   GBOOL doheat   = advptree.getValue<GBOOL>("doheat");
   GBOOL bpureadv = advptree.getValue<GBOOL>("bpureadv");
 
-  GTVector<GTVector<GFTYPE>> *xnodes = grid.xNodes();
-  GTVector<GTVector<GFTYPE>> c(GDIM) 
+  GTVector<GTVector<GFTYPE>> *xnodes = &grid.xNodes();
+  GTVector<GTVector<GFTYPE>> c(GDIM); 
 
   assert(grid.gtype() == GE_REGULAR && "Invalid element types");
 
@@ -151,8 +158,8 @@ GBOOL impl_boxdirgauss(const PropertyTree &ptree, GGrid &grid, Time &time, State
   bc[3] = boxptree.getValue<GString>("bdy_y_1");
   bc[4] = boxptree.getValue<GString>("bdy_z_0");
   bc[5] = boxptree.getValue<GString>("bdy_z_1");
-  assert(bc.multiplicity("GBDY_DIRICHLET") >= 2*GDIM
-      && "Dirichlet boundaries must be set on all boundaries");
+  assert(bc.multiplicity("GBDY_s) >= 2*GDIM
+      && "GBDY_INFLOW boundaries must be set on all boundaries");
 
   nxy = (*xnodes)[0].size(); // same size for x, y, z
 
@@ -162,6 +169,10 @@ GBOOL impl_boxdirgauss(const PropertyTree &ptree, GGrid &grid, Time &time, State
   sig0  = heatptree.getValue<GFTYPE>("sigma");
   u0    = heatptree.getValue<GFTYPE>("u0");
 
+  nu     = nuptree   .getValue<GFTYPE>("nu");
+  snut   = nuptree   .getValue<GString>("nu_type","constant");
+  assert( snut == "constant" && "nu_type must bet set to 'constant')");
+
   // Set velocity here. May be a function of time.
   // These point to components of state u_:
   for ( j=0; j<GDIM; j++ ) *c [j] = 0.0;
@@ -170,9 +181,10 @@ GBOOL impl_boxdirgauss(const PropertyTree &ptree, GGrid &grid, Time &time, State
      for ( j=0; j<GDIM; j++ ) *c[j] = cs[j];
   }
 
+
   // Prepare for case where sig is anisotropic (for later, maybe):
   for ( GSIZET k=0; k<GDIM; k++ ) {
-    sig  [k] = sqrt(sig0*sig0 + 4.0*t*nu_[0]); // constant viscosity only
+    sig  [k] = sqrt(sig0*sig0 + 4.0*t*nu); // constant viscosity only
     si   [k] = 1.0/(sig[k]*sig[k]);
     ufact[k] = u0*pow(sig0/sig[k],GDIM);
   }
@@ -184,7 +196,7 @@ GBOOL impl_boxdirgauss(const PropertyTree &ptree, GGrid &grid, Time &time, State
     for ( GSIZET i=0; i<GDIM; i++ ) xx[i] = (*xnodes)[i][j] - r0[i] - (*c[i])[j]*t;
     argxp = 0.0;
     for ( GSIZET i=0; i<GDIM; i++ ) argxp += -pow(xx[i],2.0)*si[i];
-   (*ua[0])[j] = ufact[0]*exp(argxp);
+   (*u[0])[j] = ufact[0]*exp(argxp);
   }
 
   return TRUE;
@@ -212,13 +224,15 @@ GBOOL impl_boxpergauss((const PropertyTree &ptree, GGrid &grid, Time &time, Stat
   GFTYPE           iargp, iargm ;
   GFTYPE           isum , irat , prod;
   GFTYPE           sumn , eps;
-  GFTYPE           nxy, pint, sig0, u0;
+  GFTYPE           nxy, nu, pint, sig0, u0;
   GTVector<GFTYPE> f(GDIM), xx(GDIM), si(GDIM), sig(GDIM);
   GTPoint<GFTYPE>  r0(3), P0(3), gL(3);
+  GString          snut;
 
   PropertyTree heatptree = ptree.getPropertyTree("init_lump");
-  PropertyTree boxptree = ptree.getPropertyTree("grid_box");
+  PropertyTree boxptree  = ptree.getPropertyTree("grid_box");
   PropertyTree advptree  = ptree.getPropertyTree("burgers_traits");
+  PropertyTree nuptree   = ptree.getPropertyTree("dissipation_traits");
   GBOOL doheat   = advptree.getValue<GBOOL>("doheat");
   GBOOL bpureadv = advptree.getValue<GBOOL>("bpureadv");
 
@@ -257,12 +271,17 @@ GBOOL impl_boxpergauss((const PropertyTree &ptree, GGrid &grid, Time &time, Stat
   sig0  = heatptree.getValue<GFTYPE>("sigma");
   u0    = heatptree.getValue<GFTYPE>("u0");
 
+  nu    = nuptree   .getValue<GFTYPE>("nu");
+  snut  = nuptree   .getValue<GString>("nu_type","constant");
+  assert( snut == "constant" && "nu_type must bet set to 'constant')");
+
+
   // Set adv velocity components. Note:
   // First state elem is the scalar solution, and
   // the remainder are the velocity components:
 
   for ( j=0; j<GDIM; j++ ) {
-    sig[j] = sqrt(sig0*sig0 + 4.0*t*nu_[0]);
+    sig[j] = sqrt(sig0*sig0 + 4.0*t*nu);
     si [j] = 1.0/(sig[j]*sig[j]);
    *c  [j] = 0.0;
   }
@@ -294,7 +313,7 @@ GBOOL impl_boxpergauss((const PropertyTree &ptree, GGrid &grid, Time &time, Stat
       }
       prod *= isum;
     }
-    (*ua[0])[n] = u0*pow(sig0,GDIM)/pow(sig[0],GDIM)*prod;
+    (*u[0])[n] = u0*pow(sig0,GDIM)/pow(sig[0],GDIM)*prod;
 
   } // end, loop over grid points
 
@@ -325,7 +344,7 @@ GBOOL impl_icosgauss(const PropertyTree &ptree, GGrid &grid, Time &time, State &
   GFTYPE           alpha, argxp;
   GFTYPE           lat, lon;
   GFTYPE           x, y, z, r, s;
-  GFTYPE           rad, u0 ;
+  GFTYPE           nu, rad, u0 ;
   GFTYPE           vtheta, vphi;
   GFTYPE           tiny = std::numeric_limits<GFTYPE>::epsilon();
   GTPoint<GFTYPE>           rt(3);
@@ -334,10 +353,12 @@ GBOOL impl_icosgauss(const PropertyTree &ptree, GGrid &grid, Time &time, State &
   GTVector<GFTYPE>          latp(4), lonp(4);
   std::vector<GFTYPE>       c0(4), sig0(4);
   std::vector<GFTYPE>       lat0(4), lon0(4); // up to 4 lumps
+  GString          snut;
 
   PropertyTree lumpptree = ptree.getPropertyTree("init_icosgauss");
   PropertyTree icosptree = ptree.getPropertyTree("grid_icos");
   PropertyTree advptree  = ptree.getPropertyTree("burgers_traits");
+  PropertyTree nuptree   = ptree.getPropertyTree("dissipation_traits");
   GBOOL doheat   = advptree.getValue<GBOOL>("doheat");
   GBOOL bpureadv = advptree.getValue<GBOOL>("bpureadv");
 
@@ -359,6 +380,10 @@ GBOOL impl_icosgauss(const PropertyTree &ptree, GGrid &grid, Time &time, State &
   nlumps= lumpptree.getValue<GINT>("nlumps",1);
 
   alpha *= PI/180.0;
+
+  nu    = nuptree   .getValue<GFTYPE>("nu");
+  snut  = nuptree   .getValue<GString>("nu_type","constant");
+  assert( snut == "constant" && "nu_type must bet set to 'constant')");
 
   // Convert initial locations from degrees to radians,
   // & compute initial positions of lumps in Cart coords:
@@ -387,11 +412,11 @@ GBOOL impl_icosgauss(const PropertyTree &ptree, GGrid &grid, Time &time, State &
 //  GMTK::constrain2sphere(grid, c);
   }
 
-  *ua[0] = 0.0;
+  *u[0] = 0.0;
   for ( GSIZET k=0; k<nlumps; k++ ) {
 
     // Allow different sigma/concentration for each lump:
-    sig  [k] = sqrt(sig0[k]*sig0[k] + 4.0*t*nu_[0]); // constant viscosity only
+    sig  [k] = sqrt(sig0[k]*sig0[k] + 4.0*t*nu); // constant viscosity only
     si   [k] = 1.0/(sig[k]*sig[k]);
     ufact[k] = c0[k]*pow(sig0[k]/sig[k],GDIM);
 
@@ -431,10 +456,10 @@ GBOOL impl_icosgauss(const PropertyTree &ptree, GGrid &grid, Time &time, State &
       lon = atan2(y,x);
       // Compute arclength from point to where center _should_ be:
       s     = r*acos( sin(latp[k])*sin(lat) + cos(latp[k])*cos(lat)*cos(lon-lonp[k]) );
-     (*ua[0])[j] += ufact[k]*exp(-s*s*si[k]);
+     (*u[0])[j] += ufact[k]*exp(-s*s*si[k]);
 #else
      argxp = pow(x-rt[0],2) + pow(y-rt[1],2) + pow(z-rt[2],2);
-     (*ua[0])[j] += ufact[k]*exp(-argxp*si[k]);
+     (*u[0])[j] += ufact[k]*exp(-argxp*si[k]);
 #endif
     } // end, grid-point loop
 

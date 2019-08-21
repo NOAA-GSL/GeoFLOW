@@ -14,8 +14,8 @@
 // ARGS   : traits: Traits sturcture
 //**********************************************************************************
 template<typename EquationType>
-GPosixIOObserver<EquationType>::GPosixIOObserver(typename ObserverBase<EquationType>::Traits &traits, Grid &grid):
-ObserverBase(equation, grid, traits),
+GPosixIOObserver<EquationType>::GPosixIOObserver(EquationPtr &equation, typename ObserverBase<EquationType>::Traits &traits, Grid &grid):
+ObserverBase<EquationType>(equation, grid, traits),
 bprgrid_        (TRUE),
 bInit_          (FALSE),
 cycle_          (0),

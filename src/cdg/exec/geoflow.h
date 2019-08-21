@@ -41,8 +41,6 @@
 #include "tbox/mpixx.hpp"
 #include "tbox/global_manager.hpp"
 #include "tbox/input_manager.hpp"
-#include "gstate.h"
-#include "gtools.h"
 
 using namespace geoflow::pdeint;
 using namespace geoflow::tbox;
@@ -100,9 +98,9 @@ void update_forcing  (const Time &t, State &u, State &uf);     // forcing vec up
 void steptop_callback(const Time &t, State &u, const Time &dt);// backdoor function
 
 // Public methods:
-void init_state      (Time &t, State &u, State &ub);
-void init_force      (Time &t, State &u, State &uf);
-void init_bdy        (Time &t, State &u, State &ub);
+void init_state      (const PropertyTree &ptree, EqnBasePtr &pEqn, Time &t, State &u, State &ub);
+void init_force      (const PropertyTree &ptree, Time &t, State &u, State &uf);
+void init_bdy        (const PropertyTree &ptree, Time &t, State &u, State &ub);
 void allocate        (const PropertyTree &ptree);
 void deallocate      ();
 void create_observers(EqnBasePtr &eqn_ptr, PropertyTree &ptree, GSIZET icycle, Time time, 

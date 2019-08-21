@@ -9,10 +9,11 @@
 #define _GINITF_FACTORY_HPP 
 
 #include "tbox/property_tree.hpp"
+#include "pdeint/equation_base.hpp"
 #include "gcomm.hpp"
 #include "gtvector.hpp"
 #include "ggrid.hpp"
-#include "ginitf_impl.hpp"
+#include "ginitf.hpp"
 
 using namespace geoflow;
 using namespace geoflow::tbox;

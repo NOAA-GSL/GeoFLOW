@@ -19,12 +19,12 @@ namespace pdeint {
  * Base class to provided an interface for all 'mixrers'
  *
  * The base class provides the interface using the strategy pattern
- * for all mixrer types.  Mixrers take the forcing after
+ * for all mixrer types.  Mixers take the forcing after
  * every time step and determine if it should 'randomized', and
  * how.
  */
 template<typename EquationType>
-class MixrerBase {
+class MixerBase {
 
 public:
         enum MixType     {STIR_CYCLE=0, STIR_TIME};
@@ -49,11 +49,11 @@ public:
                 double    corr_time      = 1.0;       // correlation time interval 
         };
 
-        MixrerBase() = default;
-	MixrerBase(Traits& traits, Grid& grid){traits_=traits; grid_= &grid;}
-	MixrerBase(const MixrerBase& obs) = default;
-	virtual ~MixrerBase() = default;
-	MixrerBase& operator=(const MixrerBase& obs) = default;
+        MixerBase() = default;
+	MixerBase(Traits& traits, Grid& grid){traits_=traits; grid_= &grid;}
+	MixerBase(const MixerBase& obs) = default;
+	virtual ~MixerBase() = default;
+	MixerBase& operator=(const MixerBase& obs) = default;
 
 	/**
 	 * Mix the forcing state at time
