@@ -22,11 +22,11 @@ template<typename EquationType>
 GBOOL GInitFFactory<EquationType>::init(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, Time &time, State &utmp, State &u, State &uf)
 {
   GBOOL         bret=FALSE;
-  GBOOL         bforced = ptree.getValue<GString>("use_forcing", FALSE);
+  GBOOL         bforced = ptree.getValue<GBOOL>  ("use_forcing", FALSE);
   GString       sinit   = ptree.getValue<GString>("initf_block");
   PropertyTree  ftree   = ptree.getPropertyTree(sinit);
 
-  if ( !bforced ) return;
+  if ( !bforced ) return TRUE;
 
   if ( "initf_none" == sinit
     || "none"       == sinit
