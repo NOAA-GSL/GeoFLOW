@@ -115,8 +115,8 @@ public:
 	/** Return State component description data
          * 
          */
-        CompDesc& compdesc() {
-                return icompdesc_;
+        CompDesc& comptype() {
+                return icomptype_;
         }
 
 protected:
