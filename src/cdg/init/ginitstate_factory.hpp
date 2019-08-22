@@ -26,6 +26,7 @@ class GInitStateFactory
         using EqnBasePtr    = std::shared_ptr<EqnBase>;
         using State         = typename Equation::State;
         using Grid          = typename Equation::Grid;
+        using CompDesc      = typename Equation::CompDesc;
         using Value         = typename Equation::Value;
         using Time          = typename Equation::Time;
 
@@ -33,9 +34,15 @@ class GInitStateFactory
 	static GBOOL init(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &u);
 
   private:
-	GBOOL set_direct(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &u);
-	GBOOL set_by_var(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &u);
+	GBOOL set_by_name(const PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &u);
+	GBOOL set_by_blk (const PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &u);
 }; // class GInitSFactory
+        GBOOL doinitv      (const PropertyTree &vtree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &u);
+        GBOOL doinitb      (const PropertyTree &vtree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &u);
+        GBOOL doinits      (const PropertyTree &vtree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &u);
+        GBOOL doinitps     (const PropertyTree &vtree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &u);
+        GBOOL doinitc      (const PropertyTree &vtree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &u);
+
 
 
 #include "ginitstate_factory.ipp"

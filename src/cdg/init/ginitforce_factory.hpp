@@ -1,7 +1,7 @@
 //==================================================================================
 // Module       : ginitforce_factory.hpp
 // Date         : 7/11/19 (DLR)
-// Description  : GeoFLOW forcing initialization factory object. 
+// Description  : GeoFLOW forcing variable initialization factory object. 
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
@@ -9,18 +9,16 @@
 #define _GINITFORCE_FACTORY_HPP 
 
 #include "tbox/property_tree.hpp"
-#include "pdeint/equation_base.hpp"
 #include "gcomm.hpp"
 #include "gtvector.hpp"
 #include "ggrid.hpp"
-#include "ginitforce_user.hpp"
+#include "ginitstate_user.hpp"
 
-using namespace geoflow;
-using namespace geoflow::tbox;
+using namespace geoflow::pdeint;
 using namespace std;
 
 template<typename EquationType>
-class GInitForceFactory
+class GInitStateFactory
 {
   public:
         using Equation      = EquationType;
@@ -28,14 +26,22 @@ class GInitForceFactory
         using EqnBasePtr    = std::shared_ptr<EqnBase>;
         using State         = typename Equation::State;
         using Grid          = typename Equation::Grid;
+        using CompDesc      = typename Equation::CompDesc;
         using Value         = typename Equation::Value;
         using Time          = typename Equation::Time;
 
 
-	static GBOOL init(const geoflow::tbox::PropertyTree& ptree, GGrid &grid,  Time &time, State &utmp, State &u, State &uf);
+	static GBOOL init(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &u);
 
   private:
-}; // class GInitForceFactory
+	GBOOL set_by_name(const PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &u);
+	GBOOL set_by_blk (const PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &u);
+}; // class GInitSFactory
+        GBOOL doinitfv      (const PropertyTree &vtree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &u);
+        GBOOL doinitfb      (const PropertyTree &vtree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &u);
+        GBOOL doinitfs      (const PropertyTree &vtree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &u);
+        GBOOL doinitfps     (const PropertyTree &vtree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &u);
+
 
 
 #include "ginitforce_factory.ipp"

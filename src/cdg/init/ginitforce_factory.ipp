@@ -1,7 +1,7 @@
 //==================================================================================
-// Module       : ginitforce_factory
+// Module       : ginitstate_factory
 // Date         : 7/11/19 (DLR)
-// Description  : GeoFLOW forcing initialization factory
+// Description  : GeoFLOW state initialization factory
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
@@ -9,42 +9,331 @@
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : init
-// DESC   : Do init of forcing components
+// DESC   : Do init of state components
 // ARGS   : ptree  : main property tree
 //          grid   : grid object
+//          peqn   : ptr to EqnBase 
 //          time   : initialization time
 //          utmp   : tmp arrays
-//          u      : current state vector
-//          uf     : forcing components set from call
+//          ub     : boundary state (also initialized here)
+//          u      : state to be initialized. 
 // RETURNS: none.
 //**********************************************************************************
 template<typename EquationType>
-GBOOL GInitForceFactory<EquationType>::init(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, Time &time, State &utmp, State &u, State &uf)
+GBOOL GInitStateFactory<EquationType>::init(const PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn, Time &time, State &utmp, State &ub, State &u)
 {
-  GBOOL         bret=FALSE;
-  GBOOL         bforced = ptree.getValue<GBOOL>  ("use_forcing", FALSE);
-  GString       sinit   = ptree.getValue<GString>("initf_block");
-  PropertyTree  ftree   = ptree.getPropertyTree(sinit);
+  GBOOL         bret    = FALSE;
+  GString       stype ;  
+  GString       sinit   = ptree.getValue<GString>("initforce_block");
+  PropertyTree  vtree   = ptree.getPropertyTree(sinit);
 
-  if ( !bforced ) return TRUE;
-
-  if ( "initf_none" == sinit
-    || "none"       == sinit
-    || ""           == sinit ) {
-    bret = TRUE;
+  // Get type of initialization: direct or by-var:
+  stype = vtree.getValue<GString>("init_type","");
+  if ( "name"   == stype 
+    || ""       == stype ) {
+    bret = set_by_name(ptree, grid, peqn, time, utmp, ub, u);
   }
-  else if ( "initf_null"        == sinit ) {
-    bret = ginitforce::impl_null     (ftree, grid, time, utmp, u, uf);
+  else if ( "block" == stype ) {
+    bret = set_by_blk (ptree, grid, peqn, time, utmp, ub, u);
   }
-  else if ( "initf_rand"        == sinit ) {
-    bret = ginitforce::impl_rand     (ftree, grid, time, utmp, u, uf);
-  }
-  else {                                        {
-    assert(FALSE && "Specified forcing initialization unknown");
+  else {
+    assert(FALSE && "Invalid state initialization type");
   }
 
   return bret;
 
 } // end, init method
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : set_by_name
+// DESC   : Do init of state components by calling initstate_block by name,
+//          E.g., one might classify initialization
+//          schemes by PDE-type, and user is responsible to ensuring 
+//          all state members are initialized.
+// ARGS   : ptree  : main property tree
+//          grid   : grid object
+//          peqn   : ptr to EqnBase 
+//          time   : initialization time
+//          utmp   : tmp arrays
+//          ub     : boundary state (also initialized here)
+//          u      : state to be initialized. 
+// RETURNS: none.
+//**********************************************************************************
+template<typename EquationType>
+GBOOL GInitStateFactory<EquationType>::set_by_name(const PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn, Time &time, State &utmp, State &ub, State &uf)
+{
+  GBOOL         bret    = FALSE;
+  GString       sinit   = ptree.getValue<GString>("initforce_block");
+  PropertyTree  vtree   = ptree.getPropertyTree(sinit);
+
+  if      ( "zero"                        == sinit ) {
+    for ( GINT i=0; i<uf.size(); i++ ) {
+      if ( uf[i] != NULLPTR ) *uf[i] = 0.0;
+    }
+  }
+//else if ( "initforce_myinit"            == sinit ) {
+//  bret = ginitstate::impl_mhyforce      (vtree, eqn_ptr, grid, time, utmp, ub, uf);
+//}
+  else                                        {
+    assert(FALSE & "Specified state initialization method unknown");
+  }
+
+  return bret;
+
+} // end, set_by_name method
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : set_by_blk
+// DESC   : Do init of state components by specifying block name for
+//          initstate_block, and initializing each group
+//          in the state separately. This method uses the CompDesc data
+//          in the EqnBase pointer to locate variable groups.
+// ARGS   : ptree  : main property tree
+//          grid   : grid object
+//          peqn   : ptr to EqnBase 
+//          time   : initialization time
+//          utmp   : tmp arrays
+//          ub     : boundary state (also initialized here)
+//          uf     : force to be initialized. May be NULLPTR. 
+// RETURNS: none.
+//**********************************************************************************
+template<typename EquationType>
+GBOOL GInitStateFactory<EquationType>::set_by_blk(const PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn, Time &time, State &utmp, State &ub, State &uf)
+{
+  GBOOL           bret    = TRUE;
+  GSISET          ndistcomp, mvar, nvar;
+  GString         sblk    = ptree.getValue<GString>("initforce_block");
+  GString         sinit;
+  GStateCompType *distcomp, *ivar;
+  PropertyTree    vtree   = ptree.getPropertyTree(sblk);
+  State           comp;
+  CompDesc       *icomptype = &peqn.compdesc();
+
+  ndistcomp = 0; // # distinct comp types
+  distcomp  = NULLPTR; // list of ids for  distinct comp types
+
+  mvar      = 0; // # max of specific comp types
+  ivar      = NULLPTR;  // list of ids for specific comp types
+
+  // Get distinct component types:
+  icomptype->distinct(distcomp, ndistcomp);
+
+  // Cycle over all types required, get components of that
+  // type, and initialize all of them. There should be a member
+  // function for each GStateCompType:
+  for ( GSIZET j=0; j<ncomp && bret; j++ ) {
+    
+    switch ( distcomp[j] ) {
+      
+      case GSC_KINETIC:
+        sinit = vtree.getValue<String>("initfv");
+        nvar = icomptype->contains(distcomp[j], ivar, mvar);
+        comp.resize(nvar);
+        for ( GINT i=0; i<nvar; i++ ) comp[i] = uf[ivar[i]];
+        bret = doinitfv(vtree, grid, peqn, time, utmp, ub, comp);
+        break;
+      case GSC_MAGNETIC:
+        sinit = vtree.getValue<String>("initfb");
+        nvar = icomptype->contains(distcomp[j], ivar, mvar);
+        comp.resize(nvar);
+        for ( GINT i=0; i<nvar; i++ ) comp[i] = uf[ivar[i]];
+        bret = doinitfb(vtree, grid, peqn, time, utmp, ub, comp);
+        break;
+      case GSC_ACTIVE_SCALAR:
+        sinit = vtree.getValue<String>("initfs");
+        nvar = icomptype->contains(distcomp[j], ivar, mvar);
+        comp.resize(nvar);
+        for ( GINT i=0; i<nvar; i++ ) comp[i] = uf[ivar[i]];
+        bret = doinitfs(vtree, grid, peqn, time, utmp, ub, comp);
+        break;
+      case GSC_PASSIVE_SCALAR:
+        sinit = vtree.getValue<String>("initfps");
+        nvar = icomptype->contains(distcomp[j], ivar, mvar);
+        comp.resize(nvar);
+        for ( GINT i=0; i<nvar; i++ ) comp[i] = uf[ivar[i]];
+        bret = doinitfps(vtree, grid, peqn, time, utmp, ub, comp);
+        break;
+      case GSC_PRESCRIBED:
+      case GSC_NONE:
+        break;
+      default:
+        assert(FALSE && "Invalid component type");
+    } // end, switch
+
+  } // end, j loop
+
+  if ( distcomp  != NULLPTR ) delete [] distcomp;
+  if ( ivar   != NULLPTR ) delete [] ivar ;
+
+  return bret;
+
+} // end, set_by_blk method
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : doinitfv
+// DESC   : Do init of kinetic force components. Full list of available
+//          kinetic initializations are contained here. Only
+//          kinetic components are passed in.
+// ARGS   : vtree  : initial condition property tree
+//          grid   : grid object
+//          peqn   : pointer to EqnBase
+//          time   : initialization time
+//          utmp   : tmp arrays
+//          ub     : boundary state (also initialized here)
+//          uf     : force to be initialized. 
+// RETURNS: none.
+//**********************************************************************************
+template<typename EquationType>
+GBOOL GInitStateFactory<EquationType>::doinitfv(const PropertyTree &vtree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &uf)
+{
+  GBOOL           bret    = TRUE;
+  GString         sinit = vtree.getValue<GString>("name");
+
+  if      ( "null"   == sinit
+       ||   ""             == sinit ) {
+    for ( GINT i=0; i<uf.size(); i++ ) *uf[i] = 0.0;
+    bret = TRUE;
+  }
+  else if ( "zer0" == sinit ) {
+    bret = ginitfv::random(grid, time, utmp, ub, u);
+    for ( GINT i=0; i<uf.size(); i++ ) *uf[i] = 0.0;
+  }
+//else if ( "random" == sinit ) {
+//  bret = ginitfv::random(vtree, grid, peqn, time, utmp, ub, uf);
+//} 
+  else {
+    assert(FALSE && "Unknown velocity initialization method");
+  }
+
+  return bret;
+
+} // end, doinitfv method
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : doinitfb
+// DESC   : Do init of magnetic force components. Full list of available
+//          magnetic initializations are contained here. Only
+//          magnetic components are passed in.
+// ARGS   : vtree  : initial condition property tree
+//          grid   : grid object
+//          time   : initialization time
+//          utmp   : tmp arrays
+//          ub     : boundary state (also initialized here)
+//          uf     : force to be initialized. 
+// RETURNS: none.
+//**********************************************************************************
+template<typename EquationType>
+GBOOL GInitStateFactory<EquationType>::doinitfb(const PropertyTree &vtree, GGrid &grid, EqnBasePtr &peqn, Time &time, State &utmp, State &ub, State &uf)
+{
+  GBOOL           bret    = FALSE;
+  GString         sinit = vtree.getValue<GString>("name");
+
+  if      ( "null"   == sinit
+       ||   ""             == sinit ) {
+    bret = TRUE;
+  }
+  else if ( "zero" == sinit ) {
+    for ( GINT i=0; i<uf.size(); i++ ) *uf[i] = 0.0;
+    bret = TRUE;
+  }
+//else if ( "random" == sinit ) {
+//  bret = ginitfb::random(vtree, grid, peqn, time, utmp, ub, uf);
+//} 
+  else {
+    assert(FALSE && "Unknown b-field initialization method");
+  }
+
+  return bret;
+
+} // end, doinitfb method
+
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : doinitfs
+// DESC   : Do init of active scalar force components. Full list of available
+//          scalar (passive & active) initializations are contained here.
+//          Only scalar components are passed in.
+// ARGS   : vtree  : initial condition property tree
+//          grid   : grid object
+//          peqn   : EqnBase pointer
+//          time   : initialization time
+//          utmp   : tmp arrays
+//          ub     : boundary state (also initialized here)
+//          uf     : force to be initialized. 
+// RETURNS: none.
+//**********************************************************************************
+template<typename EquationType>
+GBOOL GInitStateFactory<EquationType>::doinitfs(const PropteryTree &vtree, GGrid &grid,  EqnBasePtr &peqn, Time &time, State &utmp, State &ub, State &uf)
+{
+  GBOOL           bret    = TRUE;
+  GString         sinit = vtree.getValue<GString>("name");
+
+  if      ( "null"   == sinit
+       ||   ""             == sinit ) {
+    bret = TRUE;
+  }
+  else if ( "zero" == sinit ) {
+    for ( GINT i=0; i<uf.size(); i++ ) *uf[i] = 0.0;
+    bret = TRUE;
+  }
+//else if ( "random" == sinit ) {
+//  bret = ginitfs::random(vtree, grid, peqn, time, utmp, ub, uf);
+//} 
+  else {
+    assert(FALSE && "Unknown b-field initialization method");
+  }
+
+  return bret;
+} // end, doinitfs method
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : doinitfps
+// DESC   : Do init of passive scalar force components. Full list of available
+//          scalar (passive & active) initializations are contained here.
+//          Only scalar components are passed in.
+// ARGS   : vtree  : initial condition property tree
+//          grid   : grid object
+//          peqn   : EqnBase pointer
+//          time   : initialization time
+//          utmp   : tmp arrays
+//          ub     : boundary state (also initialized here)
+//          uf     : state to be initialized. 
+// RETURNS: none.
+//**********************************************************************************
+template<typename EquationType>
+GBOOL GInitStateFactory<EquationType>::doinitfps(const PropteryTree &vtree, GGrid &grid,  EqnBasePtr &peqn, Time &time, State &utmp, State &ub, State &uf)
+{
+  GBOOL           bret    = TRUE;
+  GString         sinit = vtree.getValue<GString>("name");
+
+  if      ( "null"   == sinit
+       ||   ""             == sinit ) {
+    bret = TRUE;
+  }
+  else if ( "zero" == sinit ) {
+    for ( GINT i=0; i<uf.size(); i++ ) *uf[i] = 0.0;
+    bret = TRUE;
+  }
+//else if ( "random" == sinit ) {
+//  bret = ginitfps::random(vtree, grid, peqn, time, utmp, ub, uf);
+//} 
+  else {
+    assert(FALSE && "Unknown b-field initialization method");
+  }
+
+  return bret;
+} // end, doinitfps method
 
 
