@@ -17,7 +17,7 @@
 //          utmp   : tmp arrays
 //          ub     : boundary state (also initialized here)
 //          u      : state to be initialized. 
-// RETURNS: none.
+// RETURNS: TRUE on success; else FALSE
 //**********************************************************************************
 template<typename EquationType>
 GBOOL GInitStateFactory<EquationType>::init(const PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn, Time &time, State &utmp, State &ub, State &u)
@@ -57,7 +57,7 @@ GBOOL GInitStateFactory<EquationType>::init(const PropertyTree& ptree, GGrid &gr
 //          utmp   : tmp arrays
 //          ub     : boundary state (also initialized here)
 //          u      : state to be initialized. 
-// RETURNS: none.
+// RETURNS: TRUE on success; else FALSE
 //**********************************************************************************
 template<typename EquationType>
 GBOOL GInitStateFactory<EquationType>::set_by_name(const PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn, Time &time, State &utmp, State &ub, State &u)
@@ -106,7 +106,7 @@ GBOOL GInitStateFactory<EquationType>::set_by_name(const PropertyTree& ptree, GG
 //          utmp   : tmp arrays
 //          ub     : boundary state (also initialized here)
 //          u      : state to be initialized. 
-// RETURNS: none.
+// RETURNS: TRUE on success; else FALSE
 //**********************************************************************************
 template<typename EquationType>
 GBOOL GInitStateFactory<EquationType>::set_by_blk(const PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn, Time &time, State &utmp, State &ub, State &u)
@@ -200,7 +200,7 @@ GBOOL GInitStateFactory<EquationType>::set_by_blk(const PropertyTree& ptree, GGr
 //          utmp   : tmp arrays
 //          ub     : boundary state (also initialized here)
 //          u      : state to be initialized. 
-// RETURNS: none.
+// RETURNS: TRUE on success; else FALSE
 //**********************************************************************************
 template<typename EquationType>
 GBOOL GInitStateFactory<EquationType>::doinitv(const PropertyTree &vtree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &u)
@@ -241,7 +241,7 @@ GBOOL GInitStateFactory<EquationType>::doinitv(const PropertyTree &vtree, GGrid 
 //          utmp   : tmp arrays
 //          ub     : boundary state (also initialized here)
 //          u      : state to be initialized. 
-// RETURNS: none.
+// RETURNS: TRUE on success; else FALSE
 //**********************************************************************************
 template<typename EquationType>
 GBOOL GInitStateFactory<EquationType>::doinitb(const PropertyTree &vtree, GGrid &grid, EqnBasePtr &peqn, Time &time, State &utmp, State &ub, State &u)
@@ -283,7 +283,7 @@ GBOOL GInitStateFactory<EquationType>::doinitb(const PropertyTree &vtree, GGrid 
 //          utmp   : tmp arrays
 //          ub     : boundary state (also initialized here)
 //          u      : state to be initialized. 
-// RETURNS: none.
+// RETURNS: TRUE on success; else FALSE
 //**********************************************************************************
 template<typename EquationType>
 GBOOL GInitStateFactory<EquationType>::doinits(const PropteryTree &vtree, GGrid &grid,  EqnBasePtr &peqn, Time &time, State &utmp, State &ub, State &u)
@@ -323,7 +323,7 @@ GBOOL GInitStateFactory<EquationType>::doinits(const PropteryTree &vtree, GGrid 
 //          utmp   : tmp arrays
 //          ub     : boundary state (also initialized here)
 //          u      : state to be initialized. 
-// RETURNS: none.
+// RETURNS: TRUE on success; else FALSE
 //**********************************************************************************
 template<typename EquationType>
 GBOOL GInitStateFactory<EquationType>::doinitps(const PropteryTree &vtree, GGrid &grid,  EqnBasePtr &peqn, Time &time, State &utmp, State &ub, State &u)
@@ -363,7 +363,7 @@ GBOOL GInitStateFactory<EquationType>::doinitps(const PropteryTree &vtree, GGrid
 //          utmp   : tmp arrays
 //          ub     : boundary state (also initialized here)
 //          u      : state to be initialized. 
-// RETURNS: none.
+// RETURNS: TRUE on success; else FALSE
 //**********************************************************************************
 template<typename EquationType>
 GBOOL GInitStateFactory<EquationType>::doinitc(const PropteryTree &vtree, GGrid &grid, EqnBaseePtr &peqn, Time &time, State &utmp, State &ub, State &u)
