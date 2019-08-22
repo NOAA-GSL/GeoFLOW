@@ -27,12 +27,12 @@ GBOOL GInitStateFactory<EquationType>::init(const PropertyTree& ptree, GGrid &gr
 
   // Get type of initialization: by-name or by-block:
   stype = ptree.getValue<GString>("initstate_type","");
-  if ( "name"   == stype 
-    || ""       == stype ) {
-    bret = set_by_name(ptree, grid, peqn, time, utmp, ub, u);
+  if ( "direct"   == stype 
+    || ""         == stype ) {
+    bret = set_by_direct(ptree, grid, peqn, time, utmp, ub, u);
   }
-  else if ( "block" == stype ) {
-    bret = set_by_blk (ptree, grid, peqn, time, utmp, ub, u);
+  else if ( "component" == stype ) {
+    bret = set_by_comp  (ptree, grid, peqn, time, utmp, ub, u);
   }
   else {
     assert(FALSE && "Invalid state initialization type");
@@ -45,7 +45,7 @@ GBOOL GInitStateFactory<EquationType>::init(const PropertyTree& ptree, GGrid &gr
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : set_by_name
+// METHOD : set_by_direct
 // DESC   : Do init of state components by calling init method to set
 //          entire state at once. E.g., one might classify initialization
 //          schemes by PDE-type, and user is responsible to ensuring 
@@ -60,7 +60,7 @@ GBOOL GInitStateFactory<EquationType>::init(const PropertyTree& ptree, GGrid &gr
 // RETURNS: TRUE on success; else FALSE
 //**********************************************************************************
 template<typename EquationType>
-GBOOL GInitStateFactory<EquationType>::set_by_name(const PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn, Time &time, State &utmp, State &ub, State &u)
+GBOOL GInitStateFactory<EquationType>::set_by_direct(const PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn, Time &time, State &utmp, State &ub, State &u)
 {
   GBOOL         bret    = FALSE;
   GString       sinit   = ptree.getValue<GString>("inits_block");
@@ -89,12 +89,12 @@ GBOOL GInitStateFactory<EquationType>::set_by_name(const PropertyTree& ptree, GG
 
   return bret;
 
-} // end, set_by_name method
+} // end, set_by_direct method
 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : set_by_blk
+// METHOD : set_by_comp
 // DESC   : Do init of state components by specifying individual
 //          variable group types within JSON block
 //          in the state separately. This method uses the CompDesc data
@@ -109,14 +109,14 @@ GBOOL GInitStateFactory<EquationType>::set_by_name(const PropertyTree& ptree, GG
 // RETURNS: TRUE on success; else FALSE
 //**********************************************************************************
 template<typename EquationType>
-GBOOL GInitStateFactory<EquationType>::set_by_blk(const PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn, Time &time, State &utmp, State &ub, State &u)
+GBOOL GInitStateFactory<EquationType>::set_by_comp(const PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn, Time &time, State &utmp, State &ub, State &u)
 {
   GBOOL           bret    = TRUE;
   GSISET          ndistcomp, mvar, nvar;
-  GString         sblk    = ptree.getValue<GString>("initstate_block");
+  GString         scomp    = ptree.getValue<GString>("initstate_block");
   GString         sinit;
   GStateCompType *distcomp, *ivar;
-  PropertyTree    vtree     = ptree.getPropertyTree(sblk);
+  PropertyTree    vtree     = ptree.getPropertyTree(scomp);
   State           comp;
   CompDesc       *icomptype = &peqn.compdesc();
 
@@ -184,7 +184,7 @@ GBOOL GInitStateFactory<EquationType>::set_by_blk(const PropertyTree& ptree, GGr
 
   return bret;
 
-} // end, set_by_blk method
+} // end, set_by_comp method
 
 
 //**********************************************************************************

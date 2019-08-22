@@ -6,7 +6,7 @@
   "initstate_block": "initstate_icosgaussburgers",
   "initforce_block": "",
   "use_forcing"    : false,
-  "initstate_type" : "name",
+  "initstate_type" : "direct",
   "initforce_type" : "",
   "restart_index"  : 0,
   "benchmark"      : false,
