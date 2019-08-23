@@ -27,7 +27,7 @@ There are 2 main steps to add the new initialization method: (1) implementation,
     of available initialization functions:
 
       ...
-    GBOOL impl_XXX (const PropertyTree& stree, EqnBasePtr &eqn_ptr, GGrid &grid,  Time &time, State &ub, State &u);
+    GBOOL impl_XXX (const PropertyTree& stree, GGrid &grid,  Time &time, State &ub, State &u);
 
       ...
       
