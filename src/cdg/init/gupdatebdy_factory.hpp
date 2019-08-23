@@ -12,7 +12,6 @@
 #include "gcomm.hpp"
 #include "gtvector.hpp"
 #include "ggrid.hpp"
-#include "gupdatebdy.hpp"
 #include "gupdatebdy_user.hpp"
 
 using namespace geoflow;
@@ -35,6 +34,8 @@ class GUpdateBdyFactory
 	static void update(const geoflow::tbox::PropertyTree& ptree, GGrid &grid,  Time &time, State &utmp, State &ub, State &u);
 
   private:
+        void set_bdy_from_state(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, Time &time, State &utmp, State &u, State &ub);
+
 }; // class GUpdateBdyFactory
 
 

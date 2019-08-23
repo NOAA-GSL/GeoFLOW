@@ -12,7 +12,6 @@
 #include "gcomm.hpp"
 #include "gtvector.hpp"
 #include "ggrid.hpp"
-#include "ginitbdy.hpp"
 #include "ginitbdy_user.hpp"
 
 using namespace geoflow;
@@ -34,6 +33,9 @@ class GInitBdyFactory
 
 
 	static GBOOL init   (const geoflow::tbox::PropertyTree& ptree, GGrid &grid,  Time &time, State &utmp, State &u, State &ub);
+
+  private:
+        void set_bdy_from_state(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, Time &time, State &utmp, State &u, State &ub);
 
 }; // class GInitBdyFactory
 

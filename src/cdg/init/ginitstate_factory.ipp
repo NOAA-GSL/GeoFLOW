@@ -29,10 +29,10 @@ GBOOL GInitStateFactory<EquationType>::init(const PropertyTree& ptree, GGrid &gr
   stype = ptree.getValue<GString>("initstate_type","");
   if ( "direct"   == stype 
     || ""         == stype ) {
-    bret = set_by_direct(ptree, grid, peqn, time, utmp, ub, u);
+    bret = set_by_direct(ptree, grid, time, utmp, ub, u);
   }
   else if ( "component" == stype ) {
-    bret = set_by_comp  (ptree, grid, peqn, time, utmp, ub, u);
+    bret = set_by_comp  (ptree, grid, time, utmp, ub, u);
   }
   else {
     assert(FALSE && "Invalid state initialization type");
@@ -72,16 +72,16 @@ GBOOL GInitStateFactory<EquationType>::set_by_direct(const PropertyTree& ptree, 
     } 
   }
   else if ( "initstate_icosgaussburgers"  == sinit ) {
-    bret = ginitstate::impl_icosgauss       (vtree, peqn, grid, time, utmp, ub, u);
+    bret = ginitstate::impl_icosgauss       (vtree, grid, time, utmp, ub, u);
   }
   else if ( "initstate_boxdirgauss"       == sinit ) {
-    bret = ginitstate::impl_boxdirgauss     (vtree, peqn, grid, time, utmp, ub, u);
+    bret = ginitstate::impl_boxdirgauss     (vtree, grid, time, utmp, ub, u);
   }
   else if ( "initstate_boxpergauss"       == sinit ) {
-    bret = ginitstate::impl_boxpergauss     (vtree, peqn, grid, time, utmp, ub, u);
+    bret = ginitstate::impl_boxpergauss     (vtree, grid, time, utmp, ub, u);
   }
   else if ( "initstate_nwave"             == sinit ) {
-    bret = ginitstate::impl_boxnwaveburgers (vtree, peqn, grid, time, utmp, ub, u);
+    bret = ginitstate::impl_boxnwaveburgers (vtree, grid, time, utmp, ub, u);
   }
   else                                        {
     assert(FALSE & "Specified state initialization method unknown");
@@ -218,7 +218,7 @@ GBOOL GInitStateFactory<EquationType>::doinitv(const PropertyTree &vtree, GGrid 
     for ( GINT i=0; i<u.size(); i++ ) *u[i] = 0.0;
   }
 //else if ( "random" == sinit ) {
-//  bret = ginitv::random(vtree, grid, peqn, time, utmp, ub, u);
+//  bret = ginitv::random(vtree, grid, time, utmp, ub, u);
 //} 
   else {
     assert(FALSE && "Unknown velocity initialization method");
@@ -258,7 +258,7 @@ GBOOL GInitStateFactory<EquationType>::doinitb(const PropertyTree &vtree, GGrid 
     bret = TRUE;
   }
 //else if ( "random" == sinit ) {
-//  bret = ginitb::random(vtree, grid, peqn, time, utmp, ub, u);
+//  bret = ginitb::random(vtree, grid, time, utmp, ub, u);
 //} 
   else {
     assert(FALSE && "Unknown b-field initialization method");
@@ -300,7 +300,7 @@ GBOOL GInitStateFactory<EquationType>::doinits(const PropteryTree &vtree, GGrid 
     bret = TRUE;
   }
 //else if ( "random" == sinit ) {
-//  bret = ginits::random(vtree, grid, peqn, time, utmp, ub, u);
+//  bret = ginits::random(vtree, grid, time, utmp, ub, u);
 //} 
   else {
     assert(FALSE && "Unknown b-field initialization method");
@@ -340,7 +340,7 @@ GBOOL GInitStateFactory<EquationType>::doinitps(const PropteryTree &vtree, GGrid
     bret = TRUE;
   }
 //else if ( "random" == sinit ) {
-//  bret = ginits::random(vtree, grid, peqn, time, utmp, ub, u);
+//  bret = ginits::random(vtree, grid, time, utmp, ub, u);
 //} 
   else {
     assert(FALSE && "Unknown b-field initialization method");
@@ -380,7 +380,7 @@ GBOOL GInitStateFactory<EquationType>::doinitc(const PropteryTree &vtree, GGrid 
     bret = TRUE;
   }
 //else if ( "random" == sinit ) {
-//  bret = ginitc::random(vtree, grid, peqn, time, utmp, ub, u);
+//  bret = ginitc::random(vtree, grid, time, utmp, ub, u);
 //} 
   else {
     assert(FALSE && "Unknown b-field initialization method");

@@ -13,16 +13,15 @@
 #include "gcomm.hpp"
 #include "gtvector.hpp"
 #include "ggrid.hpp"
-#include "ginitforce.hpp"
-#include "ginitforce_user.hpp"
-#include "ginitstate.hpp"
-#include "ginitstate_user.hpp"
+#include "ginitforce_direct_user.hpp"
+#include "ginitstate_direct_user.hpp"
+#include "ginitforce_comp.h"
 
 using namespace geoflow::pdeint;
 using namespace std;
 
 template<typename EquationType>
-class GInitStateFactory
+class GInitForceFactory
 {
   public:
         using Equation      = EquationType;
@@ -41,10 +40,10 @@ class GInitStateFactory
 	GBOOL set_by_direct(const PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &u);
 	GBOOL set_by_comp (const PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &u);
 }; 
-        GBOOL doinitfv      (const PropertyTree &vtree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &u);
-        GBOOL doinitfb      (const PropertyTree &vtree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &u);
-        GBOOL doinitfs      (const PropertyTree &vtree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &u);
-        GBOOL doinitfps     (const PropertyTree &vtree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &u);
+        GBOOL doinitv  (const PropertyTree &vtree, GGrid &grid, Time &time, State &utmp, State &ub, State &u);
+        GBOOL doinitb  (const PropertyTree &vtree, GGrid &grid, Time &time, State &utmp, State &ub, State &u);
+        GBOOL doinitfs (const PropertyTree &vtree, GGrid &grid, Time &time, State &utmp, State &ub, State &u);
+        GBOOL doinitfps(const PropertyTree &vtree, GGrid &grid, Time &time, State &utmp, State &ub, State &u);
 
 } // end, class GInitForceFactory
 

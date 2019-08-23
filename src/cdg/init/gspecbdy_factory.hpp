@@ -12,7 +12,6 @@
 #include "gcomm.hpp"
 #include "gtvector.hpp"
 #include "ggrid.hpp"
-#include "gspecbdy.hpp"
 #include "gspecbdy_user.hpp" // include user-provided spec functions
 
 

@@ -13,8 +13,8 @@
 #include "gcomm.hpp"
 #include "gtvector.hpp"
 #include "ggrid.hpp"
-#include "ginitstate.hpp"
-#include "ginitstate_user.hpp"
+#include "ginitstate_direct_user.hpp"
+#include "ginitstate_comp.h"
 
 using namespace geoflow::pdeint;
 using namespace std;
@@ -38,7 +38,7 @@ class GInitStateFactory
   private:
 	GBOOL set_by_direct(const PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &u);
 	GBOOL set_by_comp  (const PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &u);
-}; 
+
         GBOOL doinitv      (const PropertyTree &vtree, GGrid &grid, EqnBasePtr &peqn, Time &time, State &utmp, State &ub, State &u);
         GBOOL doinitb      (const PropertyTree &vtree, GGrid &grid, EqnBasePtr &peqn, Time &time, State &utmp, State &ub, State &u);
         GBOOL doinits      (const PropertyTree &vtree, GGrid &grid, EqnBasePtr &peqn, Time &time, State &utmp, State &ub, State &u);

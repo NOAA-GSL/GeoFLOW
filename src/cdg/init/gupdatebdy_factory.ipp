@@ -22,6 +22,7 @@ void GUpdateBdyFactory<EquationType>::update(const geoflow::tbox::PropertyTree& 
 {
   GBOOL         bret = FALSE, use_inits;
   Time          tt;
+  State         uu(u.size();
   GString       sgrid, supdate;
   PropertyTree  gtree;
 
@@ -37,14 +38,19 @@ void GUpdateBdyFactory<EquationType>::update(const geoflow::tbox::PropertyTree& 
     bret = TRUE;
   }
   else if ( use_inits ) {
-    bret = gupdatebdy::impl_bystateinit(ptree, grid, tt, utmp, u, ub);
+    assert(utmp.size() >= 2*u.size() && "Tmp array is too small!");
+    for ( auto i=0; i<uu.size(); i++ ) {
+      uu[i] = utmp[u.size()+i];
+     *uu[i] = *u[i];
+    }
+    bret = GInitStateFactory<EquationType>::GInitStateFactory::init(ptree, grid, tt, utmp, ub, uu);
+    if ( bret ) {
+      bret = setbdy_from_state(ptree, grid, tt, utmp, uu, ub);
+    }
+
   }
   else if ( "simple_outflow" == supdate ) {
     bret = gupdatebdy::impl_simple_output  (ptree, grid, tt, utmp, u, ub);
-  }
-
-  else if ( "mybdyupdate"    == supdate ) {
-    bret = gupdatebdy::impl_mybdyupdate   (ptree, grid, tt, utmp, u, ub);
   }
   else                                        {
     assert(FALSE && "Specified bdy update method unknown");
@@ -52,4 +58,44 @@ void GUpdateBdyFactory<EquationType>::update(const geoflow::tbox::PropertyTree& 
 
   return bret;
 } // end, init method update
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : set_bdy_from_state
+// DESC   : use state var, u, to set bdy, ub
+// ARGS   : ptree  : main property tree
+//          time   : initialization time
+//          utmp   : tmp arrays
+//          u      : state to be initialized. 
+//          ub     : boundary state 
+// RETURNS: none.
+//**********************************************************************************
+template<typename EquationType>
+void GUpdateBdyFactory<EquationType>::set_bdy_from_state(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, Time &time, State &utmp, State &u, State &ub)
+{
+  GBOOL         bret=FALSE;
+  GBOOL         use_inits; // use state init method to set bdy?
+  GFTYPE        tt;
+  GString       sgrid, supdate;
+
+  GTVector<GTVector<GSIZET>> *igbdy = &grid.igbdy_binned();
+
+  // Set from State vector, u and others that we _can_ set:
+  for ( auto k=0; k<u.size(); k++ ) {
+    for ( auto j=0; j<(*igbdy)[GBDY_DIRICHLET].size()
+       && ub[k] != NULLPTR; j++ ) {
+      (*ub[k])[j] = (*uu[k])[(*igbdy)[GBDY_DIRICHLET][j]];
+    }
+    for ( auto j=0; j<(*igbdy)[GBDY_INFLOWT].size()
+       && ub[k] != NULLPTR; j++ ) {
+      (*ub[k])[j] = (*uu[k])[(*igbdy)[GBDY_INFLOWT][j]];
+    }
+    for ( auto j=0; j<(*igbdy)[GBDY_NOSLIP].size()
+       && ub[k] != NULLPTR; j++ ) {
+      (*ub[k])[j] = 0.0;
+    }
+  }
+
+} // end, set_bdy_from_state
 

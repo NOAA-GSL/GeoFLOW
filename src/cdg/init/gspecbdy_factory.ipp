@@ -44,7 +44,7 @@ GBOOL GSpecBdyFactory::dospec(const geoflow::tbox::PropertyTree& sptree, GGrid &
     bret = TRUE;
   }
   else if ( "mybdyspec"        == sinit ) {
-    bret = gspecbdy::impl_mybdyspec  (sptree, grid, id, ibdy, tbdy);
+    bret = gspecbdy::impl_uniform(sptree, grid, id, ibdy, tbdy);
   }
   else                                        {
     assert(FALSE && "Boundary specification method unknown");
