@@ -22,14 +22,14 @@ void GUpdateBdyFactory<EquationType>::update(const geoflow::tbox::PropertyTree& 
 {
   GBOOL         bret = FALSE, use_inits;
   Time          tt;
-  State         uu(u.size();
+  State         uu(u.size());
   GString       sgrid, supdate;
   PropertyTree  gtree;
 
   sgrid    = ptree.getValue<GString>("grid_type");
   gtree    = ptree.getPropertyTree(sgrid);
-  supdate  = gtree.getValue<GStrig>("bdy_update_method","none");
-  use_inits= gtree.getValue<GStrig>("use_state_init",FALSE);
+  supdate  = gtree.getValue<GString>("bdy_update_method","none");
+  use_inits= gtree.getValue<GBOOL>  ("use_state_init",FALSE);
   tt       = time;
 
   if ( "updateb_none" == supdate
@@ -43,14 +43,14 @@ void GUpdateBdyFactory<EquationType>::update(const geoflow::tbox::PropertyTree& 
       uu[i] = utmp[u.size()+i];
      *uu[i] = *u[i];
     }
-    bret = GInitStateFactory<EquationType>::GInitStateFactory::init(ptree, grid, tt, utmp, ub, uu);
+    bret = GInitStateFactory<EquationType>::init(ptree, grid, tt, utmp, ub, uu);
     if ( bret ) {
       bret = setbdy_from_state(ptree, grid, tt, utmp, uu, ub);
     }
 
   }
   else if ( "simple_outflow" == supdate ) {
-    bret = gupdatebdy::impl_simple_output  (ptree, grid, tt, utmp, u, ub);
+    bret = gupdatebdy::impl_simple_outflow (ptree, grid, tt, utmp, u, ub);
   }
   else                                        {
     assert(FALSE && "Specified bdy update method unknown");
@@ -85,11 +85,11 @@ void GUpdateBdyFactory<EquationType>::set_bdy_from_state(const geoflow::tbox::Pr
   for ( auto k=0; k<u.size(); k++ ) {
     for ( auto j=0; j<(*igbdy)[GBDY_DIRICHLET].size()
        && ub[k] != NULLPTR; j++ ) {
-      (*ub[k])[j] = (*uu[k])[(*igbdy)[GBDY_DIRICHLET][j]];
+      (*ub[k])[j] = (*u[k])[(*igbdy)[GBDY_DIRICHLET][j]];
     }
     for ( auto j=0; j<(*igbdy)[GBDY_INFLOWT].size()
        && ub[k] != NULLPTR; j++ ) {
-      (*ub[k])[j] = (*uu[k])[(*igbdy)[GBDY_INFLOWT][j]];
+      (*ub[k])[j] = (*u[k])[(*igbdy)[GBDY_INFLOWT][j]];
     }
     for ( auto j=0; j<(*igbdy)[GBDY_NOSLIP].size()
        && ub[k] != NULLPTR; j++ ) {

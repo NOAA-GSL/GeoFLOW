@@ -39,6 +39,6 @@ class GUpdateBdyFactory
 }; // class GUpdateBdyFactory
 
 
-#include "ginitbdy_factory.ipp"
+#include "gupdatebdy_factory.ipp"
 
 #endif 

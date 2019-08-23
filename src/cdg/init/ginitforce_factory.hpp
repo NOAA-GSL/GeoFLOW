@@ -39,13 +39,13 @@ class GInitForceFactory
   private:
 	GBOOL set_by_direct(const PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &u);
 	GBOOL set_by_comp (const PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &u);
-}; 
-        GBOOL doinitv  (const PropertyTree &vtree, GGrid &grid, Time &time, State &utmp, State &ub, State &u);
-        GBOOL doinitb  (const PropertyTree &vtree, GGrid &grid, Time &time, State &utmp, State &ub, State &u);
+
+        GBOOL doinitfv (const PropertyTree &vtree, GGrid &grid, Time &time, State &utmp, State &ub, State &u);
+        GBOOL doinitfb (const PropertyTree &vtree, GGrid &grid, Time &time, State &utmp, State &ub, State &u);
         GBOOL doinitfs (const PropertyTree &vtree, GGrid &grid, Time &time, State &utmp, State &ub, State &u);
         GBOOL doinitfps(const PropertyTree &vtree, GGrid &grid, Time &time, State &utmp, State &ub, State &u);
 
-} // end, class GInitForceFactory
+}; // end, class GInitForceFactory
 
 
 #include "ginitforce_factory.ipp"
