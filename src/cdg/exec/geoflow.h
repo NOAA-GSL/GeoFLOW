@@ -29,6 +29,7 @@
 #include "ggrid_factory.hpp"
 #include "gposixio_observer.hpp"
 #include "pdeint/equation_base.hpp"
+#include "pdeint/equation_factory.hpp"
 #include "pdeint/integrator_factory.hpp"
 #include "pdeint/mixer_factory.hpp"
 #include "pdeint/observer_factory.hpp"
@@ -101,21 +102,23 @@ GC_COMM          comm_ ;      // communicator
 
 
 // Callback functions:
-void update_boundary (const PropertyTree &ptree, const Time &t, State &u, State &ub);     // bdy vector update
-void update_forcing  (const Time &t, State &u, State &uf);     // forcing vec update
-void steptop_callback(const Time &t, State &u, const Time &dt);// backdoor function
+void update_boundary  (const PropertyTree &ptree, const Time &t, State &u, State &ub);     // bdy vector update
+void update_forcing   (const Time &t, State &u, State &uf);     // forcing vec update
+void steptop_callback (const Time &t, State &u, const Time &dt);// backdoor function
 
 // Public methods:
-void init_state      (const PropertyTree &ptree, EqnBasePtr &pEqn, Time &t, State &u, State &ub);
-void init_force      (const PropertyTree &ptree, Time &t, State &u, State &uf);
-void init_bdy        (const PropertyTree &ptree, Time &t, State &u, State &ub);
-void allocate        (const PropertyTree &ptree);
-void deallocate      ();
-void create_observers(EqnBasePtr &eqn_ptr, PropertyTree &ptree, GSIZET icycle, Time time, 
-void create_equation (PropertyTree &ptree, EqnBasePtr &pEqn);
-void create_mixer  (PropertyTree &ptree, MixBasePtr &pMixer);
-void gresetart       (PropertyTree &ptree);
-void do_bench        (GString sbench, GSIZET ncyc);
+void init_state       (const PropertyTree &ptree, GGrid &, EqnBasePtr &pEqn, Time &t, State &u, State &ub);
+void init_force       (const PropertyTree &ptree, GGrid &, Time &t, State &u, State &uf);
+void init_bdy         (const PropertyTree &ptree, GGrid &, Time &t, State &u, State &ub);
+void allocate         (const PropertyTree &ptree);
+void deallocate       ();
+void create_observers (EqnBasePtr &eqn_ptr, PropertyTree &ptree, GSIZET icycle, Time time,     std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers);
+void create_equation  (PropertyTree &ptree, EqnBasePtr &pEqn);
+void create_mixer     (PropertyTree &ptree, MixBasePtr &pMixer);
+void create_basis_pool(PropertyTree &ptree, BasisBase &gbasis);
+void init_ggfx        (PropertyTree &ptree, GGrid &grid, GGFX<GFTYPE> &ggfx);
+void gresetart        (PropertyTree &ptree);
+void do_bench         (GString sbench, GSIZET ncyc);
 
 //#include "init_pde.h"
 

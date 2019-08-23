@@ -216,11 +216,12 @@ void create_equation(PropertyTree &ptree, EqnBasePtr &pEqn)
   pEqn = EquationFactory<MyTypes>::build(ptree, *grid_, utmp_);
 
   // Set PDE callback functions, misc:
-  std::function<void(const Time &t, State &u, 
-                                      State &ub)>  
-      fcallback = update_boundary; // set tmp function with proper signature for...
+  std::function<void(const Time &t, State &u, State &ub)>  
+      fcallback = [](const Time &t, State &u, State &ub)
+                  {update_boundary(t, u, ub);}; // set tmp function with proper signature for...
   std::function<void(const Time &t, State &u, const Time &dt)> 
-      stcallback = steptop_callback; // set tmp function with proper signature for...
+      stcallback = [](const Time &t, State &u, const Time &dt)
+                   {steptop_callback(t, u, dt);}; // set tmp function with proper signature for...
   pEqn->set_bdy_update_callback(fcallback); // bdy update callback
   pEqn->set_steptop_callback(stcallback);   // 'back-door' callback
 
@@ -320,7 +321,7 @@ std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers
 // ARGS  : ptree     : main property tree
 //         gbasis    : array of allowed basis objects
 //**********************************************************************************
-void create_basis_pool(PropertyTree &ptree, BasisBase &gbasis);
+void create_basis_pool(PropertyTree &ptree, BasisBase &gbasis)
 {
     
   // Eventually, this may become an actual pool, from which
@@ -578,4 +579,75 @@ void update_boundary(const PropertyTree &ptree, GGrid &grid, const Time &t, Stat
   
 } // end of method update_boundary
 
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD: init_ggfx
+// DESC  : Initialize gather/scatter operator
+// ARGS  : ptree   : main property tree
+//         grid    : GGrid object
+//         ggfx    : gather/scatter op, GGFX
+//**********************************************************************************
+void init_ggfx(PropertyTree &ptree, GGrid &grid, GGFX<GFTYPE> &ggfx)
+{
+  GString                        serr = "init_ggfx: ";
+  GFTYPE                         delta;
+  GFTYPE                         rad;
+  GMorton_KeyGen<GNODEID,GFTYPE> gmorton;
+  GTPoint<GFTYPE>                dX, porigin, P0;
+  GTVector<GNODEID>              glob_indices;
+  GTVector<GTVector<GFTYPE>>    *xnodes;
+  GString                        sgrid;
+  std::vector<GFTYPE>            pstd;
+  PropertyTree                   gtree;
+
+  sgrid = ptree.getValue<GString>("grid_type");
+  gtree = ptree.getPropertyTree(sgrid);
+
+  if ( sgrid == "grid_box" ) {
+    pstd = gtree.getArray<GFTYPE>("xyz0");
+    P0   = pstd;
+  }
+  if ( sgrid == "grid_icos" ) {
+    rad   = gtree.getValue<GFTYPE>("radius");
+    P0.x1 = -rad ;
+    P0.x2 = -rad ;
+    P0.x3 = -rad ;
+  }
+  if ( sgrid == "grid_sphere" ) {
+    rad   = gtree.getValue<GFTYPE>("radiuso");
+    P0.x1 = -rad ;
+    P0.x2 = -rad ;
+    P0.x3 = -rad ;
+  }
+
+  // First, periodize coords if required to, 
+  // before labeling nodes:
+  if ( typeid(grid) == typeid(GGridBox) ) { 
+    static_cast<GGridBox*>(&grid)->periodize();
+  }
+
+  delta  = grid.minnodedist();
+  dX     = 0.1*delta;
+  xnodes = &grid.xNodes();
+  glob_indices.resize(grid.ndof());
+
+  // Integralize *all* internal nodes
+  // using Morton indices:
+  gmorton.setIntegralLen(P0,dX);
+
+  gmorton.key(glob_indices, *xnodes);
+
+  // Initialize gather/scatter operator:
+  GBOOL bret;
+  bret = ggfx.init(glob_indices);
+  assert(bret && "Initialization of GGFX operator failed");
+
+  // Unperiodize nodes now that connectivity map is
+  // generated, so that coordinates mean what they should:
+  if ( typeid(grid) == typeid(GGridBox) ) { // periodize coords
+    static_cast<GGridBox*>(&grid)->unperiodize();
+  }
+
+} // end method init_ggfx
 
