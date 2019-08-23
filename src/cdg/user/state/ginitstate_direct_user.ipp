@@ -1,5 +1,3 @@
-#include "ginitstate_user.hpp"
-
 
 namespace ginitstate {
 

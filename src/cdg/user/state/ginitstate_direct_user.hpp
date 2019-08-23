@@ -1,7 +1,11 @@
 //==================================================================================
 // Module       : ginitstate_user.hpp
 // Date         : 7/10/19 (DLR)
-// Description  : User state initialization function implementations
+// Description  : Direct user state initialization function implementations. These
+//                methods are called directly during configuration, and can set 
+//                forcing for entire state (v+b+s) etc. The 'component' types
+//                in which component groups (v, b, s, etc) are set individually
+//                are contained in separate namespaces.
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
