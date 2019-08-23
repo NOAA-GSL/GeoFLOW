@@ -30,7 +30,7 @@ GBOOL impl_bystateinit(const PropertyTree &ptree, GGrid &grid, Time &time, State
   for ( auto j=0; j<u.size(); j++ ) {
     uu[j] = utmp[utmp.size()-1-j];
   }
-  GInitSFactory::init(ptree, grid, tt, utmp, ub, uu);
+  GInitStateFactory::init(ptree, grid, tt, utmp, ub, uu);
 
   GTVector<GTVector<GSIZET>> *igbdy = &grid.igbdy_binned();
 

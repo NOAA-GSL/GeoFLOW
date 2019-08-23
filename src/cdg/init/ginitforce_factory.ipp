@@ -74,7 +74,7 @@ GBOOL GInitStateFactory<EquationType>::set_by_direct(const PropertyTree& ptree, 
     }
   }
 //else if ( "initforce_myinit"            == sinit ) {
-//  bret = ginitstate::impl_mhyforce      (vtree, eqn_ptr, grid, time, utmp, ub, uf);
+//  bret = ginitstate::impl_mhyforce      (vtree, peqn, grid, time, utmp, ub, uf);
 //}
   else                                        {
     assert(FALSE & "Specified state initialization method unknown");
@@ -105,7 +105,7 @@ template<typename EquationType>
 GBOOL GInitStateFactory<EquationType>::set_by_comp(const PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn, Time &time, State &utmp, State &ub, State &uf)
 {
   GBOOL           bret    = TRUE;
-  GSISET          ndistcomp, mvar, nvar;
+  GSIZET          ndistcomp, mvar, nvar;
   GString         sblk    = ptree.getValue<GString>("initforce_block");
   GString         sinit;
   GStateCompType *distcomp, *ivar;
@@ -125,33 +125,33 @@ GBOOL GInitStateFactory<EquationType>::set_by_comp(const PropertyTree& ptree, GG
   // Cycle over all types required, get components of that
   // type, and initialize all of them. There should be a member
   // function for each GStateCompType:
-  for ( GSIZET j=0; j<ncomp && bret; j++ ) {
+  for ( GSIZET j=0; j<ndistcomp && bret; j++ ) {
     
     switch ( distcomp[j] ) {
       
       case GSC_KINETIC:
-        sinit = vtree.getValue<String>("initfv");
+        sinit = vtree.getValue<GString>("initfv");
         nvar = icomptype->contains(distcomp[j], ivar, mvar);
         comp.resize(nvar);
         for ( GINT i=0; i<nvar; i++ ) comp[i] = uf[ivar[i]];
         bret = doinitfv(vtree, grid, peqn, time, utmp, ub, comp);
         break;
       case GSC_MAGNETIC:
-        sinit = vtree.getValue<String>("initfb");
+        sinit = vtree.getValue<GString>("initfb");
         nvar = icomptype->contains(distcomp[j], ivar, mvar);
         comp.resize(nvar);
         for ( GINT i=0; i<nvar; i++ ) comp[i] = uf[ivar[i]];
         bret = doinitfb(vtree, grid, peqn, time, utmp, ub, comp);
         break;
       case GSC_ACTIVE_SCALAR:
-        sinit = vtree.getValue<String>("initfs");
+        sinit = vtree.getValue<GString>("initfs");
         nvar = icomptype->contains(distcomp[j], ivar, mvar);
         comp.resize(nvar);
         for ( GINT i=0; i<nvar; i++ ) comp[i] = uf[ivar[i]];
         bret = doinitfs(vtree, grid, peqn, time, utmp, ub, comp);
         break;
       case GSC_PASSIVE_SCALAR:
-        sinit = vtree.getValue<String>("initfps");
+        sinit = vtree.getValue<GString>("initfps");
         nvar = icomptype->contains(distcomp[j], ivar, mvar);
         comp.resize(nvar);
         for ( GINT i=0; i<nvar; i++ ) comp[i] = uf[ivar[i]];
@@ -273,7 +273,7 @@ GBOOL GInitStateFactory<EquationType>::doinitfb(const PropertyTree &vtree, GGrid
 // RETURNS: TRUE on success; else FALSE
 //**********************************************************************************
 template<typename EquationType>
-GBOOL GInitStateFactory<EquationType>::doinitfs(const PropteryTree &vtree, GGrid &grid,  EqnBasePtr &peqn, Time &time, State &utmp, State &ub, State &uf)
+GBOOL GInitStateFactory<EquationType>::doinitfs(const PropertyTree &vtree, GGrid &grid,  EqnBasePtr &peqn, Time &time, State &utmp, State &ub, State &uf)
 {
   GBOOL           bret    = TRUE;
   GString         sinit = vtree.getValue<GString>("name");
@@ -313,7 +313,7 @@ GBOOL GInitStateFactory<EquationType>::doinitfs(const PropteryTree &vtree, GGrid
 // RETURNS: TRUE on success; else FALSE
 //**********************************************************************************
 template<typename EquationType>
-GBOOL GInitStateFactory<EquationType>::doinitfps(const PropteryTree &vtree, GGrid &grid,  EqnBasePtr &peqn, Time &time, State &utmp, State &ub, State &uf)
+GBOOL GInitStateFactory<EquationType>::doinitfps(const PropertyTree &vtree, GGrid &grid,  EqnBasePtr &peqn, Time &time, State &utmp, State &ub, State &uf)
 {
   GBOOL           bret    = TRUE;
   GString         sinit = vtree.getValue<GString>("name");

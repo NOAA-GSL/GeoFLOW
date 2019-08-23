@@ -72,16 +72,16 @@ GBOOL GInitStateFactory<EquationType>::set_by_direct(const PropertyTree& ptree, 
     } 
   }
   else if ( "initstate_icosgaussburgers"  == sinit ) {
-    bret = ginitstate::impl_icosgauss  (vtree, eqn_ptr, grid, time, utmp, ub, u);
+    bret = ginitstate::impl_icosgauss       (vtree, peqn, grid, time, utmp, ub, u);
   }
   else if ( "initstate_boxdirgauss"       == sinit ) {
-    bret = ginitstate::impl_boxdirgauss(vtree, eqn_ptr, grid, time, utmp, ub, u);
+    bret = ginitstate::impl_boxdirgauss     (vtree, peqn, grid, time, utmp, ub, u);
   }
   else if ( "initstate_boxpergauss"       == sinit ) {
-    bret = ginitstate::impl_boxpergauss(vtree, eqn_ptr, grid, time, utmp, ub, u);
+    bret = ginitstate::impl_boxpergauss     (vtree, peqn, grid, time, utmp, ub, u);
   }
   else if ( "initstate_nwave"             == sinit ) {
-    bret = ginitstate::impl_nwave      (vtree, eqn_ptr, grid, time, utmp, ub, u);
+    bret = ginitstate::impl_boxnwaveburgers (vtree, peqn, grid, time, utmp, ub, u);
   }
   else                                        {
     assert(FALSE & "Specified state initialization method unknown");
@@ -112,7 +112,7 @@ template<typename EquationType>
 GBOOL GInitStateFactory<EquationType>::set_by_comp(const PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn, Time &time, State &utmp, State &ub, State &u)
 {
   GBOOL           bret    = TRUE;
-  GSISET          ndistcomp, mvar, nvar;
+  GSIZET          ndistcomp, mvar, nvar;
   GString         scomp    = ptree.getValue<GString>("initstate_block");
   GString         sinit;
   GStateCompType *distcomp, *ivar;
@@ -132,40 +132,40 @@ GBOOL GInitStateFactory<EquationType>::set_by_comp(const PropertyTree& ptree, GG
   // Cycle over all types required, get components of that
   // type, and initialize all of them. There should be a member
   // function for each GStateCompType:
-  for ( GSIZET j=0; j<ncomp && bret; j++ ) {
+  for ( GSIZET j=0; j<ndistcomp && bret; j++ ) {
     
     switch ( distcomp[j] ) {
       
       case GSC_KINETIC:
-        sinit = vtree.getValue<String>("initv");
+        sinit = vtree.getValue<GString>("initv");
         nvar = icomptype->contains(distcomp[j], ivar, mvar);
         comp.resize(nvar);
         for ( GINT i=0; i<nvar; i++ ) comp[i] = u[ivar[i]];
         bret = doinitv(vtree, grid, peqn, time, utmp, ub, comp);
         break;
       case GSC_MAGNETIC:
-        sinit = vtree.getValue<String>("initb");
+        sinit = vtree.getValue<GString>("initb");
         nvar = icomptype->contains(distcomp[j], ivar, mvar);
         comp.resize(nvar);
         for ( GINT i=0; i<nvar; i++ ) comp[i] = u[ivar[i]];
         bret = doinitb(vtree, grid, peqn, time, utmp, ub, comp);
         break;
       case GSC_ACTIVE_SCALAR:
-        sinit = vtree.getValue<String>("inits");
+        sinit = vtree.getValue<GString>("inits");
         nvar = icomptype->contains(distcomp[j], ivar, mvar);
         comp.resize(nvar);
         for ( GINT i=0; i<nvar; i++ ) comp[i] = u[ivar[i]];
         bret = doinits(vtree, grid, peqn, time, utmp, ub, comp);
         break;
       case GSC_PASSIVE_SCALAR:
-        sinit = vtree.getValue<String>("initp");
+        sinit = vtree.getValue<GString>("initp");
         nvar = icomptype->contains(distcomp[j], ivar, mvar);
         comp.resize(nvar);
         for ( GINT i=0; i<nvar; i++ ) comp[i] = u[ivar[i]];
         bret = doinits(vtree, grid, peqn, time, utmp, ub, comp);
         break;
       case GSC_PRESCRIBED:
-        sinit = vtree.getValue<String>("initc");
+        sinit = vtree.getValue<GString>("initc");
         nvar = icomptype->contains(distcomp[j], ivar, mvar);
         comp.resize(nvar);
         for ( GINT i=0; i<nvar; i++ ) comp[i] = u[ivar[i]];
@@ -366,7 +366,7 @@ GBOOL GInitStateFactory<EquationType>::doinitps(const PropteryTree &vtree, GGrid
 // RETURNS: TRUE on success; else FALSE
 //**********************************************************************************
 template<typename EquationType>
-GBOOL GInitStateFactory<EquationType>::doinitc(const PropteryTree &vtree, GGrid &grid, EqnBaseePtr &peqn, Time &time, State &utmp, State &ub, State &u)
+GBOOL GInitStateFactory<EquationType>::doinitc(const PropteryTree &vtree, GGrid &grid, EqnBasePtr &peqn, Time &time, State &utmp, State &ub, State &u)
 {
   GBOOL           bret  = FALSE;
   GString         sinit = vtree.getValue<GString>("name");
@@ -388,5 +388,4 @@ GBOOL GInitStateFactory<EquationType>::doinitc(const PropteryTree &vtree, GGrid 
 
   return bret;
 } // end, doinitc method
-
 

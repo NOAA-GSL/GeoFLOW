@@ -104,6 +104,9 @@ GBOOL impl_boxnwaveburgers(const PropertyTree &ptree, GGrid &grid, Time &time, S
     // dU1max = 1.0 / ( time * (sqrt(time/A) + 1.0) );
     // aArea  = 4.0*nu*log( 1.0 + sqrt(A/time) );
   }
+
+  return TRUE;
+
 } // end, impl_boxnwaveburgers
 
 
@@ -437,7 +440,7 @@ GBOOL impl_icosgauss(const PropertyTree &ptree, GGrid &grid, Time &time, State &
     // Now, rotate rt about x-axis by alpha to
     // find lat/lon of final position of lump:
     xx[0] = rt[0]; xx[1] = rt[1]; xx[2] = rt[2];
-    if ( t > 0 ) {
+    if ( time > 0 ) {
       xx[1] =  cos(alpha)*rt[1] + sin(alpha)*rt[2];
       xx[2] = -sin(alpha)*rt[1] + cos(alpha)*rt[2];
     }
