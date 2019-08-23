@@ -12,8 +12,8 @@
 #include "gcomm.hpp"
 #include "gtvector.hpp"
 #include "ggrid.hpp"
-#include "ginitb.hpp"
-#include "ginitb_user.hpp"
+#include "ginitbdy.hpp"
+#include "ginitbdy_user.hpp"
 
 using namespace geoflow;
 using namespace geoflow::tbox;
@@ -39,6 +39,6 @@ class GInitBdyFactory
 
 
 
-#include "ginits_factory.ipp"
+#include "ginitbdy_factory.ipp"
 
 #endif 

@@ -404,13 +404,13 @@ void GBurgers<TypePack>::init(GBurgers::Traits &traits)
   uevolve_.resize(nsolve); // state var to evolve
   if ( bpureadv_ || doheat_ ) {
     c_.resize(nc);    // adevective vel components
-    icomptype_.push_back(GSC_KINETIC); // 1st comp is the solved-for field
+    this->icomptype_.push_back(GSC_KINETIC); // 1st comp is the solved-for field
     if ( bpureadv_ ) { // remaining fields are adv vel--not solved for
-      for( GSIZET j=0; j<nc; j++ ) icomptype_.push_back(GSC_PRESCRIBED); 
+      for( GSIZET j=0; j<nc; j++ ) this->icomptype_.push_back(GSC_PRESCRIBED); 
     }
   }
   else { // all fields represent kinetic components:
-    for( GSIZET j=0; j<GDIM; j++ ) icomptype_.push_back(GSC_KINETIC);
+    for( GSIZET j=0; j<GDIM; j++ ) this->icomptype_.push_back(GSC_KINETIC);
   }
 
   std::function<void(const Time &t,                    // RHS callback function

@@ -12,6 +12,9 @@
 #include "gcomm.hpp"
 #include "gtvector.hpp"
 #include "ggrid.hpp"
+#include "ginitforce.hpp"
+#include "ginitforce_user.hpp"
+#include "ginitstate.hpp"
 #include "ginitstate_user.hpp"
 
 using namespace geoflow::pdeint;

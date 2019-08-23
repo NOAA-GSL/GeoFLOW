@@ -23,7 +23,7 @@ GBOOL impl_bystateinit(const PropertyTree &ptree, GGrid &grid, Time &time, State
   Time             tt = t;
   GString          serr = "impl_bystateinit: ";
 
-  bret = gupdateb::impl_bystateinit(ptree, grid, tt, utmp, u, ub);
+  bret = gupdatebdy::impl_bystateinit(ptree, grid, tt, utmp, u, ub);
 
   return TRUE;
 

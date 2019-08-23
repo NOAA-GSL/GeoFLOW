@@ -10,7 +10,7 @@
 #include <math.h>
 #include <omp.h>
 #include "geoflow.hpp"
-#include "gspecb_factory.hpp"
+#include "gspecbdy_factory.hpp"
 #include "gelem_base.hpp"
 #include "ggrid_icos.hpp"
 
@@ -1574,7 +1574,7 @@ void GGridIcos::config_bdy(const PropertyTree &ptree,
     if ( uniform[j] ) continue;
     find_bdy_ind3d(rbdy[j], itmp); 
     spectree  = ptree.getPropertyTree(confmthd[j]);
-    bret = GSpecBFactory::dospec(spectree, *this, j, itmp, btmp); // get user-defined bdy spec
+    bret = GSpecBdyFactory::dospec(spectree, *this, j, itmp, btmp); // get user-defined bdy spec
     assert(bret && "Boundary specification failed");
     igbdy [j].resize(itmp.size()); igbdy [j] = itmp;
     igbdyt[j].resize(itmp.size()); igbdyt[j] = btmp;

@@ -32,7 +32,7 @@ GBOOL GSpecBdyFactory::dospec(const geoflow::tbox::PropertyTree& sptree, GGrid &
 
   // If bdy_class is uniform, don't need config method:
   if ( "uniform"    == sclass) { 
-    bret = gspecb::impl_uniform    (sptree, grid, id, ibdy, tbdy);
+    bret = gspecbdy::impl_uniform    (sptree, grid, id, ibdy, tbdy);
     return bret;
   }
 

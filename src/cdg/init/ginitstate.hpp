@@ -27,7 +27,7 @@ typedef GTVector<GTVector<GFTYPE>*> State;
 namespace ginitstate
 {
 
-GBOOL impl_mystateinit          (const PropertyTree& stree, GGrid &grid,  Time &time, State &utmp, State &u, State &ub);
+GBOOL impl_mystateinit          (const PropertyTree& stree, GGrid &grid,  Time &time, State &utmp, State &ub, State &u);
 };
 
 #include "ginitstate.ipp"

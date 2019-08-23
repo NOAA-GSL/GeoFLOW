@@ -194,7 +194,7 @@ GBOOL impl_boxdirgauss(const PropertyTree &ptree, GGrid &grid, Time &time, State
   for ( GSIZET j=0; j<nxy; j++ ) {
     // Note: following c t is actually Integral_0^t c(t') dt', 
     //       so if c(t) changes, change this term accordingly:
-    for ( GSIZET i=0; i<GDIM; i++ ) xx[i] = (*xnodes)[i][j] - r0[i] - (*c[i])[j]*t;
+    for ( GSIZET i=0; i<GDIM; i++ ) xx[i] = (*xnodes)[i][j] - r0[i] - (*c[i])[j]*time;
     argxp = 0.0;
     for ( GSIZET i=0; i<GDIM; i++ ) argxp += -pow(xx[i],2.0)*si[i];
    (*u[0])[j] = ufact[0]*exp(argxp);
@@ -217,7 +217,7 @@ GBOOL impl_boxdirgauss(const PropertyTree &ptree, GGrid &grid, Time &time, State
 //          u    : current state
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_boxpergauss((const PropertyTree &ptree, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
+GBOOL impl_boxpergauss(const PropertyTree &ptree, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
 {
   GString          serr = "impl_boxpergauss: ";
   GBOOL            bContin;
@@ -238,8 +238,7 @@ GBOOL impl_boxpergauss((const PropertyTree &ptree, GGrid &grid, Time &time, Stat
   GBOOL doheat   = advptree.getValue<GBOOL>("doheat");
   GBOOL bpureadv = advptree.getValue<GBOOL>("bpureadv");
 
-  GTVector<GTVector<GFTYPE>> *xnodes = grid.xNodes();
-  GTVector<GTVector<GFTYPE>> c(GDIM) 
+  GTVector<GTVector<GFTYPE>> *xnodes = &grid.xNodes();
 
   assert(grid.gtype() == GE_REGULAR && "Invalid element types");
 
@@ -285,7 +284,7 @@ GBOOL impl_boxpergauss((const PropertyTree &ptree, GGrid &grid, Time &time, Stat
   // the remainder are the velocity components:
 
   for ( j=0; j<GDIM; j++ ) {
-    sig[j] = sqrt(sig0*sig0 + 4.0*t*nu);
+    sig[j] = sqrt(sig0*sig0 + 4.0*time*nu);
     si [j] = 1.0/(sig[j]*sig[j]);
    *c  [j] = 0.0;
   }
@@ -300,7 +299,7 @@ GBOOL impl_boxpergauss((const PropertyTree &ptree, GGrid &grid, Time &time, Stat
     for ( k=0; k<GDIM; k++ ) {
       // Note: following c t is actually Integral_0^t c(t') dt', 
       //       so if c(t) changes, change this term accordingly:
-      f [k]  = modf((*c[k])[j]*t/gL[k],&pint);
+      f [k]  = modf((*c[k])[j]*time/gL[k],&pint);
 //    f [k]  = (*c[k])[n]*t/gL[k];
       xx[k]  = (*xnodes)[k][n] - r0[k] - f[k]*gL[k];
 
@@ -357,6 +356,7 @@ GBOOL impl_icosgauss(const PropertyTree &ptree, GGrid &grid, Time &time, State &
   GTVector<GFTYPE>          latp(4), lonp(4);
   std::vector<GFTYPE>       c0(4), sig0(4);
   std::vector<GFTYPE>       lat0(4), lon0(4); // up to 4 lumps
+  std::vector<GFTYPE>       Omega;
   State            c(GDIM+1);
   GString          snut;
 
@@ -367,13 +367,11 @@ GBOOL impl_icosgauss(const PropertyTree &ptree, GGrid &grid, Time &time, State &
   GBOOL doheat   = advptree.getValue<GBOOL>("doheat");
   GBOOL bpureadv = advptree.getValue<GBOOL>("bpureadv");
 
-  GTVector<GTVector<GFTYPE>> *xnodes = grid.xNodes();
+  GTVector<GTVector<GFTYPE>> *xnodes = &grid.xNodes();
   assert(grid.gtype() == GE_2DEMBEDDED && "Invalid element types");
-  GTVector<GTVector<GFTYPE>> c(GDIM) 
 
-  std::vector<GFTYPE> Omega;
 
-  for ( GSIZET j=0; j<GDIM; j++ ) c[j] = u[GDIM+j];
+  for ( GSIZET j=0; j<GDIM+1; j++ ) c[j] = u[GDIM+j];
 
   nxy = (*xnodes)[0].size(); // same size for x, y, z
 
@@ -423,13 +421,13 @@ GBOOL impl_icosgauss(const PropertyTree &ptree, GGrid &grid, Time &time, State &
   for ( GSIZET k=0; k<nlumps; k++ ) {
 
     // Allow different sigma/concentration for each lump:
-    sig  [k] = sqrt(sig0[k]*sig0[k] + 4.0*t*nu); // constant viscosity only
+    sig  [k] = sqrt(sig0[k]*sig0[k] + 4.0*time*nu); // constant viscosity only
     si   [k] = 1.0/(sig[k]*sig[k]);
     ufact[k] = c0[k]*pow(sig0[k]/sig[k],GDIM);
 
     // Find where lat/lon endpoint would be at t, if alpha=0:
     latp[k]  = lat0[k];
-    lonp[k]  = lon0[k] + (u0/rad) * t;
+    lonp[k]  = lon0[k] + (u0/rad) * time;
 
     // Find where Cart endpoint would be at t, if alpha=0:
     rt[0] = rad*cos(latp[k])*cos(lonp[k]);

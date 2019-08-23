@@ -13,7 +13,7 @@
 #include "gcomm.hpp"
 #include "geoflow.hpp"
 #include "ggrid_box.hpp"
-#include "gspecb_factory.hpp"
+#include "gspecbdy_factory.hpp"
 #include "tbox/mpixx.hpp"
 #include "tbox/global_manager.hpp"
 
@@ -972,7 +972,7 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
       find_bdy_ind3d(j, TRUE, itmp); // include edges
     }
     spectree  = ptree.getPropertyTree(confmthd[j]);
-    bret = GSpecBFactory::dospec(spectree, *this, j, itmp, btmp); // get user-defined bdy spec
+    bret = GSpecBdyFactory::dospec(spectree, *this, j, itmp, btmp); // get user-defined bdy spec
     assert(bret && "Boundary specification failed");
     igbdy [j].resize(itmp.size()); igbdy [j] = itmp;
     igbdyt[j].resize(itmp.size()); igbdyt[j] = btmp;

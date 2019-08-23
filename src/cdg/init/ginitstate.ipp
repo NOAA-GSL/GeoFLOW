@@ -20,7 +20,7 @@ namespace ginitstate {
 GBOOL impl_mystateinit(const PropertyTree &ptree, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
 {
 
-  Time             tt = t;
+  Time             tt = time;
   GString          serr = "impl_bystateinit: ";
 
 
