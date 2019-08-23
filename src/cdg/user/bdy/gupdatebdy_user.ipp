@@ -2,51 +2,39 @@
 namespace gupdatebdy {
 
 
+
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : impl_mybdyupdate
-// DESC   : Update bdy using state initialization method 
-//          specified by ptree
+// METHOD : impl_simple_outflow
+// DESC   : Update bdy using simple outflow. Applies
+//          only to GBDY_OUTFLOW bdy types. Called each time step.
 // ARGS   : ptree: main prop tree
 //          grid : grid
 //          t    : time
 //          utmp : tmp arrays; require at least ub.size arrays
-//          u    : current state
+//          u    : current state, unchanged here
 //          ub   : bdy vectors (one for each state element, unless NULL)
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_mybdyupdate(const PropertyTree &ptree, GGrid &grid, Time &time, State &utmp, const State &u, State &ub)
+GBOOL impl_simple_outflow(const PropertyTree &ptree, GGrid &grid, Time &time, State &utmp, State &u, State &ub)
 {
-
-#if 0
-  Time             tt = t;
+  Time             tt = time;
   State            uu(u.size());
-  GString          serr = "impl_mybdyupdate: ";
+  GString          serr = "impl_simple_outflow: ";
 
-  Time  tt = t;
+  GTVector<GTVector<GSIZET>> *igbdy = &grid.igbdy_binned();
 
-  // Use tmp from back end, so that 'init' isn't 
-  // disturbed:
-  for ( auto j=0; j<u.size(); j++ ) {
-    uu[j] = utmp[utmp.size()-1-j];
+  // Set from State vector, u:
+  for ( auto k=0; k<u.size(); k++ ) {
+    for ( auto j=0; j<(*igbdy)[GBDY_OUTFLOW].size()
+       && ub[k] != NULLPTR; j++ ) {
+      (*ub[k])[j] = (*u[k])[(*igbdy)[GBDY_OUTFLOW][j]];
+    }
   }
-  GInitSFactory::init(ptree, grid, tt, utmp, ub, uu);
-
-  GTVector<GTVector<GSIZET>> *igbdy = &grid.igbdy();
-  ...
 
   return TRUE;
-#else
-  /* 
-     Fill in here; change function name 
-     if desired. Add (unique) function name to 
-     gupdateb_factory.ipp.
-  */
 
-  return FALSE;
-#endif
-
-} // end, method impl_mybdyupdate
+} // end, impl_simple_outflow
 
 
 } // end, gupdatebdy namespace

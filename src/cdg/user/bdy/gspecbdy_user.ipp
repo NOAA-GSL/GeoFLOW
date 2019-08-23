@@ -4,26 +4,26 @@ namespace gspecbdy {
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : impl_mybdyspec
-// DESC   : Do bdy specification using my new method
-// ARGS   : ptree: main prop tree
-//          grid : grid
-//          ibdy  : indirection array into state indicating global bdy
-//          tbdy  : array of size ibdy.size giving bdy condition type, returned
+// METHOD : impl_uniform
+// DESC   : Do bdy specification assuming that base_type bdy condition
+//          in property tree is to be set for all indices
+// ARGS   : sptree : specification prop tree
+//          grid   : grid
+//          id     : may serve as canonical bdy id
+//          ibdy   : indirection array into state indicating global bdy
+//          tbdy   : array of size ibdy.size giving bdy condition type, returned
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_mybdyspec(const PropertyTree &ptree, GGrid &grid, const GINT id, GTVector<GSIZET> &ibdy, GTVector<GBdyType> &tbdy)
+GBOOL impl_uniform(const PropertyTree &sptree, GGrid &grid, const GINT id, GTVector<GSIZET> &ibdy, GTVector<GBdyType> &tbdy)
 {
+  GBdyType btype = geoflow::str2bdytype(sptree.getValue<GString>("base_type", "GBDY_NONE"));
 
-  /* 
-     Fill in here; change function name 
-     if desired. Add (unique) function name to 
-     gspecb_factory.ipp.
-  */
+  tbdy.resizem(ibdy.size());
+  tbdy = btype;
 
-  return FALSE;
+  return TRUE;
 
-} // end, method impl_mybdyspec
+} // end, method impl_uniform
 
 
-} // end, gspecb namespace
+} // end, gspecbdy namespace
