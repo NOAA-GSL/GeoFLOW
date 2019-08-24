@@ -107,9 +107,9 @@ void update_forcing   (const Time &t, State &u, State &uf);     // forcing vec u
 void steptop_callback (const Time &t, State &u, const Time &dt);// backdoor function
 
 // Public methods:
-void init_state       (const PropertyTree &ptree, GGrid &, EqnBasePtr &pEqn, Time &t, State &u, State &ub);
-void init_force       (const PropertyTree &ptree, GGrid &, Time &t, State &u, State &uf);
-void init_bdy         (const PropertyTree &ptree, GGrid &, Time &t, State &u, State &ub);
+void init_state       (const PropertyTree &ptree, GGrid &, EqnBasePtr &pEqn, Time &t, State &utmp, State &u, State &ub);
+void init_force       (const PropertyTree &ptree, GGrid &, Time &t, State &utmp, State &u, State &uf);
+void init_bdy         (const PropertyTree &ptree, GGrid &, Time &t, State &utmp, State &u, State &ub);
 void allocate         (const PropertyTree &ptree);
 void deallocate       ();
 void create_observers (EqnBasePtr &eqn_ptr, PropertyTree &ptree, GSIZET icycle, Time time,     std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers);

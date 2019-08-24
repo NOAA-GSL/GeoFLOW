@@ -37,13 +37,13 @@ class GInitForceFactory
 	static GBOOL init(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &u);
 
   private:
-	GBOOL set_by_direct(const PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &u);
-	GBOOL set_by_comp (const PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &u);
+	static GBOOL set_by_direct(const PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &u);
+	static GBOOL set_by_comp (const PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &u);
 
-        GBOOL doinitfv (const PropertyTree &vtree, GGrid &grid, Time &time, State &utmp, State &ub, State &u);
-        GBOOL doinitfb (const PropertyTree &vtree, GGrid &grid, Time &time, State &utmp, State &ub, State &u);
-        GBOOL doinitfs (const PropertyTree &vtree, GGrid &grid, Time &time, State &utmp, State &ub, State &u);
-        GBOOL doinitfps(const PropertyTree &vtree, GGrid &grid, Time &time, State &utmp, State &ub, State &u);
+        static GBOOL doinitfv (const PropertyTree &vtree, GGrid &grid, Time &time, State &utmp, State &ub, State &u);
+        static GBOOL doinitfb (const PropertyTree &vtree, GGrid &grid, Time &time, State &utmp, State &ub, State &u);
+        static GBOOL doinitfs (const PropertyTree &vtree, GGrid &grid, Time &time, State &utmp, State &ub, State &u);
+        static GBOOL doinitfps(const PropertyTree &vtree, GGrid &grid, Time &time, State &utmp, State &ub, State &u);
 
 }; // end, class GInitForceFactory
 

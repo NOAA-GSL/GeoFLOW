@@ -18,7 +18,7 @@
 // RETURNS: none.
 //**********************************************************************************
 template<typename EquationType>
-void GUpdateBdyFactory<EquationType>::update(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, Time &time, State &utmp, State &u, State &ub)
+GBOOL GUpdateBdyFactory<EquationType>::update(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, Time &time, State &utmp, State &u, State &ub)
 {
   GBOOL         bret = FALSE, use_inits;
   Time          tt;

@@ -323,6 +323,9 @@ std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers
 //**********************************************************************************
 void create_basis_pool(PropertyTree &ptree, BasisBase &gbasis)
 {
+  std::vector<GINT> pstd(GDIM);  // order in each direction
+
+  pstd = ptree.getArray<GINT>("exp_order");
     
   // Eventually, this may become an actual pool, from which
   // solvers will determine basis in each direction. For now...
@@ -421,10 +424,10 @@ void allocate(const PropertyTree &ptree)
   std::vector<GINT>
                ibounded, iforced, diforced;
   std::string  sgrid;
-  std::string  eq_name   = ptree.getValue("pde_name");
-  PropertyTree eqn_ptree = ptree.getPropertyTree(equation_name);
-  PropertyTree stp_ptree = ptree.getPropertyTree("stepper_props");
-  bforced                = ptree.getValue<bool> ("use_forcing",false);
+  std::string  eq_name   = ptree.getValue<GString>("pde_name");
+  PropertyTree eqn_ptree = ptree.getPropertyTree  (equation_name);
+  PropertyTree stp_ptree = ptree.getPropertyTree  ("stepper_props");
+  bforced                = ptree.getValue<GBOOL>  ("use_forcing",false);
 
   assert("3##$%!62ahTze32934Plq1C4" != eq_name
       && "pde_name required");

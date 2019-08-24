@@ -31,7 +31,7 @@ class GUpdateBdyFactory
         using Time          = typename Equation::Time;
 
 
-	static void update(const geoflow::tbox::PropertyTree& ptree, GGrid &grid,  Time &time, State &utmp, State &ub, State &u);
+	static GBOOL update(const geoflow::tbox::PropertyTree& ptree, GGrid &grid,  Time &time, State &utmp, State &ub, State &u);
 
   private:
         void set_bdy_from_state(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, Time &time, State &utmp, State &u, State &ub);
