@@ -31,7 +31,7 @@ public:
 	using Grid       = typename Interface::Grid;
 	using Time       = typename Interface::Time;
         
-        NullObserver(typename ObserverBase<EquationType>::Traits &traits, Grid &grid){
+        NullObserver(const EquationPtr& equation, Grid& grid, Traits& traits){
         }
 
 protected:

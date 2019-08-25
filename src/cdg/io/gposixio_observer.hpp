@@ -62,7 +62,7 @@ public:
                "Grid is of incorrect type");
 
                            GPosixIOObserver() = delete;
-                           GPosixIOObserver(EquationPtr &equation, typename ObserverBase<EquationType>::Traits &traits, Grid &grid);
+                           GPosixIOObserver(EquationPtr &equation, Grid &grid, typename ObserverBase<EquationType>::Traits &traits);
                           ~GPosixIOObserver() = default;
                            GPosixIOObserver(const GPosixIOObserver &a) = default;
                            GPosixIOObserver &operator=(const GPosixIOObserver &bu) = default;

@@ -35,7 +35,7 @@ public:
 	using Size       = typename TypePack::Size;
 
 
-	EquationBase() = default;
+	EquationBase() { update_bdy_callback_ = nullptr; }
 	EquationBase(const EquationBase& eb) = default;
 	virtual ~EquationBase() = default;
 	EquationBase& operator=(const EquationBase& eb) = default;
@@ -119,6 +119,16 @@ public:
                 return icomptype_;
         }
 
+
+	/** Set boundary update callback function
+	 *
+	 *
+	 * \param[in]     fcn   bdy update function
+	 */
+	virtual void set_bdy_update_callback(std::function<void(const Time& t, State& u, State& ub)> fcn){
+		update_bdy_callback_ = fcn;
+	}
+
 protected:
 
 	/**
@@ -146,7 +156,10 @@ protected:
 	 */
 	virtual void step_impl(const Time& t, const State& uin, State& uf, State& ub, const Time& dt, State& uout) = 0;
   
+private:
         CompDesc icomptype_;
+        std::function<void(const Time &t, State &u, State &ub)> 
+                 update_bdy_callback_;
 };
 
 

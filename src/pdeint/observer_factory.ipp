@@ -48,7 +48,7 @@ ObserverFactory<ET>::build(const tbox::PropertyTree& ptree, EqnBasePtr& equation
 	// Create the observer and cast to base type
 	ObsBasePtr base_ptr;
 	if( "none" == observer_name ){
-		using ObsImpl = NullObserver<Equation>;
+		using ObsImpl = NullObserver<ET>;
 
 		// Allocate observer Implementation
 		std::shared_ptr<ObsImpl> obs_impl(new ObsImpl(equation, grid, traits));
@@ -60,7 +60,7 @@ ObserverFactory<ET>::build(const tbox::PropertyTree& ptree, EqnBasePtr& equation
 		base_ptr = obs_impl;
 	}
         else if( "posixio_observer" == observer_name ) {
-		using ObsImpl = GPosixIOObserver<Equation>;
+		using ObsImpl = GPosixIOObserver<ET>;
 
                 traits.itag1  = ptree.getValue <GINT>("time_field_width",6);  
                 traits.itag2  = ptree.getValue <GINT>("task_field_width",5);  

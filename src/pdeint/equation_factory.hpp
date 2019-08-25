@@ -23,7 +23,7 @@ template<typename EquationType>
 struct EquationFactory {
 	using Equation    = EquationType;
 	using EqnBase     = EquationBase<Equation>;
-	using EqnBasePtr  = std::shared_ptr<EquationBase>;
+	using EqnBasePtr  = std::shared_ptr<EqnBase>;
         using State       = typename EquationType::State;
 	using Grid        = typename EquationType::Grid;
 

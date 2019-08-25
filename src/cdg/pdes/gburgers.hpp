@@ -86,8 +86,7 @@ public:
           GINT           itorder     = 2;
           GINT           inorder     = 2;
           GFTYPE         courant     = 0.5;
-          GTVector<GFTYPE> 
-                         nu          = 0.0;
+          GFTYPE         nu          = 0.0;
           GTVector<GINT> iforced;
           GString        ssteptype   = "GSTEPPER_EXRK";
         };
@@ -102,7 +101,7 @@ public:
         void                 set_bdy_update_callback(
                              std::function<void(const Time &t, State &u,
                                            State &ub)> callback) 
-                             { update_bdy_callback_ = callback; bupdatebc_ = TRUE;
+                             { this->update_bdy_callback_ = callback; bupdatebc_ = TRUE;
                                if ( gexrk_ != NULLPTR ) 
                                  gexrk_->set_update_bdy_callback(callback);} // set bdy-update callback
 
@@ -172,8 +171,7 @@ private:
 //      GFlux              *gflux_;         // flux op
         GC_COMM             comm_;          // communicator
         GGFX<GFTYPE>       *ggfx_;          // gather-scatter operator
-        std::function<void(const Time &t, State &u,
-                           State &ub)> update_bdy_callback_;
+
         std::function<void(const Time &t, State &u, const Time &dt)>
                            steptop_callback_;
 

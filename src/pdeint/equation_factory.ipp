@@ -15,7 +15,8 @@ template<typename ET>
 typename EquationFactory<ET>::EqnBasePtr
 EquationFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid, State& utmp){
 
-        
+        int itmp;
+
 	// Set the default eqution type
 	const std::string default_equation = "none";
 
@@ -23,7 +24,7 @@ EquationFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid, State& u
 	std::string equation_name = ptree.getValue("pde_name", default_equation);
 
         // Set traits from prop tree:
-        typename EquationBase<ET>::Traits traits;
+        typename GBurgers<ET>::Traits btraits;
 
 	// Set the default state components to force:
 	std::vector<int> comps, default_comps;
@@ -36,25 +37,25 @@ EquationFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid, State& u
 	// Create the equation and cast to base type
 	EqnBasePtr base_ptr;
 	if( "pde_burgers" == equation_name ){
-		using EqnImpl = NullEquation<Equation>;
+		using EqnImpl = GBurgers<ET>;
 
-                traits.doheat    = eqn_ptree.getValue<bool>    ("doheat",false);
-                traits.bpureadv  = eqn_ptree.getValue<bool>    ("bpureadv",false);
-                traits.bconserved= eqn_ptree.getValue<bool>    ("bconserved",false);
-                traits.bforced   = eqn_ptree.getValue<bool>    ("use_forcing",false);
-                traits.variabledt= stp_ptree.getValue<bool>    ("variable_dt",false);
-                traits.courant   = stp_ptree.getValue<double>  ("courant",0.5);
-                traits.itorder   = stp_ptree.getValue<int>     ("time_deriv_order",4);
-                traits.inorder   = stp_ptree.getValue<int>     ("extrap_order",2);
-                traits.steptype  = stp_ptree.getValue<int>     ("stepping_method","GSTEPPER_EXRK");
-                traits.nu        = dis_ptree.getValue<int>     ("nu");
+                btraits.doheat    = eqn_ptree.getValue<bool>  ("doheat",false);
+                btraits.bpureadv  = eqn_ptree.getValue<bool>  ("bpureadv",false);
+                btraits.bconserved= eqn_ptree.getValue<bool>  ("bconserved",false);
+                btraits.bforced   = eqn_ptree.getValue<bool>  ("use_forcing",false);
+                btraits.variabledt= stp_ptree.getValue<bool>  ("variable_dt",false);
+                btraits.courant   = stp_ptree.getValue<double>("courant",0.5);
+                btraits.itorder   = stp_ptree.getValue<int>   ("time_deriv_order",4);
+                btraits.inorder   = stp_ptree.getValue<int>   ("extrap_order",2);
+                btraits.steptype  = stp_ptree.getValue<std::string>
+                                                             ("stepping_method","GSTEPPER_EXRK");
+                btraits.nu        = dis_ptree.getValue<double>("nu");
                 for ( auto i=0; i<GDIM; i++ ) default_comps.push_back(i);
-                comps            = eqn_ptree.getArray<int>     ("forcing_comp",default_comps);
-                traits.iforced.resize(comps.size);
-                traits.iforced   = comps; // traits.iforced may be a different d.structure
+                comps            = eqn_ptree.getArray<int>   ("forcing_comp",default_comps);
+                btraits.iforced.resize(comps.size);
+                btraits.iforced   = comps; // traits.iforced may be a different d.structure
 		// Allocate equation Implementation
-		std::shared_ptr<EqnImpl> eqn_impl(new EqnImpl(traits, grid, utmp));
-                eqn_impl->set_nu(nu);
+		std::shared_ptr<EqnImpl> eqn_impl(new EqnImpl(btraits, grid, utmp));
 
 		// Set back to base type
 		base_ptr = eqn_impl;

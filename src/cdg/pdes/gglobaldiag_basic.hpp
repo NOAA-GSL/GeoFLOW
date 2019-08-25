@@ -34,6 +34,7 @@ public:
         using Value       = typename Equation::Value;
         using Derivative  = typename Equation::Derivative;
         using Time        = typename Equation::Time;
+        using CompDesc    = typename Equation::CompDesc;
         using Jacobian    = typename Equation::Jacobian;
         using Size        = typename Equation::Size;
         using EquationPtr = std::shared_ptr<Equation>;

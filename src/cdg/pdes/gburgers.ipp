@@ -57,6 +57,7 @@ using namespace std;
 //**********************************************************************************
 template<typename TypePack>
 GBurgers<TypePack>::GBurgers(GGFX<GFTYPE> &ggfx, Grid &grid, GBurgers<TypePack>::Traits &traits, GTVector<GTVector<GFTYPE>*> &tmp) :
+EquationBase<TypePack>(),
 doheat_          (traits.doheat),
 bpureadv_      (traits.bpureadv),
 bconserved_  (traits.bconserved),
@@ -74,7 +75,6 @@ gpdv_                  (NULLPTR),
 //gflux_                 (NULLPTR),
 grid_                    (&grid),
 ggfx_                    (&ggfx),
-update_bdy_callback_   (NULLPTR),
 steptop_callback_      (NULLPTR)
 {
   static_assert(std::is_same<State,GTVector<GTVector<GFTYPE>*>>::value,

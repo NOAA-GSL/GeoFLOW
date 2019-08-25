@@ -29,13 +29,13 @@ int main(int argc, char **argv)
     // Read main prop tree; may ovewrite with
     // certain command line args:
     EH_MESSAGE("geoflow::call load prop tree...");
-    ptree    = InputManager::getInputPropertyTree();       // main param file structure
+    ptree_    = InputManager::getInputPropertyTree();       // main param file structure
     EH_MESSAGE("geoflow: prop tree loaded.");
 
     // Create other prop trees for various objects:
-    itindex     = ptree.getValue <GSIZET>("restart_index");
-    pstd        = ptree.getArray   <GINT>("exp_order");
-    bench_      = ptree.getValue  <GBOOL>("benchmark");
+    itindex     = ptree_.getValue <GSIZET>("restart_index");
+    pstd        = ptree_.getArray   <GINT>("exp_order");
+    bench_      = ptree_.getValue  <GBOOL>("benchmark");
 
     // Parse command line. ':' after char
     // option indicates that it takes an argument.
@@ -77,7 +77,7 @@ int main(int argc, char **argv)
     // Create basis pool:
     //***************************************************
     EH_MESSAGE("geoflow: create basis pool...");
-    create_basis_pool(ptree, gbasis_);
+    create_basis_pool(ptree_, gbasis_);
 
     //***************************************************
     // Create grid:
@@ -85,7 +85,7 @@ int main(int argc, char **argv)
     EH_MESSAGE("geoflow: build grid...");
     GTimerStart("gen_grid");
 
-    grid_ = GGridFactory::build(ptree, gbasis_, comm_);
+    grid_ = GGridFactory::build(ptree_, gbasis_, comm_);
     GTimerStop("gen_grid");
 
     //***************************************************
@@ -94,7 +94,7 @@ int main(int argc, char **argv)
     EH_MESSAGE("geoflow: initialize gather/scatter...");
     GTimerStart("init_ggfx_op");
 
-    init_ggfx(ptree, *grid_, ggfx_);
+    init_ggfx(ptree_, *grid_, ggfx_);
 
     GTimerStop("init_ggfx_op");
     EH_MESSAGE("geoflow: gather/scatter initialized.");
@@ -103,34 +103,34 @@ int main(int argc, char **argv)
     // Create state and tmp space:
     //***************************************************
     EH_MESSAGE("geoflow: allocate tmp space...");
-    allocate(ptree);
+    allocate(ptree_);
 
     //***************************************************
     // Create equation set:
     //***************************************************
     EH_MESSAGE("geoflow: create equation...");
     EqnBasePtr pEqn;
-    create_equation(ptree, pEqn);
+    create_equation(ptree_, pEqn);
 
     //***************************************************
     // Create the mixer (to update forcing)
     //***************************************************
     EH_MESSAGE("geoflow: create mixer...");
     MixBasePtr pMixer;
-    create_mixer(ptree, pMixer);
+    create_mixer(ptree_, pMixer);
 
     //***************************************************
     // Create observers: 
     //***************************************************
     EH_MESSAGE("geoflow: create observers...");
     std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> pObservers(new std::vector<std::shared_ptr<ObserverBase<MyTypes>>>());
-    create_observers(pEqn, ptree, icycle, t, pObservers);
+    create_observers(pEqn, ptree_, icycle, t, pObservers);
 
     //***************************************************
     // Create integrator:
     //***************************************************
     EH_MESSAGE("geoflow: create integrator...");
-    auto pIntegrator = IntegratorFactory<MyTypes>::build(ptree, pEqn, pMixer, pObservers, *grid_);
+    auto pIntegrator = IntegratorFactory<MyTypes>::build(ptree_, pEqn, pMixer, pObservers, *grid_);
     pIntegrator->get_traits().cycle = icycle;
 
     //***************************************************
@@ -139,12 +139,12 @@ int main(int argc, char **argv)
     EH_MESSAGE("geoflow: Initializing state...");
     if ( itindex == 0 ) { // start new run
       icycle = 0; t = 0.0; 
-      init_state(ptree, *grid_, pEqn, t, utmp_, u_, ub_);
-      init_bdy  (ptree, *grid_,       t, utmp_, u_, ub_);
-      init_force(ptree, *grid_,       t, utmp_, u_, uf_);
+      init_state(ptree_, *grid_, pEqn, t, utmp_, u_, ub_);
+      init_bdy  (ptree_, *grid_,       t, utmp_, u_, ub_);
+      init_force(ptree_, *grid_,       t, utmp_, u_, uf_);
     }
     else {                // restart run
-      gio_restart(ptree, 0, u_, p, icycle, t, comm_);
+      gio_restart(ptree_, 0, u_, p, icycle, t, comm_);
     }
 
     //***************************************************
@@ -219,11 +219,14 @@ void create_equation(PropertyTree &ptree, EqnBasePtr &pEqn)
   std::function<void(const Time &t, State &u, State &ub)>  
       fcallback = [](const Time &t, State &u, State &ub)
                   {update_boundary(t, u, ub);}; // set tmp function with proper signature for...
+  pEqn->set_bdy_update_callback(fcallback); // bdy update callback
+
+#if 0
   std::function<void(const Time &t, State &u, const Time &dt)> 
       stcallback = [](const Time &t, State &u, const Time &dt)
                    {steptop_callback(t, u, dt);}; // set tmp function with proper signature for...
-  pEqn->set_bdy_update_callback(fcallback); // bdy update callback
   pEqn->set_steptop_callback(stcallback);   // 'back-door' callback
+#endif
 
 } // end method create_equation
 
@@ -424,15 +427,15 @@ void allocate(const PropertyTree &ptree)
   std::vector<GINT>
                ibounded, iforced, diforced;
   std::string  sgrid;
-  std::string  eq_name   = ptree.getValue<GString>("pde_name");
-  PropertyTree eqn_ptree = ptree.getPropertyTree  (equation_name);
+  std::string  eqn_name  = ptree.getValue<GString>("pde_name");
+  PropertyTree eqn_ptree = ptree.getPropertyTree  (eqn_name);
   PropertyTree stp_ptree = ptree.getPropertyTree  ("stepper_props");
   bforced                = ptree.getValue<GBOOL>  ("use_forcing",false);
 
-  assert("3##$%!62ahTze32934Plq1C4" != eq_name
+  assert("3##$%!62ahTze32934Plq1C4" != eqn_name
       && "pde_name required");
 
-  if ( "pde_burgers" == eq_name ) {
+  if ( "pde_burgers" == eqn_name ) {
     sgrid     = ptree.getValue<GString>  ("grid_type");
     doheat    = eqn_ptree.getValue<bool> ("doheat",false);
     bpureadv  = eqn_ptree.getValue<bool> ("bpureadv",false);
@@ -452,22 +455,22 @@ void allocate(const PropertyTree &ptree)
     ntmp_     = 24;
   }
   
-  nforced = MIN(nsolved_,iforced.size());
+  nforced = MIN(nsolve_,iforced.size());
 
   u_   .resize(nstate_);                // state
-  ub_  .resize(nstate_); ub_ = NULLPTR  // bdy state array
+  ub_  .resize(nstate_); ub_ = NULLPTR; // bdy state array
   uf_  .resize(nstate_); uf_ = NULLPTR; // forcing array
   utmp_.resize  (ntmp_);                // tmp array
 
-  for ( auto j=0; j<u_. size(); j++ ) u_.          [j] = new GTVector<GFTYPE>(grid_->size());
+  for ( auto j=0; j<u_. size(); j++ ) u_                [j] = new GTVector<GFTYPE>(grid_->size());
 
   for ( auto j=0; j<ibounded.size(); j++ ) ub_[ibounded[j]] = new GTVector<GFTYPE>(grid_->nbdydof());
 
   if ( bforced ) {
-    for ( auto j=0; j<nforced      ; j++ ) uf_.[iforced[j]] = new GTVector<GFTYPE>(grid_->ndof());
+    for ( auto j=0; j<nforced      ; j++ ) uf_ [iforced[j]] = new GTVector<GFTYPE>(grid_->ndof());
   }
 
-  for ( auto j=0; j<utmp_   .size(); j++ ) utmp_.       [j] = new GTVector<GFTYPE>(grid_->size());
+  for ( auto j=0; j<utmp_   .size(); j++ ) utmp_        [j] = new GTVector<GFTYPE>(grid_->size());
 
 
 } // end method allocate
@@ -508,7 +511,7 @@ void init_state(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &
 {
   GBOOL bret;
 
-  bret = GInitSFactory<EquationTypes>::init(ptree, grid, t, utmp, ub, u);
+  bret = GInitStateFactory<MyTypes>::init(ptree, grid, peqn, t, utmp, ub, u);
 
   assert(bret && "state initialization failed");
 
@@ -521,16 +524,17 @@ void init_state(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &
 // DESC  : top-level method to set initial forcing.
 // ARGS  : ptree: main prop tree
 //         grid : grid object
+//         peqn : pointer to EqnBase 
 //         t   : initial time
 //         utmp: vector of tmp vectors 
 //         u   : full state vector
 //         uf  : full boundary state vector
 //**********************************************************************************
-void init_force(const PropertyTree &ptree, GGrid &grid, Time &t, State &utmp, State &u, State &uf);
+void init_force(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &t, State &utmp, State &u, State &uf)
 {
   GBOOL bret;
 
-  bret = GInitFFactory<EquationTypes>::init(ptree, grid, t, utmp, u, uf);
+  bret = GInitForceFactory<MyTypes>::init(ptree, grid, peqn, t, utmp, u, uf);
 
   assert(bret && "forcing initialization failed");
   
@@ -548,11 +552,11 @@ void init_force(const PropertyTree &ptree, GGrid &grid, Time &t, State &utmp, St
 //         u    : full state vector
 //         ub   : full boundary state vector
 //**********************************************************************************
-void init_bdy(const PropertyTree &ptree, GGrid &grid, Time &t, State &utmp, State &u, State &ub);
+void init_bdy(const PropertyTree &ptree, GGrid &grid, Time &t, State &utmp, State &u, State &ub)
 {
   GBOOL bret;
 
-  bret = GInitBFactory<EquationTypes>::init(ptree, grid, t, utmp, u, ub);
+  bret = GInitBdyFactory<MyTypes>::init(ptree, grid, t, utmp, u, ub);
 
   assert(bret && "boundary initialization failed");
   
@@ -563,20 +567,17 @@ void init_bdy(const PropertyTree &ptree, GGrid &grid, Time &t, State &utmp, Stat
 //**********************************************************************************
 // METHOD : update_boundary
 // DESC   : update/set boundary vectors, ub
-// ARGS   : ptree: main prop tree
-//          grid : grid object
+// ARGS   : 
 //          t    : time
-//          utmp : vector of tmp vectors 
 //          u    : current state
 //          ub   : bdy vectors (one for each state element)
 // RETURNS: none.
 //**********************************************************************************
-void update_boundary(const PropertyTree &ptree, GGrid &grid, const Time &t, State &utmp, State &u, State &ub)
+void update_boundary(const Time &t, State &u, State &ub)
 {
   GBOOL bret;
-  Time  tt = t;
 
-  bret = GUpdateBFactory::update(ptree, grid, t, utmp, u, ub);
+  bret = GUpdateBdyFactory<MyTypes>::update(ptree, *grid_, t, utmp_, u, ub);
   
   assert(bret && "boundary update failed");
   

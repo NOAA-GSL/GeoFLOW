@@ -96,24 +96,24 @@ State  uf_;
 State  utmp_;
 GTVector<GFTYPE> nu_(3);
 BasisBase        gbasis_(GDIM);
-PropertyTree     ptree;       // main prop tree
+PropertyTree     ptree_;      // main prop tree
 GGFX<GFTYPE>     ggfx_;       // DSS operator
 GC_COMM          comm_ ;      // communicator
 
 
 // Callback functions:
-void update_boundary  (const PropertyTree &ptree, const Time &t, State &u, State &ub);     // bdy vector update
+void update_boundary  (const Time &t, State &u, State &ub);     // bdy vector update
 void update_forcing   (const Time &t, State &u, State &uf);     // forcing vec update
 void steptop_callback (const Time &t, State &u, const Time &dt);// backdoor function
 
 // Public methods:
 void init_state       (const PropertyTree &ptree, GGrid &, EqnBasePtr &pEqn, Time &t, State &utmp, State &u, State &ub);
-void init_force       (const PropertyTree &ptree, GGrid &, Time &t, State &utmp, State &u, State &uf);
+void init_force       (const PropertyTree &ptree, GGrid &, EqnBasePtr &pEqn, Time &t, State &utmp, State &u, State &uf);
 void init_bdy         (const PropertyTree &ptree, GGrid &, Time &t, State &utmp, State &u, State &ub);
 void allocate         (const PropertyTree &ptree);
 void deallocate       ();
 void create_observers (EqnBasePtr &eqn_ptr, PropertyTree &ptree, GSIZET icycle, Time time,     std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers);
-void create_equation  (PropertyTree &ptree, EqnBasePtr &pEqn);
+void create_equation  (const PropertyTree &ptree, EqnBasePtr &pEqn);
 void create_mixer     (PropertyTree &ptree, MixBasePtr &pMixer);
 void create_basis_pool(PropertyTree &ptree, BasisBase &gbasis);
 void init_ggfx        (PropertyTree &ptree, GGrid &grid, GGFX<GFTYPE> &ggfx);
