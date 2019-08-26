@@ -18,7 +18,7 @@
 // RETURNS: none.
 //**********************************************************************************
 template<typename EquationType>
-GBOOL GUpdateBdyFactory<EquationType>::update(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, Time &time, State &utmp, State &u, State &ub)
+GBOOL GUpdateBdyFactory<EquationType>::update(const PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn, Time &time, State &utmp, State &u, State &ub)
 {
   GBOOL         bret = FALSE, use_inits;
   Time          tt;
@@ -43,20 +43,21 @@ GBOOL GUpdateBdyFactory<EquationType>::update(const geoflow::tbox::PropertyTree&
       uu[i] = utmp[u.size()+i];
      *uu[i] = *u[i];
     }
-    bret = GInitStateFactory<EquationType>::init(ptree, grid, tt, utmp, ub, uu);
+    bret = GInitStateFactory<EquationType>::init(ptree, grid, peqn, tt, utmp, ub, uu);
     if ( bret ) {
-      bret = this->setbdy_from_state(ptree, grid, tt, utmp, uu, ub);
+      setbdy_from_state(ptree, grid, tt, utmp, uu, ub);
     }
 
   }
   else if ( "simple_outflow" == supdate ) {
     bret = gupdatebdy::impl_simple_outflow (ptree, grid, tt, utmp, u, ub);
   }
-  else                                        {
+  else {
     assert(FALSE && "Specified bdy update method unknown");
   }
 
   return bret;
+
 } // end, init method update
 
 

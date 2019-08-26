@@ -41,6 +41,8 @@ class GPosixIOObserver : public ObserverBase<EquationType>
 
 public:
         using Equation    = EquationType;
+        using EqnBase     = EquationBase<EquationType>;
+        using EqnBasePtr  = std::shared_ptr<EqnBase>;
         using State       = typename Equation::State;
         using Grid        = typename Equation::Grid;
         using Value       = typename Equation::Value;
@@ -48,7 +50,6 @@ public:
         using Time        = typename Equation::Time;
         using Jacobian    = typename Equation::Jacobian;
         using Size        = typename Equation::Size;
-        using EquationPtr = std::shared_ptr<Equation>;
 
 //      using ObserverBase<EquationType>::ObsType;
 //      using OBS_CYCLE = typename ObserverBase<EquationType>::ObsType::OBS_CYCLE;
@@ -62,7 +63,7 @@ public:
                "Grid is of incorrect type");
 
                            GPosixIOObserver() = delete;
-                           GPosixIOObserver(EquationPtr &equation, Grid &grid, typename ObserverBase<EquationType>::Traits &traits);
+                           GPosixIOObserver(const EqnBasePtr &equation, Grid &grid, typename ObserverBase<EquationType>::Traits &traits);
                           ~GPosixIOObserver() = default;
                            GPosixIOObserver(const GPosixIOObserver &a) = default;
                            GPosixIOObserver &operator=(const GPosixIOObserver &bu) = default;

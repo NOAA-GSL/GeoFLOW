@@ -45,7 +45,7 @@ GBOOL GInitBdyFactory<EquationType>::init(const geoflow::tbox::PropertyTree& ptr
   else if ( use_inits ) { // initialize from state initialization
     bret = GInitStateFactory<EquationType>::GInitStateFactory::init(ptree, grid, peqn, tt, utmp, ub, u);
     if ( bret ) {
-      bret = setbdy_from_state(ptree, grid, tt, utmp, u, ub);
+      setbdy_from_state(ptree, grid, tt, utmp, u, ub);
     }
   }
   else if ( "mybdyinit" == sinit ) { // initialize from user-specified fcn
@@ -61,7 +61,7 @@ GBOOL GInitBdyFactory<EquationType>::init(const geoflow::tbox::PropertyTree& ptr
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : set_bdy_from_state
+// METHOD : setbdy_from_state
 // DESC   : use state var, u, to set bdy, ub
 // ARGS   : ptree  : main property tree
 //          time   : initialization time
@@ -71,7 +71,7 @@ GBOOL GInitBdyFactory<EquationType>::init(const geoflow::tbox::PropertyTree& ptr
 // RETURNS: none.
 //**********************************************************************************
 template<typename EquationType>
-void GInitBdyFactory<EquationType>::set_bdy_from_state(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, Time &time, State &utmp, State &u, State &ub)
+void GInitBdyFactory<EquationType>::setbdy_from_state(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, Time &time, State &utmp, State &u, State &ub)
 {
   GTVector<GTVector<GSIZET>> *igbdy = &grid.igbdy_binned();
 
@@ -91,4 +91,4 @@ void GInitBdyFactory<EquationType>::set_bdy_from_state(const geoflow::tbox::Prop
     }
   }
 
-} // end, set_bdy_from_state
+} // end, setbdy_from_state

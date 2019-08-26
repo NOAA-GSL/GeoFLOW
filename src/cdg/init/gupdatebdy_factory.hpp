@@ -31,10 +31,10 @@ class GUpdateBdyFactory
         using Time          = typename Equation::Time;
 
 
-	static GBOOL update(const geoflow::tbox::PropertyTree& ptree, GGrid &grid,  Time &time, State &utmp, State &ub, State &u);
+	static GBOOL update(const PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn, Time &time, State &utmp, State &u, State &ub);
 
   private:
-        void setbdy_from_state(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, Time &time, State &utmp, State &u, State &ub);
+        static void  setbdy_from_state(const PropertyTree& ptree, GGrid &grid, Time &time, State &utmp, State &u, State &ub);
 
 }; // class GUpdateBdyFactory
 

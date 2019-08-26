@@ -14,7 +14,7 @@
 // ARGS   : traits: Traits sturcture
 //**********************************************************************************
 template<typename EquationType>
-GGlobalDiag_basic<EquationType>::GGlobalDiag_basic(EquationPtr &equation, Grid &grid, typename ObserverBase<EquationType>::Traits &traits):
+GGlobalDiag_basic<EquationType>::GGlobalDiag_basic(const EqnBasePtr &equation, Grid &grid, typename ObserverBase<EquationType>::Traits &traits):
 ObserverBase<EquationType>(equation, grid, traits),
 bInit_          (FALSE),
 cycle_          (0),
@@ -96,9 +96,10 @@ void GGlobalDiag_basic<EquationType>::init(const Time t, const State &u)
    // Find State's kinetic components:
    assert(this->eqn_ptr_ != NULL && "Equation implementation must be set");
 
-   GSIZET *iwhere=NULLPTR;
-   GSIZET  nwhere=0;
-   this->eqn_ptr_->icomptype_.contains(GSC_KINETIC, iwhere, nwhere);
+   GSIZET   *iwhere=NULLPTR;
+   GSIZET    nwhere=0;
+   CompDesc *icomptype = &(this->eqn_ptr_->comptype());
+   icomptype->contains(GSC_KINETIC, iwhere, nwhere);
    for ( GSIZET j=0; j<nwhere; j++ ) ikinetic_.push_back(iwhere[j]);
 
    if ( iwhere != NULLPTR ) delete [] iwhere;

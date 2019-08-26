@@ -88,7 +88,7 @@ public:
           GFTYPE         courant     = 0.5;
           GFTYPE         nu          = 0.0;
           GTVector<GINT> iforced;
-          GString        ssteptype   = "GSTEPPER_EXRK";
+          GString        ssteptype;
         };
 
         GBurgers() = delete; 

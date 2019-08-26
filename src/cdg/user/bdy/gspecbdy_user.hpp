@@ -5,8 +5,8 @@
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
-#if !defined(_GSPECBDY_HPP)
-#define _GSPECBDY_HPP
+#if !defined(_GSPECBDY_USER_HPP)
+#define _GSPECBDY_USER_HPP
 
 #include "tbox/property_tree.hpp"
 #include "gtypes.h"

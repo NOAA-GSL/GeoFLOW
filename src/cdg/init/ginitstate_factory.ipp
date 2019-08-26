@@ -135,11 +135,11 @@ GBOOL GInitStateFactory<EquationType>::set_by_comp(const PropertyTree& ptree, GG
   // function for each GStateCompType:
   for ( GSIZET j=0; j<ndist && bret; j++ ) {
     
-    switch ( idist[j] ) {
-      
+    itype = (*icomptype)[idist[j]]; 
+    switch ( itype ) {
+
       case GSC_KINETIC:
         sinit = vtree.getValue<GString>("initv");
-        itype = (*icomptype)[idist[j]]; 
         nvar  = icomptype->contains(itype, ivar, mvar);
         comp.resize(nvar);
         for ( GINT i=0; i<nvar; i++ ) comp[i] = u[ivar[i]];
@@ -147,7 +147,6 @@ GBOOL GInitStateFactory<EquationType>::set_by_comp(const PropertyTree& ptree, GG
         break;
       case GSC_MAGNETIC:
         sinit = vtree.getValue<GString>("initb");
-        itype = (*icomptype)[idist[j]]; 
         nvar  = icomptype->contains(itype, ivar, mvar);
         comp.resize(nvar);
         for ( GINT i=0; i<nvar; i++ ) comp[i] = u[ivar[i]];
@@ -155,7 +154,6 @@ GBOOL GInitStateFactory<EquationType>::set_by_comp(const PropertyTree& ptree, GG
         break;
       case GSC_ACTIVE_SCALAR:
         sinit = vtree.getValue<GString>("inits");
-        itype = (*icomptype)[idist[j]]; 
         nvar  = icomptype->contains(itype, ivar, mvar);
         comp.resize(nvar);
         for ( GINT i=0; i<nvar; i++ ) comp[i] = u[ivar[i]];
@@ -163,7 +161,6 @@ GBOOL GInitStateFactory<EquationType>::set_by_comp(const PropertyTree& ptree, GG
         break;
       case GSC_PASSIVE_SCALAR:
         sinit = vtree.getValue<GString>("initp");
-        itype = (*icomptype)[idist[j]]; 
         nvar  = icomptype->contains(itype, ivar, mvar);
         comp.resize(nvar);
         for ( GINT i=0; i<nvar; i++ ) comp[i] = u[ivar[i]];
@@ -171,7 +168,6 @@ GBOOL GInitStateFactory<EquationType>::set_by_comp(const PropertyTree& ptree, GG
         break;
       case GSC_PRESCRIBED:
         sinit = vtree.getValue<GString>("initc");
-        itype = (*icomptype)[idist[j]]; 
         nvar  = icomptype->contains(itype, ivar, mvar);
         comp.resize(nvar);
         for ( GINT i=0; i<nvar; i++ ) comp[i] = u[ivar[i]];

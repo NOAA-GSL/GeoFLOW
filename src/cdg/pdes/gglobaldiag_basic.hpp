@@ -29,6 +29,8 @@ class GGlobalDiag_basic : public ObserverBase<EquationType>
 
 public:
         using Equation    = EquationType;
+        using EqnBase     = EquationBase<EquationType>;
+        using EqnBasePtr  = std::shared_ptr<EqnBase>;
         using State       = typename Equation::State;
         using Grid        = typename Equation::Grid;
         using Value       = typename Equation::Value;
@@ -37,7 +39,6 @@ public:
         using CompDesc    = typename Equation::CompDesc;
         using Jacobian    = typename Equation::Jacobian;
         using Size        = typename Equation::Size;
-        using EquationPtr = std::shared_ptr<Equation>;
         using ObserverBase<EquationType>::utmp_;
         using ObserverBase<EquationType>::grid_;
         using ObserverBase<EquationType>::traits_;
@@ -54,7 +55,7 @@ public:
                "Grid is of incorrect type");
 
                            GGlobalDiag_basic() = delete;
-                           GGlobalDiag_basic(EquationPtr &equation, Grid &grid, typename ObserverBase<EquationType>::Traits &traits);
+                           GGlobalDiag_basic(const EqnBasePtr &equation, Grid &grid, typename ObserverBase<EquationType>::Traits &traits);
                           ~GGlobalDiag_basic() = default;
                            GGlobalDiag_basic(const GGlobalDiag_basic &a) = default;
                            GGlobalDiag_basic &operator=(const GGlobalDiag_basic &bu) = default;

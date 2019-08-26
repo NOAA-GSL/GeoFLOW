@@ -82,12 +82,14 @@ steptop_callback_      (NULLPTR)
   assert(!(doheat_ && bpureadv_) && "Invalid PDE configuration");
 
   // Check if specified stepper type is valid:
-  GBOOL bfound;
+  GBOOL  bfound;
+  GSIZET itype;
   valid_types_.resize(4);
   valid_types_[0] = "GSTEPPER_EXRK";
   valid_types_[1] = "GSTEPPER_BDFAB";
   valid_types_[2] = "GSTEPPER_BDFEXT";
-  bfound = valid_types_.contains(traits.ssteptype, isteptype_);
+  bfound = valid_types_.contains(traits.ssteptype, itype);
+  isteptype_ = static_cast<GStepperType>(itype);
   assert( bfound && "Invalid stepping method specified");
 
   // Set dissipation from traits. Note that

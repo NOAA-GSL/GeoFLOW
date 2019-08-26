@@ -215,10 +215,10 @@ enum GStateCompType     {GSC_KINETIC=0, GSC_MAGNETIC, GSC_ACTIVE_SCALAR, GSC_PAS
 #if !defined(GTIMER_DEFINED)
   #define GTIMER_DEFINED 
   #if defined(_G_USE_GPTL)
-    #define GTimerInit(a) GPTLinitialize()
-    #define GTimerFinal(a) GPTLfinalize();
-    #define GTimerStart(a) GPTLstart(a)
-    #define GTimerStop(a)  GPTLstop(a)
+    #define GTimerInit(a)   GPTLinitialize()
+    #define GTimerFinal(a)  GPTLfinalize()
+    #define GTimerStart(a)  GPTLstart(a)
+    #define GTimerStop(a)   GPTLstop(a)
     #define GTimerReset(a)  GPTLreset()
   #else
     #define GTimerInit(a) 

@@ -83,18 +83,19 @@ using BasisBase   = GTVector<GNBasis<GCTYPE,GFTYPE>*>; // Basis pool type
 
 
 // 'Member' data:
-GBOOL  bench_=FALSE;
-GINT   nsolve_;  // number *solved* 'state' arrays
-GINT   nstate_;  // number 'state' arrays
-GINT   ntmp_  ;  // number tmp arrays
-GGrid *grid_;
-State  u_;
-State  c_;
-State  ub_;
-State  uf_;
-State  utmp_;
+GBOOL            bench_=FALSE;
+GINT             nsolve_;  // number *solved* 'state' arrays
+GINT             nstate_;  // number 'state' arrays
+GINT             ntmp_  ;  // number tmp arrays
+GGrid           *grid_;
+State            u_;
+State            c_;
+State            ub_;
+State            uf_;
+State            utmp_;
 GTVector<GFTYPE> nu_(3);
 BasisBase        gbasis_(GDIM);
+EqnBasePtr       pEqn_;       // equation pointer
 PropertyTree     ptree_;      // main prop tree
 GGFX<GFTYPE>     ggfx_;       // DSS operator
 GC_COMM          comm_ ;      // communicator
