@@ -29,6 +29,8 @@ class ObserverBase {
 public:
         enum ObsType     {OBS_CYCLE=0, OBS_TIME};
 	using Equation    = EquationType;
+        using EqnBase     = EquationBase<EquationType>;
+        using EqnBasePtr  = std::shared_ptr<EqnBase>;
 	using State       = typename Equation::State;
 	using Grid        = typename Equation::Grid;
 	using Value       = typename Equation::Value;
@@ -36,7 +38,6 @@ public:
 	using Time        = typename Equation::Time;
 	using Jacobian    = typename Equation::Jacobian;
 	using Size        = typename Equation::Size;
-	using EquationPtr = std::shared_ptr<Equation>;
 
         /**
          * Data structure to hold user selected parameters
@@ -72,7 +73,7 @@ public:
         };
 
         ObserverBase() = default;
-	ObserverBase(const EquationPtr& equation, Grid& grid, Traits& traits) {traits_=traits; grid_= &grid; utmp_=nullptr;}
+	ObserverBase(const EqnBasePtr& equation, Grid& grid, Traits& traits) {traits_=traits; grid_= &grid; utmp_=nullptr;}
 	ObserverBase(const ObserverBase& obs) = default;
 	virtual ~ObserverBase() = default;
 	ObserverBase& operator=(const ObserverBase& obs) = default;
@@ -107,7 +108,7 @@ protected:
         Traits       traits_;
         Grid        *grid_;
         State       *utmp_;
-        EquationPtr  eqn_ptr_;
+        EqnBasePtr   eqn_ptr_;
 	/**
 	 * Must be provided by implementation
 	 */

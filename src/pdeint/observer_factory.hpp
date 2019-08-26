@@ -11,9 +11,9 @@
 #include <memory>
 #include <string>
 #include "tbox/error_handler.hpp"
-#include "pdeint/null_observer.hpp"
 #include "pdeint/observer_base.hpp"
 #include "tbox/property_tree.hpp"
+#include "pdeint/null_observer.hpp"
 #include "gposixio_observer.hpp"
 #include "gglobaldiag_basic.hpp"
 

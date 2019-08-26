@@ -51,7 +51,7 @@ ObserverFactory<ET>::build(const tbox::PropertyTree& ptree, EqnBasePtr& equation
 		using ObsImpl = NullObserver<ET>;
 
 		// Allocate observer Implementation
-		std::shared_ptr<ObsImpl> obs_impl(new ObsImpl(equation, grid, traits));
+		std::shared_ptr<ObsImpl> obs_impl(new ObsImpl(equation, grid));
 
 		// Set any parameters we need to set
 		// NA

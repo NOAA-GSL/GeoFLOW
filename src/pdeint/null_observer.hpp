@@ -30,8 +30,12 @@ public:
 	using State      = typename Interface::State;
 	using Grid       = typename Interface::Grid;
 	using Time       = typename Interface::Time;
+        using Equation   = EquationType;
+        using EqnBase    = EquationBase<Equation>;
+        using EqnBasePtr = std::shared_ptr<EqnBase>;
+
         
-        NullObserver(const EquationPtr& equation, Grid& grid, Traits& traits){
+        NullObserver(EqnBasePtr& equation, Grid& grid){
         }
 
 protected:

@@ -52,7 +52,7 @@ EquationFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid, State& u
                 btraits.nu        = dis_ptree.getValue<double>("nu");
                 for ( auto i=0; i<GDIM; i++ ) default_comps.push_back(i);
                 comps            = eqn_ptree.getArray<int>   ("forcing_comp",default_comps);
-                btraits.iforced.resize(comps.size);
+                btraits.iforced.resize(comps.size());
                 btraits.iforced   = comps; // traits.iforced may be a different d.structure
 		// Allocate equation Implementation
 		std::shared_ptr<EqnImpl> eqn_impl(new EqnImpl(grid, btraits, utmp));
