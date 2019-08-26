@@ -14,7 +14,6 @@
 #include <math.h>
 #include <unistd.h>
 #include <iostream>
-#include <gptl.h>
 #include <memory>
 #include <cstdlib>
 #include <cassert>

@@ -95,6 +95,7 @@ int main(int argc, char **argv)
     GTimerStart("init_ggfx_op");
 
     init_ggfx(ptree_, *grid_, ggfx_);
+    grid_->set_ggfx(ggfx_);
 
     GTimerStop("init_ggfx_op");
     EH_MESSAGE("geoflow: gather/scatter initialized.");
@@ -141,7 +142,7 @@ int main(int argc, char **argv)
       icycle = 0; t = 0.0; 
       init_state(ptree_, *grid_, pEqn, t, utmp_, u_, ub_);
       init_bdy  (ptree_, *grid_,       t, utmp_, u_, ub_);
-      init_force(ptree_, *grid_,       t, utmp_, u_, uf_);
+      init_force(ptree_, *grid_, pEqn, t, utmp_, u_, uf_);
     }
     else {                // restart run
       gio_restart(ptree_, 0, u_, p, icycle, t, comm_);
@@ -243,10 +244,12 @@ void create_mixer(PropertyTree &ptree, MixBasePtr &pMixer)
 
   pMixer = MixerFactory<MyTypes>::build(ptree, *grid_);
 
+#if 0
   // Set mixer update callback functions:
   std::function<void(const Time &t, State &u, State &uf)>  
       fcallback = update_forcing; // set tmp function with proper signature for...
   pMixer->set_update_callback(fcallback); // forcing update callback
+#endif
 
 } // end method create_mixer
 
@@ -547,16 +550,17 @@ void init_force(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &
 // DESC  : top-level method to set initial bdy conditions.
 // ARGS  : ptree: main prop tree
 //         grid : grid object
+//         peqn : pointer to EqnBase 
 //         t    : initial time
 //         utmp : vector of tmp vectors 
 //         u    : full state vector
 //         ub   : full boundary state vector
 //**********************************************************************************
-void init_bdy(const PropertyTree &ptree, GGrid &grid, Time &t, State &utmp, State &u, State &ub)
+void init_bdy(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqnm, Time &t, State &utmp, State &u, State &ub)
 {
   GBOOL bret;
 
-  bret = GInitBdyFactory<MyTypes>::init(ptree, grid, t, utmp, u, ub);
+  bret = GInitBdyFactory<MyTypes>::init(ptree, grid, peqn, t, utmp, u, ub);
 
   assert(bret && "boundary initialization failed");
   
@@ -577,7 +581,7 @@ void update_boundary(const Time &t, State &u, State &ub)
 {
   GBOOL bret;
 
-  bret = GUpdateBdyFactory<MyTypes>::update(ptree, *grid_, t, utmp_, u, ub);
+  bret = GUpdateBdyFactory<MyTypes>::update(ptree_, *grid_, t, utmp_, u, ub);
   
   assert(bret && "boundary update failed");
   
