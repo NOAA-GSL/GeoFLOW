@@ -32,7 +32,7 @@ class GInitBdyFactory
         using Time          = typename Equation::Time;
 
 
-	static GBOOL init   (const geoflow::tbox::PropertyTree& ptree, GGrid &grid,  Time &time, State &utmp, State &u, State &ub);
+	static GBOOL init   (const geoflow::tbox::PropertyTree& ptree, GGrid &grid,  EqnBasePtr &peqn, Time &time, State &utmp, State &u, State &ub);
 
   private:
         void set_bdy_from_state(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, Time &time, State &utmp, State &u, State &ub);

@@ -19,6 +19,7 @@
 #include "gdd_base.hpp"
 #include "ggrid.hpp"
 #include "gcomm.hpp"
+#include "ggfx.hpp"
 #include "tbox/property_tree.hpp"
 
 using namespace geoflow::tbox;
@@ -110,6 +111,10 @@ virtual void                 config_bdy(const PropertyTree &ptree,
                              GTVector<GTVector<GSIZET>>   &igbdy, 
                              GTVector<GTVector<GBdyType>> &igbdyt)=0;  // config bdy
 
+        GGFX<GFTYPE>        &get_ggfx() { return *ggfx_; }             // get GGFX op
+        void                 set_ggfx(GGFX<GFTYPE> &ggfx) 
+                               { ggfx_ = &ggfx; }                      // set GGFX op    
+
 friend  std::ostream&        operator<<(std::ostream&, GGrid &);       // Output stream operator
  
 
@@ -146,6 +151,7 @@ protected:
         GTVector<GTVector<GBdyType>>
                                     igbdyt_byface_; // global domain bdy types for each igbdy index
         PropertyTree                ptree_;         // main prop tree
+        GGFX<GFTYPE>               *ggfx_;          // connectivity operator
 
 };
 

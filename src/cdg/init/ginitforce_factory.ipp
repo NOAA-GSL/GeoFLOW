@@ -111,7 +111,7 @@ GBOOL GInitForceFactory<EquationType>::set_by_comp(const PropertyTree& ptree, GG
   GStateCompType *distcomp, *ivar;
   PropertyTree    vtree   = ptree.getPropertyTree(sblk);
   State           comp;
-  CompDesc       *icomptype = &peqn.comptype();
+  CompDesc       *icomptype = &peqn->comptype();
 
   ndistcomp = 0; // # distinct comp types
   distcomp  = NULLPTR; // list of ids for  distinct comp types

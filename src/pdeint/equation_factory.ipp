@@ -47,7 +47,7 @@ EquationFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid, State& u
                 btraits.courant   = stp_ptree.getValue<double>("courant",0.5);
                 btraits.itorder   = stp_ptree.getValue<int>   ("time_deriv_order",4);
                 btraits.inorder   = stp_ptree.getValue<int>   ("extrap_order",2);
-                btraits.steptype  = stp_ptree.getValue<std::string>
+                btraits.ssteptype = stp_ptree.getValue<std::string>
                                                              ("stepping_method","GSTEPPER_EXRK");
                 btraits.nu        = dis_ptree.getValue<double>("nu");
                 for ( auto i=0; i<GDIM; i++ ) default_comps.push_back(i);
@@ -55,7 +55,7 @@ EquationFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid, State& u
                 btraits.iforced.resize(comps.size);
                 btraits.iforced   = comps; // traits.iforced may be a different d.structure
 		// Allocate equation Implementation
-		std::shared_ptr<EqnImpl> eqn_impl(new EqnImpl(btraits, grid, utmp));
+		std::shared_ptr<EqnImpl> eqn_impl(new EqnImpl(grid, btraits, utmp));
 
 		// Set back to base type
 		base_ptr = eqn_impl;

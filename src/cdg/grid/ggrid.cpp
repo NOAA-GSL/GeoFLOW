@@ -35,6 +35,7 @@ nprocs_        (GComm::WorldSize(comm)),
 irank_         (GComm::WorldRank(comm)),
 minnodedist_   (std::numeric_limits<GFTYPE>::max()),
 comm_                            (comm),
+ggfx_                         (NULLPTR),
 ptree_                          (ptree)
 {
 } // end of constructor method (1)

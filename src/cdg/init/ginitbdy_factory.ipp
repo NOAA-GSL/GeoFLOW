@@ -14,6 +14,8 @@
 // METHOD : init
 // DESC   : Make call to to do bdy initialization
 // ARGS   : ptree  : main property tree
+//          grid   : Grid object
+//          peqn   : EqnBasePtr
 //          time   : initialization time
 //          utmp   : tmp arrays
 //          u      : state to be initialized. 
@@ -21,7 +23,7 @@
 // RETURNS: none.
 //**********************************************************************************
 template<typename EquationType>
-GBOOL GInitBdyFactory<EquationType>::init(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, Time &time, State &utmp, State &u, State &ub)
+GBOOL GInitBdyFactory<EquationType>::init(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn, Time &time, State &utmp, State &u, State &ub)
 {
   GBOOL         bret=FALSE;
   GBOOL         use_inits; // use state init method to set bdy?
@@ -41,7 +43,7 @@ GBOOL GInitBdyFactory<EquationType>::init(const geoflow::tbox::PropertyTree& ptr
     bret = TRUE;
   }
   else if ( use_inits ) { // initialize from state initialization
-    bret = GInitStateFactory<EquationType>::GInitStateFactory::init(ptree, grid, tt, utmp, ub, u);
+    bret = GInitStateFactory<EquationType>::GInitStateFactory::init(ptree, grid, peqn, tt, utmp, ub, u);
     if ( bret ) {
       bret = setbdy_from_state(ptree, grid, tt, utmp, u, ub);
     }

@@ -29,10 +29,10 @@ GBOOL GInitStateFactory<EquationType>::init(const PropertyTree& ptree, GGrid &gr
   stype = ptree.getValue<GString>("initstate_type","");
   if ( "direct"   == stype 
     || ""         == stype ) {
-    bret = set_by_direct(ptree, grid, time, utmp, ub, u);
+    bret = set_by_direct(ptree, grid, peqn, time, utmp, ub, u);
   }
   else if ( "component" == stype ) {
-    bret = set_by_comp  (ptree, grid, time, utmp, ub, u);
+    bret = set_by_comp  (ptree, grid, peqn, time, utmp, ub, u);
   }
   else {
     assert(FALSE && "Invalid state initialization type");
@@ -112,61 +112,67 @@ template<typename EquationType>
 GBOOL GInitStateFactory<EquationType>::set_by_comp(const PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn, Time &time, State &utmp, State &ub, State &u)
 {
   GBOOL           bret    = TRUE;
-  GSIZET          ndistcomp, mvar, nvar;
+  GSIZET          ndist, *ivar, mvar, nvar;
+  GSIZET         *idist;
+  GStateCompType  itype;
   GString         scomp    = ptree.getValue<GString>("initstate_block");
   GString         sinit;
-  GStateCompType *distcomp, *ivar;
   PropertyTree    vtree     = ptree.getPropertyTree(scomp);
   State           comp;
-  CompDesc       *icomptype = &peqn.comptype();
+  CompDesc       *icomptype = &peqn->comptype();
 
-  ndistcomp = 0; // # distinct comp types
-  distcomp  = NULLPTR; // list of ids for  distinct comp types
+  ndist = 0; // # distinct comp types
+  idist = NULLPTR; // list of ids for  distinct comp types
 
   mvar      = 0; // # max of specific comp types
   ivar      = NULLPTR;  // list of ids for specific comp types
 
   // Get distinct component types:
-  icomptype->distinct(distcomp, ndistcomp);
+  icomptype->distinct(idist, ndist);
 
   // Cycle over all types required, get components of that
   // type, and initialize all of them. There should be a member
   // function for each GStateCompType:
-  for ( GSIZET j=0; j<ndistcomp && bret; j++ ) {
+  for ( GSIZET j=0; j<ndist && bret; j++ ) {
     
-    switch ( distcomp[j] ) {
+    switch ( idist[j] ) {
       
       case GSC_KINETIC:
         sinit = vtree.getValue<GString>("initv");
-        nvar = icomptype->contains(distcomp[j], ivar, mvar);
+        itype = (*icomptype)[idist[j]]; 
+        nvar  = icomptype->contains(itype, ivar, mvar);
         comp.resize(nvar);
         for ( GINT i=0; i<nvar; i++ ) comp[i] = u[ivar[i]];
         bret = doinitv(vtree, grid, time, utmp, ub, comp);
         break;
       case GSC_MAGNETIC:
         sinit = vtree.getValue<GString>("initb");
-        nvar = icomptype->contains(distcomp[j], ivar, mvar);
+        itype = (*icomptype)[idist[j]]; 
+        nvar  = icomptype->contains(itype, ivar, mvar);
         comp.resize(nvar);
         for ( GINT i=0; i<nvar; i++ ) comp[i] = u[ivar[i]];
         bret = doinitb(vtree, grid, time, utmp, ub, comp);
         break;
       case GSC_ACTIVE_SCALAR:
         sinit = vtree.getValue<GString>("inits");
-        nvar = icomptype->contains(distcomp[j], ivar, mvar);
+        itype = (*icomptype)[idist[j]]; 
+        nvar  = icomptype->contains(itype, ivar, mvar);
         comp.resize(nvar);
         for ( GINT i=0; i<nvar; i++ ) comp[i] = u[ivar[i]];
         bret = doinits(vtree, grid, time, utmp, ub, comp);
         break;
       case GSC_PASSIVE_SCALAR:
         sinit = vtree.getValue<GString>("initp");
-        nvar = icomptype->contains(distcomp[j], ivar, mvar);
+        itype = (*icomptype)[idist[j]]; 
+        nvar  = icomptype->contains(itype, ivar, mvar);
         comp.resize(nvar);
         for ( GINT i=0; i<nvar; i++ ) comp[i] = u[ivar[i]];
         bret = doinits(vtree, grid, time, utmp, ub, comp);
         break;
       case GSC_PRESCRIBED:
         sinit = vtree.getValue<GString>("initc");
-        nvar = icomptype->contains(distcomp[j], ivar, mvar);
+        itype = (*icomptype)[idist[j]]; 
+        nvar  = icomptype->contains(itype, ivar, mvar);
         comp.resize(nvar);
         for ( GINT i=0; i<nvar; i++ ) comp[i] = u[ivar[i]];
         bret = doinitc(vtree, grid, time, utmp, ub, comp);
@@ -179,7 +185,7 @@ GBOOL GInitStateFactory<EquationType>::set_by_comp(const PropertyTree& ptree, GG
 
   } // end, j loop
 
-  if ( distcomp  != NULLPTR ) delete [] distcomp;
+  if ( idist  != NULLPTR ) delete [] idist;
   if ( ivar   != NULLPTR ) delete [] ivar ;
 
   return bret;

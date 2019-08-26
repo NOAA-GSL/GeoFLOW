@@ -45,7 +45,7 @@ GBOOL GUpdateBdyFactory<EquationType>::update(const geoflow::tbox::PropertyTree&
     }
     bret = GInitStateFactory<EquationType>::init(ptree, grid, tt, utmp, ub, uu);
     if ( bret ) {
-      bret = setbdy_from_state(ptree, grid, tt, utmp, uu, ub);
+      bret = this->setbdy_from_state(ptree, grid, tt, utmp, uu, ub);
     }
 
   }
@@ -62,7 +62,7 @@ GBOOL GUpdateBdyFactory<EquationType>::update(const geoflow::tbox::PropertyTree&
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : set_bdy_from_state
+// METHOD : setbdy_from_state
 // DESC   : use state var, u, to set bdy, ub
 // ARGS   : ptree  : main property tree
 //          time   : initialization time
@@ -72,7 +72,7 @@ GBOOL GUpdateBdyFactory<EquationType>::update(const geoflow::tbox::PropertyTree&
 // RETURNS: none.
 //**********************************************************************************
 template<typename EquationType>
-void GUpdateBdyFactory<EquationType>::set_bdy_from_state(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, Time &time, State &utmp, State &u, State &ub)
+void GUpdateBdyFactory<EquationType>::setbdy_from_state(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, Time &time, State &utmp, State &u, State &ub)
 {
   GBOOL         bret=FALSE;
   GBOOL         use_inits; // use state init method to set bdy?
@@ -97,5 +97,5 @@ void GUpdateBdyFactory<EquationType>::set_bdy_from_state(const geoflow::tbox::Pr
     }
   }
 
-} // end, set_bdy_from_state
+} // end, setbdy_from_state
 

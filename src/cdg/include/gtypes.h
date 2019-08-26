@@ -11,6 +11,9 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#if defined(_G_USE_GPTL)
+  #include <gptl.h>
+#endif
 
 // Following is a list of preprocessor variables that may be set:
 // _G_AUTO_CREATE_DEV : Auto-copy/create classes on device
@@ -163,9 +166,10 @@ enum GElemType           {GE_REGULAR=0, GE_DEFORMED, GE_2DEMBEDDED, GE_MAX}; // 
 
 #if !defined(_G_STEPPERTYPE_DEF)
 #define _G_STEPPERTYPE_DEF
-enum GStepperType        { GSTEPPER_EXRK=0 , GSTEPPER_BDFAB , GSTEPPER_BDFEXT , GSTEPPER_MAX};
+enum GStepperType        { GSTEPPER_EXRK=0 , GSTEPPER_BDFAB , GSTEPPER_BDFEXT };
 const char * const sGStepperType[] =  
                          {"GSTEPPER_EXRK"  ,"GSTEPPER_BDFAB","GSTEPPER_BDFEXT"};
+#define GSTEPPER_MAX 3
 #endif
 
 #if !defined(_G_VECTORTYPE_DEF)

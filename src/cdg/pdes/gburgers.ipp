@@ -39,10 +39,9 @@ using namespace std;
 // METHOD : Constructor method  (1)
 // DESC   : Instantiate with grid + state + tmp. Use for fully nonlinear
 //          Burgers equation, heat equation.
-// ARGS   : ggfx      : gather/scatter operator
 //          grid      : grid object
 //          traits    :
-//            steptype  : stepper type
+//            ssteptype : stepper type
 //            itorder   : time order to du/dt derivative for multistep
 //                        methods; RK num stages (~ order)
 //            inorder   : order of approximation for nonlin term
@@ -56,7 +55,7 @@ using namespace std;
 // RETURNS: none
 //**********************************************************************************
 template<typename TypePack>
-GBurgers<TypePack>::GBurgers(GGFX<GFTYPE> &ggfx, Grid &grid, GBurgers<TypePack>::Traits &traits, GTVector<GTVector<GFTYPE>*> &tmp) :
+GBurgers<TypePack>::GBurgers(Grid &grid, GBurgers<TypePack>::Traits &traits, GTVector<GTVector<GFTYPE>*> &tmp) :
 EquationBase<TypePack>(),
 doheat_          (traits.doheat),
 bpureadv_      (traits.bpureadv),
@@ -74,7 +73,7 @@ gmass_                  (NULLPTR),
 gpdv_                  (NULLPTR),
 //gflux_                 (NULLPTR),
 grid_                    (&grid),
-ggfx_                    (&ggfx),
+ggfx_                    (&grid.get_ggfx()),
 steptop_callback_      (NULLPTR)
 {
   static_assert(std::is_same<State,GTVector<GTVector<GFTYPE>*>>::value,
@@ -88,7 +87,7 @@ steptop_callback_      (NULLPTR)
   valid_types_[0] = "GSTEPPER_EXRK";
   valid_types_[1] = "GSTEPPER_BDFAB";
   valid_types_[2] = "GSTEPPER_BDFEXT";
-  bfound = valid_types_.contains(traits.steptype, isteptype_);
+  bfound = valid_types_.contains(traits.ssteptype, isteptype_);
   assert( bfound && "Invalid stepping method specified");
 
   // Set dissipation from traits. Note that
@@ -389,10 +388,11 @@ void GBurgers<TypePack>::init(GBurgers::Traits &traits)
 {
   GString serr = "GBurgers<TypePack>::init: ";
 
-  GBOOL  bmultilevel = FALSE;
-  GSIZET n, nsolve = bpureadv_ || doheat_ ? 1 : GDIM;
-  GSIZET nc = grid_->gtype() == GE_2DEMBEDDED ? 3 : GDIM;
-  GINT   nop;
+  GBOOL      bmultilevel = FALSE;
+  GSIZET     n, nsolve = bpureadv_ || doheat_ ? 1 : GDIM;
+  GSIZET     nc = grid_->gtype() == GE_2DEMBEDDED ? 3 : GDIM;
+  GINT       nop;
+  CompDesc *icomptype = &this->comptype();
 
   // Find multistep/multistage time stepping coefficients:
   GMultilevel_coeffs_base<GFTYPE> *tcoeff_obj=NULLPTR; // time deriv coeffs
@@ -404,13 +404,13 @@ void GBurgers<TypePack>::init(GBurgers::Traits &traits)
   uevolve_.resize(nsolve); // state var to evolve
   if ( bpureadv_ || doheat_ ) {
     c_.resize(nc);    // adevective vel components
-    this->icomptype_.push_back(GSC_KINETIC); // 1st comp is the solved-for field
+    icomptype->push_back(GSC_KINETIC); // 1st comp is the solved-for field
     if ( bpureadv_ ) { // remaining fields are adv vel--not solved for
-      for( GSIZET j=0; j<nc; j++ ) this->icomptype_.push_back(GSC_PRESCRIBED); 
+      for( GSIZET j=0; j<nc; j++ ) icomptype->push_back(GSC_PRESCRIBED); 
     }
   }
   else { // all fields represent kinetic components:
-    for( GSIZET j=0; j<GDIM; j++ ) this->icomptype_.push_back(GSC_KINETIC);
+    for( GSIZET j=0; j<GDIM; j++ ) icomptype->push_back(GSC_KINETIC);
   }
 
   std::function<void(const Time &t,                    // RHS callback function

@@ -156,10 +156,11 @@ protected:
 	 */
 	virtual void step_impl(const Time& t, const State& uin, State& uf, State& ub, const Time& dt, State& uout) = 0;
   
-private:
-        CompDesc icomptype_;
         std::function<void(const Time &t, State &u, State &ub)> 
                  update_bdy_callback_;
+
+private:
+        CompDesc icomptype_;
 };
 
 
