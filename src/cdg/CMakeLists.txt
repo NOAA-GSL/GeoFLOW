@@ -95,13 +95,16 @@ set(CDG_COMMON_INC ${CDG_COMMON_INC}
    )
 
 if (USE_GPTL)
+  message(STATUS "GPTL_LIB_PATH ${GPTL_LIB_PATH}..." )
   set(CDG_COMMON_LIBS ${CDG_COMMON_LIBS} 
     ${GPTL_LIB_PATH}
      )
+  message(STATUS "GPTL_INC_PATH ${GPTL_INC_PATH}..." )
   set(CDG_COMMON_INC ${CDG_COMMON_INC}
       ${GPTL_INC_PATH}
      )
   if (HAVE_PAPI)
+    message(STATUS "GPTL_PAPI_PATH ${GPTL_PAPI_PATH}..." )
     set(CDG_COMMON_LIBS ${CDG_COMMON_LIBS} 
        ${GPTL_PAPI_PATH}
        )
