@@ -27,10 +27,3 @@
                     ${GTHOME}/gtools.cpp
     )
 
- # Fill main source list (don't include CDG_TEST_SRC):
- list(APPEND CDG_SRC 
-                     ${CDG_TEST_SRC_MISC}
-     )
-
-
-
