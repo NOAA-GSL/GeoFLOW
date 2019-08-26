@@ -33,16 +33,10 @@
 #include "pdeint/mixer_factory.hpp"
 #include "pdeint/observer_factory.hpp"
 #include "pdeint/null_observer.hpp"
-#include "ginitstate_direct_user.hpp"
-#include "ginitforce_direct_user.hpp"
-#include "ginitbdy_user.hpp"
-#include "gupdatebdy_user.hpp"
-#include "gspecbdy_user.hpp"
 #include "ginitstate_factory.hpp"
 #include "ginitforce_factory.hpp"
 #include "ginitbdy_factory.hpp"
 #include "gupdatebdy_factory.hpp"
-#include "gspecbdy_factory.hpp"
 #include "tbox/property_tree.hpp"
 #include "tbox/mpixx.hpp"
 #include "tbox/global_manager.hpp"
@@ -109,7 +103,7 @@ void steptop_callback (const Time &t, State &u, const Time &dt);// backdoor func
 // Public methods:
 void init_state       (const PropertyTree &ptree, GGrid &, EqnBasePtr &pEqn, Time &t, State &utmp, State &u, State &ub);
 void init_force       (const PropertyTree &ptree, GGrid &, EqnBasePtr &pEqn, Time &t, State &utmp, State &u, State &uf);
-void init_bdy         (const PropertyTree &ptree, GGrid &, Time &t, State &utmp, State &u, State &ub);
+void init_bdy         (const PropertyTree &ptree, GGrid &, EqnBasePtr &pEqn, Time &t, State &utmp, State &u, State &ub);
 void allocate         (const PropertyTree &ptree);
 void deallocate       ();
 void create_observers (EqnBasePtr &eqn_ptr, PropertyTree &ptree, GSIZET icycle, Time time,     std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers);

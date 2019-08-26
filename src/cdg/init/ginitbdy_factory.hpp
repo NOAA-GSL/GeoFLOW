@@ -1,7 +1,7 @@
 //==================================================================================
-// Module       : gspecbdy_factory.hpp
+// Module       : ginitbdy_factory.hpp
 // Date         : 7/11/19 (DLR)
-// Description  : GeoFLOW boundary specification factory object. 
+// Description  : GeoFLOW boundary initialization factory object. 
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
