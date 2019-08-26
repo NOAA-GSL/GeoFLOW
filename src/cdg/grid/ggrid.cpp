@@ -344,15 +344,15 @@ GFTYPE GGrid::maxlength()
 void GGrid::grid_init()
 {
 
-  GPTLstart("GGrid::grid_init: do_elems");
+  GTimerStart("GGrid::grid_init: do_elems");
   do_elems(); // generate element list from derived class
-  GPTLstop("GGrid::grid_init: do_elems");
+  GTimerStop("GGrid::grid_init: do_elems");
 
   GComm::Synch(comm_);
 
-  GPTLstart("GGrid::grid_init: do_typing");
+  GTimerStart("GGrid::grid_init: do_typing");
   do_typing(); // do element-typing check
-  GPTLstop("GGrid::grid_init: do_typing");
+  GTimerStop("GGrid::grid_init: do_typing");
 
   // Have elements been set yet?
   assert(gelems_.size() > 0 && "Elements not set");
@@ -366,31 +366,31 @@ void GGrid::grid_init()
   else if ( itype_[GE_DEFORMED]  .size() > 0 ) gtype_ = GE_DEFORMED;
   else if ( itype_[GE_REGULAR]   .size() > 0 ) gtype_ = GE_REGULAR;
 
-  GPTLstart("GGrid::grid_init: def_init");
+  GTimerStart("GGrid::grid_init: def_init");
   if ( itype_[GE_2DEMBEDDED].size() > 0
     || itype_  [GE_DEFORMED].size() > 0 ) {
     def_init();
   }
-  GPTLstop("GGrid::grid_init: def_init");
+  GTimerStop("GGrid::grid_init: def_init");
 
-  GPTLstart("GGrid::grid_init: reg_init");
+  GTimerStart("GGrid::grid_init: reg_init");
   if ( itype_[GE_REGULAR].size() > 0 ) {
     reg_init();
   }
-  GPTLstop("GGrid::grid_init: reg_init");
+  GTimerStop("GGrid::grid_init: reg_init");
 
-  GPTLstart("GGrid::grid_init: init_bc_info");
+  GTimerStart("GGrid::grid_init: init_bc_info");
   // All element bdy/face data should have been set by now:
   init_bc_info();
-  GPTLstop("GGrid::grid_init: init_bc_info");
+  GTimerStop("GGrid::grid_init: init_bc_info");
 
 
   bInitialized_ = TRUE;
   mass_ = new GMass(*this);
   
-  GPTLstart("GGrid::grid_init: find_min_dist");
+  GTimerStart("GGrid::grid_init: find_min_dist");
   minnodedist_ = find_min_dist();
-  GPTLstop("GGrid::grid_init: find_min_dist");
+  GTimerStop("GGrid::grid_init: find_min_dist");
 
 
 } // end of method grid_init (1)
@@ -408,15 +408,15 @@ void GGrid::grid_init(GTMatrix<GINT> &p,
                       GTVector<GTVector<GFTYPE>> &xnodes)
 {
 
-  GPTLstart("GGrid::grid_init: do_elems");
+  GTimerStart("GGrid::grid_init: do_elems");
   do_elems(p, xnodes); // generate element list from derived class
-  GPTLstop("GGrid::grid_init: do_elems");
+  GTimerStop("GGrid::grid_init: do_elems");
 
   GComm::Synch(comm_);
 
-  GPTLstart("GGrid::grid_init: do_typing");
+  GTimerStart("GGrid::grid_init: do_typing");
   do_typing(); // do element-typing check
-  GPTLstop("GGrid::grid_init: do_typing");
+  GTimerStop("GGrid::grid_init: do_typing");
 
   // Have elements been set yet?
   assert(gelems_.size() > 0 && "Elements not set");
@@ -430,28 +430,28 @@ void GGrid::grid_init(GTMatrix<GINT> &p,
   else if ( itype_[GE_DEFORMED]  .size() > 0 ) gtype_ = GE_DEFORMED;
   else if ( itype_[GE_REGULAR]   .size() > 0 ) gtype_ = GE_REGULAR;
 
-  GPTLstart("GGrid::grid_init: init_bc_info");
+  GTimerStart("GGrid::grid_init: init_bc_info");
   // All element bdy/face data should have been set by now:
   init_bc_info();
-  GPTLstop("GGrid::grid_init: init_bc_info");
+  GTimerStop("GGrid::grid_init: init_bc_info");
 
-  GPTLstart("GGrid::grid_init: def_init");
+  GTimerStart("GGrid::grid_init: def_init");
   if ( itype_[GE_2DEMBEDDED].size() > 0
     || itype_  [GE_DEFORMED].size() > 0 ) {
     def_init();
   }
-  GPTLstop("GGrid::grid_init: def_init");
+  GTimerStop("GGrid::grid_init: def_init");
 
-  GPTLstart("GGrid::grid_init: reg_init");
+  GTimerStart("GGrid::grid_init: reg_init");
   if ( itype_[GE_REGULAR].size() > 0 ) {
     reg_init();
   }
-  GPTLstop("GGrid::grid_init: reg_init");
+  GTimerStop("GGrid::grid_init: reg_init");
 
 
-  GPTLstart("GGrid::grid_init: find_min_dist");
+  GTimerStart("GGrid::grid_init: find_min_dist");
   minnodedist_ = find_min_dist();
-  GPTLstop("GGrid::grid_init: find_min_dist");
+  GTimerStop("GGrid::grid_init: find_min_dist");
 
   bInitialized_ = TRUE;
 
