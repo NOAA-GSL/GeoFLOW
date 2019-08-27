@@ -23,6 +23,9 @@
                     ${GHOME}/grid/ggrid_factory.cpp
     )
 
+ set(CDG_INIT_SRC   ${GHOME}/init/gspecbdy_factory.cpp 
+    )
+
  set(CDG_IO_SRC     ${GHOME}/io/gio.cpp
     )
 
@@ -58,6 +61,7 @@
                      ${CDG_BLAS_SRC} 
                      ${CDG_COMM_SRC}
                      ${CDG_GRID_SRC}
+                     ${CDG_INIT_SRC}
                      ${CDG_IO_SRC}
                      ${CDG_SEM_SRC}
                      ${GEOFLOW_TBOX_SRC}
