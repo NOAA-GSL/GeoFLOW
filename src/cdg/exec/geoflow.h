@@ -33,8 +33,6 @@
 #include "pdeint/mixer_factory.hpp"
 #include "pdeint/observer_factory.hpp"
 #include "pdeint/null_observer.hpp"
-#include "gspecbdy_user.hpp"
-#include "gspecbdy_factory.hpp"
 #include "ginitstate_factory.hpp"
 #include "ginitforce_factory.hpp"
 #include "ginitbdy_factory.hpp"
