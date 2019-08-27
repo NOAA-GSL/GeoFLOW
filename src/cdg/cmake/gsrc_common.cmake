@@ -39,6 +39,22 @@
                     ${GHOME}/sem/gadvect.cpp
     )
 
+ set(CDG_USER_SRC   ${GHOME}/user/bdy/ginitbdy_user.cpp 
+                    ${GHOME}/user/bdy/gspecbdy_user.cpp 
+                    ${GHOME}/user/bdy/gupdatebdy_user.cpp 
+                    ${GHOME}/user/force/ginitfb.cpp 
+                    ${GHOME}/user/force/ginitforce_direct_user.cpp 
+                    ${GHOME}/user/force/ginitfps.cpp 
+                    ${GHOME}/user/force/ginitfs.cpp 
+                    ${GHOME}/user/force/ginitfv.cpp 
+                    ${GHOME}/user/state/ginitb.cpp 
+                    ${GHOME}/user/state/ginitc.cpp 
+                    ${GHOME}/user/state/ginitps.cpp 
+                    ${GHOME}/user/state/ginits.cpp 
+                    ${GHOME}/user/state/ginitstate_direct_user.cpp 
+                    ${GHOME}/user/state/ginitv.cpp 
+    )
+
  set(CDG_UTILS_SRC  ${GHOME}/utils/gbitblock.cpp 
                     ${GHOME}/utils/geoflow.cpp
     )
@@ -65,6 +81,7 @@
                      ${CDG_IO_SRC}
                      ${CDG_SEM_SRC}
                      ${GEOFLOW_TBOX_SRC}
+                     ${CDG_USER_SRC}
                      ${CDG_UTILS_SRC}
      )
 
