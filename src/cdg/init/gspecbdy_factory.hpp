@@ -9,6 +9,7 @@
 #define _GSPECBDY_FACTORY_HPP 
 
 #include "tbox/property_tree.hpp"
+#include "gtypes.h"
 #include "gcomm.hpp"
 #include "gtvector.hpp"
 #include "ggrid.hpp"
@@ -26,10 +27,9 @@ class GSpecBdyFactory
 
         static GBOOL dospec(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, const GINT id,  GTVector<GSIZET> &ibdy, GTVector<GBdyType> &tbdy);
 
-  private:
+//private:
 }; // class GSpecBdyFactory
 
 
-#include "gspecbdy_factory.ipp"
 
 #endif 
