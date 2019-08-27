@@ -25,6 +25,5 @@ GBOOL impl_simple_outflow          (const PropertyTree& stree, GGrid &grid,  Tim
 
 };
 
-#include "gupdatebdy_user.ipp"
 
 #endif

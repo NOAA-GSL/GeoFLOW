@@ -26,6 +26,5 @@ GBOOL impl_uniform        (const PropertyTree &stree, GGrid &grid,  const GINT i
 
 };
 
-#include "gspecbdy_user.ipp"
 
 #endif

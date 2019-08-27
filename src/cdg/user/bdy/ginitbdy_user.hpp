@@ -24,6 +24,4 @@ namespace ginitbdy
 GBOOL impl_mybdyinit        (const PropertyTree& stree, GGrid &grid,  Time &time, State &utmp, State &u, State &ub);
 };
 
-#include "ginitbdy_user.ipp"
-
 #endif
