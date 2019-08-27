@@ -27,6 +27,5 @@ GBOOL impl_rand    (const PropertyTree &ftree, const Time &t, State &u, State &u
 
 };
 
-#include "ginitforce_direct_user.ipp"
 
 #endif

@@ -33,6 +33,6 @@ GBOOL impl_boxpergauss          (const PropertyTree& stree, GGrid &grid,  Time &
 GBOOL impl_icosgauss            (const PropertyTree& stree, GGrid &grid,  Time &time, State &utmp, State &ub, State &u);
 };
 
-#include "ginitstate_direct_user.ipp"
+
 
 #endif

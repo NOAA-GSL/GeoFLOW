@@ -29,6 +29,6 @@ GBOOL impl_rand      (const PropertyTree &vtree, GGrid &grid, Time &time, State 
 
 };
 
-#include "ginitc.ipp"
+
 
 #endif
