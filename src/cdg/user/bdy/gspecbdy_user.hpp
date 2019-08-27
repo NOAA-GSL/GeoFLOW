@@ -25,7 +25,7 @@ typedef GTVector<GTVector<GFTYPE>*> State;
 namespace gspecbdy
 {
 
-GBOOL impl_uniform        (const PropertyTree& stree, GGrid &grid,  const GINT id, GTVector<GSIZET> &ibdy, GTVector<GBdyType> &tbdy);
+GBOOL impl_uniform        (const PropertyTree &stree, GGrid &grid,  const GINT id, GTVector<GSIZET> &ibdy, GTVector<GBdyType> &tbdy);
 
 };
 
