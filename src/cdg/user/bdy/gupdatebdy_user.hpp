@@ -18,6 +18,10 @@
 using namespace geoflow;
 using namespace geoflow::tbox;
 
+typedef GFTYPE                      Time;
+typedef GTVector<GTVector<GFTYPE>*> State;
+
+
 namespace gupdatebdy
 {
 
