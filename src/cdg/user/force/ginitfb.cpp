@@ -5,6 +5,8 @@
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
+#include "ginitfb.hpp"
+
 
 
 namespace ginitfb {

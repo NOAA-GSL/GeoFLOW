@@ -6,6 +6,7 @@
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
+#include "ginitbdy_user.hpp"
 
 
 namespace ginitbdy {

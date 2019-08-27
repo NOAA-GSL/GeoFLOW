@@ -5,6 +5,7 @@
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
+#include "ginitps.hpp"
 
 
 namespace ginitps {

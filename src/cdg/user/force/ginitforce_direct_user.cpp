@@ -9,6 +9,7 @@
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
+#include "ginitforce_direct_user.hpp"
 
 
 namespace ginitforce {
