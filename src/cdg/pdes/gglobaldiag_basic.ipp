@@ -2,7 +2,7 @@
 // Module       : gglobaldiag_basic.ipp
 // Date         : 3/28/19 (DLR)
 // Description  : Observer object for carrying out L2 & extrema diagnostics for
-//                Burgers equation.
+//                kinetic quantities
 // Copyright    : Copyright 2019. Colorado State University. All rights reserved
 // Derived From : ObserverBase.
 //==================================================================================
@@ -128,6 +128,8 @@ void GGlobalDiag_basic<EquationType>::do_kinetic_L2(const Time t, const State &u
   assert(utmp_ != NULLPTR && utmp_->size() > 3
       && "tmp space not set, or is insufficient");
 
+  
+  GINT    ndim = grid_->gtype() == GE_2DEMBEDDED ? 3 : GDIM;
   GFTYPE absu, absw, ener, enst, hel, fv, rhel;
   GTVector<GFTYPE> lmax(5), gmax(5);
 
@@ -140,7 +142,7 @@ void GGlobalDiag_basic<EquationType>::do_kinetic_L2(const Time t, const State &u
 
   // Energy = <u^2>/2:
   ener = 0.0;
-  for ( GSIZET j=0; j<u.size(); j++ ) {
+  for ( GSIZET j=0; j<ku.size(); j++ ) {
    *utmp[0] = *u[j];
     utmp[0]->pow(2);
     ener += grid_->integrate(*utmp[0],*utmp[1]); 
@@ -149,13 +151,15 @@ void GGlobalDiag_basic<EquationType>::do_kinetic_L2(const Time t, const State &u
  
   // Enstrophy = <omega^2>/2
   enst = 0.0;
-  if ( GDIM == 2 && ku_.size() == 2 ) {
-    GMTK::curl<GFTYPE>(*grid_, ku_, 3, utmp, *utmp[2]);
-    utmp[2]->pow(2);
-    enst += grid_->integrate(*utmp[2],*utmp[0]); 
+  if ( ku_.size() == 1 ) {
+    for ( GINT j=0; j<ndim; j++ ) {
+      GMTK::grad<GFTYPE>(*grid_, ku_, j+1, utmp, *utmp[2]);
+      utmp[2]->pow(2);
+      enst += grid_->integrate(*utmp[2],*utmp[0]); 
+    }
   }
   else {
-    for ( GINT j=0; j<GDIM; j++ ) {
+    for ( GINT j=0; j<ku.size(); j++ ) {
       GMTK::curl<GFTYPE>(*grid_, ku_, j+1, utmp, *utmp[2]);
       utmp[2]->pow(2);
       enst += grid_->integrate(*utmp[2],*utmp[0]); 
@@ -165,10 +169,10 @@ void GGlobalDiag_basic<EquationType>::do_kinetic_L2(const Time t, const State &u
 
   // Energy injection = <f.u>
   fv = 0.0;
-  if ( uf.size() > 0 && uf[0] != NULLPTR 
-    && uf[0]->size() > 0 ) {
+  if ( uf.size() > 0 ) {
     *utmp[1] = 0.0;
-    for ( GINT j=0; j<GDIM; j++ ) {
+    for ( GINT j=0; j<ndim; j++ ) {
+      if ( uf[j] == NULLPTR ) continue;
       *utmp[1] = *uf[j];
       utmp[1]->pointProd(*ku_[j]);
       fv += grid_->integrate(*utmp[1],*utmp[0]); 
@@ -178,8 +182,8 @@ void GGlobalDiag_basic<EquationType>::do_kinetic_L2(const Time t, const State &u
 
   // Helicity = <u.omega>
   hel = 0.0;
-  if ( GDIM > 2 || u.size() > 2 ) {
-    for ( GINT j=0; j<GDIM; j++ ) {
+  if ( ku.size() > 1 ) {
+    for ( GINT j=0; j<ndim; j++ ) {
       GMTK::curl<GFTYPE>(*grid_, ku_, j+1, utmp, *utmp[2]);
       utmp[2]->pointProd(*ku_[j]);
       hel += grid_->integrate(*utmp[2],*utmp[0]); 
@@ -189,10 +193,10 @@ void GGlobalDiag_basic<EquationType>::do_kinetic_L2(const Time t, const State &u
 
   // Relative helicity = <u.omega/(|u|*|omega|)>
   rhel = 0.0;
-  if ( GDIM > 2 || ku_.size() > 2 ) {
+  if ( ku_.size() > 1 ) {
     // Compute |u|:
     *utmp[3] = 0.0;
-    for ( GINT j=0; j<GDIM; j++ ) {
+    for ( GINT j=0; j<ndim; j++ ) {
      *utmp[1] = *ku_[j];
       utmp[1]->pow(2);
      *utmp[3] += *utmp[1];
@@ -201,7 +205,7 @@ void GGlobalDiag_basic<EquationType>::do_kinetic_L2(const Time t, const State &u
     
     // Compute |curl u| = |omega|:
     *utmp[4] = 0.0;
-    for ( GINT j=0; j<GDIM; j++ ) {
+    for ( GINT j=0; j<ndim; j++ ) {
       GMTK::curl<GFTYPE>(*grid_, ku_, j+1, utmp, *utmp[2]);
       utmp[2]->pow(2);
      *utmp[4] += *utmp[2];
@@ -214,7 +218,7 @@ void GGlobalDiag_basic<EquationType>::do_kinetic_L2(const Time t, const State &u
       (*utmp[3])[k] = 1.0/( (*utmp[3])[k] * (*utmp[4])[k] + tiny );
 
     // Compute <u.omega / |u| |omega| >:
-    for ( GINT j=0; j<GDIM; j++ ) {
+    for ( GINT j=0; j<ndim; j++ ) {
       GMTK::curl<GFTYPE>(*grid_, ku_, j+1, utmp, *utmp[2]);
       utmp[2]->pointProd(*ku_[j]);
       utmp[2]->pointProd(*utmp[3]);
@@ -267,6 +271,7 @@ void GGlobalDiag_basic<EquationType>::do_kinetic_max(const Time t, const State &
   assert(utmp_ != NULLPTR && utmp_->size() > 5
       && "tmp space not set, or is insufficient");
 
+  GINT   ndim = grid_->gtypes() == GE_2DEMBEDDED ? 3 : GDIM;
   GFTYPE absu, absw, ener, enst, hel, fv, rhel;
   GTVector<GFTYPE> lmax(5), gmax(5);
 
@@ -288,13 +293,13 @@ void GGlobalDiag_basic<EquationType>::do_kinetic_max(const Time t, const State &
  
   // Enstrophy = omega^2/2
   *utmp[3] = 0.0;
-  if ( GDIM == 2 && ku_.size() == 2 ) {
+  if ( ku_.size() == 1 ) {
     GMTK::curl<GFTYPE>(*grid_, ku_, 3, utmp, *utmp[2]);
     utmp[2]->pow(2);
    *utmp[3] += *utmp[2];
   }
   else {
-    for ( GINT j=0; j<GDIM; j++ ) {
+    for ( GINT j=0; j<ndim; j++ ) {
       GMTK::curl<GFTYPE>(*grid_, ku_, j+1, utmp, *utmp[2]);
       utmp[2]->pow(2);
      *utmp[3] += *utmp[2];
@@ -304,11 +309,11 @@ void GGlobalDiag_basic<EquationType>::do_kinetic_max(const Time t, const State &
 
   // Energy injection = f.u
   lmax[2] = 0.0;
-  if ( uf.size() > 0 && uf[0] != NULLPTR 
-    && uf[0]->size() > 0 ) {
+  if ( uf.size() > 0 ) {
     *utmp[3] = 0.0;
-    for ( GINT j=0; j<GDIM; j++ ) {
-      *utmp[1] = *uf[j];
+    for ( GINT j=0; j<ku.size(); j++ ) {
+      if ( uf[ikinetic_[j]] == NULLPTR ) continue;  
+     *utmp[1] = *uf[ikinetic_[j]];
       utmp[1]->pointProd(*ku_[j]);
      *utmp[3] += *utmp[1];
     }
@@ -317,8 +322,8 @@ void GGlobalDiag_basic<EquationType>::do_kinetic_max(const Time t, const State &
 
   // Helicity = u.omega
   *utmp[3] = 0.0;
-  if ( GDIM > 2 || ku_.size() > 2 ) {
-    for ( GINT j=0; j<GDIM; j++ ) {
+  if ( ku_.size() > 1 ) {
+    for ( GINT j=0; j<ndim; j++ ) {
       GMTK::curl<GFTYPE>(*grid_, ku_, j+1, utmp, *utmp[2]);
       utmp[2]->pointProd(*ku_[j]);
      *utmp[3] += *utmp[2];
@@ -328,10 +333,10 @@ void GGlobalDiag_basic<EquationType>::do_kinetic_max(const Time t, const State &
 
   // Relative helicity = u.omega/(|u|*|omega|)
   *utmp[5] = 0.0;
-  if ( GDIM > 2 || ku_.size() > 2 ) {
+  if ( ku_.size() > 1 ) {
     // Compute |u|:
     *utmp[3] = 0.0;
-    for ( GINT j=0; j<GDIM; j++ ) {
+    for ( GINT j=0; j<ndim; j++ ) {
      *utmp[1] = *ku_[j];
       utmp[1]->pow(2);
      *utmp[3] += *utmp[1];
@@ -340,7 +345,7 @@ void GGlobalDiag_basic<EquationType>::do_kinetic_max(const Time t, const State &
     
     // Compute |curl u| = |omega|:
     *utmp[4] = 0.0;
-    for ( GINT j=0; j<GDIM; j++ ) {
+    for ( GINT j=0; j<ndim; j++ ) {
       GMTK::curl<GFTYPE>(*grid_, ku_, j+1, utmp, *utmp[2]);
       utmp[2]->pow(2);
      *utmp[4] += *utmp[2];
@@ -353,7 +358,7 @@ void GGlobalDiag_basic<EquationType>::do_kinetic_max(const Time t, const State &
       (*utmp[3])[k] = 1.0/( (*utmp[3])[k] * (*utmp[4])[k] + tiny );
 
     // Compute u.omega / |u| |omega|: 
-    for ( GINT j=0; j<GDIM; j++ ) {
+    for ( GINT j=0; j<ndim; j++ ) {
       GMTK::curl<GFTYPE>(*grid_, ku_, j+1, utmp, *utmp[2]);
       utmp[2]->pointProd(*ku_[j]);
       utmp[2]->pointProd(*utmp[3]);
