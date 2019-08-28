@@ -39,11 +39,11 @@ class GInitStateFactory
 	static GBOOL set_by_direct(const PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &u);
 	static GBOOL set_by_comp  (const PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &u);
 
-        static GBOOL doinitv      (const PropertyTree &vtree, GGrid &grid, Time &time, State &utmp, State &ub, State &u);
-        static GBOOL doinitb      (const PropertyTree &vtree, GGrid &grid, Time &time, State &utmp, State &ub, State &u);
-        static GBOOL doinits      (const PropertyTree &vtree, GGrid &grid, Time &time, State &utmp, State &ub, State &u);
-        static GBOOL doinitps     (const PropertyTree &vtree, GGrid &grid, Time &time, State &utmp, State &ub, State &u);
-        static GBOOL doinitc      (const PropertyTree &vtree, GGrid &grid, Time &time, State &utmp, State &ub, State &u);
+        static GBOOL doinitv      (const PropertyTree &ptree, GString &sconfig,  GGrid &grid, Time &time, State &utmp, State &ub, State &u);
+        static GBOOL doinitb      (const PropertyTree &ptree, GString &sconfig,  GGrid &grid, Time &time, State &utmp, State &ub, State &u);
+        static GBOOL doinits      (const PropertyTree &ptree, GString &sconfig,  GGrid &grid, Time &time, State &utmp, State &ub, State &u);
+        static GBOOL doinitps     (const PropertyTree &ptree, GString &sconfig,  GGrid &grid, Time &time, State &utmp, State &ub, State &u);
+        static GBOOL doinitc      (const PropertyTree &ptree, GString &sconfig,  GGrid &grid, Time &time, State &utmp, State &ub, State &u);
 
 }; // end, class GInitStateFactory
 

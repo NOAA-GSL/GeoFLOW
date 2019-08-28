@@ -28,8 +28,8 @@ typedef GTVector<GTVector<GFTYPE>*> State;
 namespace ginitforce
 {
 
-GBOOL impl_null    (const PropertyTree &ftree, const Time &t, State &u, State &uf);
-GBOOL impl_rand    (const PropertyTree &ftree, const Time &t, State &u, State &uf);
+GBOOL impl_null    (const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &t, State &u, State &uf);
+GBOOL impl_rand    (const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &t, State &u, State &uf);
 
 };
 

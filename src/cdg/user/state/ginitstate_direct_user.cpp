@@ -21,15 +21,16 @@ namespace ginitstate {
 // METHOD : impl_boxnwaveburgers
 // DESC   : Initialize state for Burgers with N-wave on box grids with
 //          Dirichlet or periodic boundaries
-// ARGS   : stree: state prop tree
+// ARGS   : ptree  : main prop tree
+//          sconfig: ptree block name containing variable config
 //          grid   : grid
-//          t    : time
-//          utmp : tmp arrays
-//          ub   : bdy vectors (one for each state element)
-//          u    : current state
+//          t      : time
+//          utmp   : tmp arrays
+//          ub     : bdy vectors (one for each state element)
+//          u      : current state
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_boxnwaveburgers(const PropertyTree &ptree, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
+GBOOL impl_boxnwaveburgers(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
 {
   GString          serr = "impl_boxnwaveburgers: ";
   GBOOL            bplanar=TRUE; // planar or circularized
@@ -42,7 +43,7 @@ GBOOL impl_boxnwaveburgers(const PropertyTree &ptree, GGrid &grid, Time &time, S
   std::vector<GFTYPE> kprop;
   GString          snut;
 
-  PropertyTree nwaveptree = ptree   .getPropertyTree("init_nwave");
+  PropertyTree nwaveptree = ptree   .getPropertyTree("initstate_nwave");
   PropertyTree boxptree   = ptree   .getPropertyTree("grid_box");
   PropertyTree nuptree    = ptree.getPropertyTree("dissipation_traits");
 
@@ -127,15 +128,16 @@ GBOOL impl_boxnwaveburgers(const PropertyTree &ptree, GGrid &grid, Time &time, S
 // METHOD : impl_boxdirgauss
 // DESC   : Initialize state for Burgers with Gauss lump on box grids with
 //          Dirichlet boundaries
-// ARGS   : stree: state prop tree
-//          grid : grid
-//          time : time
-//          utmp : tmp arrays
-//          ub   : bdy vectors (one for each state element)
-//          u    : current state
+// ARGS   : ptree  : main prop tree
+//          sconfig: ptree block name containing variable config
+//          grid   : grid
+//          time   : time
+//          utmp   : tmp arrays
+//          ub     : bdy vectors (one for each state element)
+//          u      : current state
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_boxdirgauss(const PropertyTree &ptree, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
+GBOOL impl_boxdirgauss(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
 {
   GString          serr = "impl_boxdirgauss: ";
   GBOOL            bContin;
@@ -147,7 +149,7 @@ GBOOL impl_boxdirgauss(const PropertyTree &ptree, GGrid &grid, Time &time, State
   GTPoint<GFTYPE>  r0(3), P0(3);
   GString          snut;
 
-  PropertyTree heatptree = ptree.getPropertyTree("init_lump");
+  PropertyTree heatptree = ptree.getPropertyTree("initstate_boxdirgauss");
   PropertyTree boxptree  = ptree.getPropertyTree("grid_box");
   PropertyTree advptree  = ptree.getPropertyTree("burgers_traits");
   PropertyTree nuptree   = ptree.getPropertyTree("dissipation_traits");
@@ -223,15 +225,16 @@ GBOOL impl_boxdirgauss(const PropertyTree &ptree, GGrid &grid, Time &time, State
 // METHOD : impl_boxpergauss
 // DESC   : Initialize state for Burgers with Gauss lump on box grids with
 //          periodic boundaries
-// ARGS   : stree: state prop tree
-//          grid : grid
-//          t    : time
-//          utmp : tmp arrays
-//          ub   : bdy vectors (one for each state element)
-//          u    : current state
+// ARGS   : stree  : main prop tree
+//          sconfig: ptree block name containing variable config
+//          grid   : grid
+//          t      : time
+//          utmp   : tmp arrays
+//          ub     : bdy vectors (one for each state element)
+//          u      : current state
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_boxpergauss(const PropertyTree &ptree, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
+GBOOL impl_boxpergauss(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
 {
   GString          serr = "impl_boxpergauss: ";
   GBOOL            bContin;
@@ -245,7 +248,7 @@ GBOOL impl_boxpergauss(const PropertyTree &ptree, GGrid &grid, Time &time, State
   State            c(GDIM);
   GString          snut;
 
-  PropertyTree heatptree = ptree.getPropertyTree("init_lump");
+  PropertyTree heatptree = ptree.getPropertyTree("initstate_boxpergauss");
   PropertyTree boxptree  = ptree.getPropertyTree("grid_box");
   PropertyTree advptree  = ptree.getPropertyTree("burgers_traits");
   PropertyTree nuptree   = ptree.getPropertyTree("dissipation_traits");
@@ -343,7 +346,8 @@ GBOOL impl_boxpergauss(const PropertyTree &ptree, GGrid &grid, Time &time, State
 //**********************************************************************************
 // METHOD : impl_icosgauss
 // DESC   : Initialize state for Burgers with Gauss lump on ICOS grid
-// ARGS   : stree: state prop tree
+// ARGS   : ptree  : main prop tree
+//          sconfig: ptree block name containing variable config
 //          grid   : grid
 //          t      : time
 //          utmp   : tmp arrays
@@ -351,7 +355,7 @@ GBOOL impl_boxpergauss(const PropertyTree &ptree, GGrid &grid, Time &time, State
 //          u      : current state
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_icosgauss(const PropertyTree &ptree, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
+GBOOL impl_icosgauss(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
 {
 
   GString          serr = "impl_icosgauss: ";
@@ -374,7 +378,7 @@ GBOOL impl_icosgauss(const PropertyTree &ptree, GGrid &grid, Time &time, State &
   State            c(GDIM+1);
   GString          snut;
 
-  PropertyTree lumpptree = ptree.getPropertyTree("init_icosgauss");
+  PropertyTree lumpptree = ptree.getPropertyTree("initstate_icosgaussburgers");
   PropertyTree icosptree = ptree.getPropertyTree("grid_icos");
   PropertyTree advptree  = ptree.getPropertyTree("burgers_traits");
   PropertyTree nuptree   = ptree.getPropertyTree("dissipation_traits");

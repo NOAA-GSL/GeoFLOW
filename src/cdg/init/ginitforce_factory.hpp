@@ -40,10 +40,10 @@ class GInitForceFactory
 	static GBOOL set_by_direct(const PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &u);
 	static GBOOL set_by_comp (const PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn,  Time &time, State &utmp, State &ub, State &u);
 
-        static GBOOL doinitfv (const PropertyTree &vtree, GGrid &grid, Time &time, State &utmp, State &ub, State &u);
-        static GBOOL doinitfb (const PropertyTree &vtree, GGrid &grid, Time &time, State &utmp, State &ub, State &u);
-        static GBOOL doinitfs (const PropertyTree &vtree, GGrid &grid, Time &time, State &utmp, State &ub, State &u);
-        static GBOOL doinitfps(const PropertyTree &vtree, GGrid &grid, Time &time, State &utmp, State &ub, State &u);
+        static GBOOL doinitfv (const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &u);
+        static GBOOL doinitfb (const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &u);
+        static GBOOL doinitfs (const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &u);
+        static GBOOL doinitfps(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &u);
 
 }; // end, class GInitForceFactory
 

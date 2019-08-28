@@ -74,7 +74,7 @@ GBOOL GInitForceFactory<EquationType>::set_by_direct(const PropertyTree& ptree, 
     }
   }
 //else if ( "initforce_myinit"            == sinit ) {
-//  bret = ginitstate::impl_mhyforce      (vtree, grid, time, utmp, ub, uf);
+//  bret = ginitstate::impl_mydirforce      (ptree, sinit, grid, time, utmp, ub, uf);
 //}
   else                                        {
     assert(FALSE && "Specified state initialization method unknown");
@@ -136,28 +136,28 @@ GBOOL GInitForceFactory<EquationType>::set_by_comp(const PropertyTree& ptree, GG
         nvar  = icomptype->contains(itype, ivar, mvar);
         comp.resize(nvar);
         for ( GINT i=0; i<nvar; i++ ) comp[i] = uf[ivar[i]];
-        bret = doinitfv(vtree, grid, time, utmp, ub, comp);
+        bret = doinitfv(ptree, sinit, grid, time, utmp, ub, comp);
         break;
       case GSC_MAGNETIC:
         sinit = vtree.getValue<GString>("initfb");
         nvar  = icomptype->contains(itype, ivar, mvar);
         comp.resize(nvar);
         for ( GINT i=0; i<nvar; i++ ) comp[i] = uf[ivar[i]];
-        bret = doinitfb(vtree, grid, time, utmp, ub, comp);
+        bret = doinitfb(ptree, sinit, grid, time, utmp, ub, comp);
         break;
       case GSC_ACTIVE_SCALAR:
         sinit = vtree.getValue<GString>("initfs");
         nvar  = icomptype->contains(itype, ivar, mvar);
         comp.resize(nvar);
         for ( GINT i=0; i<nvar; i++ ) comp[i] = uf[ivar[i]];
-        bret = doinitfs(vtree, grid, time, utmp, ub, comp);
+        bret = doinitfs(ptree, sinit, grid, time, utmp, ub, comp);
         break;
       case GSC_PASSIVE_SCALAR:
         sinit = vtree.getValue<GString>("initfps");
         nvar  = icomptype->contains(itype, ivar, mvar);
         comp.resize(nvar);
         for ( GINT i=0; i<nvar; i++ ) comp[i] = uf[ivar[i]];
-        bret = doinitfps(vtree, grid, time, utmp, ub, comp);
+        bret = doinitfps(ptree, sinit, grid, time, utmp, ub, comp);
         break;
       case GSC_PRESCRIBED:
       case GSC_NONE:
@@ -182,7 +182,8 @@ GBOOL GInitForceFactory<EquationType>::set_by_comp(const PropertyTree& ptree, GG
 // DESC   : Do init of kinetic force components. Full list of available
 //          kinetic initializations are contained here. Only
 //          kinetic components are passed in.
-// ARGS   : vtree  : initial condition property tree
+// ARGS   : ptree  : main property tree
+//          sconfig: ptree block name containing variable config
 //          grid   : grid object
 //          time   : initialization time
 //          utmp   : tmp arrays
@@ -191,10 +192,14 @@ GBOOL GInitForceFactory<EquationType>::set_by_comp(const PropertyTree& ptree, GG
 // RETURNS: TRUE on success; else FALSE
 //**********************************************************************************
 template<typename EquationType>
-GBOOL GInitForceFactory<EquationType>::doinitfv(const PropertyTree &vtree, GGrid &grid, Time &time, State &utmp, State &ub, State &uf)
+GBOOL GInitForceFactory<EquationType>::doinitfv(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &uf)
 {
   GBOOL           bret    = TRUE;
-  GString         sinit = vtree.getValue<GString>("name");
+  GString         sinit;
+  PropertyTree    vtree = ptree.getPropertyTree(sconfig);
+
+  sinit = vtree.getValue<GString>("name");
+
 
   if      ( "null"   == sinit
        ||   ""             == sinit ) {
@@ -204,11 +209,11 @@ GBOOL GInitForceFactory<EquationType>::doinitfv(const PropertyTree &vtree, GGrid
   else if ( "zer0" == sinit ) {
     for ( GINT i=0; i<uf.size(); i++ ) *uf[i] = 0.0;
   }
-//else if ( "random" == sinit ) {
-//  bret = ginitfv::random(vtree, grid, time, utmp, ub, uf);
-//} 
+  else if ( "random" == sinit ) {
+    bret = ginitfv::impl_rand(ptree, sinit, grid, time, utmp, ub, uf);
+  } 
   else {
-    assert(FALSE && "Unknown velocity initialization method");
+    assert(FALSE && "Unknown velocity force initialization method");
   }
 
   return bret;
@@ -222,7 +227,8 @@ GBOOL GInitForceFactory<EquationType>::doinitfv(const PropertyTree &vtree, GGrid
 // DESC   : Do init of magnetic force components. Full list of available
 //          magnetic initializations are contained here. Only
 //          magnetic components are passed in.
-// ARGS   : vtree  : initial condition property tree
+// ARGS   : ptree  : main property tree
+//          sconfig: ptree block name containing variable config
 //          grid   : grid object
 //          time   : initialization time
 //          utmp   : tmp arrays
@@ -231,10 +237,13 @@ GBOOL GInitForceFactory<EquationType>::doinitfv(const PropertyTree &vtree, GGrid
 // RETURNS: TRUE on success; else FALSE
 //**********************************************************************************
 template<typename EquationType>
-GBOOL GInitForceFactory<EquationType>::doinitfb(const PropertyTree &vtree, GGrid &grid, Time &time, State &utmp, State &ub, State &uf)
+GBOOL GInitForceFactory<EquationType>::doinitfb(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &uf)
 {
   GBOOL           bret    = FALSE;
-  GString         sinit = vtree.getValue<GString>("name");
+  GString         sinit;
+  PropertyTree    vtree = ptree.getPropertyTree(sconfig);
+
+  sinit = vtree.getValue<GString>("name");
 
   if      ( "null"   == sinit
        ||   ""             == sinit ) {
@@ -244,11 +253,11 @@ GBOOL GInitForceFactory<EquationType>::doinitfb(const PropertyTree &vtree, GGrid
     for ( GINT i=0; i<uf.size(); i++ ) *uf[i] = 0.0;
     bret = TRUE;
   }
-//else if ( "random" == sinit ) {
-//  bret = ginitfb::random(vtree, grid, time, utmp, ub, uf);
-//} 
+  else if ( "random" == sinit ) {
+    bret = ginitfb::impl_rand(ptree, sinit, grid, time, utmp, ub, uf);
+  } 
   else {
-    assert(FALSE && "Unknown b-field initialization method");
+    assert(FALSE && "Unknown b-field force initialization method");
   }
 
   return bret;
@@ -263,7 +272,8 @@ GBOOL GInitForceFactory<EquationType>::doinitfb(const PropertyTree &vtree, GGrid
 // DESC   : Do init of active scalar force components. Full list of available
 //          scalar (passive & active) initializations are contained here.
 //          Only scalar components are passed in.
-// ARGS   : vtree  : initial condition property tree
+// ARGS   : ptree  : initial condition property tree
+//          sconfig: ptree block name containing variable config
 //          grid   : grid object
 //          time   : initialization time
 //          utmp   : tmp arrays
@@ -272,10 +282,13 @@ GBOOL GInitForceFactory<EquationType>::doinitfb(const PropertyTree &vtree, GGrid
 // RETURNS: TRUE on success; else FALSE
 //**********************************************************************************
 template<typename EquationType>
-GBOOL GInitForceFactory<EquationType>::doinitfs(const PropertyTree &vtree, GGrid &grid,  Time &time, State &utmp, State &ub, State &uf)
+GBOOL GInitForceFactory<EquationType>::doinitfs(const PropertyTree &ptree, GString &sconfig, GGrid &grid,  Time &time, State &utmp, State &ub, State &uf)
 {
   GBOOL           bret    = TRUE;
-  GString         sinit = vtree.getValue<GString>("name");
+  GString         sinit;
+  PropertyTree    vtree = ptree.getPropertyTree(sconfig);
+
+  sinit = vtree.getValue<GString>("name");
 
   if      ( "null"   == sinit
        ||   ""             == sinit ) {
@@ -285,11 +298,11 @@ GBOOL GInitForceFactory<EquationType>::doinitfs(const PropertyTree &vtree, GGrid
     for ( GINT i=0; i<uf.size(); i++ ) *uf[i] = 0.0;
     bret = TRUE;
   }
-//else if ( "random" == sinit ) {
-//  bret = ginitfs::random(vtree, grid, time, utmp, ub, uf);
-//} 
+  else if ( "random" == sinit ) {
+    bret = ginitfs::impl_rand(ptree, sinit, grid, time, utmp, ub, uf);
+  } 
   else {
-    assert(FALSE && "Unknown b-field initialization method");
+    assert(FALSE && "Unknown scalar force  initialization method");
   }
 
   return bret;
@@ -302,7 +315,8 @@ GBOOL GInitForceFactory<EquationType>::doinitfs(const PropertyTree &vtree, GGrid
 // DESC   : Do init of passive scalar force components. Full list of available
 //          scalar (passive & active) initializations are contained here.
 //          Only scalar components are passed in.
-// ARGS   : vtree  : initial condition property tree
+// ARGS   : ptree  : initial condition property tree
+//          sconfig: ptree block name containing variable config
 //          grid   : grid object
 //          time   : initialization time
 //          utmp   : tmp arrays
@@ -311,10 +325,13 @@ GBOOL GInitForceFactory<EquationType>::doinitfs(const PropertyTree &vtree, GGrid
 // RETURNS: TRUE on success; else FALSE
 //**********************************************************************************
 template<typename EquationType>
-GBOOL GInitForceFactory<EquationType>::doinitfps(const PropertyTree &vtree, GGrid &grid,  Time &time, State &utmp, State &ub, State &uf)
+GBOOL GInitForceFactory<EquationType>::doinitfps(const PropertyTree &ptree, GString &sconfig, GGrid &grid,  Time &time, State &utmp, State &ub, State &uf)
 {
   GBOOL           bret    = TRUE;
-  GString         sinit = vtree.getValue<GString>("name");
+  GString         sinit;
+  PropertyTree    vtree = ptree.getPropertyTree(sconfig);
+
+  sinit = vtree.getValue<GString>("name");
 
   if      ( "null"   == sinit
        ||   ""             == sinit ) {
@@ -324,11 +341,11 @@ GBOOL GInitForceFactory<EquationType>::doinitfps(const PropertyTree &vtree, GGri
     for ( GINT i=0; i<uf.size(); i++ ) *uf[i] = 0.0;
     bret = TRUE;
   }
-//else if ( "random" == sinit ) {
-//  bret = ginitfps::random(vtree, grid, time, utmp, ub, uf);
-//} 
+  else if ( "random" == sinit ) {
+    bret = ginitfps::impl_rand(ptree, sinit, grid, time, utmp, ub, uf);
+  } 
   else {
-    assert(FALSE && "Unknown b-field initialization method");
+    assert(FALSE && "Unknown passive scalar force initialization method");
   }
 
   return bret;

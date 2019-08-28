@@ -25,7 +25,7 @@ typedef GTVector<GTVector<GFTYPE>*> State;
 namespace ginitfps
 {
 
-GBOOL impl_rand      (const PropertyTree &vtree, GGrid &grid, Time &time, State &utmp, State &ub, State &uf);
+GBOOL impl_rand      (const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &uf);
 
 };
 

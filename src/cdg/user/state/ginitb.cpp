@@ -15,7 +15,8 @@ namespace ginitb {
 //**********************************************************************************
 // METHOD : impl_rand
 // DESC   : Inititialize velocity with Gaussian-randomized values
-// ARGS   : vtree  : initial condition property tree
+// ARGS   : ptree  : main
+//          sconfig: ptree block name containing variable config
 //          grid   : grid object
 //          time   : initialization time
 //          utmp   : tmp arrays
@@ -23,7 +24,7 @@ namespace ginitb {
 //          u      : state to be initialized.
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_rand(const PropertyTree &vtree, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
+GBOOL impl_rand(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
 {
 
   return FALSE;
