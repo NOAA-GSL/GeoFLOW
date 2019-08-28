@@ -938,10 +938,13 @@ void GGrid::init_local_face_info()
 
   n = 0;
   for ( GSIZET e=0; e<gelems_.size(); e++ ) { // get global # face nodes
+#if 0
     ieface = &gelems_[e]->face_indices(); // set in child class
     for ( GSIZET j=0; j<ieface->size(); j++ ) { // count elem face nodes
       for ( GSIZET k=0; k<(*ieface)[j].size(); k++) n++; 
     }
+#endif
+    n += gelems_[e]->nfnodes();
   }
   igface_.resize(n);
 

@@ -37,7 +37,7 @@ public:
                              GGrid() = delete;
                              GGrid(const geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GC_COMM &comm);
 
-                            ~GGrid();
+virtual                       ~GGrid();
 //static                       GGrid *build(geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GC_COMM comm);
 
 virtual void                 do_elems() = 0;                            // compute grid for irank
