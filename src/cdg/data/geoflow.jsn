@@ -19,7 +19,7 @@
   "mystateinit": {
     "initv"   : "initv",
     "initps"  : "zero",
-    "initc"   : "zero",
+    "initc"   : "zero"
   },
   "initstate_icosbell": {
     "latitude0"  : 0.0,
