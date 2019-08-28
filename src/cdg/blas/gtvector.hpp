@@ -228,10 +228,9 @@ inline    T operator[](const GSIZET i) const {
 //
 // Writing to ostream doesn't need access to internal data so
 // don't bother making it a friend class
-//
 template<typename T>
 std::ostream &operator<<(std::ostream &os, GTVector<T> &obj) {
-  if ( obj.size() == 0 ) return os;
+  if ( obj.data() == NULLPTR || obj.size() == 0 ) return os;
   os << obj[0];
   for ( GLONG j=1; j<obj.size(); j++ ) {
     os << " " << obj[j];
