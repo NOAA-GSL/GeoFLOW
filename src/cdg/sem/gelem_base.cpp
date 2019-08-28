@@ -1243,6 +1243,7 @@ cout << serr << "cos(_x_, _G_)=" << cost << " |G|=" << jacv[n] << " xGx=" << x*G
     }
     return;
   }
+
   
   if ( pind != NULLPTR ) { // 3x3 matrix:
     for ( k=0; k<nind; k++ ) { // loop over desired indices only
