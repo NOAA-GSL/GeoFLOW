@@ -63,7 +63,7 @@ template<typename EquationType>
 GBOOL GInitStateFactory<EquationType>::set_by_direct(const PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn, Time &time, State &utmp, State &ub, State &u)
 {
   GBOOL         bret    = FALSE;
-  GString       sinit   = ptree.getValue<GString>("inits_block");
+  GString       sinit   = ptree.getValue<GString>("initstate_block");
   PropertyTree  vtree   = ptree.getPropertyTree(sinit);
 
   if      ( "zero"                        == sinit ) {
