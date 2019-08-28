@@ -94,7 +94,7 @@ int main(int argc, char **argv)
     EH_MESSAGE("geoflow: initialize gather/scatter...");
     GTimerStart("init_ggfx_op");
 
-    init_ggfx(ptree_, *grid_, *ggfx_);
+    init_ggfx(ptree_, *grid_, ggfx_);
     grid_->set_ggfx(*ggfx_);
 
     GTimerStop("init_ggfx_op");
@@ -487,7 +487,7 @@ void allocate(const PropertyTree &ptree)
 void deallocate()
 {
 
-  if ( grid_ != NULLPTR )                   delete grid_;
+  if ( grid_ != NULLPTR )                 delete grid_;
   for ( auto j=0; j<gbasis_.size(); j++ ) delete gbasis_[j];
   for ( auto j=0; j<utmp_  .size(); j++ ) delete utmp_  [j];
   for ( auto j=0; j<u_     .size(); j++ ) delete u_     [j];
@@ -593,10 +593,10 @@ void update_boundary(const Time &t, State &u, State &ub)
 // METHOD: init_ggfx
 // DESC  : Initialize gather/scatter operator
 // ARGS  : ptree   : main property tree
-//         grid    : GGrid object
+//         grid    : GGrid object pointer, instantiated here
 //         ggfx    : gather/scatter op, GGFX
 //**********************************************************************************
-void init_ggfx(PropertyTree &ptree, GGrid &grid, GGFX<GFTYPE> &ggfx)
+void init_ggfx(PropertyTree &ptree, GGrid &grid, GGFX<GFTYPE> *&ggfx)
 {
   GString                        serr = "init_ggfx: ";
   GFTYPE                         delta;
@@ -648,7 +648,9 @@ void init_ggfx(PropertyTree &ptree, GGrid &grid, GGFX<GFTYPE> &ggfx)
 
   // Initialize gather/scatter operator:
   GBOOL bret;
-  bret = ggfx.init(glob_indices);
+  ggfx = new GGFX<GFTYPE>();
+  assert(ggfx != NULLPTR && "Cannot instantiate GGFX operator");
+  bret = ggfx->init(glob_indices);
   assert(bret && "Initialization of GGFX operator failed");
 
   // Unperiodize nodes now that connectivity map is

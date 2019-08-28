@@ -78,21 +78,21 @@ using BasisBase   = GTVector<GNBasis<GCTYPE,GFTYPE>*>; // Basis pool type
 
 // 'Member' data:
 GBOOL            bench_=FALSE;
-GINT             nsolve_;  // number *solved* 'state' arrays
-GINT             nstate_;  // number 'state' arrays
-GINT             ntmp_  ;  // number tmp arrays
-GGrid           *grid_;
-State            u_;
-State            c_;
-State            ub_;
-State            uf_;
-State            utmp_;
-GTVector<GFTYPE> nu_(3);
-BasisBase        gbasis_(GDIM);
-EqnBasePtr       pEqn_;       // equation pointer
-PropertyTree     ptree_;      // main prop tree
-GGFX<GFTYPE>    *ggfx_;       // DSS operator
-GC_COMM          comm_ ;      // communicator
+GINT             nsolve_;      // number *solved* 'state' arrays
+GINT             nstate_;      // number 'state' arrays
+GINT             ntmp_  ;      // number tmp arrays
+GGrid           *grid_=NULLPTR;// grid object
+State            u_;           // state array
+State            c_;           // advection velocity, if used
+State            ub_;          // global bdy vector
+State            uf_;          // forcing tendency
+State            utmp_;        // temp array
+GTVector<GFTYPE> nu_(3);       // viscosity
+BasisBase        gbasis_(GDIM);// basis vector
+EqnBasePtr       pEqn_;        // equation pointer
+PropertyTree     ptree_;       // main prop tree
+GGFX<GFTYPE>    *ggfx_=NULLPTR;// DSS operator
+GC_COMM          comm_ ;       // communicator
 
 
 // Callback functions:
@@ -110,7 +110,7 @@ void create_observers (EqnBasePtr &eqn_ptr, PropertyTree &ptree, GSIZET icycle, 
 void create_equation  (const PropertyTree &ptree, EqnBasePtr &pEqn);
 void create_mixer     (PropertyTree &ptree, MixBasePtr &pMixer);
 void create_basis_pool(PropertyTree &ptree, BasisBase &gbasis);
-void init_ggfx        (PropertyTree &ptree, GGrid &grid, GGFX<GFTYPE> &ggfx);
+void init_ggfx        (PropertyTree &ptree, GGrid &grid, GGFX<GFTYPE> *&ggfx);
 void gresetart        (PropertyTree &ptree);
 void do_bench         (GString sbench, GSIZET ncyc);
 
