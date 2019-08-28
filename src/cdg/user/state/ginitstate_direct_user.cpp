@@ -43,7 +43,7 @@ GBOOL impl_boxnwaveburgers(const PropertyTree &ptree, GString &sconfig, GGrid &g
   std::vector<GFTYPE> kprop;
   GString          snut;
 
-  PropertyTree nwaveptree = ptree   .getPropertyTree("initstate_nwave");
+  PropertyTree nwaveptree = ptree   .getPropertyTree(sconfig);
   PropertyTree boxptree   = ptree   .getPropertyTree("grid_box");
   PropertyTree nuptree    = ptree.getPropertyTree("dissipation_traits");
 
@@ -149,9 +149,9 @@ GBOOL impl_boxdirgauss(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
   GTPoint<GFTYPE>  r0(3), P0(3);
   GString          snut;
 
-  PropertyTree heatptree = ptree.getPropertyTree("initstate_boxdirgauss");
+  PropertyTree heatptree = ptree.getPropertyTree("sconfig");
   PropertyTree boxptree  = ptree.getPropertyTree("grid_box");
-  PropertyTree advptree  = ptree.getPropertyTree("burgers_traits");
+  PropertyTree advptree  = ptree.getPropertyTree("pde_burgers");
   PropertyTree nuptree   = ptree.getPropertyTree("dissipation_traits");
   GBOOL doheat   = advptree.getValue<GBOOL>("doheat");
   GBOOL bpureadv = advptree.getValue<GBOOL>("bpureadv");
@@ -248,9 +248,9 @@ GBOOL impl_boxpergauss(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
   State            c(GDIM);
   GString          snut;
 
-  PropertyTree heatptree = ptree.getPropertyTree("initstate_boxpergauss");
+  PropertyTree heatptree = ptree.getPropertyTree(sconfig);
   PropertyTree boxptree  = ptree.getPropertyTree("grid_box");
-  PropertyTree advptree  = ptree.getPropertyTree("burgers_traits");
+  PropertyTree advptree  = ptree.getPropertyTree("pde_burgers");
   PropertyTree nuptree   = ptree.getPropertyTree("dissipation_traits");
   GBOOL doheat   = advptree.getValue<GBOOL>("doheat");
   GBOOL bpureadv = advptree.getValue<GBOOL>("bpureadv");
@@ -378,9 +378,9 @@ GBOOL impl_icosgauss(const PropertyTree &ptree, GString &sconfig, GGrid &grid, T
   State            c(GDIM+1);
   GString          snut;
 
-  PropertyTree lumpptree = ptree.getPropertyTree("initstate_icosgaussburgers");
+  PropertyTree lumpptree = ptree.getPropertyTree(sconfig);
   PropertyTree icosptree = ptree.getPropertyTree("grid_icos");
-  PropertyTree advptree  = ptree.getPropertyTree("burgers_traits");
+  PropertyTree advptree  = ptree.getPropertyTree("pde_burgers");
   PropertyTree nuptree   = ptree.getPropertyTree("dissipation_traits");
   GBOOL doheat   = advptree.getValue<GBOOL>("doheat");
   GBOOL bpureadv = advptree.getValue<GBOOL>("bpureadv");
@@ -389,7 +389,7 @@ GBOOL impl_icosgauss(const PropertyTree &ptree, GString &sconfig, GGrid &grid, T
   assert(grid.gtype() == GE_2DEMBEDDED && "Invalid element types");
 
 
-  for ( GSIZET j=0; j<GDIM+1; j++ ) c[j] = u[GDIM+j];
+  for ( GSIZET j=0; j<GDIM+1; j++ ) c[j] = u[j+1];
 
   nxy = (*xnodes)[0].size(); // same size for x, y, z
 
