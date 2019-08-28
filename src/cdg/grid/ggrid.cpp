@@ -354,6 +354,8 @@ void GGrid::grid_init()
   do_typing(); // do element-typing check
   GTimerStop("GGrid::grid_init: do_typing");
 
+  init_local_face_info(); // find glob vec of face indices
+
   // Have elements been set yet?
   assert(gelems_.size() > 0 && "Elements not set");
 
@@ -918,36 +920,21 @@ void GGrid::deriv(GTVector<GFTYPE> &u, GINT idir, GTVector<GFTYPE> &utmp,
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : init_bc_info
-// DESC   : Set global bdy condition data from the element bdy data,
+// METHOD : init_local_face_info
+// DESC   : Set local face info from element face data,
 //          to be called after elements have been set.
 // ARGS   : none
 // RETURNS: none.
 //**********************************************************************************
-void GGrid::init_bc_info()
+void GGrid::init_local_face_info()
 {
   GBOOL                        bret;
   GSIZET                       ibeg, iend; // beg, end indices for global array
   GTVector<GINT>              *iebdy;  // domain bdy indices
   GTVector<GTVector<GINT>>    *ieface; // domain face indices
-//GTVector<GBdyType>          *iebdyt; // domain bdy types
 
-  // Collect all element bdy types and indicection indices
-  // into global vectors (so we can use the GTVector 
-  // to do sorting):
-  GSIZET        m, n, nn=0; 
-  GSIZET                ig; 
-
-#if 0
-  // Set some array sizes. Note: we could use
-  // push_back, but this is slow:
-  n = 0;
-  for ( GSIZET e=0; e<gelems_.size(); e++ ) { // get global # bdy indices and types
-    iebdy  = &gelems_[e]->bdy_indices();  // set in child class
-    n += iebdy->size();
-  }
-  igbdy_.resize(n);
-#endif
+  GSIZET  m, n, nn; 
+  GSIZET        ig; // index into global array
 
   n = 0;
   for ( GSIZET e=0; e<gelems_.size(); e++ ) { // get global # face nodes
@@ -963,16 +950,7 @@ void GGrid::init_bc_info()
   m  = 0;
   for ( GSIZET e=0; e<gelems_.size(); e++ ) { // get global bdy ind and types
     ibeg   = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
-//  iebdy  = &gelems_[e]->bdy_indices();  // set in child class
     ieface = &gelems_[e]->face_indices(); // set in child class
-#if 0
-    for ( GSIZET j=0; j<iebdy->size(); j++ ) { // elem bdys (if any)
-      ig = nn + (*iebdy)[j];
-      igbdy_[n] = ig; // index in global arrays
-      n++;
-    }
-#endif
-
     for ( GSIZET j=0; j<ieface->size(); j++ ) { // get global elem face node indices
       for ( GSIZET k=0; k<(*ieface)[j].size(); k++ ) {
         ig = nn + (*ieface)[j][k];
@@ -982,7 +960,25 @@ void GGrid::init_bc_info()
     }
     nn += gelems_[e]->nnodes();
   } // end, element loop
- 
+
+
+} // end, init_local_face_info
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : init_bc_info
+// DESC   : Set global bdy condition data from the element bdy data,
+//          to be called after elements have been set.
+// ARGS   : none
+// RETURNS: none.
+//**********************************************************************************
+void GGrid::init_bc_info()
+{
+  GBOOL                        bret;
+  GSIZET                       ibeg, iend; // beg, end indices for global array
+  GTVector<GINT>              *iebdy;  // domain bdy indices
+  GTVector<GTVector<GINT>>    *ieface; // domain face indices
+
   // Find boundary indices & types from config file 
   // specification, for _each_ natural/canonical face:
   config_bdy(ptree_, igbdy_byface_, igbdyt_byface_);
