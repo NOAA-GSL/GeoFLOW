@@ -2049,6 +2049,30 @@ void curl(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &u, const GINT idir,
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD : grad
+// DESC   : Compute gradient component, idir, of input vector field
+//          
+// ARGS   : grid : grid
+//          u    : input (scalar) field. 
+//          idir : curl component to compute. Must be appropriate for 
+//                 problem dimension.
+//          tmp  : tmp vector; must be of at least length 2.
+//          grad : result
+// RETURNS: none.
+//**********************************************************************************
+template<>
+void grad(GGrid &grid, const GTVector<GFTYPE> &u, const GINT idir, 
+          GTVector<GTVector<GFTYPE>*> &tmp, GTVector<GFTYPE> &grad)
+{
+  assert ( idir >0 && idir <=3 && "Invalid compoment specified");
+
+  grid.deriv(u, idir, *tmp[0], grad);
+
+} // end of method grad
+
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD : constrain2sphere(1)
 // DESC   : Project/constrain input 3-vector to sphere:
 //          -  -     -                           -   -  -

@@ -107,6 +107,9 @@ namespace GMTK
   void    compute_grefdiviW(GGrid &grid, GTVector<GTVector<T>*> &u, GTVector<T> &etmp,
                            GBOOL btrans, GTVector<T> &divu);
   template<typename T>  
+  void    grad(GGrid &grid, const GTVector<GTVector<T>*> &u, const GINT idir, 
+               GTVector<GTVector<T>*> &tmp, GTVector<T> &grad);
+  template<typename T>  
   void    curl(GGrid &grid, const GTVector<GTVector<T>*> &u, const GINT idir, 
                GTVector<GTVector<T>*> &tmp, GTVector<T> &curl);
 
