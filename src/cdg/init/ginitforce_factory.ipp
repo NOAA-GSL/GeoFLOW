@@ -23,14 +23,16 @@ template<typename EquationType>
 GBOOL GInitForceFactory<EquationType>::init(const PropertyTree& ptree, GGrid &grid, EqnBasePtr &peqn, Time &time, State &utmp, State &ub, State &u)
 {
   GBOOL         bret    = FALSE;
-  GString       stype ;  
-  GString       sinit   = ptree.getValue<GString>("initforce_block");
-  PropertyTree  vtree   = ptree.getPropertyTree(sinit);
+  GBOOL         bforced = ptree.getValue<GBOOL>("use_forcing");
+  GString       stype;  
+  PropertyTree  vtree;
+
+  if ( !bforced ) return TRUE;
 
   // Get type of initialization: direct or by-var:
-  stype = vtree.getValue<GString>("init_type","");
-  if ( "name"   == stype 
-    || ""       == stype ) {
+  stype = ptree.getValue<GString>("initforce_type","");
+  if ( "direct"   == stype 
+    || ""         == stype ) {
     bret = set_by_direct(ptree, grid, peqn, time, utmp, ub, u);
   }
   else if ( "block" == stype ) {
