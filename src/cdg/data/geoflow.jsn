@@ -11,18 +11,15 @@
   "restart_index"  : 0,
   "benchmark"      : false,
   "observer_list"  : ["posixio_observer", "global_diag_basic"],
+  "initv": {
+    "name": "random",
+    "kdn" : 2,
+    "kup" : 3
+  },
   "mystateinit": {
-    "initv"   : "zero",
-    "initb"   : "zero",
-    "inits"   : "zero",
+    "initv"   : "initv",
     "initps"  : "zero",
     "initc"   : "zero",
-    "kvdn"    : 2,
-    "kvup"    : 3,
-    "kbdn"    : 2,
-    "kbup"    : 3,
-    "ksdn"    : 2,
-    "ksup"    : 3
   },
   "initstate_icosbell": {
     "latitude0"  : 0.0,
