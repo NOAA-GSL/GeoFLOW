@@ -16,13 +16,13 @@
     "initb"   : "zero",
     "inits"   : "zero",
     "initps"  : "zero",
-    "initc"   : "zero"
+    "initc"   : "zero",
     "kvdn"    : 2,
     "kvup"    : 3,
     "kbdn"    : 2,
     "kbup"    : 3,
     "ksdn"    : 2,
-    "ksup"    : 3,
+    "ksup"    : 3
   },
   "initstate_icosbell": {
     "latitude0"  : 0.0,
@@ -70,7 +70,7 @@
     "doheat"      : false,
     "bpureadv"    : true,
     "bconserved"  : false,
-    "forcing_comp": [0 1 2];
+    "forcing_comp": [0, 1, 2]
   },
   "sponge_layer": {
     "bdy_class"        : "uniform",
@@ -98,8 +98,8 @@
     "radiuso"           : 2.0,
     "num_radial_elems"  : 10,
     "bdy_inner"         : "dirichlet_fixed",
-    "bdy_outer"         : "sponge_layer"
-    "bdy_init_method  " : ""
+    "bdy_outer"         : "sponge_layer",
+    "bdy_init_method  " : "",
     "bdy_update_method" : "", 
     "use_state_init"    : false
   },
@@ -108,7 +108,7 @@
     "radius"           : 0.1,
     "base_type"        : "GBDY_USER0"
   },
-  compound_inflow_example": {
+  "compound_inflow_example": {
     "bdy_class"        : "user",
     "base_type"        : "GBDY_DIRICHLET", 
     "bdy_config_method": "circular_jet"
@@ -128,15 +128,15 @@
     "bdy_y_0"   : "burgers_inflow",
     "bdy_y_1"   : "burgers_inflow",
     "bdy_z_0"   : "burgers_inflow",
-    "bdy_z_1"   : "burgers_inflow"
-    "bdy_init_method  " : ""
+    "bdy_z_1"   : "burgers_inflow",
+    "bdy_init_method  " : "",
     "bdy_update_method" : "", 
     "use_state_init"    : true
   },
   "stepper_props": {
     "stepping_method"  : "GSTEPPER_EXRK",
     "time_deriv_order" : 4,
-    "extrap_order"     : 2
+    "extrap_order"     : 2,
     "variable_dt"      : false,
     "courant"          : 0.04 
   },
