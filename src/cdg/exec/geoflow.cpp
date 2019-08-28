@@ -94,8 +94,8 @@ int main(int argc, char **argv)
     EH_MESSAGE("geoflow: initialize gather/scatter...");
     GTimerStart("init_ggfx_op");
 
-    init_ggfx(ptree_, *grid_, ggfx_);
-    grid_->set_ggfx(ggfx_);
+    init_ggfx(ptree_, *grid_, *ggfx_);
+    grid_->set_ggfx(*ggfx_);
 
     GTimerStop("init_ggfx_op");
     EH_MESSAGE("geoflow: gather/scatter initialized.");

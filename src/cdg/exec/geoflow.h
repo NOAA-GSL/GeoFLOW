@@ -91,7 +91,7 @@ GTVector<GFTYPE> nu_(3);
 BasisBase        gbasis_(GDIM);
 EqnBasePtr       pEqn_;       // equation pointer
 PropertyTree     ptree_;      // main prop tree
-GGFX<GFTYPE>     ggfx_;       // DSS operator
+GGFX<GFTYPE>    *ggfx_;       // DSS operator
 GC_COMM          comm_ ;      // communicator
 
 
