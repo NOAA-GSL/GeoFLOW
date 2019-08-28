@@ -1980,27 +1980,27 @@ void matmat_prod<GQUAD>(GTMatrix<GQUAD> &C, GTMatrix<GQUAD> &A, GTMatrix<GQUAD> 
 //          idir : curl component to compute. Must be appropriate for 
 //                 problem dimension.
 //          tmp  : tmp vector; must be of at least length 2.
-//          curl : result
+//          curlc: result
 // RETURNS: none.
 //**********************************************************************************
 template<>
 void curl(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &u, const GINT idir, 
-          GTVector<GTVector<GFTYPE>*> &tmp, GTVector<GFTYPE> &curl)
+          GTVector<GTVector<GFTYPE>*> &tmp, GTVector<GFTYPE> &curlc)
 {
 
   if ( GDIM == 2 && u.size() > GDIM ) {
     switch (idir) {
       case 1:
-        grid.deriv(*u[2], 2, *tmp[0], curl);
-        curl *= -1.0;
+        grid.deriv(*u[2], 2, *tmp[0], curlc);
+        curlc *= -1.0;
         break;
       case 2:
-        grid.deriv(*u[2], 1, *tmp[0], curl);
+        grid.deriv(*u[2], 1, *tmp[0], curlc);
         break;
       case 3:
-        grid.deriv(*u[1], 1, *tmp[0], curl);
+        grid.deriv(*u[1], 1, *tmp[0], curlc);
         grid.deriv(*u[0], 2, *tmp[0], *tmp[1]);
-        curl -= *tmp[1];
+        curlc -= *tmp[1];
         break;
       default:
         assert( FALSE && "Invalid component specified");
@@ -2012,9 +2012,9 @@ void curl(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &u, const GINT idir,
   if ( GDIM == 2 ) {
     switch (idir) {
       case 3:
-        grid.deriv(*u[1], 1, *tmp[0], curl);
+        grid.deriv(*u[1], 1, *tmp[0], curlc);
         grid.deriv(*u[0], 2, *tmp[0], *tmp[1]);
-        curl -= *tmp[1];
+        curlc -= *tmp[1];
         break;
       default:
         assert( FALSE && "Invalid component specified");
@@ -2026,19 +2026,19 @@ void curl(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &u, const GINT idir,
   if ( GDIM == 3 ) {
     switch (idir) {
       case 1:
-        grid.deriv(*u[1], 3, *tmp[0], curl);
+        grid.deriv(*u[1], 3, *tmp[0], curlc);
         grid.deriv(*u[2], 2, *tmp[0], *tmp[1]);
-        curl -= *tmp[1];
+        curlc -= *tmp[1];
         break;
       case 2:
-        grid.deriv(*u[2], 1, *tmp[0], curl);
+        grid.deriv(*u[2], 1, *tmp[0], curlc);
         grid.deriv(*u[0], 3, *tmp[0], *tmp[1]);
-        curl -= *tmp[1];
+        curlc -= *tmp[1];
         break;
       case 3:
-        grid.deriv(*u[1], 1, *tmp[0], curl);
+        grid.deriv(*u[1], 1, *tmp[0], curlc);
         grid.deriv(*u[0], 2, *tmp[0], *tmp[1]);
-        curl -= *tmp[1];
+        curlc -= *tmp[1];
         break;
     }
   }
@@ -2054,19 +2054,19 @@ void curl(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &u, const GINT idir,
 //          
 // ARGS   : grid : grid
 //          u    : input (scalar) field. 
-//          idir : curl component to compute. Must be appropriate for 
+//          idir : gradient component to compute. Must be appropriate for 
 //                 problem dimension.
-//          tmp  : tmp vector; must be of at least length 2.
-//          grad : result
+//          tmp  : tmp vector; must be of at least length 1.
+//          gradc: result
 // RETURNS: none.
 //**********************************************************************************
 template<>
-void grad(GGrid &grid, const GTVector<GFTYPE> &u, const GINT idir, 
-          GTVector<GTVector<GFTYPE>*> &tmp, GTVector<GFTYPE> &grad)
+void grad(GGrid &grid, GTVector<GFTYPE> &u, const GINT idir, 
+          GTVector<GTVector<GFTYPE>*> &tmp, GTVector<GFTYPE> &gradc)
 {
   assert ( idir >0 && idir <=3 && "Invalid compoment specified");
 
-  grid.deriv(u, idir, *tmp[0], grad);
+  grid.deriv(u, idir, *tmp[0], gradc);
 
 } // end of method grad
 
