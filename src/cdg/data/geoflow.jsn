@@ -7,7 +7,7 @@
   "initforce_block": "",
   "use_forcing"    : false,
   "initstate_type" : "direct",
-  "initforce_type" : "",
+  "initforce_type" : "component",
   "restart_index"  : 0,
   "benchmark"      : false,
   "observer_list"  : ["posixio_observer", "global_diag_basic"],
@@ -85,9 +85,8 @@
   },
   "grid_icos": {
     "grid_name" : "grid_icos",
-    "ilevel"    : 0,
+    "ilevel"    : 2,
     "radius"    : 1.0,
-    "num_elems" : [10, 10, 10]
   },
   "grid_sphere" : {
     "grid_name"         : "grid_sphere",
@@ -162,7 +161,7 @@
     "interval_freq_fact" : 10.0
   },
   "time_integration": {
-    "integ_type" : "cycle",
+    "integ_type" : "time",
     "time_end"   : 1.001,
     "cycle_end"  : 1,
     "dt"         : 1.0e-6
