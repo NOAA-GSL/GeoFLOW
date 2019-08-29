@@ -480,6 +480,9 @@ void allocate(const PropertyTree &ptree)
 
   for ( auto j=0; j<utmp_   .size(); j++ ) utmp_        [j] = new GTVector<GFTYPE>(grid_->size());
 
+  // If linear adv. prescribed var is set, 
+  // point to correct area of u_:
+  for ( GINT j=0; j<c_.size(); j++ ) c_[j] = u_[j+1];
 
 } // end method allocate
 
