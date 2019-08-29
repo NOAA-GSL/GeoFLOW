@@ -696,6 +696,9 @@ void compare(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &t, 
   char              stmp[1024];
   PropertyTree      vtree = ptree.getPropertyTree("stepper_props");
   
+  bret   = ptree.getValue<GBOOL>("do_comparison");
+  if ( !bret ) return;
+
   ntasks = GComm::WorldSize(comm_);
   myrank = GComm::WorldRank(comm_);
   bvardt = vtree.getValue<GBOOL>("variable_dt",FALSE);
