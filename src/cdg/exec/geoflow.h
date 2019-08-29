@@ -67,13 +67,17 @@ struct EquationTypes {
         using Size       = SizeType;
 };
 
-using MyTypes     = EquationTypes<>;           // Define types used
-using EqnBase     = EquationBase<MyTypes>;     // Equation Base Type
-using EqnBasePtr  = std::shared_ptr<EqnBase>;  // Equation Base Ptr
-using MixBase     = MixerBase<MyTypes>;        // Stirring/mixing Base Type
-using MixBasePtr  = std::shared_ptr<MixBase>;  // Stirring/mixing Base Ptr
-using ObsBase     = ObserverBase<EqnBase>;     // Observer Base Type
-using BasisBase   = GTVector<GNBasis<GCTYPE,GFTYPE>*>; // Basis pool type
+using MyTypes       = EquationTypes<>;           // Define types used
+using EqnBase       = EquationBase<MyTypes>;     // Equation Base type
+using EqnBasePtr    = std::shared_ptr<EqnBase>;  // Equation Base ptr
+using MixBase       = MixerBase<MyTypes>;        // Stirring/mixing Base type
+using MixBasePtr    = std::shared_ptr<MixBase>;  // Stirring/mixing Base ptr
+using IntegratorPtr = std::shared_ptr<Integrator<MyTypes>>;
+                                                 // Integrator ptr
+
+using ObsBase       = ObserverBase<EqnBase>;     // Observer Base type
+using BasisBase     = GTVector<GNBasis<GCTYPE,GFTYPE>*>; 
+                                                 // Basis pool type
 
 
 // 'Member' data:
@@ -90,6 +94,7 @@ State            utmp_;        // temp array
 GTVector<GFTYPE> nu_(3);       // viscosity
 BasisBase        gbasis_(GDIM);// basis vector
 EqnBasePtr       pEqn_;        // equation pointer
+IntegratorPtr    pIntegrator_; // integrator pointer
 PropertyTree     ptree_;       // main prop tree
 GGFX<GFTYPE>    *ggfx_=NULLPTR;// DSS operator
 GC_COMM          comm_ ;       // communicator
@@ -112,6 +117,7 @@ void create_mixer     (PropertyTree &ptree, MixBasePtr &pMixer);
 void create_basis_pool(PropertyTree &ptree, BasisBase &gbasis);
 void init_ggfx        (PropertyTree &ptree, GGrid &grid, GGFX<GFTYPE> *&ggfx);
 void gresetart        (PropertyTree &ptree);
+void compare          (const PropertyTree &ptree, GGrid &, EqnBasePtr &pEqn, Time &t, State &utmp, State &ub, State &u);
 void do_bench         (GString sbench, GSIZET ncyc);
 
 //#include "init_pde.h"

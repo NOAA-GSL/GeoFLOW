@@ -130,8 +130,8 @@ int main(int argc, char **argv)
     // Create integrator:
     //***************************************************
     EH_MESSAGE("geoflow: create integrator...");
-    auto pIntegrator = IntegratorFactory<MyTypes>::build(ptree_, pEqn_, pMixer, pObservers, *grid_);
-    pIntegrator->get_traits().cycle = icycle;
+    pIntegrator_ = IntegratorFactory<MyTypes>::build(ptree_, pEqn_, pMixer, pObservers, *grid_);
+    pIntegrator_->get_traits().cycle = icycle;
 
     //***************************************************
     // Initialize state:
@@ -155,7 +155,7 @@ int main(int argc, char **argv)
     GTimerReset();
     GTimerStart("time_loop");
 
-    pIntegrator->time_integrate(t, uf_, ub_, u_);
+    pIntegrator_->time_integrate(t, uf_, ub_, u_);
 
     GTimerStop("time_loop");
     EH_MESSAGE("geoflow: time stepping done.");
@@ -163,7 +163,12 @@ int main(int argc, char **argv)
     //***************************************************
     // Do benchmarking if required:
     //***************************************************
-    do_bench("benchmark.txt", pIntegrator->get_numsteps());
+    do_bench("benchmark.txt", pIntegrator_->get_numsteps());
+
+    //***************************************************
+    // Compare solution if required:
+    //***************************************************
+    compare(ptree_, *grid_, pEqn_, t, utmp_, ub_, u_);
  
 #if defined(_G_USE_GPTL)
 //  GPTLpr(myrank);
@@ -425,7 +430,7 @@ void allocate(const PropertyTree &ptree)
 {
 
   GBOOL        doheat, bpureadv, bforced;
-  GINT         nadv, nforced;
+  GINT         nladv, nforced;
   std::vector<GINT>
                ibounded, iforced, diforced;
   std::string  sgrid;
@@ -443,17 +448,18 @@ void allocate(const PropertyTree &ptree)
     bpureadv  = eqn_ptree.getValue<bool> ("bpureadv",false);
     for ( auto i=0; i<GDIM; i++ ) diforced.push_back(i);
     iforced   = eqn_ptree.getArray<GINT> ("forcing_comp", diforced);
-    nadv      = sgrid == "grid_icos" ? 3 : GDIM;
+    nladv     = sgrid == "grid_icos" ? 3 : GDIM;
     nsolve_   = GDIM;
     nstate_   = GDIM;
     if ( doheat || bpureadv ) {
       nsolve_   = 1;
-      nstate_   = nadv + nsolve_;
+      nstate_   = nladv + nsolve_;
     }
     if ( "grid_icos" != sgrid ) {
       ibounded.resize(nsolve_);
       for ( auto i=0; i<nsolve_; i++ ) ibounded.push_back(i);
     }
+    c_.resize(nladv);
     ntmp_     = 24;
   }
   
@@ -500,7 +506,7 @@ void deallocate()
 //**********************************************************************************
 //**********************************************************************************
 // METHOD: init_state
-// DESC  : top-level method to set initial conditions.
+// DESC  : Top-level method to set initial conditions.
 // ARGS  : ptree: main prop tree
 //         grid : grid object
 //         peqn : pointer to EqnBase 
@@ -523,7 +529,7 @@ void init_state(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &
 //**********************************************************************************
 //**********************************************************************************
 // METHOD: init_force
-// DESC  : top-level method to set initial forcing.
+// DESC  : Top-level method to set initial forcing.
 // ARGS  : ptree: main prop tree
 //         grid : grid object
 //         peqn : pointer to EqnBase 
@@ -546,7 +552,7 @@ void init_force(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &
 //**********************************************************************************
 //**********************************************************************************
 // METHOD: init_bdy
-// DESC  : top-level method to set initial bdy conditions.
+// DESC  : Top-level method to set initial bdy conditions.
 // ARGS  : ptree: main prop tree
 //         grid : grid object
 //         peqn : pointer to EqnBase 
@@ -660,4 +666,159 @@ void init_ggfx(PropertyTree &ptree, GGrid &grid, GGFX<GFTYPE> *&ggfx)
   }
 
 } // end method init_ggfx
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD: compare
+// DESC  : Top-level method to do a comparison of
+//         integrated solution with specified initial 
+//         solution and write metrics to a file
+// ARGS  : ptree: main prop tree
+//         grid : grid object
+//         peqn : pointer to EqnBase 
+//         t    : current time
+//         utmp : vector of tmp vectors
+//         u    : full state vector
+//**********************************************************************************
+void compare(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &t, State &utmp, State &ub, State &u)
+{
+  GBOOL             bret, bvardt;
+  GINT              myrank, ntasks;
+  GFTYPE            dxmin, lmin, tt;
+  GTVector<GFTYPE>  lnorm(3), gnorm(3), maxerror(3);
+  GTVector<GFTYPE>  nnorm(nsolve_);
+  GTVector<GString> savars, scvars, sdvars;
+  State             ua(nstate_);
+  std::vector<GINT> pstd(GDIM);
+  GString           sdir = ".";
+  GString           sfile;
+  char              stmp[1024];
+  PropertyTree      vtree = ptree.getPropertyTree("stepper_props");
+  
+  ntasks = GComm::WorldSize(comm_);
+  myrank = GComm::WorldRank(comm_);
+  bvardt = vtree.getValue<GBOOL>("variable_dt",FALSE);
+  sfile  = ptree.getValue<GString>("compare_file","compare.txt");
+  pstd   = ptree.getArray<GINT>("exp_order");
+
+  // Create analytic solution array:
+  for ( GINT j=0; j<ua.size(); j++ ) ua[j] = new GTVector<GFTYPE>(grid.ndof());
+
+  // Set up some output variables:
+  for ( GSIZET j=0; j<u.size(); j++ ) {
+    sprintf(stmp, "u%lua", j+1);
+    savars.push_back(stmp);
+    sprintf(stmp, "diff%lu", j+1);
+    sdvars.push_back(stmp);
+  }
+  for ( GSIZET j=0; j<c_.size(); j++ ) {
+    sprintf(stmp, "c%lu", j+1);
+    scvars.push_back(stmp);
+  }
+
+
+  // Compute analytic solution, do comparisons:
+    
+  maxerror = 0.0;
+  lnorm    = 0.0;  
+  nnorm    = 1.0;
+
+
+  tt = 0.0;
+  bret = GInitStateFactory<MyTypes>::init(ptree, grid, peqn, tt, utmp, ub, ua);
+  assert(bret && "state initialization failed");
+  for ( GSIZET j=0; j<nsolve_; j++ ) { // local errors
+   *utmp [1] = *ua [j]; utmp [1]->pow(2);
+    nnorm[j] = grid.integrate(*utmp   [1],*utmp [0]) ; // L2 norm of analyt soln at t=0
+    nnorm[j] = nnorm[j] > std::numeric_limits<GFTYPE>::epsilon() ? nnorm[j] : 1.0;
+    cout << "main: nnorm[" << j << "]=" << nnorm[j] << endl;
+  }
+    
+  GTVector<GINT> istate(nsolve_);
+  GTVector<GINT> cstate(c_.size());
+  for ( GINT j=0; j<nsolve_; j++ ) istate[j] = j;
+  for ( GINT j=0; j<c_.size(); j++ ) cstate[j] = j;
+
+  // Compute analytic solution at t:
+  tt = t;
+  bret = GInitStateFactory<MyTypes>::init(ptree, grid, peqn, tt, utmp, ub, ua);
+  assert(bret && "state initialization failed");
+
+#if 1
+  // Set up and output the analytic solution
+  // and difference solution as well as
+  // advection velocity if one exists:
+  GIOTraits iot;
+  iot.nelems = grid.nelems();
+  iot.gtype  = grid.gtype();
+  iot.porder.resize(1,GDIM);
+  for ( GINT j=0; j<GDIM; j++ ) iot.porder(0,j) = pstd[j];
+  gio_write_state(iot, grid, ua, istate, savars, comm_);
+  for ( GINT j=0; j<c_.size(); j++ ) 
+  gio_write_state(iot, grid, c_, cstate, scvars, comm_);
+  for ( GINT j=0; j<nsolve_; j++ ) { 
+    *utmp[j] = *u[j] - *ua[j];
+  }
+  gio_write_state(iot, grid, utmp, istate, sdvars, comm_);
+#endif
+
+  // Compute error norms:
+  for ( GINT j=0; j<nsolve_; j++ ) { //local errors
+   *utmp [0] = *u[j] - *ua[j];
+   *utmp [1]  = *utmp[0]; utmp [1]->abs();
+   *utmp [2]  = *utmp[0]; utmp [2]->pow(2);
+    lnorm[0]  = utmp [0]->infnorm (); // inf-norm
+    gnorm[1]  = grid.integrate(*utmp[1],*utmp[0])/sqrt(nnorm[j]) ; // L1-norm
+    gnorm[2]  = grid.integrate(*utmp[2],*utmp[0]) ; // L2-norm
+    // Accumulate to find global errors for this field:
+    GComm::Allreduce(lnorm.data()  , gnorm.data()  , 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm_);
+    gnorm[2] =  sqrt(gnorm[2]/nnorm[j]);
+    // now find max errors of each type for each field:
+    for ( GINT i=0; i<3; i++ ) maxerror[i] = MAX(maxerror[i],fabs(gnorm[i]));
+  }
+
+  // Compute some global quantities for output:
+  dxmin = grid.minnodedist();
+  lmin  = grid.minlength();
+  if ( myrank == 0 ) 
+  cout << "main: maxerror = " << maxerror << endl;
+   
+  GTVector<GSIZET> lsz(2), gsz(2);
+  lsz[0] = grid.nelems();
+  lsz[1] = grid.ndof();
+  GComm::Allreduce(lsz.data(), gsz.data(), 2, T2GCDatatype<GSIZET>() , GC_OP_SUM, comm_);
+
+  // Print convergence data to file:
+  std::ifstream itst;
+  std::ofstream ios;
+
+  if ( myrank == 0 ) {
+    itst.open(sfile);
+    ios.open(sfile,std::ios_base::app);
+  
+    // Write header, if required:
+    if ( itst.peek() == std::ofstream::traits_type::eof() ) {
+      ios << "#ntasks" << "  ";
+      ios << "ncyc"    << "  ";
+      ios << "var_dt"  << "  ";
+      for ( GSIZET j=0; j<GDIM; j++ ) ios << "p" << j+1 << "  ";
+      ios << "num_elems    dx_min   EL_min     inf_err     L1_err      L2_err" << std::endl;
+    }
+    itst.close();
+
+    ios << ntasks << "  " ;
+    ios << pIntegrator_->get_numsteps()  << "  ";
+    ios << bvardt << "  ";
+    for ( GINT j=0; j<GDIM; j++ ) ios << pstd[j] << "  ";
+    ios << gsz[0] << "  " << dxmin       << "  " << lmin
+                  << "  " << maxerror[0] << "  " << maxerror[1] 
+                  << "  " << maxerror[2]
+        << std::endl;
+    ios.close();
+  }
+
+  for ( GINT j=0; j<nstate_; j++ ) delete ua[j];
+
+} // end method compare
 
