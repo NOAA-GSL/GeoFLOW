@@ -1,10 +1,6 @@
-This is the 'user' directory, for adding new state and forcing initialization
-methods. 
+This is the 'user' directory, for adding new state, forcing, and boundary initialization, and for boundary conditions, new update methods.
 
-There are two main steps for adding a new initialization routine. There are 2
-initializations that may be done: (A) state initialization (always required);
-(B) forcing initialization (only required if 'use_forcing' == TRUE in configuration
-file.
+There are two main steps for adding a new state or forcing initialization routine. There are 2 initializations that may be done: (A) state initialization (always required); (B) forcing initialization (only required if 'use_forcing' == TRUE in configuration file.
 
 For example, to add a new state initialization, first
 
