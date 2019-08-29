@@ -1,0 +1,7 @@
+README for init directory. This directory contains mainly 'factory' code to help configure initial conditioins for state, initial conditions for external forcing, boundary conditions. 
+
+For boundary conditions, there are 3 distinct tasks:
+
+(1) specifying the conditions (gspecbdy_factory)
+(2) initializing bdy conditions (ginitbdy_factory)
+(3) updaating boundary conditions (gupdatebdy_factory)
