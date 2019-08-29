@@ -5,7 +5,7 @@
 # Build configuration options may
 # be changed here:
 
-set   (GDIM "3")                           # Dimensionality
+set   (GDIM "2")                           # Dimensionality
 
 option(DO_TESTS       "DO_TESTS"    OFF)   # Build testing targets
 option(DO_GEOFLOW     "DO_GEOFLOW"   ON)   # Build GeoFLOW target
