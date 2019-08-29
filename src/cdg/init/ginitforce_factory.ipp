@@ -35,7 +35,7 @@ GBOOL GInitForceFactory<EquationType>::init(const PropertyTree& ptree, GGrid &gr
     || ""         == stype ) {
     bret = set_by_direct(ptree, grid, peqn, time, utmp, ub, u);
   }
-  else if ( "block" == stype ) {
+  else if ( "component" == stype ) {
     bret = set_by_comp  (ptree, grid, peqn, time, utmp, ub, u);
   }
   else {
