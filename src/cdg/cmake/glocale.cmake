@@ -28,26 +28,27 @@ set(CMAKE_Fortran_COMPILER mpifort)
 # BOOST path:
 set(GLOCALE_BOOST_ROOT 
 #   /home/Duane.Rosenberg/lib/boost_1_69_0_intel_18.1
-    /scratch/duane.rosenberg/lib/boost_1_69_0_gcc
-#   /Users/duane.rosenberg/lib/boost_1_69_0_gcc
+#   /scratch/duane.rosenberg/lib/boost_1_69_0_gcc
+    /Users/duane.rosenberg/lib/boost_1_69_0_gcc
    )
 
 # MPI path:
 set(GLOCALE_MPI_PATH 
-    /scratch/duane.rosenberg/lib/mpich-3.2_gcc
+#   /scratch/duane.rosenberg/lib/mpich-3.2_gcc
+    /Users/duane.rosenberg/lib/mpich-3.3_gcc
    )
 
 # GPTL path:
 set(GLOCALE_GPTL_PATH 
-    /home/duane.rosenberg/lib/gptl-v5.5_gcc
+#   /home/duane.rosenberg/lib/gptl-v5.5_gcc
 #   /home/Duane.Rosenberg/lib/gptl-v5.4.4_pgi_openmpi
 #   /home/Duane.Rosenberg/lib/gptl-v5.4.4_intel_impi_theia
-#   /Users/duane.rosenberg/lib/gptl-5.6.0_clang
+    /Users/duane.rosenberg/lib/gptl-5.6.0_clang
    )
 
 # PAPI path: 
 set(GLOCALE_PAPI_PATH
-    /apps/papi/5.4.0/lib/libpapi.a
+#   /apps/papi/5.4.0/lib/libpapi.a
    )
 
 ##############################################################
