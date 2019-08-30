@@ -156,6 +156,8 @@ GBOOL impl_boxdirgauss(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
   GBOOL doheat   = advptree.getValue<GBOOL>("doheat");
   GBOOL bpureadv = advptree.getValue<GBOOL>("bpureadv");
 
+  assert((bpureadv || doheat) && "Pure advection or heat must be used");
+
   GTVector<GTVector<GFTYPE>> *xnodes = &grid.xNodes();
 
   assert(grid.gtype() == GE_REGULAR && "Invalid element types");
@@ -254,6 +256,8 @@ GBOOL impl_boxpergauss(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
   PropertyTree nuptree   = ptree.getPropertyTree("dissipation_traits");
   GBOOL doheat   = advptree.getValue<GBOOL>("doheat");
   GBOOL bpureadv = advptree.getValue<GBOOL>("bpureadv");
+  
+  assert((bpureadv || doheat) && "Pure advection or heat must be used");
 
   GTVector<GTVector<GFTYPE>> *xnodes = &grid.xNodes();
 
@@ -384,6 +388,8 @@ GBOOL impl_icosgauss(const PropertyTree &ptree, GString &sconfig, GGrid &grid, T
   PropertyTree nuptree   = ptree.getPropertyTree("dissipation_traits");
   GBOOL doheat   = advptree.getValue<GBOOL>("doheat");
   GBOOL bpureadv = advptree.getValue<GBOOL>("bpureadv");
+
+  assert((bpureadv || doheat) && "Pure advection or heat must be used");
 
   GTVector<GTVector<GFTYPE>> *xnodes = &grid.xNodes();
   assert(grid.gtype() == GE_2DEMBEDDED && "Invalid element types");
