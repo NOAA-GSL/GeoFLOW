@@ -135,15 +135,16 @@ void GGlobalDiag_basic<EquationType>::do_kinetic_L2(const Time t, const State &u
 
   // Make things a little easier:
   GTVector<GTVector<GFTYPE>*> utmp(5);
-  for ( GSIZET j=0; j<5; j++ ) utmp[j] = (*utmp_)[j];
+  for ( GINT j=0; j<5; j++ ) utmp[j] = (*utmp_)[j];
 
   // Find kinetic components to operate on:
-  for ( GSIZET j=0; j<ikinetic_.size(); j++ ) ku_[j] = u[ikinetic_[j]];
+  for ( GINT j=0; j<ikinetic_.size(); j++ ) ku_[j] = u[ikinetic_[j]];
+
 
   // Energy = <u^2>/2:
   ener = 0.0;
-  for ( GSIZET j=0; j<ku_.size(); j++ ) {
-   *utmp[0] = *u[j];
+  for ( GINT j=0; j<ku_.size(); j++ ) {
+   *utmp[0] = *ku_[j];
     utmp[0]->pow(2);
     ener += grid_->integrate(*utmp[0],*utmp[1]); 
   }
@@ -277,14 +278,14 @@ void GGlobalDiag_basic<EquationType>::do_kinetic_max(const Time t, const State &
 
   // Make things a little easier:
   GTVector<GTVector<GFTYPE>*> utmp(6);
-  for ( GSIZET j=0; j<6; j++ ) utmp[j] = (*utmp_)[j];
+  for ( GINT j=0; j<6; j++ ) utmp[j] = (*utmp_)[j];
 
   // Find kinetic components to operate on:
-  for ( GSIZET j=0; j<ikinetic_.size(); j++ ) ku_[j] = u[ikinetic_[j]];
+  for ( GINT j=0; j<ikinetic_.size(); j++ ) ku_[j] = u[ikinetic_[j]];
 
   // Energy = u^2/2:
   *utmp[1] = 0.0;
-  for ( GSIZET j=0; j<ku_.size(); j++ ) {
+  for ( GINT j=0; j<ku_.size(); j++ ) {
    *utmp[0] = *ku_[j];
     utmp[0]->pow(2);
    *utmp[1] += *utmp[0];
