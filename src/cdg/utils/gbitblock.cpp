@@ -62,7 +62,7 @@ GBitBlock::GBitBlock(const GBitBlock &a)
   bitFieldLength_ = a.bitFieldLength_;
   numIntSubBlocks_= a.numIntSubBlocks_;
   iBlock_ = new GUSHORT  [numIntSubBlocks_];
-  for ( i=0; i<numIntSubBlocks_; i++ );
+  for ( i=0; i<numIntSubBlocks_; i++ )
      *(iBlock_+i) =  *(a.iBlock_+i); 
    
 } // end of copy constructor method
@@ -83,7 +83,7 @@ GBitBlock &GBitBlock::operator=(const GBitBlock &a)
   numIntSubBlocks_= a.numIntSubBlocks_;
   if ( iBlock_ != NULL) delete [] iBlock_;
   iBlock_ = new GUSHORT  [numIntSubBlocks_];
-  for ( i=0; i<numIntSubBlocks_; i++ );
+  for ( i=0; i<numIntSubBlocks_; i++ )
      *(iBlock_+i) =  *(a.iBlock_+i);
 
   return *this;  
@@ -252,7 +252,7 @@ GUSHORT  GBitBlock::setbits_basic(GUSHORT  x, int p, int n, GUSHORT  y)
   // y's bits, left shifted to p:
   // zero'ing mask= ( (~0 << p+1) | ~(~0 << (p-n+1)) )
 
-  iret =  ( ( (~0 << p+1) | ~(~0 << (p-n+1)) ) & x ) | ( ytmp << p );
+  iret =  ( ( (~0 << (p+1)) | ~(~0 << (p-n+1)) ) & x ) | ( ytmp << p );
 
   return iret;
 
