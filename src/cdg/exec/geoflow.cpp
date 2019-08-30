@@ -448,12 +448,15 @@ void allocate(const PropertyTree &ptree)
     bpureadv  = eqn_ptree.getValue<bool> ("bpureadv",false);
     for ( auto i=0; i<GDIM; i++ ) diforced.push_back(i);
     iforced   = eqn_ptree.getArray<GINT> ("forcing_comp", diforced);
-    nladv     = sgrid == "grid_icos" ? 3 : GDIM;
+    nladv     = 0;
     nsolve_   = GDIM;
     nstate_   = GDIM;
     if ( doheat || bpureadv ) {
       nsolve_   = 1;
       nstate_   = nladv + nsolve_;
+      if ( bpureadv  ) {
+        nladv     = sgrid == "grid_icos" ? 3 : GDIM;
+      }
     }
     if ( "grid_icos" != sgrid ) {
       ibounded.resize(nsolve_);
