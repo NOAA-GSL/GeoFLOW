@@ -396,6 +396,10 @@ void GBurgers<TypePack>::init(GBurgers::Traits &traits)
   GINT       nop;
   CompDesc *icomptype = &this->comptype();
 
+  if ( !bpureadv_ &&  !doheat_ ) {
+    nsolve = grid_->gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
+  }
+
   // Find multistep/multistage time stepping coefficients:
   GMultilevel_coeffs_base<GFTYPE> *tcoeff_obj=NULLPTR; // time deriv coeffs
   GMultilevel_coeffs_base<GFTYPE> *acoeff_obj=NULLPTR; // adv op. coeffs
