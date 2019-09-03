@@ -14,7 +14,7 @@ namespace ginitv {
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : impl_abc_box
-// DESC   : Inititialize velocity with Arnoldi-Beltrami-Childress (ABC)
+// DESC   : Inititialize velocity with Arnold-Beltrami-Childress (ABC)
 //          initial conditions for box grids, 2d and 3d.
 // ARGS   : ptree  : main property tree
 //          sconfig: ptree block name containing variable config
@@ -25,28 +25,35 @@ namespace ginitv {
 //          u      : velocity-state to be initialized.
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_abd_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
+GBOOL impl_abc_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
 {
 
   assert(grid.gtype() == GE_REGULAR && "Box grids required");
 
-  PropertyTree vtree = ptree.getPropertyTree(sconfig);
+  GINT         kdn, kup, p, pdef;
+  GSIZET       nn ;
+  GFTYPE       A, B, C, pi2, u0, x, y, z;
+  PropertyTree vtree ;
+  GTVector<GTVector<GFTYPE>>
+              *xnodes = &grid.xNodes();
 
-  GINT    kdn    = vtree.getValue  <GINT>("kdn); 
-  GINT    kup    = vtree.getValue  <GINT>("kup"); 
-  GINT    p      = vtree.getValue  <GINT>("kpower",3);
-  GSIZET  nn ;
-  GFTYPE  A      = vtree.getArray<GFTYPE>("A", 1.1); 
-  GFTYPE  B      = vtree.getArray<GFTYPE>("B"  2.3); 
 #if defined(_G_IS3D)
-  GFTYPE  C      = vtree.getArray<GFTYPE>("C", 2.6); 
+  pdef = 2;
+#else
+  pdef = 3;
 #endif
-  GFTYPE  u0     = vtree.getArray<GFTYPE>("u0", 1.0); 
-  GFTYPE  pi2, x, y, z; 
-  GTVector<GTVector<GFTYPE>> 
-         *xnodes = &grid.xNodes();
 
-  nn = xnodes[0]->size();
+  vtree = ptree.getPropertyTree(sconfig);
+  kdn   = vtree.getValue<GINT>("kdn");
+  kup   = vtree.getValue<GINT>("kup");
+  p     = vtree.getValue<GINT>("kpower",pdef);
+  A     = vtree.getValue<GFTYPE>("A", 0.9);
+  B     = vtree.getValue<GFTYPE>("B", 1.0);
+#if defined(_G_IS3D)
+  C     = vtree.getValue<GFTYPE>("C", 1.1);
+#endif
+  u0    = vtree.getValue<GFTYPE>("u0", 1.0);
+  nn    = (*xnodes)[0].size();
 
   // Stream fcn is 
   //   psi = Sum_i { -A cos(2pi*ki*x) + B sin(2pi*ki*y) / ki^p }
@@ -56,7 +63,7 @@ GBOOL impl_abd_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Tim
   *u[0] = 0.0;
   *u[1] = 0.0;
   for ( GSIZET j=0; j<nn; j++ ) {
-    x = (*xnodes[0])[j]; y = (*xnodes[1])[j]; 
+    x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; 
     for ( GINT k=kdn; k<=kup; k++ ) {
       pi2         = 2.0*PI*k;
       (*u[0])[j] +=  B*pi2*cos(pi2*y) / pow(k,p);
@@ -70,7 +77,7 @@ GBOOL impl_abd_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Tim
   *u[1] = 0.0;
   *u[2] = 0.0;
   for ( GSIZET j=0; j<nn; j++ ) {
-    x = (*xnodes[0])[j]; y = (*xnodes[1])[j]; 
+    x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
     for ( GINT k=kdn; k<kup; k++ ) {
       pi2         = 2.0*PI*k;
       (*u[0])[j] +=  ( B*cos(pi2*y) + C*sin(pi2*z) ) / pow(k,p);
