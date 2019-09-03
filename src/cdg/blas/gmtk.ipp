@@ -239,7 +239,7 @@ void normalize_euclidean(GTVector<GTVector<T>*> &x, GINT *iind, GINT nind, T x0)
   }
   else {
     for ( GSIZET n=0; n<x[0]->size(); n++ ) { // cycle over all n-tuples
-      for ( GSIZET l=0, xn=0.0; l<x.size(); l++ ) xn += (*x[l])[n]*x[l][n];
+      for ( GSIZET l=0, xn=0.0; l<x.size(); l++ ) xn += (*x[l])[n]*(*x[l])[n];
       xn = x0/pow(xn,0.5);
       for ( GSIZET l=0, xn=0.0; l<x.size(); l++ ) (*x[l])[n] *= xn;
     }
