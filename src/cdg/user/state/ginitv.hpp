@@ -26,6 +26,7 @@ namespace ginitv
 {
 
 GBOOL impl_rand      (const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &u);
+GBOOL impl_abc_box   (const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &u);
 
 };
 
