@@ -2696,10 +2696,10 @@ template<>
 void vsphere2cart(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &vsph, GVectorType vtype, GTVector<GTVector<GFTYPE>*> &vcart)
 {
 
-  if      ( grid.gtype() != GE_2DEMBEDDED ) {
+  if      ( GDIM == 2 && grid.gtype() == GE_2DEMBEDDED ) {
     assert( vsph.size() >= 2 && "GE_2DEMBEDDED grid requires 2 spherical components");
   }
-  else if ( grid.gtype() != GE_DEFORMED ) {
+  else if ( grid.gtype() == GE_DEFORMED ) {
     assert( vsph.size() >= 3 && "GE_DEFORMED grid requires 3 spherical components");
   }
   else if ( grid.gtype() != GE_REGULAR ) {
