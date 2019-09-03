@@ -1831,9 +1831,6 @@ GTVector<T>::distinctrng(GSIZET ibeg, GSIZET n, GSIZET is, T *&vals,
                                 GSIZET *&indices, GSIZET  &nd)
 {
 
-  assert(std::is_arithmetic<T>::value || std::is_arithmetic<T>::value || std::is_pointer<T>::value &&
-    "Invalid template type: distinctrng");
-
   GLLONG i, j, nfound;
   GBOOL bcont;
 
@@ -1898,9 +1895,6 @@ GTVector<T>::distinctrng(GSIZET ibeg, GSIZET n, GSIZET is,
                                 GSIZET *&indices, GSIZET  &nd)
 {
 
-  assert(std::is_arithmetic<T>::value || std::is_arithmetic<T>::value || std::is_pointer<T>::value &&
-    "Invalid template type: distinctrng");
-
   GLLONG i, j, nfound;
   GBOOL bcont;
 
@@ -1962,8 +1956,6 @@ GSIZET
 GTVector<T>::distinctrng_floor(GSIZET ibeg, GSIZET n, GSIZET is, T *&vals,
                                       GSIZET *&indices, GSIZET  &nd, T floor)
 {
-  assert(std::is_arithmetic<T>::value || std::is_arithmetic<T>::value &&
-    "Invalid template type: distinctrng_floor");
 
   GLLONG i, j, nfound;
   GBOOL bcont;
@@ -2032,8 +2024,6 @@ GSIZET
 GTVector<T>::distinctrng_floor(GSIZET ibeg, GSIZET n, GSIZET is, 
                                       GSIZET *&indices, GSIZET  &nd, T floor)
 {
-  assert(std::is_arithmetic<T>::value || std::is_arithmetic<T>::value &&
-    "Invalid template type: distinctrng_floor");
 
   GLLONG i, j, nfound;
   GBOOL bcont;
@@ -2089,9 +2079,6 @@ template<class T>
 GSIZET
 GTVector<T>::distinct(GSIZET  *&indices, GSIZET  &nd)
 {
-
-  assert(std::is_arithmetic<T>::value || std::is_arithmetic<T>::value || std::is_pointer<T>::value &&
-    "Invalid template type: distinct(GSIZET*, GSIZET&)");
 
   GSIZET n = distinctrng(this->gindex_.beg(), this->gindex_.end()-this->gindex_.end()+1, 1, indices, nd);
 
