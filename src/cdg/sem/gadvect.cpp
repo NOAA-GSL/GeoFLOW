@@ -96,7 +96,9 @@ void GAdvect::apply(GTVector<GFTYPE> &p, const GTVector<GTVector<GFTYPE>*> &u, G
 //**********************************************************************************
 void GAdvect::def_prod(GTVector<GFTYPE> &p, const GTVector<GTVector<GFTYPE>*> &u, GTVector<GTVector<GFTYPE>*> &utmp, GTVector<GFTYPE> &po) 
 {
-  assert( utmp.size() >= GDIM+1
+  GSIZET nxy = grid_->gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
+
+  assert( utmp.size() >= nxy+1
        && "Insufficient temp space specified");
 
 
@@ -120,7 +122,6 @@ void GAdvect::def_prod(GTVector<GFTYPE> &p, const GTVector<GTVector<GFTYPE>*> &u
   // Get derivatives with weights:
   GMTK::compute_grefderivsW(*grid_, p, etmp1_, FALSE, utmp); // utmp stores tensor-prod derivatives, Dj p
 
-  GSIZET nxy = grid_->gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
 
   // Compute po += ui Rij (D^j p): 
   po = 0.0;
