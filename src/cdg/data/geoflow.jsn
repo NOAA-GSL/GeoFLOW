@@ -2,7 +2,7 @@
   "pde_name"             : "pde_burgers",
   "exp_order"            : [3, 3, 3],
   "exp_order_type"       : "constant",
-  "grid_type"            : "grid_box",
+  "grid_type"            : "grid_icos",
   "initstate_block"      : "mystateinit",
   "initforce_block"      : "",
   "use_forcing"          : false,
@@ -13,13 +13,13 @@
   "do_comparison"        : false,
   "observer_list"        : ["posixio_observer", "global_diag_basic"],
   "initv": {
-    "name": "abc_box",
+    "name": "abc",
     "kdn" : 2,
-    "kup" : 3
-    "A"   : 0.9
-    "B"   : 1.0
-    "C"   : 1.1
-    "u0"   : 1.1
+    "kup" : 3,
+    "A"   : 0.9,
+    "B"   : 1.0,
+    "C"   : 1.1,
+    "u0"  : 1.0
   },
   "mystateinit": {
     "initv"   : "initv",
@@ -167,7 +167,7 @@
     "integ_type" : "cycle",
     "time_end"   : 1.001,
     "cycle_end"  : 10,
-    "dt"         : 1.0e-6
+    "dt"         : 1.0e-5
   }
 
 }
