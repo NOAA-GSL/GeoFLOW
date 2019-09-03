@@ -85,7 +85,7 @@ GBOOL impl_abd_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Tim
 
   return TRUE;
 
-} // end, method impl_rand
+} // end, method impl_abc_box
 
 //**********************************************************************************
 //**********************************************************************************
@@ -97,7 +97,7 @@ GBOOL impl_abd_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Tim
 //          time   : initialization time
 //          utmp   : tmp arrays
 //          ub     : boundary state (also initialized here)
-//          u      : state to be initialized.
+//          u      : velocity state to be initialized.
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
 GBOOL impl_rand(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
