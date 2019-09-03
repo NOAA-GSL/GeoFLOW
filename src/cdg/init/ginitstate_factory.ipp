@@ -220,8 +220,11 @@ GBOOL GInitStateFactory<EquationType>::doinitv(const PropertyTree &ptree, GStrin
   else if ( "zer0" == sinit ) {
     for ( GINT i=0; i<u.size(); i++ ) *u[i] = 0.0;
   }
+  else if ( "abc_box" == sinit ) {
+    bret = ginitv::impl_abc_box(ptree, sconfig, grid, time, utmp, ub, u);
+  } 
   else if ( "random" == sinit ) {
-    bret = ginitv::impl_rand(ptree, sconfig, grid, time, utmp, ub, u);
+    bret = ginitv::impl_rand   (ptree, sconfig, grid, time, utmp, ub, u);
   } 
   else {
     assert(FALSE && "Unknown velocity initialization method");

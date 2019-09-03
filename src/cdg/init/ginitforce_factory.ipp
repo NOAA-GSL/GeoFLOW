@@ -211,8 +211,11 @@ GBOOL GInitForceFactory<EquationType>::doinitfv(const PropertyTree &ptree, GStri
   else if ( "zer0" == sinit ) {
     for ( GINT i=0; i<uf.size(); i++ ) *uf[i] = 0.0;
   }
+  else if ( "abc_box" == sinit ) {
+    bret = ginitfv::impl_abc_box(ptree, sinit, grid, time, utmp, ub, uf);
+  } 
   else if ( "random" == sinit ) {
-    bret = ginitfv::impl_rand(ptree, sinit, grid, time, utmp, ub, uf);
+    bret = ginitfv::impl_rand   (ptree, sinit, grid, time, utmp, ub, uf);
   } 
   else {
     assert(FALSE && "Unknown velocity force initialization method");
