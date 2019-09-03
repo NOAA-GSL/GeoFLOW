@@ -458,7 +458,11 @@ void allocate(const PropertyTree &ptree)
         nladv     = sgrid == "grid_icos" ? 3 : GDIM;
       }
     }
-    if ( "grid_icos" != sgrid ) {
+    if ( "grid_icos" == sgrid ) {
+      nsolve_   = 3;
+      nstate_   = nladv + nsolve_;
+    }
+    else {
       ibounded.resize(nsolve_);
       for ( auto i=0; i<nsolve_; i++ ) ibounded.push_back(i);
     }
