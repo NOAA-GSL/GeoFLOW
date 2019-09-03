@@ -161,7 +161,8 @@ const char * const sGBdyType [] ={"GBDY_DIRICHLET"  ,"GBDY_INFLOWT","GBDY_NOSLIP
 
 #if !defined(_G_ELEMTYPE_DEF)
 #define _G_ELEMTYPE_DEF
-enum GElemType           {GE_REGULAR=0, GE_DEFORMED, GE_2DEMBEDDED, GE_MAX}; // regular, deformed, embedded 2d
+enum GElemType           {GE_REGULAR=0, GE_DEFORMED, GE_2DEMBEDDED}; // regular, deformed, embedded 2d
+#define GE_MAX 3
 #endif
 
 #if !defined(_G_STEPPERTYPE_DEF)
