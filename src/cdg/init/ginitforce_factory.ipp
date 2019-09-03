@@ -198,21 +198,31 @@ GBOOL GInitForceFactory<EquationType>::doinitfv(const PropertyTree &ptree, GStri
 {
   GBOOL           bret    = TRUE;
   GString         sinit;
+  GGridIcos      *icos;
+  GGridBox       *box;
   PropertyTree    vtree = ptree.getPropertyTree(sconfig);
 
   sinit = vtree.getValue<GString>("name");
 
-
+  icos = dynamic_cast<GGridIcos*>(&grid);
+  box  = dynamic_cast<GGridBox*> (&grid);
   if      ( "null"   == sinit
-       ||   ""             == sinit ) {
+       ||   ""             == sinit ) {     // set to 0
     for ( GINT i=0; i<uf.size(); i++ ) *uf[i] = 0.0;
     bret = TRUE;
   }
-  else if ( "zer0" == sinit ) {
+  else if ( "zer0" == sinit ) {            // set to 0
     for ( GINT i=0; i<uf.size(); i++ ) *uf[i] = 0.0;
   }
-  else if ( "abc_box" == sinit ) {
-    bret = ginitfv::impl_abc_box(ptree, sinit, grid, time, utmp, ub, uf);
+  else if ( "abc" == sinit ) {             // ABC forcing
+
+    if       ( icos != NULLPTR ) {
+      bret = ginitfv::impl_abc_icos(ptree, sconfig, grid, time, utmp, ub, uf);
+    }
+    else {
+      bret = ginitfv::impl_abc_box (ptree, sconfig, grid, time, utmp, ub, uf);
+    }
+
   } 
   else if ( "random" == sinit ) {
     bret = ginitfv::impl_rand   (ptree, sinit, grid, time, utmp, ub, uf);

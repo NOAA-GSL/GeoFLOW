@@ -13,6 +13,8 @@
 #include "gcomm.hpp"
 #include "gtvector.hpp"
 #include "ggrid.hpp"
+#include "ggrid_icos.hpp"
+#include "ggrid_box.hpp"
 #include "ginitforce_direct_user.hpp"
 #include "ginitstate_direct_user.hpp"
 #include "ginitforce_comp.h"

@@ -208,20 +208,29 @@ GBOOL GInitStateFactory<EquationType>::doinitv(const PropertyTree &ptree, GStrin
 {
   GBOOL           bret  = TRUE;
   GString         sinit;
+  GGridIcos      *icos;
+  GGridBox       *box;
   PropertyTree    vtree = ptree.getPropertyTree(sconfig); 
 
   sinit = vtree.getValue<GString>("name");
 
+  icos = dynamic_cast<GGridIcos*>(&grid);
+  box  = dynamic_cast<GGridBox*> (&grid);
   if      ( "null"   == sinit
-       ||   ""       == sinit ) {
+       ||   ""       == sinit ) {     // set to 0
     for ( GINT i=0; i<u.size(); i++ ) *u[i] = 0.0;
     bret = TRUE;
   }
-  else if ( "zer0" == sinit ) {
+  else if ( "zer0" == sinit ) {       // set to 0
     for ( GINT i=0; i<u.size(); i++ ) *u[i] = 0.0;
   }
-  else if ( "abc_box" == sinit ) {
-    bret = ginitv::impl_abc_box(ptree, sconfig, grid, time, utmp, ub, u);
+  else if ( "abc" == sinit ) {        // ABC init
+    if      ( icos != NULLPTR ) {
+      bret = ginitv::impl_abc_icos(ptree, sconfig, grid, time, utmp, ub, u);
+    }
+    else  {
+      bret = ginitv::impl_abc_box (ptree, sconfig, grid, time, utmp, ub, u);
+    }
   } 
   else if ( "random" == sinit ) {
     bret = ginitv::impl_rand   (ptree, sconfig, grid, time, utmp, ub, u);
