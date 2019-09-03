@@ -416,7 +416,7 @@ void GBurgers<TypePack>::init(GBurgers::Traits &traits)
     }
   }
   else { // all fields represent kinetic components:
-    for( GSIZET j=0; j<GDIM; j++ ) icomptype->push_back(GSC_KINETIC);
+    for( GSIZET j=0; j<nsolve; j++ ) icomptype->push_back(GSC_KINETIC);
   }
 
   std::function<void(const Time &t,                    // RHS callback function
