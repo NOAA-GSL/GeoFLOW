@@ -2,20 +2,24 @@
   "pde_name"             : "pde_burgers",
   "exp_order"            : [3, 3, 3],
   "exp_order_type"       : "constant",
-  "grid_type"            : "grid_icos",
-  "initstate_block"      : "initstate_icosgaussburgers",
+  "grid_type"            : "grid_box",
+  "initstate_block"      : "mystateinit",
   "initforce_block"      : "",
   "use_forcing"          : false,
-  "initstate_type"       : "direct",
-  "initforce_type"       : "component",
+  "initstate_type"       : "component",
+  "initforce_type"       : "",
   "restart_index"        : 0,
   "benchmark"            : false,
-  "do_comparison"        : true,
+  "do_comparison"        : false,
   "observer_list"        : ["posixio_observer", "global_diag_basic"],
   "initv": {
-    "name": "random",
+    "name": "abc_box",
     "kdn" : 2,
     "kup" : 3
+    "A"   : 0.9
+    "B"   : 1.0
+    "C"   : 1.1
+    "u0"   : 1.1
   },
   "mystateinit": {
     "initv"   : "initv",
@@ -66,7 +70,7 @@
   },
   "pde_burgers": {
     "doheat"      : false,
-    "bpureadv"    : true,
+    "bpureadv"    : false,
     "bconserved"  : false,
     "forcing_comp": [0, 1, 2]
   },
@@ -87,7 +91,7 @@
   "grid_icos": {
     "grid_name" : "grid_icos",
     "ilevel"    : 2,
-    "radius"    : 1.0,
+    "radius"    : 1.0
   },
   "grid_sphere" : {
     "grid_name"         : "grid_sphere",
@@ -100,10 +104,8 @@
     "bdy_update_method" : "", 
     "use_state_init"    : false
   },
-  "circular_jet": {
-    "position"         : [0, 0.5, 0.5],
-    "radius"           : 0.1,
-    "base_type"        : "GBDY_USER0"
+  "fully_periodic": {
+    "base_type"        : "GBDY_PERIODIC"
   },
   "compound_inflow_example": {
     "bdy_class"        : "user",
@@ -120,12 +122,12 @@
     "xyz0"      : [1.0, 1.0, 1.0],
     "delxyz"    : [1.0, 1.0, 1.0],
     "num_elems" : [4, 4, 1],
-    "bdy_x_0"   : "burgers_inflow",
-    "bdy_x_1"   : "burgers_inflow",
-    "bdy_y_0"   : "burgers_inflow",
-    "bdy_y_1"   : "burgers_inflow",
-    "bdy_z_0"   : "burgers_inflow",
-    "bdy_z_1"   : "burgers_inflow",
+    "bdy_x_0"   : "fully_periodic",
+    "bdy_x_1"   : "fully_periodic",
+    "bdy_y_0"   : "fully_periodic",
+    "bdy_y_1"   : "fully_periodic",
+    "bdy_z_0"   : "fully_periodic",
+    "bdy_z_1"   : "fully_periodic",
     "bdy_init_method  " : "",
     "bdy_update_method" : "", 
     "use_state_init"    : true
@@ -162,9 +164,9 @@
     "interval_freq_fact" : 10.0
   },
   "time_integration": {
-    "integ_type" : "time",
+    "integ_type" : "cycle",
     "time_end"   : 1.001,
-    "cycle_end"  : 1,
+    "cycle_end"  : 10,
     "dt"         : 1.0e-6
   }
 
