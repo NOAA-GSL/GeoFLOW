@@ -21,10 +21,10 @@ namespace ginitfv {
 //          time   : initialization time
 //          utmp   : tmp arrays
 //          ub     : boundary state (also initialized here)
-//          u      : velocity-state to be initialized.
+//          uf     : velocity-state to be initialized.
 // RETURNS: TRUE on success; else FALSE
 //**********************************************************************************
-GBOOL impl_abd_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
+GBOOL impl_abd_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &uf)
 {
 
   assert(grid.gtype() == GE_REGULAR && "Box grids required");
@@ -52,35 +52,35 @@ GBOOL impl_abd_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Tim
   // Compute vel components s.t. ux = d psi / dy, uy = -d psi / dx
 #if defined(_G_IS2D)
 
-  *u[0] = 0.0;
-  *u[1] = 0.0;
+  *uf[0] = 0.0;
+  *uf[1] = 0.0;
   for ( GSIZET j=0; j<nn; j++ ) {
     x = (*xnodes[0])[j]; y = (*xnodes[1])[j];
     for ( GINT k=kdn; k<=kup; k++ ) {
       pi2         = 2.0*PI*k;
-      (*u[0])[j] +=  B*pi2*cos(pi2*y) / pow(k,p);
-      (*u[1])[j] += -A*pi2*sin(pi2*x) / pow(k,p);
+      (*uf[0])[j] +=  B*pi2*cos(pi2*y) / pow(k,p);
+      (*uf[1])[j] += -A*pi2*sin(pi2*x) / pow(k,p);
     }
   }
  
 #elif defined(_G_IS3D)
 
-  *u[0] = 0.0;
-  *u[1] = 0.0;
-  *u[2] = 0.0;
+  *uf[0] = 0.0;
+  *uf[1] = 0.0;
+  *uf[2] = 0.0;
   for ( GSIZET j=0; j<nn; j++ ) {
     x = (*xnodes[0])[j]; y = (*xnodes[1])[j];
     for ( GINT k=kdn; k<kup; k++ ) {
       pi2         = 2.0*PI*k;
-      (*u[0])[j] +=  ( B*cos(pi2*y) + C*sin(pi2*z) ) / pow(k,p);
-      (*u[1])[j] +=  ( A*sin(pi2*x) + C*cos(pi2*z) ) / pow(k,p);
-      (*u[2])[j] +=  ( A*cos(pi2*x) + B*sin(pi2*y) ) / pow(k,p);
+      (*uf[0])[j] +=  ( B*cos(pi2*y) + C*sin(pi2*z) ) / pow(k,p);
+      (*uf[1])[j] +=  ( A*sin(pi2*x) + C*cos(pi2*z) ) / pow(k,p);
+      (*uf[2])[j] +=  ( A*cos(pi2*x) + B*sin(pi2*y) ) / pow(k,p);
     }
   }
 
 #endif
 
-  GMTK::normalize_euclidean(u, NULLPTR, 0, f0);
+  GMTK::normalize_euclidean(uf, NULLPTR, 0, f0);
 
   return TRUE;
 
