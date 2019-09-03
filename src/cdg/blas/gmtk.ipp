@@ -215,10 +215,11 @@ void cross_prod(GTVector<T> &Ax, GTVector<T> &Ay, GTVector<T> &Az,
 //          iind : pointer to indirection array, used if non_NULLPTR.
 //          nind : number of indices in iind. This is the number of cross products
 //                 that will be computed, if iind is non-NULLPTR
+//          x0   : normalization constant
 // RETURNS: GTVector & 
 //**********************************************************************************
 template<typename T>
-void normalize_euclidean(GTVector<GTVector<T>*> &x, GINT *iind, GINT nind)
+void normalize_euclidean(GTVector<GTVector<T>*> &x, GINT *iind, GINT nind, T x0)
 {
   GSIZET n;
   T      xn(3);
@@ -232,14 +233,14 @@ void normalize_euclidean(GTVector<GTVector<T>*> &x, GINT *iind, GINT nind)
     for ( GSIZET k=0; k<nind; k++ ) { // cycle over all n-tuples
       n = iind[k];
       for ( GSIZET l=0, xn=0.0; l<x.size(); l++ ) xn += (*x[l])[n]*(*x[l])[n];
-      xn = 1.0/xn;
+      xn = x0/pow(xn,0.5);
       for ( GSIZET l=0, xn=0.0; l<x.size(); l++ ) (*x[l])[n] *= xn;
     }
   }
   else {
     for ( GSIZET n=0; n<x[0]->size(); n++ ) { // cycle over all n-tuples
       for ( GSIZET l=0, xn=0.0; l<x.size(); l++ ) xn += (*x[l])[n]*x[l][n];
-      xn = 1.0/xn;
+      xn = x0/pow(xn,0.5);
       for ( GSIZET l=0, xn=0.0; l<x.size(); l++ ) (*x[l])[n] *= xn;
     }
   }

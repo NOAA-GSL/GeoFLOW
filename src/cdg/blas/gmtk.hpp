@@ -67,7 +67,7 @@ namespace GMTK
                   GTVector<T> &Cx, GTVector<T> &Cy, GTVector<T> &Cz);
 
   template<typename T>  
-  void    normalize_euclidean(GTVector<GTVector<T>*> &x, GINT *iind, GINT nind);
+  void    normalize_euclidean(GTVector<GTVector<T>*> &x, GINT *iind, GINT nind, T x0=1);
 
   template<typename T>
   void saxpby(GTVector<T> &x, T a, GTVector<T> &y, T b); 
