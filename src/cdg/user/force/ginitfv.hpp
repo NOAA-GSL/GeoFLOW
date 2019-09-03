@@ -27,6 +27,7 @@ namespace ginitfv
 
 GBOOL impl_rand      (const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &uf);
 GBOOL impl_abc_box   (const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &uf);
+GBOOL impl_abc_icos  (const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &uf);
 
 };
 
