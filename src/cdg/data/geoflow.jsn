@@ -1,6 +1,6 @@
 { 
   "pde_name"             : "pde_burgers",
-  "exp_order"            : [3, 3, 3],
+  "exp_order"            : [2, 2, 2],
   "exp_order_type"       : "constant",
   "grid_type"            : "grid_icos",
   "initstate_block"      : "mystateinit",
@@ -90,7 +90,7 @@
   },
   "grid_icos": {
     "grid_name" : "grid_icos",
-    "ilevel"    : 2,
+    "ilevel"    : 1,
     "radius"    : 1.0
   },
   "grid_sphere" : {
