@@ -49,6 +49,7 @@ void GGlobalDiag_basic<EquationType>::observe_impl(const Time &t, const State &u
   init(t,u);
 
   mpixx::communicator comm;
+
    
   if ( (traits_.itype == ObserverBase<EquationType>::OBS_CYCLE 
         && (cycle_-cycle_last_+1) >= traits_.cycle_interval)
