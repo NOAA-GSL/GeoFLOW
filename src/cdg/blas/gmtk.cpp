@@ -2832,4 +2832,41 @@ void vsphere2cart(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &vsph, GVectorT
 } // end of method vsphere2cart
 
 
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : normalize
+// DESC   : 
+//             Compute norm of input field, s.t.
+//             Integratl (u^2) dV = x0
+//          
+// ARGS   : x    : array of pointers to vectors; must each have at least 3
+//                 elements for 3-d vector product. All vector elements must
+//                 have the same length
+//          grid : grid object
+//          tmp  : tmp vector of length at least 2, each
+//                 of same length as x
+//          x0   : normalization constant
+// RETURNS: GTVector & 
+//**********************************************************************************
+template<>
+void normalize(GTVector<GTVector<GFTYPE>*> &x, GGrid &grid, GTVector<GTVector<GFTYPE>*> &tmp, GFTYPE x0)
+{
+  GSIZET n;
+  GFTYPE xn=0.0;
+
+  for ( GINT l=0; l<x.size(); l++ ) {
+    *tmp[0] = *x[l]; tmp[0]->pow(2);
+    xn += grid.integrate(*tmp[0], *tmp[1]);
+  }
+
+  xn = sqrt(x0/xn);
+  for ( GINT l=0; l<x.size(); l++ ) {
+    for ( GSIZET n=0; n<x[0]->size(); n++ ) { 
+      (*x[l])[n] *= xn;
+    }
+  }
+
+} // end of method normalize
+
+
 } // end, namespace GMTK

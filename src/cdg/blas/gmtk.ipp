@@ -222,7 +222,7 @@ template<typename T>
 void normalize_euclidean(GTVector<GTVector<T>*> &x, GINT *iind, GINT nind, T x0)
 {
   GSIZET n;
-  T      xn(3);
+  T      xn;
 
   // NOTE: The better way to do this, especially for long lists is use
   //       outer loop over coord dimensions, and store progressive sum
@@ -234,14 +234,15 @@ void normalize_euclidean(GTVector<GTVector<T>*> &x, GINT *iind, GINT nind, T x0)
       n = iind[k];
       for ( GSIZET l=0, xn=0.0; l<x.size(); l++ ) xn += (*x[l])[n]*(*x[l])[n];
       xn = x0/pow(xn,0.5);
-      for ( GSIZET l=0, xn=0.0; l<x.size(); l++ ) (*x[l])[n] *= xn;
+      for ( GSIZET l=0; l<x.size(); l++ ) (*x[l])[n] *= xn;
     }
   }
   else {
     for ( GSIZET n=0; n<x[0]->size(); n++ ) { // cycle over all n-tuples
       for ( GSIZET l=0, xn=0.0; l<x.size(); l++ ) xn += (*x[l])[n]*(*x[l])[n];
       xn = x0/pow(xn,0.5);
-      for ( GSIZET l=0, xn=0.0; l<x.size(); l++ ) (*x[l])[n] *= xn;
+std::cout << "norm_euc: xn=" << xn << std::endl;
+      for ( GSIZET l=0; l<x.size(); l++ ) (*x[l])[n] *= xn;
     }
   }
 
