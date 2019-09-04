@@ -211,7 +211,7 @@ GBOOL GInitForceFactory<EquationType>::doinitfv(const PropertyTree &ptree, GStri
     for ( GINT i=0; i<uf.size(); i++ ) *uf[i] = 0.0;
     bret = TRUE;
   }
-  else if ( "zer0" == sinit ) {            // set to 0
+  else if ( "zero" == sinit ) {            // set to 0
     for ( GINT i=0; i<uf.size(); i++ ) *uf[i] = 0.0;
   }
   else if ( "abc" == sinit ) {             // ABC forcing

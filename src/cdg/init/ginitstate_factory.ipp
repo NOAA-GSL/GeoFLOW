@@ -221,7 +221,7 @@ GBOOL GInitStateFactory<EquationType>::doinitv(const PropertyTree &ptree, GStrin
     for ( GINT i=0; i<u.size(); i++ ) *u[i] = 0.0;
     bret = TRUE;
   }
-  else if ( "zer0" == sinit ) {       // set to 0
+  else if ( "zero" == sinit ) {       // set to 0
     for ( GINT i=0; i<u.size(); i++ ) *u[i] = 0.0;
   }
   else if ( "abc" == sinit ) {        // ABC init
