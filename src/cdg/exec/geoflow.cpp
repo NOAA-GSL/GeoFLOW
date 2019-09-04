@@ -467,7 +467,7 @@ void allocate(const PropertyTree &ptree)
       for ( auto i=0; i<nsolve_; i++ ) ibounded.push_back(i);
     }
     c_.resize(nladv);
-    ntmp_     = 24;
+    ntmp_     = 27;
   }
   
   nforced = MIN(nsolve_,iforced.size());
