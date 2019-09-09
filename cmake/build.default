@@ -1,0 +1,70 @@
+
+#
+# Request verbose CMake messages (i.e. debug paths, etc.)
+#
+set(USER_REQUEST_VERBOSE_CMAKE TRUE)
+
+#
+# ============================== Build Type ============================
+# Default: 
+# > cmake -D CMAKE_BUILD_TYPE=Debug
+#
+#set(CMAKE_BUILD_TYPE debug)
+
+#
+# ========================== Compiler (Serial) ==========================
+# Default: 
+# Use environment variables CC, CXX, FC, F77, F90, etc.
+# > cmake -D CC=/usr/bin/g++-4.2 
+#
+#set(CMAKE_C_COMPILER            "gcc-4.2")
+#set(CMAKE_C_FLAGS               "")
+#set(CMAKE_C_FLAGS_DEBUG         "")
+#set(CMAKE_C_FLAGS_RELEASE       "")
+
+#set(CMAKE_CXX_COMPILER          "/usr/bin/g++-4.2")
+#set(CMAKE_CXX_FLAGS             "")
+#set(CMAKE_CXX_FLAGS_DEBUG       "")
+#set(CMAKE_CXX_FLAGS_RELEASE     "")
+
+#set(CMAKE_FORTRAN_COMPILER      "gfortran")
+#set(CMAKE_FORTRAN_FLAGS         "")
+#set(CMAKE_FORTRAN_FLAGS_DEBUG   "")
+#set(CMAKE_FORTRAN_FLAGS_RELEASE "")
+
+
+#
+# ======================== Compiler (MPI Parallel) ========================
+# Default: 
+# Use environment variables MPI_CC, MPI_CXX, MPI_FC, MPI_F90, etc.
+# > cmake -D MPI_CXX=/opt/openmpi/bin/mpiicc 
+#
+#set(MPI_C_FOUND                 "" )
+#set(MPI_C_COMPILER              "" )
+#set(MPI_C_COMPILE_FLAGS         "" )
+#set(MPI_C_INCLUDE_PATH          "" )
+#set(MPI_C_LINK_FLAGS            "" )
+#set(MPI_C_LIBRARIES             "" )
+
+#set(MPI_CXX_FOUND               "" )
+#set(MPI_CXX_COMPILER            "" )
+#set(MPI_CXX_COMPILE_FLAGS       "" )
+#set(MPI_CXX_INCLUDE_PATH        "" )
+#set(MPI_CXX_LINK_FLAGS          "" )
+#set(MPI_CXX_LIBRARIES           "" )
+
+#set(MPI_FORTRAN_FOUND           "" )
+#set(MPI_FORTRAN_COMPILER        "" )
+#set(MPI_FORTRAN_COMPILE_FLAGS   "" )
+#set(MPI_FORTRAN_INCLUDE_PATH    "" )
+#set(MPI_FORTRAN_LINK_FLAGS      "" )
+#set(MPI_FORTRAN_LIBRARIES       "" )
+
+
+#
+# ======================== Boost Library ========================
+# Default: 
+# Use environment variables BOOST_ROOT
+# > cmake -D BOOST_ROOT=/opt/boost/boost_1_69_0/gcc/8.2.1 
+#
+#set(BOOST_ROOT                   "")

@@ -1,5 +1,15 @@
 # Check CMake Version 
 cmake_minimum_required(VERSION 3.1.0 FATAL_ERROR)
+
+#
+#---------------------------------------------------------------------
+# Load user requested variables if set (i.e. User Hardwired Values)
+# NOTE: Must be done before "project" or "enable_language()"
+#---------------------------------------------------------------------
+#
+set(USER_CONFIG "default" CACHE STRING "Default GeoFLOW Configuration File")
+include("${CMAKE_SOURCE_DIR}/cmake/build.${USER_CONFIG}")
+
 #
 #---------------------------------------------------------------------
 # Project Setup
@@ -94,45 +104,46 @@ endif(USER_REQUEST_VERBOSE_CMAKE)
 #---------------------------------------------------------------------
 # Detect OpenMP & MPI Flags/Includes/Libraries
 #---------------------------------------------------------------------
-
 message("")
 message("------------------ Searching for Libraries ---------------------")
+find_package(OpenMP)
+find_package(MPI)
 
-message("")
-message("Searching OpenMP:")
-FIND_PACKAGE(OpenMP)
-message("OpenMP Found          = ${OpenMP_FOUND}")
-message("OpenMP F Comp Flags   = ${OpenMP_Fortran_FLAGS}")
-message("OpenMP F Inludes      = ${OpenMP_Fortran_INCLUDE_PATH}")
-message("OpenMP F Link Flags   = ${OpenMP_Fortran_LINK_FLAGS}")
-message("OpenMP F Libraries    = ${OpenMP_Fortran_LIBRARIES}")
-message("OpenMP C Comp Flags   = ${OpenMP_C_FLAGS}")
-message("OpenMP C Inludes      = ${OpenMP_C_INCLUDE_PATH}")
-message("OpenMP C Link Flags   = ${OpenMP_C_LINK_FLAGS}")
-message("OpenMP C Libraries    = ${OpenMP_C_LIBRARIES}")
-message("OpenMP C++ Comp Flags = ${OpenMP_CXX_FLAGS}")
-message("OpenMP C++ Inludes    = ${OpenMP_CXX_INCLUDE_PATH}")
-message("OpenMP C++ Link Flags = ${OpenMP_CXX_LINK_FLAGS}")
-message("OpenMP C++ Libraries  = ${OpenMP_CXX_LIBRARIES}")
+if(USER_REQUEST_VERBOSE_CMAKE)
+	message("")
+	message("--------------------- OpenMP Libraries ------------------------")
+	message("OpenMP Found          = ${OpenMP_FOUND}")
+	message("OpenMP F Comp Flags   = ${OpenMP_Fortran_FLAGS}")
+	message("OpenMP F Inludes      = ${OpenMP_Fortran_INCLUDE_PATH}")
+	message("OpenMP F Link Flags   = ${OpenMP_Fortran_LINK_FLAGS}")
+	message("OpenMP F Libraries    = ${OpenMP_Fortran_LIBRARIES}")
+	message("OpenMP C Comp Flags   = ${OpenMP_C_FLAGS}")
+	message("OpenMP C Inludes      = ${OpenMP_C_INCLUDE_PATH}")
+	message("OpenMP C Link Flags   = ${OpenMP_C_LINK_FLAGS}")
+	message("OpenMP C Libraries    = ${OpenMP_C_LIBRARIES}")
+	message("OpenMP C++ Comp Flags = ${OpenMP_CXX_FLAGS}")
+	message("OpenMP C++ Inludes    = ${OpenMP_CXX_INCLUDE_PATH}")
+	message("OpenMP C++ Link Flags = ${OpenMP_CXX_LINK_FLAGS}")
+	message("OpenMP C++ Libraries  = ${OpenMP_CXX_LIBRARIES}")
+	message("")
+	message("------------------------ MPI Libraries --------------------------")
+	message("MPI F Found        = ${MPI_Fortran_FOUND}")
+	message("MPI F Comp Flags   = ${MPI_Fortran_FLAGS}")
+	message("MPI F Inludes      = ${MPI_Fortran_INCLUDE_PATH}")
+	message("MPI F Link Flags   = ${MPI_Fortran_LINK_FLAGS}")
+	message("MPI F Libraries    = ${MPI_Fortran_LIBRARIES}")
+	message("MPI C Found        = ${MPI_C_FOUND}")
+	message("MPI C Comp Flags   = ${MPI_C_FLAGS}")
+	message("MPI C Inludes      = ${MPI_C_INCLUDE_PATH}")
+	message("MPI C Link Flags   = ${MPI_C_LINK_FLAGS}")
+	message("MPI C Libraries    = ${MPI_C_LIBRARIES}")
+	message("MPI C++ Found      = ${MPI_CXX_FOUND}")
+	message("MPI C++ Comp Flags = ${MPI_CXX_FLAGS}")
+	message("MPI C++ Inludes    = ${MPI_CXX_INCLUDE_PATH}")
+	message("MPI C++ Link Flags = ${MPI_CXX_LINK_FLAGS}")
+	message("MPI C++ Libraries  = ${MPI_CXX_LIBRARIES}")
+endif(USER_REQUEST_VERBOSE_CMAKE)
 
-message("")
-message("Searching MPI:")
-FIND_PACKAGE(MPI)
-message("MPI F Found        = ${MPI_Fortran_FOUND}")
-message("MPI F Comp Flags   = ${MPI_Fortran_FLAGS}")
-message("MPI F Inludes      = ${MPI_Fortran_INCLUDE_PATH}")
-message("MPI F Link Flags   = ${MPI_Fortran_LINK_FLAGS}")
-message("MPI F Libraries    = ${MPI_Fortran_LIBRARIES}")
-message("MPI C Found        = ${MPI_C_FOUND}")
-message("MPI C Comp Flags   = ${MPI_C_FLAGS}")
-message("MPI C Inludes      = ${MPI_C_INCLUDE_PATH}")
-message("MPI C Link Flags   = ${MPI_C_LINK_FLAGS}")
-message("MPI C Libraries    = ${MPI_C_LIBRARIES}")
-message("MPI C++ Found      = ${MPI_CXX_FOUND}")
-message("MPI C++ Comp Flags = ${MPI_CXX_FLAGS}")
-message("MPI C++ Inludes    = ${MPI_CXX_INCLUDE_PATH}")
-message("MPI C++ Link Flags = ${MPI_CXX_LINK_FLAGS}")
-message("MPI C++ Libraries  = ${MPI_CXX_LIBRARIES}")
 
 #---------------------------------------------------------------------
 # Detect Other Libraries
@@ -143,18 +154,19 @@ set(Boost_NO_SYSTEM_PATHS ON)     # Do not search system paths before BOOST_ROOT
 set(Boost_USE_STATIC_LIBS ON)     # Static link to Boost libraries
 set(Boost_USE_STATIC_RUNTIME OFF) # Use Boost static linked to C++ runtime
 set(Boost_USE_MULTITHREADED OFF)  # Use Boost multi-threaded code
-
-message("")
-message("Searching Boost:")
-message("BOOST_ROOT = ${BOOST_ROOT}")
-message("Boost_NO_SYSTEM_PATHS = ${Boost_NO_SYSTEM_PATHS}")
 FIND_PACKAGE(Boost 1.65.0 COMPONENTS mpi serialization REQUIRED)
-message("Boost Found               = ${Boost_FOUND}")
-message("Boost Version             = ${Boost_VERSION}")
-message("Boost Includes            = ${Boost_INCLUDE_DIRS}")
-message("Boost Link Libraries      = ${Boost_LIBRARY_DIRS}")
-message("Boost Component Libraries = ${Boost_LIBRARIES}")
-#message("Boost_<C>_FOUND           = ${Boost_<C>_FOUND}") # Specific Component
+
+if(USER_REQUEST_VERBOSE_CMAKE)
+	message("")
+	message("--------------------- Boost Libraries ------------------------")
+	message("BOOST_ROOT = ${BOOST_ROOT}")
+	message("Boost_NO_SYSTEM_PATHS = ${Boost_NO_SYSTEM_PATHS}")
+	message("Boost Found               = ${Boost_FOUND}")
+	message("Boost Version             = ${Boost_VERSION}")
+	message("Boost Includes            = ${Boost_INCLUDE_DIRS}")
+	message("Boost Link Libraries      = ${Boost_LIBRARY_DIRS}")
+	message("Boost Component Libraries = ${Boost_LIBRARIES}")
+endif(USER_REQUEST_VERBOSE_CMAKE)
 
 #
 #---------------------------------------------------------------------
@@ -174,14 +186,14 @@ if(USER_REQUEST_VERBOSE_CMAKE)
 	message("CMAKE_CXX_COMPILER_VERSION = ${CMAKE_CXX_COMPILER_VERSION}")
 
 	message("")
-	message("CMake Version Can Test For C++ Features:")
+	message("CMake Version Test can for the following C++ features:")
 	get_property(known_features GLOBAL PROPERTY CMAKE_CXX_KNOWN_FEATURES)
 	foreach(i ${known_features})
 		message("${i}")
 	endforeach()
 	
 	message("")
-	message("Compiler C++ Features:")
+	message("C++ Compiler Supported Features:")
 	foreach(i ${CMAKE_CXX_COMPILE_FEATURES})
 		message("${i}")
 	endforeach()
@@ -197,9 +209,9 @@ add_compile_options("-Werror")
 # Check Platform Support
 #---------------------------------------------------------------------
 
-message("")
-message("------------------------ Platform Support -------------------------")
-message("")
+#message("")
+#message("------------------------ Platform Support -------------------------")
+#message("")
 
 #include(cpp_chrono)   # Returns HAVE_CPP_CHRONO_H, C11_CHRONO_WORKS, C20_CHRONO_WORKS
 #include(cpp_optional) # Returns HAVE_CPP_OPTIONAL_H, C17_OPTIONAL_WORKS
@@ -214,11 +226,11 @@ message("")
 add_subdirectory(src)
 
 # Build Tests for Libraries
-enable_testing()
-add_subdirectory(test)
+#enable_testing()
+#add_subdirectory(test)
 
 # Build Executables
-add_subdirectory(src/apps)
+#add_subdirectory(src/apps)
 
 
 

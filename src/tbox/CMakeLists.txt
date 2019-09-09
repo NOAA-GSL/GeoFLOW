@@ -53,7 +53,8 @@ target_link_libraries(tbox
 install(
 	DIRECTORY "${MY_PROJECT_INCDIR}/tbox"
 	DESTINATION "${MY_INSTALL_INCDIR}"  
-	FILES_MATCHING PATTERN "*.hpp"
+	FILES_MATCHING
+	PATTERN "*.hpp"
 )
 
 # Install Library
