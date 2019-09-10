@@ -128,6 +128,7 @@ namespace GMTK
   GFTYPE enstrophy(GGrid &grid, const GTVector<GTVector<T>*> &u, GTVector<GTVector<T>*> &tmp, GBOOL ismax=FALSE);
   template<typename T>  
   GFTYPE helicity(GGrid &grid, const GTVector<GTVector<T>*> &u, GTVector<GTVector<T>*> &tmp, GBOOL ismax=FALSE);
+  GFTYPE relhelicity(GGrid &grid, const GTVector<GTVector<T>*> &u, GTVector<GTVector<T>*> &tmp, GBOOL ismax=FALSE);
   template<typename T>  
   GFTYPE energyinj(GGrid &grid, const GTVector<GTVector<T>*> &u, GTVector<GTVector<GFTYPE>*> &uf, GTVector<GTVector<T>*> &tmp, GBOOL ismax=FALSE);
 

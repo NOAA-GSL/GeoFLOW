@@ -2991,22 +2991,114 @@ GFTYPE helicity(GGrid &grid, GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector<
  *tmp[3] = 0.0;
   for ( GINT l=1; l<u.size(); l++ ) {
     GMTK::curl(grid, u, l, utmp, *cc);
-    cc->pointPRod(*u[l]);
-    cc->pow(2);
+    cc->pointProd(*u[l]);
    *tmp[3] += *cc;
   }
 
   if ( ismax ) {
-    hel =  0.5*tmp[3]->amax();
+    hel =  tmp[3]->amax();
   }
   else {
     hel  = grid.integrate(*tmp[3], *tmp[0]);
-    hel *=  0.5*grid.ivolume();
+    hel *=  grid.ivolume();
   }
 
   return hel;
 
 } // end of method helicity 
+
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : relhelicity
+// DESC   : 
+//             Compute volume-integrated mean 
+//                 Int |curl u \dot u| /(|u| {curl u|) dV / Int dV
+//          
+// ARGS   : 
+//          grid : grid object
+//          u    : vector field; entire field used to compute energy
+//          tmp  : tmp vector of length at least 5, each
+//                 of same length as u
+//          ismax: if TRUE, then compute abs max of integrand, and return, 
+//                 instead of computing mean
+// RETURNS: GFTYPE helicity
+//**********************************************************************************
+template<>
+GFTYPE relhelicity(GGrid &grid, GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector<GFTYPE>*> &tmp, GBOOL ismax)
+{
+  assert(tmp.size() >= 5 && "Insufficient temp space");
+
+  
+  GFTYPE                      rhel;
+  GTVector<GFTYPE>           *cc;
+  GTVector<GTVector<GFTYPE>*> utmp(3);
+
+  utmp[0] = tmp[0];
+  utmp[1] = tmp[1];
+  cc      = tmp[2];
+
+ *tmp[3] = 0.0;
+ *tmp[4] = 0.0;
+
+  // Compute u. curl u:
+  for ( GINT l=0; l<u.size(); l++ ) {
+    GMTK::curl(grid, u, l, utmp, *cc);
+    cc->pointProd(*u[l]);
+   *tmp[3] += *cc;
+  }
+  
+  // Compute |curl u|:
+  for ( GINT l=0; l<u.size(); l++ ) {
+    GMTK::curl(grid, u, l, utmp, *cc);
+    cc->pow(2);
+    *tmp[4] += *cc;
+  }
+  tmp[4]->pow(0.5);
+
+
+  // Compute |u|:
+  *tmp[0] = 0.0;
+  for ( GINT l=0; l<u.size(); l++ ) {
+   *tmp[1] = *u[l];
+    tmp[1]->pow(2);
+    *tmp[0] += *tmp[1];
+  }
+  tmp[0]->pow(0.5);
+
+  // Compute u. (curl u) /|u| |curl u|:
+  GFTYPE tiny = std::numeric_limits<GFTYPE>::epsilon();
+  for ( GINT k=0; k<utmp[0]->size(); k++ ) {
+   (*tmp[3])[k] = (*tmp[3])[k] / ( (*tmp[4])[k] * (*utmp[0])[k] + tiny );
+  }
+
+
+  if ( ismax ) {
+    rhel =  tmp[3]->amax();
+  }
+  else {
+    rhel  = grid.integrate(*tmp[3], *tmp[0]);
+    rhel *=  rid.ivolume();
+  }
+
+  return rhel;
+
+} // end of method relhelicity 
+
+
+
+  if ( ismax ) {
+    rhel =  0.5*tmp[3]->amax();
+  }
+  else {
+    rhel  = grid.integrate(*tmp[3], *tmp[0]);
+    rhel *=  0.5*grid.ivolume();
+  }
+
+  return rhel;
+
+} // end of method relhelicity 
 
 
 //**********************************************************************************
@@ -3019,7 +3111,8 @@ GFTYPE helicity(GGrid &grid, GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector<
 // ARGS   : 
 //          grid : grid object
 //          u    : velocity field; entire field used to compute energy
-//          uf   : forcing field; each must be non-NULL on entry
+//          uf   : forcing field; each must be non-NULL on entry; if
+//                 any are NULL, or uf.size == 0, then return value is 0.
 //          tmp  : tmp vector of length at least 2, each
 //                 of same length as u
 //          ismax: if TRUE, then compute abs max of integrand, and return, 
@@ -3029,6 +3122,14 @@ GFTYPE helicity(GGrid &grid, GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector<
 template<>
 GFTYPE energyinj(GGrid &grid, GTVector<GTVector<GFTYPE>*> &u,  GTVector<GTVector<GFTYPE>>*> &uf, GTVector<GTVector<GFTYPE>*> &tmp, GBOOL ismax)
 {
+
+  if ( uf.size() == 0 ) return 0.0;
+
+  GBOOL bnull = FALSE;
+  for ( GINT l=0; l<u.size(); l++ ) bnull = bnull || uf[l] == NULLPTR;
+
+  if ( bnull ) return 0.0;
+
   assert(tmp.size() >= 2 && "Insufficient temp space");
 
   
