@@ -2836,39 +2836,36 @@ void vsphere2cart(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &vsph, GVectorT
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : normalize
+// METHOD : normalizeL2
 // DESC   : 
-//             Compute norm of input field, s.t.
-//             Integratl (u^2) dV = x0
+//             L2 Normalize input field, u --> c u,  s.t.
+//               Int((c u^2) dV / Int dV = u0^2
 //          
-// ARGS   : x    : array of pointers to vectors; must each have at least 3
-//                 elements for 3-d vector product. All vector elements must
-//                 have the same length
+// ARGS   : 
 //          grid : grid object
+//          u    : array of pointers to vectors; must each have at least 3
+//                 elements for 3-d vector product. All vector elements must
+//                 have the same length. Is normalized on exit.
 //          tmp  : tmp vector of length at least 2, each
 //                 of same length as x
-//          x0   : normalization constant
-// RETURNS: GTVector & 
+//          u0   : normalization value
+// RETURNS: none.
 //**********************************************************************************
 template<>
-void normalize(GTVector<GTVector<GFTYPE>*> &x, GGrid &grid, GTVector<GTVector<GFTYPE>*> &tmp, GFTYPE x0)
+void normalizeL2(GGrid &grid, GTVector<GTVector<GFTYPE>*> &u, GTVector<GTVector<GFTYPE>*> &tmp, GFTYPE u0)
 {
   GSIZET n;
-  GFTYPE xn=0.0;
+  GFTYPE xn, ener;
 
-  for ( GINT l=0; l<x.size(); l++ ) {
-    *tmp[0] = *x[l]; tmp[0]->pow(2);
-    xn += grid.integrate(*tmp[0], *tmp[1]);
+  ener = GMTK::energy(grid, u, tmp, FALSE);
+  xn   = u0 / sqrt(ener);
+  for ( GINT l=0; l<u.size(); l++ ) {
+   *tmp[0] = *x[l]; tmp[0]->pow(2);
+    (*u[l])[n] *= xn;
   }
 
-  xn = sqrt(x0/xn);
-  for ( GINT l=0; l<x.size(); l++ ) {
-    for ( GSIZET n=0; n<x[0]->size(); n++ ) { 
-      (*x[l])[n] *= xn;
-    }
-  }
 
-} // end of method normalize
+} // end of method normalizeL2
 
 
 
