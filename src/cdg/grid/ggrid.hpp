@@ -79,6 +79,10 @@ virtual void                 print(const GString &filename){}          // print 
         GFTYPE               maxlength();                             // find max elem length
         GFTYPE               minnodedist()         
                              {return minnodedist_;}                   // find min node distance
+        GFTYPE               volume()         
+                             {return volume_;}                        // get grid volume
+        GFTYPE               ivolume()         
+                             {return ivolume_;}                       // get nverse of grid volume
         GTMatrix<GTVector<GFTYPE>>
                             &dXidX();                                 // global Rij = dXi^j/dX^i
         GTVector<GFTYPE>    &dXidX(GSIZET i,GSIZET j);                // Rij matrix element 
@@ -133,6 +137,9 @@ protected:
         GINT                        irank_;         // MPI task id
         GINT                        nprocs_;        // number of MPI tasks
         GC_COMM                     comm_;          // communicator
+        GFTYPE                      minnodedist_;   // min node length array (for each elem)
+	GFTYPE                      volume_;        // grid volume
+	GFTYPE                      ivolume_;       // 1 / grid volume
         GElemList                   gelems_;        // element list
         GTVector<GFTYPE>            etmp_;          // elem-level tmp vector
         GTVector<GTVector<GSIZET>>  itype_;         // indices in elem list of each type
@@ -145,7 +152,6 @@ protected:
         GTVector<GTVector<GFTYPE>>  faceNormal_;    // normal to eleme faces each face node point (2d & 3d), global
         GTVector<GTVector<GSIZET>>  igface_;        // index into global field indicating elem face node
         GTVector<GTVector<GFTYPE>>  bdyNormal_;     // normal to surface at each bdy node point (2d & 3d), global
-        GFTYPE                      minnodedist_;   // min node length array (for each elem)
         GTVector<GTVector<GSIZET>>  igbdy_binned_;  // index into global field indicating a domain bdy--by type
         GTVector<GSIZET>            igbdy_;         // index into global field indicating a domain bdy
         GTVector<GTVector<GSIZET>>  igbdy_byface_;  // index into global field indicating a domain bdy

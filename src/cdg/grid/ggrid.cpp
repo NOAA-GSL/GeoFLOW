@@ -34,6 +34,8 @@ bInitialized_                   (FALSE),
 nprocs_        (GComm::WorldSize(comm)),
 irank_         (GComm::WorldRank(comm)),
 minnodedist_   (std::numeric_limits<GFTYPE>::max()),
+volume_                           (0.0),
+ivolume_                          (0.0),
 comm_                            (comm),
 ggfx_                         (NULLPTR),
 ptree_                          (ptree)
@@ -394,7 +396,11 @@ void GGrid::grid_init()
   minnodedist_ = find_min_dist();
   GTimerStop("GGrid::grid_init: find_min_dist");
 
-
+  // Compute grid volume:
+  GTVector<GFTYPE> tmp0(ndof()), tmp1(ndof());
+  tmp0 = 1.0;
+  volume_  = integrate(tmp0, tmp1);
+  ivolume_ = 1.0 / volume;
 } // end of method grid_init (1)
 
 
@@ -456,6 +462,12 @@ void GGrid::grid_init(GTMatrix<GINT> &p,
   GTimerStop("GGrid::grid_init: find_min_dist");
 
   bInitialized_ = TRUE;
+
+  // Compute grid volume:
+  GTVector<GFTYPE> tmp0(ndof()), tmp1(ndof());
+  tmp0 = 1.0;
+  volume_  = integrate(tmp0, tmp1);
+  ivolume_ = 1.0 / volume;
 
 } // end of method grid_init
 
