@@ -1,37 +1,46 @@
 #
-# === Unit Tests
+# === Final Applications to Build ===
 #
 
 # 
-# Build list of all tests to create
+# List of final applications to build
 #
-set(exec_files  
+set(apps_files  
         geoflow.cpp
-)
+   )
+
+#		       	
+# Include headers unique to main applications
+# Note:
+# - Only used if "main.cpp" has a "main.hpp" that needs including
+#
+set(apps_include_headers "")
 
 #
-# Build list of compiler options for tests
+# Compiler options for each application
 #
-set(compiler_options "$<$<CXX_COMPILER_ID:AppleClang>:-Wno-comment>"
-		             "$<$<BOOL:${OpenMP_FOUND}>:${OpenMP_CXX_FLAGS}>"
-		             "$<$<BOOL:${MPI_CXX_FOUND}>:${MPI_CXX_FLAGS}>" )
-		       	
-# Set include headers unique to main only
-set(include_headers "")
+set(apps_compiler_options 
+		"$<$<CXX_COMPILER_ID:AppleClang>:-Wno-comment>"
+		"$<$<BOOL:${OpenMP_FOUND}>:${OpenMP_CXX_FLAGS}>"
+		"$<$<BOOL:${MPI_CXX_FOUND}>:${MPI_CXX_FLAGS}>" 
+	)
 
-# Set libraries the test need
-# - Gets library include paths from here
-set(linked_libraries tbox)	
+#
+# Set the library names needed by applications
+# Note:
+# - These are only things not previously linked by a GeoFLOW library
+#
+set(apps_linked_libraries tbox)	
 				             
 #
 # Loop over each building & installing
 #	             
-FOREACH(test_src ${exec_files})
-	string(REPLACE ".cpp" "" test_name ${test_src})
-	add_executable(${test_name} ${test_src})
-	target_compile_options(${test_name} PRIVATE ${compiler_options})
-	target_include_directories(${test_name} PRIVATE ${include_headers})
-	target_link_libraries(${test_name} ${linked_libraries})
-	install(TARGETS ${test_name} DESTINATION "${MY_INSTALL_BINDIR}")
-ENDFOREACH(test_src)
+FOREACH(app_src ${apps_files})
+	string(REPLACE ".cpp" "" app_name ${app_src})
+	add_executable(${app_name} ${app_src})
+	target_compile_options(${app_name} PRIVATE ${apps_compiler_options})
+	target_include_directories(${app_name} PRIVATE ${apps_include_headers})
+	target_link_libraries(${app_name} ${apps_linked_libraries})
+	install(TARGETS ${app_name} DESTINATION "${MY_INSTALL_BINDIR}")
+ENDFOREACH(app_src)
 

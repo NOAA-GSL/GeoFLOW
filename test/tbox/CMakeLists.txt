@@ -39,7 +39,7 @@ FOREACH(test_src ${test_tbox_files})
 	add_executable(${test_name} ${test_src})
 	target_compile_options(${test_name} PRIVATE ${compiler_options})
 	target_include_directories(${test_name} PRIVATE ${include_headers})
-	target_link_libraries(${test_name} ${linked_libraries})
+	target_link_libraries(${test_name} ${linked_libraries} Boost::boost)
 	add_test(${test_name} ${test_name})
 ENDFOREACH(test_src)
 
@@ -48,5 +48,6 @@ ENDFOREACH(test_src)
 install(
 	DIRECTORY "${MY_PROJECT_TSTDIR}/tbox/data"
 	DESTINATION "${MY_INSTALL_TSTDIR}/tbox"  
-	FILES_MATCHING PATTERN "*"
+	FILES_MATCHING 
+	PATTERN "*"
 )

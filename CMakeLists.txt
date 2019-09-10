@@ -222,15 +222,12 @@ add_compile_options("-Werror")
 # 
 #---------------------------------------------------------------------
 
-# Build Libraries & Tests
+# Build Libraries & Applications
 add_subdirectory(src)
-
-# Build Tests for Libraries
-#enable_testing()
-#add_subdirectory(test)
 
 # Build Executables
 #add_subdirectory(src/apps)
 
-
+# Build Tests for Libraries
+add_subdirectory(test)
 

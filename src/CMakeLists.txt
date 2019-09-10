@@ -1,4 +1,4 @@
-
+#
 # Create the "configure.hpp" file
 # 
 # src/configure.hpp.in --> build/src/configure.hpp
@@ -16,3 +16,5 @@ INSTALL(FILES "${MY_INSTALL_SRCDIR}/configure.hpp"
 
 
 add_subdirectory(tbox)
+
+add_subdirectory(apps)
