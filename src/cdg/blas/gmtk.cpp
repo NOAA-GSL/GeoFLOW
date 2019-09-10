@@ -1988,7 +1988,7 @@ void curl(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &u, const GINT idir,
           GTVector<GTVector<GFTYPE>*> &tmp, GTVector<GFTYPE> &curlc)
 {
 
-  if ( GDIM == 2 && u.size() > GDIM ) {
+  if ( GDIM == 2 && u.size() > GDIM && grid.gtype() != GE_2DEMBEDDED ) {
     switch (idir) {
       case 1:
         grid.deriv(*u[2], 2, *tmp[0], curlc);
@@ -2009,7 +2009,7 @@ void curl(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &u, const GINT idir,
     return;
   }
 
-  if ( GDIM == 2 ) {
+  if ( GDIM == 2  && u.size() == 2 && grid.gtype() == GE_REGULAR ) {
     switch (idir) {
       case 3:
         grid.deriv(*u[1], 1, *tmp[0], curlc);
@@ -2023,7 +2023,7 @@ void curl(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &u, const GINT idir,
     return;
   }
 
-  if ( GDIM == 3 ) {
+  if ( GDIM == 3 || grid.gtype() == GE_2DEMBEDDED ) {
     switch (idir) {
       case 1:
         grid.deriv(*u[1], 3, *tmp[0], curlc);
