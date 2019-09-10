@@ -123,14 +123,14 @@ namespace GMTK
   template<typename T>  
   void    vsphere2cart(GGrid &grid, const GTVector<GTVector<T>*> &vsph, GVectorType vtype, GTVector<GTVector<T>*> &vcart);
   template<typename T>  
-  GFTYPE energy(GGrid &grid, const GTVector<GTVector<T>*> &u, GTVector<GTVector<T>*> &tmp, GBOOL ismax=FALSE);
+  GFTYPE energy(GGrid &grid, const GTVector<GTVector<T>*> &u, GTVector<GTVector<T>*> &tmp, GBOOL isglobal, GBOOL ismax=FALSE);
   template<typename T>  
-  GFTYPE enstrophy(GGrid &grid, const GTVector<GTVector<T>*> &u, GTVector<GTVector<T>*> &tmp, GBOOL ismax=FALSE);
+  GFTYPE enstrophy(GGrid &grid, const GTVector<GTVector<T>*> &u, GTVector<GTVector<T>*> &tmp, GBOOL isglobal, GBOOL ismax=FALSE);
   template<typename T>  
-  GFTYPE helicity(GGrid &grid, const GTVector<GTVector<T>*> &u, GTVector<GTVector<T>*> &tmp, GBOOL ismax=FALSE);
-  GFTYPE relhelicity(GGrid &grid, const GTVector<GTVector<T>*> &u, GTVector<GTVector<T>*> &tmp, GBOOL ismax=FALSE);
+  GFTYPE helicity(GGrid &grid, const GTVector<GTVector<T>*> &u, GTVector<GTVector<T>*> &tmp, GBOOL isglobal, GBOOL ismax=FALSE);
+  GFTYPE relhelicity(GGrid &grid, const GTVector<GTVector<T>*> &u, GTVector<GTVector<T>*> &tmp, GBOOL isglobal, GBOOL ismax=FALSE);
   template<typename T>  
-  GFTYPE energyinj(GGrid &grid, const GTVector<GTVector<T>*> &u, GTVector<GTVector<GFTYPE>*> &uf, GTVector<GTVector<T>*> &tmp, GBOOL ismax=FALSE);
+  GFTYPE energyinj(GGrid &grid, const GTVector<GTVector<T>*> &u, GTVector<GTVector<GFTYPE>*> &uf, GTVector<GTVector<T>*> &tmp, GBOOL isglobal, GBOOL ismax=FALSE);
 
 };
 

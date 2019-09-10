@@ -2877,16 +2877,18 @@ void normalizeL2(GGrid &grid, GTVector<GTVector<GFTYPE>*> &u, GTVector<GTVector<
 //             vector field
 //          
 // ARGS   : 
-//          grid : grid object
-//          u    : vector field; entire field used to compute energy
-//          tmp  : tmp vector of length at least 2, each
-//                 of same length as u
+//          grid    : grid object
+//          u       : vector field; entire field used to compute energy
+//          tmp     : tmp vector of length at least 2, each
+//                    of same length as u
+//          isglobal: do global reduction
+//          ismax   : do max norm, instead of L2
 // RETURNS: GFTYPE energy
 //**********************************************************************************
 template<>
-GFTYPE energy(GGrid &grid, GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector<GFTYPE>*> &tmp)
+GFTYPE energy(GGrid &grid, GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector<GFTYPE>*> &tmp, GBOOL isglobal, GBOOL ismax)
 {
-  GFTYPE ener;
+  GFTYPE ener, local;
 
  *tmp[1] = *u[0]; tmp[1]->pow(2);
   for ( GINT l=1; l<u.size(); l++ ) {
@@ -2896,9 +2898,13 @@ GFTYPE energy(GGrid &grid, GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector<GF
 
   if ( ismax ) {
     ener =  0.5*tmp[1]->amax();
+    if ( isglobal ) {
+      local = ener;
+      GComm::Allreduce(&local, &ener, 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm_);
+    }
   }
   else {
-    ener  = grid.integrate(*tmp[1], *tmp[0]);
+    ener  = grid.integrate(*tmp[1], *tmp[0], isglobal);
     ener *=  0.5*grid.ivolume();
   }
 
@@ -2915,21 +2921,22 @@ GFTYPE energy(GGrid &grid, GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector<GF
 //                 1/2 Int |curl u |^2 dV / Int dV
 //          
 // ARGS   : 
-//          grid : grid object
-//          u    : vector field; entire field used to compute energy
-//          tmp  : tmp vector of length at least 4, each
-//                 of same length as u
-//          ismax: if TRUE, then compute max of integrand, and return, 
-//                 instead of computing mean
+//          grid    : grid object
+//          u       : vector field; entire field used to compute energy
+//          tmp     : tmp vector of length at least 4, each
+//                    of same length as u
+//          isglobal: do global reduction
+//          ismax   : if TRUE, then compute max of integrand, and return, 
+//                    instead of computing mean
 // RETURNS: GFTYPE enstrophy
 //**********************************************************************************
 template<>
-GFTYPE enstrophy(GGrid &grid, GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector<GFTYPE>*> &tmp, GBOOL ismax)
+GFTYPE enstrophy(GGrid &grid, GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector<GFTYPE>*> &tmp, GBOOL isglobal, GBOOL ismax)
 {
   assert(tmp.size() >= 4 && "Insufficient temp space");
 
   
-  GFTYPE                      enst;
+  GFTYPE                      enst, local;
   GTVector<GFTYPE>           *cc;
   GTVector<GTVector<GFTYPE>*> utmp(3);
 
@@ -2946,9 +2953,13 @@ GFTYPE enstrophy(GGrid &grid, GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector
 
   if ( ismax ) {
     enst =  0.5*tmp[3]->amax();
+    if ( isglobal ) {
+      local = enst;
+      GComm::Allreduce(&local, &enst, 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm_);
+    }
   }
   else {
-    enst  = grid.integrate(*tmp[3], *tmp[0]);
+    enst  = grid.integrate(*tmp[3], *tmp[0], isglobal);
     enst *=  0.5*grid.ivolume();
   }
 
@@ -2966,21 +2977,22 @@ GFTYPE enstrophy(GGrid &grid, GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector
 //                 Int |curl u \dot u| dV / Int dV
 //          
 // ARGS   : 
-//          grid : grid object
-//          u    : vector field; entire field used to compute energy
-//          tmp  : tmp vector of length at least 4, each
-//                 of same length as u
-//          ismax: if TRUE, then compute abs max of integrand, and return, 
-//                 instead of computing mean
+//          grid    : grid object
+//          u       : vector field; entire field used to compute energy
+//          tmp     : tmp vector of length at least 4, each
+//                    of same length as u
+//          isglobal: do global reduction
+//          ismax   : if TRUE, then compute abs max of integrand, and return, 
+//                    instead of computing mean
 // RETURNS: GFTYPE helicity
 //**********************************************************************************
 template<>
-GFTYPE helicity(GGrid &grid, GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector<GFTYPE>*> &tmp, GBOOL ismax)
+GFTYPE helicity(GGrid &grid, GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector<GFTYPE>*> &tmp, GBOOL isglobal, GBOOL ismax)
 {
   assert(tmp.size() >= 4 && "Insufficient temp space");
 
   
-  GFTYPE                      hel;
+  GFTYPE                      hel, local;
   GTVector<GFTYPE>           *cc;
   GTVector<GTVector<GFTYPE>*> utmp(3);
 
@@ -2997,9 +3009,13 @@ GFTYPE helicity(GGrid &grid, GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector<
 
   if ( ismax ) {
     hel =  tmp[3]->amax();
+    if ( isglobal ) {
+      local = hel;
+      GComm::Allreduce(&local, &hel, 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm_);
+    }
   }
   else {
-    hel  = grid.integrate(*tmp[3], *tmp[0]);
+    hel  = grid.integrate(*tmp[3], *tmp[0], isglobal);
     hel *=  grid.ivolume();
   }
 
@@ -3017,21 +3033,22 @@ GFTYPE helicity(GGrid &grid, GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector<
 //                 Int |curl u \dot u| /(|u| {curl u|) dV / Int dV
 //          
 // ARGS   : 
-//          grid : grid object
-//          u    : vector field; entire field used to compute energy
-//          tmp  : tmp vector of length at least 5, each
-//                 of same length as u
-//          ismax: if TRUE, then compute abs max of integrand, and return, 
-//                 instead of computing mean
+//          grid    : grid object
+//          u       : vector field; entire field used to compute energy
+//          tmp     : tmp vector of length at least 5, each
+//                    of same length as u
+//          isglobal: do global reduction
+//          ismax   : if TRUE, then compute abs max of integrand, and return, 
+//                    instead of computing mean
 // RETURNS: GFTYPE helicity
 //**********************************************************************************
 template<>
-GFTYPE relhelicity(GGrid &grid, GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector<GFTYPE>*> &tmp, GBOOL ismax)
+GFTYPE relhelicity(GGrid &grid, GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector<GFTYPE>*> &tmp, GBOOL isglobal, GBOOL ismax)
 {
   assert(tmp.size() >= 5 && "Insufficient temp space");
 
   
-  GFTYPE                      rhel;
+  GFTYPE                      local, rhel;
   GTVector<GFTYPE>           *cc;
   GTVector<GTVector<GFTYPE>*> utmp(3);
 
@@ -3076,9 +3093,13 @@ GFTYPE relhelicity(GGrid &grid, GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVect
 
   if ( ismax ) {
     rhel =  tmp[3]->amax();
+    if ( isglobal ) {
+      local = rhel;
+      GComm::Allreduce(&local, &rhel, 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm_);
+    }
   }
   else {
-    rhel  = grid.integrate(*tmp[3], *tmp[0]);
+    rhel  = grid.integrate(*tmp[3], *tmp[0], isglobal);
     rhel *=  rid.ivolume();
   }
 
@@ -3086,19 +3107,6 @@ GFTYPE relhelicity(GGrid &grid, GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVect
 
 } // end of method relhelicity 
 
-
-
-  if ( ismax ) {
-    rhel =  0.5*tmp[3]->amax();
-  }
-  else {
-    rhel  = grid.integrate(*tmp[3], *tmp[0]);
-    rhel *=  0.5*grid.ivolume();
-  }
-
-  return rhel;
-
-} // end of method relhelicity 
 
 
 //**********************************************************************************
@@ -3109,18 +3117,19 @@ GFTYPE relhelicity(GGrid &grid, GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVect
 //                 Int |u \dot f| dV / Int dV
 //          
 // ARGS   : 
-//          grid : grid object
-//          u    : velocity field; entire field used to compute energy
-//          uf   : forcing field; each must be non-NULL on entry; if
+//          grid    : grid object
+//          u       : velocity field; entire field used to compute energy
+//          uf      : forcing field; each must be non-NULL on entry; if
 //                 any are NULL, or uf.size == 0, then return value is 0.
-//          tmp  : tmp vector of length at least 2, each
-//                 of same length as u
-//          ismax: if TRUE, then compute abs max of integrand, and return, 
-//                 instead of computing mean
+//          tmp     : tmp vector of length at least 2, each
+//                    of same length as u
+//          isglobal: do global reduction
+//          ismax   : if TRUE, then compute abs max of integrand, and return, 
+//                    instead of computing mean
 // RETURNS: GFTYPE energy injection rate
 //**********************************************************************************
 template<>
-GFTYPE energyinj(GGrid &grid, GTVector<GTVector<GFTYPE>*> &u,  GTVector<GTVector<GFTYPE>>*> &uf, GTVector<GTVector<GFTYPE>*> &tmp, GBOOL ismax)
+GFTYPE energyinj(GGrid &grid, GTVector<GTVector<GFTYPE>*> &u,  GTVector<GTVector<GFTYPE>>*> &uf, GTVector<GTVector<GFTYPE>*> &tmp, GBOOL isglobal, GBOOL ismax)
 {
 
   if ( uf.size() == 0 ) return 0.0;
@@ -3133,7 +3142,7 @@ GFTYPE energyinj(GGrid &grid, GTVector<GTVector<GFTYPE>*> &u,  GTVector<GTVector
   assert(tmp.size() >= 2 && "Insufficient temp space");
 
   
-  GFTYPE                      einj;
+  GFTYPE                      einj, local;
 
 
   u[0]->pointProd(*uf[0], *tmp[0]);
@@ -3145,9 +3154,15 @@ GFTYPE energyinj(GGrid &grid, GTVector<GTVector<GFTYPE>*> &u,  GTVector<GTVector
 
   if ( ismax ) {
     einj =  tmp[0]->amax();
+
+    if ( isglobal ) {
+      local = einj;
+      GComm::Allreduce(&local, &einj, 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm_);
+    }
+
   }
   else {
-    einj  = grid.integrate(*tmp[0], *tmp[1]);
+    einj  = grid.integrate(*tmp[0], *tmp[1], isglobal);
     einj *=  grid.ivolume();
   }
 
