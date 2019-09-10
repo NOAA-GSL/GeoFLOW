@@ -1988,6 +1988,8 @@ void curl(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &u, const GINT idir,
           GTVector<GTVector<GFTYPE>*> &tmp, GTVector<GFTYPE> &curlc)
 {
 
+  assert(tmp.sise() >= 2 && "Insufficient temp space");
+
   if ( GDIM == 2 && u.size() > GDIM && grid.gtype() != GE_2DEMBEDDED ) {
     switch (idir) {
       case 1:
@@ -2867,6 +2869,195 @@ void normalize(GTVector<GTVector<GFTYPE>*> &x, GGrid &grid, GTVector<GTVector<GF
   }
 
 } // end of method normalize
+
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : energy
+// DESC   : 
+//             Compute volume-integrated mean of energy from input 
+//             vector field
+//          
+// ARGS   : 
+//          grid : grid object
+//          u    : vector field; entire field used to compute energy
+//          tmp  : tmp vector of length at least 2, each
+//                 of same length as u
+// RETURNS: GFTYPE energy
+//**********************************************************************************
+template<>
+GFTYPE energy(GGrid &grid, GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector<GFTYPE>*> &tmp)
+{
+  GFTYPE ener;
+
+ *tmp[1] = *u[0]; tmp[1]->pow(2);
+  for ( GINT l=1; l<u.size(); l++ ) {
+    *tmp[0] = *u[l]; tmp[0]->pow(2);
+    *tmp[1] += *tmp[0];
+  }
+
+  if ( ismax ) {
+    ener =  0.5*tmp[1]->amax();
+  }
+  else {
+    ener  = grid.integrate(*tmp[1], *tmp[0]);
+    ener *=  0.5*grid.ivolume();
+  }
+
+  return ener;
+
+} // end of method energy
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : enstrophy
+// DESC   : 
+//             Compute volume-integrated mean 
+//                 1/2 Int |curl u |^2 dV / Int dV
+//          
+// ARGS   : 
+//          grid : grid object
+//          u    : vector field; entire field used to compute energy
+//          tmp  : tmp vector of length at least 4, each
+//                 of same length as u
+//          ismax: if TRUE, then compute max of integrand, and return, 
+//                 instead of computing mean
+// RETURNS: GFTYPE enstrophy
+//**********************************************************************************
+template<>
+GFTYPE enstrophy(GGrid &grid, GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector<GFTYPE>*> &tmp, GBOOL ismax)
+{
+  assert(tmp.size() >= 4 && "Insufficient temp space");
+
+  
+  GFTYPE                      enst;
+  GTVector<GFTYPE>           *cc;
+  GTVector<GTVector<GFTYPE>*> utmp(3);
+
+  utmp[0] = tmp[0];
+  utmp[1] = tmp[1];
+  cc      = tmp[2];
+
+ *tmp[3] = 0.0;
+  for ( GINT l=1; l<u.size(); l++ ) {
+    GMTK::curl(grid, u, l, utmp, *cc);
+    cc->pow(2);
+   *tmp[3] += *cc;
+  }
+
+  if ( ismax ) {
+    enst =  0.5*tmp[3]->amax();
+  }
+  else {
+    enst  = grid.integrate(*tmp[3], *tmp[0]);
+    enst *=  0.5*grid.ivolume();
+  }
+
+  return enst;
+
+} // end of method enstrophy
+
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : helicity
+// DESC   : 
+//             Compute volume-integrated mean 
+//                 Int |curl u \dot u| dV / Int dV
+//          
+// ARGS   : 
+//          grid : grid object
+//          u    : vector field; entire field used to compute energy
+//          tmp  : tmp vector of length at least 4, each
+//                 of same length as u
+//          ismax: if TRUE, then compute abs max of integrand, and return, 
+//                 instead of computing mean
+// RETURNS: GFTYPE helicity
+//**********************************************************************************
+template<>
+GFTYPE helicity(GGrid &grid, GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector<GFTYPE>*> &tmp, GBOOL ismax)
+{
+  assert(tmp.size() >= 4 && "Insufficient temp space");
+
+  
+  GFTYPE                      hel;
+  GTVector<GFTYPE>           *cc;
+  GTVector<GTVector<GFTYPE>*> utmp(3);
+
+  utmp[0] = tmp[0];
+  utmp[1] = tmp[1];
+  cc      = tmp[2];
+
+ *tmp[3] = 0.0;
+  for ( GINT l=1; l<u.size(); l++ ) {
+    GMTK::curl(grid, u, l, utmp, *cc);
+    cc->pointPRod(*u[l]);
+    cc->pow(2);
+   *tmp[3] += *cc;
+  }
+
+  if ( ismax ) {
+    hel =  0.5*tmp[3]->amax();
+  }
+  else {
+    hel  = grid.integrate(*tmp[3], *tmp[0]);
+    hel *=  0.5*grid.ivolume();
+  }
+
+  return hel;
+
+} // end of method helicity 
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : energyinj
+// DESC   : 
+//             Compute volume-integrated mean energy injection
+//                 Int |u \dot f| dV / Int dV
+//          
+// ARGS   : 
+//          grid : grid object
+//          u    : velocity field; entire field used to compute energy
+//          uf   : forcing field; each must be non-NULL on entry
+//          tmp  : tmp vector of length at least 2, each
+//                 of same length as u
+//          ismax: if TRUE, then compute abs max of integrand, and return, 
+//                 instead of computing mean
+// RETURNS: GFTYPE energy injection rate
+//**********************************************************************************
+template<>
+GFTYPE energyinj(GGrid &grid, GTVector<GTVector<GFTYPE>*> &u,  GTVector<GTVector<GFTYPE>>*> &uf, GTVector<GTVector<GFTYPE>*> &tmp, GBOOL ismax)
+{
+  assert(tmp.size() >= 2 && "Insufficient temp space");
+
+  
+  GFTYPE                      einj;
+
+
+  u[0]->pointProd(*uf[0], *tmp[0]);
+  for ( GINT l=1; l<u.size(); l++ ) {
+	  assert(uf[l]!= NULLPTR && "NULL force not allowed");
+    u[l]->pointProd(*uf[l], *tmp[1]);
+   *tmp[0] += *tmp[1];
+  }
+
+  if ( ismax ) {
+    einj =  tmp[0]->amax();
+  }
+  else {
+    einj  = grid.integrate(*tmp[0], *tmp[1]);
+    einj *=  grid.ivolume();
+  }
+
+  return einj;
+
+} // end of method energyinj
+
+
 
 
 } // end, namespace GMTK
