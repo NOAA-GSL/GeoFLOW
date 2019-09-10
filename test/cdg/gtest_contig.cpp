@@ -16,7 +16,7 @@
 #include <list>
 #include <iterator>
 #include <gptl.h>
-#if defined(HAVE_PAPI)
+#if defined(USE_PAPI)
 #include <papi.h>
 #endif
 #include "gtypes.h"
@@ -286,7 +286,7 @@ GINT main(int argc, char *argv[]){
         // Initialize GPTL:
         GINT iret;
 
-        #if defined(HAVE_PAPI) && defined(DO_PAPI)
+        #if defined(USE_PAPI) && defined(DO_PAPI)
         iret=GPTLsetoption (PAPI_L1_DCM  , 1);
         iret=GPTLsetoption (PAPI_L2_DCM  , 1);
         iret=GPTLsetoption (PAPI_L2_DCA  , 1);
@@ -451,8 +451,8 @@ GINT main(int argc, char *argv[]){
         l1m = 0.0; l2m = 0.0; l2a = 0.0; l3m = 0.0; ins = 0.0; 
         lst = 0.0; cyc = 0.0; prf = 0.0; lm1 = 0.0; lm2 = 0.0; 
         ref = 0.0;
-#if defined(HAVE_PAPI) && defined(DO_PAPI)
-std::cout << "main: HAVE_PAPI..." << std::endl;
+#if defined(USE_PAPI) && defined(DO_PAPI)
+std::cout << "main: USE_PAPI..." << std::endl;
         GPTLget_eventvalue("ElemA"  ,"PAPI_L1_DCM" ,-1,&l1m[0]);
         GPTLget_eventvalue("ElemA"  ,"PAPI_L2_DCM" ,-1,&l2m[0]);
         GPTLget_eventvalue("ElemA"  ,"PAPI_L2_DCA" ,-1,&l2a[0]);

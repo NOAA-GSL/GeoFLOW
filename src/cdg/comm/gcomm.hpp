@@ -9,12 +9,11 @@
 #define GCOMM_HPP
 
 #include "gtypes.h"
+#include "gcommdata_t.h"
+
 #include <cstdlib>
 #include <iostream>
 #include <string.h>
-#include "gcommdata_t.h"
-#include "gtvector.hpp"
-#include "gtmatrix.hpp"
 
 #if defined(_G_USE_MPI)
 #  include "mpi.h"

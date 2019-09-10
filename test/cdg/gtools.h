@@ -13,7 +13,6 @@
 #include <math.h>
 #include <unistd.h>
 #include <iostream>
-#include <gptl.h>
 #include <memory>
 #include <cstdlib>
 #include <cassert>
@@ -27,6 +26,10 @@
 #include "ggrid_box.hpp"
 #include "ggrid_icos.hpp"
 #include "tbox/property_tree.hpp"
+
+#if defined(_G_USE_GPTL)
+    #include <gptl.h>
+#endif
 
 using namespace geoflow::tbox;
 using namespace std;

@@ -1,0 +1,60 @@
+###################################################
+# Configuration file for PGI Compiler
+###################################################
+
+#
+# ========================== Compiler (Serial) ==========================
+# Default: 
+# Use environment variables CC, CXX, FC, F77, F90, etc.
+# > cmake -D CC=/usr/bin/g++-4.2 
+#
+
+set(INSTR_FLAGS "" )
+	if(DO_AUTO_PROF)
+    	set( INSTR_FLAGS "-finstrument-functions" )
+  	endif(DO_AUTO_PROF)
+set(EXTRA_FLAGS ${INSTR_FLAGS}")
+
+#set(CMAKE_C_COMPILER            "pgcc")
+#set(CMAKE_C_FLAGS               "-O2 -Minfo ${EXTRA_FLAGS}")
+#set(CMAKE_C_FLAGS_DEBUG         "-O0 -g -Minfo ${EXTRA_FLAGS}")
+#set(CMAKE_C_FLAGS_RELEASE       "-O2 -Minfo ${EXTRA_FLAGS}")
+
+#set(CMAKE_CXX_COMPILER          "pg++")
+#set(CMAKE_CXX_FLAGS             "-O2 -std=c++11 -Minfo ${OMP_FLAGS} ${ACC_FLAGS ${INSTR_FLAGS}}")
+#set(CMAKE_CXX_FLAGS_DEBUG       "-O0 -g -std=c++11 -Minfo ${OMP_FLAGS} ${ACC_FLAGS ${INSTR_FLAGS}}")
+#set(CMAKE_CXX_FLAGS_RELEASE     "-O2 -std=c++11 -Minfo ${OMP_FLAGS} ${ACC_FLAGS ${INSTR_FLAGS}}")
+
+#set(CMAKE_Fortran_COMPILER      "pgf90")
+#set(CMAKE_Fortran_FLAGS         "-O2  -Minfo ${EXTRA_FLAGS}")
+#set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -g -Minfo ${EXTRA_FLAGS}")
+#set(CMAKE_Fortran_FLAGS_RELEASE "-O2  -Minfo ${EXTRA_FLAGS}")
+
+
+#
+# ======================== Compiler (MPI Parallel) ========================
+# Default: 
+# Use environment variables MPI_CC, MPI_CXX, MPI_FC, MPI_F90, etc.
+# > cmake -D MPI_CXX=/opt/openmpi/bin/mpiicc 
+#
+set(MPI_C_FOUND                 FALSE )
+set(MPI_C_COMPILER              "mpicc" )
+set(MPI_C_COMPILE_FLAGS         "" )
+set(MPI_C_INCLUDE_PATH          "" )
+set(MPI_C_LINK_FLAGS            "" )
+set(MPI_C_LIBRARIES             "" )
+
+set(MPI_CXX_FOUND               FALSE )
+set(MPI_CXX_COMPILER            "mpic++" )
+set(MPI_CXX_COMPILE_FLAGS       "" )
+set(MPI_CXX_INCLUDE_PATH        "" )
+set(MPI_CXX_LINK_FLAGS          "" )
+set(MPI_CXX_LIBRARIES           "" )
+
+set(MPI_Fortran_FOUND           FALSE )
+set(MPI_Fortran_COMPILER        "mpif90" )
+set(MPI_Fortran_COMPILE_FLAGS   "" )
+set(MPI_Fortran_INCLUDE_PATH    "" )
+set(MPI_Fortran_LINK_FLAGS      "" )
+set(MPI_Fortran_LIBRARIES       "" )
+

@@ -7,6 +7,58 @@
 #ifndef GEOFLOW_CONFIG_HPP_IN_
 #define GEOFLOW_CONFIG_HPP_IN_
 
+// Constants to compare against
+#define CPP_INT_TWO 2
+#define CPP_INT_THREE 3
+
+//
+// To be filled in by CMake
+//
+#define GDIM ${GDIM}
+#cmakedefine DO_DEBUG
+#cmakedefine USE_GBLAS
+#cmakedefine USE_OPENMP
+#cmakedefine USE_OPENACC
+#cmakedefine USE_MPI
+#cmakedefine USE_GPTL
+#cmakedefine USE_PAPI
+
+//
+// Logic based on above values
+//
+#if defined(DO_DEBUG) && !defined(USE_OPENACC)
+	#define _G_BOUNDS_CHK
+#endif
+
+#if defined(USE_GBLAS)
+	#define _G_USE_GBLAS
+#endif
+
+#if defined(USE_GPTL)
+	#define _G_USE_GPTL
+#endif
+
+#if defined(USE_PAPI)
+	#define _G_USE_PAPI
+#endif
+
+#if defined(USE_MPI)
+	#define _G_USE_MPI
+#endif
+
+#if defined(USE_OPENACC)
+	#define _G_USE_OPENACC
+	#define _G_AUTO_CREATE_DEV
+	#define _G_AUTO_UPDATE_DEV
+#endif
+
+#if GDIM == CPP_INT_TWO
+	#define _G_IS2D
+#elif GDIM == CPP_INT_THREE
+	#define _G_IS3D
+#else
+	#error Unrecognized GDIM Value
+#endif
 
 //====================================================
 //                    Debug Flags

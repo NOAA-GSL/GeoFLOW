@@ -9,7 +9,7 @@
 #define _GEOFLOW_HPP
 
 #include "gtypes.h"
-#include <assert.h>
+#include <cassert>
 
 
 namespace geoflow

@@ -10,7 +10,6 @@
 #include <memory>
 #include <cmath>
 #include <limits>
-#include <gptl.h>
 #include <typeinfo>
 #include "gelem_base.hpp"
 #include "ggrid.hpp"
@@ -18,6 +17,9 @@
 #include "gcomm.hpp"
 #include "tbox/error_handler.hpp"
 
+#if defined(_G_USE_GPTL)
+  #include <gptl.h>
+#endif
 
 //**********************************************************************************
 //**********************************************************************************

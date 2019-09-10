@@ -10,7 +10,6 @@
 #include <unistd.h>
 #include <iostream>
 #include <vector>
-#include <gptl.h>
 #include "gexec.h"
 #include "gcomm.hpp"
 #include "gtvector.hpp"
@@ -19,6 +18,9 @@
 #include "gmtk.hpp"
 #include "gllbasis.hpp"
 
+#if defined(_G_USE_GPTL)
+    #include <gptl.h>
+#endif
 
 int main(int argc, char **argv)
 {

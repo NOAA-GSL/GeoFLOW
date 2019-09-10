@@ -11,6 +11,9 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+
+#include "configure.hpp"
+
 #if defined(_G_USE_GPTL)
   #include <gptl.h>
 #endif

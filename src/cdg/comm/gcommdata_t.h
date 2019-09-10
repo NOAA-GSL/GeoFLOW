@@ -12,14 +12,14 @@
 
 #include "gtypes.h"
 #include <type_traits>
-#include <assert.h>
+#include <cassert>
 
 
 //--------------------------------------------------------------------------------
 // Comm Datatypes
 //--------------------------------------------------------------------------------
 #if defined(_G_USE_MPI)
-#  include "mpi.h"
+#include "mpi.h"
 
 #define GC_COMM         MPI_Comm
 #define GC_COMM_WORLD   MPI_COMM_WORLD
@@ -32,11 +32,11 @@
 //   NOTE: Make sure there is a 1-to-1 correspondence
 //         between these types, and GD_**** types in gtypes.h:
 const GCommDatatype GC_DATATYPE[] = 
-                        {MPI::BYTE     , MPI::BOOL              , MPI::UNSIGNED_CHAR, MPI::BYTE              ,
-                         MPI::SHORT    , MPI::UNSIGNED_SHORT    , MPI::INT          , MPI::UNSIGNED          ,
-                         MPI::LONG     , MPI::UNSIGNED_LONG     , MPI::LONG_LONG    , MPI::INT               ,
-                         MPI::LONG     , MPI::UNSIGNED_LONG_LONG, MPI::LONG_LONG    , MPI::UNSIGNED_LONG_LONG,
-                         MPI::LONG_LONG, MPI::FLOAT             , MPI::DOUBLE       , MPI::LONG_DOUBLE       };
+                        {MPI_BYTE     , MPI_C_BOOL            , MPI_UNSIGNED_CHAR, MPI_BYTE              ,
+                         MPI_SHORT    , MPI_UNSIGNED_SHORT    , MPI_INT          , MPI_UNSIGNED          ,
+                         MPI_LONG     , MPI_UNSIGNED_LONG     , MPI_LONG_LONG    , MPI_INT               ,
+                         MPI_LONG     , MPI_UNSIGNED_LONG_LONG, MPI_LONG_LONG    , MPI_UNSIGNED_LONG_LONG,
+                         MPI_LONG_LONG, MPI_FLOAT             , MPI_DOUBLE       , MPI_LONG_DOUBLE       };
 
 // Make sure there is a 1-1 corresp between GC_Optype and GC_OP
 // indices in gtypes.h:

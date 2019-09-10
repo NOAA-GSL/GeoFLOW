@@ -8,7 +8,7 @@
 
 #include <math.h>
 #include <type_traits>
-#include <assert.h>
+#include <cassert>
 #include <limits>
 #include "ggfx.hpp"
 #include "gcomm.hpp"

@@ -11,9 +11,12 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <iostream>
-#include <gptl.h>
 #include "gtvector.hpp"
 #include "gtmatrix.hpp"
+
+#if defined(_G_USE_GPTL)
+    #include <gptl.h>
+#endif
 
 int main(int argc, char **argv)
 {

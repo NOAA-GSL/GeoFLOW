@@ -1,8 +1,20 @@
+#
+# ========================== Build Options ===========================
+#
+set   (GDIM 2)                           # Dimensionality
 
-#
-# Request verbose CMake messages (i.e. debug paths, etc.)
-#
-set(USER_REQUEST_VERBOSE_CMAKE TRUE)
+option(DO_TESTS       "DO_TESTS"      OFF)  # Build testing targets
+option(DO_GEOFLOW     "DO_GEOFLOW"    ON)   # Build GeoFLOW target
+
+option(DO_DEBUG       "DO_DEBUG"      ON)   # Compile for DEBUG
+option(USE_OPENMP     "USE_OPENMP"    ON)  # Compile for OpenMP
+option(USE_OPENACC    "USE_OPENACC"   OFF)  # Compile for OpenACC
+option(USE_GBLAS      "USE_GBLAS"     ON)   # Use GBlas instead of C 
+option(USE_MPI        "USE_MPI"       ON)   # Build with MPI?
+option(USE_GPTL       "USE_GPTL"      OFF)  # Build with GPTL?
+option(USE_PAPI       "USE_PAPI"      OFF)  # Is GPTL built with PAPI support?
+option(DO_AUTO_PROF   "DO_AUTO_PROF"  OFF)  # Do auto-profing with GPTL?
+option(VERBOSE_CMAKE  "VERBOSE_CMAKE" ON)   # Verbose CMake Ouput
 
 #
 # ============================== Build Type ============================
@@ -17,20 +29,20 @@ set(USER_REQUEST_VERBOSE_CMAKE TRUE)
 # Use environment variables CC, CXX, FC, F77, F90, etc.
 # > cmake -D CC=/usr/bin/g++-4.2 
 #
-#set(CMAKE_C_COMPILER            "gcc-4.2")
+#set(CMAKE_C_COMPILER            "")
 #set(CMAKE_C_FLAGS               "")
 #set(CMAKE_C_FLAGS_DEBUG         "")
 #set(CMAKE_C_FLAGS_RELEASE       "")
 
-#set(CMAKE_CXX_COMPILER          "/usr/bin/g++-4.2")
+#set(CMAKE_CXX_COMPILER          "")
 #set(CMAKE_CXX_FLAGS             "")
 #set(CMAKE_CXX_FLAGS_DEBUG       "")
 #set(CMAKE_CXX_FLAGS_RELEASE     "")
 
-#set(CMAKE_FORTRAN_COMPILER      "gfortran")
-#set(CMAKE_FORTRAN_FLAGS         "")
-#set(CMAKE_FORTRAN_FLAGS_DEBUG   "")
-#set(CMAKE_FORTRAN_FLAGS_RELEASE "")
+#set(CMAKE_Fortran_COMPILER      "")
+#set(CMAKE_Fortran_FLAGS         "")
+#set(CMAKE_Fortran_FLAGS_DEBUG   "")
+#set(CMAKE_Fortran_FLAGS_RELEASE "")
 
 
 #
@@ -53,18 +65,45 @@ set(USER_REQUEST_VERBOSE_CMAKE TRUE)
 #set(MPI_CXX_LINK_FLAGS          "" )
 #set(MPI_CXX_LIBRARIES           "" )
 
-#set(MPI_FORTRAN_FOUND           "" )
-#set(MPI_FORTRAN_COMPILER        "" )
-#set(MPI_FORTRAN_COMPILE_FLAGS   "" )
-#set(MPI_FORTRAN_INCLUDE_PATH    "" )
-#set(MPI_FORTRAN_LINK_FLAGS      "" )
-#set(MPI_FORTRAN_LIBRARIES       "" )
-
+#set(MPI_Fortran_FOUND           "" )
+#set(MPI_Fortran_COMPILER        "" )
+#set(MPI_Fortran_COMPILE_FLAGS   "" )
+#set(MPI_Fortran_INCLUDE_PATH    "" )
+#set(MPI_Fortran_LINK_FLAGS      "" )
+#set(MPI_Fortran_LIBRARIES       "" )
 
 #
-# ======================== Boost Library ========================
+# ========================== Boost Library ==========================
 # Default: 
 # Use environment variables BOOST_ROOT
 # > cmake -D BOOST_ROOT=/opt/boost/boost_1_69_0/gcc/8.2.1 
 #
-#set(BOOST_ROOT                   "")
+set(BOOST_ROOT "" CACHE STRING "Location of Boost Library")
+
+#
+# ========================== GPTL Library ===========================
+# Default: 
+# Use environment variables GPTL_ROOT
+# > cmake -D GPTL_ROOT=/opt/gptl/gcc/8.2.1
+#
+set(GPTL_ROOT "" CACHE STRING "Location of GPTL Library")
+set(GPTL_INC_PATH  "${GPTL_ROOT}/include")
+set(GPTL_LIB_PATH  "${GPTL_ROOT}/lib/libgptl.a")
+
+#
+# ========================== PAPI Library ===========================
+# Default: 
+# Use environment variables PAPI_ROOT
+# > cmake -D PAPI_ROOT=/opt/papi/gcc/8.2.1
+#
+set(PAPI_ROOT "" CACHE STRING "Location of PAPI Library")
+set(PAPI_INC_PATH  "${GPTL_ROOT}/include")
+set(PAPI_LIB_PATH  "${GPTL_ROOT}/lib/libpapi.a")
+
+
+
+
+
+
+
+

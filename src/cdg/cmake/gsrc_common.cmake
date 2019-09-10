@@ -13,7 +13,6 @@
     )
 
  set(CDG_COMM_SRC   ${GHOME}/comm/gcomm.cpp 
-#                   ${GHOME}/comm/ggfx.cpp
     )
 
  set(CDG_GRID_SRC   ${GHOME}/grid/gdd_base.cpp
@@ -59,19 +58,6 @@
                     ${GHOME}/utils/geoflow.cpp
     )
 
- set(GEOFLOW_TBOX_SRC ${GHOME}/../tbox/clock.cpp 
-                      ${GHOME}/../tbox/command_line.cpp 
-                      ${GHOME}/../tbox/error_handler.cpp 
-                      ${GHOME}/../tbox/global_manager.cpp
-                      ${GHOME}/../tbox/input_manager.cpp
-                      ${GHOME}/../tbox/io_buffer.cpp
-                      ${GHOME}/../tbox/mpixx.cpp
-                      ${GHOME}/../tbox/pio.cpp
-                      ${GHOME}/../tbox/property_tree.cpp
-                      ${GHOME}/../tbox/tracer.cpp
-    )
-
-
 # Aggregate source into CDG_SRC used in CMakeLists.txt:
  list(APPEND CDG_SRC 
                      ${CDG_BLAS_SRC} 
@@ -80,7 +66,6 @@
                      ${CDG_INIT_SRC}
                      ${CDG_IO_SRC}
                      ${CDG_SEM_SRC}
-                     ${GEOFLOW_TBOX_SRC}
                      ${CDG_USER_SRC}
                      ${CDG_UTILS_SRC}
      )

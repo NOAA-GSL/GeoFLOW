@@ -13,7 +13,7 @@
 #include "gbutcherrk.hpp"
 #include "ggfx.hpp"
 
-
+#include <functional>
 
 template <typename T>
 class GExRKStepper

@@ -16,5 +16,6 @@ INSTALL(FILES "${MY_INSTALL_SRCDIR}/configure.hpp"
 
 
 add_subdirectory(tbox)
+add_subdirectory(cdg)
 
 add_subdirectory(apps)

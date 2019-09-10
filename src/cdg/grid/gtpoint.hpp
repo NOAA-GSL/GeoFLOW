@@ -91,7 +91,7 @@ public:
   { for ( GINT j=0; j<gdim_; j++ ) *px_[j] = v[j][i];
     if ( gdim_>0) x1 = v[0][i]; if ( gdim_>1) x2 = v[1][i]; if (gdim_>2) x3 = v[2][i]; if ( gdim_>3) x4 = v[3][i];}
 
-  inline void  operator-(T f)
+  inline GTPoint<T> &operator-(T f)
   { GTPoint<T> *ret = new GTPoint<T>(gdim_);
     for ( GINT j=0; j<gdim_; j++ ) (*ret)[j] = *px_[j] - f; return *ret; }
 
@@ -105,7 +105,7 @@ public:
   inline void  operator-=(GTPoint<T> &a)
   { for ( GINT j=0; j<gdim_; j++ ) *px_[j] -= a[j]; }
 
-  inline void  operator+(T f)
+  inline GTPoint<T> &operator+(T f)
   { GTPoint<T> *ret = new GTPoint<T>(gdim_);
     for ( GINT j=0; j<gdim_; j++ ) (*ret)[j] = *px_[j] + f; return *ret; }
 
