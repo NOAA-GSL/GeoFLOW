@@ -90,7 +90,7 @@ GBOOL impl_abc_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Tim
 
 #endif
 
-  GMTK::normalize(uf, grid, utmp, f0);
+  GMTK::normalizeL2(uf, grid, utmp, f0);
 
   return TRUE;
 
@@ -187,7 +187,7 @@ GBOOL impl_abc_icos(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Ti
 
 #endif
 
-  GMTK::normalize(uf, grid, utmp, f0);
+  GMTK::normalizeL2(uf, grid, utmp, f0);
 
 
   return TRUE;
