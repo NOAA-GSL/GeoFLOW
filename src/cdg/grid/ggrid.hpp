@@ -69,7 +69,8 @@ virtual void                 print(const GString &filename){}          // print 
         void                 deriv(GTVector<GFTYPE> &u, GINT idir, GTVector<GFTYPE> &tmp,
                                    GTVector<GFTYPE> &du );            // derivative of global vector
         GFTYPE               integrate(GTVector<GFTYPE> &u,
-                                       GTVector<GFTYPE> &tmp);        // spatial integration of global vector
+                                       GTVector<GFTYPE> &tmp, 
+				       GBOOL bglobal = TRUE);         // spatial integration of global vector
         void                 print(GString fname, GBOOL bdof=FALSE);
         GSIZET               ndof();                                  // compute total number elem dof
         GSIZET               size() { return ndof(); }

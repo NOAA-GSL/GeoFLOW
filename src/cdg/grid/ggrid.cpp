@@ -816,11 +816,12 @@ GFTYPE GGrid::find_min_dist()
 // DESC   : Compute spatial integral of global input vector. Result 
 //          is a sum over all MPI tasks. NOTE: This method extracts weights
 //          from the elements, so don't use this method very often.
-// ARGS   : u  : 'global' integral argument
-//          tmp: tmp vector, same size as u
+// ARGS   : u     : 'global' integral argument
+//          tmp   :  tmp vector, same size as u
+//          blocal:  do global reduction?
 // RETURNS: GFTYPE integral
 //**********************************************************************************
-GFTYPE GGrid::integrate(GTVector<GFTYPE> &u, GTVector<GFTYPE> &tmp)
+GFTYPE GGrid::integrate(GTVector<GFTYPE> &u, GTVector<GFTYPE> &tmp, GBOOL bglobal)
 {
   assert(bInitialized_ && "Object not inititaized");
 
@@ -882,7 +883,11 @@ GFTYPE GGrid::integrate(GTVector<GFTYPE> &u, GTVector<GFTYPE> &tmp)
   // Multiply by Jacobian:
   tmp.pointProd(Jac_);
   xint = tmp.sum();  
-  GComm::Allreduce(&xint, &xgint, 1, T2GCDatatype<GFTYPE>() , GC_OP_SUM, comm_);
+
+  xgint = xint;
+  if ( bglobal ) {
+    GComm::Allreduce(&xint, &xgint, 1, T2GCDatatype<GFTYPE>() , GC_OP_SUM, comm_);
+  }
 
   return xgint;
 
