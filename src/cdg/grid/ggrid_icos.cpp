@@ -8,7 +8,7 @@
 #include <cstdlib>
 #include <memory>
 #include <cmath>
-#include "omp.h"
+//#include "omp.h"  // Are we calling API functions ?
 #include "geoflow.hpp"
 #include "gspecbdy_factory.hpp"
 #include "gelem_base.hpp"
