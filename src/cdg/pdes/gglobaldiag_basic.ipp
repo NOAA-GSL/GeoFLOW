@@ -138,30 +138,34 @@ void GGlobalDiag_basic<EquationType>::do_kinetic_L2(const Time t, const State &u
 
 
   // Energy = <u^2>/2
-  ener = GMTK::energy(grid, ku, utmp, TRUE, FALSE);
+  lmax[0] = GMTK::energy(grid, ku, utmp, FALSE, FALSE);
  
   // Enstrophy = <omega^2>/2
+  lmax[1] = 0.0;
   if ( ku_.size() == 1 ) {
     for ( GINT j=0; j<ndim; j++ ) {
       GMTK::grad<GFTYPE>(*grid_, *ku_[0], j+1, utmp, *utmp[2]);
       utmp[2]->pow(2);
-      enst += grid_->integrate(*utmp[2],*utmp[0]); 
-      enst *= 0.5*grid.ivolume();
+      lmax[1] += grid_->integrate(*utmp[2],*utmp[0], isglobal); 
     }
+    lax[1] *= 0.5*grid.ivolume();
   }
   else {
-    enst = GMTK::enstrophy(grid, ku, utmp, TRUE, FALSE);
+    lmax[1] = GMTK::enstrophy(grid, ku, utmp, FALSE, FALSE);
   }
 
   // Energy injection = <f.u>
-  fv = GMTK::energyinj(grid, ku, utmp, TRUE, FALSE);
+  lmax[2] = GMTK::energyinj(grid, ku, utmp, TRUE, FALSE);
 
   // Helicity = <u.omega>
-  hel = GMTK::helicity(grid, ku, utmp, TRUE, FALSE);
+  lmax[3] = GMTK::helicity(grid, ku, utmp, FALSE, FALSE);
 
   // Relative helicity = <u.omega/(|u|*|omega|)>
-  rhel = GMTK::relhelicity(grid, ku, utmp, TRUE, FALSE);
+  lmax[4] = GMTK::relhelicity(grid, ku, utmp, FALSE, FALSE);
 
+  // Gather final max's:
+  GComm::Allreduce(lmax.data(), gmax.data(), 5, T2GCDatatype<GFTYPE>(), GC_OP_SUM, grid_->get_comm());
+  ener = gmax[0]; enst = gmax[1]; fv = gmax[2]; hel = gmax[3]; rhel = gmax[4];
 
   // Print data to file:
   std::ifstream itst;
