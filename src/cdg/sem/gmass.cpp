@@ -6,9 +6,9 @@
 // Derived From : GLinOp
 //==================================================================================
 
-#include <stdlib.h>
-#include <memory.h>
-#include <math.h>
+#include <cstdlib>
+#include <memory>
+#include <cmath>
 #include "gmass.hpp"
 #include "gtmatrix.hpp"
 

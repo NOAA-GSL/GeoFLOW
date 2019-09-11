@@ -13,7 +13,7 @@
 
 #include <cstdlib>
 #include <iostream>
-#include <string.h>
+#include <string>
 
 #if defined(_G_USE_MPI)
 #  include "mpi.h"

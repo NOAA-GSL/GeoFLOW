@@ -10,7 +10,7 @@
 #define MORTON_KEYGEN_HPP
 
 #include "gtypes.h"
-#include <stdlib.h>
+#include <cstdlib>
 #include "gtpoint.hpp"
 #include "gkeygen.hpp"
 #include "gbitblock.hpp"

@@ -8,7 +8,7 @@
 
 #include "gexec.h"
 #include "gtypes.h"
-#include <stdio.h>
+#include <cstdio>
 #include <unistd.h>
 #include <iostream>
 #include <memory>
@@ -18,7 +18,7 @@
 #include "gexrk_stepper.hpp"
 
 #if defined(_G_USE_GPTL)
-    #include <gptl.h>
+    #include "gptl.h"
 #endif
 
 typedef GTVector<GTVector<GFTYPE>*> State;

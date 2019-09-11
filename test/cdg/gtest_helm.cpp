@@ -8,10 +8,10 @@
 
 #include "gexec.h"
 #include "gtypes.h"
-#include <stdio.h>
+#include <cstdio>
 #include <unistd.h>
 #include <iostream>
-#include <gptl.h>
+#include "gptl.h"
 #include <memory>
 #include <cstdlib>
 #include <cassert>

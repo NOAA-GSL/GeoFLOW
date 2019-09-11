@@ -10,7 +10,7 @@
 //==================================================================================
 #include <iostream>
 #include <fstream>
-#include <stdio.h>
+#include <cstdio>
 #include "gmm.h"
 using namespace GMM;
 

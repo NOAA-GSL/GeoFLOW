@@ -7,10 +7,10 @@
 //==================================================================================
 #include "gexec.h"
 #include "gtypes.h"
-#include <stdio.h>
+#include <cstdio>
 #include <unistd.h>
 #include <iostream>
-#include <gptl.h>
+#include "gptl.h"
 #include <random>
 #include "gcomm.hpp"
 #include "gtvector.hpp"

@@ -29,9 +29,9 @@
 
 #include "gtypes.h"
 #include <functional>
-#include <stdlib.h>
-#include <memory.h>
-#include <math.h>
+#include <cstdlib>
+#include <memory>
+#include <cmath>
 #include "gtvector.hpp"
 #include "gdd_base.hpp"
 #include "ggrid.hpp"

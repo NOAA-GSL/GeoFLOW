@@ -6,11 +6,11 @@
 // Derived From : none.
 //==================================================================================
 
-#include <stdio.h>
+#include <cstdio>
 #include <unistd.h>
 #include <iostream>
 #include <vector>
-#include <gptl.h>
+#include "gptl.h"
 #include "gexec.h"
 #include "ggfx.hpp"
 

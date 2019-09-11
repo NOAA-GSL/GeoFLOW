@@ -15,7 +15,7 @@
 #include "configure.hpp"
 
 #if defined(_G_USE_GPTL)
-  #include <gptl.h>
+  #include "gptl.h"
 #endif
 
 // Following is a list of preprocessor variables that may be set:

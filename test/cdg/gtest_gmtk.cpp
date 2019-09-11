@@ -6,7 +6,7 @@
 // Derived From : none.
 //==================================================================================
 
-#include <stdio.h>
+#include <cstdio>
 #include <unistd.h>
 #include <iostream>
 #include <vector>
@@ -19,7 +19,7 @@
 #include "gllbasis.hpp"
 
 #if defined(_G_USE_GPTL)
-    #include <gptl.h>
+    #include "gptl.h"
 #endif
 
 int main(int argc, char **argv)

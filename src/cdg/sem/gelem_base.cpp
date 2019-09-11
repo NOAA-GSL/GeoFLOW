@@ -29,9 +29,9 @@
 //
 // [Note that in 2d, we use just the bottom plane.]
 //==================================================================================
-#include <stdlib.h>
-#include <memory.h>
-#include <math.h>
+#include <cstdlib>
+#include <memory>
+#include <cmath>
 #include "gelem_base.hpp"
 #include "gshapefcn_embed.hpp"
 #include "gshapefcn_hostd.hpp"

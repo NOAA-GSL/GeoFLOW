@@ -18,6 +18,7 @@ set(test_cdg_files
 		# gtest_gll.cpp
 		# gtest_gmm.cpp
 		# gtest_gmtk.cpp
+		  gtest_gtvector.cpp
 		# gtest_helm.cpp
 		# gtest_mass.cpp
 		# gtest_morton.cpp
@@ -32,16 +33,19 @@ set(test_cdg_files
 #
 # Build list of compiler options for tests
 #
-set(compiler_options "$<$<CXX_COMPILER_ID:AppleClang>:-Wno-comment>"
-		             "$<$<BOOL:${OpenMP_FOUND}>:${OpenMP_CXX_FLAGS}>"
-		             "$<$<BOOL:${MPI_CXX_FOUND}>:${MPI_CXX_FLAGS}>" )
+set(compiler_options 
+		"$<$<CXX_COMPILER_ID:AppleClang>:-Wno-comment>"
+		"$<$<BOOL:${OpenMP_FOUND}>:${OpenMP_CXX_FLAGS}>"
+	)
 		       
 # Set include headers unique to testing
 set(include_headers "")
 
 # Set libraries the test need
 # - Gets library include paths from here
-set(linked_libraries tbox cdg Boost::boost)
+set(linked_libraries 
+		cdg 
+	)
 		             
 #
 # Loop over each test building and adding to ctest

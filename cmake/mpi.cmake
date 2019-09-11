@@ -8,7 +8,7 @@ set(CMAKE_REQUIRED_INCLUDES ${MPI_CXX_INCLUDE_PATH})
 set(CMAKE_REQUIRED_LIBRARIES ${MPI_CXX_LIBRARIES})
 
 check_cxx_source_compiles("
-#include <mpi.h>
+#include "mpi.h"
 int main(){
 
 	MPI_Init(NULL, NULL);

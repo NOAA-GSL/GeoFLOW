@@ -7,7 +7,8 @@
 // Copyright    : Copyright 2018. Colorado State University. All rights reserved
 // Derived From : none.
 //==================================================================================
-#include <math.h>
+#include <cmath>
+#include <cstring>
 #include "gbitblock.hpp"
 
 

@@ -24,9 +24,9 @@
 // Copyright    : Copyright 2019. Colorado State University. All rights reserved
 // Derived From : EquationBase.
 //==================================================================================
-#include <stdlib.h>
-#include <memory.h>
-#include <math.h>
+#include <cstdlib>
+#include <memory>
+#include <cmath>
 #include "gab.hpp"
 #include "gext.hpp"
 #include "gbdf.hpp"

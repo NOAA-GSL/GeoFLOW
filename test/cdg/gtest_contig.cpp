@@ -15,7 +15,7 @@
 #include <vector>
 #include <list>
 #include <iterator>
-#include <gptl.h>
+#include "gptl.h"
 #if defined(USE_PAPI)
 #include <papi.h>
 #endif

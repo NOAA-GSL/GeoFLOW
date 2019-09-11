@@ -9,7 +9,7 @@
 #include "gtvector.hpp"
 #include "gtstlvec.hpp"
 #include <unistd.h>
-#include <gptl.h>
+#include "gptl.h"
 
 int main(int argc, char* argv[])
 {

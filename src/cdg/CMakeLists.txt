@@ -28,8 +28,7 @@ target_compile_options(cdg
 	PRIVATE
 		"$<$<CXX_COMPILER_ID:AppleClang>:-Wno-comment>"
 		"$<$<BOOL:${OpenMP_FOUND}>:${OpenMP_CXX_FLAGS}>"
-		"$<$<BOOL:${MPI_CXX_FOUND}>:${MPI_CXX_FLAGS}>"	
-)
+	)
 
 # Note: The configure.hpp file is within ${MY_INSTALL_SRCDIR}
 # until it gets installed to ${MY_INSTALL_INCDIR} at the end.
@@ -42,16 +41,14 @@ target_include_directories(cdg
 		"$<$<BOOL:${MPI_CXX_FOUND}>:${MPI_CXX_INCLUDE_PATH}>"
 		"$<$<BOOL:${USE_PAPI}>:${PAPI_INC_PATH}>"
 		"$<$<BOOL:${USE_GPTL}>:${GPTL_INC_PATH}>"
-)
+	)
 
 target_link_libraries(cdg 
-	PRIVATE
+	PUBLIC
 		tbox
-		"$<$<BOOL:${OpenMP_FOUND}>:${OpenMP_CXX_LIBRARIES}>"
-		"$<$<BOOL:${MPI_CXX_FOUND}>:${MPI_CXX_LIBRARIES}>"
 		"$<$<BOOL:${USE_PAPI}>:${PAPI_LIB_PATH}>"
 		"$<$<BOOL:${USE_GPTL}>:${GPTL_LIB_PATH}>"
-)
+	)
 
 # Install public headers
 install(

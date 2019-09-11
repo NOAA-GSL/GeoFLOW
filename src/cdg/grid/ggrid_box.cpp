@@ -7,9 +7,9 @@
 // Copyright    : Copyright 2018. Colorado State University. All rights reserved
 // Derived From : none.
 //==================================================================================
-#include <stdlib.h>
-#include <memory.h>
-#include <math.h>
+#include <cstdlib>
+#include <memory>
+#include <cmath>
 #include "gcomm.hpp"
 #include "geoflow.hpp"
 #include "ggrid_box.hpp"

@@ -9,7 +9,7 @@
 #define _GIO_H
 
 #include "gtypes.h"
-#include <stdio.h>
+#include <cstdio>
 #include <iostream>
 #include <cstdlib>
 #include <cassert>

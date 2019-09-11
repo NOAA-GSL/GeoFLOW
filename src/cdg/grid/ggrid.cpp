@@ -18,7 +18,7 @@
 #include "tbox/error_handler.hpp"
 
 #if defined(_G_USE_GPTL)
-  #include <gptl.h>
+  #include "gptl.h"
 #endif
 
 //**********************************************************************************

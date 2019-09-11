@@ -16,9 +16,9 @@
 // Derived From : GLinOp
 //==================================================================================
 
-#include <stdlib.h>
-#include <memory.h>
-#include <math.h>
+#include <cstdlib>
+#include <memory>
+#include <cmath>
 #include "ghelmholtz.hpp"
 #include "gtmatrix.hpp"
 #include "gmtk.hpp"

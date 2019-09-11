@@ -12,7 +12,7 @@
 #if !defined(GKEYGEN_HPP)
 #define GKEYGEN_HPP
 
-#include <stdlib.h>
+#include <cstdlib>
 #include "gtypes.h"
 #include "gtpoint.hpp"
 #include "gtvector.hpp"

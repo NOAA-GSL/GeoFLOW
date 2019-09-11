@@ -5,10 +5,10 @@
 // Derived From : GGrid.
 //==================================================================================
 
-#include <stdlib.h>
-#include <memory.h>
-#include <math.h>
-#include <omp.h>
+#include <cstdlib>
+#include <memory>
+#include <cmath>
+#include "omp.h"
 #include "geoflow.hpp"
 #include "gspecbdy_factory.hpp"
 #include "gelem_base.hpp"

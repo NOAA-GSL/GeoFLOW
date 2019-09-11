@@ -11,7 +11,7 @@
 #if !defined(GBITBLOCK_HPP)
 #define GBITBLOCK_HPP
 #include "gtypes.h"
-#include <string.h>
+#include <string>
 #include "gtvector.hpp"
 
 

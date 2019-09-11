@@ -8,8 +8,8 @@
 
 #include "gexec.h"
 #include "gtypes.h"
-#include <stdio.h>
-#include <math.h>
+#include <cstdio>
+#include <cmath>
 #include <unistd.h>
 #include <iostream>
 #include <memory>
@@ -34,7 +34,7 @@
 #include "gtools.h"
 
 #if defined(_G_USE_GPTL)
-    #include <gptl.h>
+    #include "gptl.h"
 #endif
 
 using namespace geoflow::tbox;

@@ -6,7 +6,7 @@
 // Derived From : none.
 //==================================================================================
 
-#include <math.h>
+#include <cmath>
 #include <type_traits>
 #include <cassert>
 #include <limits>

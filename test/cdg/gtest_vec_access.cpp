@@ -6,11 +6,11 @@
 // Derived From : none.
 //==================================================================================
 
-#include <stdio.h>
+#include <cstdio>
 #include <unistd.h>
 #include <iostream>
 #include <vector>
-#include <gptl.h>
+#include "gptl.h"
 #include "gtvector.hpp"
 
 int main(int argc, char **argv)

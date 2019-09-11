@@ -13,10 +13,10 @@
 // Copyright    : Copyright 2018. Colorado State University. All rights reserved
 // Derived From : GNBasis
 //==================================================================================
-#include <stdlib.h>
-#include <memory.h>
-#include <math.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <memory>
+#include <cmath>
+#include <cstdio>
 #include "gllbasis.hpp"
 
 

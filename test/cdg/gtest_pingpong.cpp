@@ -8,13 +8,13 @@
 // Derived From : none.
 //==================================================================================
 #include <sys/stat.h>
-#include <stdio.h>
+#include <cstdio>
 #include <unistd.h>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <vector>
-#include <gptl.h>
+#include "gptl.h"
 #include <mpi.h>
 #include "gcomm.hpp"
 #include "gtvector.hpp"

@@ -32,10 +32,10 @@
 // Modifications:
 //************************************************************************************//
 #include "gregelem.hpp"
-#include <stdlib.h>
-#include <memory.h>
-#include <math.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <memory>
+#include <cmath>
+#include <cstdio>
 #include "gcutils.hpp"
 
 //************************************************************************************

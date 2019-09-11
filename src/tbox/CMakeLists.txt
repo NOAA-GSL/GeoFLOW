@@ -18,17 +18,13 @@ target_sources(tbox
 
 target_compile_features(tbox
 	PUBLIC
-		cxx_alias_templates
-	PRIVATE
-		cxx_nullptr	
-		cxx_static_assert
+		cxx_std_11
 )
 
 target_compile_options(tbox 
 	PRIVATE
 		"$<$<CXX_COMPILER_ID:AppleClang>:-Wno-comment>"
 		"$<$<BOOL:${OpenMP_FOUND}>:${OpenMP_CXX_FLAGS}>"
-		"$<$<BOOL:${MPI_CXX_FOUND}>:${MPI_CXX_FLAGS}>"	
 )
 
 # Note: The configure.hpp file is within ${MY_INSTALL_SRCDIR}
@@ -45,7 +41,6 @@ target_include_directories(tbox
 target_link_libraries(tbox 
 	PRIVATE
 		"${Boost_LIBRARIES}"
-		"$<$<BOOL:${OpenMP_FOUND}>:${OpenMP_CXX_LIBRARIES}>"
 		"$<$<BOOL:${MPI_CXX_FOUND}>:${MPI_CXX_LIBRARIES}>"
 )
 
