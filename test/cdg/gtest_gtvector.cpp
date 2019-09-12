@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
     v[2] = 7;
     v[3] = 9;
 
-    v = d + e;
+    v = d * 3;
 
     return 0;
 }

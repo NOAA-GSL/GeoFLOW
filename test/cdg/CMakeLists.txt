@@ -18,6 +18,7 @@ set(test_cdg_files
 		# gtest_gll.cpp
 		# gtest_gmm.cpp
 		# gtest_gmtk.cpp
+		  gtest_gtmatrix.cpp
 		  gtest_gtvector.cpp
 		# gtest_helm.cpp
 		# gtest_mass.cpp

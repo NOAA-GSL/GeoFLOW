@@ -8,9 +8,10 @@
 // Copyright   : Copyright 2018. Colorado State University. All rights reserved
 // Derived from: none.
 //==================================================================================
-#include "gtvector.hpp"
-#include "gtmatrix.hpp"
+
 #include "gmtk.hpp"
+
+#include <cassert>
 
 
 //**********************************************************************************
@@ -812,6 +813,53 @@ template<class T> void GTVector<T>::transpose(GSIZET n)
   }
 } // end, method transpose
 
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : operator +
+// DESC   : addition of vector and constant, create new vector
+// ARGS   : GTVector &
+// RETURNS: void
+//**********************************************************************************
+template<class T>
+GTVector<T>
+GTVector<T>::operator+(T b)
+{
+    GTVector ans(*this);
+    ans += b;
+    return ans;
+} // end, operator+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : operator -
+// DESC   : subtraction of vector and constant, create new vector
+// ARGS   : GTVector &
+// RETURNS: void
+//**********************************************************************************
+template<class T>
+GTVector<T>
+GTVector<T>::operator-(T b)
+{
+    GTVector ans(*this);
+    ans -= b;
+    return ans;
+} // end, operator-
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : operator *
+// DESC   : product of vector and constant, create new vector
+// ARGS   : GTVector &
+// RETURNS: void
+//**********************************************************************************
+template<class T>
+GTVector<T>
+GTVector<T>::operator*(T b)
+{
+    GTVector ans(*this);
+    ans *= b;
+    return ans;
+} // end, operator*
 
 //**********************************************************************************
 //**********************************************************************************
@@ -821,8 +869,8 @@ template<class T> void GTVector<T>::transpose(GSIZET n)
 // RETURNS: GTVector<T>&
 //**********************************************************************************
 template<class T>
-GTVector<T>&
-GTVector<T>::operator+(GTVector<T> &obj) 
+GTVector<T>
+GTVector<T>::operator+(GTVector &obj)
 {
   return this->add_impl_(obj, typename std::is_floating_point<T>::type());
 } // end, operator+
@@ -836,10 +884,24 @@ GTVector<T>::operator+(GTVector<T> &obj)
 // RETURNS: GTVector<T>&
 //**********************************************************************************
 template<class T>
-GTVector<T>&
-GTVector<T>::operator-(GTVector<T> &obj) 
+GTVector<T>
+GTVector<T>::operator-(GTVector &obj)
 {
   return this->sub_impl_(obj, typename std::is_floating_point<T>::type());
+} // end, operator-
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : operator *
+// DESC   :
+// ARGS   : GTVector &
+// RETURNS: GTVector<T>&
+//**********************************************************************************
+template<class T>
+GTVector<T>
+GTVector<T>::operator*(GTVector &obj)
+{
+  return this->mul_impl_(obj, typename std::is_floating_point<T>::type());
 } // end, operator-
 
 //**********************************************************************************
@@ -908,31 +970,6 @@ GTVector<T>::operator*=(T b)
 
 } // end, operator*= (1)
 
-//**********************************************************************************
-//**********************************************************************************
-// METHOD : operator * 
-// DESC   : product of vector and constant, create new vector
-// ARGS   : GTVector &
-// RETURNS: void
-//**********************************************************************************
-template<class T>
-GTVector<T>&
-GTVector<T>::operator*(T b)
-{
-  GTVector<T> *vret = new GTVector<T>(gindex_);
-  GLLONG j;
-  for ( j=this->gindex_.beg(); j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
-    (*vret)[j] = this->data_[j] * b;
-  }
-
-  #if defined(_G_AUTO_UPDATE_DEV)
-  vret->updatedev();
-  #endif
-
-  return *vret;
-
-} // end, operator* 
-
 
 //**********************************************************************************
 //**********************************************************************************
@@ -944,9 +981,8 @@ GTVector<T>::operator*(T b)
 #pragma acc routine vector
 template<class T>
 void
-GTVector<T>::operator+=(GTVector<T> &obj)
+GTVector<T>::operator+=(GTVector &obj)
 {
-
   for ( GLLONG j=this->gindex_.beg(); j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
     this->data_[j] += obj[j-this->gindex_.beg()];
   }
@@ -968,7 +1004,7 @@ GTVector<T>::operator+=(GTVector<T> &obj)
 #pragma acc routine vector
 template<class T>
 void
-GTVector<T>::operator-=(GTVector<T> &b)
+GTVector<T>::operator-=(GTVector &b)
 {
 
   for ( GLLONG j=this->gindex_.beg(); j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
@@ -991,7 +1027,7 @@ GTVector<T>::operator-=(GTVector<T> &b)
 //**********************************************************************************
 template<class T>
 void
-GTVector<T>::operator*=(GTVector<T> &b)
+GTVector<T>::operator*=(GTVector &b)
 {
   GLLONG j;
   T *p = b.data();
@@ -2268,15 +2304,15 @@ GTVector<T>::sortincreasing(GTVector<GSIZET> &isort)
 // RETURNS: GTVector &
 //**********************************************************************************
 template<class T>
-GTVector<T>&
+GTVector<T>
 GTVector<T>::add_impl_(GTVector<T> &obj, std::false_type d) 
 {
-  GTVector<T> *vret = new GTVector<T> (this->gindex_);
+  GTVector vret(this->gindex_);
 
   T a = static_cast<T>(1);
   T b = static_cast<T>(1);
   for ( GLLONG j=this->gindex_.beg(); j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
-      (*vret)[j] = this->data_[j] + obj[j];
+      vret[j] = this->data_[j] + obj[j];
   } 
   
 
@@ -2284,7 +2320,7 @@ GTVector<T>::add_impl_(GTVector<T> &obj, std::false_type d)
   vret->updatedev();
   #endif
 
-  return *vret;
+  return vret;
 } // end, add_impl_
 
 //**********************************************************************************
@@ -2295,20 +2331,20 @@ GTVector<T>::add_impl_(GTVector<T> &obj, std::false_type d)
 // RETURNS: GTVector &
 //**********************************************************************************
 template<class T>
-GTVector<T>&
-GTVector<T>::add_impl_(GTVector<T> &obj, std::true_type d) 
+GTVector<T>
+GTVector<T>::add_impl_(GTVector &obj, std::true_type d)
 {
-  GTVector<T> *vret = new GTVector<T> (this->gindex_);
+  GTVector vret(this->gindex_);
   
   T a = static_cast<T>(1);
   T b = static_cast<T>(1);
-  GMTK::add(*vret, *this, obj, a, b);
+  GMTK::add(vret, *this, obj, a, b);
 
   #if defined(_G_AUTO_UPDATE_DEV)
-  vret->updatedev();
+      vret.updatedev();
   #endif
 
-  return *vret;
+  return vret;
 } // end, add_impl_
 
 //**********************************************************************************
@@ -2319,23 +2355,23 @@ GTVector<T>::add_impl_(GTVector<T> &obj, std::true_type d)
 // RETURNS: GTVector &
 //**********************************************************************************
 template<class T>
-GTVector<T>&
-GTVector<T>::sub_impl_(GTVector<T> &obj, std::false_type d)
+GTVector<T>
+GTVector<T>::sub_impl_(GTVector &obj, std::false_type d)
 {
-  GTVector<T> *vret = new GTVector<T> (this->gindex_);
+  GTVector vret(this->gindex_);
 
   T a = static_cast<T>(1);
   T b = static_cast<T>(-1);
   GLLONG j;
   for ( j=this->gindex_.beg(); j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
-    (*vret)[j] = this->data_[j] - obj[j];
+    vret[j] = this->data_[j] - obj[j];
   }
 
   #if defined(_G_AUTO_UPDATE_DEV)
-  vret->updatedev();
+      vret.updatedev();
   #endif
 
-  return *vret;
+  return vret;
 } // end, sub_impl_
 
 
@@ -2347,22 +2383,63 @@ GTVector<T>::sub_impl_(GTVector<T> &obj, std::false_type d)
 // RETURNS: GTVector &
 //**********************************************************************************
 template<class T>
-GTVector<T>&
-GTVector<T>::sub_impl_(GTVector<T> &obj, std::true_type d)
+GTVector<T>
+GTVector<T>::sub_impl_(GTVector &obj, std::true_type d)
 {
-  GTVector<T> *vret = new GTVector<T> (this->gindex_);
+  GTVector vret(this->gindex_);
 
   T a = static_cast<T>(1);
   T b = static_cast<T>(-1);
-  GMTK::add(*vret, *this, obj, a, b);
+  GMTK::add(vret, *this, obj, a, b);
 
   #if defined(_G_AUTO_UPDATE_DEV)
-  vret->updatedev();
+      vret.updatedev();
   #endif
 
-  return *vret;
+  return vret;
 } // end, sub_impl_
 
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : mul_impl_
+// DESC   :
+// ARGS   : GTVector &
+// RETURNS: GTVector &
+//**********************************************************************************
+template<class T>
+GTVector<T>
+GTVector<T>::mul_impl_(GTVector &obj, std::false_type d)
+{
+  GTVector vret(this->gindex_);
+
+  T a = static_cast<T>(1);
+  T b = static_cast<T>(-1);
+  GLLONG j;
+  for ( j=this->gindex_.beg(); j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
+    vret[j] = this->data_[j] * obj[j];
+  }
+
+  #if defined(_G_AUTO_UPDATE_DEV)
+      vret.updatedev();
+  #endif
+
+  return vret;
+} // end, sub_impl_
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : mul_impl_
+// DESC   :
+// ARGS   : GTVector &
+// RETURNS: GTVector &
+//**********************************************************************************
+template<class T>
+GTVector<T>
+GTVector<T>::mul_impl_(GTVector &obj, std::true_type d)
+{
+    return mul_impl_(obj,std::false_type());
+} // end, sub_impl_
 
 //**********************************************************************************
 //**********************************************************************************

@@ -16,12 +16,13 @@
 #define _GTVECTOR_DECL_HPP
 
 #include "gtypes.h"
+#include "gindex.hpp"
+#include "cff_blas.h"
+
 #include <cstdlib>
 #include <limits>
 #include <iostream>
 #include <vector>
-#include "gindex.hpp"
-#include "cff_blas.h"
 
 #if !defined(_G_VEC_CACHE_SIZE)
   # define _G_VEC_CACHE_SIZE 16
@@ -82,7 +83,7 @@ template <class T> class GTVector
     void updatehost();
     void updatedev();
 
-inline   T &operator[](const GSIZET i) {
+    T& operator[](const GSIZET i) {
     #if defined(_G_BOUNDS_CHK)
       const char serr[] = "GTVector<T>::operator[]: ";
       if ( i+gindex_.beg() > gindex_.end() ) {
@@ -93,7 +94,7 @@ inline   T &operator[](const GSIZET i) {
       return data_[i+gindex_.beg()];
     };
 
-inline    T operator[](const GSIZET i) const {
+    T operator[](const GSIZET i) const {
     #if defined(_G_BOUNDS_CHK)
       const char serr[] = "GTVector<T>::operator[] const: ";
       if ( i+gindex_.beg() > gindex_.end() ) {
@@ -101,15 +102,23 @@ inline    T operator[](const GSIZET i) const {
         while(1){}; exit(1);
       }
     #endif
-      T ret = data_[i+gindex_.beg()];
-      return ret;
+      return data_[i+gindex_.beg()];
     };
 
+    #pragma acc routine vector
+    GTVector       operator+(T b);
+    #pragma acc routine vector
+    GTVector       operator-(T b);
+    #pragma acc routine vector
+    GTVector       operator*(T b);
 
     #pragma acc routine vector 
-    GTVector<T>       &operator+(GTVector<T> &b);
+    GTVector       operator+(GTVector &b);
+    #pragma acc routine vector
+    GTVector       operator-(GTVector &b);
     #pragma acc routine vector 
-    GTVector<T>       &operator-(GTVector<T> &b);
+    GTVector       operator*(GTVector &b);
+
 
     #pragma acc routine vector
     void               operator+=(T b);
@@ -117,15 +126,13 @@ inline    T operator[](const GSIZET i) const {
     void               operator-=(T b);
     #pragma acc routine vector
     void               operator*=(T b);
-    #pragma acc routine vector
-    GTVector<T>       &operator*(T b);
-  
+
     #pragma acc routine vector 
-    void               operator+=(GTVector<T> &b);
+    void               operator+=(GTVector &b);
     #pragma acc routine vector
-    void               operator-=(GTVector<T> &b);
+    void               operator-=(GTVector &b);
     #pragma acc routine vector
-    void               operator*=(GTVector<T> &b);
+    void               operator*=(GTVector &b);
 
 
     #pragma acc routine vector
@@ -213,15 +220,19 @@ inline    T operator[](const GSIZET i) const {
 
 
   #pragma acc routine vector 
-  GTVector<T>& add_impl_(GTVector<T> &b, std::true_type);
+  GTVector add_impl_(GTVector &b, std::true_type);
   #pragma acc routine vector 
-  GTVector<T>& add_impl_(GTVector<T> &b, std::false_type);
+  GTVector add_impl_(GTVector &b, std::false_type);
   
   #pragma acc routine vector 
-  GTVector<T>& sub_impl_(GTVector<T> &b, std::true_type);
+  GTVector sub_impl_(GTVector &b, std::true_type);
   #pragma acc routine vector 
-  GTVector<T>& sub_impl_(GTVector<T> &b, std::false_type);
+  GTVector sub_impl_(GTVector &b, std::false_type);
 
+  #pragma acc routine vector
+  GTVector mul_impl_(GTVector &b, std::true_type);
+    #pragma acc routine vector
+  GTVector mul_impl_(GTVector &b, std::false_type);
 };
 
 
