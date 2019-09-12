@@ -23,11 +23,6 @@ target_sources(cdg
 )
 
 #
-# Request Fortran Linker
-#
-#set_property(TARGET cdg PROPERTY LINKER_LANGUAGE Fortran)
-
-#
 # Compiler standard required
 #
 option(CMAKE_CXX_STANDARD_REQUIRED TRUE)
@@ -49,7 +44,6 @@ target_compile_options(cdg
 	PRIVATE
 #		"$<$<CXX_COMPILER_ID:AppleClang>:-Wno-comment>"
 		"$<$<BOOL:${OpenMP_FOUND}>:${OpenMP_CXX_FLAGS}>"
-#		"$<$<COMPILE_LANGUAGE:Fortran>:-lquadmath>"
 	)
 
 #
@@ -78,7 +72,6 @@ target_link_libraries(cdg
 		"$<$<BOOL:${USE_PAPI}>:${PAPI_LIB_PATH}>"
 		"$<$<BOOL:${USE_GPTL}>:${GPTL_LIB_PATH}>"
 		"$<$<BOOL:${MPI_CXX_FOUND}>:${MPI_CXX_LIBRARIES}>"
-		"$<$<BOOL:${MPI_Fortran_FOUND}>:${MPI_Fortran_LIBRARIES}>"
 	)
 
 #

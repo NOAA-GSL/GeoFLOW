@@ -249,8 +249,12 @@ enum GStateCompType     {GSC_KINETIC=0, GSC_MAGNETIC, GSC_ACTIVE_SCALAR, GSC_PAS
   #define GError() printf("Error: %s; line: %d\n",__FILE__,__LINE__);
 #endif
 
-extern std::stringstream oss_global_;
-#define GPP(comm,a)    oss_global_ << a << std::endl; GComm::cout(comm,oss_global_.str().c_str()); oss_global_.str(std::string());
+#define GPP(comm,a)                                   \
+    do {                                              \
+        std::stringstream oss_global_;                \
+        oss_global_ << a << std::endl;                \
+        GComm::cout(comm,oss_global_.str().c_str());  \
+    } while(0)
 
 
 #endif // _G_TYPES_DEF

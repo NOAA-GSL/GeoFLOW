@@ -14,7 +14,6 @@
 #include "gtvector.hpp"
 #include "gtmatrix.hpp"
 
-std::stringstream oss_global_;
 
 #if 0   //!defined(_G_PRE_INSTANTIATION)
 #define _G_PRE_INSTANTIATION
