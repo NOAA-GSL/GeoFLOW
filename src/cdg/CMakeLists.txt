@@ -61,7 +61,7 @@ set (CMAKE_CXX_STANDARD 11) # good for only cmake v3+
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/gsrc_common.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/ginc_common.cmake)
 
-# Set test target soures. The sources
+# Set test target sources. The sources
 # the rest are in tests CDG_TEST_SRC:
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/gtests_src.cmake)
 
@@ -125,7 +125,6 @@ endif()
 # Add build targets:
 ########################################################################
 # First, add the main executable, if required to:
-# if required to:
 if (DO_GEOFLOW)
   message(STATUS "Process executable ${GEOFLOW_EXE}..." )
   add_executable(${GEOFLOW_EXE} ${CDG_SRC} ${GEOFLOW_SRC})
@@ -136,7 +135,7 @@ if (DO_GEOFLOW)
   install(TARGETS ${GEOFLOW_EXE} RUNTIME DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/../../bin)
 endif()
 
-# Add the tests executable, if required to:
+# Add the tests executables, if required to:
 if (DO_TESTS)
   foreach(cdgtests ${CDG_TEST_SRC})
     string(REPLACE ".cpp" "" GTMP ${cdgtests})
