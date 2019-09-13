@@ -94,7 +94,7 @@ template <class T> class GTVector
       return data_[i+gindex_.beg()];
     };
 
-    T operator[](const GSIZET i) const {
+    const T& operator[](const GSIZET i) const {
     #if defined(_G_BOUNDS_CHK)
       const char serr[] = "GTVector<T>::operator[] const: ";
       if ( i+gindex_.beg() > gindex_.end() ) {
@@ -106,33 +106,33 @@ template <class T> class GTVector
     };
 
     #pragma acc routine vector
-    GTVector       operator+(T b);
+    GTVector       operator+(const T b);
     #pragma acc routine vector
-    GTVector       operator-(T b);
+    GTVector       operator-(const T b);
     #pragma acc routine vector
-    GTVector       operator*(T b);
+    GTVector       operator*(const T b);
 
     #pragma acc routine vector 
-    GTVector       operator+(GTVector &b);
+    GTVector       operator+(const GTVector &b);
     #pragma acc routine vector
-    GTVector       operator-(GTVector &b);
+    GTVector       operator-(const GTVector &b);
     #pragma acc routine vector 
-    GTVector       operator*(GTVector &b);
+    GTVector       operator*(const GTVector &b);
 
 
     #pragma acc routine vector
-    void               operator+=(T b);
+    void               operator+=(const T b);
     #pragma acc routine vector
-    void               operator-=(T b);
+    void               operator-=(const T b);
     #pragma acc routine vector
-    void               operator*=(T b);
+    void               operator*=(const T b);
 
     #pragma acc routine vector 
-    void               operator+=(GTVector &b);
+    void               operator+=(const GTVector &b);
     #pragma acc routine vector
-    void               operator-=(GTVector &b);
+    void               operator-=(const GTVector &b);
     #pragma acc routine vector
-    void               operator*=(GTVector &b);
+    void               operator*=(const GTVector &b);
 
 
     #pragma acc routine vector
@@ -220,19 +220,19 @@ template <class T> class GTVector
 
 
   #pragma acc routine vector 
-  GTVector add_impl_(GTVector &b, std::true_type);
+  GTVector add_impl_(const GTVector &b, std::true_type);
   #pragma acc routine vector 
-  GTVector add_impl_(GTVector &b, std::false_type);
+  GTVector add_impl_(const GTVector &b, std::false_type);
   
   #pragma acc routine vector 
-  GTVector sub_impl_(GTVector &b, std::true_type);
+  GTVector sub_impl_(const GTVector &b, std::true_type);
   #pragma acc routine vector 
-  GTVector sub_impl_(GTVector &b, std::false_type);
+  GTVector sub_impl_(const GTVector &b, std::false_type);
 
   #pragma acc routine vector
-  GTVector mul_impl_(GTVector &b, std::true_type);
+  GTVector mul_impl_(const GTVector &b, std::true_type);
     #pragma acc routine vector
-  GTVector mul_impl_(GTVector &b, std::false_type);
+  GTVector mul_impl_(const GTVector &b, std::false_type);
 };
 
 

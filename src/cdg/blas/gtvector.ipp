@@ -822,7 +822,7 @@ template<class T> void GTVector<T>::transpose(GSIZET n)
 //**********************************************************************************
 template<class T>
 GTVector<T>
-GTVector<T>::operator+(T b)
+GTVector<T>::operator+(const T b)
 {
     GTVector ans(*this);
     ans += b;
@@ -838,7 +838,7 @@ GTVector<T>::operator+(T b)
 //**********************************************************************************
 template<class T>
 GTVector<T>
-GTVector<T>::operator-(T b)
+GTVector<T>::operator-(const T b)
 {
     GTVector ans(*this);
     ans -= b;
@@ -854,7 +854,7 @@ GTVector<T>::operator-(T b)
 //**********************************************************************************
 template<class T>
 GTVector<T>
-GTVector<T>::operator*(T b)
+GTVector<T>::operator*(const T b)
 {
     GTVector ans(*this);
     ans *= b;
@@ -870,7 +870,7 @@ GTVector<T>::operator*(T b)
 //**********************************************************************************
 template<class T>
 GTVector<T>
-GTVector<T>::operator+(GTVector &obj)
+GTVector<T>::operator+(const GTVector &obj)
 {
   return this->add_impl_(obj, typename std::is_floating_point<T>::type());
 } // end, operator+
@@ -885,7 +885,7 @@ GTVector<T>::operator+(GTVector &obj)
 //**********************************************************************************
 template<class T>
 GTVector<T>
-GTVector<T>::operator-(GTVector &obj)
+GTVector<T>::operator-(const GTVector &obj)
 {
   return this->sub_impl_(obj, typename std::is_floating_point<T>::type());
 } // end, operator-
@@ -899,7 +899,7 @@ GTVector<T>::operator-(GTVector &obj)
 //**********************************************************************************
 template<class T>
 GTVector<T>
-GTVector<T>::operator*(GTVector &obj)
+GTVector<T>::operator*(const GTVector &obj)
 {
   return this->mul_impl_(obj, typename std::is_floating_point<T>::type());
 } // end, operator-
@@ -913,7 +913,7 @@ GTVector<T>::operator*(GTVector &obj)
 //**********************************************************************************
 template<class T>
 void
-GTVector<T>::operator+=(T b)
+GTVector<T>::operator+=(const T b)
 {
   GLLONG j;
   for ( j=this->gindex_.beg(); j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
@@ -935,7 +935,7 @@ GTVector<T>::operator+=(T b)
 //**********************************************************************************
 template<class T>
 void
-GTVector<T>::operator-=(T b)
+GTVector<T>::operator-=(const T b)
 {
   GLLONG j;
   for ( j=this->gindex_.beg(); j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
@@ -957,7 +957,7 @@ GTVector<T>::operator-=(T b)
 //**********************************************************************************
 template<class T>
 void
-GTVector<T>::operator*=(T b)
+GTVector<T>::operator*=(const T b)
 {
   GLLONG j;
   for ( j=this->gindex_.beg(); j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
@@ -981,7 +981,7 @@ GTVector<T>::operator*=(T b)
 #pragma acc routine vector
 template<class T>
 void
-GTVector<T>::operator+=(GTVector &obj)
+GTVector<T>::operator+=(const GTVector &obj)
 {
   for ( GLLONG j=this->gindex_.beg(); j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
     this->data_[j] += obj[j-this->gindex_.beg()];
@@ -1004,7 +1004,7 @@ GTVector<T>::operator+=(GTVector &obj)
 #pragma acc routine vector
 template<class T>
 void
-GTVector<T>::operator-=(GTVector &b)
+GTVector<T>::operator-=(const GTVector &b)
 {
 
   for ( GLLONG j=this->gindex_.beg(); j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
@@ -1027,7 +1027,7 @@ GTVector<T>::operator-=(GTVector &b)
 //**********************************************************************************
 template<class T>
 void
-GTVector<T>::operator*=(GTVector &b)
+GTVector<T>::operator*=(const GTVector &b)
 {
   GLLONG j;
   T *p = b.data();
@@ -2305,7 +2305,7 @@ GTVector<T>::sortincreasing(GTVector<GSIZET> &isort)
 //**********************************************************************************
 template<class T>
 GTVector<T>
-GTVector<T>::add_impl_(GTVector<T> &obj, std::false_type d) 
+GTVector<T>::add_impl_(const GTVector<T> &obj, std::false_type d)
 {
   GTVector vret(this->gindex_);
 
@@ -2332,7 +2332,7 @@ GTVector<T>::add_impl_(GTVector<T> &obj, std::false_type d)
 //**********************************************************************************
 template<class T>
 GTVector<T>
-GTVector<T>::add_impl_(GTVector &obj, std::true_type d)
+GTVector<T>::add_impl_(const GTVector &obj, std::true_type d)
 {
   GTVector vret(this->gindex_);
   
@@ -2356,7 +2356,7 @@ GTVector<T>::add_impl_(GTVector &obj, std::true_type d)
 //**********************************************************************************
 template<class T>
 GTVector<T>
-GTVector<T>::sub_impl_(GTVector &obj, std::false_type d)
+GTVector<T>::sub_impl_(const GTVector &obj, std::false_type d)
 {
   GTVector vret(this->gindex_);
 
@@ -2384,7 +2384,7 @@ GTVector<T>::sub_impl_(GTVector &obj, std::false_type d)
 //**********************************************************************************
 template<class T>
 GTVector<T>
-GTVector<T>::sub_impl_(GTVector &obj, std::true_type d)
+GTVector<T>::sub_impl_(const GTVector &obj, std::true_type d)
 {
   GTVector vret(this->gindex_);
 
@@ -2408,7 +2408,7 @@ GTVector<T>::sub_impl_(GTVector &obj, std::true_type d)
 //**********************************************************************************
 template<class T>
 GTVector<T>
-GTVector<T>::mul_impl_(GTVector &obj, std::false_type d)
+GTVector<T>::mul_impl_(const GTVector &obj, std::false_type d)
 {
   GTVector vret(this->gindex_);
 
@@ -2436,7 +2436,7 @@ GTVector<T>::mul_impl_(GTVector &obj, std::false_type d)
 //**********************************************************************************
 template<class T>
 GTVector<T>
-GTVector<T>::mul_impl_(GTVector &obj, std::true_type d)
+GTVector<T>::mul_impl_(const GTVector &obj, std::true_type d)
 {
     return mul_impl_(obj,std::false_type());
 } // end, sub_impl_

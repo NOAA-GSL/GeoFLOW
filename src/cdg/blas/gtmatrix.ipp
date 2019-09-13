@@ -10,7 +10,6 @@
 //==================================================================================
 #include <limits>
 #include "cff_blas.h"
-#include "gtmatrix.hpp"
 #include "gmtk.hpp"
 
 #define GTMATRIX_ROTATE(a,i,j,k,l) g=a(i,j);h=a(k,l);a(i,j)=g-s*(h+g*tau);\
@@ -299,29 +298,37 @@ void  GTMatrix<T>::operator=(const GTVector<T> &v)
 
 } // end = operator(3)
 
-
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : operator *
-// DESC   : multiplies this by constant, and returns
-//          result, without destroying *this data
+// METHOD : operator +=
+// DESC   : Scalar self-addition: this += a, modifying member data
 // ARGS   : T scalar
-// RETURNS: product matrix
+// RETURNS: none
 //**********************************************************************************
 template<class T>
-GTMatrix<T> &GTMatrix<T>::operator*(T a) 
+void GTMatrix<T>::operator+=(const T a)
 {
   static_assert(std::is_arithmetic<T>::value,
-    "Invalid template type: GTMatrix<T>::operator*(T)");
+    "Invalid template type: GTMatrix<T>::operator+=(T)");
 
-  GTMatrix<T>   *mret = new GTMatrix<T>(n1_,n2_);
+  data_ += a;
+}
 
-  GTVector<T> &vdata = mret->data();
-  for ( GSIZET j=0; j<n1_*n2_; j++ ) vdata[j] = a*data_[j];
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : operator -=
+// DESC   : Scalar self-subtraction: this -= a, modifying member data
+// ARGS   : T scalar
+// RETURNS: none
+//**********************************************************************************
+template<class T>
+void GTMatrix<T>::operator-=(const T a)
+{
+  static_assert(std::is_arithmetic<T>::value,
+    "Invalid template type: GTMatrix<T>::operator+=(T)");
 
-  return *mret;
-
-} // end of * operator 
+  data_ -= a;
+}
 
 //**********************************************************************************
 //**********************************************************************************
@@ -332,15 +339,14 @@ GTMatrix<T> &GTMatrix<T>::operator*(T a)
 // RETURNS: product matrix
 //**********************************************************************************
 template<class T>
-void GTMatrix<T>::operator*=(T a) 
+void GTMatrix<T>::operator*=(const T a)
 {
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::operator*=(T)");
 
   data_ *= a;
 
-} // end of *= operator 
-
+} // end of *= operator
 
 //**********************************************************************************
 //**********************************************************************************
@@ -350,7 +356,7 @@ void GTMatrix<T>::operator*=(T a)
 // RETURNS: none
 //**********************************************************************************
 template<class T>
-void GTMatrix<T>::operator+=(GTMatrix<T> &a) 
+void GTMatrix<T>::operator+=(const GTMatrix<T> &a)
 {
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::operator+=(GTMatrix<T> &)");
@@ -366,34 +372,15 @@ void GTMatrix<T>::operator+=(GTMatrix<T> &a)
 
 }
 
-
-//**********************************************************************************
-//**********************************************************************************
-// METHOD : operator +=
-// DESC   : Scalar self-addition: this += a, modifying member data
-// ARGS   : T scalar
-// RETURNS: none
-//**********************************************************************************
-template<class T>
-void GTMatrix<T>::operator+=(T a) 
-{
-  static_assert(std::is_arithmetic<T>::value,
-    "Invalid template type: GTMatrix<T>::operator+=(T)");
-
-  data_ += a;
-
-}
-
-
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : operator -=
 // DESC   : Matrix subtraction : this -= a, modifying member data
 // ARGS   : GTMatrix &
-// RETURNS: GTMatrix 
+// RETURNS: GTMatrix
 //**********************************************************************************
 template<class T>
-void GTMatrix<T>::operator-=(GTMatrix<T> &a) 
+void GTMatrix<T>::operator-=(const GTMatrix<T> &a)
 {
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::operator-=(GTMatrix<T> &)");
@@ -411,30 +398,55 @@ void GTMatrix<T>::operator-=(GTMatrix<T> &a)
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD : operator *
+// DESC   : multiplies this by constant, and returns
+//          result, without destroying *this data
+// ARGS   : T scalar
+// RETURNS: product matrix
+//**********************************************************************************
+template<class T>
+GTMatrix<T> GTMatrix<T>::operator*(const T a)
+{
+  static_assert(std::is_arithmetic<T>::value,
+    "Invalid template type: GTMatrix<T>::operator*(T)");
+
+  GTMatrix mret(*this);
+  mret *= a;
+  return mret;
+
+} // end of * operator
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : operator * mat-vec
+// DESC   : matrix-vector product, returns product,
+//          without destroying *this data, for GFLOAT type
+// ARGS   : GTVector &
+// RETURNS: GTVector vector
+//**********************************************************************************
+template<class T>
+GTVector<T> GTMatrix<T>::operator*(const GTVector<T> &a)
+{
+  return this->matvec_impl_(a, typename std::is_floating_point<T>::type());
+} // end, method operator*
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD : operator +
 // DESC   : Matrix addition: this + a
 // ARGS   : GTMatrix &
 // RETURNS: GTMatrix 
 //**********************************************************************************
 template<class T>
-GTMatrix<T> &GTMatrix<T>::operator+(GTMatrix<T> &a)
+GTMatrix<T>
+GTMatrix<T>::operator+(const GTMatrix &a)
 {
-
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::operator+(GTMatrix<T> &)");
 
-  #if defined(_G_BOUNDS_CHK)
-  if ( this->n1_ != a.dim(1) || this->n2_ !=a.dim(2) ) {
-    std::cout << "GTMatrix<T>::+: incompatible matrices"<< std::endl;
-    exit(1);
-  }
-  #endif
-
-  GTMatrix<T>  *mret=new GTMatrix<T>(n1_,n2_);
-
-  mret->data() = this->data() + a.data();
-
-  return *mret;
+  GTMatrix mret(*this);
+  mret += a;
+  return mret;
 
 } // operator+
 
@@ -446,27 +458,31 @@ GTMatrix<T> &GTMatrix<T>::operator+(GTMatrix<T> &a)
 // RETURNS: GTMatrix  &
 //**********************************************************************************
 template<class T>
-GTMatrix<T> &GTMatrix<T>::operator-(GTMatrix<T> &a)
+GTMatrix<T>
+GTMatrix<T>::operator-(const GTMatrix &a)
 {
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::operator-(GTMatrix<T> &)");
 
-  
-  #if defined(_G_BOUNDS_CHK)
-  if ( this->n1_ != a.dim(1) || this->n2_ !=a.dim(2) ) {
-    std::cout << "GTMatrix<T>::-: incompatible matrices"<< std::endl;
-    exit(1);
-  } 
-  #endif
-
-  GTMatrix<T>  *mret=new GTMatrix<T>(n1_,n2_);
-
-  mret->data() = this->data() - a.data();
-
-  return *mret;
-
+  GTMatrix mret(*this);
+  mret -= a;
+  return mret;
 } // operator-
 
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : operator * mat-mat
+// DESC   : Multiplies this by matrix m, and returns
+//          result, for GFLOAT types
+// ARGS   : GTMatrix a factor
+// RETURNS: GTMatrix product matrix
+//**********************************************************************************
+template<class T>
+GTMatrix<T>
+GTMatrix<T>::operator*(const GTMatrix<T> &a)
+{
+  return this->matmat_impl_(a, typename std::is_floating_point<T>::type());
+} // end, method operator*
 
 //**********************************************************************************
 //**********************************************************************************
@@ -2540,35 +2556,7 @@ void GTMatrix<T>::updatedev()
 } //nd of method updatedev
 
 
-//**********************************************************************************
-//**********************************************************************************
-// METHOD : operator * mat-vec
-// DESC   : matrix-vector product, returns product,
-//          without destroying *this data, for GFLOAT type
-// ARGS   : GTVector &
-// RETURNS: GTVector vector
-//**********************************************************************************
-template<class T>
-GTVector<T> &GTMatrix<T>::operator*(GTVector<T> &a)
-{
-  return this->matvec_impl_(a, typename std::is_floating_point<T>::type());
-} // end, method operator*
 
-
-//**********************************************************************************
-//**********************************************************************************
-// METHOD : operator * mat-mat
-// DESC   : Multiplies this by matrix m, and returns
-//          result, for GFLOAT types
-// ARGS   : GTMatrix a factor
-// RETURNS: GTMatrix product matrix
-//**********************************************************************************
-template<class T>
-GTMatrix<T> &GTMatrix<T>::operator*(GTMatrix<T> &a)
-{
-  return this->matmat_impl_(a, typename std::is_floating_point<T>::type());
-
-} // end, method operator*
 
 
 //**********************************************************************************
@@ -2581,17 +2569,17 @@ GTMatrix<T> &GTMatrix<T>::operator*(GTMatrix<T> &a)
 // RETURNS: GTMatrix &
 //**********************************************************************************
 template<class T>
-GTVector<T> &GTMatrix<T>::matvec_impl_(GTVector<T> &obj, std::true_type)
+GTVector<T> GTMatrix<T>::matvec_impl_(const GTVector<T> &obj, std::true_type)
 {
-  GTVector<T> *vret = new GTVector<T> (this->size(1));
+  GTVector<T> vret(this->size(1));
 
   GMTK::matvec_prod(*vret, *this, obj);
 
   #if defined(_G_AUTO_UPDATE_DEV)
-  vret->updatedev();
+      vret.updatedev();
   #endif
 
-  return *vret;
+  return vret;
 } // end, matvec_impl_ (1)
 
 
@@ -2605,22 +2593,22 @@ GTVector<T> &GTMatrix<T>::matvec_impl_(GTVector<T> &obj, std::true_type)
 // RETURNS: GTMatrix &
 //**********************************************************************************
 template<class T>
-GTVector<T> &GTMatrix<T>::matvec_impl_(GTVector<T> &obj, std::false_type)
+GTVector<T> GTMatrix<T>::matvec_impl_(const GTVector<T> &obj, std::false_type)
 {
-  GTVector<T> *vret = new GTVector<T> (this->size(1));
+  GTVector<T> vret(this->size(1));
 
   for ( GSIZET i=0; i<this->size(1); i++ ) {
-    (*vret)[i] = static_cast<T>(0);
+    vret[i] = static_cast<T>(0);
     for ( GSIZET j=0; j<this->size(2); j++ ) {
-      (*vret)[i] += (*this)(i,j)*obj[j];
+      vret[i] += (*this)(i,j)*obj[j];
     }
   }
 
   #if defined(_G_AUTO_UPDATE_DEV)
-  vret->updatedev();
+      vret->updatedev();
   #endif
 
-  return *vret;
+  return vret;
 } // end, matvec_impl_ (2)
 
 
@@ -2635,17 +2623,18 @@ GTVector<T> &GTMatrix<T>::matvec_impl_(GTVector<T> &obj, std::false_type)
 // RETURNS: GTMatrix &
 //**********************************************************************************
 template<class T>
-GTMatrix<T> &GTMatrix<T>::matmat_impl_(GTMatrix<T> &obj, std::true_type)
+GTMatrix<T>
+GTMatrix<T>::matmat_impl_(const GTMatrix &obj, std::true_type)
 {
-  GTMatrix<T> *mret = new GTMatrix<T> (this->size(1),obj.size(2));
+  GTMatrix mret(this->size(1),obj.size(2));
 
   GMTK::matmat_prod(*mret, *this, obj);
 
   #if defined(_G_AUTO_UPDATE_DEV)
-  vret->updatedev();
+      vret->updatedev();
   #endif
 
-  return *mret;
+  return mret;
 } // end, matmat_impl_ (1)
 
 
@@ -2660,26 +2649,27 @@ GTMatrix<T> &GTMatrix<T>::matmat_impl_(GTMatrix<T> &obj, std::true_type)
 // RETURNS: GTMatrix &
 //**********************************************************************************
 template<class T>
-GTMatrix<T> &GTMatrix<T>::matmat_impl_(GTMatrix<T> &obj, std::false_type)
+GTMatrix<T>
+GTMatrix<T>::matmat_impl_(const GTMatrix &obj, std::false_type)
 {
-  GTMatrix<T> *mret = new GTMatrix<T> (this->size(1),obj.size(2));
+  GTMatrix mret(this->size(1),obj.size(2));
 
   for ( GSIZET j=0; j<obj.size(2); j++ ) {
     for ( GSIZET i=0; i<this->size(1); i++ ) {
 
-      (*mret)(i,j) = 0.0;
+      mret(i,j) = 0.0;
       for ( GSIZET k=0; k<this->size(2); k++ ) {
-        (*mret)(i,j) += (*this)(i,k) * obj(k,j);
+        mret(i,j) += (*this)(i,k) * obj(k,j);
       }
 
     }
   }
 
   #if defined(_G_AUTO_UPDATE_DEV)
-  vret->updatedev();
+      vret->updatedev();
   #endif
 
-  return *mret;
+  return mret;
 } // end, matmat_impl_ (2)
 
 

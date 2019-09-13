@@ -52,16 +52,26 @@ public:
          GTMatrix<T>       &operator=(const GTMatrix<T> &) ;
          void               operator=(T);
          void               operator=(const GTVector<T> &);
-         void               operator+=(GTMatrix<T> &);
-         void               operator-=(GTMatrix<T> &);
-         void               operator+=(T);
-         GTMatrix<T>       &operator*(GTMatrix<T> &); // right multiplication: Matrix * Matrix
-         GTVector<T>       &operator*(GTVector<T> &); // right multiplication: Matrix * vector
-         GTMatrix<T>       &operator*(T);             // right multiplication: Matrix * const
-         void               operator*=(T);            // multiplication by const Mat *= const
 
-         GTMatrix<T>       &operator+(GTMatrix<T> &); // addition
-         GTMatrix<T>       &operator-(GTMatrix<T> &); // subtraction
+
+         void               operator+=(const T);
+         void               operator-=(const T);
+         void               operator*=(const T);            // multiplication by const Mat *= const
+
+         void               operator+=(const GTMatrix &);
+         void               operator-=(const GTMatrix &);
+
+         GTMatrix        operator*(const T);             // right multiplication: Matrix * const
+
+         GTVector<T>        operator*(const GTVector<T> &); // right multiplication: Matrix * Vector
+
+         GTMatrix        operator+(const GTMatrix &); // addition
+         GTMatrix        operator-(const GTMatrix &); // subtraction
+         GTMatrix        operator*(const GTMatrix &); // right multiplication: Matrix * Matrix
+
+
+
+
          GBOOL              transpose(GTMatrix<T> &);
          GBOOL              transpose(T *&, GSIZET nx, GSIZET ny);
 //       void               transpose();
@@ -142,6 +152,7 @@ public:
 
 
          inline GTVector<T> &data() { return this->data_; }
+         inline const GTVector<T> &data() const { return this->data_; }
          inline T *rowdata(GSIZET i) { return (this->data_.data()+i*n2_); }
          inline T *coldata(GSIZET j) { return (this->data_.data()+j*n1_); }
 
@@ -201,10 +212,10 @@ void              jacobi(GTVector<T> &d, GTMatrix<T> &v, GSIZET &nrot, GTMatrix<
 private:
 T                 dpythag(T a, T b);
 GSIZET            isamax(GSIZET n, T *sx, GSIZET  incx);
-GTVector<T>      &matvec_impl_(GTVector<T> &obj, std::true_type);
-GTVector<T>      &matvec_impl_(GTVector<T> &obj, std::false_type);
-GTMatrix<T>      &matmat_impl_(GTMatrix<T> &obj, std::true_type);
-GTMatrix<T>      &matmat_impl_(GTMatrix<T> &obj, std::false_type);
+GTVector<T>      matvec_impl_(const GTVector<T> &obj, std::true_type);
+GTVector<T>      matvec_impl_(const GTVector<T> &obj, std::false_type);
+GTMatrix<T>      matmat_impl_(const GTMatrix<T> &obj, std::true_type);
+GTMatrix<T>      matmat_impl_(const GTMatrix<T> &obj, std::false_type);
 
 // Private data:
 GSIZET            n1_;

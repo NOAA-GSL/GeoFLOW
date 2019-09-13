@@ -13,6 +13,7 @@
 #include "gspecbdy_factory.hpp"
 #include "gelem_base.hpp"
 #include "ggrid_icos.hpp"
+#include "gtpoint.hpp"
 
 using namespace std;
 
