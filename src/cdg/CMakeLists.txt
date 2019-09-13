@@ -1,7 +1,7 @@
 #==================================================================================
 # Module       : CMakeLists.txt
 # Date         : 8/16/19 (DLR)
-# Description  : GeoFIRE executable cmake file
+# Description  : GeoFLOW executable cmake file
 # Copyright    : Copyright 2019. Colorado State University. All rights reserved.
 #==================================================================================
 #
