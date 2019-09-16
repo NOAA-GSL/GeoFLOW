@@ -41,8 +41,11 @@ set(CMAKE_Fortran_FLAGS_RELEASE "-O2 ${EXTRA_FLAGS}")
 #
 # ======================== Compiler (MPI Parallel) ========================
 # Default: 
-# Use environment variables MPI_CC, MPI_CXX, MPI_FC, MPI_F90, etc.
-# > cmake -D MPI_CXX=/opt/openmpi/bin/mpiicc 
+# Use environment variables.
+#   - MPI_C_COMPILER
+#   - MPI_CXX_COMPILER 
+#   - MPI_Fortran_COMPILER
+# > cmake -D MPI_CXX_COMPILER=/opt/openmpi/bin/mpiicc 
 #
 set(MPI_C_FOUND                 FALSE )
 set(MPI_C_COMPILER              "mpiicc" )

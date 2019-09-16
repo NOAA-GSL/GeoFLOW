@@ -44,21 +44,23 @@ option(VERBOSE_CMAKE  "VERBOSE_CMAKE" ON)   # Verbose CMake Ouput
 #set(CMAKE_Fortran_FLAGS_DEBUG   "")
 #set(CMAKE_Fortran_FLAGS_RELEASE "")
 
-
 #
 # ======================== Compiler (MPI Parallel) ========================
 # Default: 
-# Use environment variables MPI_CC, MPI_CXX, MPI_FC, MPI_F90, etc.
-# > cmake -D MPI_CXX=/opt/openmpi/bin/mpiicc 
+# Use environment variables.
+#   - MPI_C_COMPILER
+#   - MPI_CXX_COMPILER 
+#   - MPI_Fortran_COMPILER
+# > cmake -D MPI_CXX_COMPILER=/opt/openmpi/bin/mpiicc 
 #
-#set(MPI_C_FOUND                 "" )
+#set(MPI_C_COMPILER              "" )
 #set(MPI_C_COMPILER              "" )
 #set(MPI_C_COMPILE_FLAGS         "" )
 #set(MPI_C_INCLUDE_PATH          "" )
 #set(MPI_C_LINK_FLAGS            "" )
 #set(MPI_C_LIBRARIES             "" )
 
-#set(MPI_CXX_FOUND               "" )
+#set(MPI_CXX_COMPILER            "" )
 #set(MPI_CXX_COMPILER            "" )
 #set(MPI_CXX_COMPILE_FLAGS       "" )
 #set(MPI_CXX_INCLUDE_PATH        "" )
@@ -66,7 +68,7 @@ option(VERBOSE_CMAKE  "VERBOSE_CMAKE" ON)   # Verbose CMake Ouput
 #set(MPI_CXX_LIBRARIES           "" )
 
 #set(MPI_Fortran_FOUND           "" )
-#set(MPI_Fortran_COMPILER        "" )
+#set(MPI_Fortran_FOUND           "" )
 #set(MPI_Fortran_COMPILE_FLAGS   "" )
 #set(MPI_Fortran_INCLUDE_PATH    "" )
 #set(MPI_Fortran_LINK_FLAGS      "" )

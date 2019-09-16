@@ -1,5 +1,5 @@
 ###################################################
-# Configuration file for GNU Compiler
+# Configuration file for PGI Compiler
 ###################################################
 
 #
@@ -22,27 +22,29 @@ if(DO_AUTO_PROF)
 endif(DO_AUTO_PROF)
 set(EXTRA_FLAGS "${ACC_FLAGS} ${INSTR_FLAGS}")
 
-set(CMAKE_C_COMPILER            "gcc")
-set(CMAKE_C_FLAGS               "-O0 -std=c++11 -finline-limit=2000 --param max-inline-insns-single=100000 -Winline ${EXTRA_FLAGS}")
-set(CMAKE_C_FLAGS_DEBUG         "-g -std=c++11 -finline-limit=2000 --param max-inline-insns-single=100000 -Winline ${EXTRA_FLAGS}")
-set(CMAKE_C_FLAGS_RELEASE       "-O0 -std=c++11 -finline-limit=2000 --param max-inline-insns-single=100000 -Winline ${EXTRA_FLAGS}")
+#set(CMAKE_C_COMPILER            "pgcc")
+#set(CMAKE_C_FLAGS               "-O2 -Minfo ${EXTRA_FLAGS}")
+#set(CMAKE_C_FLAGS_DEBUG         "-O0 -g -Minfo ${EXTRA_FLAGS}")
+#set(CMAKE_C_FLAGS_RELEASE       "-O2 -Minfo ${EXTRA_FLAGS}")
 
-set(CMAKE_CXX_COMPILER          "g++")
-set(CMAKE_CXX_FLAGS             "-O0 -finline-limit=2000 --param max-inline-insns-single=100000  -Winline ${EXTRA_FLAGS}")
-set(CMAKE_CXX_FLAGS_DEBUG       "-g -finline-limit=2000 --param max-inline-insns-single=100000  -Winline ${EXTRA_FLAGS}")
-set(CMAKE_CXX_FLAGS_RELEASE     "-O0 -finline-limit=2000 --param max-inline-insns-single=100000  -Winline ${EXTRA_FLAGS}")
+#set(CMAKE_CXX_COMPILER          "pg++")
+#set(CMAKE_CXX_FLAGS             "-O2 -std=c++11 -Minfo ${OMP_FLAGS} ${ACC_FLAGS ${INSTR_FLAGS}}")
+#set(CMAKE_CXX_FLAGS_DEBUG       "-O0 -g -std=c++11 -Minfo ${OMP_FLAGS} ${ACC_FLAGS ${INSTR_FLAGS}}")
+#set(CMAKE_CXX_FLAGS_RELEASE     "-O2 -std=c++11 -Minfo ${OMP_FLAGS} ${ACC_FLAGS ${INSTR_FLAGS}}")
 
-set(CMAKE_Fortran_COMPILER      "gFortran")
-set(CMAKE_Fortran_FLAGS         "-O0 -finline-limit=2000 --param max-inline-insns-single=100000 -Winline ${EXTRA_FLAGS}")
-set(CMAKE_Fortran_FLAGS_DEBUG   "-g -finline-limit=2000 --param max-inline-insns-single=100000 -Winline ${EXTRA_FLAGS}")
-set(CMAKE_Fortran_FLAGS_RELEASE "-O0 -finline-limit=2000 --param max-inline-insns-single=100000 -Winline ${EXTRA_FLAGS}")
-
+#set(CMAKE_Fortran_COMPILER      "pgf90")
+#set(CMAKE_Fortran_FLAGS         "-O2  -Minfo ${EXTRA_FLAGS}")
+#set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -g -Minfo ${EXTRA_FLAGS}")
+#set(CMAKE_Fortran_FLAGS_RELEASE "-O2  -Minfo ${EXTRA_FLAGS}")
 
 #
 # ======================== Compiler (MPI Parallel) ========================
 # Default: 
-# Use environment variables MPI_CC, MPI_CXX, MPI_FC, MPI_F90, etc.
-# > cmake -D MPI_CXX=/opt/openmpi/bin/mpiicc 
+# Use environment variables.
+#   - MPI_C_COMPILER
+#   - MPI_CXX_COMPILER 
+#   - MPI_Fortran_COMPILER
+# > cmake -D MPI_CXX_COMPILER=/opt/openmpi/bin/mpic++
 #
 set(MPI_C_FOUND                 FALSE )
 set(MPI_C_COMPILER              "mpicc" )
