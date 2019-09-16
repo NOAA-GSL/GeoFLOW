@@ -28,9 +28,9 @@ option(VERBOSE_CMAKE  "VERBOSE_CMAKE" ON)   # Verbose CMake Ouput
 # Default: 
 # - Use proper Environment Variables
 #
-#	include("${CMAKE_SOURCE_DIR}/cmake/build.gcc")
+include("${CMAKE_SOURCE_DIR}/cmake/build.gcc")
 #	include("${CMAKE_SOURCE_DIR}/cmake/build.pgi")
-include("${CMAKE_SOURCE_DIR}/cmake/build.intel")
+#	include("${CMAKE_SOURCE_DIR}/cmake/build.intel")
 
 #
 # ========================== Boost Library ==========================
@@ -52,10 +52,10 @@ CACHE STRING "Location of Boost Library"
 # > cmake -D GPTL_ROOT=/opt/gptl/gcc/8.2.1
 #
 set(GPTL_ROOT 
-#   "/home/duane.rosenberg/lib/gptl-v5.5_gcc"
+   "/home/duane.rosenberg/lib/gptl-v5.5_gcc"
 #   "/home/Duane.Rosenberg/lib/gptl-v5.4.4_pgi_openmpi"
 #   "/home/Duane.Rosenberg/lib/gptl-v5.4.4_intel_impi_theia"
-    "/Users/duane.rosenberg/lib/gptl-5.6.0_clang"
+#    "/Users/duane.rosenberg/lib/gptl-5.6.0_clang"
 CACHE STRING "Location of GPTL Library"
 )
 set(GPTL_INC_PATH  "${GPTL_ROOT}/include")
