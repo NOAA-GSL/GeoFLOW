@@ -62,15 +62,20 @@ mark_as_advanced(PAPI_LIBRARIES)
 
 # ========================================================================
 
-# Notification messages
+#
+# Custom Notification Messages
+#
 if(NOT PAPI_INCLUDE_DIRS)
-    message(STATUS "Could NOT find 'papi.h', install a PAPI or set PAPI_ROOT")
+    message(STATUS "Could NOT find 'papi.h', install PAPI or set PAPI_ROOT")
 endif()
 if(NOT PAPI_LIBRARIES)
-    message(STATUS "Could NOT find a libpapi*, install it or set PAPI_ROOT")
+    message(STATUS "Could NOT find a libpapi*, install PAPI or set PAPI_ROOT")
 endif()
 
-# Determines whether or not PAPI was found
+#
+# Determines whether library was found
+# - Set the PAPI_FOUND variable depending on checks it does
+#
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(PAPI DEFAULT_MSG PAPI_INCLUDE_DIRS PAPI_LIBRARIES)
 

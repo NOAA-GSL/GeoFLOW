@@ -24,13 +24,13 @@ option(VERBOSE_CMAKE  "VERBOSE_CMAKE" ON)   # Verbose CMake Ouput
 #set(CMAKE_BUILD_TYPE debug)
 
 #
-# ============================== Compiler ==============================
-# Default: 
-# - Use proper Environment Variables
+# ==================== Compiler (Serial+Parallel) ======================
 #
-include("${CMAKE_SOURCE_DIR}/cmake/build.gcc")
-#	include("${CMAKE_SOURCE_DIR}/cmake/build.pgi")
-#	include("${CMAKE_SOURCE_DIR}/cmake/build.intel")
+# Select compiler vendor to load
+#
+include("${CMAKE_SOURCE_DIR}/cmake/compiler.gcc")
+#	include("${CMAKE_SOURCE_DIR}/cmake/compiler.pgi")
+#	include("${CMAKE_SOURCE_DIR}/cmake/compiler.intel")
 
 #
 # ========================== Boost Library ==========================
@@ -42,8 +42,7 @@ set(BOOST_ROOT
 #		"/home/Duane.Rosenberg/lib/boost_1_69_0_intel_18.1"
 #		"/scratch/duane.rosenberg/lib/boost_1_69_0_gcc"
 		"/Users/duane.rosenberg/lib/boost_1_69_0_gcc"
-CACHE STRING "Location of Boost Library"
-)
+CACHE STRING "Location of Boost Library")
 
 #
 # ========================== GPTL Library ===========================
@@ -52,14 +51,11 @@ CACHE STRING "Location of Boost Library"
 # > cmake -D GPTL_ROOT=/opt/gptl/gcc/8.2.1
 #
 set(GPTL_ROOT 
-   "/home/duane.rosenberg/lib/gptl-v5.5_gcc"
+    "/home/duane.rosenberg/lib/gptl-v5.5_gcc"
 #   "/home/Duane.Rosenberg/lib/gptl-v5.4.4_pgi_openmpi"
 #   "/home/Duane.Rosenberg/lib/gptl-v5.4.4_intel_impi_theia"
-#    "/Users/duane.rosenberg/lib/gptl-5.6.0_clang"
-CACHE STRING "Location of GPTL Library"
-)
-set(GPTL_INC_PATH  "${GPTL_ROOT}/include")
-set(GPTL_LIB_PATH  "${GPTL_ROOT}/lib/libgptl.a")
+#   "/Users/duane.rosenberg/lib/gptl-5.6.0_clang"
+CACHE STRING "Location of GPTL Library")
 
 #
 # ========================== PAPI Library ===========================
@@ -68,14 +64,8 @@ set(GPTL_LIB_PATH  "${GPTL_ROOT}/lib/libgptl.a")
 # > cmake -D PAPI_ROOT=/opt/papi/gcc/8.2.1
 #
 set(PAPI_ROOT 
-	"/apps/papi/5.4.0"
+	"/apps/papi/5.4.0" 
 CACHE STRING "Location of PAPI Library")
-set(PAPI_INC_PATH  "${GPTL_ROOT}/include")
-set(PAPI_LIB_PATH  "${GPTL_ROOT}/lib/libpapi.a")
-
-
-
-
 
 
 

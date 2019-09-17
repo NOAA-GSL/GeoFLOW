@@ -12,8 +12,8 @@
 # Set possible hints where to find GPTL
 #
 set(GPTL_HINTS 
-	       ${GPTL_ROOT}
-	       $ENV{GPLT_ROOT}
+	${GPTL_ROOT}
+	$ENV{GPLT_ROOT}
 )
 
 #
@@ -60,14 +60,14 @@ find_library(GPTL_LIBRARIES
 		${GPTL_HINTS}
 	PATH_SUFFIXES
 		lib
-		bluegene/include
-		cray/include
-                lahey/include
-                linux/include
-                macos/include
-                pgi/include
-		xeon/include
-                xeonphi/include
+		bluegene/lib
+		cray/lib
+        lahey/lib
+        linux/lib
+        macos/lib
+        pgi/lib
+		xeon/lib
+        xeonphi/lib
 	PATHS
 		${GPTL_PATHS}
 	DOC
@@ -77,15 +77,20 @@ mark_as_advanced(GPTL_LIBRARIES)
 
 # ========================================================================
 
-# Notification messages
+#
+# Custom Notification Messages
+#
 if(NOT GPTL_INCLUDE_DIRS)
-    message(STATUS "Could NOT find 'gptl.h', install a GPTL or set GPTL_ROOT")
+    message(STATUS "Could NOT find 'gptl.h', install GPTL or set GPTL_ROOT")
 endif()
 if(NOT GPTL_LIBRARIES)
-    message(STATUS "Could NOT find a libgptl..., install it or set GPTL_ROOT")
+    message(STATUS "Could NOT find a libgptl*, install GPTL or set GPTL_ROOT")
 endif()
 
-# Determines whether or not GPTL was found
+#
+# Determines whether library was found
+# - Set the GPTL_FOUND variable depending on checks it does
+#
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(GPTL DEFAULT_MSG GPTL_INCLUDE_DIRS GPTL_LIBRARIES)
 

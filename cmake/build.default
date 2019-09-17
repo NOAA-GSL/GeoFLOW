@@ -7,10 +7,10 @@ option(DO_TESTS       "DO_TESTS"      OFF)  # Build testing targets
 option(DO_GEOFLOW     "DO_GEOFLOW"    ON)   # Build GeoFLOW target
 
 option(DO_DEBUG       "DO_DEBUG"      ON)   # Compile for DEBUG
-option(USE_OPENMP     "USE_OPENMP"    ON)  # Compile for OpenMP
-option(USE_OPENACC    "USE_OPENACC"   OFF)  # Compile for OpenACC
-option(USE_GBLAS      "USE_GBLAS"     ON)   # Use GBlas instead of C 
+option(USE_OPENMP     "USE_OPENMP"    ON)   # Compile for OpenMP
 option(USE_MPI        "USE_MPI"       ON)   # Build with MPI?
+option(USE_OPENACC    "USE_OPENACC"   OFF)  # Compile for OpenACC
+option(USE_GBLAS      "USE_GBLAS"     ON)   # Use GBlas instead of C
 option(USE_GPTL       "USE_GPTL"      OFF)  # Build with GPTL?
 option(USE_PAPI       "USE_PAPI"      OFF)  # Is GPTL built with PAPI support?
 option(DO_AUTO_PROF   "DO_AUTO_PROF"  OFF)  # Do auto-profing with GPTL?
@@ -27,52 +27,30 @@ option(VERBOSE_CMAKE  "VERBOSE_CMAKE" ON)   # Verbose CMake Ouput
 # ========================== Compiler (Serial) ==========================
 # Default: 
 # Use environment variables CC, CXX, FC, F77, F90, etc.
-# > cmake -D CC=/usr/bin/g++-4.2 
+# > CC=gcc-4.2 CXX=/usr/bin/g++-4.2 cmake ..
 #
-#set(CMAKE_C_COMPILER            "")
-#set(CMAKE_C_FLAGS               "")
-#set(CMAKE_C_FLAGS_DEBUG         "")
-#set(CMAKE_C_FLAGS_RELEASE       "")
+# Alternate:
+# Use CMake variables CMAKE_C_COMPILER, CMAKE_CXX_COMPILER, etc.
+# > cmake -D CMAKE_C_COMPILER=gcc-4.2 -D CMAKE_CXX_COMPILER=g++-4.2 ..
+#
 
-#set(CMAKE_CXX_COMPILER          "")
-#set(CMAKE_CXX_FLAGS             "")
-#set(CMAKE_CXX_FLAGS_DEBUG       "")
-#set(CMAKE_CXX_FLAGS_RELEASE     "")
-
-#set(CMAKE_Fortran_COMPILER      "")
-#set(CMAKE_Fortran_FLAGS         "")
-#set(CMAKE_Fortran_FLAGS_DEBUG   "")
-#set(CMAKE_Fortran_FLAGS_RELEASE "")
 
 #
 # ======================== Compiler (MPI Parallel) ========================
-# Default: 
+# Default:
+# Set the serial compiler to the MPI wrapper
+#
+# Alternate: 
 # Use environment variables.
 #   - MPI_C_COMPILER
 #   - MPI_CXX_COMPILER 
 #   - MPI_Fortran_COMPILER
 # > cmake -D MPI_CXX_COMPILER=/opt/openmpi/bin/mpiicc 
+# 
+# Alternate: 
+# Let CMake determine a MPI wrapper using your path variables
 #
-#set(MPI_C_COMPILER              "" )
-#set(MPI_C_COMPILER              "" )
-#set(MPI_C_COMPILE_FLAGS         "" )
-#set(MPI_C_INCLUDE_PATH          "" )
-#set(MPI_C_LINK_FLAGS            "" )
-#set(MPI_C_LIBRARIES             "" )
 
-#set(MPI_CXX_COMPILER            "" )
-#set(MPI_CXX_COMPILER            "" )
-#set(MPI_CXX_COMPILE_FLAGS       "" )
-#set(MPI_CXX_INCLUDE_PATH        "" )
-#set(MPI_CXX_LINK_FLAGS          "" )
-#set(MPI_CXX_LIBRARIES           "" )
-
-#set(MPI_Fortran_FOUND           "" )
-#set(MPI_Fortran_FOUND           "" )
-#set(MPI_Fortran_COMPILE_FLAGS   "" )
-#set(MPI_Fortran_INCLUDE_PATH    "" )
-#set(MPI_Fortran_LINK_FLAGS      "" )
-#set(MPI_Fortran_LIBRARIES       "" )
 
 #
 # ========================== Boost Library ==========================
@@ -80,7 +58,9 @@ option(VERBOSE_CMAKE  "VERBOSE_CMAKE" ON)   # Verbose CMake Ouput
 # Use environment variables BOOST_ROOT
 # > cmake -D BOOST_ROOT=/opt/boost/boost_1_69_0/gcc/8.2.1 
 #
-set(BOOST_ROOT "" CACHE STRING "Location of Boost Library")
+set(BOOST_ROOT 
+	"" 
+CACHE STRING "Location of Boost Library")
 
 #
 # ========================== GPTL Library ===========================
@@ -88,9 +68,9 @@ set(BOOST_ROOT "" CACHE STRING "Location of Boost Library")
 # Use environment variables GPTL_ROOT
 # > cmake -D GPTL_ROOT=/opt/gptl/gcc/8.2.1
 #
-set(GPTL_ROOT "" CACHE STRING "Location of GPTL Library")
-set(GPTL_INC_PATH  "${GPTL_ROOT}/include")
-set(GPTL_LIB_PATH  "${GPTL_ROOT}/lib/libgptl.a")
+set(GPTL_ROOT 
+	"" 
+CACHE STRING "Location of GPTL Library")
 
 #
 # ========================== PAPI Library ===========================
@@ -98,9 +78,9 @@ set(GPTL_LIB_PATH  "${GPTL_ROOT}/lib/libgptl.a")
 # Use environment variables PAPI_ROOT
 # > cmake -D PAPI_ROOT=/opt/papi/gcc/8.2.1
 #
-set(PAPI_ROOT "" CACHE STRING "Location of PAPI Library")
-set(PAPI_INC_PATH  "${GPTL_ROOT}/include")
-set(PAPI_LIB_PATH  "${GPTL_ROOT}/lib/libpapi.a")
+set(PAPI_ROOT 
+	"" 
+CACHE STRING "Location of PAPI Library")
 
 
 
