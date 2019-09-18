@@ -42,11 +42,7 @@ set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 # Force build in seperate directory
 #---------------------------------------------------------------------
 #
-file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH)
-if(EXISTS "${LOC_PATH}")
-	include(oos_error)   
-	message(FATAL_ERROR)
-endif()
+include(InSourceBuild)
 
 #
 #---------------------------------------------------------------------

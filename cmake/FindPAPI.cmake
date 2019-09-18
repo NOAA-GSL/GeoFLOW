@@ -2,7 +2,7 @@
 # Try to find PAPI library
 #
 # Once done this will define
-#  PAPI_FOUND 	      - If system found GPLT library
+#  PAPI_FOUND 	      - If system found PAPI library
 #  PAPI_INCLUDE_DIRS  - The PAPI include directories
 #  PAPI_LIBRARIES     - The libraries needed to use PAPI
 #  PAPI_FLAGS 	      - Compiler flags required for using PAPI
@@ -13,7 +13,7 @@
 #
 set(PAPI_HINTS 
 	       ${PAPI_ROOT}
-	       $ENV{GPLT_ROOT}
+	       $ENV{PAPI_ROOT}
 )
 
 #
