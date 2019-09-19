@@ -276,7 +276,7 @@ void saxpby(GTVector<T> &x, T a, GTVector<T> &y, T b)
 // METHOD : normalizeL2
 // DESC   :
 //             L2 Normalize input field, u --> c u,  s.t.
-//               Int((c u^2) dV / Int dV = u0^2
+//               Int (c u)^2  dV / Int dV = u0^2
 //
 // ARGS   :
 //          grid : grid object
@@ -294,13 +294,11 @@ void normalizeL2(GGrid &grid, GTVector<GTVector<T>*> &u, GTVector<GTVector<T>*> 
   GSIZET  n;
   GDOUBLE xn, ener;
 
-  ener = static_cast<GDOUBLE>(GMTK::energy(grid, u, tmp, FALSE));
+  ener = static_cast<GDOUBLE>(GMTK::energy(grid, u, tmp, TRUE, FALSE));
   xn   = u0 / sqrt(ener);
   for ( GINT l=0; l<u.size(); l++ ) {
-   *tmp[0] = *u[l]; tmp[0]->pow(2);
-    (*u[l])[n] *= xn;
+    *u[l] *= xn;
   }
-
 
 } // end of method normalizeL2
 
