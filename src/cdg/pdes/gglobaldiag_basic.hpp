@@ -40,7 +40,7 @@ public:
         using Jacobian    = typename Equation::Jacobian;
         using Size        = typename Equation::Size;
         using ObserverBase<EquationType>::utmp_;
-        using ObserverBase<EquationType>::grid_;
+//      using ObserverBase<EquationType>::grid_;
         using ObserverBase<EquationType>::traits_;
 
 //      using ObserverBase<EquationType>::ObsType;
@@ -80,6 +80,7 @@ private:
         GString            sidir_;      // directory from which to read
         GString            sodir_;      // directory in which to write
         State              ku_;         // vector of pointers to kinetic components
+        GGrid             *grid_;       // grid object
 
 };
 

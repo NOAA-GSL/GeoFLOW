@@ -20,10 +20,10 @@ bInit_          (FALSE),
 cycle_          (0),
 ocycle_         (1),
 cycle_last_     (0),
-time_last_      (0.0)
+time_last_      (0.0),
+grid_           (&grid)
 { 
   traits_ = traits;
-  grid_   = &grid;
   utmp_   = static_cast<GTVector<GTVector<GFTYPE>*>*>(utmp_);
   myrank_ = GComm::WorldRank(grid.get_comm());
 } // end of constructor (1) method
@@ -125,6 +125,8 @@ void GGlobalDiag_basic<EquationType>::do_kinetic_L2(const Time t, const State &u
       && "tmp space not set, or is insufficient");
 
   
+  GBOOL   isreduced= FALSE;
+  GBOOL   ismax    = FALSE;
   GINT    ndim = grid_->gtype() == GE_2DEMBEDDED ? 3 : GDIM;
   GFTYPE absu, absw, ener, enst, hel, fv, rhel;
   GTVector<GFTYPE> lmax(5), gmax(5);
@@ -138,7 +140,7 @@ void GGlobalDiag_basic<EquationType>::do_kinetic_L2(const Time t, const State &u
 
 
   // Energy = <u^2>/2
-  lmax[0] = GMTK::energy(grid, ku, utmp, FALSE, FALSE);
+  lmax[0] = GMTK::energy(*grid_, ku_, utmp, isreduced, ismax);
  
   // Enstrophy = <omega^2>/2
   lmax[1] = 0.0;
@@ -146,22 +148,22 @@ void GGlobalDiag_basic<EquationType>::do_kinetic_L2(const Time t, const State &u
     for ( GINT j=0; j<ndim; j++ ) {
       GMTK::grad<GFTYPE>(*grid_, *ku_[0], j+1, utmp, *utmp[2]);
       utmp[2]->pow(2);
-      lmax[1] += grid_->integrate(*utmp[2],*utmp[0], isglobal); 
+      lmax[1] += grid_->integrate(*utmp[2],*utmp[0], isreduced); 
     }
-    lax[1] *= 0.5*grid.ivolume();
+    lmax[1] *= 0.5*grid_->ivolume();
   }
   else {
-    lmax[1] = GMTK::enstrophy(grid, ku, utmp, FALSE, FALSE);
+    lmax[1] = GMTK::enstrophy(*grid_, ku_, utmp, isreduced, ismax);
   }
 
   // Energy injection = <f.u>
-  lmax[2] = GMTK::energyinj(grid, ku, utmp, TRUE, FALSE);
+  lmax[2] = GMTK::energyinj(*grid_, ku_, uf, utmp, isreduced, ismax);
 
   // Helicity = <u.omega>
-  lmax[3] = GMTK::helicity(grid, ku, utmp, FALSE, FALSE);
+  lmax[3] = GMTK::helicity(*grid_, ku_, utmp, isreduced, ismax);
 
   // Relative helicity = <u.omega/(|u|*|omega|)>
-  lmax[4] = GMTK::relhelicity(grid, ku, utmp, FALSE, FALSE);
+  lmax[4] = GMTK::relhelicity(*grid_, ku_, utmp, isreduced, ismax);
 
   // Gather final max's:
   GComm::Allreduce(lmax.data(), gmax.data(), 5, T2GCDatatype<GFTYPE>(), GC_OP_SUM, grid_->get_comm());
@@ -209,6 +211,8 @@ void GGlobalDiag_basic<EquationType>::do_kinetic_max(const Time t, const State &
   assert(utmp_ != NULLPTR && utmp_->size() > 5
       && "tmp space not set, or is insufficient");
 
+  GBOOL   isreduced= FALSE;
+  GBOOL   ismax    = TRUE;
   GINT   ndim = grid_->gtype() == GE_2DEMBEDDED ? 3 : GDIM;
   GFTYPE absu, absw, ener, enst, hel, fv, rhel;
   GTVector<GFTYPE> lmax(5), gmax(5);
@@ -221,7 +225,7 @@ void GGlobalDiag_basic<EquationType>::do_kinetic_max(const Time t, const State &
   for ( GINT j=0; j<ikinetic_.size(); j++ ) ku_[j] = u[ikinetic_[j]];
 
   // Energy = <u^2>/2
-  lmax[0] = GMTK::energy(grid, ku, utmp, FALSE, TRUE);
+  lmax[0] = GMTK::energy(*grid_, ku_, utmp, FALSE, TRUE);
  
   // Enstrophy = <omega^2>/2
   lmax[1] = 0.0;
@@ -229,22 +233,22 @@ void GGlobalDiag_basic<EquationType>::do_kinetic_max(const Time t, const State &
     for ( GINT j=0; j<ndim; j++ ) {
       GMTK::grad<GFTYPE>(*grid_, *ku_[0], j+1, utmp, *utmp[2]);
       utmp[2]->pow(2);
-      lmax[1] += grid_->integrate(*utmp[2],*utmp[0], FALSE); 
+      lmax[1] += grid_->integrate(*utmp[2],*utmp[0], isreduced); 
     }
-    lmax[1] *= 0.5*grid.ivolume();
+    lmax[1] *= 0.5*grid_->ivolume();
   }
   else {
-    lmax[1] = GMTK::enstrophy(grid, ku, utmp, FALSE, TRUE);
+    lmax[1] = GMTK::enstrophy(*grid_, ku_, utmp, isreduced, ismax);
   }
 
   // Energy injection = <f.u>
-  lmax[2] = GMTK::energyinj(grid, ku, utmp, FALSE, TRUE);
+  lmax[2] = GMTK::energyinj(*grid_, ku_, uf, utmp, isreduced, ismax);
 
   // Helicity = <u.omega>
-  lmax[3] = GMTK::helicity(grid, ku, utmp, FALSE, TRUE);
+  lmax[3] = GMTK::helicity(*grid_, ku_, utmp, isreduced, ismax);
 
   // Relative helicity = <u.omega/(|u|*|omega|)>
-  lmax[4] = GMTK::relhelicity(grid, ku, utmp, FALSE, TRUE);
+  lmax[4] = GMTK::relhelicity(*grid_, ku_, utmp, isreduced, ismax);
 
 
   // Gather final max's:
