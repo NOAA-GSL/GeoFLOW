@@ -21,7 +21,8 @@ option(VERBOSE_CMAKE  "VERBOSE_CMAKE" ON)   # Verbose CMake Ouput
 # Default: 
 # > cmake -D CMAKE_BUILD_TYPE=Debug
 #
-#set(CMAKE_BUILD_TYPE debug)
+set(CMAKE_BUILD_TYPE debug
+CACHE STRING "Type of build to configure")
 
 #
 # ==================== Compiler (Serial+Parallel) ======================
