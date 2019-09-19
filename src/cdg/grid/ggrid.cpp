@@ -400,7 +400,7 @@ void GGrid::grid_init()
   GTVector<GFTYPE> tmp0(ndof()), tmp1(ndof());
   tmp0 = 1.0;
   volume_  = integrate(tmp0, tmp1);
-  ivolume_ = 1.0 / volume;
+  ivolume_ = 1.0 / volume_;
 } // end of method grid_init (1)
 
 
@@ -467,7 +467,7 @@ void GGrid::grid_init(GTMatrix<GINT> &p,
   GTVector<GFTYPE> tmp0(ndof()), tmp1(ndof());
   tmp0 = 1.0;
   volume_  = integrate(tmp0, tmp1);
-  ivolume_ = 1.0 / volume;
+  ivolume_ = 1.0 / volume_;
 
 } // end of method grid_init
 
