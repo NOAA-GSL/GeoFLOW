@@ -49,7 +49,6 @@ void GGlobalDiag_basic<EquationType>::observe_impl(const Time &t, const State &u
 
   mpixx::communicator comm;
 
-   
   if ( (traits_.itype == ObserverBase<EquationType>::OBS_CYCLE 
         && (cycle_-cycle_last_+1) >= traits_.cycle_interval)
     || (traits_.itype == ObserverBase<EquationType>::OBS_TIME  
@@ -142,6 +141,7 @@ void GGlobalDiag_basic<EquationType>::do_kinetic_L2(const Time t, const State &u
   // Energy = <u^2>/2
   lmax[0] = GMTK::energy(*grid_, ku_, utmp, isreduced, ismax);
  
+
   // Enstrophy = <omega^2>/2
   lmax[1] = 0.0;
   if ( ku_.size() == 1 ) {
@@ -225,7 +225,7 @@ void GGlobalDiag_basic<EquationType>::do_kinetic_max(const Time t, const State &
   for ( GINT j=0; j<ikinetic_.size(); j++ ) ku_[j] = u[ikinetic_[j]];
 
   // Energy = <u^2>/2
-  lmax[0] = GMTK::energy(*grid_, ku_, utmp, FALSE, TRUE);
+  lmax[0] = GMTK::energy(*grid_, ku_, utmp, isreduced, ismax);
  
   // Enstrophy = <omega^2>/2
   lmax[1] = 0.0;
