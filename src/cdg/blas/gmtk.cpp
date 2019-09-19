@@ -1990,7 +1990,12 @@ void curl(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &u, const GINT idir,
 
   assert(tmp.size() >= 2 && "Insufficient temp space");
 
-  if ( GDIM == 2 && u.size() > GDIM && grid.gtype() != GE_2DEMBEDDED ) {
+  // Handle 2.5-d 2d-3c case:
+  // Handle 1c cases in 2d or 3d:
+  if  ( u.size() < 2 ) {
+     curlc = 0.0; 
+  }
+  else if ( GDIM == 2 && u.size() > GDIM && grid.gtype() != GE_2DEMBEDDED ) {
     switch (idir) {
       case 1:
         grid.deriv(*u[2], 2, *tmp[0], curlc);
@@ -2008,10 +2013,10 @@ void curl(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &u, const GINT idir,
         assert( FALSE && "Invalid component specified");
         break;
     }
-    return;
   }
 
-  if ( GDIM == 2  && u.size() == 2 && grid.gtype() == GE_REGULAR ) {
+  // Handle 2d-2c regular types:
+  else if ( GDIM == 2  && u.size() == 2 && grid.gtype() == GE_REGULAR ) {
     switch (idir) {
       case 3:
         grid.deriv(*u[1], 1, *tmp[0], curlc);
@@ -2022,10 +2027,10 @@ void curl(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &u, const GINT idir,
         assert( FALSE && "Invalid component specified");
         break;
     }
-    return;
   }
 
-  if ( GDIM == 3 || grid.gtype() == GE_2DEMBEDDED ) {
+  // Handle 3d-3c or embedded cases:
+  else if ( GDIM == 3 || grid.gtype() == GE_2DEMBEDDED ) {
     switch (idir) {
       case 1:
         grid.deriv(*u[1], 3, *tmp[0], curlc);
@@ -2044,6 +2049,8 @@ void curl(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &u, const GINT idir,
         break;
     }
   }
+
+
   return;
 
 } // end of method curl
@@ -3053,10 +3060,13 @@ GFTYPE relhelicity(GGrid &grid, const GTVector<GTVector<GFTYPE>*> & u, GTVector<
   }
   tmp[0]->pow(0.5);
 
-  // Compute u. (curl u) /|u| |curl u|:
-  GFTYPE tiny = numeric_limits<GFTYPE>::epsilon();
+
+  // Compute u. (curl u) /|u| |curl u| integrand:
+  GFTYPE tiny = 100.0*numeric_limits<GFTYPE>::epsilon();
+
+  tmp[0]->pointProd(*tmp[4]); // compute |u| |curl u|
   for ( GINT k=0; k<utmp[0]->size(); k++ ) {
-   (*tmp[3])[k] = (*tmp[3])[k] / ( (*tmp[4])[k] * (*utmp[0])[k] + tiny );
+   (*tmp[3])[k] = abs((*tmp[0])[k]) <= tiny ? 0.0 : (*tmp[3])[k]/(*tmp[0])[k];  
   }
 
 
