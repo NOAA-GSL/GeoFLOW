@@ -2851,7 +2851,7 @@ void vsphere2cart(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &vsph, GVectorT
 // RETURNS: GFTYPE energy
 //**********************************************************************************
 template<>
-GFTYPE energy(GGrid &grid, GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector<GFTYPE>*> &tmp, GBOOL isglobal, GBOOL ismax)
+GFTYPE energy(GGrid &grid, const GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector<GFTYPE>*> &tmp, GBOOL isglobal, GBOOL ismax)
 {
   GDOUBLE                     ener, local;
   GC_COMM                     comm = grid.get_comm();
@@ -2897,7 +2897,7 @@ GFTYPE energy(GGrid &grid, GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector<GF
 // RETURNS: GFTYPE enstrophy
 //**********************************************************************************
 template<>
-GFTYPE enstrophy(GGrid &grid, GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector<GFTYPE>*> &tmp, GBOOL isglobal, GBOOL ismax)
+GFTYPE enstrophy(GGrid &grid, const GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector<GFTYPE>*> &tmp, GBOOL isglobal, GBOOL ismax)
 {
   assert(tmp.size() >= 4 && "Insufficient temp space");
 
@@ -2954,7 +2954,7 @@ GFTYPE enstrophy(GGrid &grid, GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector
 // RETURNS: GFTYPE helicity
 //**********************************************************************************
 template<>
-GFTYPE helicity(GGrid &grid, GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector<GFTYPE>*> &tmp, GBOOL isglobal, GBOOL ismax)
+GFTYPE helicity(GGrid &grid, const GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector<GFTYPE>*> &tmp, GBOOL isglobal, GBOOL ismax)
 {
   assert(tmp.size() >= 4 && "Insufficient temp space");
 
@@ -3011,7 +3011,7 @@ GFTYPE helicity(GGrid &grid, GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector<
 // RETURNS: GFTYPE helicity
 //**********************************************************************************
 template<>
-GFTYPE relhelicity(GGrid &grid, GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector<GFTYPE>*> &tmp, GBOOL isglobal, GBOOL ismax)
+GFTYPE relhelicity(GGrid &grid, const GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector<GFTYPE>*> &tmp, GBOOL isglobal, GBOOL ismax)
 {
   assert(tmp.size() >= 5 && "Insufficient temp space");
 
@@ -3098,7 +3098,7 @@ GFTYPE relhelicity(GGrid &grid, GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVect
 // RETURNS: GFTYPE energy injection rate
 //**********************************************************************************
 template<>
-GFTYPE energyinj(GGrid &grid, GTVector<GTVector<GFTYPE>*> &u,  GTVector<GTVector<GFTYPE>*> &uf, GTVector<GTVector<GFTYPE>*> &tmp, GBOOL isglobal, GBOOL ismax)
+GFTYPE energyinj(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &u,  const GTVector<GTVector<GFTYPE>*> &uf, GTVector<GTVector<GFTYPE>*> &tmp, GBOOL isglobal, GBOOL ismax)
 {
 
   if ( uf.size() == 0 ) return 0.0;
