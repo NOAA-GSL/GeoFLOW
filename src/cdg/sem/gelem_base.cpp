@@ -1851,7 +1851,7 @@ void GElem_base::set_bdyNormal2d(GTMatrix<GTVector<GFTYPE>> &rij, GTVector<GINT>
   else if ( elemtype_ == GE_DEFORMED 
          || elemtype_ == GE_REGULAR ) { // non-embedded deformed surfaces
 
-    // These are computed computed in the order of bdy_indices:
+    // These are computed in the order of bdy_indices:
     GMTK::cross_prod_k<GFTYPE>(rij    (0,0), rij       (1,0), 
                                iind.data() , iind.size(),  1,
                                bdyNormal[0], bdyNormal[1]  ); 
