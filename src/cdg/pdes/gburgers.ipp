@@ -283,18 +283,29 @@ void GBurgers<TypePack>::step_impl(const Time &t, State &uin, State &uf, State &
 
   // Set evolved state vars from input state.
   // These are not deep copies:
-  if ( bpureadv_ || doheat_ ) {
+  if ( doheat_ ) {
     uevolve_[0] = uin[0]; 
-    for ( auto j=0; j<c_.size(); j++ ) c_ [j] = uin[j+1];
+  }
+  else if ( bpureadv_ ) {
+    uevolve_[0] = uin[0]; 
+    if ( bpureadv_ ) {
+      for ( auto j=0; j<c_.size(); j++ ) c_ [j] = uin[j+1];
+    }
   }
   else {
     for ( auto j=0; j<uin.size(); j++ ) uevolve_ [j] = uin[j];
   }
 
+GFTYPE ener ;
+
   switch ( isteptype_ ) {
     case GSTEPPER_EXRK:
       for ( auto j=0; j<uold_.size(); j++ ) *uold_[j] = *uevolve_[j];
+ener = GMTK::energy(*grid_, uold_, utmp_, TRUE, FALSE);
+cout << "GBurgers<TypePack>::step_impl: 0: ener=" << ener << endl;
       step_exrk(t, uold_, uf, ub, dt, uevolve_);
+ener = GMTK::energy(*grid_, uevolve_, utmp_, TRUE, FALSE);
+cout << "GBurgers<TypePack>::step_impl: 1: ener=" << ener << endl;
       break;
     case GSTEPPER_BDFAB:
     case GSTEPPER_BDFEXT:
