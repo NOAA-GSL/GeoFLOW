@@ -68,7 +68,7 @@ lshapefcn_             (NULLPTR)
   // compute global bdy range, and global vertices:
   dP_  = spt;
   P1_ = P0_ + dP_;
-  gverts_.resize(ndim_);
+  gverts_.resize(2*ndim_);
   if ( ndim_ == 2 ) {
     gverts_[0] = P0_; 
     gp = P0_; gp.x1 += dP_.x1; gverts_[1] = gp; 
@@ -81,10 +81,10 @@ lshapefcn_             (NULLPTR)
     gverts_[2] = P1_; 
     gp = P0_; gp.x2 += dP_.x2; gverts_[3] = gp;
 
-    gp = P0_; gp.x3 += dP_.x3; gverts_[0] = gp; 
-    gp.x1 += dP_.x1; gverts_[1] = gp; 
-    gverts_[2] = P1_; 
-    gp = P0_; gp.x3 += dP_.x3; gp.x2 += dP_.x2; gverts_[3] = gp;
+    gp = P0_; gp.x3 += dP_.x3; gverts_[4] = gp; 
+    gp.x1 += dP_.x1; gverts_[5] = gp; 
+    gverts_[6] = P1_; 
+    gp = P0_; gp.x3 += dP_.x3; gp.x2 += dP_.x2; gverts_[7] = gp;
   }
 
   ne_.resize(b.size());
