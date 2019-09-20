@@ -127,9 +127,10 @@ friend  std::ostream&        operator<<(std::ostream&, GGrid &);       // Output
 protected:
        
         void                        init_local_face_info();           // get local face info
+        void                        globalize_coords();               // create global coord vecs from elems
         void                        init_bc_info();                   // configure bdys
-        void                        def_init();                       // iniitialze deformed elems
-        void                        reg_init();                       // initialize regular elems
+        void                        def_geom_init();                  // iniitialze deformed elems
+        void                        reg_geom_init();                  // initialize regular elems
         GFTYPE                      find_min_dist(); 
 
         GBOOL                       bInitialized_;  // object initialized?

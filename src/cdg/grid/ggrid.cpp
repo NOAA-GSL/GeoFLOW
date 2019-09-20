@@ -356,10 +356,11 @@ void GGrid::grid_init()
   do_typing(); // do element-typing check
   GTimerStop("GGrid::grid_init: do_typing");
 
-  init_local_face_info(); // find glob vec of face indices
-
   // Have elements been set yet?
   assert(gelems_.size() > 0 && "Elements not set");
+
+  globalize_coords    (); // set glob vec of node coords
+  init_local_face_info(); // find glob vec of face indices
 
   // Restrict grid to a single element type:
   assert(ntype_.multiplicity(0) == GE_MAX-1
@@ -370,23 +371,23 @@ void GGrid::grid_init()
   else if ( itype_[GE_DEFORMED]  .size() > 0 ) gtype_ = GE_DEFORMED;
   else if ( itype_[GE_REGULAR]   .size() > 0 ) gtype_ = GE_REGULAR;
 
-  GTimerStart("GGrid::grid_init: def_init");
-  if ( itype_[GE_2DEMBEDDED].size() > 0
-    || itype_  [GE_DEFORMED].size() > 0 ) {
-    def_init();
-  }
-  GTimerStop("GGrid::grid_init: def_init");
-
-  GTimerStart("GGrid::grid_init: reg_init");
-  if ( itype_[GE_REGULAR].size() > 0 ) {
-    reg_init();
-  }
-  GTimerStop("GGrid::grid_init: reg_init");
-
   GTimerStart("GGrid::grid_init: init_bc_info");
   // All element bdy/face data should have been set by now:
   init_bc_info();
   GTimerStop("GGrid::grid_init: init_bc_info");
+
+  GTimerStart("GGrid::grid_init: def_geom_init");
+  if ( itype_[GE_2DEMBEDDED].size() > 0
+    || itype_  [GE_DEFORMED].size() > 0 ) {
+    def_geom_init();
+  }
+  GTimerStop("GGrid::grid_init: def_geom_init");
+
+  GTimerStart("GGrid::grid_init: reg_geom_init");
+  if ( itype_[GE_REGULAR].size() > 0 ) {
+    reg_geom_init();
+  }
+  GTimerStop("GGrid::grid_init: reg_geom_init");
 
 
   bInitialized_ = TRUE;
@@ -429,6 +430,10 @@ void GGrid::grid_init(GTMatrix<GINT> &p,
   // Have elements been set yet?
   assert(gelems_.size() > 0 && "Elements not set");
 
+  init_local_face_info(); // find glob vec of face indices
+  globalize_coords    (); // set glob vec of node coords
+
+
   // Restrict grid to a single element type:
   assert(ntype_.multiplicity(0) == GE_MAX-1
         && "Only a single element type allowed on grid");
@@ -443,18 +448,18 @@ void GGrid::grid_init(GTMatrix<GINT> &p,
   init_bc_info();
   GTimerStop("GGrid::grid_init: init_bc_info");
 
-  GTimerStart("GGrid::grid_init: def_init");
+  GTimerStart("GGrid::grid_init: def_geom_init");
   if ( itype_[GE_2DEMBEDDED].size() > 0
     || itype_  [GE_DEFORMED].size() > 0 ) {
-    def_init();
+    def_geom_init();
   }
-  GTimerStop("GGrid::grid_init: def_init");
+  GTimerStop("GGrid::grid_init: def_geom_init");
 
-  GTimerStart("GGrid::grid_init: reg_init");
+  GTimerStart("GGrid::grid_init: reg_geom_init");
   if ( itype_[GE_REGULAR].size() > 0 ) {
-    reg_init();
+    reg_geom_init();
   }
-  GTimerStop("GGrid::grid_init: reg_init");
+  GTimerStop("GGrid::grid_init: reg_geom_init");
 
 
   GTimerStart("GGrid::grid_init: find_min_dist");
@@ -474,17 +479,18 @@ void GGrid::grid_init(GTMatrix<GINT> &p,
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : def_init
+// METHOD : def_geom_init
 // DESC   : Initialize global (metric) variables for deformed elems. 
-//          All elements are assumed to be of the same type.
+//          All elements are assumed to be of the same type. Note:
+//          do_elems and globalize_coords must be called prior to entry.
 // ARGS   : none
 // RETURNS: none
 //**********************************************************************************
-void GGrid::def_init()
+void GGrid::def_geom_init()
 {
    assert(gelems_.size() > 0 && "Elements not set");
 
-   GString serr = "GGrid::def_init: ";
+   GString serr = "GGrid::def_geom_init: ";
    GSIZET nxy = gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
    GTMatrix<GTVector<GFTYPE>> rijtmp;
    GTVector<GTVector<GFTYPE>> *xe;
@@ -500,9 +506,6 @@ void GGrid::def_init()
    }
    Jac_.resize(ndof());
    faceJac_.resize(nfacedof());
-
-   xNodes_.resize(nxy);
-   for ( GSIZET j=0; j<nxy; j++ ) xNodes_[j].resize(ndof());
 
    // Resize surface-point-wise normals:
    faceNormal_.resize(nxy); // no. coords for each normal at each face point
@@ -520,6 +523,7 @@ void GGrid::def_init()
      ibeg  = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
      ifbeg = gelems_[e]->ifbeg(); ifend = gelems_[e]->ifend();
      ibbeg = gelems_[e]->ibbeg(); ibend = gelems_[e]->ibend();
+
      xe    = &gelems_[e]->xNodes();
 
      // Restrict global arrays to local scope:
@@ -533,12 +537,6 @@ void GGrid::def_init()
      }
      Jac_.range(ibeg, iend);
      faceJac_.range(ifbeg, ifend);
-
-     // Set global nodal Cart coords from element coords:
-     for ( GSIZET j=0; j<nxy; j++ ) {
-       xNodes_[j].range(ibeg, iend);
-       xNodes_[j] = (*xe)[j];
-     }
 
      // Set the geom/metric quantities using element data:
      if ( GDIM == 2 ) {
@@ -566,28 +564,27 @@ void GGrid::def_init()
    }
    Jac_.range_reset();
    faceJac_.range_reset();
-   for ( GSIZET j=0; j<nxy; j++ ) xNodes_[j].range_reset();
 
 
    GComm::Synch(comm_);
    
-} // end of method def_init
+} // end of method def_geom_init
 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : reg_init
+// METHOD : reg_geom_init
 // DESC   : Initialize global (metric) variables for regular elemes. 
-//          All elements are assumed to be
-//          of the same type.
+//          All elements are assumed to be of the same type. Note:
+//          do_elems and globalize_coords must be called prior to entry.
 // ARGS   : none
 // RETURNS: none
 //**********************************************************************************
-void GGrid::reg_init()
+void GGrid::reg_geom_init()
 {
    assert(gelems_.size() > 0 && "Elements not set");
 
-   GString serr = "GridIcos::reg_init: ";
+   GString serr = "GridIcos::reg_geom_init: ";
    GSIZET nxy = GDIM;
    GTMatrix<GTVector<GFTYPE>>  rijtmp;
    GTVector<GTVector<GFTYPE>> *xe;
@@ -602,8 +599,6 @@ void GGrid::reg_init()
    Jac_.resize(ndof());
    faceJac_.resize(nfacedof());
 
-   xNodes_.resize(nxy);
-   for ( GSIZET j=0; j<nxy; j++ ) xNodes_[j].resize(ndof());
 
    // Resize surface-point-wise normals:
    faceNormal_.resize(nxy); // no. coords for each normal at each face point
@@ -621,8 +616,9 @@ void GGrid::reg_init()
      ibeg  = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
      ifbeg = gelems_[e]->ifbeg(); ifend = gelems_[e]->ifend();
      ibbeg = gelems_[e]->ibbeg(); ibend = gelems_[e]->ibend();
-     xe    = &gelems_[e]->xNodes();
   
+     xe    = &gelems_[e]->xNodes();
+
      // Restrict global data to local scope:
      for ( GSIZET j=0; j<nxy; j++ ) {
        faceNormal_[j].range(ifbeg, ifend); 
@@ -635,13 +631,6 @@ void GGrid::reg_init()
      }
      Jac_.range(ibeg, iend);
      faceJac_.range(ifbeg, ifend);
-
-     // Set global nodal Cart coords from element coords:
-     for ( GSIZET j=0; j<nxy; j++ ) {
-       xNodes_[j].range(ibeg, iend);
-       xNodes_[j] = (*xe)[j];
-     }
-
 
      // Set the geom/metric quantities using element data:
      if ( GDIM == 2 ) {
@@ -668,11 +657,49 @@ void GGrid::reg_init()
    }
    Jac_.range_reset();
    faceJac_.range_reset();
-   for ( GSIZET j=0; j<nxy; j++ ) xNodes_[j].range_reset();
 
    GComm::Synch(comm_);
    
-} // end of method reg_init
+} // end of method reg_geom_init
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : globalize_coords
+// DESC   : Create 'global' vectors from element-based coordinates
+// ARGS   : none
+// RETURNS: none
+//**********************************************************************************
+void GGrid::globalize_coords()
+{
+   GString serr = "GridIcos::globalize_coords: ";
+   GSIZET  nxy = gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
+   GTVector<GTVector<GFTYPE>> *xe;
+
+   xNodes_.resize(nxy);
+   for ( GSIZET j=0; j<nxy; j++ ) xNodes_[j].resize(ndof());
+
+   GSIZET ibeg, iend; // beg, end indices for global arrays
+   for ( GSIZET e=0; e<gelems_.size(); e++ ) {
+     ibeg  = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
+     xe    = &gelems_[e]->xNodes();
+
+     // Set global nodal Cart coords from element coords:
+     for ( GSIZET j=0; j<nxy; j++ ) {
+       xNodes_[j].range(ibeg, iend);
+       xNodes_[j] = (*xe)[j];
+     }
+
+     // Zero-out local xe; only global allowed now:
+     for ( GSIZET j=0; j<nxy; j++ ) (*xe)[j].clear();
+
+   } // end, element loop
+
+   // Reset global scope:
+   for ( GSIZET j=0; j<nxy; j++ ) xNodes_[j].range_reset();
+
+
+} // end, method globalize_coords
 
 
 //**********************************************************************************
