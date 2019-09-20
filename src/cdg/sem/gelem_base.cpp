@@ -1809,8 +1809,10 @@ GTVector<GTMatrix<GFTYPE>> &matv, GTVector<GTMatrix<GFTYPE>> &matu, GTVector<GFT
 // DESC   : Compute bdyNormal_ components for 2d element. This 'bdy' can
 //          refer to element faces, or global bdy nodes, if any.
 // ARGS   : 
-//          rij  : matrix of quantities dx_j/dxi_i
-//          iind : indirection indices of bdyNormal into volume
+//          rij      : matrix of quantities dx_j/dxi_i
+//          iind     : indirection indices of bdyNormal into volume
+//          bdyNormal: x, y, z components of global bdy normals at each
+//                     of iind bdy nodes 
 //          
 // RETURNS: none.
 //***********************************************************************************
@@ -1834,7 +1836,7 @@ void GElem_base::set_bdyNormal2d(GTMatrix<GTVector<GFTYPE>> &rij, GTVector<GINT>
   GSIZET n;
 
   GFTYPE xn;            // vector magnitude
-  if ( elemtype_ == GE_2DEMBEDDED ) { // embedded surfaces
+  if ( elemtype_ == GE_2DEMBEDDED && bdyNormal[0].size() > 0 ) { // embedded surfaces
 
     // These are computed in the order of bdy_indices:
     GMTK::cross_prod<GFTYPE>(rij   (0,0) , rij   (1,0) , rij      (2,0),
@@ -1848,8 +1850,9 @@ void GElem_base::set_bdyNormal2d(GTMatrix<GTVector<GFTYPE>> &rij, GTVector<GINT>
       for ( GSIZET i=0; i<bdyNormal.size(); i++ ) bdyNormal[i][j] *= 1.0/xn;
     }
   }
-  else if ( elemtype_ == GE_DEFORMED 
-         || elemtype_ == GE_REGULAR ) { // non-embedded deformed surfaces
+  else if ( (elemtype_ == GE_DEFORMED 
+         ||  elemtype_ == GE_REGULAR)
+         &&  bdyNormal[0].size() > 0 ) { // non-embedded deformed surfaces
 
     // These are computed in the order of bdy_indices:
     GMTK::cross_prod_k<GFTYPE>(rij    (0,0), rij       (1,0), 
@@ -1895,7 +1898,7 @@ void GElem_base::set_bdyNormal3d(GTMatrix<GTVector<GFTYPE>> &rij, GTVector<GINT>
 
   // Assume that the indirection indices, iind, are just concatenated
   // forms of bdy_indices_, and face_indices_: 
-  if ( elemtype_ == GE_REGULAR ) { // regular surfaces
+  if ( elemtype_ == GE_REGULAR && bdyNormal[0].size() > 0 ) { // regular surfaces
     // For each bdy node, take cross prod of d_x_/dxi_1 X d_x_/dxi_2
     // where xi1, and xi2 are the reference coords of the face:
      
