@@ -903,16 +903,18 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
   GString            gname, sbdy, bdyclass, bdyinit;
   PropertyTree       bdytree, gridptree, spectree;
 
-  assert(gname == "grid_box");
 
   bdynames[0] = "bdy_x_0";
   bdynames[1] = "bdy_x_1";
   bdynames[2] = "bdy_y_0";
   bdynames[3] = "bdy_y_1";
-  bdynames[4] = "bdy_z_0";
-  bdynames[5] = "bdy_z_1";
+  if ( GDIM == 3 ) {
+    bdynames[4] = "bdy_z_0";
+    bdynames[5] = "bdy_z_1";
+  }
 
   gname     = ptree.getValue<GString>("grid_type");
+  assert(gname == "grid_box");
   gridptree = ptree.getPropertyTree(gname);
 
 
@@ -935,24 +937,24 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
   //       returned on exist contain info for all bdys:
   for ( auto j=0; j<2*GDIM; j++ ) { // cycle over faces
     sbdy         = gridptree.getValue<GString>(bdynames[j]);
-    bdytree      = gridptree.getPropertyTree(sbdy);
+    bdytree      = ptree.getPropertyTree(sbdy);
     bdyclass     = bdytree.getValue<GString>("bdy_class", "uniform");
     bdytype  [j] = geoflow::str2bdytype(bdytree.getValue<GString>("base_type", "GBDY_NONE"));
     buniform [j] = bdyclass == "uniform" ? TRUE : FALSE;
     confmthd [j] = bdytree.getValue<GString>("bdy_config_method","");
     bperiodic    = bperiodic || bdytype[j] == GBDY_PERIODIC;
-    assert(bperiodic && !buniform[j] && "GBDY_PERIODIC boundary must have bdy_class = uniform");
+    assert(bperiodic && buniform[j] && "GBDY_PERIODIC boundary must have bdy_class = uniform");
   }
 
   if ( ndim_ == 2 ) {
-    assert( (  (bdytype[0] == GBDY_PERIODIC && bdytype[2] != GBDY_PERIODIC)
-           ||  (bdytype[3] == GBDY_PERIODIC && bdytype[1] != GBDY_PERIODIC) )
+    assert( (  (bdytype[0] == GBDY_PERIODIC && bdytype[2] == GBDY_PERIODIC)
+           ||  (bdytype[3] == GBDY_PERIODIC && bdytype[1] == GBDY_PERIODIC) )
            &&  "Incompatible GBDY_PERIODIC boundary specification");
   }
   else if ( ndim_ == 3 ) {
-    assert( (  (bdytype[0] == GBDY_PERIODIC && bdytype[2] != GBDY_PERIODIC)
-           ||  (bdytype[3] == GBDY_PERIODIC && bdytype[1] != GBDY_PERIODIC)  
-           ||  (bdytype[4] == GBDY_PERIODIC && bdytype[5] != GBDY_PERIODIC) )
+    assert( (  (bdytype[0] == GBDY_PERIODIC && bdytype[2] == GBDY_PERIODIC)
+           ||  (bdytype[3] == GBDY_PERIODIC && bdytype[1] == GBDY_PERIODIC)  
+           ||  (bdytype[4] == GBDY_PERIODIC && bdytype[5] == GBDY_PERIODIC) )
            &&  "Incompatible GBDY_PERIODIC boundary specification");
   }
        
@@ -976,6 +978,8 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
     assert(bret && "Boundary specification failed");
     igbdy [j].resize(itmp.size()); igbdy [j] = itmp;
     igbdyt[j].resize(itmp.size()); igbdyt[j] = btmp;
+    itmp.clear();
+    btmp.clear();
   }
   
   // Fill in uniform bdy types:
@@ -1000,11 +1004,14 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
       }
     }
     // Set type for each bdy index:
+    btmp.resize(itmp.size());
     for ( auto i=0; i<itmp.size(); i++ ) {
       btmp[i] = bdytype[j]; 
     }
     igbdy [j].resize(itmp.size()); igbdy [j] = itmp;
     igbdyt[j].resize(itmp.size()); igbdyt[j] = btmp;
+    itmp.clear();
+    btmp.clear();
   }
 
 
