@@ -681,7 +681,7 @@ void GTVector<T>::operator=(T a)
 template<class T> 
 void  GTVector<T>::range(GSIZET ibeg, GSIZET iend) 
 {
-//assert(ibeg <= n_ && iend <= n_ && "Invalid range specification");
+  assert(iend < n_ && ibeg <= iend && "Invalid range specification");
 
   gindex_.beg() = ibeg;
   gindex_.end() = iend;
