@@ -296,7 +296,7 @@ void GGridBox::do_elems2d()
       if ( FUZZYEQ(P0_.x1,cent.x1,eps_) ) face_ind = &pelem->edge_indices(3);
       // For now, we don't allow corner nodes to be repeated, 
       // and we'll have to choose the best way to define the 
-      // normal vectors at the 'corner' nodes:
+      // normal vectors at the these nodes:
       for ( GSIZET k=0; face_ind != NULLPTR && k<face_ind->size(); k++ ) {
         if ( !bdy_ind->contains((*face_ind)[k]) ) {
           bdy_ind->push_back((*face_ind)[k]); 
@@ -1003,6 +1003,9 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
         find_bdy_ind3d(j, TRUE, itmp); // include edges
       }
     }
+
+cout << "GGridBox::config_bdy: itmp[" << j << "]=" << itmp << endl;
+
     // Set type for each bdy index:
     btmp.resize(itmp.size());
     for ( auto i=0; i<itmp.size(); i++ ) {

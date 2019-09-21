@@ -373,6 +373,9 @@ void GGrid::grid_init()
 
   GTimerStart("GGrid::grid_init: init_bc_info");
   // All element bdy/face data should have been set by now:
+
+cout << "GGrid::grid_init: 0" << endl;
+
   init_bc_info();
   GTimerStop("GGrid::grid_init: init_bc_info");
 
@@ -608,6 +611,7 @@ void GGrid::reg_geom_init()
      bdyNormal_ [i].resize(nbdydof());
    }
 
+
    // Now, set the geometry/metric quanties from the elements:
    GSIZET ibeg, iend; // beg, end indices for global arrays
    GSIZET ibbeg, ibend; // beg, end indices for global arrays for bdy quantities
@@ -616,6 +620,7 @@ void GGrid::reg_geom_init()
      ibeg  = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
      ifbeg = gelems_[e]->ifbeg(); ifend = gelems_[e]->ifend();
      ibbeg = gelems_[e]->ibbeg(); ibend = gelems_[e]->ibend();
+cout << "reg_geom_init: ibbeg=" << ibbeg << " ibend=" << ibend << endl;
   
      xe    = &gelems_[e]->xNodes();
 
@@ -1045,9 +1050,11 @@ void GGrid::init_bc_info()
     }
   }
  
+  cout << "GGrid::init_bc_info: igbdy_=" << igbdy_ << endl;
+  cout << "GGrid::init_bc_info: igbdyt_=" << igbdyt_ << endl;
   
 
-  // Create bdy type-bins (one bin for each GBdyType), and
+  // Create bdy type bins (one bin for each GBdyType), and
   // for each type, set the indirection indices into global
   // vectors that have that type:
   GBdyType         itype;
@@ -1060,6 +1067,8 @@ void GGrid::init_bc_info()
     for ( GSIZET j=0; j<nind; j++ ) igbdy_binned_[k][j] = igbdy_[ind[j]];
     nind = 0;
   } // end, element loop
+
+  cout << "GGrid::init_bc_info: igbdy_binned=" << igbdy_binned_ << endl;
 
   if ( ind != NULLPTR ) delete [] ind;
 
