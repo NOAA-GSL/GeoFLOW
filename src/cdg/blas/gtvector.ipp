@@ -684,7 +684,7 @@ void  GTVector<T>::range(GSIZET ibeg, GSIZET iend)
 {
 //assert(iend < n_ && ibeg <= iend && "Invalid range specification");
   if ( iend >= n_ || ibeg >= n_ ) {
-    std::cout << "GTVector::range: invalid range specification" << std::endl;
+    std::cout << "GTVector::range: invalid range specification: n_=" << n_ << " ibeg=" << ibeg << " iend=" << iend << std::endl;
     while (1);
   }
 
