@@ -218,7 +218,7 @@ GSIZET GGrid::ndof()
 //**********************************************************************************
 GSIZET GGrid::nfacedof()
 {
-   return igface_.size();
+   return ieface_.size();
 } // end of method nfacedof
 
 
@@ -512,7 +512,7 @@ void GGrid::def_geom_init()
 
    // Resize surface-point-wise normals:
    faceNormal_.resize(nxy); // no. coords for each normal at each face point
-   bdyNormal_.resize(nxy); // no. coords for each normal at each face point
+   bdyNormal_.resize(nxy); // no. coords for each normal at each domain bdy point
    for ( GSIZET i=0; i<bdyNormal_.size(); i++ ) {
      faceNormal_[i].resize(nfacedof());
      bdyNormal_ [i].resize(nbdydof());
@@ -531,8 +531,6 @@ void GGrid::def_geom_init()
 
      // Restrict global arrays to local scope:
      for ( GSIZET j=0; j<nxy; j++ ) {
-       faceNormal_[j].range(ifbeg, ifend); // set range for each coord, j
-       bdyNormal_ [j].range(ibbeg, ibend); // set range for each coord, j
        for ( GSIZET i=0; i<nxy; i++ )  {
          dXidX_(i,j).range(ibeg, iend);
          rijtmp(i,j).range(ibeg, iend);
@@ -543,10 +541,10 @@ void GGrid::def_geom_init()
 
      // Set the geom/metric quantities using element data:
      if ( GDIM == 2 ) {
-       gelems_[e]->dogeom2d(rijtmp, dXidX_, Jac_, faceJac_, faceNormal_, bdyNormal_);
+       gelems_[e]->dogeom2d(rijtmp, dXidX_, Jac_, faceJac_);
      }
      else if ( GDIM == 3 ) {
-       gelems_[e]->dogeom3d(rijtmp, dXidX_, Jac_, faceJac_, faceNormal_, bdyNormal_);
+       gelems_[e]->dogeom3d(rijtmp, dXidX_, Jac_, faceJac_);
      }
 
      // Zero-out local xe; only global allowed now:
@@ -554,11 +552,6 @@ void GGrid::def_geom_init()
      
    } // end, element loop
 
-   // Reset global scope:
-   for ( GSIZET j=0; j<nxy; j++ ) {
-     faceNormal_[j].range_reset();
-     bdyNormal_ [j].range_reset();
-   }
    for ( GSIZET j=0; j<nxy; j++ )  {
      for ( GSIZET i=0; i<nxy; i++ )  {
        dXidX_(i,j).range_reset();
@@ -567,6 +560,8 @@ void GGrid::def_geom_init()
    }
    Jac_.range_reset();
    faceJac_.range_reset();
+
+   do_normals();
 
 
    GComm::Synch(comm_);
@@ -639,10 +634,10 @@ cout << "reg_geom_init: ibbeg=" << ibbeg << " ibend=" << ibend << endl;
 
      // Set the geom/metric quantities using element data:
      if ( GDIM == 2 ) {
-       gelems_[e]->dogeom2d(rijtmp, dXidX_, Jac_, faceJac_, faceNormal_, bdyNormal_);
+       gelems_[e]->dogeom2d(rijtmp, dXidX_, Jac_, faceJac_); 
      } 
      else if ( GDIM == 3 ) {
-       gelems_[e]->dogeom3d(rijtmp, dXidX_, Jac_, faceJac_, faceNormal_, bdyNormal_);
+       gelems_[e]->dogeom3d(rijtmp, dXidX_, Jac_, faceJac_);
      }
       
      // Zero-out local xe; only global allowed now:
@@ -666,6 +661,47 @@ cout << "reg_geom_init: ibbeg=" << ibbeg << " ibend=" << ibend << endl;
    GComm::Synch(comm_);
    
 } // end of method reg_geom_init
+
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : do_normals
+// DESC   : Compute normals to elem faces, and to domain boundary 
+//          nodes
+// ARGS   : none
+// RETURNS: none
+//**********************************************************************************
+void GGrid::do_normals()
+{
+  assert(gelems_.size() > 0 && "Elements not set");
+
+  GString         serr = "GridIcos::do_normals: ";
+  GSIZET          nxy = gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
+  GSIZET          n;
+  GTPoint<GFTYPE> pt;
+
+  // Resize surface-point-wise normals:
+  faceNormal_.resize(nxy); // no. coords for each normal at each face point
+  bdyNormal_ .resize(nxy); // no. coords for each normal at each bdy point
+  for ( GSIZET i=0; i<nxy; i++ ) {
+    faceNormal_[i].resize(nfacedof());
+    bdyNormal_ [i].resize(nbdydof());
+  }
+
+  // Note: at a given node, the (Cartesian) normals are
+  // computed as n_j = (dX_/dxi  X  dX_/deta)_j, where
+  // (xi, eta) define the surface, and X_ = (x, y, z)
+  // are the physical coordinates. Knoweldge of the 
+
+  // Set element face normals:
+  do_face_normals();
+  
+  // Set domain boundary node normals:
+  do_bdy_normals();
+  
+   
+} // end of method do_normals
 
 
 //**********************************************************************************
@@ -995,7 +1031,7 @@ void GGrid::init_local_face_info()
 #endif
     n += gelems_[e]->nfnodes();
   }
-  igface_.resize(n);
+  ieface_.resize(n);
 
   nn = 0; // global reference index
   n  = 0;
@@ -1006,7 +1042,7 @@ void GGrid::init_local_face_info()
     for ( GSIZET j=0; j<ieface->size(); j++ ) { // get global elem face node indices
       for ( GSIZET k=0; k<(*ieface)[j].size(); k++ ) {
         ig = nn + (*ieface)[j][k];
-        igface_[m] = ig;
+        ieface_[m] = ig;
         m++;
       }
     }
@@ -1032,20 +1068,20 @@ void GGrid::init_bc_info()
   GTVector<GTVector<GINT>>    *ieface; // domain face indices
 
   // Find boundary indices & types from config file 
-  // specification, for _each_ natural/canonical face:
-  config_bdy(ptree_, igbdy_byface_, igbdyt_byface_);
+  // specification, for _each_ natural/canonical domain face:
+  config_bdy(ptree_, igbdy_bydface_, igbdyt_byface_);
 
   // Flatten these 2 bdy index & types indirection arrays:
   GSIZET      nind=0, nw=0;
-  for ( auto j=0; j<igbdy_byface_.size(); j++ ) {
-    nind += igbdy_byface_[j].size();
+  for ( auto j=0; j<igbdy_bydface_.size(); j++ ) {
+    nind += igbdy_bydface_[j].size();
   }
   igbdy_ .resize(nind);
   igbdyt_.resize(nind);
   nind = 0;
-  for ( auto j=0; j<igbdy_byface_.size(); j++ ) {
-    for ( auto i=0; i<igbdy_byface_.size(); i++ ) {
-      igbdy_ [nind  ] = igbdy_byface_ [j][i];
+  for ( auto j=0; j<igbdy_bydface_.size(); j++ ) {
+    for ( auto i=0; i<igbdy_bydface_.size(); i++ ) {
+      igbdy_ [nind  ] = igbdy_bydface_ [j][i];
       igbdyt_[nind++] = igbdyt_byface_[j][i];
     }
   }

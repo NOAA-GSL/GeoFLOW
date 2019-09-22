@@ -43,7 +43,9 @@ virtual                       ~GGrid();
 virtual void                 do_elems() = 0;                            // compute grid for irank
 virtual void                 do_elems(GTMatrix<GINT> &p,
                                GTVector<GTVector<GFTYPE>> &xnodes) = 0; // compute grid on restart
-virtual void                 set_partitioner(GDD_base *d) = 0;         // set and use GDD object
+virtual void                 do_face_normals()=0;                       // compute normals to elem faces 
+virtual void                 do_bdy_normals ()=0;                       // compute normals to doimain bdy
+virtual void                 set_partitioner(GDD_base *d) = 0;          // set and use GDD object
 
 #if 0
 virtual void                 set_bdy_callback(
@@ -99,7 +101,7 @@ virtual void                 print(const GString &filename){}          // print 
         GTVector<GTVector<GFTYPE>>
                             &faceNormal();                             // global face normals
         GTVector<GTVector<GSIZET>>
-                            &igface() { return igface_;}               // global dom face indices into u for each elem face index
+                            &ieface() { return ieface_;}               // global dom face indices into u for each elem face index
         GTVector<GTVector<GFTYPE>>
                             &bdyNormal();                              // global bdy normals
         GTVector<GTVector<GSIZET>>
@@ -131,6 +133,7 @@ protected:
         void                        init_bc_info();                   // configure bdys
         void                        def_geom_init();                  // iniitialze deformed elems
         void                        reg_geom_init();                  // initialize regular elems
+        void                        do_normals();                     // compute normals to elem faces and domain bdy
         GFTYPE                      find_min_dist(); 
 
         GBOOL                       bInitialized_;  // object initialized?
@@ -152,11 +155,11 @@ protected:
         GTVector<GFTYPE>            Jac_;           // interior Jacobian, global
         GTVector<GFTYPE>            faceJac_;       // face Jacobian, global
         GTVector<GTVector<GFTYPE>>  faceNormal_;    // normal to eleme faces each face node point (2d & 3d), global
-        GTVector<GTVector<GSIZET>>  igface_;        // index into global field indicating elem face node
+        GTVector<GTVector<GSIZET>>  ieface_;        // index into global field indicating elem face node
         GTVector<GTVector<GFTYPE>>  bdyNormal_;     // normal to surface at each bdy node point (2d & 3d), global
         GTVector<GTVector<GSIZET>>  igbdy_binned_;  // index into global field indicating a domain bdy--by type
         GTVector<GSIZET>            igbdy_;         // index into global field indicating a domain bdy
-        GTVector<GTVector<GSIZET>>  igbdy_byface_;  // index into global field indicating a domain bdy
+        GTVector<GTVector<GSIZET>>  igbdy_bydface_; // index into global field indicating a domain bdy face
         GTVector<GBdyType>          igbdyt_;        // global domain bdy types for each igbdy index
         GTVector<GTVector<GBdyType>>
                                     igbdyt_byface_; // global domain bdy types for each igbdy index

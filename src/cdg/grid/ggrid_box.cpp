@@ -1248,3 +1248,30 @@ GBOOL GGridBox::on_global_edge(GINT iface, GTPoint<GFTYPE> &pt)
   
   return bret;
 } // end, method on_global_edge
+
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : do_face_normals
+// DESC   : Compute normals to each element face
+// ARGS   : none 
+// RETURNS: none
+//**********************************************************************************
+void GGridBox::do_face_normals()
+{
+
+} // end, method do_face_normals
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : do_bdy_normals
+// DESC   : Compute normals to each domain bdy
+// ARGS   : none 
+// RETURNS: none
+//**********************************************************************************
+void GGridBox::do_bdy_normals()
+{
+
+} // end, method do_bdy_normals

@@ -56,6 +56,8 @@ public:
         void                do_elems();                                   // compute grid for irank
         void                do_elems(GTMatrix<GINT> &p,
                               GTVector<GTVector<GFTYPE>> &xnodes);        // compute elems from restart data)
+        void                do_face_normals();                            // compute normals to elem faces
+        void                do_bdy_normals ();                            // compute normals to doimain bd
         void                set_partitioner(GDD_base *d);                 // set and use GDD object
         GTVector<GTriangle<GFTYPE>> 
                            &get_tmesh(){ return tmesh_;}                  // get complete triang. mesh
@@ -118,6 +120,7 @@ friend  std::ostream&       operator<<(std::ostream&, GGridIcos &);       // Out
                             GTVector<GTVector<GBdyType>> &igbdyt); // configure bdy
          void               find_bdy_ind3d(GFTYPE radius, 
                                            GTVector<GSIZET> &ibdy);// find bdy indices for bdy=radius
+
 
          GINT               ilevel_;        // refinement level (>= 0)
          GINT               ndim_;          // grid dimensionality (2 or 3)
