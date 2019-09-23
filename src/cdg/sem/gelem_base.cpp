@@ -1153,6 +1153,7 @@ void GElem_base::Jac(GMVFType &G, GTVector<GFTYPE> &jacv, GBOOL &pChk, GINT *pin
         y  = G(1,2)[n];
         z  = G(2,2)[n];
         jacv[n] = sqrt(Gx*Gx + Gy*Gy + Gz*Gz);
+w to dial US from abroad
         r   = sqrt( x*x + y*y + z*z );
         cost = (Gx*x + Gy*y + Gz*z)/(r*jacv[n]); // cos(x,G)
 cout << serr << "cos(_x_, _G_)=" << cost << " |G|=" << jacv[n] << " xGx=" << x*Gx << " yGy=" << y*Gy << " zGz=" << z*Gz << endl;;
@@ -1742,7 +1743,7 @@ GTVector<GTMatrix<GFTYPE>> &matv, GTVector<GTMatrix<GFTYPE>> &matu, GTVector<GFT
 } // end of method interp(2)
 
 
-/*
+#if 0
 //***********************************************************************************
 //***********************************************************************************
 // METHOD : set_bdyNormal2d
@@ -1857,7 +1858,7 @@ void GElem_base::set_bdyNormal3d(GTMatrix<GTVector<GFTYPE>> &rij, GTVector<GINT>
   }
   
 } // end of method set_bdyNormal3d
-*/
+#endif
 
 
 //***********************************************************************************
