@@ -31,6 +31,7 @@
 GGrid::GGrid(const geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GC_COMM &comm)
 :
 bInitialized_                   (FALSE),
+do_face_normals_                (FALSE),
 nprocs_        (GComm::WorldSize(comm)),
 irank_         (GComm::WorldRank(comm)),
 minnodedist_   (std::numeric_limits<GFTYPE>::max()),
@@ -681,21 +682,16 @@ void GGrid::do_normals()
   GSIZET          n;
   GTPoint<GFTYPE> pt;
 
-  // Resize surface-point-wise normals:
-  faceNormal_.resize(nxy); // no. coords for each normal at each face point
-  bdyNormal_ .resize(nxy); // no. coords for each normal at each bdy point
-  for ( GSIZET i=0; i<nxy; i++ ) {
-    faceNormal_[i].resize(nfacedof());
-    bdyNormal_ [i].resize(nbdydof());
-  }
-
   // Note: at a given node, the (Cartesian) normals are
   // computed as n_j = (dX_/dxi  X  dX_/deta)_j, where
   // (xi, eta) define the surface, and X_ = (x, y, z)
   // are the physical coordinates. Knoweldge of the 
 
-  // Set element face normals:
-  do_face_normals();
+  // Set element face normals. Note: arrays for 
+  // normals are allocated in these calls:
+  if ( do_face_normals_ ) {
+    do_face_normals();
+  }
   
   // Set domain boundary node normals:
   do_bdy_normals();
@@ -1069,7 +1065,7 @@ void GGrid::init_bc_info()
 
   // Find boundary indices & types from config file 
   // specification, for _each_ natural/canonical domain face:
-  config_bdy(ptree_, igbdy_bydface_, igbdyt_byface_);
+  config_bdy(ptree_, igbdy_bydface_, igbdyt_bydface_);
 
   // Flatten these 2 bdy index & types indirection arrays:
   GSIZET      nind=0, nw=0;
@@ -1082,13 +1078,10 @@ void GGrid::init_bc_info()
   for ( auto j=0; j<igbdy_bydface_.size(); j++ ) {
     for ( auto i=0; i<igbdy_bydface_.size(); i++ ) {
       igbdy_ [nind  ] = igbdy_bydface_ [j][i];
-      igbdyt_[nind++] = igbdyt_byface_[j][i];
+      igbdyt_[nind++] = igbdyt_bydface_[j][i];
     }
   }
  
-  cout << "GGrid::init_bc_info: igbdy_=" << igbdy_ << endl;
-  cout << "GGrid::init_bc_info: igbdyt_=" << igbdyt_ << endl;
-  
 
   // Create bdy type bins (one bin for each GBdyType), and
   // for each type, set the indirection indices into global
@@ -1103,8 +1096,6 @@ void GGrid::init_bc_info()
     for ( GSIZET j=0; j<nind; j++ ) igbdy_binned_[k][j] = igbdy_[ind[j]];
     nind = 0;
   } // end, element loop
-
-  cout << "GGrid::init_bc_info: igbdy_binned=" << igbdy_binned_ << endl;
 
   if ( ind != NULLPTR ) delete [] ind;
 

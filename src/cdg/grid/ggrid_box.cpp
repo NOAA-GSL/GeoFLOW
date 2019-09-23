@@ -1261,17 +1261,122 @@ GBOOL GGridBox::on_global_edge(GINT iface, GTPoint<GFTYPE> &pt)
 void GGridBox::do_face_normals()
 {
 
+  #if defined(_G_IS_2D)
+    do_face_normals2d();
+  #elif defined(_G_IS_3D)
+    do_face_normals3d();
+  #else
+    #error Invalid problem dimensionality
+  #endif
+
 } // end, method do_face_normals
 
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD : do_face_normals2d
+// DESC   : Compute normals to each element face in 2d
+// ARGS   : none 
+// RETURNS: none
+//**********************************************************************************
+void GGridBox::do_face_normals2d()
+{
+
+  // Cycle through local elem face indices to set
+  // normals. Taken in order, these should correspond
+   GSIZET ibeg, iend;   // beg, end indices for global arrays
+   GSIZET ibbeg, ibend; // beg, end indices for global arrays for bdy quantities
+   GSIZET ifbeg, ifend; // beg, end indices for global arrays for face quantities
+   GTVector<GTVector<GINT>>    *ieface; // domain face indices
+   for ( GSIZET e=0; e<gelems_.size(); e++ ) {
+     ibeg   = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
+     ifbeg  = gelems_[e]->ifbeg(); ifend = gelems_[e]->ifend();
+     ibbeg  = gelems_[e]->ibbeg(); ibend = gelems_[e]->ibend();
+     ieface = &gelems_[e]->face_indices();
+
+     // Restrict global arrays to local scope:
+     for ( GSIZET j=0; j<nxy; j++ ) {
+       for ( GSIZET i=0; i<nxy; i++ )  {
+         dXidX_(i,j).range(ibeg, iend);
+       }
+     }
+
+     
+
+   } // end, element loop
+
+
+   for ( GSIZET j=0; j<nxy; j++ )  {
+     for ( GSIZET i=0; i<nxy; i++ )  {
+       dXidX_(i,j).range_reset();
+       rijtmp(i,j).range_reset();
+     }
+   }
+
+
+
+
+
+} // end, method do_bdy_normals2d
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : do_face_normals3d
+// DESC   : Compute normals to each element face in 3d
+// ARGS   : none 
+// RETURNS: none
+//**********************************************************************************
+void GGridBox::do_face_normals3d()
+{
+
+
+} // end, method do_bdy_normals3d
+
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD : do_bdy_normals
-// DESC   : Compute normals to each domain bdy
+// DESC   : Compute normals to each domain bdy 
 // ARGS   : none 
 // RETURNS: none
 //**********************************************************************************
 void GGridBox::do_bdy_normals()
 {
 
+  #if defined(_G_IS_2D)
+    do_bdy_normals2d();
+  #elif defined(_G_IS_3D)
+    do_bdy_normals3d();
+  #else
+    #error Invalid problem dimensionality
+  #endif
+
 } // end, method do_bdy_normals
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : do_bdy_normals2d
+// DESC   : Compute normals to each domain bdy in 2d
+// ARGS   : none 
+// RETURNS: none
+//**********************************************************************************
+void GGridBox::do_bdy_normals2d()
+{
+
+} // end, method do_bdy_normals2d
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : do_bdy_normals3d
+// DESC   : Compute normals to each domain bdy in 3d
+// ARGS   : none 
+// RETURNS: none
+//**********************************************************************************
+void GGridBox::do_bdy_normals3d()
+{
+
+} // end, method do_bdy_normals3d
+

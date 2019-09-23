@@ -1636,7 +1636,47 @@ void GGridIcos::find_bdy_ind3d(GFTYPE radius, GTVector<GSIZET> &ibdy)
 void GGridIcos::do_face_normals()
 {
 
+  #if defined(_G_IS_2D)
+    do_face_normals2d();
+  #elif defined(_G_IS_3D)
+    do_face_normals3d();
+  #else
+    #error Invalid problem dimensionality
+  #endif
+
 } // end, method do_face_normals
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : do_face_normals2d
+// DESC   : Compute normals to each element face in 2d
+// ARGS   : none 
+// RETURNS: none
+//**********************************************************************************
+void GGridBox::do_face_normals2d()
+{
+
+  // Cycle through local elem face indices to set
+  // normals. Taken in order, these should correspond
+
+
+} // end, method do_bdy_normals2d
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : do_face_normals3d
+// DESC   : Compute normals to each element face in 3d
+// ARGS   : none 
+// RETURNS: none
+//**********************************************************************************
+void GGridBox::do_face_normals3d()
+{
+
+
+} // end, method do_bdy_normals3d
+
 
 
 //**********************************************************************************
@@ -1649,5 +1689,26 @@ void GGridIcos::do_face_normals()
 void GGridIcos::do_bdy_normals()
 {
 
+  #if defined(_G_IS_2D)
+    return;
+  #elif defined(_G_IS_3D)
+    do_bdy_normals3d();
+  #else
+    #error Invalid problem dimensionality
+  #endif
+
 } // end, method do_bdy_normals
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : do_bdy_normals3d
+// DESC   : Compute normals to each domain bdy in 3d
+// ARGS   : none 
+// RETURNS: none
+//**********************************************************************************
+void GGridBox::do_bdy_normals3d()
+{
+
+} // end, method do_bdy_normals3d
 

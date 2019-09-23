@@ -120,6 +120,10 @@ friend  std::ostream&       operator<<(std::ostream&, GGridIcos &);       // Out
                             GTVector<GTVector<GBdyType>> &igbdyt); // configure bdy
          void               find_bdy_ind3d(GFTYPE radius, 
                                            GTVector<GSIZET> &ibdy);// find bdy indices for bdy=radius
+         void               do_face_normals2d();                            // compute normals to elem faces in 2d
+         void               do_face_normals3d();                            // compute normals to elem faces in 3d
+         void               do_bdy_normals3d();                             // compute normals to doimain bdy in 3d
+
 
 
          GINT               ilevel_;        // refinement level (>= 0)

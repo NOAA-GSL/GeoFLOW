@@ -136,8 +136,9 @@ protected:
         void                        do_normals();                     // compute normals to elem faces and domain bdy
         GFTYPE                      find_min_dist(); 
 
-        GBOOL                       bInitialized_;  // object initialized?
+        GBOOL                       bInitialized_;    // object initialized?
         GBOOL                       is_bdy_time_dep_; // time-dep bdy vals?
+        GBOOL                       do_face_normals_; // compute elem face normals for fluxes?
         GElemType                   gtype_;         // element types comprising grid
         GINT                        irank_;         // MPI task id
         GINT                        nprocs_;        // number of MPI tasks
@@ -162,7 +163,7 @@ protected:
         GTVector<GTVector<GSIZET>>  igbdy_bydface_; // index into global field indicating a domain bdy face
         GTVector<GBdyType>          igbdyt_;        // global domain bdy types for each igbdy index
         GTVector<GTVector<GBdyType>>
-                                    igbdyt_byface_; // global domain bdy types for each igbdy index
+                                    igbdyt_bydface_;// global domain bdy types for each igbdy index
         PropertyTree                ptree_;         // main prop tree
         GGFX<GFTYPE>               *ggfx_;          // connectivity operator
 
