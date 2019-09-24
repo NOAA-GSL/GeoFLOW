@@ -100,8 +100,8 @@ virtual void                 print(const GString &filename){}          // print 
                             &faceJac();                                // global face Jacobian
         GTVector<GTVector<GFTYPE>>
                             &faceNormal();                             // global face normals
-        GTVector<GTVector<GSIZET>>
-                            &ieface() { return ieface_;}               // global dom face indices into u for each elem face index
+        GTVector<GSIZET>
+                            &gieface() { return gieface_;}             // elem face indices into glob u for all elem faces
         GTVector<GTVector<GFTYPE>>
                             &bdyNormal();                              // global bdy normals
         GTVector<GTVector<GSIZET>>
@@ -156,7 +156,7 @@ protected:
         GTVector<GFTYPE>            Jac_;           // interior Jacobian, global
         GTVector<GFTYPE>            faceJac_;       // face Jacobian, global
         GTVector<GTVector<GFTYPE>>  faceNormal_;    // normal to eleme faces each face node point (2d & 3d), global
-        GTVector<GTVector<GSIZET>>  ieface_;        // index into global field indicating elem face node
+        GTVector<GSIZET>            gieface_;       // index into global field indicating elem face node
         GTVector<GTVector<GFTYPE>>  bdyNormal_;     // normal to surface at each bdy node point (2d & 3d), global
         GTVector<GTVector<GSIZET>>  igbdy_binned_;  // index into global field indicating a domain bdy--by type
         GTVector<GSIZET>            igbdy_;         // index into global field indicating a domain bdy

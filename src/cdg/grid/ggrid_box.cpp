@@ -1284,37 +1284,45 @@ void GGridBox::do_face_normals2d()
 
   // Cycle through local elem face indices to set
   // normals. Taken in order, these should correspond
+   GSIZET m=0, nn=0;
    GSIZET ibeg, iend;   // beg, end indices for global arrays
    GSIZET ibbeg, ibend; // beg, end indices for global arrays for bdy quantities
    GSIZET ifbeg, ifend; // beg, end indices for global arrays for face quantities
-   GTVector<GTVector<GINT>>    *ieface; // domain face indices
+   GTVector<GTVector<GINT>>   *ieface ; // domain face indices
+   GTVector<GSIZET>            gieface; // global element face indices
+   GTVector<GINT>             *iverts ; // elem vertex indices
+   gieface.resize(gieface_.size());
    for ( GSIZET e=0; e<gelems_.size(); e++ ) {
      ibeg   = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
      ifbeg  = gelems_[e]->ifbeg(); ifend = gelems_[e]->ifend();
      ibbeg  = gelems_[e]->ibbeg(); ibend = gelems_[e]->ibend();
      ieface = &gelems_[e]->face_indices();
+  
 
-     // Restrict global arrays to local scope:
-     for ( GSIZET j=0; j<nxy; j++ ) {
-       for ( GSIZET i=0; i<nxy; i++ )  {
-         dXidX_(i,j).range(ibeg, iend);
+     for ( GSIZET j=0; j<ieface->size(); j++ ) { // cycle over all elem faces
+       iverts = &gelems_[e]->vert_indices(j);
+       for ( GSIZET k=0; k<(*ieface)[j].size(); k++ ) {
+         ig = nn + (*ieface)[j][k];
+         if ( !gieface.containsn(ig, m) ) { // don't include repeated face ind
+           gieface[m] = ig;
+           m++;
+           if      ( j == 0 ) {
+             if ( iverts->contains((*ieface)[j][k]:w
+
+           }
+           else if ( j == 1 ) {
+           }
+           else if ( j == 1 ) {
+           }
+           else if ( j == 1 ) {
+           }
+         }
        }
      }
+     nn += gelems_[e]->nnodes();
 
-     
 
    } // end, element loop
-
-
-   for ( GSIZET j=0; j<nxy; j++ )  {
-     for ( GSIZET i=0; i<nxy; i++ )  {
-       dXidX_(i,j).range_reset();
-       rijtmp(i,j).range_reset();
-     }
-   }
-
-
-
 
 
 } // end, method do_bdy_normals2d

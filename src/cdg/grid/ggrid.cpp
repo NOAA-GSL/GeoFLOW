@@ -219,7 +219,7 @@ GSIZET GGrid::ndof()
 //**********************************************************************************
 GSIZET GGrid::nfacedof()
 {
-   return ieface_.size();
+   return gieface_.size();
 } // end of method nfacedof
 
 
@@ -1027,19 +1027,21 @@ void GGrid::init_local_face_info()
 #endif
     n += gelems_[e]->nfnodes();
   }
-  ieface_.resize(n);
+  gieface_.resize(n);
 
+  // Find list over all elemes of element face nodes:
   nn = 0; // global reference index
-  n  = 0;
-  m  = 0;
-  for ( GSIZET e=0; e<gelems_.size(); e++ ) { // get global bdy ind and types
+  m  = 0; // current num of global face indices
+  for ( GSIZET e=0; e<gelems_.size(); e++ ) { // cycle over all elems
     ibeg   = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
     ieface = &gelems_[e]->face_indices(); // set in child class
-    for ( GSIZET j=0; j<ieface->size(); j++ ) { // get global elem face node indices
+    for ( GSIZET j=0; j<ieface->size(); j++ ) { // cycle over all elem faces
       for ( GSIZET k=0; k<(*ieface)[j].size(); k++ ) {
         ig = nn + (*ieface)[j][k];
-        ieface_[m] = ig;
-        m++;
+        if ( !gieface_.containsn(ig, m) ) { // don't include repeated face ind
+          gieface_[m] = ig;
+          m++;
+        }
       }
     }
     nn += gelems_[e]->nnodes();
