@@ -167,7 +167,7 @@ GBOOL impl_boxdirgauss(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
     cs = heatptree.getArray<GFTYPE>("adv_vel");
   }
 
-  for ( GSIZET j=0; j<GDIM; j++ ) c[j] = u[GDIM+j];
+  for ( GSIZET j=0; j<GDIM; j++ ) c[j] = u[j+1];
 
   // Check bdy conditioins:
   GTVector<GString> bc(6);
@@ -270,7 +270,7 @@ GBOOL impl_boxpergauss(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
   std::vector<GFTYPE> dxyz = boxptree.getArray<GFTYPE>("delxyz");
   P0 = xyz0; r0 = dxyz; gL = r0;
 
-  for ( GSIZET j=0; j<GDIM; j++ ) c[j] = u[GDIM+j];
+  for ( GSIZET j=0; j<GDIM; j++ ) c[j] = u[j+1];
 
   std::vector<GFTYPE> cs;
   if ( bpureadv ) {
@@ -395,7 +395,9 @@ GBOOL impl_icosgauss(const PropertyTree &ptree, GString &sconfig, GGrid &grid, T
   assert(grid.gtype() == GE_2DEMBEDDED && "Invalid element types");
 
 
-  for ( GSIZET j=0; j<GDIM+1; j++ ) c[j] = u[j+1];
+  if ( bpureadv ) {
+    for ( GSIZET j=0; j<GDIM+1; j++ ) c[j] = u[j+1];
+  }
 
   nxy = (*xnodes)[0].size(); // same size for x, y, z
 

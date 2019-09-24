@@ -21,10 +21,9 @@ cycle_          (0),
 ocycle_         (1),
 cycle_last_     (0),
 time_last_      (0.0),
-ivol_           (1.0)
+grid_           (&grid)
 { 
   traits_ = traits;
-  grid_   = &grid;
   utmp_   = static_cast<GTVector<GTVector<GFTYPE>*>*>(utmp_);
   myrank_ = GComm::WorldRank(grid.get_comm());
 } // end of constructor (1) method
@@ -50,7 +49,6 @@ void GGlobalDiag_basic<EquationType>::observe_impl(const Time &t, const State &u
 
   mpixx::communicator comm;
 
-   
   if ( (traits_.itype == ObserverBase<EquationType>::OBS_CYCLE 
         && (cycle_-cycle_last_+1) >= traits_.cycle_interval)
     || (traits_.itype == ObserverBase<EquationType>::OBS_TIME  
@@ -89,10 +87,20 @@ void GGlobalDiag_basic<EquationType>::init(const Time t, const State &u)
    time_last_  = this->traits_.start_time ;
    ocycle_     = this->traits_.start_ocycle;
 
-   *(*utmp_)[0] = 1.0;
-   GFTYPE vol = grid_->integrate(*(*utmp_)[0],*(*utmp_)[1]);
-   assert(vol > 0.0 && "Invalid volume integral");
-   ivol_ = 1.0/vol;
+
+   // Find State's kinetic components:
+   assert(this->eqn_ptr_ != NULL && "Equation implementation must be set");
+
+   GSIZET   *iwhere=NULLPTR;
+   GSIZET    nwhere=0;
+   CompDesc *icomptype = &(this->eqn_ptr_->comptype());
+   icomptype->contains(GSC_KINETIC, iwhere, nwhere);
+   for ( GSIZET j=0; j<nwhere; j++ ) ikinetic_.push_back(iwhere[j]);
+
+   if ( iwhere != NULLPTR ) delete [] iwhere;
+
+   ku_.resize(ikinetic_.size());
+   
 
    // Find State's kinetic components:
    assert(this->eqn_ptr_ != NULL && "Equation implementation must be set");
@@ -130,6 +138,8 @@ void GGlobalDiag_basic<EquationType>::do_kinetic_L2(const Time t, const State &u
       && "tmp space not set, or is insufficient");
 
   
+  GBOOL   isreduced= FALSE;
+  GBOOL   ismax    = FALSE;
   GINT    ndim = grid_->gtype() == GE_2DEMBEDDED ? 3 : GDIM;
   GFTYPE absu, absw, ener, enst, hel, fv, rhel;
   GTVector<GFTYPE> lmax(5), gmax(5);
@@ -142,94 +152,36 @@ void GGlobalDiag_basic<EquationType>::do_kinetic_L2(const Time t, const State &u
   for ( GINT j=0; j<ikinetic_.size(); j++ ) ku_[j] = u[ikinetic_[j]];
 
 
-  // Energy = <u^2>/2:
-  ener = 0.0;
-  for ( GINT j=0; j<ku_.size(); j++ ) {
-   *utmp[0] = *ku_[j];
-    utmp[0]->pow(2);
-    ener += grid_->integrate(*utmp[0],*utmp[1]); 
-  }
-  ener *= 0.5*ivol_;
+  // Energy = <u^2>/2
+  lmax[0] = GMTK::energy(*grid_, ku_, utmp, isreduced, ismax);
  
+
   // Enstrophy = <omega^2>/2
-  enst = 0.0;
+  lmax[1] = 0.0;
   if ( ku_.size() == 1 ) {
     for ( GINT j=0; j<ndim; j++ ) {
       GMTK::grad<GFTYPE>(*grid_, *ku_[0], j+1, utmp, *utmp[2]);
       utmp[2]->pow(2);
-      enst += grid_->integrate(*utmp[2],*utmp[0]); 
+      lmax[1] += grid_->integrate(*utmp[2],*utmp[0], isreduced); 
     }
+    lmax[1] *= 0.5*grid_->ivolume();
   }
   else {
-    for ( GINT j=0; j<ku_.size(); j++ ) {
-      GMTK::curl<GFTYPE>(*grid_, ku_, j+1, utmp, *utmp[2]);
-      utmp[2]->pow(2);
-      enst += grid_->integrate(*utmp[2],*utmp[0]); 
-    }
+    lmax[1] = GMTK::enstrophy(*grid_, ku_, utmp, isreduced, ismax);
   }
-  enst *= 0.5*ivol_;
 
   // Energy injection = <f.u>
-  fv = 0.0;
-  if ( uf.size() > 0 ) {
-    *utmp[1] = 0.0;
-    for ( GINT j=0; j<ndim; j++ ) {
-      if ( uf[j] == NULLPTR ) continue;
-      *utmp[1] = *uf[j];
-      utmp[1]->pointProd(*ku_[j]);
-      fv += grid_->integrate(*utmp[1],*utmp[0]); 
-    }
-    fv *= ivol_;
-  }
+  lmax[2] = GMTK::energyinj(*grid_, ku_, uf, utmp, isreduced, ismax);
 
   // Helicity = <u.omega>
-  hel = 0.0;
-  if ( ku_.size() > 1 ) {
-    for ( GINT j=0; j<ndim; j++ ) {
-      GMTK::curl<GFTYPE>(*grid_, ku_, j+1, utmp, *utmp[2]);
-      utmp[2]->pointProd(*ku_[j]);
-      hel += grid_->integrate(*utmp[2],*utmp[0]); 
-    }
-  }
-  hel *= ivol_;
+  lmax[3] = GMTK::helicity(*grid_, ku_, utmp, isreduced, ismax);
 
   // Relative helicity = <u.omega/(|u|*|omega|)>
-  rhel = 0.0;
-  if ( ku_.size() > 1 ) {
-    // Compute |u|:
-    *utmp[3] = 0.0;
-    for ( GINT j=0; j<ndim; j++ ) {
-     *utmp[1] = *ku_[j];
-      utmp[1]->pow(2);
-     *utmp[3] += *utmp[1];
-    }
-    utmp[3]->pow(0.5);
-    
-    // Compute |curl u| = |omega|:
-    *utmp[4] = 0.0;
-    for ( GINT j=0; j<ndim; j++ ) {
-      GMTK::curl<GFTYPE>(*grid_, ku_, j+1, utmp, *utmp[2]);
-      utmp[2]->pow(2);
-     *utmp[4] += *utmp[2];
-    }
-    utmp[4]->pow(0.5);
+  lmax[4] = GMTK::relhelicity(*grid_, ku_, utmp, isreduced, ismax);
 
-    // Create 1/|u| |omega| :
-    GFTYPE tiny = std::numeric_limits<GFTYPE>::epsilon();
-    for ( GSIZET k=0; k<ku_[0]->size(); k++ )  
-      (*utmp[3])[k] = 1.0/( (*utmp[3])[k] * (*utmp[4])[k] + tiny );
-
-    // Compute <u.omega / |u| |omega| >:
-    for ( GINT j=0; j<ndim; j++ ) {
-      GMTK::curl<GFTYPE>(*grid_, ku_, j+1, utmp, *utmp[2]);
-      utmp[2]->pointProd(*ku_[j]);
-      utmp[2]->pointProd(*utmp[3]);
-      rhel += grid_->integrate(*utmp[2],*utmp[0]); 
-    }
-  }
-  rhel *= ivol_;
-
-
+  // Gather final max's:
+  GComm::Allreduce(lmax.data(), gmax.data(), 5, T2GCDatatype<GFTYPE>(), GC_OP_SUM, grid_->get_comm());
+  ener = gmax[0]; enst = gmax[1]; fv = gmax[2]; hel = gmax[3]; rhel = gmax[4];
 
   // Print data to file:
   std::ifstream itst;
@@ -273,6 +225,8 @@ void GGlobalDiag_basic<EquationType>::do_kinetic_max(const Time t, const State &
   assert(utmp_ != NULLPTR && utmp_->size() > 5
       && "tmp space not set, or is insufficient");
 
+  GBOOL   isreduced= FALSE;
+  GBOOL   ismax    = TRUE;
   GINT   ndim = grid_->gtype() == GE_2DEMBEDDED ? 3 : GDIM;
   GFTYPE absu, absw, ener, enst, hel, fv, rhel;
   GTVector<GFTYPE> lmax(5), gmax(5);
@@ -284,92 +238,32 @@ void GGlobalDiag_basic<EquationType>::do_kinetic_max(const Time t, const State &
   // Find kinetic components to operate on:
   for ( GINT j=0; j<ikinetic_.size(); j++ ) ku_[j] = u[ikinetic_[j]];
 
-  // Energy = u^2/2:
-  *utmp[1] = 0.0;
-  for ( GINT j=0; j<ku_.size(); j++ ) {
-   *utmp[0] = *ku_[j];
-    utmp[0]->pow(2);
-   *utmp[1] += *utmp[0];
-  }
-  lmax[0] = 0.5*utmp[1]->max();
+  // Energy = <u^2>/2
+  lmax[0] = GMTK::energy(*grid_, ku_, utmp, isreduced, ismax);
  
-  // Enstrophy = omega^2/2
-  *utmp[3] = 0.0;
+  // Enstrophy = <omega^2>/2
+  lmax[1] = 0.0;
   if ( ku_.size() == 1 ) {
     for ( GINT j=0; j<ndim; j++ ) {
       GMTK::grad<GFTYPE>(*grid_, *ku_[0], j+1, utmp, *utmp[2]);
       utmp[2]->pow(2);
-     *utmp[3] += *utmp[2];
+      lmax[1] += grid_->integrate(*utmp[2],*utmp[0], isreduced); 
     }
+    lmax[1] *= 0.5*grid_->ivolume();
   }
   else {
-    for ( GINT j=0; j<ndim; j++ ) {
-      GMTK::curl<GFTYPE>(*grid_, ku_, j+1, utmp, *utmp[2]);
-      utmp[2]->pow(2);
-     *utmp[3] += *utmp[2];
-    }
-  }
-  lmax[1] = 0.5*utmp[3]->max();
-
-  // Energy injection = f.u
-  lmax[2] = 0.0;
-  if ( uf.size() > 0 ) {
-    *utmp[3] = 0.0;
-    for ( GINT j=0; j<ku_.size(); j++ ) {
-      if ( uf[ikinetic_[j]] == NULLPTR ) continue;  
-     *utmp[1] = *uf[ikinetic_[j]];
-      utmp[1]->pointProd(*ku_[j]);
-     *utmp[3] += *utmp[1];
-    }
-    lmax[2] = utmp[3]->amax();
+    lmax[1] = GMTK::enstrophy(*grid_, ku_, utmp, isreduced, ismax);
   }
 
-  // Helicity = u.omega
-  *utmp[3] = 0.0;
-  if ( ku_.size() > 1 ) {
-    for ( GINT j=0; j<ndim; j++ ) {
-      GMTK::curl<GFTYPE>(*grid_, ku_, j+1, utmp, *utmp[2]);
-      utmp[2]->pointProd(*ku_[j]);
-     *utmp[3] += *utmp[2];
-    }
-  }
-  lmax[3] = utmp[3]->amax();
+  // Energy injection = <f.u>
+  lmax[2] = GMTK::energyinj(*grid_, ku_, uf, utmp, isreduced, ismax);
 
-  // Relative helicity = u.omega/(|u|*|omega|)
-  *utmp[5] = 0.0;
-  if ( ku_.size() > 1 ) {
-    // Compute |u|:
-    *utmp[3] = 0.0;
-    for ( GINT j=0; j<ndim; j++ ) {
-     *utmp[1] = *ku_[j];
-      utmp[1]->pow(2);
-     *utmp[3] += *utmp[1];
-    }
-    utmp[3]->pow(0.5);
-    
-    // Compute |curl u| = |omega|:
-    *utmp[4] = 0.0;
-    for ( GINT j=0; j<ndim; j++ ) {
-      GMTK::curl<GFTYPE>(*grid_, ku_, j+1, utmp, *utmp[2]);
-      utmp[2]->pow(2);
-     *utmp[4] += *utmp[2];
-    }
-    utmp[4]->pow(0.5);
+  // Helicity = <u.omega>
+  lmax[3] = GMTK::helicity(*grid_, ku_, utmp, isreduced, ismax);
 
-    // Create 1/|u| |omega| :
-    GFTYPE tiny = std::numeric_limits<GFTYPE>::epsilon();
-    for ( GSIZET k=0; k<ku_[0]->size(); k++ )  
-      (*utmp[3])[k] = 1.0/( (*utmp[3])[k] * (*utmp[4])[k] + tiny );
+  // Relative helicity = <u.omega/(|u|*|omega|)>
+  lmax[4] = GMTK::relhelicity(*grid_, ku_, utmp, isreduced, ismax);
 
-    // Compute u.omega / |u| |omega|: 
-    for ( GINT j=0; j<ndim; j++ ) {
-      GMTK::curl<GFTYPE>(*grid_, ku_, j+1, utmp, *utmp[2]);
-      utmp[2]->pointProd(*ku_[j]);
-      utmp[2]->pointProd(*utmp[3]);
-     *utmp[5] += *utmp[2];
-    }
-  }
-  lmax[4] = utmp[5]->amax();
 
   // Gather final max's:
   GComm::Allreduce(lmax.data(), gmax.data(), 5, T2GCDatatype<GFTYPE>(), GC_OP_MAX, grid_->get_comm());

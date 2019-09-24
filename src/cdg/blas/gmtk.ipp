@@ -241,7 +241,10 @@ void normalize_euclidean(GTVector<GTVector<T>*> &x, GINT *iind, GINT nind, T x0)
     for ( GSIZET n=0; n<x[0]->size(); n++ ) { // cycle over all n-tuples
       for ( GSIZET l=0, xn=0.0; l<x.size(); l++ ) xn += (*x[l])[n]*(*x[l])[n];
       xn = x0/pow(xn,0.5);
+<<<<<<< HEAD
 std::cout << "norm_euc: xn=" << xn << std::endl;
+=======
+>>>>>>> feature/burgers
       for ( GSIZET l=0; l<x.size(); l++ ) (*x[l])[n] *= xn;
     }
   }
@@ -270,6 +273,38 @@ void saxpby(GTVector<T> &x, T a, GTVector<T> &y, T b)
     x[j] = a*x[j] + b*y[j];
   }
 } // end of method saxpby
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : normalizeL2
+// DESC   :
+//             L2 Normalize input field, u --> c u,  s.t.
+//               Int (c u)^2  dV / Int dV = u0^2
+//
+// ARGS   :
+//          grid : grid object
+//          u    : array of pointers to vectors; must each have at least 3
+//                 elements for 3-d vector product. All vector elements must
+//                 have the same length. Is normalized on exit.
+//          tmp  : tmp vector of length at least 2, each
+//                 of same length as x
+//          u0   : normalization value
+// RETURNS: none.
+//**********************************************************************************
+template<typename T>
+void normalizeL2(GGrid &grid, GTVector<GTVector<T>*> &u, GTVector<GTVector<T>*> &tmp, T u0)
+{
+  GSIZET  n;
+  GDOUBLE xn, ener;
+
+  ener = static_cast<GDOUBLE>(GMTK::energy(grid, u, tmp, TRUE, FALSE));
+  xn   = u0 / sqrt(ener);
+  for ( GINT l=0; l<u.size(); l++ ) {
+    *u[l] *= xn;
+  }
+
+} // end of method normalizeL2
 
 
 } // end, namespace GMTK

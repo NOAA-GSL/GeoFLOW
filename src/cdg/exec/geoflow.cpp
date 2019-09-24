@@ -452,11 +452,11 @@ void allocate(const PropertyTree &ptree)
     nsolve_   = GDIM;
     nstate_   = GDIM;
     if ( doheat || bpureadv ) {
-      nsolve_   = 1;
-      nstate_   = nladv + nsolve_;
       if ( bpureadv  ) {
         nladv     = sgrid == "grid_icos" ? 3 : GDIM;
       }
+      nsolve_   = 1;
+      nstate_   = nladv + nsolve_;
     }
     if ( "grid_icos" == sgrid ) {
       nsolve_   = 3;

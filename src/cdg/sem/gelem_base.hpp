@@ -153,9 +153,9 @@ inline  GTVector<GINT>     &ibdy_indices(){ return ibdy_indices_;}
 inline  GTVector<GBdyType> &bdy_types(){ return bdy_types_;}
 inline  GTVector<GFTYPE>   &mask(){ return mask_;}
 
-virtual void                dogeom1d (GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFTYPE>> &irij, GTVector<GFTYPE> &jac, GTVector<GFTYPE> &facejac, GTVector<GTVector<GFTYPE>> &faceNormal, GTVector<GTVector<GFTYPE>> &bdyNormal); 
-virtual void                dogeom2d (GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFTYPE>> &irij, GTVector<GFTYPE> &jac, GTVector<GFTYPE> &facejac, GTVector<GTVector<GFTYPE>> &faceNormal, GTVector<GTVector<GFTYPE>> &bdyNormal); 
-virtual void                dogeom3d (GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFTYPE>> &irij, GTVector<GFTYPE> &jac, GTVector<GFTYPE> &facejac, GTVector<GTVector<GFTYPE>> &faceNormal, GTVector<GTVector<GFTYPE>> &bdyNormal); 
+virtual void                dogeom1d (GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFTYPE>> &irij, GTVector<GFTYPE> &jac, GTVector<GFTYPE> &facejac); 
+virtual void                dogeom2d (GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFTYPE>> &irij, GTVector<GFTYPE> &jac, GTVector<GFTYPE> &facejac); 
+virtual void                dogeom3d (GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFTYPE>> &irij, GTVector<GFTYPE> &jac, GTVector<GFTYPE> &facejac); 
 
 friend std::ostream&        operator<<(std::ostream&, GElem_base &);    // Output stream operator
  
@@ -181,8 +181,10 @@ virtual void                get_indirect3d(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b,
         void                Jac(GMVFType &rij, GTVector<GFTYPE> &jac, GBOOL &pChk, GINT *ind, GINT nind);
 virtual void                Jac_embed(GMVFType &G, GTVector<GFTYPE> &jac, GBOOL &pChk, GINT *pind, GINT nind);
         void                inv(GMVFType &G, GMVFType &iG);
+/*
         void                set_bdyNormal2d(GTMatrix<GTVector<GFTYPE>> &rij, GTVector<GINT> &iind, GTVector<GTVector<GFTYPE>> &bdyNormal);
         void                set_bdyNormal3d(GTMatrix<GTVector<GFTYPE>> &rij, GTVector<GINT> &iind, GTVector<GTVector<GFTYPE>> &bdyNormal);
+*/
                                         
 
 GINT                    Ntot_;          // total no. node points in element

@@ -43,7 +43,9 @@ virtual                       ~GGrid();
 virtual void                 do_elems() = 0;                            // compute grid for irank
 virtual void                 do_elems(GTMatrix<GINT> &p,
                                GTVector<GTVector<GFTYPE>> &xnodes) = 0; // compute grid on restart
-virtual void                 set_partitioner(GDD_base *d) = 0;         // set and use GDD object
+virtual void                 do_face_normals()=0;                       // compute normals to elem faces 
+virtual void                 do_bdy_normals ()=0;                       // compute normals to doimain bdy
+virtual void                 set_partitioner(GDD_base *d) = 0;          // set and use GDD object
 
 #if 0
 virtual void                 set_bdy_callback(
@@ -69,7 +71,8 @@ virtual void                 print(const GString &filename){}          // print 
         void                 deriv(GTVector<GFTYPE> &u, GINT idir, GTVector<GFTYPE> &tmp,
                                    GTVector<GFTYPE> &du );            // derivative of global vector
         GFTYPE               integrate(GTVector<GFTYPE> &u,
-                                       GTVector<GFTYPE> &tmp);        // spatial integration of global vector
+                                       GTVector<GFTYPE> &tmp, 
+				       GBOOL bglobal = TRUE);         // spatial integration of global vector
         void                 print(GString fname, GBOOL bdof=FALSE);
         GSIZET               ndof();                                  // compute total number elem dof
         GSIZET               size() { return ndof(); }
@@ -79,6 +82,10 @@ virtual void                 print(const GString &filename){}          // print 
         GFTYPE               maxlength();                             // find max elem length
         GFTYPE               minnodedist()         
                              {return minnodedist_;}                   // find min node distance
+        GFTYPE               volume()         
+                             {return volume_;}                        // get grid volume
+        GFTYPE               ivolume()         
+                             {return ivolume_;}                       // get nverse of grid volume
         GTMatrix<GTVector<GFTYPE>>
                             &dXidX();                                 // global Rij = dXi^j/dX^i
         GTVector<GFTYPE>    &dXidX(GSIZET i,GSIZET j);                // Rij matrix element 
@@ -93,16 +100,16 @@ virtual void                 print(const GString &filename){}          // print 
                             &faceJac();                                // global face Jacobian
         GTVector<GTVector<GFTYPE>>
                             &faceNormal();                             // global face normals
-        GTVector<GTVector<GSIZET>>
-                            &igface() { return igface_;}               // global dom face indices into u for each elem face index
+        GTVector<GSIZET>
+                            &gieface() { return gieface_;}             // elem face indices into glob u for all elem faces
         GTVector<GTVector<GFTYPE>>
                             &bdyNormal();                              // global bdy normals
         GTVector<GTVector<GSIZET>>
                             &igbdy_binned() { return igbdy_binned_;}   // global dom bdy indices binned into GBdyType
         GTVector<GTVector<GSIZET>>
-                            &igbdy_byface() { return igbdy_byface_;}   // global dom bdy indices for each face
+                            &igbdy_bydface() { return igbdy_bydface_;}   // global dom bdy indices for each face
         GTVector<GTVector<GBdyType>>
-                            &igbdyt_byface(){ return igbdyt_byface_;}  // global dom bdy indices for each face
+                            &igbdyt_bydface(){ return igbdyt_bydface_;}  // global dom bdy type for each face
         GTVector<GSIZET>
                             &igbdy() { return igbdy_;}                 // global dom bdy indices into u
 
@@ -122,17 +129,23 @@ friend  std::ostream&        operator<<(std::ostream&, GGrid &);       // Output
 protected:
        
         void                        init_local_face_info();           // get local face info
+        void                        globalize_coords();               // create global coord vecs from elems
         void                        init_bc_info();                   // configure bdys
-        void                        def_init();                       // iniitialze deformed elems
-        void                        reg_init();                       // initialize regular elems
+        void                        def_geom_init();                  // iniitialze deformed elems
+        void                        reg_geom_init();                  // initialize regular elems
+        void                        do_normals();                     // compute normals to elem faces and domain bdy
         GFTYPE                      find_min_dist(); 
 
-        GBOOL                       bInitialized_;  // object initialized?
+        GBOOL                       bInitialized_;    // object initialized?
         GBOOL                       is_bdy_time_dep_; // time-dep bdy vals?
+        GBOOL                       do_face_normals_; // compute elem face normals for fluxes?
         GElemType                   gtype_;         // element types comprising grid
         GINT                        irank_;         // MPI task id
         GINT                        nprocs_;        // number of MPI tasks
         GC_COMM                     comm_;          // communicator
+        GFTYPE                      minnodedist_;   // min node length array (for each elem)
+	GFTYPE                      volume_;        // grid volume
+	GFTYPE                      ivolume_;       // 1 / grid volume
         GElemList                   gelems_;        // element list
         GTVector<GFTYPE>            etmp_;          // elem-level tmp vector
         GTVector<GTVector<GSIZET>>  itype_;         // indices in elem list of each type
@@ -143,15 +156,14 @@ protected:
         GTVector<GFTYPE>            Jac_;           // interior Jacobian, global
         GTVector<GFTYPE>            faceJac_;       // face Jacobian, global
         GTVector<GTVector<GFTYPE>>  faceNormal_;    // normal to eleme faces each face node point (2d & 3d), global
-        GTVector<GTVector<GSIZET>>  igface_;        // index into global field indicating elem face node
+        GTVector<GSIZET>            gieface_;       // index into global field indicating elem face node
         GTVector<GTVector<GFTYPE>>  bdyNormal_;     // normal to surface at each bdy node point (2d & 3d), global
-        GFTYPE                      minnodedist_;   // min node length array (for each elem)
         GTVector<GTVector<GSIZET>>  igbdy_binned_;  // index into global field indicating a domain bdy--by type
         GTVector<GSIZET>            igbdy_;         // index into global field indicating a domain bdy
-        GTVector<GTVector<GSIZET>>  igbdy_byface_;  // index into global field indicating a domain bdy
+        GTVector<GTVector<GSIZET>>  igbdy_bydface_; // index into global field indicating a domain bdy face
         GTVector<GBdyType>          igbdyt_;        // global domain bdy types for each igbdy index
         GTVector<GTVector<GBdyType>>
-                                    igbdyt_byface_; // global domain bdy types for each igbdy index
+                                    igbdyt_bydface_;// global domain bdy types for each igbdy index
         PropertyTree                ptree_;         // main prop tree
         GGFX<GFTYPE>               *ggfx_;          // connectivity operator
 

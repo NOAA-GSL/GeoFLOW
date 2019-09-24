@@ -469,12 +469,13 @@ void GTVector<T>::clear()
 //  #pragma acc exit data delete( data_[0:n_-1] )
     #pragma acc exit data delete( data_[0:n_-1], this[0:1] )
   #endif
-
   if ( data_ != NULLPTR ) {
     delete [] data_;
     this->data_ = NULLPTR; 
   }
-  gindex_(0, 0, 0, -1, 0,  0);
+  n_ = 0;
+  gindex_(n_, n_, 0, n_-1, 1,  0);
+  gindex_keep_ = gindex_;
 
   #if defined(_G_AUTO_CREATE_DEV)
 //  #pragma acc enter data create( data_[0:n_-1] )
@@ -682,7 +683,11 @@ void GTVector<T>::operator=(T a)
 template<class T> 
 void  GTVector<T>::range(GSIZET ibeg, GSIZET iend) 
 {
-//assert(ibeg <= n_ && iend <= n_ && "Invalid range specification");
+//assert(iend < n_ && ibeg <= iend && "Invalid range specification");
+  if ( iend >= n_ || ibeg >= n_ ) {
+    std::cout << "GTVector::range: invalid range specification: n_=" << n_ << " ibeg=" << ibeg << " iend=" << iend << std::endl;
+    while (1);
+  }
 
   gindex_.beg() = ibeg;
   gindex_.end() = iend;

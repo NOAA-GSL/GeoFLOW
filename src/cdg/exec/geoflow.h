@@ -10,8 +10,8 @@
 
 #include "gexec.h"
 #include "gtypes.h"
-#include <cstdio>
-#include <cmath>
+#include <stdio.h>
+#include <math.h>
 #include <unistd.h>
 #include <iostream>
 #include <memory>

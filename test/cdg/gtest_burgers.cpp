@@ -52,7 +52,7 @@ typename ValueType = GFTYPE,
 typename DerivType = StateType,
 typename TimeType  = ValueType,
 typename JacoType  = StateType,
-typename SizeType  = GSIZET
+typename SizeType  = GSIZET,
 >
 struct EquationTypes {
         using State      = StateType;

@@ -40,7 +40,7 @@ public:
         using Jacobian    = typename Equation::Jacobian;
         using Size        = typename Equation::Size;
         using ObserverBase<EquationType>::utmp_;
-        using ObserverBase<EquationType>::grid_;
+//      using ObserverBase<EquationType>::grid_;
         using ObserverBase<EquationType>::traits_;
 
 //      using ObserverBase<EquationType>::ObsType;
@@ -75,12 +75,12 @@ private:
         GSIZET             ocycle_;     // output cycle number
         GTVector<GINT>     ikinetic_;   // stores GSC_KINETIC component types
         GFTYPE             time_last_;  // most recent output time
-        GFTYPE             ivol_;       // inverse of grid volume
         GTVector<GINT>     state_index_;// list of state indices to print
         GTVector<GString>  state_names_;// list of names of states to print
         GString            sidir_;      // directory from which to read
         GString            sodir_;      // directory in which to write
         State              ku_;         // vector of pointers to kinetic components
+        GGrid             *grid_;       // grid object
 
 };
 

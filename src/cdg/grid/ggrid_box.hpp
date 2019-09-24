@@ -29,6 +29,9 @@ class GGridBox : public GGrid
 {
 
 public:
+        using              GGrid::faceNormal_;
+        using              GGrid::bdyNormal_;
+
         // Box grid traits:
         struct Traits {
           GTPoint<GFTYPE>     P0;        // global lower point
@@ -43,6 +46,8 @@ public:
         void                do_elems();                                      // compute elems
         void                do_elems(GTMatrix<GINT> &p,
                               GTVector<GTVector<GFTYPE>> &xnodes);           // compute elems from restart data
+        void                do_face_normals();                               // compute normals to elem faces
+        void                do_bdy_normals ();                               // compute normals to doimain bdy
         void                set_partitioner(GDD_base *d);                    // set and use GDD object
         void                set_basis(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b); // set element basis
         void                periodize();                                     // periodize coords, if allowed
@@ -67,6 +72,10 @@ private:
                               GTVector<GTVector<GFTYPE>> &xnodes);          // do 2d grid restart
          void               do_elems3d(GTMatrix<GINT> &p, 
                               GTVector<GTVector<GFTYPE>> &xnodes);          // do 3d grid restart
+         void               do_face_normals2d();                            // compute normals to elem faces in 2d
+         void               do_face_normals3d();                            // compute normals to elem faces in 3d
+         void               do_bdy_normals2d();                             // compute normals to doimain bdy in 2d
+         void               do_bdy_normals3d();                             // compute normals to doimain bdy in 3d
          void               find_subdomain();                               // find task's default subdomain
          void               find_bdy_ind2d(GINT, GBOOL, GTVector<GSIZET> &);// find global bdy indices for specified bdy in 2d
          void               find_bdy_ind3d(GINT, GBOOL, GTVector<GSIZET> &);// find global bdy indices for specified bdy in 3d

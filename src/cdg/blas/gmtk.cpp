@@ -54,7 +54,7 @@ void D2_X_D1<GFLOAT>(GTMatrix<GFLOAT> &D1, GTMatrix<GFLOAT>  &D2T,
   N22 = D2T.size(2);
   #if defined(_G_BOUNDS_CHK)
   if ( !(u.size() >= N12*N21 && y.size() >= N11*N22) ) {
-    std::cout << "GMTK::D2_X_D1" << "incompatible size" << std::endl;
+    cout << "GMTK::D2_X_D1" << "incompatible size" << endl;
     exit(1);
   }
   #endif
@@ -103,7 +103,7 @@ void D2_X_D1<GDOUBLE>(GTMatrix<GDOUBLE> &D1, GTMatrix<GDOUBLE>  &D2T,
   N22 = D2T.size(2);
   #if defined(_G_BOUNDS_CHK)
   if ( !(u.size() >= N12*N21 && y.size() >= N11*N22) ) {
-    std::cout << "GMTK::D2_X_D1" << "incompatible size" << std::endl;
+    cout << "GMTK::D2_X_D1" << "incompatible size" << endl;
     exit(1);
   }
   #endif
@@ -152,7 +152,7 @@ void D2_X_D1<GQUAD>(GTMatrix<GQUAD> &D1, GTMatrix<GQUAD>  &D2T,
   N22 = D2T.size(2);
   #if defined(_G_BOUNDS_CHK)
   if ( !(u.size() >= N12*N21 && y.size() >= N11*N22) ) {
-    std::cout << "GMTK::D2_X_D1" << "incompatible size" << std::endl;
+    cout << "GMTK::D2_X_D1" << "incompatible size" << endl;
     exit(1);
   }
   #endif
@@ -196,7 +196,7 @@ void I2_X_D1<GFLOAT>(GTMatrix<GFLOAT> &D1,
 
   #if defined(_G_BOUNDS_CHK)
   if ( !(u.size() >= N1*N2 && y.size() >= N1*N2) ) {
-    std::cout << "GMTK::I2_X_D1" << "incompatible size" << std::endl;
+    cout << "GMTK::I2_X_D1" << "incompatible size" << endl;
     exit(1);
   }
   #endif
@@ -232,7 +232,7 @@ void I2_X_D1<GDOUBLE>(GTMatrix<GDOUBLE> &D1,
 
   #if defined(_G_BOUNDS_CHK)
   if ( !(u.size() >= N1*N2 && y.size() >= N1*N2) ) {
-    std::cout << "GMTK::I2_X_D1" << "incompatible size" << std::endl;
+    cout << "GMTK::I2_X_D1" << "incompatible size" << endl;
     exit(1);
   }
   #endif
@@ -268,7 +268,7 @@ void I2_X_D1<GQUAD>(GTMatrix<GQUAD> &D1,
 
   #if defined(_G_BOUNDS_CHK)
   if ( !(u.size() >= N1*N2 && y.size() >= N1*N2) ) {
-    std::cout << "GMTK::I2_X_D1" << "incompatible size" << std::endl;
+    cout << "GMTK::I2_X_D1" << "incompatible size" << endl;
     exit(1);
   }
   #endif
@@ -310,7 +310,7 @@ void Dg2_X_D1<GFLOAT>(GTMatrix<GFLOAT> &D1, GTVector<GFLOAT> &Dg2, GTVector<GFLO
   N2  = Dg2.size();
   #if defined(_G_BOUNDS_CHK)
   if ( !(u.size() >= N11*N2 && y.size() >= N11*N2) ) {
-    std::cout << "GMTK::Dg_X_D1" << "incompatible size" << std::endl;
+    cout << "GMTK::Dg_X_D1" << "incompatible size" << endl;
     exit(1);
   }
   #endif
@@ -359,7 +359,7 @@ void Dg2_X_D1<GDOUBLE>(GTMatrix<GDOUBLE> &D1, GTVector<GDOUBLE> &Dg2, GTVector<G
   N2  = Dg2.size();
   #if defined(_G_BOUNDS_CHK)
   if ( !(u.size() >= N11*N2 && y.size() >= N11*N2) ) {
-    std::cout << "GMTK::Dg_X_D1" << "incompatible size" << std::endl;
+    cout << "GMTK::Dg_X_D1" << "incompatible size" << endl;
     exit(1);
   }
   #endif
@@ -408,7 +408,7 @@ void Dg2_X_D1<GQUAD>(GTMatrix<GQUAD> &D1, GTVector<GQUAD> &Dg2, GTVector<GQUAD> 
   N2  = Dg2.size();
   #if defined(_G_BOUNDS_CHK)
   if ( !(u.size() >= N11*N2 && y.size() >= N11*N2) ) {
-    std::cout << "GMTK::Dg_X_D1" << "incompatible size" << std::endl;
+    cout << "GMTK::Dg_X_D1" << "incompatible size" << endl;
     exit(1);
   }
   #endif
@@ -451,7 +451,7 @@ void D2_X_I1<GFLOAT>(GTMatrix<GFLOAT> &D2T,
   N22 = D2T.size(2);
   #if defined(_G_BOUNDS_CHK)
   if ( !(u.size() >= N1*N2 && y.size() >= N1*N2) ) {
-    std::cout << "GMTK::D2_X_I1" << "incompatible size" << std::endl;
+    cout << "GMTK::D2_X_I1" << "incompatible size" << endl;
     exit(1);
   }
   #endif
@@ -486,7 +486,7 @@ void D2_X_I1<GDOUBLE>(GTMatrix<GDOUBLE> &D2T,
   N22 = D2T.size(2);
   #if defined(_G_BOUNDS_CHK)
   if ( !(u.size() >= N1*N2 && y.size() >= N1*N2) ) {
-    std::cout << "GMTK::D2_X_I1" << "incompatible size" << std::endl;
+    cout << "GMTK::D2_X_I1" << "incompatible size" << endl;
     exit(1);
   }
   #endif
@@ -522,7 +522,7 @@ void D2_X_I1<GQUAD>(GTMatrix<GQUAD> &D2T,
   N22 = D2T.size(2);
   #if defined(_G_BOUNDS_CHK)
   if ( !(u.size() >= N1*N2 && y.size() >= N1*N2) ) {
-    std::cout << "GMTK::D2_X_I1" << "incompatible size" << std::endl;
+    cout << "GMTK::D2_X_I1" << "incompatible size" << endl;
     exit(1);
   }
   #endif
@@ -564,7 +564,7 @@ void D2_X_Dg1<GFLOAT>(GTVector<GFLOAT> &Dg1, GTMatrix<GFLOAT> &D2T, GTVector<GFL
   N22 = D2T.size(2);
   #if defined(_G_BOUNDS_CHK)
   if ( !(u.size() >= N1*N21 && y.size() >= N1*N21) ) {
-    std::cout << "GMTK::D2_X_Dg1" << "incompatible size" << std::endl;
+    cout << "GMTK::D2_X_Dg1" << "incompatible size" << endl;
     exit(1);
   }
   #endif
@@ -611,7 +611,7 @@ void D2_X_Dg1<GDOUBLE>(GTVector<GDOUBLE> &Dg1, GTMatrix<GDOUBLE> &D2T, GTVector<
   N22 = D2T.size(2);
   #if defined(_G_BOUNDS_CHK)
   if ( !(u.size() >= N1*N21 && y.size() >= N1*N21) ) {
-    std::cout << "GMTK::D2_X_Dg1" << "incompatible size" << std::endl;
+    cout << "GMTK::D2_X_Dg1" << "incompatible size" << endl;
     exit(1);
   }
   #endif
@@ -658,7 +658,7 @@ void D2_X_Dg1<GQUAD>(GTVector<GQUAD> &Dg1, GTMatrix<GQUAD> &D2T, GTVector<GQUAD>
   N22 = D2T.size(2);
   #if defined(_G_BOUNDS_CHK)
   if ( !(u.size() >= N1*N21 && y.size() >= N1*N21) ) {
-    std::cout << "GMTK::D2_X_Dg1" << "incompatible size" << std::endl;
+    cout << "GMTK::D2_X_Dg1" << "incompatible size" << endl;
     exit(1);
   }
   #endif
@@ -707,7 +707,7 @@ void D3_X_D2_X_D1<GFLOAT>(GTMatrix<GFLOAT> &D1, GTMatrix<GFLOAT>  &D2T, GTMatrix
   N32 = D3T.size(2);
   #if defined(_G_BOUNDS_CHK)
   if ( !(u.size() >= N12*N21*N31 && y.size() >= N11*N22*N32) ) {
-    std::cout << "GMTK::D2_X_D1" << "incompatible size" << std::endl;
+    cout << "GMTK::D2_X_D1" << "incompatible size" << endl;
     exit(1);
   }
   #endif
@@ -766,7 +766,7 @@ void D3_X_D2_X_D1<GDOUBLE>(GTMatrix<GDOUBLE> &D1, GTMatrix<GDOUBLE>  &D2T, GTMat
   N32 = D3T.size(2);
   #if defined(_G_BOUNDS_CHK)
   if ( !(u.size() >= N12*N21*N31 && y.size() >= N11*N22*N32) ) {
-    std::cout << "GMTK::D2_X_D1" << "incompatible size" << std::endl;
+    cout << "GMTK::D2_X_D1" << "incompatible size" << endl;
     exit(1);
   }
   #endif
@@ -825,7 +825,7 @@ void D3_X_D2_X_D1<GQUAD>(GTMatrix<GQUAD> &D1, GTMatrix<GQUAD>  &D2T, GTMatrix<GQ
   N32 = D3T.size(2);
   #if defined(_G_BOUNDS_CHK)
   if ( !(u.size() >= N12*N21*N31 && y.size() >= N11*N22*N32) ) {
-    std::cout << "GMTK::D2_X_D1" << "incompatible size" << std::endl;
+    cout << "GMTK::D2_X_D1" << "incompatible size" << endl;
     exit(1);
   }
   #endif
@@ -1658,7 +1658,7 @@ void add<GFLOAT>(GTVector<GFLOAT> &vret, GTVector<GFLOAT> &va, GTVector<GFLOAT> 
 {
   #if defined(_G_BOUNDS_CHK)
   if ( va.size() < vret.size() || vb.size() < vret.size() ) {
-    std::cout << "GTVector<T>::add: " << "incompatible size" << std::endl;
+    cout << "GTVector<T>::add: " << "incompatible size" << endl;
 while(1){};
     exit(1);
   }
@@ -1693,7 +1693,7 @@ void add<GDOUBLE>(GTVector<GDOUBLE> &vret, GTVector<GDOUBLE> &va, GTVector<GDOUB
 {
   #if defined(_G_BOUNDS_CHK)
   if ( va.size() < vret.size() || vb.size() < vret.size() ) {
-    std::cout << "GTVector<T>::add: " << "incompatible size" << std::endl;
+    cout << "GTVector<T>::add: " << "incompatible size" << endl;
 while(1){};
     exit(1);
   }
@@ -1728,7 +1728,7 @@ void add<GQUAD>(GTVector<GQUAD> &vret, GTVector<GQUAD> &va, GTVector<GQUAD> &vb,
 {
   #if defined(_G_BOUNDS_CHK)
   if ( va.size() < vret.size() || vb.size() < vret.size() ) {
-    std::cout << "GTVector<T>::add: " << "incompatible size" << std::endl;
+    cout << "GTVector<T>::add: " << "incompatible size" << endl;
 while(1){};
     exit(1);
   }
@@ -1760,7 +1760,7 @@ void matvec_prod<GFLOAT>(GTVector<GFLOAT> &vret, GTMatrix<GFLOAT> &A, GTVector<G
 {
   #if defined(_G_BOUNDS_CHK)
   if ( b.size() < A.size(2) ) {
-    std::cout << "GMTK::matvec_prod: " << "incompatible size" << std::endl;
+    cout << "GMTK::matvec_prod: " << "incompatible size" << endl;
     exit(1);
   }
   #endif
@@ -1795,7 +1795,7 @@ void matvec_prod<GDOUBLE>(GTVector<GDOUBLE> &vret, GTMatrix<GDOUBLE> &A, GTVecto
 {
   #if defined(_G_BOUNDS_CHK)
   if ( b.size() < A.size(2) ) {
-    std::cout << "GMTK::matvec_prod: " << "incompatible size" << std::endl;
+    cout << "GMTK::matvec_prod: " << "incompatible size" << endl;
     exit(1);
   }
   #endif
@@ -1830,7 +1830,7 @@ void matvec_prod<GQUAD>(GTVector<GQUAD> &vret, GTMatrix<GQUAD> &A, GTVector<GQUA
 {
   #if defined(_G_BOUNDS_CHK)
   if ( b.size() < A.size(2) ) {
-    std::cout << "GMTK::matvec_prod: " << "incompatible size" << std::endl;
+    cout << "GMTK::matvec_prod: " << "incompatible size" << endl;
     exit(1);
   }
   #endif
@@ -1866,7 +1866,7 @@ void matmat_prod<GFLOAT>(GTMatrix<GFLOAT> &C, GTMatrix<GFLOAT> &A, GTMatrix<GFLO
 {
   #if defined(_G_BOUNDS_CHK)
   if ( A.size(2) != B.size(1) ) {
-    std::cout << "GMTK::matmat_prod:incompatible matrix"<< std::endl;
+    cout << "GMTK::matmat_prod:incompatible matrix"<< endl;
     exit(1);
   }
   #endif
@@ -1905,7 +1905,7 @@ void matmat_prod<GDOUBLE>(GTMatrix<GDOUBLE> &C, GTMatrix<GDOUBLE> &A, GTMatrix<G
 {
   #if defined(_G_BOUNDS_CHK)
   if ( A.size(2) != B.size(1) ) {
-    std::cout << "GMTK::matmat_prod:incompatible matrix"<< std::endl;
+    cout << "GMTK::matmat_prod:incompatible matrix"<< endl;
     exit(1);
   }
   #endif
@@ -1944,7 +1944,7 @@ void matmat_prod<GQUAD>(GTMatrix<GQUAD> &C, GTMatrix<GQUAD> &A, GTMatrix<GQUAD> 
 {
   #if defined(_G_BOUNDS_CHK)
   if ( A.size(2) != B.size(1) ) {
-    std::cout << "GMTK::matmat_prod:incompatible matrix"<< std::endl;
+    cout << "GMTK::matmat_prod:incompatible matrix"<< endl;
     exit(1);
   }
   #endif
@@ -1988,7 +1988,14 @@ void curl(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &u, const GINT idir,
           GTVector<GTVector<GFTYPE>*> &tmp, GTVector<GFTYPE> &curlc)
 {
 
-  if ( GDIM == 2 && u.size() > GDIM ) {
+  assert(tmp.size() >= 2 && "Insufficient temp space");
+
+  // Handle 2.5-d 2d-3c case:
+  // Handle 1c cases in 2d or 3d:
+  if  ( u.size() < 2 ) {
+     curlc = 0.0; 
+  }
+  else if ( GDIM == 2 && u.size() > GDIM && grid.gtype() != GE_2DEMBEDDED ) {
     switch (idir) {
       case 1:
         grid.deriv(*u[2], 2, *tmp[0], curlc);
@@ -2006,10 +2013,10 @@ void curl(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &u, const GINT idir,
         assert( FALSE && "Invalid component specified");
         break;
     }
-    return;
   }
 
-  if ( GDIM == 2 ) {
+  // Handle 2d-2c regular types:
+  else if ( GDIM == 2  && u.size() == 2 && grid.gtype() == GE_REGULAR ) {
     switch (idir) {
       case 3:
         grid.deriv(*u[1], 1, *tmp[0], curlc);
@@ -2020,10 +2027,10 @@ void curl(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &u, const GINT idir,
         assert( FALSE && "Invalid component specified");
         break;
     }
-    return;
   }
 
-  if ( GDIM == 3 ) {
+  // Handle 3d-3c or embedded cases:
+  else if ( GDIM == 3 || grid.gtype() == GE_2DEMBEDDED ) {
     switch (idir) {
       case 1:
         grid.deriv(*u[1], 3, *tmp[0], curlc);
@@ -2042,6 +2049,8 @@ void curl(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &u, const GINT idir,
         break;
     }
   }
+
+
   return;
 
 } // end of method curl
@@ -2714,7 +2723,7 @@ void vsphere2cart(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &vsph, GVectorT
   GFTYPE           vthcontra, vphicontra;
   GTVector<GTVector<GFTYPE>> *xnodes = &grid.xNodes();
 
-  tiny = std::numeric_limits<GFTYPE>::epsilon();
+  tiny = numeric_limits<GFTYPE>::epsilon();
 
   //   v_i_cart = vtheta dx_i/dtheta + vphi dx_i/dphi
   // where
@@ -2834,39 +2843,314 @@ void vsphere2cart(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &vsph, GVectorT
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : normalize
+// METHOD : energy
 // DESC   : 
-//             Compute norm of input field, s.t.
-//             Integratl (u^2) dV = x0
+//             Compute volume-integrated mean of energy from input 
+//             vector field
 //          
-// ARGS   : x    : array of pointers to vectors; must each have at least 3
-//                 elements for 3-d vector product. All vector elements must
-//                 have the same length
-//          grid : grid object
-//          tmp  : tmp vector of length at least 2, each
-//                 of same length as x
-//          x0   : normalization constant
-// RETURNS: GTVector & 
+// ARGS   : 
+//          grid    : grid object
+//          u       : vector field; entire field used to compute energy
+//          tmp     : tmp vector of length at least 2, each
+//                    of same length as u
+//          isglobal: do global reduction
+//          ismax   : do max norm, instead of L2
+// RETURNS: GFTYPE energy
 //**********************************************************************************
 template<>
-void normalize(GTVector<GTVector<GFTYPE>*> &x, GGrid &grid, GTVector<GTVector<GFTYPE>*> &tmp, GFTYPE x0)
+GFTYPE energy(GGrid &grid, const GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector<GFTYPE>*> &tmp, GBOOL isglobal, GBOOL ismax)
 {
-  GSIZET n;
-  GFTYPE xn=0.0;
+  GDOUBLE                     ener, local;
+  GC_COMM                     comm = grid.get_comm();
 
-  for ( GINT l=0; l<x.size(); l++ ) {
-    *tmp[0] = *x[l]; tmp[0]->pow(2);
-    xn += grid.integrate(*tmp[0], *tmp[1]);
+ *tmp[1] = *u[0]; tmp[1]->pow(2);
+  for ( GINT l=1; l<u.size(); l++ ) {
+    *tmp[0] = *u[l]; tmp[0]->pow(2);
+    *tmp[1] += *tmp[0];
   }
 
-  xn = sqrt(x0/xn);
-  for ( GINT l=0; l<x.size(); l++ ) {
-    for ( GSIZET n=0; n<x[0]->size(); n++ ) { 
-      (*x[l])[n] *= xn;
+  if ( ismax ) {
+    ener =  0.5*tmp[1]->amax();
+    if ( isglobal ) {
+      local = ener;
+      GComm::Allreduce(&local, &ener, 1, T2GCDatatype<GDOUBLE>() , GC_OP_MAX, comm);
     }
   }
+  else {
+    ener  = static_cast<GDOUBLE>(grid.integrate(*tmp[1], *tmp[0], isglobal));
+    ener *=  0.5*static_cast<GDOUBLE>(grid.ivolume());
+  }
 
-} // end of method normalize
+  return static_cast<GFTYPE>(ener);
+
+} // end of method energy
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : enstrophy
+// DESC   : 
+//             Compute volume-integrated mean 
+//                 1/2 Int |curl u |^2 dV / Int dV
+//          
+// ARGS   : 
+//          grid    : grid object
+//          u       : vector field; entire field used to compute energy
+//          tmp     : tmp vector of length at least 4, each
+//                    of same length as u
+//          isglobal: do global reduction
+//          ismax   : if TRUE, then compute max of integrand, and return, 
+//                    instead of computing mean
+// RETURNS: GFTYPE enstrophy
+//**********************************************************************************
+template<>
+GFTYPE enstrophy(GGrid &grid, const GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector<GFTYPE>*> &tmp, GBOOL isglobal, GBOOL ismax)
+{
+  assert(tmp.size() >= 4 && "Insufficient temp space");
+
+  
+  GDOUBLE                     enst, local;
+  GC_COMM                     comm = grid.get_comm();
+  GTVector<GFTYPE>           *cc;
+  GTVector<GTVector<GFTYPE>*> utmp(3);
+
+  utmp[0] = tmp[0];
+  utmp[1] = tmp[1];
+  cc      = tmp[2];
+
+ *tmp[3] = 0.0;
+  for ( GINT l=1; l<u.size(); l++ ) {
+    GMTK::curl(grid, u, l, utmp, *cc);
+    cc->pow(2);
+   *tmp[3] += *cc;
+  }
+
+  if ( ismax ) {
+    enst =  0.5*static_cast<GDOUBLE>(tmp[3]->amax());
+    if ( isglobal ) {
+      local = enst;
+      GComm::Allreduce(&local, &enst, 1, T2GCDatatype<GDOUBLE>() , GC_OP_MAX, comm);
+    }
+  }
+  else {
+    enst  = static_cast<GDOUBLE>(grid.integrate(*tmp[3], *tmp[0], isglobal));
+    enst *=  0.5*grid.ivolume();
+  }
+
+  return static_cast<GFTYPE>(enst);
+
+} // end of method enstrophy
+
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : helicity
+// DESC   : 
+//             Compute volume-integrated mean 
+//                 Int |curl u \dot u| dV / Int dV
+//          
+// ARGS   : 
+//          grid    : grid object
+//          u       : vector field; entire field used to compute energy
+//          tmp     : tmp vector of length at least 4, each
+//                    of same length as u
+//          isglobal: do global reduction
+//          ismax   : if TRUE, then compute abs max of integrand, and return, 
+//                    instead of computing mean
+// RETURNS: GFTYPE helicity
+//**********************************************************************************
+template<>
+GFTYPE helicity(GGrid &grid, const GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector<GFTYPE>*> &tmp, GBOOL isglobal, GBOOL ismax)
+{
+  assert(tmp.size() >= 4 && "Insufficient temp space");
+
+  
+  GDOUBLE                     hel, local;
+  GC_COMM                     comm = grid.get_comm();
+  GTVector<GFTYPE>           *cc;
+  GTVector<GTVector<GFTYPE>*> utmp(3);
+
+  utmp[0] = tmp[0];
+  utmp[1] = tmp[1];
+  cc      = tmp[2];
+
+ *tmp[3] = 0.0;
+  for ( GINT l=1; l<u.size(); l++ ) {
+    GMTK::curl(grid, u, l, utmp, *cc);
+    cc->pointProd(*u[l]);
+   *tmp[3] += *cc;
+  }
+
+  if ( ismax ) {
+    hel =  static_cast<GDOUBLE>(tmp[3]->amax());
+    if ( isglobal ) {
+      local = hel;
+      GComm::Allreduce(&local, &hel, 1, T2GCDatatype<GDOUBLE>() , GC_OP_MAX, comm);
+    }
+  }
+  else {
+    hel  = static_cast<GDOUBLE>(grid.integrate(*tmp[3], *tmp[0], isglobal));
+    hel *=  static_cast<GDOUBLE>(grid.ivolume());
+  }
+
+  return static_cast<GFTYPE>(hel);
+
+} // end of method helicity 
+
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : relhelicity
+// DESC   : 
+//             Compute volume-integrated mean 
+//                 Int |curl u \dot u| /(|u| {curl u|) dV / Int dV
+//          
+// ARGS   : 
+//          grid    : grid object
+//          u       : vector field; entire field used to compute energy
+//          tmp     : tmp vector of length at least 5, each
+//                    of same length as u
+//          isglobal: do global reduction
+//          ismax   : if TRUE, then compute abs max of integrand, and return, 
+//                    instead of computing mean
+// RETURNS: GFTYPE helicity
+//**********************************************************************************
+template<>
+GFTYPE relhelicity(GGrid &grid, const GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector<GFTYPE>*> &tmp, GBOOL isglobal, GBOOL ismax)
+{
+  assert(tmp.size() >= 5 && "Insufficient temp space");
+
+  
+  GDOUBLE                     local, rhel;
+  GC_COMM                     comm = grid.get_comm();
+  GTVector<GFTYPE>           *cc;
+  GTVector<GTVector<GFTYPE>*> utmp(3);
+
+  utmp[0] = tmp[0];
+  utmp[1] = tmp[1];
+  cc      = tmp[2];
+
+ *tmp[3] = 0.0;
+ *tmp[4] = 0.0;
+
+  // Compute u. curl u:
+  for ( GINT l=0; l<u.size(); l++ ) {
+    GMTK::curl(grid, u, l, utmp, *cc);
+    cc->pointProd(*u[l]);
+   *tmp[3] += *cc;
+  }
+  
+  // Compute |curl u|:
+  for ( GINT l=0; l<u.size(); l++ ) {
+    GMTK::curl(grid, u, l, utmp, *cc);
+    cc->pow(2);
+    *tmp[4] += *cc;
+  }
+  tmp[4]->pow(0.5);
+
+
+  // Compute |u|:
+  *tmp[0] = 0.0;
+  for ( GINT l=0; l<u.size(); l++ ) {
+   *tmp[1] = *u[l];
+    tmp[1]->pow(2);
+    *tmp[0] += *tmp[1];
+  }
+  tmp[0]->pow(0.5);
+
+
+  // Compute u. (curl u) /|u| |curl u| integrand:
+  GFTYPE tiny = 100.0*numeric_limits<GFTYPE>::epsilon();
+
+  tmp[0]->pointProd(*tmp[4]); // compute |u| |curl u|
+  for ( GINT k=0; k<utmp[0]->size(); k++ ) {
+   (*tmp[3])[k] = abs((*tmp[0])[k]) <= tiny ? 0.0 : (*tmp[3])[k]/(*tmp[0])[k];  
+  }
+
+
+  if ( ismax ) {
+    rhel =  static_cast<GDOUBLE>(tmp[3]->amax());
+    if ( isglobal ) {
+      local = rhel;
+      GComm::Allreduce(&local, &rhel, 1, T2GCDatatype<GDOUBLE>() , GC_OP_MAX, comm);
+    }
+  }
+  else {
+    rhel  = static_cast<GDOUBLE>(grid.integrate(*tmp[3], *tmp[0], isglobal));
+    rhel *= static_cast<GDOUBLE>(grid.ivolume());
+  }
+
+  return static_cast<GFTYPE>(rhel);
+
+} // end of method relhelicity 
+
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : energyinj
+// DESC   : 
+//             Compute volume-integrated mean energy injection
+//                 Int |u \dot f| dV / Int dV
+//          
+// ARGS   : 
+//          grid    : grid object
+//          u       : velocity field; entire field used to compute energy
+//          uf      : forcing field; each must be non-NULL on entry; if
+//                 any are NULL, or uf.size == 0, then return value is 0.
+//          tmp     : tmp vector of length at least 2, each
+//                    of same length as u
+//          isglobal: do global reduction
+//          ismax   : if TRUE, then compute abs max of integrand, and return, 
+//                    instead of computing mean
+// RETURNS: GFTYPE energy injection rate
+//**********************************************************************************
+template<>
+GFTYPE energyinj(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &u,  const GTVector<GTVector<GFTYPE>*> &uf, GTVector<GTVector<GFTYPE>*> &tmp, GBOOL isglobal, GBOOL ismax)
+{
+
+  if ( uf.size() == 0 ) return 0.0;
+
+  GBOOL bnull = FALSE;
+  for ( GINT l=0; l<u.size(); l++ ) bnull = bnull || uf[l] == NULLPTR;
+
+  if ( bnull ) return 0.0;
+
+  assert(tmp.size() >= 2 && "Insufficient temp space");
+
+  
+  GDOUBLE                     einj, local;
+  GC_COMM                     comm = grid.get_comm();
+
+
+  u[0]->pointProd(*uf[0], *tmp[0]);
+  for ( GINT l=1; l<u.size(); l++ ) {
+	  assert(uf[l]!= NULLPTR && "NULL force not allowed");
+    u[l]->pointProd(*uf[l], *tmp[1]);
+   *tmp[0] += *tmp[1];
+  }
+
+  if ( ismax ) {
+    einj =  static_cast<GDOUBLE>(tmp[0]->amax());
+
+    if ( isglobal ) {
+      local = einj;
+      GComm::Allreduce(&local, &einj, 1, T2GCDatatype<GDOUBLE>() , GC_OP_MAX, comm);
+    }
+
+  }
+  else {
+    einj  = static_cast<GDOUBLE>(grid.integrate(*tmp[0], *tmp[1], isglobal));
+    einj *=  static_cast<GDOUBLE>(grid.ivolume());
+  }
+
+  return static_cast<GFTYPE>(einj);
+
+} // end of method energyinj
+
+
 
 
 } // end, namespace GMTK

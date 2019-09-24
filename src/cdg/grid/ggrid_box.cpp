@@ -68,7 +68,7 @@ lshapefcn_             (NULLPTR)
   // compute global bdy range, and global vertices:
   dP_  = spt;
   P1_ = P0_ + dP_;
-  gverts_.resize(ndim_);
+  gverts_.resize(2*ndim_);
   if ( ndim_ == 2 ) {
     gverts_[0] = P0_; 
     gp = P0_; gp.x1 += dP_.x1; gverts_[1] = gp; 
@@ -80,11 +80,10 @@ lshapefcn_             (NULLPTR)
     gp = P0_; gp.x1 += dP_.x1; gverts_[1] = gp; 
     gverts_[2] = P1_; 
     gp = P0_; gp.x2 += dP_.x2; gverts_[3] = gp;
-
-    gp = P0_; gp.x3 += dP_.x3; gverts_[0] = gp; 
-    gp.x1 += dP_.x1; gverts_[1] = gp; 
-    gverts_[2] = P1_; 
-    gp = P0_; gp.x3 += dP_.x3; gp.x2 += dP_.x2; gverts_[3] = gp;
+    gp = P0_; gp.x3 += dP_.x3; gverts_[4] = gp; 
+    gp.x1 += dP_.x1; gverts_[5] = gp; 
+    gverts_[6] = P1_; 
+    gp = P0_; gp.x3 += dP_.x3; gp.x2 += dP_.x2; gverts_[7] = gp;
   }
 
   ne_.resize(b.size());
@@ -296,7 +295,7 @@ void GGridBox::do_elems2d()
       if ( FUZZYEQ(P0_.x1,cent.x1,eps_) ) face_ind = &pelem->edge_indices(3);
       // For now, we don't allow corner nodes to be repeated, 
       // and we'll have to choose the best way to define the 
-      // normal vectors at the 'corner' nodes:
+      // normal vectors at the these nodes:
       for ( GSIZET k=0; face_ind != NULLPTR && k<face_ind->size(); k++ ) {
         if ( !bdy_ind->contains((*face_ind)[k]) ) {
           bdy_ind->push_back((*face_ind)[k]); 
@@ -903,16 +902,17 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
   GString            gname, sbdy, bdyclass, bdyinit;
   PropertyTree       bdytree, gridptree, spectree;
 
-  assert(gname == "grid_box");
-
   bdynames[0] = "bdy_x_0";
   bdynames[1] = "bdy_x_1";
   bdynames[2] = "bdy_y_0";
   bdynames[3] = "bdy_y_1";
-  bdynames[4] = "bdy_z_0";
-  bdynames[5] = "bdy_z_1";
+  if ( GDIM == 3 ) {
+    bdynames[4] = "bdy_z_0";
+    bdynames[5] = "bdy_z_1";
+  }
 
   gname     = ptree.getValue<GString>("grid_type");
+  assert(gname == "grid_box");
   gridptree = ptree.getPropertyTree(gname);
 
 
@@ -935,24 +935,24 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
   //       returned on exist contain info for all bdys:
   for ( auto j=0; j<2*GDIM; j++ ) { // cycle over faces
     sbdy         = gridptree.getValue<GString>(bdynames[j]);
-    bdytree      = gridptree.getPropertyTree(sbdy);
+    bdytree      = ptree.getPropertyTree(sbdy);
     bdyclass     = bdytree.getValue<GString>("bdy_class", "uniform");
     bdytype  [j] = geoflow::str2bdytype(bdytree.getValue<GString>("base_type", "GBDY_NONE"));
     buniform [j] = bdyclass == "uniform" ? TRUE : FALSE;
     confmthd [j] = bdytree.getValue<GString>("bdy_config_method","");
     bperiodic    = bperiodic || bdytype[j] == GBDY_PERIODIC;
-    assert(bperiodic && !buniform[j] && "GBDY_PERIODIC boundary must have bdy_class = uniform");
+    assert(bperiodic && buniform[j] && "GBDY_PERIODIC boundary must have bdy_class = uniform");
   }
 
   if ( ndim_ == 2 ) {
-    assert( (  (bdytype[0] == GBDY_PERIODIC && bdytype[2] != GBDY_PERIODIC)
-           ||  (bdytype[3] == GBDY_PERIODIC && bdytype[1] != GBDY_PERIODIC) )
+    assert( (  (bdytype[0] == GBDY_PERIODIC && bdytype[2] == GBDY_PERIODIC)
+           ||  (bdytype[3] == GBDY_PERIODIC && bdytype[1] == GBDY_PERIODIC) )
            &&  "Incompatible GBDY_PERIODIC boundary specification");
   }
   else if ( ndim_ == 3 ) {
-    assert( (  (bdytype[0] == GBDY_PERIODIC && bdytype[2] != GBDY_PERIODIC)
-           ||  (bdytype[3] == GBDY_PERIODIC && bdytype[1] != GBDY_PERIODIC)  
-           ||  (bdytype[4] == GBDY_PERIODIC && bdytype[5] != GBDY_PERIODIC) )
+    assert( (  (bdytype[0] == GBDY_PERIODIC && bdytype[2] == GBDY_PERIODIC)
+           ||  (bdytype[3] == GBDY_PERIODIC && bdytype[1] == GBDY_PERIODIC)  
+           ||  (bdytype[4] == GBDY_PERIODIC && bdytype[5] == GBDY_PERIODIC) )
            &&  "Incompatible GBDY_PERIODIC boundary specification");
   }
        
@@ -976,6 +976,8 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
     assert(bret && "Boundary specification failed");
     igbdy [j].resize(itmp.size()); igbdy [j] = itmp;
     igbdyt[j].resize(itmp.size()); igbdyt[j] = btmp;
+    itmp.clear();
+    btmp.clear();
   }
   
   // Fill in uniform bdy types:
@@ -999,12 +1001,18 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
         find_bdy_ind3d(j, TRUE, itmp); // include edges
       }
     }
+
+cout << "GGridBox::config_bdy: itmp[" << j << "]=" << itmp << endl;
+
     // Set type for each bdy index:
+    btmp.resize(itmp.size());
     for ( auto i=0; i<itmp.size(); i++ ) {
       btmp[i] = bdytype[j]; 
     }
     igbdy [j].resize(itmp.size()); igbdy [j] = itmp;
     igbdyt[j].resize(itmp.size()); igbdyt[j] = btmp;
+    itmp.clear();
+    btmp.clear();
   }
 
 
@@ -1238,3 +1246,145 @@ GBOOL GGridBox::on_global_edge(GINT iface, GTPoint<GFTYPE> &pt)
   
   return bret;
 } // end, method on_global_edge
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : do_face_normals
+// DESC   : Compute normals to each element face
+// ARGS   : none 
+// RETURNS: none
+//**********************************************************************************
+void GGridBox::do_face_normals()
+{
+
+  #if defined(_G_IS2D)
+    do_face_normals2d();
+  #elif defined(_G_IS3D)
+    do_face_normals3d();
+  #else
+    #error Invalid problem dimensionality
+  #endif
+
+} // end, method do_face_normals
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : do_face_normals2d
+// DESC   : Compute normals to each element face in 2d
+// ARGS   : none 
+// RETURNS: none
+//**********************************************************************************
+void GGridBox::do_face_normals2d()
+{
+
+#if 0
+  // Cycle through local elem face indices to set
+  // normals. Taken in order, these should correspond
+   GSIZET m=0, nn=0;
+   GSIZET ibeg, iend;   // beg, end indices for global arrays
+   GSIZET ibbeg, ibend; // beg, end indices for global arrays for bdy quantities
+   GSIZET ifbeg, ifend; // beg, end indices for global arrays for face quantities
+   GTVector<GTVector<GINT>>   *ieface ; // domain face indices
+   GTVector<GSIZET>            gieface; // global element face indices
+   GTVector<GINT>             *iverts ; // elem vertex indices
+   gieface.resize(gieface_.size());
+   for ( GSIZET e=0; e<gelems_.size(); e++ ) {
+     ibeg   = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
+     ifbeg  = gelems_[e]->ifbeg(); ifend = gelems_[e]->ifend();
+     ibbeg  = gelems_[e]->ibbeg(); ibend = gelems_[e]->ibend();
+     ieface = &gelems_[e]->face_indices();
+  
+
+     for ( GSIZET j=0; j<ieface->size(); j++ ) { // cycle over all elem faces
+       iverts = &gelems_[e]->vert_indices(j);
+       for ( GSIZET k=0; k<(*ieface)[j].size(); k++ ) {
+         ig = nn + (*ieface)[j][k];
+         if ( !gieface.containsn(ig, m) ) { // don't include repeated face ind
+           gieface[m] = ig;
+           m++;
+           if      ( j == 0 ) {
+             if ( iverts->contains((*ieface)[j][k]:w
+
+           }
+           else if ( j == 1 ) {
+           }
+           else if ( j == 1 ) {
+           }
+           else if ( j == 1 ) {
+           }
+         }
+       }
+     }
+     nn += gelems_[e]->nnodes();
+
+
+   } // end, element loop
+#endif
+
+
+} // end, method do_bdy_normals2d
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : do_face_normals3d
+// DESC   : Compute normals to each element face in 3d
+// ARGS   : none 
+// RETURNS: none
+//**********************************************************************************
+void GGridBox::do_face_normals3d()
+{
+
+
+} // end, method do_bdy_normals3d
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : do_bdy_normals
+// DESC   : Compute normals to each domain bdy 
+// ARGS   : none 
+// RETURNS: none
+//**********************************************************************************
+void GGridBox::do_bdy_normals()
+{
+
+  #if defined(_G_IS2D)
+    do_bdy_normals2d();
+  #elif defined(_G_IS3D)
+    do_bdy_normals3d();
+  #else
+    #error Invalid problem dimensionality
+  #endif
+
+} // end, method do_bdy_normals
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : do_bdy_normals2d
+// DESC   : Compute normals to each domain bdy in 2d
+// ARGS   : none 
+// RETURNS: none
+//**********************************************************************************
+void GGridBox::do_bdy_normals2d()
+{
+
+} // end, method do_bdy_normals2d
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : do_bdy_normals3d
+// DESC   : Compute normals to each domain bdy in 3d
+// ARGS   : none 
+// RETURNS: none
+//**********************************************************************************
+void GGridBox::do_bdy_normals3d()
+{
+
+} // end, method do_bdy_normals3d
+
+>>>>>>> feature/burgers

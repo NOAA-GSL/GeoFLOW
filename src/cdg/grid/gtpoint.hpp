@@ -91,21 +91,15 @@ public:
   { for ( GINT j=0; j<gdim_; j++ ) *px_[j] = v[j][i];
     if ( gdim_>0) x1 = v[0][i]; if ( gdim_>1) x2 = v[1][i]; if (gdim_>2) x3 = v[2][i]; if ( gdim_>3) x4 = v[3][i];}
 
-  inline GTPoint<T> operator-(const T f)
-  {
-      GTPoint ret(*this);
-      ret -= f;
-      return ret;
-  }
+  inline void  operator-(T f)
+  { GTPoint<T> *ret = new GTPoint<T>(gdim_);
+    for ( GINT j=0; j<gdim_; j++ ) (*ret)[j] = *px_[j] - f; return *ret; }
 
-  inline GTPoint<T> operator-(const GTPoint<T> &a)
-  {
-      GTPoint ret(*this);
-      ret -= a;
-      return ret;
-  }
+  inline GTPoint<T> &operator-(GTPoint<T> &a)
+  { GTPoint<T> *ret=new GTPoint<T>(gdim_);
+    for ( GINT j=0; j<gdim_; j++ ) (*ret)[j] = *px_[j] - a[j];  return *ret; }
 
-  inline void  operator-=(const T a)
+  inline void  operator-=(T a)
   { for ( GINT j=0; j<gdim_; j++ ) *px_[j] -= a; }
 
   inline void  operator-=(const GTPoint<T> &a)
@@ -162,7 +156,7 @@ public:
 #endif
     return *px_[i]; }
 
-  inline const T& operator[](const GINT i) const
+  inline T operator[](const GINT i) const
   { 
 #if defined(_G_BOUNDS_CHK)
     if ( i<0 || i>=gdim_ ) { 

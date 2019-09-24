@@ -17,9 +17,6 @@
 #include "gcomm.hpp"
 #include "tbox/error_handler.hpp"
 
-#if defined(_G_USE_GPTL)
-  #include "gptl.h"
-#endif
 
 //**********************************************************************************
 //**********************************************************************************
@@ -33,9 +30,12 @@
 GGrid::GGrid(const geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GC_COMM &comm)
 :
 bInitialized_                   (FALSE),
+do_face_normals_                (FALSE),
 nprocs_        (GComm::WorldSize(comm)),
 irank_         (GComm::WorldRank(comm)),
 minnodedist_   (std::numeric_limits<GFTYPE>::max()),
+volume_                           (0.0),
+ivolume_                          (0.0),
 comm_                            (comm),
 ggfx_                         (NULLPTR),
 ptree_                          (ptree)
@@ -218,7 +218,7 @@ GSIZET GGrid::ndof()
 //**********************************************************************************
 GSIZET GGrid::nfacedof()
 {
-   return igface_.size();
+   return gieface_.size();
 } // end of method nfacedof
 
 
@@ -356,10 +356,11 @@ void GGrid::grid_init()
   do_typing(); // do element-typing check
   GTimerStop("GGrid::grid_init: do_typing");
 
-  init_local_face_info(); // find glob vec of face indices
-
   // Have elements been set yet?
   assert(gelems_.size() > 0 && "Elements not set");
+
+  globalize_coords    (); // set glob vec of node coords
+  init_local_face_info(); // find glob vec of face indices
 
   // Restrict grid to a single element type:
   assert(ntype_.multiplicity(0) == GE_MAX-1
@@ -370,23 +371,25 @@ void GGrid::grid_init()
   else if ( itype_[GE_DEFORMED]  .size() > 0 ) gtype_ = GE_DEFORMED;
   else if ( itype_[GE_REGULAR]   .size() > 0 ) gtype_ = GE_REGULAR;
 
-  GTimerStart("GGrid::grid_init: def_init");
-  if ( itype_[GE_2DEMBEDDED].size() > 0
-    || itype_  [GE_DEFORMED].size() > 0 ) {
-    def_init();
-  }
-  GTimerStop("GGrid::grid_init: def_init");
-
-  GTimerStart("GGrid::grid_init: reg_init");
-  if ( itype_[GE_REGULAR].size() > 0 ) {
-    reg_init();
-  }
-  GTimerStop("GGrid::grid_init: reg_init");
-
   GTimerStart("GGrid::grid_init: init_bc_info");
   // All element bdy/face data should have been set by now:
+
+
   init_bc_info();
   GTimerStop("GGrid::grid_init: init_bc_info");
+
+  GTimerStart("GGrid::grid_init: def_geom_init");
+  if ( itype_[GE_2DEMBEDDED].size() > 0
+    || itype_  [GE_DEFORMED].size() > 0 ) {
+    def_geom_init();
+  }
+  GTimerStop("GGrid::grid_init: def_geom_init");
+
+  GTimerStart("GGrid::grid_init: reg_geom_init");
+  if ( itype_[GE_REGULAR].size() > 0 ) {
+    reg_geom_init();
+  }
+  GTimerStop("GGrid::grid_init: reg_geom_init");
 
 
   bInitialized_ = TRUE;
@@ -396,7 +399,11 @@ void GGrid::grid_init()
   minnodedist_ = find_min_dist();
   GTimerStop("GGrid::grid_init: find_min_dist");
 
-
+  // Compute grid volume:
+  GTVector<GFTYPE> tmp0(ndof()), tmp1(ndof());
+  tmp0 = 1.0;
+  volume_  = integrate(tmp0, tmp1);
+  ivolume_ = 1.0 / volume_;
 } // end of method grid_init (1)
 
 
@@ -425,6 +432,10 @@ void GGrid::grid_init(GTMatrix<GINT> &p,
   // Have elements been set yet?
   assert(gelems_.size() > 0 && "Elements not set");
 
+  init_local_face_info(); // find glob vec of face indices
+  globalize_coords    (); // set glob vec of node coords
+
+
   // Restrict grid to a single element type:
   assert(ntype_.multiplicity(0) == GE_MAX-1
         && "Only a single element type allowed on grid");
@@ -439,18 +450,18 @@ void GGrid::grid_init(GTMatrix<GINT> &p,
   init_bc_info();
   GTimerStop("GGrid::grid_init: init_bc_info");
 
-  GTimerStart("GGrid::grid_init: def_init");
+  GTimerStart("GGrid::grid_init: def_geom_init");
   if ( itype_[GE_2DEMBEDDED].size() > 0
     || itype_  [GE_DEFORMED].size() > 0 ) {
-    def_init();
+    def_geom_init();
   }
-  GTimerStop("GGrid::grid_init: def_init");
+  GTimerStop("GGrid::grid_init: def_geom_init");
 
-  GTimerStart("GGrid::grid_init: reg_init");
+  GTimerStart("GGrid::grid_init: reg_geom_init");
   if ( itype_[GE_REGULAR].size() > 0 ) {
-    reg_init();
+    reg_geom_init();
   }
-  GTimerStop("GGrid::grid_init: reg_init");
+  GTimerStop("GGrid::grid_init: reg_geom_init");
 
 
   GTimerStart("GGrid::grid_init: find_min_dist");
@@ -459,22 +470,29 @@ void GGrid::grid_init(GTMatrix<GINT> &p,
 
   bInitialized_ = TRUE;
 
+  // Compute grid volume:
+  GTVector<GFTYPE> tmp0(ndof()), tmp1(ndof());
+  tmp0 = 1.0;
+  volume_  = integrate(tmp0, tmp1);
+  ivolume_ = 1.0 / volume_;
+
 } // end of method grid_init
 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : def_init
+// METHOD : def_geom_init
 // DESC   : Initialize global (metric) variables for deformed elems. 
-//          All elements are assumed to be of the same type.
+//          All elements are assumed to be of the same type. Note:
+//          do_elems and globalize_coords must be called prior to entry.
 // ARGS   : none
 // RETURNS: none
 //**********************************************************************************
-void GGrid::def_init()
+void GGrid::def_geom_init()
 {
    assert(gelems_.size() > 0 && "Elements not set");
 
-   GString serr = "GGrid::def_init: ";
+   GString serr = "GGrid::def_geom_init: ";
    GSIZET nxy = gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
    GTMatrix<GTVector<GFTYPE>> rijtmp;
    GTVector<GTVector<GFTYPE>> *xe;
@@ -491,12 +509,9 @@ void GGrid::def_init()
    Jac_.resize(ndof());
    faceJac_.resize(nfacedof());
 
-   xNodes_.resize(nxy);
-   for ( GSIZET j=0; j<nxy; j++ ) xNodes_[j].resize(ndof());
-
    // Resize surface-point-wise normals:
    faceNormal_.resize(nxy); // no. coords for each normal at each face point
-   bdyNormal_.resize(nxy); // no. coords for each normal at each face point
+   bdyNormal_.resize(nxy); // no. coords for each normal at each domain bdy point
    for ( GSIZET i=0; i<bdyNormal_.size(); i++ ) {
      faceNormal_[i].resize(nfacedof());
      bdyNormal_ [i].resize(nbdydof());
@@ -510,12 +525,11 @@ void GGrid::def_init()
      ibeg  = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
      ifbeg = gelems_[e]->ifbeg(); ifend = gelems_[e]->ifend();
      ibbeg = gelems_[e]->ibbeg(); ibend = gelems_[e]->ibend();
+
      xe    = &gelems_[e]->xNodes();
 
      // Restrict global arrays to local scope:
      for ( GSIZET j=0; j<nxy; j++ ) {
-       faceNormal_[j].range(ifbeg, ifend); // set range for each coord, j
-       bdyNormal_ [j].range(ibbeg, ibend); // set range for each coord, j
        for ( GSIZET i=0; i<nxy; i++ )  {
          dXidX_(i,j).range(ibeg, iend);
          rijtmp(i,j).range(ibeg, iend);
@@ -524,18 +538,12 @@ void GGrid::def_init()
      Jac_.range(ibeg, iend);
      faceJac_.range(ifbeg, ifend);
 
-     // Set global nodal Cart coords from element coords:
-     for ( GSIZET j=0; j<nxy; j++ ) {
-       xNodes_[j].range(ibeg, iend);
-       xNodes_[j] = (*xe)[j];
-     }
-
      // Set the geom/metric quantities using element data:
      if ( GDIM == 2 ) {
-       gelems_[e]->dogeom2d(rijtmp, dXidX_, Jac_, faceJac_, faceNormal_, bdyNormal_);
+       gelems_[e]->dogeom2d(rijtmp, dXidX_, Jac_, faceJac_);
      }
      else if ( GDIM == 3 ) {
-       gelems_[e]->dogeom3d(rijtmp, dXidX_, Jac_, faceJac_, faceNormal_, bdyNormal_);
+       gelems_[e]->dogeom3d(rijtmp, dXidX_, Jac_, faceJac_);
      }
 
      // Zero-out local xe; only global allowed now:
@@ -543,11 +551,6 @@ void GGrid::def_init()
      
    } // end, element loop
 
-   // Reset global scope:
-   for ( GSIZET j=0; j<nxy; j++ ) {
-     faceNormal_[j].range_reset();
-     bdyNormal_ [j].range_reset();
-   }
    for ( GSIZET j=0; j<nxy; j++ )  {
      for ( GSIZET i=0; i<nxy; i++ )  {
        dXidX_(i,j).range_reset();
@@ -556,28 +559,29 @@ void GGrid::def_init()
    }
    Jac_.range_reset();
    faceJac_.range_reset();
-   for ( GSIZET j=0; j<nxy; j++ ) xNodes_[j].range_reset();
+
+   do_normals();
 
 
    GComm::Synch(comm_);
    
-} // end of method def_init
+} // end of method def_geom_init
 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : reg_init
+// METHOD : reg_geom_init
 // DESC   : Initialize global (metric) variables for regular elemes. 
-//          All elements are assumed to be
-//          of the same type.
+//          All elements are assumed to be of the same type. Note:
+//          do_elems and globalize_coords must be called prior to entry.
 // ARGS   : none
 // RETURNS: none
 //**********************************************************************************
-void GGrid::reg_init()
+void GGrid::reg_geom_init()
 {
    assert(gelems_.size() > 0 && "Elements not set");
 
-   GString serr = "GridIcos::reg_init: ";
+   GString serr = "GridIcos::reg_geom_init: ";
    GSIZET nxy = GDIM;
    GTMatrix<GTVector<GFTYPE>>  rijtmp;
    GTVector<GTVector<GFTYPE>> *xe;
@@ -592,8 +596,6 @@ void GGrid::reg_init()
    Jac_.resize(ndof());
    faceJac_.resize(nfacedof());
 
-   xNodes_.resize(nxy);
-   for ( GSIZET j=0; j<nxy; j++ ) xNodes_[j].resize(ndof());
 
    // Resize surface-point-wise normals:
    faceNormal_.resize(nxy); // no. coords for each normal at each face point
@@ -603,6 +605,7 @@ void GGrid::reg_init()
      bdyNormal_ [i].resize(nbdydof());
    }
 
+
    // Now, set the geometry/metric quanties from the elements:
    GSIZET ibeg, iend; // beg, end indices for global arrays
    GSIZET ibbeg, ibend; // beg, end indices for global arrays for bdy quantities
@@ -611,8 +614,10 @@ void GGrid::reg_init()
      ibeg  = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
      ifbeg = gelems_[e]->ifbeg(); ifend = gelems_[e]->ifend();
      ibbeg = gelems_[e]->ibbeg(); ibend = gelems_[e]->ibend();
-     xe    = &gelems_[e]->xNodes();
+cout << "reg_geom_init: ibbeg=" << ibbeg << " ibend=" << ibend << endl;
   
+     xe    = &gelems_[e]->xNodes();
+
      // Restrict global data to local scope:
      for ( GSIZET j=0; j<nxy; j++ ) {
        faceNormal_[j].range(ifbeg, ifend); 
@@ -626,19 +631,12 @@ void GGrid::reg_init()
      Jac_.range(ibeg, iend);
      faceJac_.range(ifbeg, ifend);
 
-     // Set global nodal Cart coords from element coords:
-     for ( GSIZET j=0; j<nxy; j++ ) {
-       xNodes_[j].range(ibeg, iend);
-       xNodes_[j] = (*xe)[j];
-     }
-
-
      // Set the geom/metric quantities using element data:
      if ( GDIM == 2 ) {
-       gelems_[e]->dogeom2d(rijtmp, dXidX_, Jac_, faceJac_, faceNormal_, bdyNormal_);
+       gelems_[e]->dogeom2d(rijtmp, dXidX_, Jac_, faceJac_); 
      } 
      else if ( GDIM == 3 ) {
-       gelems_[e]->dogeom3d(rijtmp, dXidX_, Jac_, faceJac_, faceNormal_, bdyNormal_);
+       gelems_[e]->dogeom3d(rijtmp, dXidX_, Jac_, faceJac_);
      }
       
      // Zero-out local xe; only global allowed now:
@@ -658,11 +656,85 @@ void GGrid::reg_init()
    }
    Jac_.range_reset();
    faceJac_.range_reset();
-   for ( GSIZET j=0; j<nxy; j++ ) xNodes_[j].range_reset();
 
    GComm::Synch(comm_);
    
-} // end of method reg_init
+} // end of method reg_geom_init
+
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : do_normals
+// DESC   : Compute normals to elem faces, and to domain boundary 
+//          nodes
+// ARGS   : none
+// RETURNS: none
+//**********************************************************************************
+void GGrid::do_normals()
+{
+  assert(gelems_.size() > 0 && "Elements not set");
+
+  GString         serr = "GridIcos::do_normals: ";
+  GSIZET          nxy = gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
+  GSIZET          n;
+  GTPoint<GFTYPE> pt;
+
+  // Note: at a given node, the (Cartesian) normals are
+  // computed as n_j = (dX_/dxi  X  dX_/deta)_j, where
+  // (xi, eta) define the surface, and X_ = (x, y, z)
+  // are the physical coordinates. Knoweldge of the 
+
+  // Set element face normals. Note: arrays for 
+  // normals are allocated in these calls:
+  if ( do_face_normals_ ) {
+    do_face_normals();
+  }
+  
+  // Set domain boundary node normals:
+  do_bdy_normals();
+  
+   
+} // end of method do_normals
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : globalize_coords
+// DESC   : Create 'global' vectors from element-based coordinates
+// ARGS   : none
+// RETURNS: none
+//**********************************************************************************
+void GGrid::globalize_coords()
+{
+   GString serr = "GridIcos::globalize_coords: ";
+   GSIZET  nxy = gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
+   GTVector<GTVector<GFTYPE>> *xe;
+
+   xNodes_.resize(nxy);
+   for ( GSIZET j=0; j<nxy; j++ ) xNodes_[j].resize(ndof());
+
+   GSIZET ibeg, iend; // beg, end indices for global arrays
+   for ( GSIZET e=0; e<gelems_.size(); e++ ) {
+     ibeg  = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
+     xe    = &gelems_[e]->xNodes();
+
+     // Set global nodal Cart coords from element coords:
+     for ( GSIZET j=0; j<nxy; j++ ) {
+       xNodes_[j].range(ibeg, iend);
+       xNodes_[j] = (*xe)[j];
+     }
+
+     // Zero-out local xe; only global allowed now:
+     for ( GSIZET j=0; j<nxy; j++ ) (*xe)[j].clear();
+
+   } // end, element loop
+
+   // Reset global scope:
+   for ( GSIZET j=0; j<nxy; j++ ) xNodes_[j].range_reset();
+
+
+} // end, method globalize_coords
 
 
 //**********************************************************************************
@@ -806,11 +878,12 @@ GFTYPE GGrid::find_min_dist()
 // DESC   : Compute spatial integral of global input vector. Result 
 //          is a sum over all MPI tasks. NOTE: This method extracts weights
 //          from the elements, so don't use this method very often.
-// ARGS   : u  : 'global' integral argument
-//          tmp: tmp vector, same size as u
+// ARGS   : u     : 'global' integral argument
+//          tmp   :  tmp vector, same size as u
+//          blocal:  do global reduction?
 // RETURNS: GFTYPE integral
 //**********************************************************************************
-GFTYPE GGrid::integrate(GTVector<GFTYPE> &u, GTVector<GFTYPE> &tmp)
+GFTYPE GGrid::integrate(GTVector<GFTYPE> &u, GTVector<GFTYPE> &tmp, GBOOL bglobal)
 {
   assert(bInitialized_ && "Object not inititaized");
 
@@ -872,7 +945,11 @@ GFTYPE GGrid::integrate(GTVector<GFTYPE> &u, GTVector<GFTYPE> &tmp)
   // Multiply by Jacobian:
   tmp.pointProd(Jac_);
   xint = tmp.sum();  
-  GComm::Allreduce(&xint, &xgint, 1, T2GCDatatype<GFTYPE>() , GC_OP_SUM, comm_);
+
+  xgint = xint;
+  if ( bglobal ) {
+    GComm::Allreduce(&xint, &xgint, 1, T2GCDatatype<GFTYPE>() , GC_OP_SUM, comm_);
+  }
 
   return xgint;
 
@@ -948,19 +1025,21 @@ void GGrid::init_local_face_info()
 #endif
     n += gelems_[e]->nfnodes();
   }
-  igface_.resize(n);
+  gieface_.resize(n);
 
+  // Find list over all elemes of element face nodes:
   nn = 0; // global reference index
-  n  = 0;
-  m  = 0;
-  for ( GSIZET e=0; e<gelems_.size(); e++ ) { // get global bdy ind and types
+  m  = 0; // current num of global face indices
+  for ( GSIZET e=0; e<gelems_.size(); e++ ) { // cycle over all elems
     ibeg   = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
     ieface = &gelems_[e]->face_indices(); // set in child class
-    for ( GSIZET j=0; j<ieface->size(); j++ ) { // get global elem face node indices
+    for ( GSIZET j=0; j<ieface->size(); j++ ) { // cycle over all elem faces
       for ( GSIZET k=0; k<(*ieface)[j].size(); k++ ) {
         ig = nn + (*ieface)[j][k];
-        igface_[m] = ig;
-        m++;
+        if ( !gieface_.containsn(ig, m) ) { // don't include repeated face ind
+          gieface_[m] = ig;
+          m++;
+        }
       }
     }
     nn += gelems_[e]->nnodes();
@@ -985,27 +1064,26 @@ void GGrid::init_bc_info()
   GTVector<GTVector<GINT>>    *ieface; // domain face indices
 
   // Find boundary indices & types from config file 
-  // specification, for _each_ natural/canonical face:
-  config_bdy(ptree_, igbdy_byface_, igbdyt_byface_);
+  // specification, for _each_ natural/canonical domain face:
+  config_bdy(ptree_, igbdy_bydface_, igbdyt_bydface_);
 
   // Flatten these 2 bdy index & types indirection arrays:
   GSIZET      nind=0, nw=0;
-  for ( auto j=0; j<igbdy_byface_.size(); j++ ) {
-    nind += igbdy_byface_[j].size();
+  for ( auto j=0; j<igbdy_bydface_.size(); j++ ) {
+    nind += igbdy_bydface_[j].size();
   }
   igbdy_ .resize(nind);
   igbdyt_.resize(nind);
   nind = 0;
-  for ( auto j=0; j<igbdy_byface_.size(); j++ ) {
-    for ( auto i=0; i<igbdy_byface_.size(); i++ ) {
-      igbdy_ [nind  ] = igbdy_byface_ [j][i];
-      igbdyt_[nind++] = igbdyt_byface_[j][i];
+  for ( auto j=0; j<igbdy_bydface_.size(); j++ ) {
+    for ( auto i=0; i<igbdy_bydface_.size(); i++ ) {
+      igbdy_ [nind  ] = igbdy_bydface_ [j][i];
+      igbdyt_[nind++] = igbdyt_bydface_[j][i];
     }
   }
  
-  
 
-  // Create bdy type-bins (one bin for each GBdyType), and
+  // Create bdy type bins (one bin for each GBdyType), and
   // for each type, set the indirection indices into global
   // vectors that have that type:
   GBdyType         itype;
