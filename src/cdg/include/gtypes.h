@@ -5,6 +5,9 @@
 // Copyright    : Copyright 2018. Colorado State University. All rights reserved
 // Derived From : none.
 //==================================================================================
+#if !defined(_GTYPES_HPP)
+#define _GTYPES_HPP
+
 #include <cstddef>
 #include <cmath>
 #include <string>
@@ -261,3 +264,6 @@ enum GStateCompType     {GSC_KINETIC=0, GSC_MAGNETIC, GSC_ACTIVE_SCALAR, GSC_PAS
 
 
 #endif // _G_TYPES_DEF
+
+#endif // !defined(_GTYPES_HPP)
+

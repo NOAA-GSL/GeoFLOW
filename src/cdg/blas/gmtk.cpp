@@ -6,7 +6,7 @@
 // Copyright    : Copyright 2018. Colorado State University. All rights reserved
 // Derived From : none.
 //==================================================================================
-#include "gtypes.h"
+
 #include "gmtk.hpp"
 #include "gtvector.hpp"
 #include "gtmatrix.hpp"
