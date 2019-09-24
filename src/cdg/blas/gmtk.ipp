@@ -241,10 +241,6 @@ void normalize_euclidean(GTVector<GTVector<T>*> &x, GINT *iind, GINT nind, T x0)
     for ( GSIZET n=0; n<x[0]->size(); n++ ) { // cycle over all n-tuples
       for ( GSIZET l=0, xn=0.0; l<x.size(); l++ ) xn += (*x[l])[n]*(*x[l])[n];
       xn = x0/pow(xn,0.5);
-<<<<<<< HEAD
-std::cout << "norm_euc: xn=" << xn << std::endl;
-=======
->>>>>>> feature/burgers
       for ( GSIZET l=0; l<x.size(); l++ ) (*x[l])[n] *= xn;
     }
   }
