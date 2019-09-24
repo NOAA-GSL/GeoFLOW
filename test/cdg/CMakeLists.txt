@@ -13,22 +13,20 @@ set(test_cdg_files
 		# gtest_class_acc.cpp
 		# gtest_contig.cpp
 		# gtest_derivs.cpp
-		# gtest_ggfx.cpp
 		# gtest_ggrid.cpp
 		# gtest_gll.cpp
 		# gtest_gmm.cpp
 		# gtest_gmtk.cpp
 		  gtest_gtmatrix.cpp
 		  gtest_gtvector.cpp
+		# gtest_ggfx.cpp
 		# gtest_helm.cpp
 		# gtest_mass.cpp
 		# gtest_morton.cpp
 		# gtest_pingpong.cpp
 		# gtest_rk.cpp
-		# gtest_tmp.cpp
 		# gtest_vec_access.cpp
 		# gtest_vec.cpp
-		# gtest_.cpp			
 )
 
 #
