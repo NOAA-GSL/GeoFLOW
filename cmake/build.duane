@@ -41,8 +41,8 @@ include("${CMAKE_SOURCE_DIR}/cmake/compiler.gcc")
 #
 set(BOOST_ROOT 
 #		"/home/Duane.Rosenberg/lib/boost_1_69_0_intel_18.1"
-#		"/scratch/duane.rosenberg/lib/boost_1_69_0_gcc"
-		"/Users/duane.rosenberg/lib/boost_1_69_0_gcc"
+ 		"/scratch/duane.rosenberg/lib/boost_1_69_0_gcc"
+#		"/Users/duane.rosenberg/lib/boost_1_69_0_gcc"
 CACHE STRING "Location of Boost Library")
 
 #
@@ -52,7 +52,8 @@ CACHE STRING "Location of Boost Library")
 # > cmake -D GPTL_ROOT=/opt/gptl/gcc/8.2.1
 #
 set(GPTL_ROOT 
-    "/home/duane.rosenberg/lib/gptl-v5.5_gcc"
+    "/scratch/duane.rosenberg/lib/gptl-v5.5_gcc"
+#   "/home/duane.rosenberg/lib/gptl-v5.5_gcc"
 #   "/home/Duane.Rosenberg/lib/gptl-v5.4.4_pgi_openmpi"
 #   "/home/Duane.Rosenberg/lib/gptl-v5.4.4_intel_impi_theia"
 #   "/Users/duane.rosenberg/lib/gptl-5.6.0_clang"
