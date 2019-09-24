@@ -1261,9 +1261,9 @@ GBOOL GGridBox::on_global_edge(GINT iface, GTPoint<GFTYPE> &pt)
 void GGridBox::do_face_normals()
 {
 
-  #if defined(_G_IS_2D)
+  #if defined(_G_IS2D)
     do_face_normals2d();
-  #elif defined(_G_IS_3D)
+  #elif defined(_G_IS3D)
     do_face_normals3d();
   #else
     #error Invalid problem dimensionality
@@ -1282,6 +1282,7 @@ void GGridBox::do_face_normals()
 void GGridBox::do_face_normals2d()
 {
 
+#if 0
   // Cycle through local elem face indices to set
   // normals. Taken in order, these should correspond
    GSIZET m=0, nn=0;
@@ -1323,6 +1324,7 @@ void GGridBox::do_face_normals2d()
 
 
    } // end, element loop
+#endif
 
 
 } // end, method do_bdy_normals2d
@@ -1352,9 +1354,9 @@ void GGridBox::do_face_normals3d()
 void GGridBox::do_bdy_normals()
 {
 
-  #if defined(_G_IS_2D)
+  #if defined(_G_IS2D)
     do_bdy_normals2d();
-  #elif defined(_G_IS_3D)
+  #elif defined(_G_IS3D)
     do_bdy_normals3d();
   #else
     #error Invalid problem dimensionality

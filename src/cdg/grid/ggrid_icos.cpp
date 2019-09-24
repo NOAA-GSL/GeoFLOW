@@ -1636,9 +1636,9 @@ void GGridIcos::find_bdy_ind3d(GFTYPE radius, GTVector<GSIZET> &ibdy)
 void GGridIcos::do_face_normals()
 {
 
-  #if defined(_G_IS_2D)
+  #if defined(_G_IS2D)
     do_face_normals2d();
-  #elif defined(_G_IS_3D)
+  #elif defined(_G_IS3D)
     do_face_normals3d();
   #else
     #error Invalid problem dimensionality
@@ -1654,7 +1654,7 @@ void GGridIcos::do_face_normals()
 // ARGS   : none 
 // RETURNS: none
 //**********************************************************************************
-void GGridBox::do_face_normals2d()
+void GGridIcos::do_face_normals2d()
 {
 
   // Cycle through local elem face indices to set
@@ -1671,7 +1671,7 @@ void GGridBox::do_face_normals2d()
 // ARGS   : none 
 // RETURNS: none
 //**********************************************************************************
-void GGridBox::do_face_normals3d()
+void GGridIcos::do_face_normals3d()
 {
 
 
@@ -1689,9 +1689,9 @@ void GGridBox::do_face_normals3d()
 void GGridIcos::do_bdy_normals()
 {
 
-  #if defined(_G_IS_2D)
+  #if defined(_G_IS2D)
     return;
-  #elif defined(_G_IS_3D)
+  #elif defined(_G_IS3D)
     do_bdy_normals3d();
   #else
     #error Invalid problem dimensionality
@@ -1707,7 +1707,7 @@ void GGridIcos::do_bdy_normals()
 // ARGS   : none 
 // RETURNS: none
 //**********************************************************************************
-void GGridBox::do_bdy_normals3d()
+void GGridIcos::do_bdy_normals3d()
 {
 
 } // end, method do_bdy_normals3d

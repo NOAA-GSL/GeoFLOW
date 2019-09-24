@@ -107,9 +107,9 @@ virtual void                 print(const GString &filename){}          // print 
         GTVector<GTVector<GSIZET>>
                             &igbdy_binned() { return igbdy_binned_;}   // global dom bdy indices binned into GBdyType
         GTVector<GTVector<GSIZET>>
-                            &igbdy_byface() { return igbdy_byface_;}   // global dom bdy indices for each face
+                            &igbdy_bydface() { return igbdy_bydface_;}   // global dom bdy indices for each face
         GTVector<GTVector<GBdyType>>
-                            &igbdyt_byface(){ return igbdyt_byface_;}  // global dom bdy indices for each face
+                            &igbdyt_bydface(){ return igbdyt_bydface_;}  // global dom bdy type for each face
         GTVector<GSIZET>
                             &igbdy() { return igbdy_;}                 // global dom bdy indices into u
 
