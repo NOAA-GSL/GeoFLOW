@@ -1387,4 +1387,3 @@ void GGridBox::do_bdy_normals3d()
 
 } // end, method do_bdy_normals3d
 
->>>>>>> feature/burgers
