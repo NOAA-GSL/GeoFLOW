@@ -157,6 +157,7 @@ endif(USE_MPI)
 if(USE_GPTL)
 message("")
 message("------------------------ GPTL Libraries --------------------------")
+message("GPTL_ROOT = ${GPTL_ROOT}")
 find_package(GPTL REQUIRED)
 if(CMAKE_VERBOSE_MAKEFILE)
 	message("")
@@ -170,6 +171,7 @@ endif(USE_GPTL)
 if(USE_PAPI)
 message("")
 message("------------------------ PAPI Libraries --------------------------")
+message("PAPI_ROOT = ${PAPI_ROOT}")
 find_package(PAPI REQUIRED)
 if(CMAKE_VERBOSE_MAKEFILE)
 	message("")
@@ -182,6 +184,7 @@ endif(USE_PAPI)
 
 message("")
 message("--------------------- Boost Libraries ------------------------")
+message("BOOST_ROOT = ${BOOST_ROOT}")
 set(Boost_DEBUG OFF)              # Enable debug output from FIND_PACKAGE
 set(Boost_NO_SYSTEM_PATHS ON)     # Do not search system paths before BOOST_ROOT
 set(Boost_USE_STATIC_LIBS ON)     # Static link to Boost libraries
