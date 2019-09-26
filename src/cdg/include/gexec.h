@@ -5,6 +5,9 @@
 // Copyright    : Copyright 2018. Colorado State University. All rights reserved
 // Derived From : none.
 //==================================================================================
+#if !defined(_GEXEC_HPP)
+#define _GEXEC_HPP
+
 #include <cstddef>
 #include <cmath>
 #include <string>
@@ -42,3 +45,4 @@ template class GTMatrix <GLLONG>;
 template class GTMatrix <GSIZET>;
 #endif
 
+#endif // _GEXEC_HPP

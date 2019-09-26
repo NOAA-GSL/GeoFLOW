@@ -848,19 +848,19 @@ GBOOL  GTMatrix<T>::inverse(GTMatrix<T> &mret, GSIZET nx, GSIZET ny)
 // RETURNS: inverse of this
 //**********************************************************************************
 template<class T>
-GTMatrix<T> &GTMatrix<T>::inverse()
+GTMatrix<T> GTMatrix<T>::inverse()
 {
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::inverse()");
 
-  GTMatrix<T> *mret = new GTMatrix<T>(n1_,n2_);
+  GTMatrix<T> mret(n1_,n2_);
 
-  if ( !inverse(*mret) ) {
+  if ( !inverse(mret) ) {
     std::cout << "GTMatrix<T>::inverse(3): failed" << std::endl;
     exit(1);
   }
 
-  return *mret;
+  return mret;
 
 } // end, method inverse (3)
 
