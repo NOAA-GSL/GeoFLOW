@@ -16,7 +16,7 @@
 // ARGS   : GSIZET n: no. bins
 // RETURNS: none
 //**********************************************************************************
-template<class T>
+template<typename T>
 GTStat<T>::GTStat(GSIZET n, GC_COMM comm):
 nbins_         (n),
 nkeep_         (0),
@@ -37,7 +37,7 @@ comm_       (comm)
 // ARGS   : 
 // RETURNS: 
 //**********************************************************************************
-template<class T>
+template<typename T>
 GTStat<T>::GTStat(const GTStat<T> &obj):
 nbins_      (obj.get_nbins())
 {
@@ -60,8 +60,8 @@ nbins_      (obj.get_nbins())
 //          pdf    : final pdf
 // RETURNS: none.
 //**********************************************************************************
-template<class T> 
-void GTStat<T>::dopdf1d(GTVector<T> u, GBOOL ifixdr, T &fmin, T &fmax, GBOOL dolog, GTVector<T> &pdf)
+template<typename T> 
+void GTStat<T>::dopdf1d(const GTVector<T> &u, GBOOL ifixdr, T &fmin, T &fmax, GBOOL dolog, GTVector<T> &pdf)
 {
   GSIZET ibin, j, lkeep;
   T      del, test, tmax, tmin;
@@ -209,8 +209,8 @@ void GTStat<T>::dopdf1d(GTVector<T> u, GBOOL ifixdr, T &fmin, T &fmax, GBOOL dol
 //          fname  : filename to which to output pdf
 // RETURNS: none.
 //**********************************************************************************
-template<class T> 
-void GTStat<T>::dopdf1d(GTVector<T> u, GBOOL ifixdr, T &fmin, T &fmax, GBOOL dolog, const GString &fname)
+template<typename T> 
+void GTStat<T>::dopdf1d(const GTVector<T> &u, GBOOL ifixdr, T &fmin, T &fmax, GBOOL dolog, const GString &fname)
 {
   GSIZET            j;
   T                 ofmax, ofmin;

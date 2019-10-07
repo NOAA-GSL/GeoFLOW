@@ -24,7 +24,7 @@
 using namespace std;
 
 
-template <class T> class GTStat
+template <typename T> class GTStat
 {
   static_assert(std::is_floating_point<T>::value, "Requires floating point template parameter");
 
@@ -40,8 +40,8 @@ template <class T> class GTStat
               lpdf_.resize(nbins);}        // Set no. bins
     GSIZET &get_nbins() const
              {return nbins_; }             // Get no. bins
-    void   dopdf1d(GTVector<T> u, GBOOL ifixdr, T &fmin, T &fmax, GBOOL dolog, GTVector<T> &pdf);
-    void   dopdf1d(GTVector<T> u, GBOOL ifixdr, T &fmin, T &fmax, GBOOL dolog, const GString &fname); 
+    void   dopdf1d(const GTVector<T> &u, GBOOL ifixdr, T &fmin, T &fmax, GBOOL dolog, GTVector<T> &pdf);
+    void   dopdf1d(const GTVector<T> &u, GBOOL ifixdr, T &fmin, T &fmax, GBOOL dolog, const GString &fname); 
     
 
   private:
