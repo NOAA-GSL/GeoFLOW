@@ -77,7 +77,7 @@ public:
 //       void               transpose();
          GBOOL              inverse(GTMatrix<T> &);
          GBOOL              inverse(GTMatrix<T> &, GSIZET n1, GSIZET n2);
-         GTMatrix<T>       &inverse();
+         GTMatrix<T>        inverse();
          GBOOL              isSymmetric();
          void               setSingularZero(GDOUBLE tol);
          void               setCacheBlockingFactor(GINT icsz);

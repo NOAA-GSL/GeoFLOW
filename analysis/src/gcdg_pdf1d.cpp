@@ -95,7 +95,13 @@ int main(int argc, char **argv)
       }
 #endif
       finput  = traits.idir + "/" + preflist[i] + stask;
-      foutput = traits.odir + "/" + traits.opref + "_" + preflist[i] + ".txt";
+
+      if ( traits.dolog ) {
+        foutput = traits.odir + "/" + traits.opref + "_log_" + preflist[i] + ".txt";
+      }
+      else {
+        foutput = traits.odir + "/" + traits.opref + "_" + preflist[i] + ".txt";
+      }
 
       cout << "main: prefix" << preflist[i] << ": processing " << finput << endl;
 

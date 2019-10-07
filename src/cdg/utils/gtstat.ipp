@@ -133,6 +133,7 @@ void GTStat<T>::dopdf1d(const GTVector<T> &u, GBOOL ifixdr, T &fmin, T &fmax, GB
     for ( j=0; j<lkeep; j++ ) {
       sumr += fabs(u[ikeep_[j]]);
     }
+  }
   else {
     #pragma omp parallel for default(shared) private(j) reduction(+:sumr)
     for ( j=0; j<lkeep; j++ ) {

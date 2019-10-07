@@ -8,15 +8,18 @@
 set(apps_files  
        geoflow_stub.cpp
        geoflow_cdg.cpp
-   )
+	)
 
 #		       	
 # Include headers unique to main applications
 # Note:
 # - Only used if "main.cpp" has a "main.hpp" that needs including
 #
- set(apps_include_headers "")
-#set(apps_include_headers "${MY_INSTALL_INCDIR}/include")
+set(apps_include_headers 		
+	PUBLIC
+		"$<$<BOOL:${USE_PAPI}>:${PAPI_INCLUDE_DIRS}>"
+		"$<$<BOOL:${USE_GPTL}>:${GPTL_INCLUDE_DIRS}>"
+)
 
 #
 # Compiler options for each application
@@ -32,7 +35,10 @@ set(apps_compiler_options
 # Note:
 # - These are only things not previously linked by a GeoFLOW library
 #
-set(apps_linked_libraries tbox cdg)	
+set(apps_linked_libraries 
+	tbox 
+	cdg
+	)	
 				             
 #
 # Loop over each building & installing
