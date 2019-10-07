@@ -61,7 +61,7 @@ nbins_      (obj.get_nbins())
 // RETURNS: none.
 //**********************************************************************************
 template<typename T> 
-void GTStat<T>::dopdf1d(const GTVector<T> &u, GBOOL ifixdr, T &fmin, T &fmax, GBOOL dolog, GTVector<T> &pdf)
+void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixdr, T &fmin, T &fmax, GBOOL dolog, GTVector<T> &pdf)
 {
   GSIZET ibin, j, lkeep;
   T      del, test, tmax, tmin;
@@ -211,7 +211,7 @@ void GTStat<T>::dopdf1d(const GTVector<T> &u, GBOOL ifixdr, T &fmin, T &fmax, GB
 // RETURNS: none.
 //**********************************************************************************
 template<typename T> 
-void GTStat<T>::dopdf1d(const GTVector<T> &u, GBOOL ifixdr, T &fmin, T &fmax, GBOOL dolog, const GString &fname)
+void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixdr, T &fmin, T &fmax, GBOOL dolog, const GString &fname)
 {
   GSIZET            j;
   T                 ofmax, ofmin;
