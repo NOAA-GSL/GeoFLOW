@@ -218,7 +218,7 @@ GBOOL impl_simsum_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid, 
   GBOOL        bphase;
   GINT         kdn, kup, pdef;
   GSIZET       nn ;
-  GFTYPE       A, B, C, E0, L, p, phase, pi2, vphase, x, y, z;
+  GFTYPE       A, B, C, E0, kn, L, p, phase, vphase, x, y, z;
   GTPoint<GFTYPE>
                G0, G1;
   PropertyTree vtree ;
@@ -256,11 +256,11 @@ GBOOL impl_simsum_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid, 
   *u[0] = 0.0;
   *u[1] = 0.0;
   for ( GINT k=kdn; k<=kup; k++ ) {
+    kn = 2.0*PI*static_cast<GFTYPE>(k)/L;
     for ( GSIZET j=0; j<nn; j++ ) {
       x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; 
-      pi2         = 2.0*PI*static_cast<GFTYPE>(k);
-      phase       = bphase ? 2.0*PI*(*distribution)(generator) : 0.0;
-      (*u[0])[j] +=  cos(pi2*x/L + phase) / pow(k,p);
+      phase = bphase ? 2.0*PI*(*distribution)(generator) : 0.0;
+      (*u[0])[j] +=  cos(kn*x + phase) / pow(kn,p);
     }
   }
   
