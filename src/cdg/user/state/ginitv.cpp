@@ -218,7 +218,9 @@ GBOOL impl_simsum_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid, 
   GBOOL        bphase;
   GINT         kdn, kup, pdef;
   GSIZET       nn ;
-  GFTYPE       A, B, C, E0, p, phase, pi2, vphase, x, y, z;
+  GFTYPE       A, B, C, E0, L, p, phase, pi2, vphase, x, y, z;
+  GTPoint<GFTYPE>
+               G0, G1;
   PropertyTree vtree ;
   GTVector<GTVector<GFTYPE>>
               *xnodes = &grid.xNodes();
@@ -230,6 +232,9 @@ GBOOL impl_simsum_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid, 
 #else
   pdef = 3;
 #endif
+
+  G0 = tgrid->getP0();
+  G1 = tgrid->getP1();
 
   vtree  = ptree.getPropertyTree(sconfig);
   kdn    = vtree.getValue<GINT>("kdn");
@@ -247,6 +252,7 @@ GBOOL impl_simsum_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid, 
   //   psi = Sum_i { -cos(2pi*ki*x) ) / ki^p }
   // Compute vel components s.t. ux = d psi / dy, uy = -d psi / dx
 
+  L = G1.x1 - G0.x1;
   *u[0] = 0.0;
   *u[1] = 0.0;
   for ( GINT k=kdn; k<=kup; k++ ) {
@@ -254,7 +260,7 @@ GBOOL impl_simsum_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid, 
       x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; 
       pi2         = 2.0*PI*static_cast<GFTYPE>(k);
       phase       = bphase ? 2.0*PI*(*distribution)(generator) : 0.0;
-      (*u[0])[j] +=  cos(pi2*x + phase) / pow(k,p);
+      (*u[0])[j] +=  cos(pi2*x/L + phase) / pow(k,p);
     }
   }
   
