@@ -13,10 +13,13 @@
   "do_comparison"        : false,
   "observer_list"        : ["posixio_observer", "global_diag_basic"],
   "initv1d": {
-    "name": "simplesum",
-    "kdn" : 2,
-    "kup" : 4,
-    "E0"  : 1.0
+    "name"     : "simplesum",
+    "kdn"      : 2,
+    "kup"      : 20,
+    "kpower"   : 2.0,
+    "E0"       : 1.0,
+    "scramble" : true,
+    "phase_var": 0.001
   },
   "initv": {
     "name": "abc",
