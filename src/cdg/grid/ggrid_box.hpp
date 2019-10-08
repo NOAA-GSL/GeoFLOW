@@ -55,8 +55,8 @@ public:
          void               config_bdy(const PropertyTree &ptree,
                             GTVector<GTVector<GSIZET>>   &igbdy, 
                             GTVector<GTVector<GBdyType>> &igbdyt);           // config bdy
-         GTPoint<GFTYPE>   &getP0() const  {return P0_; }                    // get blob bdy point 
-         GTPoint<GFTYPE>   &getP1() const  {return P1_; }                    // get blob bdy point 
+const    GTPoint<GFTYPE>   &getP0() {return P0_; }                           // get blob bdy point 
+const    GTPoint<GFTYPE>   &getP1() {return P1_; }                           // get blob bdy point 
 
          void               print(const GString &filename);                  // print grid to file
 
