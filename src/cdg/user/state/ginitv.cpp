@@ -215,12 +215,15 @@ GBOOL impl_simsum_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid, 
   GGridBox *tgrid = dynamic_cast<GGridBox*>(&grid);
   assert(tgrid != NULLPTR && "Box grid required");
 
+  GBOOL        bphase;
   GINT         kdn, kup, pdef;
   GSIZET       nn ;
-  GFTYPE       A, B, C, E0, p, pi2, x, y, z;
+  GFTYPE       A, B, C, E0, p, phase, pi2, vphase, x, y, z;
   PropertyTree vtree ;
   GTVector<GTVector<GFTYPE>>
               *xnodes = &grid.xNodes();
+  default_random_engine generator;
+  normal_distribution<GFTYPE> *distribution;
 
 #if defined(_G_IS3D)
   pdef = 2;
@@ -228,12 +231,16 @@ GBOOL impl_simsum_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid, 
   pdef = 3;
 #endif
 
-  vtree = ptree.getPropertyTree(sconfig);
-  kdn   = vtree.getValue<GINT>("kdn");
-  kup   = vtree.getValue<GINT>("kup");
-  p     = vtree.getValue<GFTYPE>("kpower",pdef);
-  E0    = vtree.getValue<GFTYPE>("E0", 1.0);
-  nn    = (*xnodes)[0].size();
+  vtree  = ptree.getPropertyTree(sconfig);
+  kdn    = vtree.getValue<GINT>("kdn");
+  kup    = vtree.getValue<GINT>("kup");
+  p      = vtree.getValue<GFTYPE>("kpower",pdef);
+  E0     = vtree.getValue<GFTYPE>("E0", 1.0);
+  bphase = vtree.getValue<GBOOL>("scramble", FALSE);
+  vphase = vtree.getValue<GFTYPE>("phase_var", 0.005);
+  nn     = (*xnodes)[0].size();
+
+  distribution = new normal_distribution<GFTYPE>(0,vphase);
 
 #if defined(_G_IS2D)
   // Stream fcn is 
@@ -242,11 +249,12 @@ GBOOL impl_simsum_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid, 
 
   *u[0] = 0.0;
   *u[1] = 0.0;
-  for ( GSIZET j=0; j<nn; j++ ) {
-    x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; 
-    for ( GINT k=kdn; k<=kup; k++ ) {
-      pi2         = 2.0*PI*k;
-      (*u[0])[j] +=  cos(pi2*x) / pow(k,p);
+  for ( GINT k=kdn; k<=kup; k++ ) {
+    for ( GSIZET j=0; j<nn; j++ ) {
+      x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; 
+      pi2         = 2.0*PI*static_cast<GFTYPE>(k);
+      phase       = bphase ? 2.0*PI*(*distribution)(generator) : 0.0;
+      (*u[0])[j] +=  cos(pi2*x + phase) / pow(k,p);
     }
   }
   
@@ -266,6 +274,8 @@ GBOOL impl_simsum_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid, 
 #endif
 
   GMTK::normalizeL2(grid, u, utmp, E0);
+
+  delete distribution;
 
   return TRUE;
 
