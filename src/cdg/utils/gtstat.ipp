@@ -151,7 +151,7 @@ void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixdr, T &fmin, T &fmax, GBOOL do
     sumr += pow(u[ikeep_[j]]-gavg_,2);
   }
   GComm::Allreduce(&sumr, &sig_, 1, T2GCDatatype<T>() , GC_OP_SUM, comm_);
-  sig_ *= xnorm;
+  sig_ = sqrt(sig_/xnorm);
 
   // Compute local PDF:
   del = fabs(fmax - fmin) / nbins_;
