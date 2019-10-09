@@ -8,7 +8,7 @@
 #include "tbox/pio.hpp"
 #include "tbox/mpixx.hpp"
 #include "tbox/global_manager.hpp"
-#include "tbox/code_header.hpp"
+#include "tbox/display_header.hpp"
 
 using namespace geoflow::tbox;
 
