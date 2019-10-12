@@ -56,14 +56,17 @@ nbins_      (obj.get_nbins())
 //                   provide these to caller
 //          fmin/
 //          fmax   : dynamical range for pdf
+//          iside  : if 1, considers only u>0 data; if -1, considers only
+//                   u<0 data; if 0, considers all data. 
 //          dolog  : take log of |u| when creating bins?
+//          utmp   : tmp vector of same size as u
 //          pdf    : final pdf
 // RETURNS: none.
 //**********************************************************************************
 template<typename T> 
-void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixdr, T &fmin, T &fmax, GBOOL dolog, GTVector<T> &pdf)
+void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixdr, T &fmin, T &fmax, GINT iside, GBOOL dolog, GTVector<T> &utmp, GTVector<T> &pdf)
 {
-  GSIZET ibin, j, lkeep;
+  GSIZET ibin, iend, j, lkeep;
   T      del, test, tmax, tmin;
   T      fbin, fmin1, fmax1;
   T      sumr, xnorm;
@@ -76,49 +79,56 @@ void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixdr, T &fmin, T &fmax, GBOOL do
 
   tiny = fabs(100.0*std::numeric_limits<T>::epsilon());
 
-  // Compute dynamic range, if not using specified range:
+  utmp = u;
+  iend = utmp.size()-1;
+
+  // Check if doing 1-sided pdf:
+  if      ( iside ==  1 ) { // keep positive entries
+    for ( auto j=0; j< utmp.size(); j++ ) {
+      utmp[j] = MAX(0.0, utmp[j]);
+    }   
+    utmp.sortdecreasing();
+    utmp.contains(0.0, iend); iend--;
+  }
+  else if ( iside == -1 ) { // keep negative entries
+    for ( auto j=0; j< utmp.size(); j++ ) {
+      utmp[j] = MIN(0.0, utmp[j]);
+    }   
+    utmp.sortincreasing();
+    utmp.contains(0.0, iend); iend--;
+  }
+
+  if ( dolog ) {
+    utmp.abs();
+  } 
+
+  // Compute bin dynamic range, if not using specified range:
   if ( !ifixdr ) {
-    fmin1 = u.min();
-    fmax1 = u.max();
+    utmp.range(0,iend);
+    fmin1 = utmp.min();
+    fmax1 = utmp.max();
     GComm::Allreduce(&fmin1, &fmin, 1, T2GCDatatype<T>() , GC_OP_MIN, comm_);
     GComm::Allreduce(&fmax1, &fmax, 1, T2GCDatatype<T>() , GC_OP_MAX, comm_);
-  }
-  
-  if ( dolog ) {
-    fmin = log10(fabs(fmin)+tiny);
-    fmax = log10(fabs(fmax)+tiny);
-    if ( fmin > fmax ) {
-      fmin1 = fmin;
-      fmin = fmax;
-      fmax = fmin1;
+    if ( dolog ) {
+      fmin += tiny;
+      fmax += tiny;
     }
+    utmp.range_reset();
   }
 
-  tmin = fmin;
+  tmin = fmin; // for testing to set samples
   tmax = fmax;
   if ( dolog ) {
-    tmin = pow(10.0, fmin);
-    tmax = pow(10.0, fmax);
+    fmin = log10(fabs(fmin)); // for binning
+    fmax = log10(fabs(fmax));
   }
-
 
   // Find indirection indices that meet dyn. range criterion:
   lkeep = 0;
-  if ( dolog ) {
   #pragma omp for
-    for ( auto j=0; j<u.size(); j++ ) {
-      if ( fabs(u[j]) >= tmin && fabs(u[j]) <= tmax ) {
-        ikeep_[lkeep++] = j;
-      }
-    }
-  }
-  else {
-  #pragma omp for
-    for ( auto j=0; j<u.size(); j++ ) {
-      if ( u[j] >= tmin && u[j] <= tmax ) {
-        ikeep_[lkeep] = j;
-        lkeep++;
-      }
+  for ( j=0; j<utmp.size(); j++ ) {
+    if ( utmp[j] >= tmin && utmp[j] <= tmax ) {
+      ikeep_[lkeep++] = j;
     }
   }
   GComm::Allreduce(&lkeep, &nkeep_, 1, T2GCDatatype<GSIZET>() , GC_OP_SUM, comm_);
@@ -128,17 +138,9 @@ void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixdr, T &fmin, T &fmax, GBOOL do
 
   // Compute average:
   sumr = 0.0;
-  if ( dolog ) {
-    #pragma omp parallel for default(shared) private(j) reduction(+:sumr)
-    for ( j=0; j<lkeep; j++ ) {
-      sumr += fabs(u[ikeep_[j]]);
-    }
-  }
-  else {
-    #pragma omp parallel for default(shared) private(j) reduction(+:sumr)
-    for ( j=0; j<lkeep; j++ ) {
-      sumr += u[ikeep_[j]];
-    }
+  #pragma omp parallel for default(shared) private(j) reduction(+:sumr)
+  for ( j=0; j<lkeep; j++ ) {
+    sumr += utmp[ikeep_[j]];
   }
   GComm::Allreduce(&sumr, &gavg_, 1, T2GCDatatype<T>() , GC_OP_SUM, comm_);
   gavg_ *= xnorm;
@@ -148,17 +150,20 @@ void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixdr, T &fmin, T &fmax, GBOOL do
   sumr = 0.0;
   #pragma omp parallel for default(shared) private(j) reduction(+:sumr)
   for ( j=0; j<lkeep; j++ ) {
-    sumr += pow(u[ikeep_[j]]-gavg_,2);
+    sumr += (utmp[ikeep_[j]]-gavg_)*(utmp[ikeep_[j]]-gavg_);
   }
   GComm::Allreduce(&sumr, &sig_, 1, T2GCDatatype<T>() , GC_OP_SUM, comm_);
   sig_ = sqrt(sig_/xnorm);
+
+  // Note: We _may_ want to compute higher order quantities like
+  //       skewness, flatness. If so, do that here.
 
   // Compute local PDF:
   del = fabs(fmax - fmin) / nbins_;
   if ( dolog ) {
     #pragma omp parallel for  private(ibin,test)
     for ( j=0; j<lkeep; j++ ) {
-      test = log10(fabs(u[ikeep_[j]])+tiny);
+      test = log10(utmp[ikeep_[j]]+tiny);
       ibin = static_cast<GSIZET> ( ( test - fmin )/del );
       ibin = MIN(MAX(ibin,0),nbins_-1);
       #pragma omp atomic
@@ -168,7 +173,7 @@ void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixdr, T &fmin, T &fmax, GBOOL do
   else {
     #pragma omp parallel for  private(ibin,test)
     for ( j=0; j<lkeep; j++ ) {
-      test = u[ikeep_[j]];
+      test = utmp[ikeep_[j]];
       ibin = static_cast<GSIZET> ( ( test - fmin )/del );
       ibin = MIN(MAX(ibin,0),nbins_-1);
       #pragma omp atomic
@@ -180,7 +185,7 @@ void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixdr, T &fmin, T &fmax, GBOOL do
   GComm::Allreduce(lpdf_.data(), pdf.data(), nbins_, T2GCDatatype<T>() , GC_OP_SUM, comm_);
 
 
- // Do sanity check:
+  // Do sanity check:
   fbin = 0.0;
   #pragma omp parallel for  default(shared) reduction(+:fbin)
   for ( j=0; j<nbins_; j++ ) {
@@ -188,7 +193,6 @@ void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixdr, T &fmin, T &fmax, GBOOL do
     fbin += pdf[j];
   }
   assert( fbin == nkeep_ && "Inconsistent binning");
-
 
 
 } // end, dopdf1d (1)
@@ -206,12 +210,15 @@ void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixdr, T &fmin, T &fmax, GBOOL do
 //                   provide these to caller
 //          fmin/
 //          fmax   : dynamical range for pdf
+//          iside  : if 1, considers only u>0 data; if -1, considers only
+//                   u<0 data; if 0, considers all data. 
 //          dolog  : take log of |u| when creating bins?
+//          utmp   : tmp vector of same size as u
 //          fname  : filename to which to output pdf
 // RETURNS: none.
 //**********************************************************************************
 template<typename T> 
-void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixdr, T &fmin, T &fmax, GBOOL dolog, const GString &fname)
+void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixdr, T &fmin, T &fmax, GINT iside, GBOOL dolog, GTVector<T> &utmp, const GString &fname)
 {
   GSIZET            j;
   T                 ofmax, ofmin;
@@ -220,7 +227,7 @@ void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixdr, T &fmin, T &fmax, GBOOL do
 
   gpdf_.resize(nbins_);
 
-  dopdf1d(u, ifixdr, fmin, fmax, dolog, gpdf_);
+  dopdf1d(u, ifixdr, fmin, fmax, iside, dolog, utmp, gpdf_);
   if ( myrank_ == 0 )  {
 
     ofmin = fmin;

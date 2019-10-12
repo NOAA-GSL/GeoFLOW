@@ -28,6 +28,7 @@ using namespace std;
 struct MyTraits {
   GBOOL    dolog    ;
   GBOOL    bfixeddr ;
+  GINT     iside    ;
   GINT     wfile    ;
   GINT     wtask    ;
   GINT     wtime    ;
@@ -70,7 +71,7 @@ int main(int argc, char **argv)
     GSIZET                      ipos;
     GIOTraits                   giotraits;
     GTStat<GFTYPE>              gstat(traits.nbins, comm_);
-    GTVector<GFTYPE>            u; 
+    GTVector<GFTYPE>            u, utmp; 
     std::stringstream           sformat;
     GString                     spref;
     char                        stask[16];
@@ -108,7 +109,8 @@ int main(int argc, char **argv)
 
       // read in data
       gio_read(giotraits, finput, u);
-      gstat.dopdf1d(u, traits.bfixeddr, traits.fmin, traits.fmax, traits.dolog, foutput); 
+      utmp.resize(u.size());
+      gstat.dopdf1d(u, traits.bfixeddr, traits.fmin, traits.fmax, traits.iside,  traits.dolog, utmp, foutput); 
       cout << "main: pdf written to: " << foutput << "." << endl;
     }
 
@@ -141,6 +143,7 @@ GBOOL init(int &argc, char **argv, PropertyTree &ptree, MyTraits &traits, GTVect
     // Set traits from prop tree, then over write if necessary:
     traits.dolog    = ptree.getValue<GBOOL>  ("dolog"   ,FALSE);
     traits.bfixeddr = ptree.getValue<GBOOL>  ("bfixeddr",FALSE);
+    traits.iside    = ptree.getValue<GINT>   ("iside"   , 0);
     traits.wfile    = ptree.getValue<GINT>   ("wfile"   ,2048);
     traits.wtask    = ptree.getValue<GINT>   ("wtask"   ,5);
     traits.wtime    = ptree.getValue<GINT>   ("wtime"   ,6);
@@ -154,6 +157,7 @@ GBOOL init(int &argc, char **argv, PropertyTree &ptree, MyTraits &traits, GTVect
     // Set traits from prop tree, then over write if necessary:
     traits.dolog    = FALSE;
     traits.bfixeddr = FALSE;
+    traits.iside    = 0;
     traits.wfile    = 2048;
     traits.wtask    = 5;
     traits.wtime    = 6;
@@ -189,6 +193,12 @@ GBOOL init(int &argc, char **argv, PropertyTree &ptree, MyTraits &traits, GTVect
       case 'p': // set output file prefix
           traits.opref = optarg;
           break;
+      case 's': // set 'sided-ness' 
+          traits.iside = atoi(optarg);
+          assert(traits.iside == -1 
+              || traits.iside ==  0
+              || traits.iside ==  1);
+          break;
       case 'u': // upper dynamic range
           traits.fmax     = atoi(optarg);
           traits.bfixeddr = TRUE;
@@ -200,7 +210,7 @@ GBOOL init(int &argc, char **argv, PropertyTree &ptree, MyTraits &traits, GTVect
       case '?':
       case 'h': // help
           std::cout << "usage: " << std::endl <<
-          argv[0] << " [-h] [-b #bins] [-d input_dir] [-g dolog?] [-i config_file_name] [-o output_dir] [-p output_file_prefix] [-l lower_dyn_range] [-u upper_dyn_range] file1pref file2pref ..." << std::endl;
+          argv[0] << " [-h] [-b #bins] [-d input_dir] [-g dolog?] [-i config_file_name] [-o output_dir] [-p output_file_prefix] [-l lower_dyn_range] [-s iside] [-u upper_dyn_range] file1pref file2pref ..." << std::endl;
           exit(1);
           break;
       default: // invalid option
