@@ -3308,14 +3308,14 @@ void domathop(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &uin,  const GStrin
   else if ( "lapderivs" == sop ) { // operates on a scalar field
     // produces a vector field of each termin Laplacnin:
     nxy = grid.gtype() == GE_2DEMBEDDED ? 3 : GDIM;
-    assert(utmp .size() >  3   && "Insufficient temp space");
+    assert(utmp .size() >= 3   && "Insufficient temp space");
     assert(uin  .size() >= 1   && "Insufficient no. input components");
     assert(uout .size() >= nxy && "Insufficient no. output components");
-    tmp[0] = utmp[0]; tmp[1] = utmp[1]; tmp[2] = utmp[2];
+    for ( auto j=0; j<3; j++ ) tmp[j] = utmp[j];
     iuout.resize(nxy); 
     for ( auto j=0; j<nxy; j++ ) {
-      GMTK::grad(grid, *uin[0], j+1, tmp , *tmp[3]);
-      GMTK::grad(grid, *tmp[3], j+1, utmp, *uout[j]);
+      GMTK::grad(grid, *uin[0], j+1, tmp , *tmp[2]);
+      GMTK::grad(grid, *tmp[2], j+1, utmp, *uout[j]);
       iuout[j] = j; 
     }
   }
