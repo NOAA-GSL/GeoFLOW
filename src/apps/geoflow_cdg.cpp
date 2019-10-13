@@ -275,9 +275,9 @@ std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers
 {
     GINT    ivers;
     GSIZET  rest_ocycle;       // restart output cycle
-    GSIZET  deltac;            // cycle interval
-    GFTYPE  ofact;             // output freq in terms of restart output
-    Time    deltat;            // time interval
+    GSIZET  deltac, cyc_ref;   // cycle interval
+    GFTYPE  ofact ;            // output freq in terms of restart output
+    Time    deltat, delt_ref;  // time interval
     PropertyTree obsptree;     // observer props 
     GString dstr = "none";
     GString ptype;
@@ -299,6 +299,17 @@ std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers
     rest_ocycle = ptree.getValue <GSIZET>("restart_index");
     if ( "constant" == ptype ) ivers = 0;
     if ( "variable" == ptype ) ivers = 1;
+
+    // Find iobserver, get cadence, and use this to tie 
+    // other observer cadences to it:
+    for ( GSIZET j=0; j<obslist.size(); j++ ) {
+      obsptree = ptree.getPropertyTree(obslist[j]);
+      if ( "posixio_observer" == obslist[j]  ) {
+        delt_ref      = obsptree.getValue<GDOUBLE>("time_interval",0.01);
+        cyc_ref       = obsptree.getValue <GSIZET>("cycle_interval",1);
+      }
+    }
+
     for ( GSIZET j=0; j<obslist.size(); j++ ) {
       if ( "none" != obslist[j] ) {
         obsptree = ptree.getPropertyTree(obslist[j]);
@@ -308,15 +319,21 @@ std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers
 
         ofact       = obsptree.getValue<GDOUBLE>("interval_freq_fact",1.0);
         deltat      = obsptree.getValue<GDOUBLE>("time_interval",0.01);
-        deltac      = obsptree.getValue<GDOUBLE>("cycle_interval",1);
+        deltac      = obsptree.getValue <GSIZET>("cycle_interval",1);
         // Set current time and output cycle so that observer can initialize itself
         // These could/should be hidden from the config file:
         if ( "posixio_observer" == obslist[j]  ) ofact = 1.0;
         obsptree.setValue <GSIZET>("start_ocycle",MAX(0.0,rest_ocycle*ofact));
         obsptree.setValue <GFTYPE>("start_time"  ,time);
-        obsptree.setValue <GFTYPE>("time_interval", MAX(0.0,deltat/ofact));
-        obsptree.setValue <GSIZET>("cycle_interval",MAX(1.0,deltac/ofact));
-        obsptree.setValue<GString>("cadence_type",ctype);
+
+        // Link each observer cadence to I/O cadence:
+        if ( "posixio_observer" != obslist[j]  ) {
+          obsptree.setValue <GFTYPE>("time_interval", MAX(0.0,delt_ref/ofact));
+          deltac = (GSIZET)( ((GDOUBLE)cyc_ref)/ofact );
+          obsptree.setValue <GSIZET>("cycle_interval",MAX(1  ,deltac));
+          obsptree.setValue<GString>("cadence_type",ctype);
+        }
+        ptree.setPropertyTree(obslist[j],obsptree); // set obs tree with new values
 
         pObservers->push_back(ObserverFactory<MyTypes>::build(ptree, obslist[j], pEqn, *grid_));
       }
