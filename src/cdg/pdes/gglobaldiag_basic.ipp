@@ -57,7 +57,7 @@ void GGlobalDiag_basic<EquationType>::observe_impl(const Time &t, const State &u
 
     do_kinetic_L2 (t, u, uf, "gbalance.txt");
     do_kinetic_max(t, u, uf, "gmax.txt");
-    cycle_last_ = cycle_+1;
+    cycle_last_ = cycle_;
     time_last_  = t;
     ocycle_++;
   }
