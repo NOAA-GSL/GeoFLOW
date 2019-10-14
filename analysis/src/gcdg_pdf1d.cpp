@@ -184,7 +184,7 @@ GBOOL init(int &argc, char **argv, PropertyTree &ptree, MyTraits &traits, GTVect
           traits.dolog = TRUE;
           break;
       case 'l': // lower dynamic range
-          traits.fmin     = atoi(optarg);
+          traits.fmin     = atof(optarg);
           traits.bfixeddr = TRUE;
           break;
       case 'o': // output dir
@@ -200,7 +200,7 @@ GBOOL init(int &argc, char **argv, PropertyTree &ptree, MyTraits &traits, GTVect
               || traits.iside ==  1);
           break;
       case 'u': // upper dynamic range
-          traits.fmax     = atoi(optarg);
+          traits.fmax     = atof(optarg);
           traits.bfixeddr = TRUE;
           break;
       case ':': // missing option argument
