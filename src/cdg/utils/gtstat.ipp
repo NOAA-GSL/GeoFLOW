@@ -51,11 +51,15 @@ nbins_      (obj.get_nbins())
 // DESC   : Do 1d pdf of input scalar field, and output to specified file.
 // ARGS   : 
 //          u      : scalar field on which to operate
-//          ifixdr : if TRUE, then use specified fmin, fmax to set dynamical range.
+//          ifixmin: if TRUE, then use specified fmin, to set lower dynamical range.
+//                   If FALSE, then determine the dynamical range dynamically, and
+//                   provide these to caller
+//          ifixmax: if TRUE, then use specified fmax, to set lower dynamical range.
 //                   If FALSE, then determine the dynamical range dynamically, and
 //                   provide these to caller
 //          fmin/
-//          fmax   : dynamical range for pdf
+//          fmax   : dynamical range for pdf, used for binning if ifixmin/max=TRUE,
+//                   returned with values found in u if ifixmin/max=FALSE
 //          iside  : if 1, considers only u>0 data; if -1, considers only
 //                   u<0 data; if 0, considers all data. 
 //          dolog  : take log of |u| when creating bins?
@@ -64,10 +68,10 @@ nbins_      (obj.get_nbins())
 // RETURNS: none.
 //**********************************************************************************
 template<typename T> 
-void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixdr, T &fmin, T &fmax, GINT iside, GBOOL dolog, GTVector<T> &utmp, GTVector<T> &pdf)
+void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixmin, GBOOL ifixmax, T &fmin, T &fmax, GINT iside, GBOOL dolog, GTVector<T> &utmp, GTVector<T> &pdf)
 {
   GSIZET ibin, iend, j, lkeep;
-  T      del, test, tmax, tmin;
+  T      bmin, bmax, del, test;
   T      fbin, fmin1, fmax1;
   T      sumr, xnorm;
   T      tiny;
@@ -103,31 +107,38 @@ void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixdr, T &fmin, T &fmax, GINT isi
   } 
 
   // Compute bin dynamic range, if not using specified range:
-  if ( !ifixdr ) {
+  if ( !ifixmin ) {
     utmp.range(0,iend);
     fmin1 = utmp.min();
-    fmax1 = utmp.max();
     GComm::Allreduce(&fmin1, &fmin, 1, T2GCDatatype<T>() , GC_OP_MIN, comm_);
-    GComm::Allreduce(&fmax1, &fmax, 1, T2GCDatatype<T>() , GC_OP_MAX, comm_);
     if ( dolog ) {
       fmin += tiny;
+    }
+    utmp.range_reset();
+  }
+
+  if ( !ifixmax ) {
+    utmp.range(0,iend);
+    fmax1 = utmp.max();
+    GComm::Allreduce(&fmax1, &fmax, 1, T2GCDatatype<T>() , GC_OP_MAX, comm_);
+    if ( dolog ) {
       fmax += tiny;
     }
     utmp.range_reset();
   }
 
-  tmin = fmin; // for testing to set samples
-  tmax = fmax;
+  bmin = fmin; // set bin min/max
+  bmax = fmax;
   if ( dolog ) {
-    fmin = log10(fabs(fmin)); // for binning
-    fmax = log10(fabs(fmax));
+    bmin = log10(fabs(fmin)); 
+    bmax = log10(fabs(fmax));
   }
 
   // Find indirection indices that meet dyn. range criterion:
   lkeep = 0;
   #pragma omp for
   for ( j=0; j<utmp.size(); j++ ) {
-    if ( utmp[j] >= tmin && utmp[j] <= tmax ) {
+    if ( utmp[j] >= fmin && utmp[j] <= fmax ) {
       ikeep_[lkeep++] = j;
     }
   }
@@ -159,12 +170,12 @@ void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixdr, T &fmin, T &fmax, GINT isi
   //       skewness, flatness. If so, do that here.
 
   // Compute local PDF:
-  del = fabs(fmax - fmin) / nbins_;
+  del = fabs(bmax - bmin) / nbins_;
   if ( dolog ) {
     #pragma omp parallel for  private(ibin,test)
     for ( j=0; j<lkeep; j++ ) {
       test = log10(utmp[ikeep_[j]]+tiny);
-      ibin = static_cast<GSIZET> ( ( test - fmin )/del );
+      ibin = static_cast<GSIZET> ( ( test - bmin )/del );
       ibin = MIN(MAX(ibin,0),nbins_-1);
       #pragma omp atomic
       lpdf_[ibin] += 1.0;
@@ -174,7 +185,7 @@ void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixdr, T &fmin, T &fmax, GINT isi
     #pragma omp parallel for  private(ibin,test)
     for ( j=0; j<lkeep; j++ ) {
       test = utmp[ikeep_[j]];
-      ibin = static_cast<GSIZET> ( ( test - fmin )/del );
+      ibin = static_cast<GSIZET> ( ( test - bmin )/del );
       ibin = MIN(MAX(ibin,0),nbins_-1);
       #pragma omp atomic
       lpdf_[ibin] += 1.0;
@@ -205,11 +216,14 @@ void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixdr, T &fmin, T &fmax, GINT isi
 //          is allocated in this call (gpdf_).
 // ARGS   : 
 //          u      : scalar field on which to operate
-//          ifixdr : if TRUE, then use specified fmin, fmax to set dynamical range.
+//          ifixmin: if TRUE, then use specified fmin, to set lower dynamical range.
+//                   If FALSE, then determine the dynamical range dynamically, and
+//                   provide these to caller
+//          ifixmax: if TRUE, then use specified fmax, to set lower dynamical range.
 //                   If FALSE, then determine the dynamical range dynamically, and
 //                   provide these to caller
 //          fmin/
-//          fmax   : dynamical range for pdf
+//          fmax   : dynamical range for pdf bins
 //          iside  : if 1, considers only u>0 data; if -1, considers only
 //                   u<0 data; if 0, considers all data. 
 //          dolog  : take log of |u| when creating bins?
@@ -218,7 +232,7 @@ void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixdr, T &fmin, T &fmax, GINT isi
 // RETURNS: none.
 //**********************************************************************************
 template<typename T> 
-void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixdr, T &fmin, T &fmax, GINT iside, GBOOL dolog, GTVector<T> &utmp, const GString &fname)
+void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixmin, GBOOL ifixmax, T &fmin, T &fmax, GINT iside, GBOOL dolog, GTVector<T> &utmp, const GString &fname)
 {
   GSIZET            j;
   T                 ofmax, ofmin;
@@ -227,7 +241,7 @@ void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixdr, T &fmin, T &fmax, GINT isi
 
   gpdf_.resize(nbins_);
 
-  dopdf1d(u, ifixdr, fmin, fmax, iside, dolog, utmp, gpdf_);
+  dopdf1d(u, ifixmin, ifixmax, fmin, fmax, iside, dolog, utmp, gpdf_);
   if ( myrank_ == 0 )  {
 
     ofmin = fmin;

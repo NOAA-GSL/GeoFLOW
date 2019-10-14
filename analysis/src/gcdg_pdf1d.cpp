@@ -27,7 +27,8 @@ using namespace std;
 
 struct MyTraits {
   GBOOL    dolog    ;
-  GBOOL    bfixeddr ;
+  GBOOL    bfixedmin;
+  GBOOL    bfixedmax;
   GINT     iside    ;
   GINT     wfile    ;
   GINT     wtask    ;
@@ -110,7 +111,7 @@ int main(int argc, char **argv)
       // read in data
       gio_read(giotraits, finput, u);
       utmp.resize(u.size());
-      gstat.dopdf1d(u, traits.bfixeddr, traits.fmin, traits.fmax, traits.iside,  traits.dolog, utmp, foutput); 
+      gstat.dopdf1d(u, traits.bfixedmin, traits.bfixedmax, traits.fmin, traits.fmax, traits.iside,  traits.dolog, utmp, foutput); 
       cout << "main: pdf written to: " << foutput << "." << endl;
     }
 
@@ -142,7 +143,8 @@ GBOOL init(int &argc, char **argv, PropertyTree &ptree, MyTraits &traits, GTVect
 
     // Set traits from prop tree, then over write if necessary:
     traits.dolog    = ptree.getValue<GBOOL>  ("dolog"   ,FALSE);
-    traits.bfixeddr = ptree.getValue<GBOOL>  ("bfixeddr",FALSE);
+    traits.bfixedmin= ptree.getValue<GBOOL>  ("bfixedmin",FALSE);
+    traits.bfixedmax= ptree.getValue<GBOOL>  ("bfixedmax",FALSE);
     traits.iside    = ptree.getValue<GINT>   ("iside"   , 0);
     traits.wfile    = ptree.getValue<GINT>   ("wfile"   ,2048);
     traits.wtask    = ptree.getValue<GINT>   ("wtask"   ,5);
@@ -156,7 +158,8 @@ GBOOL init(int &argc, char **argv, PropertyTree &ptree, MyTraits &traits, GTVect
 #else
     // Set traits from prop tree, then over write if necessary:
     traits.dolog    = FALSE;
-    traits.bfixeddr = FALSE;
+    traits.bfixedmin= FALSE;
+    traits.bfixedmax= FALSE;
     traits.iside    = 0;
     traits.wfile    = 2048;
     traits.wtask    = 5;
@@ -185,7 +188,7 @@ GBOOL init(int &argc, char **argv, PropertyTree &ptree, MyTraits &traits, GTVect
           break;
       case 'l': // lower dynamic range
           traits.fmin     = atof(optarg);
-          traits.bfixeddr = TRUE;
+          traits.bfixedmin = TRUE;
           break;
       case 'o': // output dir
           traits.odir = optarg;
@@ -201,7 +204,7 @@ GBOOL init(int &argc, char **argv, PropertyTree &ptree, MyTraits &traits, GTVect
           break;
       case 'u': // upper dynamic range
           traits.fmax     = atof(optarg);
-          traits.bfixeddr = TRUE;
+          traits.bfixedmax = TRUE;
           break;
       case ':': // missing option argument
           std::cout << argv[0] << ": option " << optopt << " requires an argument" << std::endl;
@@ -219,6 +222,7 @@ GBOOL init(int &argc, char **argv, PropertyTree &ptree, MyTraits &traits, GTVect
           break;
       }
     }
+cout << "main: fmin=" << traits.fmin << " fmax=" << traits.fmax << endl;
 
     // Get file prefixes, if any:
     for ( ; optind < argc; optind++ ) {
