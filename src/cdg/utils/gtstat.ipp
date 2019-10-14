@@ -72,7 +72,7 @@ void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixmin, GBOOL ifixmax, T &fmin, T
 {
   GSIZET ibin, iend, j, lkeep;
   T      bmin, bmax, del, test;
-  T      fbin, fmin1, fmax1;
+  T      fbin, ftmp;
   T      sumr, xnorm;
   T      tiny;
 
@@ -109,8 +109,8 @@ void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixmin, GBOOL ifixmax, T &fmin, T
   // Compute bin dynamic range, if not using specified range:
   if ( !ifixmin ) {
     utmp.range(0,iend);
-    fmin1 = utmp.min();
-    GComm::Allreduce(&fmin1, &fmin, 1, T2GCDatatype<T>() , GC_OP_MIN, comm_);
+    ftmp = utmp.min();
+    GComm::Allreduce(&ftmp, &fmin, 1, T2GCDatatype<T>() , GC_OP_MIN, comm_);
     if ( dolog ) {
       fmin += tiny;
     }
@@ -119,8 +119,8 @@ void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixmin, GBOOL ifixmax, T &fmin, T
 
   if ( !ifixmax ) {
     utmp.range(0,iend);
-    fmax1 = utmp.max();
-    GComm::Allreduce(&fmax1, &fmax, 1, T2GCDatatype<T>() , GC_OP_MAX, comm_);
+    ftmp = utmp.max();
+    GComm::Allreduce(&ftmp, &fmax, 1, T2GCDatatype<T>() , GC_OP_MAX, comm_);
     if ( dolog ) {
       fmax += tiny;
     }
@@ -235,7 +235,6 @@ template<typename T>
 void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixmin, GBOOL ifixmax, T &fmin, T &fmax, GINT iside, GBOOL dolog, GTVector<T> &utmp, const GString &fname)
 {
   GSIZET            j;
-  T                 ofmax, ofmin;
   std::ofstream     ios;
   std::stringstream header;
 
@@ -244,17 +243,10 @@ void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixmin, GBOOL ifixmax, T &fmin, T
   dopdf1d(u, ifixmin, ifixmax, fmin, fmax, iside, dolog, utmp, gpdf_);
   if ( myrank_ == 0 )  {
 
-    ofmin = fmin;
-    ofmax = fmax;
-    if ( dolog ) {
-      ofmin = pow(10.0, fmin);
-      ofmax = pow(10.0, fmax);
-    }
-
     header << std::scientific << std::setprecision(8);
     header << "# range=[" 
-           << ofmin  << ","
-           << ofmax  << "]; avg="
+           << fmin   << ","
+           << fmax   << "]; avg="
            << gavg_  << "; sig="
            << sig_   << "; nbins="
            << nbins_ << "; blog ="
