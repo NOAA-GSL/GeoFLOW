@@ -132,7 +132,7 @@ void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixdr, T &fmin, T &fmax, GINT isi
     }
   }
   GComm::Allreduce(&lkeep, &nkeep_, 1, T2GCDatatype<GSIZET>() , GC_OP_SUM, comm_);
-  assert(nkeep_ > 0  && "No samples are within dynamic range");
+  assert(nkeep_ > 0  && "No samples within dynamic range");
 
   xnorm = 1.0 / static_cast<T>(nkeep_);
 
@@ -153,7 +153,7 @@ void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixdr, T &fmin, T &fmax, GINT isi
     sumr += (utmp[ikeep_[j]]-gavg_)*(utmp[ikeep_[j]]-gavg_);
   }
   GComm::Allreduce(&sumr, &sig_, 1, T2GCDatatype<T>() , GC_OP_SUM, comm_);
-  sig_ = sqrt(sig_/xnorm);
+  sig_ = sqrt(sig_*xnorm);
 
   // Note: We _may_ want to compute higher order quantities like
   //       skewness, flatness. If so, do that here.
