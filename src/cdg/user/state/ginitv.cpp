@@ -219,7 +219,7 @@ GBOOL impl_simsum_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid, 
   GINT         kdn, kup, pdef;
   GSIZET       nn ;
   GFTYPE       A, B, C, E0, kn, L, p, x, y, z;
-  GFTYPE       mult1, mult2;
+  GFTYPE       mult1, mult2, phase1, phase2;
   GTPoint<GFTYPE>
                G0, G1;
   PropertyTree vtree ;
@@ -245,7 +245,8 @@ GBOOL impl_simsum_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid, 
   brandom= vtree.getValue<GBOOL>("scramble", FALSE);
   nn     = (*xnodes)[0].size();
 
-  distribution = new normal_distribution<GFTYPE>(0,sqrt(2.0*E0));
+//distribution = new normal_distribution<GFTYPE>(0,sqrt(2.0*E0));
+  distribution = new normal_distribution<GFTYPE>(0,2.0*PI);
 
 #if defined(_G_IS2D)
   // Stream fcn is 
@@ -257,11 +258,14 @@ GBOOL impl_simsum_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid, 
   *u[1] = 0.0;
   for ( GINT k=kdn; k<=kup; k++ ) {
     kn = 2.0*PI*static_cast<GFTYPE>(k)/L;
-    mult1 = (*distribution)(generator);
-    mult2 = (*distribution)(generator);
+//  mult1  = (*distribution)(generator);
+//  mult2  = (*distribution)(generator);
+    phase1 = (*distribution)(generator);
+    phase2 = (*distribution)(generator);
     for ( GSIZET j=0; j<nn; j++ ) {
       x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; 
-      (*u[0])[j] +=  (mult1*cos(kn*x) + mult2*sin(kn*x)) / pow(kn,p);
+//    (*u[0])[j] +=  (wmult1*cos(kn*x) + mult2*sin(kn*x)) / pow(kn,p);
+      (*u[0])[j] +=  (cos(kn*x+phase1) + sin(kn*x+phase2)) / pow(kn,p);
     }
   }
   
