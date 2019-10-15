@@ -11,15 +11,17 @@
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : Constructor method
+// METHOD : Constructor method (1)
 // DESC   : Instantitate with no. bins
 // ARGS   : GSIZET n: no. bins
 // RETURNS: none
 //**********************************************************************************
 template<typename T>
 GTStat<T>::GTStat(GSIZET n, GC_COMM comm):
+bfixedwidth_   (FALSE),
 nbins_         (n),
 nkeep_         (0),
+fixedwidth_    (0.0),
 comm_       (comm)
 {
   assert(nbins_ > 0 && "Invalid bin count");
@@ -27,7 +29,31 @@ comm_       (comm)
   myrank_  = GComm::WorldRank(comm_);
 
   lpdf_ .resize(nbins_);
-}
+
+} // end, constuctor (1)
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : Constructor method (2)
+// DESC   : Instantitate with constant bin widsth 
+// ARGS   : T w: bin width
+// RETURNS: none
+//**********************************************************************************
+template<typename T>
+GTStat<T>::GTStat(T w, GC_COMM comm):
+bfixedwidth_   (TRUE),
+nbins_         (0),
+nkeep_         (0),
+fixedwidth_    (w),
+comm_       (comm)
+{
+  assert(nbins_ > 0 && "Invalid bin count");
+
+  myrank_  = GComm::WorldRank(comm_);
+
+
+} // end, constuctor (2)
 
 
 //**********************************************************************************
@@ -76,10 +102,6 @@ void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixmin, GBOOL ifixmax, T &fmin, T
   T      sumr, xnorm;
   T      tiny;
 
-  gpdf_.resize(nbins_);
-  ikeep_.resize(u.size());
-  lpdf_ = 0.0;
-  pdf   = 0.0;
 
   tiny = fabs(100.0*std::numeric_limits<T>::epsilon());
 
@@ -133,6 +155,22 @@ void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixmin, GBOOL ifixmax, T &fmin, T
     bmin = log10(fabs(fmin)); 
     bmax = log10(fabs(fmax));
   }
+
+  if ( bfixedwidth_ ) {
+    if ( dolog ) {
+      nbins_ = static_cast<GSIZET>( (bmax - bmin) / log10(fixedwidth_) );
+    }
+    else {
+      nbins_ = static_cast<GSIZET>( (bmax - bmin) / fixedwidth_ );
+    }
+  }
+
+  gpdf_.resize(nbins_);
+  ikeep_.resize(u.size());
+  lpdf_.resizem(nbins_);
+  pdf  .resizem(nbins_);
+  lpdf_ = 0.0;
+  pdf   = 0.0;
 
   // Find indirection indices that meet dyn. range criterion:
   lkeep = 0;
@@ -238,7 +276,6 @@ void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixmin, GBOOL ifixmax, T &fmin, T
   std::ofstream     ios;
   std::stringstream header;
 
-  gpdf_.resize(nbins_);
 
   dopdf1d(u, ifixmin, ifixmax, fmin, fmax, iside, dolog, utmp, gpdf_);
   if ( myrank_ == 0 )  {

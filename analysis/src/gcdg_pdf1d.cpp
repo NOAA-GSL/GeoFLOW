@@ -26,19 +26,21 @@ using namespace geoflow::tbox;
 using namespace std;
 
 struct MyTraits {
-  GBOOL    dolog    ;
-  GBOOL    bfixedmin;
-  GBOOL    bfixedmax;
-  GINT     iside    ;
-  GINT     wfile    ;
-  GINT     wtask    ;
-  GINT     wtime    ;
-  GSIZET   nbins    ;
-  GFTYPE   fmin     ;
-  GFTYPE   fmax     ;
-  GString  idir     ;
-  GString  odir     ;
-  GString  opref    ;
+  GBOOL    dolog      ;
+  GBOOL    bfixedmin  ;
+  GBOOL    bfixedmax  ;
+  GBOOL    bfixedwidth;
+  GINT     iside      ;
+  GINT     wfile      ;
+  GINT     wtask      ;
+  GINT     wtime      ;
+  GSIZET   nbins      ;
+  GFTYPE   fmin       ;
+  GFTYPE   fmax       ;
+  GFTYPE   fixedwidth ;
+  GString  idir       ;
+  GString  odir       ;
+  GString  opref      ;
 };
 
 GBOOL init(int &argc, char **argv, PropertyTree &ptree, MyTraits &traits, GTVector<GString> &preflist);
@@ -145,6 +147,7 @@ GBOOL init(int &argc, char **argv, PropertyTree &ptree, MyTraits &traits, GTVect
     traits.dolog    = ptree.getValue<GBOOL>  ("dolog"   ,FALSE);
     traits.bfixedmin= ptree.getValue<GBOOL>  ("bfixedmin",FALSE);
     traits.bfixedmax= ptree.getValue<GBOOL>  ("bfixedmax",FALSE);
+    traits.bfixedwidth= ptree.getValue<GBOOL>  ("bfixedwidth",FALSE);
     traits.iside    = ptree.getValue<GINT>   ("iside"   , 0);
     traits.wfile    = ptree.getValue<GINT>   ("wfile"   ,2048);
     traits.wtask    = ptree.getValue<GINT>   ("wtask"   ,5);
@@ -152,29 +155,32 @@ GBOOL init(int &argc, char **argv, PropertyTree &ptree, MyTraits &traits, GTVect
     traits.nbins    = ptree.getValue<GSIZET> ("nbins"   ,500);
     traits.fmin     = ptree.getValue<GFTYPE> ("fmin"    ,0);
     traits.fmax     = ptree.getValue<GFTYPE> ("fmax"    ,100.0);
+    traits.fixedwidth= ptree.getValue<GBOOL>  ("fixedwidth",0.0);
     traits.idir     = ptree.getValue<GString>("idir"    ,".");
     traits.odir     = ptree.getValue<GString>("odir"    ,".");
     traits.opref    = ptree.getValue<GString>("opref"   ,"pdf1d");
 #else
     // Set traits from prop tree, then over write if necessary:
-    traits.dolog    = FALSE;
-    traits.bfixedmin= FALSE;
-    traits.bfixedmax= FALSE;
-    traits.iside    = 0;
-    traits.wfile    = 2048;
-    traits.wtask    = 5;
-    traits.wtime    = 6;
-    traits.nbins    = 50;
-    traits.fmin     = 0;
-    traits.fmax     = 100.0;
-    traits.idir     = ".";
-    traits.odir     = ".";
-    traits.opref    = "pdf1d";
+    traits.dolog      = FALSE;
+    traits.bfixedmin  = FALSE;
+    traits.bfixedmax  = FALSE;
+    traits.bfixedwidth= FALSE;
+    traits.iside      = 0;
+    traits.wfile      = 2048;
+    traits.wtask      = 5;
+    traits.wtime      = 6;
+    traits.nbins      = 50;
+    traits.fmin       = 0;
+    traits.fmax       = 100.0;
+    traits.fixedwidth = 0.0;
+    traits.idir       = ".";
+    traits.odir       = ".";
+    traits.opref      = "pdf1d";
 #endif
     
     // Parse command line. ':' after char
     // option indicates that it takes an argument:
-    while ((iopt = getopt(argc, argv, "b:d:gl:o:p:s:u:h")) != -1) {
+    while ((iopt = getopt(argc, argv, "b:d:gl:o:p:s:u:w:h")) != -1) {
       // NOTE: -i reserved for Input Manager
       switch (iopt) {
       case 'b': // handled by InputManager
@@ -206,6 +212,11 @@ GBOOL init(int &argc, char **argv, PropertyTree &ptree, MyTraits &traits, GTVect
           traits.fmax     = atof(optarg);
           traits.bfixedmax = TRUE;
           break;
+      case 'w': // set 'sided-ness' 
+          traits.bfixedwidth = TRUE;
+          traits.fixedwidth = atof(optarg);
+          assert(traits.fixedwidth != 0.0);
+          break;
       case ':': // missing option argument
           std::cout << argv[0] << ": option " << optopt << " requires an argument" << std::endl;
           exit(1);
@@ -213,7 +224,7 @@ GBOOL init(int &argc, char **argv, PropertyTree &ptree, MyTraits &traits, GTVect
       case '?':
       case 'h': // help
           std::cout << "usage: " << std::endl <<
-          argv[0] << " [-h] [-b #bins] [-d input_dir] [-g dolog?] [-i config_file_name] [-o output_dir] [-p output_file_prefix] [-l lower_dyn_range] [-s iside] [-u upper_dyn_range] file1pref file2pref ..." << std::endl;
+          argv[0] << " [-h] [-b #bins] [-d input_dir] [-g dolog?] [-i config_file_name] [-o output_dir] [-p output_file_prefix] [-l lower_dyn_range] [-s iside] [-u upper_dyn_range] [-w bin_width]  file1pref file2pref ..." << std::endl;
           exit(1);
           break;
       default: // invalid option
