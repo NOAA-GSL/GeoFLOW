@@ -136,6 +136,8 @@ template <class T> class GTVector
 
 
     #pragma acc routine vector
+    T isfinite();
+    #pragma acc routine vector
     T max();
     #pragma acc routine vector
     T amax();

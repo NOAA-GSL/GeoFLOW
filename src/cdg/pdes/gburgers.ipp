@@ -280,6 +280,8 @@ template<typename TypePack>
 void GBurgers<TypePack>::step_impl(const Time &t, State &uin, State &uf, State &ub, const Time &dt)
 {
 
+  GBOOL bret;
+
   // If there's a top-of-the-timestep callback, 
   // call it here:
   if ( bsteptop_ ) {
@@ -311,6 +313,13 @@ void GBurgers<TypePack>::step_impl(const Time &t, State &uin, State &uf, State &
       step_multistep(t, uevolve_, uf, ub, dt);
       break;
   }
+
+  // Check solution for NaN and Inf:
+  bret = TRUE;
+  for ( auto j=0; j<uevolve_.size(); j++ ) {
+     bret = bret && uevolve_ [j]->isfinite();
+  }
+  assert(bret && "Solution not finite");
 
 } // end of method step_impl (1)
 

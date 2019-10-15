@@ -1049,6 +1049,28 @@ GTVector<T>::operator*=(const GTVector &b)
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD : isfinite
+// DESC   : Find if a nan or inf exists in vector
+// ARGS   : 
+// RETURNS: TRUE if ok (all members are finite);  else FALSE
+//**********************************************************************************
+template<class T>
+T
+GTVector<T>::isfinite()
+{
+  GBOOL bret = TRUE;
+
+  for ( GLLONG j=this->gindex_.beg(); j<=this->gindex_.end() && j<=this->gindex_.end() && bret; j+=this->gindex_.stride() ) {
+    bret = std::isfinite(this->data_[j]);
+  }
+ 
+  return bret;
+
+} // end isfinite
+
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD : maxn
 // DESC   : Find max of first n elements
 // ARGS   : n : num elemets past gindex.beg() to check
