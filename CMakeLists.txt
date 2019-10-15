@@ -112,6 +112,9 @@ message("")
 message("================================================================")
 message("                    Searching for Libraries                     ")
 message("================================================================")
+if(${CMAKE_VERSION} VERSION_GREATER "3.11.999") 
+	cmake_policy(SET CMP0074 NEW) # find_package search <name>_ROOT
+endif()
 
 if(USE_OPENMP)
 message("")
