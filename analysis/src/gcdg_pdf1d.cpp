@@ -86,12 +86,15 @@ int main(int argc, char **argv)
     giotraits.wtime  = traits.wtime;
     giotraits.dir    = traits.odir;
 
+    cout << "main: instantiate GTStat operator................." << endl;
     if ( traits.bfixedwidth ) {
-      gstat = new GTStat<GFTYPE>(traits.nbins, comm_);
-    }
-    else {
       gstat = new GTStat<GFTYPE>(traits.fixedwidth, comm_);
     }
+    else {
+      gstat = new GTStat<GFTYPE>(traits.nbins, comm_);
+    }
+    assert(gstat != NULLPTR );
+    cout << "main: GTStat operator instantiated." << endl;
 
     // Process each file specified:
     sformat << ".%0" << giotraits.wtask << "d.out";
@@ -162,7 +165,7 @@ GBOOL init(int &argc, char **argv, PropertyTree &ptree, MyTraits &traits, GTVect
     traits.wtime    = ptree.getValue<GINT>   ("wtime"   ,6);
     traits.nbins    = ptree.getValue<GSIZET> ("nbins"   ,500);
     traits.fmin     = ptree.getValue<GFTYPE> ("fmin"    ,0);
-    traits.fmax     = ptree.getValue<GFTYPE> ("fmax"    ,100.0);
+    traits.fmax     = ptree.getValue<GFTYPE> ("fmax"    ,0);
     traits.fixedwidth= ptree.getValue<GBOOL>  ("fixedwidth",0.0);
     traits.idir     = ptree.getValue<GString>("idir"    ,".");
     traits.odir     = ptree.getValue<GString>("odir"    ,".");
@@ -179,7 +182,7 @@ GBOOL init(int &argc, char **argv, PropertyTree &ptree, MyTraits &traits, GTVect
     traits.wtime      = 6;
     traits.nbins      = 50;
     traits.fmin       = 0;
-    traits.fmax       = 100.0;
+    traits.fmax       = 0;
     traits.fixedwidth = 0.0;
     traits.idir       = ".";
     traits.odir       = ".";
@@ -220,7 +223,7 @@ GBOOL init(int &argc, char **argv, PropertyTree &ptree, MyTraits &traits, GTVect
           traits.fmax     = atof(optarg);
           traits.bfixedmax = TRUE;
           break;
-      case 'w': // set 'sided-ness' 
+      case 'w': // set const bin width
           traits.bfixedwidth = TRUE;
           traits.fixedwidth = atof(optarg);
           assert(traits.fixedwidth != 0.0);
@@ -241,7 +244,6 @@ GBOOL init(int &argc, char **argv, PropertyTree &ptree, MyTraits &traits, GTVect
           break;
       }
     }
-cout << "main: fmin=" << traits.fmin << " fmax=" << traits.fmax << endl;
 
     // Get file prefixes, if any:
     for ( ; optind < argc; optind++ ) {
