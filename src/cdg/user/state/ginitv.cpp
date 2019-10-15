@@ -343,25 +343,26 @@ GBOOL impl_simsum_icos(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
 
   *u[0] = 0.0;
   *u[1] = 0.0;
-#if defined(_G_IS3D)
   *u[2] = 0.0;
-#endif
-  for ( GINT k=kdn; k<=kup; k++ ) {
-    kn = static_cast<GFTYPE>(k);
+  for ( GINT m=0; m<u.size(); m++ ) {
+    for ( GINT k=kdn; k<=kup; k++ ) {
+      kn = static_cast<GFTYPE>(k);
 //  mult1  = (*distribution)(generator);
 //  mult2  = (*distribution)(generator);
-    phase1 = (*distribution)(generator);
-    phase2 = (*distribution)(generator);
-    for ( GSIZET j=0; j<nn; j++ ) {
-      x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j]; 
-      r = sqrt(x*x + y*y + z*z);
-      lat = asin(z/r); lon = atan2(y,x);
-//    (*u[0])[j] +=  (wmult1*cos(kn*x) + mult2*sin(kn*x)) / pow(kn,p);
-      (*u[0])[j] +=  (cos(kn*lat+phase1) + sin(kn*lon+phase2)) / pow(kn,p);
+      phase1 = (*distribution)(generator);
+      phase2 = (*distribution)(generator);
+      for ( GSIZET j=0; j<nn; j++ ) {
+        x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j]; 
+        r = sqrt(x*x + y*y + z*z);
+        lat = asin(z/r); lon = atan2(y,x);
+//      (*u[m])[j] +=  (wmult1*cos(kn*x) + mult2*sin(kn*x)) / pow(kn,p);
+        (*u[m])[j] +=  (cos(kn*lat+phase1) + sin(kn*lon+phase2)) / pow(kn,p);
+      }
     }
-  }
+  } // end velocity compponent, m 
   
 
+  GMTK::constrain2sphere(grid, u);
   GMTK::normalizeL2(grid, u, utmp, E0);
 
   delete distribution;
