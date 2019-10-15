@@ -216,10 +216,9 @@ GBOOL impl_simsum_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid, 
   GGridBox *tgrid = dynamic_cast<GGridBox*>(&grid);
   assert(tgrid != NULLPTR && "Box grid required");
 
-  GBOOL        brandom;
   GINT         kdn, kup, pdef;
   GSIZET       nn ;
-  GFTYPE       A, B, C, E0, kn, L, p, x, y, z;
+  GFTYPE       E0, kn, L, p, x, y, z;
   GFTYPE       mult1, mult2, phase1, phase2;
   GTPoint<GFTYPE>
                G0, G1;
@@ -243,7 +242,6 @@ GBOOL impl_simsum_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid, 
   kup    = vtree.getValue<GINT>("kup");
   p      = vtree.getValue<GFTYPE>("kpower",pdef);
   E0     = vtree.getValue<GFTYPE>("E0", 1.0);
-  brandom= vtree.getValue<GBOOL>("scramble", FALSE);
   nn     = (*xnodes)[0].size();
 
 //distribution = new normal_distribution<GFTYPE>(0,sqrt(2.0*E0));
@@ -297,7 +295,7 @@ GBOOL impl_simsum_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid, 
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : impl_simsum_icos
-// DESC   : Inititialize velocity with simple sum of waves in x-dir only,
+// DESC   : Inititialize velocity with simple sum of waves in lat-long
 //          scaled by k^p. For icos grids, 2d and 3d.
 // ARGS   : ptree  : main property tree
 //          sconfig: ptree block name containing variable config
@@ -316,10 +314,14 @@ GBOOL impl_simsum_icos(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
 
   GINT         kdn, kup, pdef;
   GSIZET       nn ;
-  GFTYPE       A, B, C, E0, p, pi2, x, y, z;
+  GFTYPE       E0, kn, p, r, x, y, z;
+  GFTYPE       lat, lon;
+  GFTYPE       mult1, mult2, phase1, phase2;
   PropertyTree vtree ;
   GTVector<GTVector<GFTYPE>>
               *xnodes = &grid.xNodes();
+  std::default_random_engine generator;
+  std::normal_distribution<GFTYPE> *distribution;
 
 #if defined(_G_IS3D)
   pdef = 2;
@@ -327,45 +329,42 @@ GBOOL impl_simsum_icos(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
   pdef = 3;
 #endif
 
-  vtree = ptree.getPropertyTree(sconfig);
-  kdn   = vtree.getValue<GINT>("kdn");
-  kup   = vtree.getValue<GINT>("kup");
-  p     = vtree.getValue<GFTYPE>("kpower",pdef);
-  E0    = vtree.getValue<GFTYPE>("E0", 1.0);
-  nn    = (*xnodes)[0].size();
 
-#if defined(_G_IS2D)
-  // Stream fcn is 
-  //   psi = Sum_i { -cos(2pi*ki*x) ) / ki^p }
-  // Compute vel components s.t. ux = d psi / dy, uy = -d psi / dx
+  vtree  = ptree.getPropertyTree(sconfig);
+  kdn    = vtree.getValue<GINT>("kdn");
+  kup    = vtree.getValue<GINT>("kup");
+  p      = vtree.getValue<GFTYPE>("kpower",pdef);
+  E0     = vtree.getValue<GFTYPE>("E0", 1.0);
+  nn     = (*xnodes)[0].size();
+
+//distribution = new normal_distribution<GFTYPE>(0,sqrt(2.0*E0));
+  distribution = new normal_distribution<GFTYPE>(0,2.0*PI);
+
 
   *u[0] = 0.0;
   *u[1] = 0.0;
-  for ( GSIZET j=0; j<nn; j++ ) {
-    x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; 
-    for ( GINT k=kdn; k<=kup; k++ ) {
-      pi2         = 2.0*PI*k;
-      (*u[0])[j] +=  pi2 * cos(pi2*x) / pow(k,p);
+#if defined(_G_IS3D)
+  *u[2] = 0.0;
+#endif
+  for ( GINT k=kdn; k<=kup; k++ ) {
+    kn = static_cast<GFTYPE>(k);
+//  mult1  = (*distribution)(generator);
+//  mult2  = (*distribution)(generator);
+    phase1 = (*distribution)(generator);
+    phase2 = (*distribution)(generator);
+    for ( GSIZET j=0; j<nn; j++ ) {
+      x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j]; 
+      r = sqrt(x*x + y*y + z*z);
+      lat = asin(z/r); lon = atan2(y,x);
+//    (*u[0])[j] +=  (wmult1*cos(kn*x) + mult2*sin(kn*x)) / pow(kn,p);
+      (*u[0])[j] +=  (cos(kn*lat+phase1) + sin(kn*lon+phase2)) / pow(kn,p);
     }
   }
   
-#elif defined(_G_IS3D)
 
-  *u[0] = 0.0;
-  *u[1] = 0.0;
-  *u[2] = 0.0;
-  for ( GSIZET j=0; j<nn; j++ ) {
-    x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
-    for ( GINT k=kdn; k<kup; k++ ) {
-      pi2         = 2.0*PI*k;
-      (*u[0])[j] +=  pi2 * cos(pi2*x) / pow(k,p);
-    }
-  }
-
-#endif
-
-  GMTK::constrain2sphere(grid, u);
   GMTK::normalizeL2(grid, u, utmp, E0);
+
+  delete distribution;
 
   return TRUE;
 
