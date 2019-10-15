@@ -9,6 +9,7 @@
 #include "ggrid_icos.hpp"
 #include "ggrid_box.hpp"
 
+#include <random>
 
 namespace ginitv {
 
@@ -225,8 +226,8 @@ GBOOL impl_simsum_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid, 
   PropertyTree vtree ;
   GTVector<GTVector<GFTYPE>>
               *xnodes = &grid.xNodes();
-  default_random_engine generator;
-  normal_distribution<GFTYPE> *distribution;
+  std::default_random_engine generator;
+  std::normal_distribution<GFTYPE> *distribution;
 
 #if defined(_G_IS3D)
   pdef = 2;
