@@ -28,7 +28,6 @@ comm_       (comm)
 
   myrank_  = GComm::WorldRank(comm_);
 
-  lpdf_ .resize(nbins_);
 
 } // end, constuctor (1)
 
@@ -48,7 +47,6 @@ nkeep_         (0),
 fixedwidth_    (w),
 comm_       (comm)
 {
-  assert(nbins_ > 0 && "Invalid bin count");
 
   myrank_  = GComm::WorldRank(comm_);
 
@@ -67,7 +65,6 @@ template<typename T>
 GTStat<T>::GTStat(const GTStat<T> &obj):
 nbins_      (obj.get_nbins())
 {
-  lpdf_ .resize(nbins_);
 }
 
 
@@ -90,11 +87,12 @@ nbins_      (obj.get_nbins())
 //                   u<0 data; if 0, considers all data. 
 //          dolog  : take log of |u| when creating bins?
 //          utmp   : tmp vector of same size as u
+//          lpdf   : local pdf tmp space
 //          pdf    : final pdf
 // RETURNS: none.
 //**********************************************************************************
 template<typename T> 
-void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixmin, GBOOL ifixmax, T &fmin, T &fmax, GINT iside, GBOOL dolog, GTVector<T> &utmp, GTVector<T> &pdf)
+void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixmin, GBOOL ifixmax, T &fmin, T &fmax, GINT iside, GBOOL dolog, GTVector<T> &utmp, GTVector<T> &lpdf, GTVector<T> &pdf)
 {
   GSIZET ibin, iend, j, lkeep;
   T      bmin, bmax, del, test;
@@ -157,20 +155,21 @@ void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixmin, GBOOL ifixmax, T &fmin, T
   }
 
   if ( bfixedwidth_ ) {
+
     if ( dolog ) {
-      nbins_ = static_cast<GSIZET>( (bmax - bmin) / log10(fixedwidth_) );
+      nbins_ = static_cast<GSIZET>( abs(bmax - bmin) / log10(fixedwidth_) );
     }
     else {
-      nbins_ = static_cast<GSIZET>( (bmax - bmin) / fixedwidth_ );
+      nbins_ = static_cast<GSIZET>( abs(bmax - bmin) / fixedwidth_ );
     }
   }
+  assert(nbins_ > 0 && "Invalid bin count");
 
-  gpdf_.resize(nbins_);
   ikeep_.resize(u.size());
-  lpdf_.resizem(nbins_);
-  pdf  .resizem(nbins_);
-  lpdf_ = 0.0;
-  pdf   = 0.0;
+  lpdf.resize(nbins_);
+  pdf  .resize(nbins_);
+  lpdf = 0.0;
+  pdf  = 0.0;
 
   // Find indirection indices that meet dyn. range criterion:
   lkeep = 0;
@@ -181,6 +180,9 @@ void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixmin, GBOOL ifixmax, T &fmin, T
     }
   }
   GComm::Allreduce(&lkeep, &nkeep_, 1, T2GCDatatype<GSIZET>() , GC_OP_SUM, comm_);
+  if ( nkeep_ <= 0 ) {
+    cout << "GTStat::dopdf1d: bfixedwidth=" << bfixedwidth_ << " fixedwidth=" << fixedwidth_ << " fmin=" << fmin << " fmax=" << fmax << endl;
+  }
   assert(nkeep_ > 0  && "No samples within dynamic range");
 
   xnorm = 1.0 / static_cast<T>(nkeep_);
@@ -216,7 +218,7 @@ void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixmin, GBOOL ifixmax, T &fmin, T
       ibin = static_cast<GSIZET> ( ( test - bmin )/del );
       ibin = MIN(MAX(ibin,0),nbins_-1);
       #pragma omp atomic
-      lpdf_[ibin] += 1.0;
+      lpdf[ibin] += 1.0;
     }
   }
   else {
@@ -226,12 +228,12 @@ void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixmin, GBOOL ifixmax, T &fmin, T
       ibin = static_cast<GSIZET> ( ( test - bmin )/del );
       ibin = MIN(MAX(ibin,0),nbins_-1);
       #pragma omp atomic
-      lpdf_[ibin] += 1.0;
+      lpdf[ibin] += 1.0;
     }
   }
   
   // Compute global reduction between MPI tasks to find final (global) pdf:
-  GComm::Allreduce(lpdf_.data(), pdf.data(), nbins_, T2GCDatatype<T>() , GC_OP_SUM, comm_);
+  GComm::Allreduce(lpdf.data(), pdf.data(), nbins_, T2GCDatatype<T>() , GC_OP_SUM, comm_);
 
 
   // Do sanity check:
@@ -277,7 +279,7 @@ void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixmin, GBOOL ifixmax, T &fmin, T
   std::stringstream header;
 
 
-  dopdf1d(u, ifixmin, ifixmax, fmin, fmax, iside, dolog, utmp, gpdf_);
+  dopdf1d(u, ifixmin, ifixmax, fmin, fmax, iside, dolog, utmp, lpdf_, gpdf_);
   if ( myrank_ == 0 )  {
 
     header << std::scientific << std::setprecision(8);
@@ -293,6 +295,8 @@ void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixmin, GBOOL ifixmax, T &fmin, T
      ios.open(fname,std::ios_base::trunc);
      ios << std::scientific << std::setprecision(15);
      ios << header.str() << std::endl;
+     // NOTE: Do NOT use gpdf_.size() here, since
+     //       this may be > nbins_:
      for ( j=0; j<nbins_-1; j++ ) {
        ios << gpdf_[j] << " " << std::endl;
      }
