@@ -1,8 +1,8 @@
 { 
   "pde_name"             : "pde_burgers",
-  "exp_order"            : [4, 1, 2],
+  "exp_order"            : [16, 1, 1],
   "exp_order_type"       : "constant",
-  "grid_type"            : "grid_box",
+  "grid_type"            : "grid_icos",
   "initstate_block"      : "mystateinit",
   "initforce_block"      : "",
   "use_forcing"          : false,
@@ -15,20 +15,19 @@
   "initv1d": {
     "name"     : "simplesum",
     "kdn"      : 2,
-    "kup"      : 20,
-    "kpower"   : 2.0,
-    "E0"       : 1.0,
-    "scramble" : true,
-    "phase_var": 0.001
+    "kup"      : 40,
+    "kpower"   : 0.025,
+    "E0"       : 1.0
   },
   "initv": {
-    "name": "abc",
-    "kdn" : 2,
-    "kup" : 3,
-    "A"   : 0.9,
-    "B"   : 1.0,
-    "C"   : 1.1,
-    "E0"  : 1.0
+    "name"  : "abc",
+    "kdn"   : 2,
+    "kup"   : 3,
+    "kpower": 0.5,
+    "A"     : 0.9,
+    "B"     : 1.0,
+    "C"     : 1.1,
+    "E0"    : 1.0
   },
   "mystateinit": {
     "initv"   : "initv1d",
@@ -99,7 +98,7 @@
   },
   "grid_icos": {
     "grid_name" : "grid_icos",
-    "ilevel"    : 2,
+    "ilevel"    : 17,
     "radius"    : 1.0
   },
   "grid_sphere" : {
@@ -130,7 +129,7 @@
     "grid_name" : "grid_box",
     "xyz0"      : [0.0, 0.0, 0.0],
     "delxyz"    : [1.0, 1.0, 1.0],
-    "num_elems" : [20, 1, 1],
+    "num_elems" : [4096, 1, 1],
     "bdy_x_0"   : "fully_periodic",
     "bdy_x_1"   : "fully_periodic",
     "bdy_y_0"   : "fully_periodic",
@@ -149,30 +148,40 @@
     "courant"          : 0.04 
   },
   "dissipation_traits": {
-    "nu"      : 8.33e-2,
+    "nu"      : 1.0e-4,
     "nu_type" : "constant"
   },
   "curlv": {
-    "compids" : [0, 1],
-    "names"   : ["omegax", "omegay", "omegaz"],
-    "mathop"  : "curl"
+    "state_index" : [0, 1, 2],
+    "names"       : ["omegax", "omegay", "omegaz"],
+    "mathop"      : "curl"
   },
   "curlvmag": {
-    "compids" : [0, 1],
-    "names"   : ["omega"],
-    "mathop"  : "curlmag"
+    "state_index" : [0, 1, 2],
+    "names"       : ["omega"],
+    "mathop"      : "curlmag"
+  },
+  "gradv": {
+    "state_index" : [0],
+    "names"       : ["gradx", "grady", "gradz"],
+    "mathop"      : "grad"
+  },
+  "2derivs": {
+    "state_index" : [0],
+    "names"       : ["du1dx2","du1dy2"],
+    "mathop"      : "lapderivs"
   },
   "posixio_observer": {
     "observer_name"      : "posixio_observer",
     "indirectory"        : "outs",
     "outdirectory"       : "outs",
     "cadence_type"       : "cycle",
-    "cycle_interval"     : 1,
+    "cycle_interval"     : 400,
     "time_interval"      : 0.01,
-    "state_index"        : [0],
+    "state_index"        : [0, 1, 2],
     "state_names"        : ["u1", "u2", "u3"],
     "grid_names"         : ["xgrid", "ygrid", "zgrid"],
-    "derived_quantities" : ["curlv", "curlvmag"],
+    "derived_quantities" : ["curlv"],
     "time_field_width"   : 6,
     "task_field_width"   : 5,
     "filename_size"      : 2048
@@ -181,14 +190,14 @@
     "observer_name"      : "global_diag_basic",
     "indirectory"        : ".",
     "outdirectory"       : ".",
-    "interval_freq_fact" : 10.0,
+    "interval_freq_fact" : 40.0,
     "treat_as_1d"        : true
   },
   "time_integration": {
-    "integ_type" : "cycle",
-    "time_end"   : 1.001,
+    "integ_type" : "time",
+    "time_end"   : 0.0101,
     "cycle_end"  : 20,
-    "dt"         : 1.0e-4
+    "dt"         : 1.0e-9
   }
 
 }
