@@ -73,7 +73,7 @@ int main(int argc, char **argv)
 
     GSIZET                      ipos;
     GIOTraits                   giotraits;
-    GTStat<GFTYPE>              gstat(traits.nbins, comm_);
+    GTStat<GFTYPE>             *gstat=NULLPTR;
     GTVector<GFTYPE>            u, utmp; 
     std::stringstream           sformat;
     GString                     spref;
@@ -85,6 +85,13 @@ int main(int argc, char **argv)
     giotraits.wtask  = traits.wtask;
     giotraits.wtime  = traits.wtime;
     giotraits.dir    = traits.odir;
+
+    if ( traits.bfixedwidth ) {
+      gstat = new GTStat<GFTYPE>(traits.nbins, comm_);
+    }
+    else {
+      gstat = new GTStat<GFTYPE>(traits.fixedwidth, comm_);
+    }
 
     // Process each file specified:
     sformat << ".%0" << giotraits.wtask << "d.out";
@@ -113,7 +120,7 @@ int main(int argc, char **argv)
       // read in data
       gio_read(giotraits, finput, u);
       utmp.resize(u.size());
-      gstat.dopdf1d(u, traits.bfixedmin, traits.bfixedmax, traits.fmin, traits.fmax, traits.iside,  traits.dolog, utmp, foutput); 
+      gstat->dopdf1d(u, traits.bfixedmin, traits.bfixedmax, traits.fmin, traits.fmax, traits.iside,  traits.dolog, utmp, foutput); 
       cout << "main: pdf written to: " << foutput << "." << endl;
     }
 
@@ -121,6 +128,7 @@ int main(int argc, char **argv)
     GlobalManager::shutdown();
     GlobalManager::finalize();
 
+    if ( gstat != NULLPTR ) delete gstat;
 
     exit(0);
 
