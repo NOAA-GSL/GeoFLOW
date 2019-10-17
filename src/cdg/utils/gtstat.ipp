@@ -123,7 +123,9 @@ void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixmin, GBOOL ifixmax, T &fmin, T
   }
 
   if ( dolog ) {
+    utmp.range(0,iend);
     utmp.abs();
+    utmp.range_reset();
   } 
 
   // Compute bin dynamic range, if not using specified range:
@@ -157,10 +159,10 @@ void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixmin, GBOOL ifixmax, T &fmin, T
   if ( bfixedwidth_ ) {
 
     if ( dolog ) {
-      nbins_ = static_cast<GSIZET>( abs(bmax - bmin) / log10(fixedwidth_) );
+      nbins_ = static_cast<GSIZET>( fabs(bmax - bmin) / fabs(log10(fixedwidth_)) );
     }
     else {
-      nbins_ = static_cast<GSIZET>( abs(bmax - bmin) / fixedwidth_ );
+      nbins_ = static_cast<GSIZET>( fabs(bmax - bmin) / fixedwidth_ );
     }
   }
   assert(nbins_ > 0 && "Invalid bin count");
@@ -172,6 +174,7 @@ void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixmin, GBOOL ifixmax, T &fmin, T
   pdf  = 0.0;
 
   // Find indirection indices that meet dyn. range criterion:
+  utmp.range(0,iend);
   lkeep = 0;
   #pragma omp for
   for ( j=0; j<utmp.size(); j++ ) {
@@ -180,6 +183,7 @@ void GTStat<T>::dopdf1d(GTVector<T> &u, GBOOL ifixmin, GBOOL ifixmax, T &fmin, T
     }
   }
   GComm::Allreduce(&lkeep, &nkeep_, 1, T2GCDatatype<GSIZET>() , GC_OP_SUM, comm_);
+  utmp.range_reset();
   if ( nkeep_ <= 0 ) {
     cout << "GTStat::dopdf1d: bfixedwidth=" << bfixedwidth_ << " fixedwidth=" << fixedwidth_ << " fmin=" << fmin << " fmax=" << fmax << endl;
   }
