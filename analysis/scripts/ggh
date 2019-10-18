@@ -1,0 +1,102 @@
+#!/bin/tcsh 
+
+if ($# < 2) then
+    echo "-------------------------------------------------- "
+    echo "ggh probes GeoFLOLW GIO binary output file, and reports "
+    echo "the header data encoded within it"
+    echo
+    echo "usage: "
+    echo "       ggh file_name szfloat szsizet szint"
+    echo "where:"
+    echo "           file_name: name of binary file (required)"
+    echo "           szfloat  : floating point size (4 or 8)"
+    echo "                      (required)"
+    echo "           szsizet  : sizet size in bytes (4 or 8). Default is 8."
+    echo "           szint t  : int size in bytes (4 or 8). Default is 4."
+    echo "-------------------------------------------------- "
+    exit
+endif
+
+
+setenv FILE   $1
+setenv ISIZE   4
+setenv FSIZE  $2
+setenv FF    
+if ($# < 3) then
+  setenv SIZET   8
+  setenv ISIZE   4
+endif
+if ($# < 4) then
+  setenv ISIZE   4
+endif
+
+
+if (! -e {$FILE}) then
+  echo "file " $FILE " does not exist"
+  exit 1
+endif
+
+setenv PREF 0x
+setenv SUFF
+
+
+# Compute offsets for data items:
+set offvs   = 0
+set offdi   = `echo 'ibase=10;obase=10; '$offvs'   + '$ISIZE'  '  | bc`
+set xoffdi  = `echo 'ibase=10;obase=16; '$offdi'  '  | bc`
+
+setenv DOdi   "od -t dI        -j {$PREF}{$xoffdi}{$SUFF} -N {$ISIZE} {$FILE}"
+set ardi    = `$DOdi`
+
+set offne   = `echo 'ibase=10;obase=10; '$offdi'   + '$ISIZE'  '  | bc`
+set offor   = `echo 'ibase=10;obase=10; '$offne'   + '$SIZET'  '  | bc`
+set norder  = `echo 'ibase=10;obase=10; '$ISIZE'*'$ardi[2]'    '  | bc`
+set offgr   = `echo 'ibase=10;obase=10; '$offor'   + '$norder' '  | bc`
+set offcy   = `echo 'ibase=10;obase=10; '$offgr'   + '$ISIZE'  '  | bc`
+set offti   = `echo 'ibase=10;obase=10; '$offcy'   + '$SIZET'  '  | bc`
+
+echo "ardi=" $ardi[2]
+echo "norder=" $norder
+echo "offvs =" $offvs
+echo "offdi =" $offdi
+echo "offne =" $offne
+echo "offor =" $offor
+echo "offgr =" $offgr
+echo "offcy =" $offcy
+echo "offti =" $offti
+
+# Convert offsets to hex:
+set xoffvs   = `echo 'ibase=10;obase=16; '$offvs'   '  | bc`
+set xoffne   = `echo 'ibase=10;obase=16; '$offne'   '  | bc`
+set xoffor   = `echo 'ibase=10;obase=16; '$offor'   '  | bc`
+set xoffgr   = `echo 'ibase=10;obase=16; '$offgr'   '  | bc`
+set xoffcy   = `echo 'ibase=10;obase=16; '$offcy'   '  | bc`
+set xoffti   = `echo 'ibase=10;obase=16; '$offti'   '  | bc`
+
+# Get data items at offsets:
+setenv DOvs   "od -t dI        -j {$PREF}{$xoffvs}{$SUFF} -N {$ISIZE} {$FILE}"
+setenv DOne   "od -t dL        -j {$PREF}{$xoffne}{$SUFF} -N {$SIZET} {$FILE}"
+setenv DOor   "od -t dI        -j {$PREF}{$xoffor}{$SUFF} -N {$ISIZE} {$FILE}"
+setenv DOgr   "od -t dI        -j {$PREF}{$xoffgr}{$SUFF} -N {$ISIZE} {$FILE}"
+setenv DOcy   "od -t dI        -j {$PREF}{$xoffcy}{$SUFF} -N {$SIZET} {$FILE}"
+setenv DOti   "od -t f{$FSIZE} -j {$PREF}{$xoffti}{$SUFF} -N {$FSIZE} {$FILE}"
+
+
+set arvs   = `$DOvs`
+set arne   = `$DOne`
+set aror   = `$DOor`
+set argr   = `$DOgr`
+set arcy   = `$DOcy`
+set arti   = `$DOti`
+
+# Print header:
+echo "Header for GIO file: " $1 " :"
+echo ".................GIO version= " $arvs[2]
+echo ".........................dim= " $ardi[2]
+echo "...................num elems= " $arne[2]
+echo ".......................order= " $aror[2]
+echo "...................grid type= " $argr[2]
+echo ".......................cycle= " $arcy[2]
+echo "........................time= " $arti[2]
+
+
