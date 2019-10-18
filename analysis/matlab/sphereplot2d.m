@@ -1,4 +1,6 @@
-function h = sphereplot2d(svar, tindex, bwire, varargin)
+function h = sphereplot2d(svar, tindex, blog, bwire, varargin)
+%
+% function h = sphereplot2d(svar, tindex, blog, bwire, varargin)
 %
 % Plots 2d GeoFLOW data onto the sureface of a sphere. 
 % Grid type must be GE_2DEMBEDDED.
@@ -9,6 +11,7 @@ function h = sphereplot2d(svar, tindex, bwire, varargin)
 %  Input:
 %    svar    : prefix for field file. Required
 %    tindex  : time index for output. Required
+%    blog    : take log of data?
 %    bwire   : if > 0, print wire frame only; if 0 
 %              print color patches. Default is 0
 %    varargin: to pass to quadmesh: e.g. to plot
@@ -28,6 +31,10 @@ if nargin < 2
   error('must specify svar, tindex');
 end 
 if nargin < 3
+  bwire = 0;
+  blog  = 0;
+end 
+if nargin < 4
   bwire = 0;
 end 
 
@@ -113,7 +120,12 @@ for itask = 0:ntasks-1
     cf = (cm - umin) / (umax - umin + eps);
     cv = (uu - umin) / (umax - umin + eps);
     if bwire == 0 
-      h = quadmesh(imat,xx,yy,zz,uu,'FaceColor','interp');
+      if blog > 0
+        puu = log10(uu);
+      else 
+        puu = uu;
+      end
+      h = quadmesh(imat,xx,yy,zz,puu,'FaceColor','interp');
       colorbar('vertical');
     else
       h = quadmesh(imat,xx,yy,zz,varargin{:});
