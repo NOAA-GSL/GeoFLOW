@@ -1,0 +1,135 @@
+#!/bin/tcsh 
+
+echo "Test for enough args..."
+if ($# < 3) then
+    echo "-------------------------------------------------- "
+    echo "grng finds GIO binary files whose time stamp "
+    echo " resides within specified bounds [t0, t1]."
+    echo
+    echo "usage: "
+    echo "       grng file_prefix t0 t1 "
+    echo "where:"
+    echo "           file prefix: name of binary file (required)"
+    echo "           t0       : start time (required)."
+    echo "           t1       : stop time (required)."
+    echo "           szfloat  : floating point size (4 or 8), Default is 8."
+    echo "           szsizet  : sizet size in bytes (4 or 8). Default is 8."
+    echo "           szint t  : int size in bytes (4 or 8). Default is 4."
+    echo "-------------------------------------------------- "
+    exit
+endif
+
+
+echo "Set defaults..."
+setenv FPREF  $1
+setenv T0     $2 
+setenv T1     $3 
+
+echo "Set defaults... <4"
+if ($# < 4) then
+  setenv FSIZE   8
+  setenv SIZET   8
+  setenv ISIZE   4
+endif
+echo "Set defaults... <5"
+if ($# < 5) then
+  setenv ISIZE   4
+  setenv SIZET   8
+endif
+echo "Set defaults... <6"
+if ($# < 6) then
+  setenv ISIZE   4
+endif
+
+
+setenv PREF 0x
+setenv SUFF
+setenv PREFLIST
+
+echo "Cycling over files..."
+
+# Cycle over all files
+foreach FILE ($FPREF.*.00000.out)
+
+
+
+# Compute offsets for data items:
+set offvs   = 0
+set offdi   = `echo 'ibase=10;obase=10; '$offvs'   + '$ISIZE'  '  | bc`
+set xoffdi  = `echo 'ibase=10;obase=16; '$offdi'  '  | bc`
+
+setenv DOdi   "od -t dI        -j {$PREF}{$xoffdi}{$SUFF} -N {$ISIZE} {$FILE}"
+set ardi    = `$DOdi`
+
+set offne   = `echo 'ibase=10;obase=10; '$offdi'   + '$ISIZE'  '  | bc`
+set offor   = `echo 'ibase=10;obase=10; '$offne'   + '$SIZET'  '  | bc`
+set norder  = `echo 'ibase=10;obase=10; '$ISIZE'*'$ardi[2]'    '  | bc`
+set offgr   = `echo 'ibase=10;obase=10; '$offor'   + '$norder' '  | bc`
+set offcy   = `echo 'ibase=10;obase=10; '$offgr'   + '$ISIZE'  '  | bc`
+set offti   = `echo 'ibase=10;obase=10; '$offcy'   + '$SIZET'  '  | bc`
+
+# Convert offsets to hex:
+set xoffvs   = `echo 'ibase=10;obase=16; '$offvs'   '  | bc`
+set xoffne   = `echo 'ibase=10;obase=16; '$offne'   '  | bc`
+set xoffor   = `echo 'ibase=10;obase=16; '$offor'   '  | bc`
+set xoffgr   = `echo 'ibase=10;obase=16; '$offgr'   '  | bc`
+set xoffcy   = `echo 'ibase=10;obase=16; '$offcy'   '  | bc`
+set xoffti   = `echo 'ibase=10;obase=16; '$offti'   '  | bc`
+
+# Get data items at offsets:
+setenv DOvs   "od -t dI        -j {$PREF}{$xoffvs}{$SUFF} -N {$ISIZE} {$FILE}"
+setenv DOne   "od -t dL        -j {$PREF}{$xoffne}{$SUFF} -N {$SIZET} {$FILE}"
+setenv DOor   "od -t dI        -j {$PREF}{$xoffor}{$SUFF} -N {$ISIZE} {$FILE}"
+setenv DOgr   "od -t dI        -j {$PREF}{$xoffgr}{$SUFF} -N {$ISIZE} {$FILE}"
+setenv DOcy   "od -t dI        -j {$PREF}{$xoffcy}{$SUFF} -N {$SIZET} {$FILE}"
+setenv DOti   "od -t f{$FSIZE} -j {$PREF}{$xoffti}{$SUFF} -N {$FSIZE} {$FILE}"
+
+
+set arvs   = `$DOvs`
+set arne   = `$DOne`
+set aror   = `$DOor`
+set argr   = `$DOgr`
+set arcy   = `$DOcy`
+set arti   = `$DOti`
+
+# Print header:
+#echo "Header for GIO file: " $1 " :"
+#echo ".................GIO version= " $arvs[2]
+#echo ".........................dim= " $ardi[2]
+#echo "...................num elems= " $arne[2]
+#echo ".......................order= " $aror[2]
+#echo "...................grid type= " $argr[2]
+#echo ".......................cycle= " $arcy[2]
+#echo "........................time= " $arti[2]
+
+set Time=$arti[2]
+#set pref=$FILE:t:t
+
+echo "Time="  $Time
+echo "T0  ="   $T0
+echo "T1  ="   $T1
+# Convert times from scient. notation to something bc understands:
+
+# set atime = `echo $Time | sed 's/([+-]?[0-9.]+)[eE]\+?(-?)([0-9]+)/(\1*10^\2\3)/g'`
+# set at0   = `echo $T0   | sed 's/([+-]?[0-9.]+)[eE]\+?(-?)([0-9]+)/(\1*10^\2\3)/g'`
+# set at1   = `echo $T1   | sed 's/([+-]?[0-9.]+)[eE]\+?(-?)([0-9]+)/(\1*10^\2\3)/g'`
+
+set atime = `printf "%.16f" $Time`
+set at0   = `printf "%.16f" $T0 ` 
+set at1   = `printf "%.16f" $T1`  
+
+echo "atime=" $atime
+echo "at0  =" $at0
+echo "at1  =" $at1
+
+#if ($Time >= $T0 && $Time <= $T1) then
+ set compare0  = `echo ' '$atime' >= '$at0'  '  | bc`
+ set compare1  = `echo ' '$atime' <= '$at1'  '  | bc`
+if ( $compare0 == 1 && $compare1 == 1 ) then
+  set PREFLIST = ($PREFLIST $FILE:r:r)
+# echo "Interval list: " $FILE:r:r
+endif
+
+end
+echo "Interval list: " $PREFLIST
+
