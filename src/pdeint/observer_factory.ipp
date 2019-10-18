@@ -87,7 +87,7 @@ ObserverFactory<ET>::build(const tbox::PropertyTree& ptree, const std::string ob
                 traits.derived_quantities.resize(dqnames.size());
                 for ( auto j=0; j<dqnames.size(); j++ ) {
                   dqtree = ptree.getPropertyTree(dqnames[j]); // get prop tree for named quantity
-                  traits.derived_quantities[j].icomponents = dqtree.getArray<int>("state_index",defi);
+                  traits.derived_quantities[j].icomponents = dqtree.getArray<int>("state_index");
                   traits.derived_quantities[j].snames      = dqtree.getArray<std::string>("names"  ,defq);
                   traits.derived_quantities[j].smath_op    = dqtree.getValue<std::string>("mathop" ,"");
                 }
