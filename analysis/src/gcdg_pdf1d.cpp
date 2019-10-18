@@ -27,6 +27,7 @@ using namespace std;
 
 struct MyTraits {
   GBOOL    dolog      ;
+  GBOOL    doavg      ;
   GBOOL    bfixedmin  ;
   GBOOL    bfixedmax  ;
   GBOOL    bfixedwidth;
@@ -74,7 +75,7 @@ int main(int argc, char **argv)
     GSIZET                      ipos;
     GIOTraits                   giotraits;
     GTStat<GFTYPE>             *gstat=NULLPTR;
-    GTVector<GFTYPE>            u, utmp; 
+    GTVector<GFTYPE>            u, uavg, utmp; 
     std::stringstream           sformat;
     GString                     spref;
     char                        stask[16];
@@ -95,35 +96,48 @@ int main(int argc, char **argv)
     }
     assert(gstat != NULLPTR );
     cout << "main: GTStat operator instantiated." << endl;
+    if ( traits.doavg ) { // set output name for average
+        if ( traits.dolog ) {
+          foutput = traits.odir + "/" + traits.opref + "_log_avg_.txt";
+        }
+        else {
+          foutput = traits.odir + "/" + traits.opref + "_avg_.txt";
+        }
+    }
 
     // Process each file specified:
     sformat << ".%0" << giotraits.wtask << "d.out";
     sprintf(stask, sformat.str().c_str(), myrank);
     for ( auto i=0; i<preflist.size(); i++ ) {
       // Make sure input file names don't include directory:
-#if 0
-      ipos    = preflist[i].find("/");
-      if ( ipos != std::string::npos ) {
-        cout << "    discarding: " << preflist[i] << endl;
-        continue;
-      }
-#endif
       finput  = traits.idir + "/" + preflist[i] + stask;
 
-      if ( traits.dolog ) {
-        foutput = traits.odir + "/" + traits.opref + "_log_" + preflist[i] + ".txt";
+      if ( !traits.doavg ) { // not doing averaging
+        if ( traits.dolog ) {
+          foutput = traits.odir + "/" + traits.opref + "_log_" + preflist[i] + ".txt";
+        }
+        else {
+          foutput = traits.odir + "/" + traits.opref + "_" + preflist[i] + ".txt";
+        }
       }
-      else {
-        foutput = traits.odir + "/" + traits.opref + "_" + preflist[i] + ".txt";
-      }
-
       cout << "main: prefix" << preflist[i] << ": processing " << finput << endl;
 
-
-      // read in data
+      // Read in data
       gio_read(giotraits, finput, u);
       utmp.resize(u.size());
-      gstat->dopdf1d(u, traits.bfixedmin, traits.bfixedmax, traits.fmin, traits.fmax, traits.iside,  traits.dolog, utmp, foutput); 
+      if ( !traits.doavg ) { // process each file separately:
+        gstat->dopdf1d(u, traits.bfixedmin, traits.bfixedmax, traits.fmin, traits.fmax, traits.iside,  traits.dolog, utmp, foutput); 
+        cout << "main: pdf written to: " << foutput << "." << endl;
+      }
+      else { // gather to process only the average:
+        if( i == 0 ) { uavg.resize(u.size()); uavg = 0.0; }
+        uavg += u;
+      }
+    }
+
+    if ( traits.doavg ) {
+      uavg *= 1.0/static_cast<GFTYPE>(preflist.size());
+      gstat->dopdf1d(uavg, traits.bfixedmin, traits.bfixedmax, traits.fmin, traits.fmax, traits.iside,  traits.dolog, utmp, foutput); 
       cout << "main: pdf written to: " << foutput << "." << endl;
     }
 
@@ -155,6 +169,7 @@ GBOOL init(int &argc, char **argv, PropertyTree &ptree, MyTraits &traits, GTVect
     EH_MESSAGE("prop tree loaded.");
 
     // Set traits from prop tree, then over write if necessary:
+    traits.doavg    = ptree.getValue<GBOOL>  ("doavg"   ,FALSE);
     traits.dolog    = ptree.getValue<GBOOL>  ("dolog"   ,FALSE);
     traits.bfixedmin= ptree.getValue<GBOOL>  ("bfixedmin",FALSE);
     traits.bfixedmax= ptree.getValue<GBOOL>  ("bfixedmax",FALSE);
@@ -173,6 +188,7 @@ GBOOL init(int &argc, char **argv, PropertyTree &ptree, MyTraits &traits, GTVect
 #else
     // Set traits from prop tree, then over write if necessary:
     traits.dolog      = FALSE;
+    traits.doavg      = FALSE;
     traits.bfixedmin  = FALSE;
     traits.bfixedmax  = FALSE;
     traits.bfixedwidth= FALSE;
@@ -191,9 +207,12 @@ GBOOL init(int &argc, char **argv, PropertyTree &ptree, MyTraits &traits, GTVect
     
     // Parse command line. ':' after char
     // option indicates that it takes an argument:
-    while ((iopt = getopt(argc, argv, "b:d:gl:o:p:s:u:w:h")) != -1) {
+    while ((iopt = getopt(argc, argv, "ab:d:gl:o:p:s:u:w:h")) != -1) {
       // NOTE: -i reserved for Input Manager
       switch (iopt) {
+      case 'a': // handled by InputManager
+          traits.doavg = TRUE;
+          break;
       case 'b': // handled by InputManager
           traits.nbins = atoi(optarg);
           break;
@@ -235,7 +254,7 @@ GBOOL init(int &argc, char **argv, PropertyTree &ptree, MyTraits &traits, GTVect
       case '?':
       case 'h': // help
           std::cout << "usage: " << std::endl <<
-          argv[0] << " [-h] [-b #bins] [-d input_dir] [-g dolog?] [-i config_file_name] [-o output_dir] [-p output_file_prefix] [-l lower_dyn_range] [-s iside] [-u upper_dyn_range] [-w bin_width]  file1pref file2pref ..." << std::endl;
+          argv[0] << " [-h] [-a {does average}] [-b #bins] [-d input_dir] [-g dolog?] [-i config_file_name] [-o output_dir] [-p output_file_prefix] [-l lower_dyn_range] [-s iside] [-u upper_dyn_range] [-w bin_width]  file1pref file2pref ..." << std::endl;
           exit(1);
           break;
       default: // invalid option
