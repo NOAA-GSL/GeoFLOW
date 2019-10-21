@@ -403,7 +403,7 @@ void do_bench(GString fname, GSIZET ncyc)
         ios << "#nelems"  << "  ";
         ios << "ndof"     << "  ";
         ios << "dxmin"    << "  ";
-        ios << "lmin"     << "  ";
+        ios << "elmin"    << "  ";
         ios << "ntasks"   << "  ";
         ios << "nthreads" << "  ";
         ios << "ttotal"   << "  ";
