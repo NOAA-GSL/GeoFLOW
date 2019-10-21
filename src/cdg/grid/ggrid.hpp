@@ -80,6 +80,7 @@ virtual void                 print(const GString &filename){}          // print 
         GSIZET               nbdydof();                               // compute total number elem bdy dof
         GFTYPE               minlength();                             // find min elem length
         GFTYPE               maxlength();                             // find max elem length
+        GFTYPE               avglength();                             // find avg elem length
         GFTYPE               minnodedist()         
                              {return minnodedist_;}                   // find min node distance
         GFTYPE               volume()         

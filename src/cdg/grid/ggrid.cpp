@@ -299,7 +299,7 @@ GFTYPE GGrid::minlength()
 // METHOD : maxlength
 // DESC   : Find max elem length 
 // ARGS   : none
-// RETURNS: GFTYPE separation
+// RETURNS: GFTYPE length
 //**********************************************************************************
 GFTYPE GGrid::maxlength()
 {
@@ -337,6 +337,59 @@ GFTYPE GGrid::maxlength()
 
    return gmax;
 } // end of method maxlength
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : avglength
+// DESC   : Find avg elem length 
+// ARGS   : none
+// RETURNS: GFTYPE length
+//**********************************************************************************
+GFTYPE GGrid::avglength()
+{
+   assert(gelems_.size() > 0 && "Elements not set");
+
+   GFTYPE gavg, lavg, navg, lv[2], gv[2];;
+   GTPoint<GFTYPE> dr;
+   GTVector<GTPoint<GFTYPE>> *xverts;
+
+   navg = 0.0;
+   lavg = 0.0;
+   for ( GSIZET i=0; i<gelems_.size(); i++ ) {
+     xverts = &gelems_[i]->xVertices();
+     #if defined(_G_IS2D)
+     for ( GSIZET j=0; j<xverts->size(); j++ ) {
+       dr = (*xverts)[(j+1)%xverts->size()] - (*xverts)[j];
+       lavg += dr.norm();
+       navg += 1.0;
+     }
+     #elif defined(_G_IS3D)
+     for ( GSIZET j=0; j<4; j++ ) { // bottom
+       dr = (*xverts)[(j+1)%xverts->size()] - (*xverts)[j];
+       lavg += dr.norm();
+       navg += 1.0;
+     }
+     for ( GSIZET j=4; j<8; j++ ) { // top
+       dr = (*xverts)[(j+1)%xverts->size()] - (*xverts)[j];
+       lavg += dr.norm();
+       navg += 1.0;
+     }
+     for ( GSIZET j=0; j<4; j++ ) { // vertical edges
+       dr = (*xverts)[j+4] - (*xverts)[j];
+       lavg += dr.norm();
+       navg += 1.0;
+     }
+     #endif
+   }
+
+   lv[0] = lavg;
+   lv[1] = navg;
+   GComm::Allreduce(&lv, &gv, 2, T2GCDatatype<GFTYPE>() , GC_OP_SUM, comm_);
+   gavg = gv[0] / gv[1];
+
+   return gavg;
+} // end of method avglength
 
 
 //**********************************************************************************
