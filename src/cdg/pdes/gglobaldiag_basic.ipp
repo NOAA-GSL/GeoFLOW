@@ -192,7 +192,7 @@ void GGlobalDiag_basic<EquationType>::do_kinetic_L2(const Time t, const State &u
   if ( myrank_ == 0 ) {
     ios.open(fullfile,std::ios_base::app);
     if ( doheader ) {
-      ios << "nelems=" << ne << " dxmin=" << dxmin << " elmin=" << elmin << " elmax=" << elmax << " elavg=" << elavg << std::endl;
+      ios << "#nelems=" << ne << " dxmin=" << dxmin << " elmin=" << elmin << " elmax=" << elmax << " elavg=" << elavg << std::endl;
       ios << "#time    KE     Enst     f.v    hel     rhel " << std::endl;
     }
 
@@ -287,7 +287,7 @@ void GGlobalDiag_basic<EquationType>::do_kinetic_max(const Time t, const State &
   if ( myrank_ == 0 ) {
     ios.open(fullfile,std::ios_base::app);
     if ( doheader ) {
-      ios << "nelems=" << ne << " dxmin=" << dxmin << " elmin=" << elmin << " elmax=" << elmax << " elavg=" << elavg << std::endl;
+      ios << "#nelems=" << ne << " dxmin=" << dxmin << " elmin=" << elmin << " elmax=" << elmax << " elavg=" << elavg << std::endl;
       ios << "#time    KE     Enst     f.v    hel     rhel " << std::endl;
     }
 
