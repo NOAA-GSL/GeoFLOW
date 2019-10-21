@@ -6,7 +6,7 @@
 // Derived From : none.
 //==================================================================================
 #include "gutils.hpp"
-
+#include "gcomm.hpp"
 
 namespace geoflow
 {
@@ -46,6 +46,29 @@ GStateCompType str2comptype(const GString &stype)
   }
   assert(FALSE && "Invalid state component type");
 } // end, str2comptype
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : file_empty
+// DESC   : Determine if specified file exists or is empty
+// ARGS   : sfile: file name
+// RETURNS: GBOOL
+//**********************************************************************************
+GBOOL file_empty(GString sfile)
+{
+
+  GBOOL         bret=FALSE;
+  std::ifstream itst;
+
+  GComm::Synch();
+  itst.open(sfile);
+  bret = itst.peek() == std::ofstream::traits_type::eof();
+  itst.close();
+
+  return bret;
+
+} // end, method file_empty
 
 
 

@@ -17,6 +17,7 @@ namespace geoflow
 
 GBdyType       str2bdytype (const GString &stype);
 GStateCompType str2comptype(const GString &stype);
+GBOOL          file_empty(GString filename);
 
 } // end, namespace
 
