@@ -173,19 +173,28 @@ void GGlobalDiag_basic<EquationType>::do_kinetic_L2(const Time t, const State &u
   ener = gmax[0]; enst = gmax[1]; fv = gmax[2]; hel = gmax[3]; rhel = gmax[4];
 
   // Print data to file:
-  std::ifstream itst;
+  GBOOL         doheader=FALSE;
+  GSIZET        le, ne;
+  GFTYPE        dxmin, elmin, elmax, elavg;
   std::ofstream ios;
   GString       fullfile = sodir_ + "/" + fname;
 
-  if ( myrank_ == 0 ) {
-    itst.open(fullfile);
-    ios.open(fullfile,std::ios_base::app);
+  if ( geoflow::file_empty(fullfile) ) {
+    le    = grid_->nelems();
+    dxmin = grid_->minnodedist();
+    elmin = grid_->minlength();
+    elmax = grid_->maxlength();
+    elavg = grid_->avglength();
+    GComm::Allreduce(&le, &ne, 1, T2GCDatatype<GSIZET>() , GC_OP_SUM, grid_->get_comm());
+    doheader = TRUE;
+  }
 
-    // Write header, if required:
-    if ( itst.peek() == std::ofstream::traits_type::eof() ) {
-    ios << "#time    KE     Enst     f.v    hel     rhel " << std::endl;
+  if ( myrank_ == 0 ) {
+    ios.open(fullfile,std::ios_base::app);
+    if ( doheader ) {
+      ios << "nelems=" << ne << " dxmin=" << dxmin << " elmin=" << elmin << " elmax=" << elmax << " elavg=" << elavg << std::endl;
+      ios << "#time    KE     Enst     f.v    hel     rhel " << std::endl;
     }
-    itst.close();
 
     ios << t  
         << "    " << ener  << "    "  << enst 
@@ -259,19 +268,28 @@ void GGlobalDiag_basic<EquationType>::do_kinetic_max(const Time t, const State &
   
 
   // Print data to file:
-  std::ifstream itst;
+  GBOOL         doheader=FALSE;
+  GSIZET        le, ne;
+  GFTYPE        dxmin, elmin, elmax, elavg;
   std::ofstream ios;
   GString       fullfile = sodir_ + "/" + fname;
 
+  // Write header, if required:
+  if ( geoflow::file_empty(fullfile) ) {
+    le    = grid_->nelems();
+    dxmin = grid_->minnodedist();
+    elmin = grid_->minlength();
+    elmax = grid_->maxlength();
+    elavg = grid_->avglength();
+    GComm::Allreduce(&le, &ne, 1, T2GCDatatype<GSIZET>() , GC_OP_SUM, grid_->get_comm());
+    doheader = TRUE;
+  }
   if ( myrank_ == 0 ) {
-    itst.open(fullfile);
     ios.open(fullfile,std::ios_base::app);
-
-    // Write header, if required:
-    if ( itst.peek() == std::ofstream::traits_type::eof() ) {
-    ios << "#time    KE     Enst     f.v    hel     rhel " << std::endl;
+    if ( doheader ) {
+      ios << "nelems=" << ne << " dxmin=" << dxmin << " elmin=" << elmin << " elmax=" << elmax << " elavg=" << elavg << std::endl;
+      ios << "#time    KE     Enst     f.v    hel     rhel " << std::endl;
     }
-    itst.close();
 
     ios << t  
         << "    " << ener  << "    "  << enst 

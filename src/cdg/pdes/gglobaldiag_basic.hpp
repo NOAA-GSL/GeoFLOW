@@ -11,6 +11,7 @@
 
 #include "gtvector.hpp"
 #include "ggrid.hpp"
+#include "gutils.hpp"
 #include "pdeint/equation_base.hpp"
 #include "pdeint/observer_base.hpp"
 #include "tbox/property_tree.hpp"
