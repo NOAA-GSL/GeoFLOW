@@ -3,7 +3,7 @@
 // Date         : 6/1/18 (DLR)
 // Description  : Base class forming interfaces for all allowed 1D/2D/3D (lin/quad/hex) 
 //                elements
-// Copyright    : Copyright 2018. Colorado State University. All rights reserved
+// Copyright    : Copyright 2018. Colorado State University. All rights reserved.
 // Derived From : none.
 //               
 //
@@ -1907,6 +1907,8 @@ void GElem_base::operator=(const GElem_base &e)
   igend_        = e.igend_;
   ifbeg_        = e.ifbeg_;
   ifend_        = e.ifend_;
+  ibbeg_        = e.ibbeg_;
+  ibend_        = e.ibend_;
   bInitialized_ = e.bInitialized_;
   elemtype_     = e.elemtype_;
   elemid_       = e.elemid_;

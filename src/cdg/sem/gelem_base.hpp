@@ -54,6 +54,7 @@ public:
                             GElem_base(GElemType etype, GNBasis<GCTYPE,GFTYPE> *b1, GNBasis<GCTYPE,GFTYPE> *b2, GNBasis<GCTYPE,GFTYPE> *b3=NULLPTR);
                             GElem_base(GElemType etypa, GNBasis<GCTYPE,GFTYPE> *b[], GINT nb);
                             GElem_base(GElemType etype, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b);
+                            GElem_base(const GElem_base &) = default;
                            ~GElem_base();
 
         void                operator=(const GElem_base&);
