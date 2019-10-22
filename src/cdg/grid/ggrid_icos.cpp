@@ -520,17 +520,18 @@ void GGridIcos::do_elems2d(GINT irank)
       gnomonic2cart(xgtmp, 1.0, xlatc, xlongc, *xNodes); //
       project2sphere(*xNodes, radiusi_);
       pelem->init(*xNodes);
-      gelems_.push_back(pelem);
 
       nfnodes = 0;
-      for ( GSIZET j=0; j<gelems_[n]->nfaces(); j++ )  // get # face nodes
-        nfnodes += gelems_[n]->face_indices(j).size();
+      for ( GSIZET j=0; j<pelem->nfaces(); j++ )  // get # face nodes
+        nfnodes += pelem->face_indices(j).size();
       pelem->igbeg() = icurr;      // beginning global index
       pelem->igend() = icurr+pelem->nnodes()-1; // end global index
       pelem->ifbeg() = fcurr;
       pelem->ifend() = fcurr+nfnodes-1; // end global face index
       icurr += pelem->nnodes();
       fcurr += nfnodes;
+
+      gelems_.push_back(pelem);
 
     } // end of element loop for this triangle
   } // end of triangle base mesh loop
@@ -689,17 +690,18 @@ void GGridIcos::do_elems3d(GINT irank)
         spherical2xyz(*xNodes);
 
         pelem->init(*xNodes);
-        gelems_.push_back(pelem);
 
         nfnodes = 0;
-        for ( GSIZET j=0; j<gelems_[e]->nfaces(); j++ )  // get # face nodes
-          nfnodes += gelems_[e]->face_indices(j).size();
+        for ( GSIZET j=0; j<pelem->nfaces(); j++ )  // get # face nodes
+          nfnodes += pelem->face_indices(j).size();
         pelem->igbeg() = icurr;      // beginning global index
         pelem->igend() = icurr+pelem->nnodes()-1; // end global index
         pelem->ifbeg() = fcurr;
         pelem->ifend() = fcurr+nfnodes-1; // end global face index
         icurr += pelem->nnodes();
         fcurr += nfnodes;
+
+        gelems_.push_back(pelem);
       }
       delete pelem2d;
 

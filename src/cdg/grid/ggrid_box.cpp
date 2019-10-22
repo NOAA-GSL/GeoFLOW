@@ -261,9 +261,9 @@ void GGridBox::do_elems2d()
   GSIZET nvnodes;   // no. vol nodes
   GSIZET nfnodes;   // no. face nodes
   GSIZET nbnodes;   // no. bdy nodes
-  GSIZET icurr = 0; // current global index
-  GSIZET fcurr = 0; // current global face index
-  GSIZET bcurr = 0; // current global bdy index
+  GLONG  icurr = 0; // current global index
+  GLONG  fcurr = 0; // current global face index
+  GLONG  bcurr = 0; // current global bdy index
 
   for ( GSIZET i=0; i<qmesh_.size(); i++ ) { // for each quad in irank's mesh
     pelem = new GElem_base(GE_REGULAR, gbasis_);
@@ -304,22 +304,25 @@ void GGridBox::do_elems2d()
       }
     }
 
-    gelems_.push_back(pelem);
 
     // Find global global interior and bdy start & stop indices represented 
     // locally within element:
-    nvnodes = gelems_[i]->nnodes();
-    nfnodes = gelems_[i]->nfnodes();
-    nbnodes = gelems_[i]->bdy_indices().size();
+    nvnodes = pelem->nnodes();
+    nfnodes = pelem->nfnodes();
+    nbnodes = pelem->bdy_indices().size();
     pelem->igbeg() = icurr;           // beg global vol index
     pelem->igend() = icurr+nvnodes-1; // end global vol index
     pelem->ifbeg() = fcurr;           // beg global face index
     pelem->ifend() = fcurr+nfnodes-1; // end global face index
     pelem->ibbeg() = bcurr;           // beg global bdy index
     pelem->ibend() = bcurr+nbnodes-1; // end global bdy index
+cout << GComm::WorldRank() << " nelems=" << gelems_.size()  << " bcurr=" << bcurr  << " nbnodes=" << nbnodes << endl;
+
     icurr += nvnodes;
     fcurr += nfnodes;
     bcurr += nbnodes;
+
+    gelems_.push_back(pelem);
   } // end of quad mesh loop
 
 } // end of method do_elems2d (1)
@@ -371,9 +374,9 @@ void GGridBox::do_elems3d()
   GSIZET nvnodes;   // no. vol indices
   GSIZET nfnodes;   // no. face indices
   GSIZET nbnodes;   // no. bdy indices
-  GSIZET icurr = 0; // current global index
-  GSIZET fcurr = 0; // current global face index
-  GSIZET bcurr = 0; // current global bdy index
+  GLONG  icurr = 0; // current global index
+  GLONG  fcurr = 0; // current global face index
+  GLONG  bcurr = 0; // current global bdy index
   for ( GSIZET i=0; i<hmesh_.size(); i++ ) { // for each hex in irank's mesh
 
     pelem = new GElem_base(GE_REGULAR, gbasis_);
@@ -418,11 +421,9 @@ void GGridBox::do_elems3d()
       }
     }
 
-    gelems_.push_back(pelem);
-
-    nvnodes = gelems_[i]->nnodes();
-    nfnodes = gelems_[i]->nfnodes();
-    nbnodes = gelems_[i]->bdy_indices().size();
+    nvnodes = pelem->nnodes();
+    nfnodes = pelem->nfnodes();
+    nbnodes = pelem->bdy_indices().size();
     pelem->igbeg() = icurr;           // beg global vol index
     pelem->igend() = icurr+nvnodes-1; // end global vol index
     pelem->ifbeg() = fcurr;           // beg global face index
@@ -432,6 +433,8 @@ void GGridBox::do_elems3d()
     icurr += nvnodes;
     fcurr += nfnodes;
     bcurr += nbnodes;
+
+    gelems_.push_back(pelem);
   } // end of hex mesh loop
 
 } // end of method do_elems3d (1)
@@ -532,8 +535,8 @@ void GGridBox::do_elems2d(GTMatrix<GINT> &p,
     // Find global global interior and bdy start & stop indices represented 
     // locally within element:
     assert(nvnodes == gelems_[n]->nnodes() && "Incompatible node count");
-    nfnodes = gelems_[i]->nfnodes();
-    nbnodes = gelems_[i]->bdy_indices().size();
+    nfnodes = pelem->nfnodes();
+    nbnodes = pelem->bdy_indices().size();
     pelem->igbeg() = icurr;           // beg global vol index
     pelem->igend() = icurr+nvnodes-1; // end global vol index
     pelem->ifbeg() = fcurr;           // beg global face index
@@ -591,9 +594,9 @@ void GGridBox::do_elems3d(GTMatrix<GINT> &p,
   GSIZET nvnodes;   // no. vol indices
   GSIZET nfnodes;   // no. face indices
   GSIZET nbnodes;   // no. bdy indices
-  GSIZET icurr = 0; // current global index
-  GSIZET fcurr = 0; // current global face index
-  GSIZET bcurr = 0; // current global bdy index
+  GLONG  icurr = 0; // current global index
+  GLONG  fcurr = 0; // current global face index
+  GLONG  bcurr = 0; // current global bdy index
   for ( GSIZET i=0; i<p.size(1); i++ ) { // for each hex in irank's mesh
     nvnodes = 1; 
     for ( GSIZET j=0; j<GDIM; j++ ) { // set basis from pool
@@ -648,8 +651,8 @@ void GGridBox::do_elems3d(GTMatrix<GINT> &p,
     gelems_.push_back(pelem);
 
     assert(nvnodes == gelems_[i]->nnodes() && "Incompatible node count");
-    nfnodes = gelems_[i]->nfnodes();
-    nbnodes = gelems_[i]->bdy_indices().size();
+    nfnodes = pelem->nfnodes();
+    nbnodes = pelem->bdy_indices().size();
     pelem->igbeg() = icurr;           // beg global vol index
     pelem->igend() = icurr+nvnodes-1; // end global vol index
     pelem->ifbeg() = fcurr;           // beg global face index
