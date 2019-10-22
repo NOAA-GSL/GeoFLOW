@@ -56,7 +56,7 @@ template <class T> class GTVector
     T     &back();              // Get reference to last element
     T     &back() const;        // Get reference to last element
 
-    void range(GSIZET ibeg, GSIZET end);    // Set range of vector within capacity
+    void range(GLONG ibeg, GLONG end);      // Set range of vector within capacity
     void range_reset();                     // Reset range of vector 
     GIndex &getIndex() ;        // Return generalized index member
 

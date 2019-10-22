@@ -681,10 +681,11 @@ void GTVector<T>::operator=(T a)
 // RETURNS: none.
 //************************************************************************************
 template<class T> 
-void  GTVector<T>::range(GSIZET ibeg, GSIZET iend) 
+void  GTVector<T>::range(GLONG ibeg, GLONG iend) 
 {
 //assert(iend < n_ && ibeg <= iend && "Invalid range specification");
-  if ( iend >= n_ || ibeg >= n_ ) {
+  if ( ibeg >= static_cast<GLONG>(n_) 
+   ||  iend >= static_cast<GLONG>(n_) ) {
     std::cout << "GTVector::range: invalid range specification: n_=" << n_ << " ibeg=" << ibeg << " iend=" << iend << std::endl;
     while (1);
   }
