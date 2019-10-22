@@ -82,12 +82,12 @@ virtual GBOOL               differentiateWeak(GTVector<GFTYPE> &dv, GTVector<GFT
         void                set_rootid(GINT id){rootid_ = id;}
         void                resize(GTVector<GINT> &);
 
-inline  GSIZET             &igbeg(){ return igbeg_;} // vol beg index 
-inline  GSIZET             &igend(){ return igend_;} // vol end index
-inline  GSIZET             &ibbeg(){ return ibbeg_;} // bdy beg index
-inline  GSIZET             &ibend(){ return ibend_;} // bdy end index
-inline  GSIZET             &ifbeg(){ return ifbeg_;} // face beg index
-inline  GSIZET             &ifend(){ return ifend_;} // face end index
+inline  GLONG              &igbeg(){ return igbeg_;} // vol beg index 
+inline  GLONG              &igend(){ return igend_;} // vol end index
+inline  GLONG              &ibbeg(){ return ibbeg_;} // bdy beg index
+inline  GLONG              &ibend(){ return ibend_;} // bdy end index
+inline  GLONG              &ifbeg(){ return ifbeg_;} // face beg index
+inline  GLONG              &ifend(){ return ifend_;} // face end index
 inline  GINT                nnodes(){ return Ntot_;} // no. vol nodes
 inline  GINT                nfnodes(){ return Nftot_;} // no. face nodes 
 inline  GTVector<GINT>     &dim(){ return N_;} 
@@ -191,12 +191,12 @@ virtual void                Jac_embed(GMVFType &G, GTVector<GFTYPE> &jac, GBOOL 
 GINT                    Ntot_;          // total no. node points in element
 GINT                    Nftot_;         // total no. face node points in element
 GTVector<GINT>          N_;             // no. _nodes_ in each direction
-GSIZET                  igbeg_;         // holds starting global index 
-GSIZET                  igend_;         // holds ending global index
-GSIZET                  ibbeg_;         // holds starting global bdy node index 
-GSIZET                  ibend_;         // holds ending global bdy node index
-GSIZET                  ifbeg_;         // holds starting global face node index 
-GSIZET                  ifend_;         // holds ending global face node index
+GLONG                   igbeg_;         // holds starting global index 
+GLONG                   igend_;         // holds ending global index
+GLONG                   ibbeg_;         // holds starting global bdy node index 
+GLONG                   ibend_;         // holds ending global bdy node index
+GLONG                   ifbeg_;         // holds starting global face node index 
+GLONG                   ifend_;         // holds ending global face node index
 GBOOL                   bInitialized_;  // element initialized?
 GBOOL                   bbasis_;        // basis set?
 GElemType               elemtype_;      // elem type
