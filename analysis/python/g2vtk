@@ -499,7 +499,7 @@ class Mesh:
         
         for f in mesh_names:
             piece = ET.SubElement(ugrid, 'Piece')
-            piece.set('Source', f)
+            piece.set('Source', os.path.basename(f))
             
         mydata = ET.tostring(data, encoding='unicode')
         myfile = open(filename, "w")
@@ -559,8 +559,8 @@ if __name__ == '__main__':
     #fdict[step#]['variables']  = List of variables with files  
 
     # Generate Parallel VTK Files for each step
-    mesh_names = []
     for step, val in fdict.items():
+        mesh_names = []
         for proc in val['processors']:
             if proc%10 == 0:
                 print('Processing step %d for rank %5d - %5d'%(step,proc,proc+9))
