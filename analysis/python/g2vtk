@@ -499,7 +499,7 @@ class Mesh:
         
         for f in mesh_names:
             piece = ET.SubElement(ugrid, 'Piece')
-            piece.set('Source', f)
+            piece.set('Source', os.path.basename(f))
             
         mydata = ET.tostring(data, encoding='unicode')
         myfile = open(filename, "w")
