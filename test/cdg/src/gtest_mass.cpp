@@ -11,7 +11,9 @@
 #include <cstdio>
 #include <unistd.h>
 #include <iostream>
+#if defined(_G_USE_GPTL)
 #include "gptl.h"
+#endif
 #include <random>
 #include "gcomm.hpp"
 #include "ggfx.hpp"
@@ -26,7 +28,6 @@
 #include "tbox/mpixx.hpp"
 #include "tbox/global_manager.hpp"
 #include "tbox/input_manager.hpp"
-#include "gtools.h"
 
 using namespace geoflow::tbox;
 using namespace std;
@@ -34,6 +35,8 @@ using namespace std;
 
 GGrid       *grid_;
 GC_COMM      comm_=GC_COMM_WORLD ;      // communicator
+
+void init_ggfx(PropertyTree &ptree, GGrid &grid, GGFX<GFTYPE> &ggfx);
 
 
 int main(int argc, char **argv)
@@ -55,18 +58,20 @@ int main(int argc, char **argv)
     GINT myrank  = GComm::WorldRank();
     GINT nprocs  = GComm::WorldSize();
 
+#if defined(_G_USE_GPTL)
     // Set GTPL options:
     GPTLsetoption (GPTLcpu, 1);
 
     // Initialize GPTL:
     GPTLinitialize();
+#endif
 
     // Get minimal property tree:
     PropertyTree gtree, ptree; 
     GString sgrid;
     std::vector<GINT> pstd(GDIM);
 
-    ptree.load_file("input.jsn");
+    ptree.load_file("icos_input.jsn");
     sgrid       = ptree.getValue<GString>("grid_type");
     pstd        = ptree.getArray<GINT>("exp_order");
     gtree       = ptree.getPropertyTree(sgrid);
@@ -82,9 +87,15 @@ int main(int argc, char **argv)
     }
 
     // Generate grid:
+#if defined(_G_USE_GPTL)
     GPTLstart("gen_grid");
+#endif
+
     grid_ = GGridFactory::build(ptree, gbasis, comm_);
+
+#if defined(_G_USE_GPTL)
     GPTLstop("gen_grid");
+#endif
 
     // Initialize gather/scatter operator:
     GGFX<GFTYPE> ggfx;
@@ -164,8 +175,10 @@ cout << serr << "imult=" << *imult << endl;
     GComm::Allreduce(&errcode, &gerrcode, 1, T2GCDatatype<GINT>() , GC_OP_MAX, comm_);
 
  
+#if defined(_G_USE_GPTL)
     GPTLpr_file("timing.txt");
     GPTLfinalize();
+#endif
 
 
 term:
@@ -180,4 +193,84 @@ term:
     return(gerrcode);
 } // end, main
 
+
+//==================================================================================
+// Module       : gtools.cpp
+// Date         : 5/5/19 (DLR)
+// Description  : GeoFLOW initialization tools
+// Copyright    : Copyright 2019. Colorado State University. All rights reserved.
+// Derived From : 
+//==================================================================================
+#include "gtools.h"
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD: init_ggfx
+// DESC  : Initialize gather/scatter operator
+// ARGS  : ptree   : main property tree
+//         grid    : GGrid object
+//         ggfx    : gather/scatter op, GGFX
+//**********************************************************************************
+void init_ggfx(PropertyTree &ptree, GGrid &grid, GGFX<GFTYPE> &ggfx)
+{
+  GString                        serr = "init_ggfx: ";
+  GFTYPE                         delta;
+  GFTYPE                         rad;
+  GMorton_KeyGen<GNODEID,GFTYPE> gmorton;
+  GTPoint<GFTYPE>                dX, porigin, P0;
+  GTVector<GNODEID>              glob_indices;
+  GTVector<GTVector<GFTYPE>>    *xnodes;
+  GString                        sgrid;
+  std::vector<GFTYPE>            pstd;
+  PropertyTree                   gtree;
+
+  sgrid = ptree.getValue<GString>("grid_type");
+  gtree = ptree.getPropertyTree(sgrid);
+
+  if ( sgrid == "grid_box" ) {
+    pstd = gtree.getArray<GFTYPE>("xyz0");
+    P0   = pstd;
+  }
+  if ( sgrid == "grid_icos" ) {
+    rad   = gtree.getValue<GFTYPE>("radius");
+    P0.x1 = -rad ;
+    P0.x2 = -rad ;
+    P0.x3 = -rad ;
+  }
+  if ( sgrid == "grid_sphere" ) {
+    rad   = gtree.getValue<GFTYPE>("radiuso");
+    P0.x1 = -rad ;
+    P0.x2 = -rad ;
+    P0.x3 = -rad ;
+  }
+
+  // First, periodize coords if required to, 
+  // before labeling nodes:
+  if ( typeid(grid) == typeid(GGridBox) ) { 
+    static_cast<GGridBox*>(&grid)->periodize();
+  }
+
+  delta  = grid.minnodedist();
+  dX     = 0.1*delta;
+  xnodes = &grid.xNodes();
+  glob_indices.resize(grid.ndof());
+
+  // Integralize *all* internal nodes
+  // using Morton indices:
+  gmorton.setIntegralLen(P0,dX);
+
+  gmorton.key(glob_indices, *xnodes);
+
+  // Initialize gather/scatter operator:
+  GBOOL bret;
+  bret = ggfx.init(glob_indices);
+  assert(bret && "Initialization of GGFX operator failed");
+
+  // Unperiodize nodes now that connectivity map is
+  // generated, so that coordinates mean what they should:
+  if ( typeid(grid) == typeid(GGridBox) ) { // periodize coords
+    static_cast<GGridBox*>(&grid)->unperiodize();
+  }
+
+} // end method init_ggfx
 
