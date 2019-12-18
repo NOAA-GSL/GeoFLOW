@@ -147,6 +147,7 @@ std::cout << "D2T=" << D2T << std::endl;
     // First, create full matrix:
     GSIZET l, m, n;
     GTMatrix<GDOUBLE> BIG2(N[0]*N[1],N[0]*N[1]);
+    GTMatrix<GDOUBLE> BIG2k(N[0]*N[1],N[0]*N[1]);
     GTVector<GDOUBLE> tmp(N[0]*N[1]);
     for ( GSIZET j=0; j<N[1]; j++ ) {
       for ( GSIZET i=0; i<N[1]; i++ ) {
@@ -159,6 +160,7 @@ std::cout << "D2T=" << D2T << std::endl;
 
       }
     }
+    BIG2k = BIG2; // for later....
     u2da = BIG2 * u2d;
 
     GMTK::D2_X_D1(D1, D2T, u2d, tmp, y2); 
@@ -246,7 +248,7 @@ std::cout << "y2a  = " << u2da << std::endl;
 
         for ( GSIZET m=0; m<N[0]*N[1]; m++ ) {
           for ( GSIZET l=0; l<N[0]*N[1]; l++ ) {
-            BIG3(l+i*N[0]*N[1],m+j*N[0]*N[1]) = D3(i,j)*BIG2(l,m);
+            BIG3(l+i*N[0]*N[1],m+j*N[0]*N[1]) = D3(i,j)*BIG2k(l,m);
           }
         }
 
