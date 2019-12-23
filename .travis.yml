@@ -52,7 +52,7 @@ script:
   - ls
   - export BOOST_ROOT=boost_1_72_0/gcc
   - export CPLUS_INCLUDE_PATH=${BOOST_ROOT}/include:${CPLUS_INCLUDE_PATH}
-  - cmake -DBOOST_ROOT=boost_1_72_0/gcc -DBoost_INCLUDE_DIR=${BOOST_ROOT}/include
+  - cmake -DBOOST_ROOT=boost_1_72_0/gcc -DBoost_INCLUDE_DIR=${BOOST_ROOT}/include ..
 #  - make VERBOSE=1
 #  - make tests VERBOSE=1
 #  - make test VERBOSE=1
