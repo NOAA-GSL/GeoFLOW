@@ -142,7 +142,7 @@ set(Boost_DEBUG OFF)              # Enable debug output from FIND_PACKAGE
 set(Boost_NO_SYSTEM_PATHS ON)     # Do not search system paths before BOOST_ROOT
 set(Boost_USE_STATIC_LIBS ON)     # Static link to Boost libraries
 set(Boost_USE_STATIC_RUNTIME OFF) # Use Boost static linked to C++ runtime
-set(Boost_USE_MULTITHREADED OFF)  # Use Boost multi-threaded code
+#set(Boost_USE_MULTITHREADED OFF)  # Use Boost multi-threaded code
 
 message("")
 message("Searching Boost:")
