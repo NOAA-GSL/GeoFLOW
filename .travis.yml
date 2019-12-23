@@ -49,8 +49,9 @@ env:
   
 script:
   - pwd
-  - mkdir build
-  - cd build
+  - ls
+#  - mkdir build
+#  - cd build
 #  - cmake -DBOOST_ROOT=boost_1_72_0/gcc ..
 #  - make VERBOSE=1
 #  - make tests VERBOSE=1
