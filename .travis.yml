@@ -24,8 +24,7 @@ before_script:
   - export FC=mpif90
   - export CPPFLAGS='-I/usr/include'
   - wget https://dl.bintray.com/boostorg/release/1.72.0/source/boost_1_72_0.tar.gz
-  - tar -xzvf boost_1_72_0.tar.gz
-  - ls -l
+  - tar -xzf boost_1_72_0.tar.gz
   - pushd boost_1_72_0
   - export TOOLSET=gcc
   - export MPI_WRAPPER=mpicxx
@@ -35,9 +34,8 @@ before_script:
   - export LIBRARY_TARGETS=shared,static
   - export BUILD_TYPE=complete
   - export LIBRARY_NAME=versioned
-  - ./bootstrap.sh --with-toolset=${TOOLSET} --with-libraries=${BUILD_LIBS} --prefix=${INSTALL_LOC}
-  - ./b2 -j ${NPROC} install --build-type=${BUILD_TYPE} --layout=${LIBRARY_NAME} --target=${LIBRARY_TARGETS}
-  - pwd
+  - ./bootstrap.sh --with-toolset=${TOOLSET} --with-libraries=${BUILD_LIBS} --prefix=${INSTALL_LOC} &> /dev/null
+  - ./b2 -j ${NPROC} install --build-type=${BUILD_TYPE} --layout=${LIBRARY_NAME} --target=${LIBRARY_TARGETS} &> /dev/null
   - popd
 env:
   global:
@@ -48,10 +46,13 @@ env:
     - LDFLAGS='-L/usr/lib'
   
 script:
-  - pwd
-  - mkdir build
+  - mkdir -p build
   - cd build
-  - cmake -DBOOST_ROOT=boost_1_72_0/gcc ..
-  - make VERBOSE=1
-  - make tests VERBOSE=1
-  - make test VERBOSE=1
+  - pwd
+  - ls
+  - export BOOST_ROOT=boost_1_72_0/gcc
+  - export CPLUS_INCLUDE_PATH=${BOOST_ROOT}/include:${CPLUS_INCLUDE_PATH}
+#  - cmake -DBOOST_ROOT=boost_1_72_0/gcc -DBoost_INCLUDE_DIR=${BOOST_ROOT}/include ..
+#  - make VERBOSE=1
+#  - make tests VERBOSE=1
+#  - make test VERBOSE=1
