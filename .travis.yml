@@ -55,3 +55,4 @@ script:
   - make VERBOSE=1
   - make tests VERBOSE=1
   - make test VERBOSE=1
+  - ls
