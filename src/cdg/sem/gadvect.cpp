@@ -113,7 +113,7 @@ void GAdvect::def_prod(GTVector<GFTYPE> &p, const GTVector<GTVector<GFTYPE>*> &u
 //
 // where
 //    D1 f = (I_X_I_X_Dx)f; D2 f = (I_X_Dy_X_I)f; D3 f = (Dz_X_I_X_I)f
-// and Rij derivative matrix computed in the element, dX^j/dX^i, which
+// and Rij derivative matrix computed in the element, dXi^j/dX^i, which
 // doesn't include the weights or the Jacobian.
 
   GTMatrix<GTVector<GFTYPE>> *dXidX = &grid_->dXidX(); // get Rij

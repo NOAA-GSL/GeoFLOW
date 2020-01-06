@@ -33,7 +33,7 @@ int main(int argc, char **argv)
     GINT   iopt;
     GINT   errcode=0, gerrcode;
     GSIZET ne=4;    
-    GSIZET np=1;    // elem 'order'
+    GSIZET np=4;    // elem 'order'
     GC_COMM comm = GC_COMM_WORLD;
 
 
@@ -75,11 +75,14 @@ int main(int argc, char **argv)
     GINT nprocs  = GComm::WorldSize();
 
 
+
+#if defined(_G_USE_GPTL)
     // Set GTPL options:
     GPTLsetoption (GPTLcpu, 1);
 
     // Initialize GPTL:
     GPTLinitialize();
+#endif
 
     GTVector<GSIZET> N(3);
     N[0] = np+1; N[1] = np+2; N[2] = np+3;
@@ -144,6 +147,7 @@ std::cout << "D2T=" << D2T << std::endl;
     // First, create full matrix:
     GSIZET l, m, n;
     GTMatrix<GDOUBLE> BIG2(N[0]*N[1],N[0]*N[1]);
+    GTMatrix<GDOUBLE> BIG2k(N[0]*N[1],N[0]*N[1]);
     GTVector<GDOUBLE> tmp(N[0]*N[1]);
     for ( GSIZET j=0; j<N[1]; j++ ) {
       for ( GSIZET i=0; i<N[1]; i++ ) {
@@ -156,6 +160,7 @@ std::cout << "D2T=" << D2T << std::endl;
 
       }
     }
+    BIG2k = BIG2; // for later....
     u2da = BIG2 * u2d;
 
     GMTK::D2_X_D1(D1, D2T, u2d, tmp, y2); 
@@ -192,7 +197,7 @@ std::cout << "y2a  = " << u2da << std::endl;
     E2 = y2;
     E2 -= u2da;
   
-#if 1
+#if 0
 std::cout << "BIG2 = " << BIG2 << std::endl;
 std::cout << "y2=" << y2 << std::endl; 
 std::cout << "y2a  = " << u2da << std::endl;
@@ -243,7 +248,7 @@ std::cout << "y2a  = " << u2da << std::endl;
 
         for ( GSIZET m=0; m<N[0]*N[1]; m++ ) {
           for ( GSIZET l=0; l<N[0]*N[1]; l++ ) {
-            BIG3(l+i*N[0]*N[1],m+j*N[0]*N[1]) = D3(i,j)*BIG2(l,m);
+            BIG3(l+i*N[0]*N[1],m+j*N[0]*N[1]) = D3(i,j)*BIG2k(l,m);
           }
         }
 
@@ -273,7 +278,7 @@ std::cout << "y3a  = " << u3da << std::endl;
    }
 
 
-#if 1
+#if 0
    GLLBasis<GCTYPE,GFTYPE> gbasis(N[0]-1);
    GLLBasis<GCTYPE,GFTYPE> gobasis(N[0]+1);
    GTVector<GFTYPE> u, v, t;
@@ -301,8 +306,10 @@ std::cout << "y3a  = " << u3da << std::endl;
 
   gerrcode = errcode;
   
+#if defined(_G_USE_GPTL)
   GPTLpr_file("timing.txt");
   GPTLfinalize();
+#endif
 
 
 term:

@@ -24,11 +24,13 @@ int main(int argc, char **argv)
     GBOOL   bret;
     GINT    errcode=0;
 
+#if defined(_G_USE_GPTL)
     // Set GTPL options:
     GPTLsetoption (GPTLcpu, 1);
 
     // Initialize GPTL:
     GPTLinitialize();
+#endif
 
     // Set matrices:
     GFLOAT a[16] = { 1 , 5 , 9 , 13,
@@ -85,7 +87,9 @@ int main(int argc, char **argv)
 
     v  [0] = 3 ; v  [1] = 5 ; v  [2] = 7 ; v  [3] = 9 ;
 
+#if defined(_G_USE_GPTL)
     GPTLstart("blas_stuff");
+#endif
 
     // A + B  solution:
     D(0,0) = 18; D(0,1) = 20; D(0,2) = 22; D(0,3) = 24; 
@@ -95,7 +99,7 @@ int main(int argc, char **argv)
 
     C = A + B;
     E = C - D;
-    if ( E.data().L1norm() > 0 ) {
+    if ( E.data().Eucnorm() > 0 ) {
       std::cout << "main: -------------------------------------A+B FAILED" << std::endl;
       errcode = 1;
     } else {
@@ -107,7 +111,7 @@ int main(int argc, char **argv)
 
     C = A - B;
     E = C - D;
-    if ( E.data().L1norm() > 0 ) {
+    if ( E.data().Eucnorm() > 0 ) {
       std::cout << "main: -------------------------------------A-B FAILED" << std::endl;
       errcode = 2;
     } else {
@@ -122,7 +126,7 @@ int main(int argc, char **argv)
     D(3,0) = 16; D(3,1) = 17; D(3,2) = 18; D(3,3) = 19; 
     C += 3.0;
     E = C - D;
-    if ( E.data().L1norm() > 0 ) {
+    if ( E.data().Eucnorm() > 0 ) {
       std::cout << "main: -------------------------------------A+=3 FAILED" << std::endl;
       errcode = 3;
     } else {
@@ -137,7 +141,7 @@ int main(int argc, char **argv)
     D(3,0) = 39; D(3,1) = 42; D(3,2) = 45; D(3,3) = 48; 
     C *= 3.0;
     E = C - D;
-    if ( E.data().L1norm() > 0 ) {
+    if ( E.data().Eucnorm() > 0 ) {
       std::cout << "main: -------------------------------------A*=3 FAILED" << std::endl;
       errcode = 5;
     } else {
@@ -151,7 +155,7 @@ int main(int argc, char **argv)
     D(3,0) =-93; D(3,1) =-94; D(3,2) =-95; D(3,3) =-96; 
     C = A*4 - B*5;
     E = C - D;
-    if ( E.data().L1norm() > 0 ) {
+    if ( E.data().Eucnorm() > 0 ) {
       std::cout << "main: -------------------------------------A-B FAILED" << std::endl;
       errcode = 6;
     } else {
@@ -166,7 +170,7 @@ int main(int argc, char **argv)
     D(3,0) = 42; D(3,1) = 44; D(3,2) = 46; D(3,3) = 48; 
     C += B;
     E = C - D;
-    if ( E.data().L1norm() > 0 ) {
+    if ( E.data().Eucnorm() > 0 ) {
       std::cout << "main: -------------------------------------A+=B FAILED" << std::endl;
       errcode = 7;
     } else {
@@ -183,7 +187,7 @@ std::cout << "A  =" << A << std::endl;
 std::cout << "B  =" << B << std::endl;
 std::cout << "A*B=" << C << std::endl;
     E = C - D;
-    if ( E.data().L1norm() > 0 ) {
+    if ( E.data().Eucnorm() > 0 ) {
       std::cout << "main: -------------------------------------A*B FAILED" << std::endl;
       errcode = 7;
     } else {
@@ -194,7 +198,7 @@ std::cout << "A*B=" << C << std::endl;
     d [0] = 70; d[1] = 166; d[2] = 262; d[3] = 358;
     u = A * v;
     e = u - d;
-    if ( e.L1norm() > 0 ) {
+    if ( e.Eucnorm() > 0 ) {
       std::cout << "main: -------------------------------------A*v FAILED" << std::endl;
       errcode = 7;
     } else {
@@ -210,7 +214,7 @@ std::cout << "A*B=" << C << std::endl;
 std::cout << "Transpose(A)=" << C << std::endl;
 
     E = C - D;
-    if ( E.data().L1norm() > 0 ) {
+    if ( E.data().Eucnorm() > 0 ) {
       std::cout << "main: -------------------------------------A Transpose FAILED" << std::endl;
       errcode = 7;
     } else {
@@ -233,7 +237,7 @@ std::cout << "Transpose(A)=" << C << std::endl;
     E43 = F34 - D43;
 
     std::cout << "F34=" << F34 << std::endl;
-    if ( E43.data().L1norm() > 0 ) {
+    if ( E43.data().Eucnorm() > 0 ) {
       std::cout << "main: -------------------------------------A Transpose-in-place FAILED" << std::endl;
       errcode = 8;
     } else {
@@ -252,7 +256,7 @@ std::cout << "Transpose(A)=" << C << std::endl;
     std::cout << "A3 * A3^-1=" << D3 << std::endl;
     C3.createIdentity();
     E3 = C3 - D3;
-    if ( E3.data().L1norm() > 1.0e-7 ) {
+    if ( E3.data().Eucnorm() > 1.0e-7 ) {
       std::cout << "main: -------------------------------------A^-1 FAILED" << std::endl;
       errcode = 9;
     } else {
@@ -260,10 +264,12 @@ std::cout << "Transpose(A)=" << C << std::endl;
     }
 #endif
 
+#if defined(_G_USE_GPTL)
     GPTLstop("blas_stuff");
 
     GPTLpr_file("timing.txt");
     GPTLfinalize();
+#endif
 
 
 term:

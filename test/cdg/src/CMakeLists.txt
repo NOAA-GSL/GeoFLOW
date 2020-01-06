@@ -6,8 +6,11 @@
 # Build list of all tests to create
 #
 set(test_cdg_files
+		  gtest_blas.cpp    
+		  gtest_ggfx.cpp
+		  gtest_gmtk.cpp
+		  gtest_mass.cpp
 		# gtest_advect.cpp  # Only compiles with GPTL
-		# gtest_blas.cpp    # Only compiles with GPTL
 		# gtest_binding.cpp
 		# gtest_burgers.cpp
 		# gtest_class_acc.cpp
@@ -16,12 +19,7 @@ set(test_cdg_files
 		# gtest_ggrid.cpp
 		# gtest_gll.cpp
 		# gtest_gmm.cpp
-		# gtest_gmtk.cpp
-		  gtest_gtmatrix.cpp
-		  gtest_gtvector.cpp
-		# gtest_ggfx.cpp
 		# gtest_helm.cpp
-		# gtest_mass.cpp
 		# gtest_morton.cpp
 		# gtest_pingpong.cpp
 		# gtest_rk.cpp

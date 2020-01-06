@@ -26,8 +26,8 @@ int main(int argc, char **argv)
     GINT   nrpt=1;
     GINT   iopt;
     GINT   errcode=0, gerrcode;
-    GSIZET ne=2; // no. elements per task (# 'y' elems)
-    GSIZET np=1;    // elem 'order'
+    GSIZET ne=16; // no. elements per task (# 'y' elems)
+    GSIZET np=4;    // elem 'order'
     GC_COMM comm = GC_COMM_WORLD;
     GGFX<GFLOAT>   ggfx;
 

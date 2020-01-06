@@ -276,7 +276,6 @@ GBOOL impl_icosnwaveburgers(const PropertyTree &ptree, GString &sconfig, GGrid &
 } // end, impl_icosnwaveburgers
 
 
-
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : impl_boxdirgauss
