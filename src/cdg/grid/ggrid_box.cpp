@@ -71,7 +71,7 @@ lshapefcn_             (NULLPTR)
   // compute global bdy range, and global vertices:
   for ( auto j=0; j<GDIM; j++ ) dP_[j] = spt[j];
   P1_ = P0_ + dP_;
-  gverts_.resize(2*ndim_);
+  gverts_.resize(pow(2,ndim_));
   for ( auto j=0; j<gverts_.size(); j++ ) gverts_[j].resize(GDIM);
   if ( ndim_ == 2 ) {
     gverts_[0] = P0_; 
@@ -269,7 +269,7 @@ void GGridBox::do_elems2d()
   GLONG  fcurr = 0; // current global face index
   GLONG  bcurr = 0; // current global bdy index
 
-  for ( GSIZET i=0; i<qmesh_.size(); i++ ) { // for each quad in irank's mesh
+  for ( auto i=0; i<qmesh_.size(); i++ ) { // for each quad in irank's mesh
     pelem = new GElem_base(GE_REGULAR, gbasis_);
     xNodes  = &pelem->xNodes();  // node spatial data
     xiNodes = &pelem->xiNodes(); // node ref interval data
@@ -277,9 +277,9 @@ void GGridBox::do_elems2d()
     bdy_ind = &pelem->bdy_indices(); // get bdy indices data member
     bdy_typ = &pelem->bdy_types  (); // get bdy types data member
     bdy_ind->clear(); bdy_typ->clear();
-    for ( GSIZET l=0; l<ndim_; l++ ) { // loop over element Cart coords
+    for ( auto l=0; l<ndim_; l++ ) { // loop over element Cart coords
       (*xNodes)[l] = 0.0;
-      for ( GSIZET m=0; m<pow(2,ndim_); m++ ) { // loop over verts given in Cart coords
+      for ( auto m=0; m<pow(2,ndim_); m++ ) { // loop over verts given in Cart coords
         I[0] = m;
         lshapefcn_->Ni(I, *xiNodes, Ni);
         (*xNodes)[l] += Ni * ( (*(qmesh_[i].v[m]))[l] * 0.25 );
@@ -290,7 +290,7 @@ void GGridBox::do_elems2d()
 
     // With face/edge centroids computed, compute 
     // global boundary nodes:
-    for ( GSIZET j=0; j<2*ndim_; j++ ) { // cycle over all edges
+    for ( auto j=0; j<2*ndim_; j++ ) { // cycle over all edges
       cent = pelem->edgeCentroid(j);
       face_ind = NULLPTR;
       if ( FUZZYEQ(P0_.x2,cent.x2,eps_) ) face_ind = &pelem->edge_indices(0);
@@ -300,7 +300,7 @@ void GGridBox::do_elems2d()
       // For now, we don't allow corner nodes to be repeated, 
       // and we'll have to choose the best way to define the 
       // normal vectors at the these nodes:
-      for ( GSIZET k=0; face_ind != NULLPTR && k<face_ind->size(); k++ ) {
+      for ( auto k=0; face_ind != NULLPTR && k<face_ind->size(); k++ ) {
         if ( !bdy_ind->contains((*face_ind)[k]) ) {
           bdy_ind->push_back((*face_ind)[k]); 
           bdy_typ->push_back(GBDY_NONE); 
@@ -372,14 +372,13 @@ void GGridBox::do_elems3d()
   gdd_->doDD(ftcentroids_, irank_, iind);
 #endif
 
-  GSIZET i;
   GSIZET nvnodes;   // no. vol indices
   GSIZET nfnodes;   // no. face indices
   GSIZET nbnodes;   // no. bdy indices
   GLONG  icurr = 0; // current global index
   GLONG  fcurr = 0; // current global face index
   GLONG  bcurr = 0; // current global bdy index
-  for ( GSIZET i=0; i<hmesh_.size(); i++ ) { // for each hex in irank's mesh
+  for ( auto i=0; i<hmesh_.size(); i++ ) { // for each hex in irank's mesh
 
     pelem = new GElem_base(GE_REGULAR, gbasis_);
     xNodes  = &pelem->xNodes();  // node spatial data
@@ -390,9 +389,9 @@ void GGridBox::do_elems3d()
     bdy_ind->clear(); bdy_typ->clear();
     pelem->igbeg() = icurr;      // beginning global index
     pelem->igend() = icurr + pelem->nnodes()-1; // end global index
-    for ( GSIZET l=0; l<ndim_; l++ ) { // loop over element Cart coords
+    for ( auto l=0; l<ndim_; l++ ) { // loop over element Cart coords
       (*xNodes)[l] = 0.0;
-      for ( GSIZET m=0; m<pow(2,ndim_); m++ ) { // loop over verts given in Cart coords
+      for ( auto m=0; m<pow(2,ndim_); m++ ) { // loop over verts given in Cart coords
         I[0] = m;
         lshapefcn_->Ni(I, *xiNodes, Ni);
         (*xNodes)[l] += Ni * ( (*(hmesh_[i].v[m]))[l] * 0.125 );
@@ -401,8 +400,9 @@ void GGridBox::do_elems3d()
 
     pelem->init(*xNodes);
 
-    // With edge/face centroids set, compute bdy_nodes:
-    for ( GSIZET j=0; j<2*ndim_; j++ ) { // cycle over faces
+#if 0
+    // With edge/face centroids set, compute global bdy_nodes:
+    for ( auto j=0; j<2*ndim_; j++ ) { // cycle over faces
       cent = pelem->faceCentroid(j);
       face_ind = NULLPTR;
       if ( FUZZYEQ(P0_.x2,cent.x2,eps_) ) face_ind = &pelem->edge_indices(0);
@@ -411,17 +411,20 @@ void GGridBox::do_elems3d()
       if ( FUZZYEQ(P0_.x1,cent.x1,eps_) ) face_ind = &pelem->edge_indices(3);
       if ( FUZZYEQ(P0_.x3,cent.x3,eps_) ) face_ind = &pelem->edge_indices(4);
       if ( FUZZYEQ(P1_.x3,cent.x3,eps_) ) face_ind = &pelem->edge_indices(5);
-      face_ind = &pelem->face_indices(0);
+//    face_ind = &pelem->face_indices(0);
       // For now, we don't allow corner nodes to be repeated, 
       // and we'll have to choose the best way to define the 
       // normal vectors at the 'corner' nodes:
-      for ( GSIZET k=0; face_ind != NULLPTR && k<face_ind->size(); k++ ) {
+      for ( auto k=0; face_ind != NULLPTR && k<face_ind->size(); k++ ) {
         if ( !bdy_ind->contains((*face_ind)[k]) ) {
           bdy_ind->push_back((*face_ind)[k]); 
           bdy_typ->push_back(GBDY_NONE); // default always to GBDY_NONE 
         }
       }
     }
+#endif
+
+    gelems_.push_back(pelem);
 
     nvnodes = pelem->nnodes();
     nfnodes = pelem->nfnodes();
@@ -436,7 +439,6 @@ void GGridBox::do_elems3d()
     fcurr += nfnodes;
     bcurr += nbnodes;
 
-    gelems_.push_back(pelem);
   } // end of hex mesh loop
 
 } // end of method do_elems3d (1)
@@ -476,7 +478,7 @@ void GGridBox::do_elems2d(GTMatrix<GINT> &p,
 
   // Now, treat the gbasis_ as a pool that we search
   // to find bases we need:
-  for ( GSIZET j=0; j<ppool.size(); j++ ) ppool[j] = gbasis_[j]->getOrder();
+  for ( auto j=0; j<ppool.size(); j++ ) ppool[j] = gbasis_[j]->getOrder();
 
   GSIZET iwhere, n;
   GSIZET nvnodes;   // no. vol nodes
@@ -485,9 +487,9 @@ void GGridBox::do_elems2d(GTMatrix<GINT> &p,
   GSIZET icurr = 0; // current global index
   GSIZET fcurr = 0; // current global face index
   GSIZET bcurr = 0; // current global bdy index
-  for ( GSIZET i=0; i<p.size(1); i++ ) { // for each element
+  for ( auto i=0; i<p.size(1); i++ ) { // for each element
     nvnodes = 1;
-    for ( GSIZET j=0; j<GDIM; j++ ) { // set basis from pool
+    for ( auto j=0; j<GDIM; j++ ) { // set basis from pool
       assert(ppool.contains(p(i,j),iwhere) && "Expansion order not found");
       gb[j] = gbasis_[iwhere];
       nvnodes *= (p(i,j) + 1);
@@ -502,18 +504,18 @@ void GGridBox::do_elems2d(GTMatrix<GINT> &p,
     // Set internal node positions from input data.
     // Note that gxnodes are 'global' and xNodes is
     // element-local:
-    for ( GSIZET j=0; j<GDIM; j++ ) {
+    for ( auto j=0; j<GDIM; j++ ) {
        gxnodes[j].range(icurr, icurr+nvnodes-1);
       (*xNodes)[j] = gxnodes[j];
     }
-    for ( GSIZET j=0; j<GDIM; j++ ) gxnodes[j].range_reset();
+    for ( auto j=0; j<GDIM; j++ ) gxnodes[j].range_reset();
 
     pelem->init(*xNodes);
 
 
     // With face/edge centroids computed, compute 
     // global boundary nodes:
-    for ( GSIZET j=0; j<2*ndim_; j++ ) { // cycle over all edges
+    for ( auto j=0; j<2*ndim_; j++ ) { // cycle over all edges
       cent = pelem->edgeCentroid(j);
       face_ind = NULLPTR;
       if ( FUZZYEQ(P0_.x2,cent.x2,eps_) ) face_ind = &pelem->edge_indices(0);
@@ -523,14 +525,13 @@ void GGridBox::do_elems2d(GTMatrix<GINT> &p,
       // For now, we don't allow corner nodes to be repeated, 
       // and we'll have to choose the best way to define the 
       // normal vectors at the 'corner' nodes:
-      for ( GSIZET k=0; face_ind != NULLPTR && k<face_ind->size(); k++ ) {
+      for ( auto k=0; face_ind != NULLPTR && k<face_ind->size(); k++ ) {
         if ( !bdy_ind->contains((*face_ind)[k]) ) {
           bdy_ind->push_back((*face_ind)[k]); 
           bdy_typ->push_back(GBDY_NONE); 
         }
       }
     }
-
 
     gelems_.push_back(pelem);
 
@@ -590,7 +591,7 @@ void GGridBox::do_elems3d(GTMatrix<GINT> &p,
 
   // Now, treat the gbasis_ as a pool that we search
   // to find bases we need:
-  for ( GSIZET j=0; j<ppool.size(); j++ ) ppool[j] = gbasis_[j]->getOrder();
+  for ( auto j=0; j<ppool.size(); j++ ) ppool[j] = gbasis_[j]->getOrder();
 
   GSIZET i, iwhere, n;
   GSIZET nvnodes;   // no. vol indices
@@ -599,9 +600,9 @@ void GGridBox::do_elems3d(GTMatrix<GINT> &p,
   GLONG  icurr = 0; // current global index
   GLONG  fcurr = 0; // current global face index
   GLONG  bcurr = 0; // current global bdy index
-  for ( GSIZET i=0; i<p.size(1); i++ ) { // for each hex in irank's mesh
+  for ( auto i=0; i<p.size(1); i++ ) { // for each hex in irank's mesh
     nvnodes = 1; 
-    for ( GSIZET j=0; j<GDIM; j++ ) { // set basis from pool
+    for ( auto j=0; j<GDIM; j++ ) { // set basis from pool
       assert(ppool.contains(p(i,j),iwhere) && "Expansion order not found");
       gb[j] = gbasis_[iwhere];
       nvnodes *= (p(i,j) + 1);
@@ -619,16 +620,17 @@ void GGridBox::do_elems3d(GTMatrix<GINT> &p,
     // Set internal node positions from input data.
     // Note that gxnodes are 'global' and xNodes is
     // element-local:
-    for ( GSIZET j=0; j<GDIM; j++ ) {
+    for ( auto j=0; j<GDIM; j++ ) {
        gxnodes[j].range(icurr, icurr+nvnodes-1);
       (*xNodes)[j] = gxnodes[j];
     }
-    for ( GSIZET j=0; j<GDIM; j++ ) gxnodes[j].range_reset();
+    for ( auto j=0; j<GDIM; j++ ) gxnodes[j].range_reset();
 
     pelem->init(*xNodes);
 
+#if 0
     // With edge/face centroids set, compute bdy_nodes:
-    for ( GSIZET j=0; j<2*ndim_; j++ ) { // cycle over faces
+    for ( auto j=0; j<2*ndim_; j++ ) { // cycle over faces
       cent = pelem->faceCentroid(j);
       face_ind = NULLPTR;
       if ( FUZZYEQ(P0_.x2,cent.x2,eps_) ) face_ind = &pelem->edge_indices(0);
@@ -642,13 +644,14 @@ void GGridBox::do_elems3d(GTMatrix<GINT> &p,
       // For now, we don't allow corner nodes to be repeated, 
       // and we'll have to choose the best way to define the 
       // normal vectors at the 'corner' nodes:
-      for ( GSIZET k=0; face_ind != NULLPTR && k<face_ind->size(); k++ ) {
+      for ( auto k=0; face_ind != NULLPTR && k<face_ind->size(); k++ ) {
         if ( !bdy_ind->contains((*face_ind)[k]) ) {
           bdy_ind->push_back((*face_ind)[k]); 
           bdy_typ->push_back(GBDY_NONE); // default always to GBDY_NONE 
         }
       }
     }
+#endif
 
     gelems_.push_back(pelem);
 
@@ -734,17 +737,18 @@ void GGridBox::periodize()
   for ( GSIZET k=0; k<x.size(); k++ ) x[k] = P0_[k];
 
   GUINT  bit;
-  GSIZET id, n=0;
+  GSIZET id;
+  periodicids_ .resize(igbdy_binned_[GBDY_PERIODIC].size());
+  periodicdirs_.resize(igbdy_binned_[GBDY_PERIODIC].size());
   for ( GSIZET k=0; k<igbdy_binned_[GBDY_PERIODIC].size(); k++ ) { // for each blobal bdy node
     id = igbdy_binned_[GBDY_PERIODIC][k];
-    periodicids_.push_back(id);       
-    periodicdirs_.push_back(0);
+    periodicids_ [k] = id;       
+    periodicdirs_[k] = 0;
     for ( GSIZET i=0; i<xNodes_.size(); i++ ) { // for x, y, z dirs
       if ( FUZZYEQ(P1_[i],xNodes_[i][id],eps_) ) { // right/top-most coord will change
-        periodicdirs_[n] |= 1U << i;  // position right-most direction bit  
+        periodicdirs_[k] |= 1U << i;  // position right-most direction bit  
       }
     }
-    n++;
   }
 
   // Now, cycle through periodic nodes and periodize coordinates:
@@ -859,7 +863,6 @@ void GGridBox::find_subdomain()
         ib = MAX(beg_lin-static_cast<GLONG>(k*nxy+j*ne_[0]),0); 
         ie = MIN(end_lin-static_cast<GLONG>(k*nxy+j*ne_[0]),ne_[0]-1); 
         for ( GLONG i=ib; i<=ie; i++ ) { 
-          for ( auto l=0; l<4; l++ ) qmesh_[n][l].resize(ndim_);
           v0.x1 = P0_.x1+i*dx.x1; v0.x2 = P0_.x2+j*dx.x2; v0.x3 = P0_.x3+k*dx.x3; 
                                                           hmesh_[n].v1 = v0;
           dv.x1 = dx.x1 ; dv.x2 = 0.0  ; dv.x3 = 0.0   ;  hmesh_[n].v2 = v0 + dv;
@@ -897,7 +900,7 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
 {
   // Cycle over all geometric boundaries, and configure:
 
-  GBOOL              bret, bperiodic=FALSE, buseinit;
+  GBOOL              bret, bperiodic=FALSE;
   GSIZET             iwhere;
   GTVector<GBOOL>    buniform(2*GDIM);
   GTVector<GBdyType> bdytype(2*GDIM);
@@ -905,8 +908,7 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
   GTVector<GSIZET>   itmp;
   GTVector<GString>  bdynames (2*GDIM);
   GTVector<GString>  confmthd (2*GDIM);
-  GTVector<GString>  bdyupdate(2*GDIM);
-  GString            gname, sbdy, bdyclass, bdyinit;
+  GString            gname, sbdy, bdyclass;
   PropertyTree       bdytree, gridptree, spectree;
 
   bdynames[0] = "bdy_x_0";
@@ -930,9 +932,11 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
   igbdy .resize(2*GDIM);
   igbdyt.resize(2*GDIM);
 
+#if 0
   bdyupdate = gridptree.getValue<GString>("update_method","");
   bdyinit   = gridptree.getValue<GString>("bdy_init_method","");
   buseinit  = gridptree.getValue<GBOOL>  ("use_state_init_method",FALSE);
+#endif
 
 
   // Get properties from the main prop tree. 
@@ -988,7 +992,7 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
   }
   
   // Fill in uniform bdy types:
-  for ( auto j=0; j<2*GDIM; j++ ) { 
+  for ( auto j=0; j<2*GDIM; j++ ) { // for each global bdy face 
     if ( !buniform[j] ) continue;
     // First, find global bdy indices:
     if ( bperiodic && bdytype[j] != GBDY_PERIODIC  ) {
@@ -1019,7 +1023,8 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
     igbdyt[j].resize(itmp.size()); igbdyt[j] = btmp;
     itmp.clear();
     btmp.clear();
-  }
+
+  } // end, global bdy face loop
 
 
 } // end of method config_bdy
@@ -1106,63 +1111,104 @@ void GGridBox::find_bdy_ind3d(GINT bdyid, GBOOL incl_edge, GTVector<GSIZET> &ibd
 
   assert(bdyid >=0 && bdyid < 2*GDIM);
 
-  ibdy.clear();
-
+  GSIZET nbdy, n;
   GTPoint<GFTYPE> pt(ndim_);
 
-  pt.setBracket(eps_);
-
+  ibdy.clear();
+  nbdy = n = 0;
   switch ( bdyid ) {
     case 0: // southern vert face:
       for ( GSIZET i=0; i<xNodes_[0].size(); i++ ) { // face 0
-        if ( FUZZYEQ(P0_.x1,xNodes_[0][i],eps_) ) {
+        if ( FUZZYEQ(P0_.x2,xNodes_[1][i],eps_) ) {
           pt.assign(xNodes_, i);
-          if ( incl_edge || !on_global_edge(0,pt) ) ibdy.push_back(i);
+          if ( incl_edge || !on_global_edge(0,pt) ) nbdy++;
+        }
+      }
+      ibdy.resize(nbdy);
+      for ( GSIZET i=0; i<xNodes_[0].size(); i++ ) { // face 0
+        if ( FUZZYEQ(P0_.x2,xNodes_[1][i],eps_) ) {
+          pt.assign(xNodes_, i);
+          if ( incl_edge || !on_global_edge(0,pt) ) ibdy[n++] = i;
         }
       }
       break;
 
     case 1: // eastern vert. face:
       for ( GSIZET i=0; i<xNodes_[0].size(); i++ ) { // face 1
-        if ( FUZZYEQ(P1_.x1,xNodes_[1][i],eps_) ) {
+        if ( FUZZYEQ(P1_.x1,xNodes_[0][i],eps_) ) {
           pt.assign(xNodes_, i);
-          if ( incl_edge || !on_global_edge(1,pt) ) ibdy.push_back(i);
+          if ( incl_edge || !on_global_edge(1,pt) ) nbdy++;
+        }
+      }
+      ibdy.resize(nbdy);
+      for ( GSIZET i=0; i<xNodes_[0].size(); i++ ) { // face 1
+        if ( FUZZYEQ(P1_.x1,xNodes_[0][i],eps_) ) {
+          pt.assign(xNodes_, i);
+          if ( incl_edge || !on_global_edge(1,pt) ) ibdy[n++] = i;
         }
       }
       break;
 
     case 2: // northern vert. face:
       for ( GSIZET i=0; i<xNodes_[0].size(); i++ ) { // face 2
-        if ( FUZZYEQ(P1_.x1,xNodes_[0][i],eps_) ) {
+        if ( FUZZYEQ(P1_.x2,xNodes_[1][i],eps_) ) {
           pt.assign(xNodes_, i);
-          if ( incl_edge || !on_global_edge(2,pt) ) ibdy.push_back(i);
+          if ( incl_edge || !on_global_edge(2,pt) ) nbdy++;
+        }
+      }
+      ibdy.resize(nbdy);
+      for ( GSIZET i=0; i<xNodes_[0].size(); i++ ) { // face 2
+        if ( FUZZYEQ(P1_.x2,xNodes_[1][i],eps_) ) {
+          pt.assign(xNodes_, i);
+          if ( incl_edge || !on_global_edge(2,pt) ) ibdy[n++] = i;
         }
       }
       break;
 
     case 3: // western vertical face:
       for ( GSIZET i=0; i<xNodes_[0].size(); i++ ) { // face 3
-        if ( FUZZYEQ(P0_.x1,xNodes_[1][i],eps_) ) {
+        if ( FUZZYEQ(P0_.x1,xNodes_[0][i],eps_) ) {
           pt.assign(xNodes_, i);
-          if ( incl_edge || !on_global_edge(3,pt) ) ibdy.push_back(i);
+          if ( incl_edge || !on_global_edge(3,pt) ) nbdy++;
+        }
+      }
+      ibdy.resize(nbdy);
+      for ( GSIZET i=0; i<xNodes_[0].size(); i++ ) { // face 3
+        if ( FUZZYEQ(P0_.x1,xNodes_[0][i],eps_) ) {
+          pt.assign(xNodes_, i);
+          if ( incl_edge || !on_global_edge(3,pt) ) ibdy[n++] = i;
         }
       }
       break;
 
     case 4: // bottom horiz face:
       for ( GSIZET i=0; i<xNodes_[0].size(); i++ ) { // face 4
-        if ( FUZZYEQ(P0_.x1,xNodes_[2][i],eps_) ) {
+        if ( FUZZYEQ(P0_.x3,xNodes_[2][i],eps_) ) {
           pt.assign(xNodes_, i);
-          if ( incl_edge || !on_global_edge(4,pt) ) ibdy.push_back(i);
+          if ( incl_edge || !on_global_edge(4,pt) ) nbdy++;
+        }
+      }
+      ibdy.resize(nbdy);
+      for ( GSIZET i=0; i<xNodes_[0].size(); i++ ) { // face 4
+        if ( FUZZYEQ(P0_.x3,xNodes_[2][i],eps_) ) {
+          pt.assign(xNodes_, i);
+          if ( incl_edge || !on_global_edge(4,pt) ) ibdy[n++] = i;
         }
       }
       break;
 
     case 5: // top horiz face:
       for ( GSIZET i=0; i<xNodes_[0].size(); i++ ) { // face 5
-        if ( FUZZYEQ(P1_.x1,xNodes_[2][i],eps_) ) {
+        if ( FUZZYEQ(P1_.x3,xNodes_[2][i],eps_) ) {
           pt.assign(xNodes_, i);
-          if ( incl_edge || !on_global_edge(5,pt) ) ibdy.push_back(i);
+          if ( incl_edge || !on_global_edge(5,pt) ) nbdy++;
+        }
+      }
+      ibdy.resize(nbdy);
+      for ( GSIZET i=0; i<xNodes_[0].size(); i++ ) { // face 5
+        if ( FUZZYEQ(P1_.x3,xNodes_[2][i],eps_) ) {
+          pt.assign(xNodes_, i);
+          if ( incl_edge || !on_global_edge(5,pt) ) ibdy[n++] = i;
         }
       }
       break;

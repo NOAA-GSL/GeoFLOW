@@ -136,87 +136,87 @@ template <class T> class GTVector
 
 
     #pragma acc routine vector
-    GBOOL isfinite();
+        GBOOL isfinite();
     #pragma acc routine vector
-    GBOOL isfinite(GSIZET &iwhere);
+        GBOOL isfinite(GSIZET &iwhere);
     #pragma acc routine vector
-    T max();
+        T max();
     #pragma acc routine vector
-    T amax();
+        T amax();
     #pragma acc routine vector
-    T amaxdiff(T tiny);
+        T amaxdiff(T tiny);
     #pragma acc routine vector
-    T maxn(GSIZET n);
+        T maxn(GSIZET n);
     #pragma acc routine vector
-    GSIZET imax();
+        GSIZET imax();
     #pragma acc routine vector
-    T min();
+        T min();
     #pragma acc routine vector
-    T amin();
+        T amin();
     #pragma acc routine vector
-    T amindiff(T tiny);
+        T amindiff(T tiny);
     #pragma acc routine vector
-    T minn(GSIZET n);
+        T minn(GSIZET n);
     #pragma acc routine vector
-    GSIZET imin();
+        GSIZET imin();
     #pragma acc routine vector
-    T sum();
+        T sum();
     #pragma acc routine vector
-    T infnorm();
+        T infnorm();
     #pragma acc routine vector
-    T Eucnorm();
+        T Eucnorm();
     #pragma acc routine vector
-    void rpow(GDOUBLE p);
+        void rpow(GDOUBLE p);
     #pragma acc routine vector
-    void abs();
+        void abs();
     #pragma acc routine vector
-    GBOOL contains(T val);     // Buffer contains val?
+inline GBOOL contains(T val);     // Buffer contains val?
     #pragma acc routine vector
-    GSIZET contains(T val, GSIZET *&iwhere, GSIZET &nw);
+inline GSIZET contains(T val, GSIZET *&iwhere, GSIZET &nw);
     #pragma acc routine vector
-    GBOOL containsn(T val, GSIZET n); // check n elements
+inline GBOOL containsn(T val, GSIZET n); // check n elements
     #pragma acc routine vector
-    GBOOL  contains(T val, GSIZET  &index);
+inline GBOOL  contains(T val, GSIZET  &index);
     #pragma acc routine vector
-    GBOOL  containsn(T val, GSIZET n, GSIZET  &index);
+inline GBOOL  containsn(T val, GSIZET n, GSIZET  &index);
     #pragma acc routine vector
-    GBOOL  contains_floor(T val, GSIZET &index, T floor, GSIZET istart=0);
+inline GBOOL  contains_floor(T val, GSIZET &index, T floor, GSIZET istart=0);
     #pragma acc routine vector
-    GBOOL  contains_ceil(T val, GSIZET  &index, T ceil  , GSIZET istart=0);
+inline GBOOL  contains_ceil(T val, GSIZET  &index, T ceil  , GSIZET istart=0);
     #pragma acc routine vector
-    GSIZET distinctrng(GSIZET istart, GSIZET n, GSIZET is,  T *&vals, GSIZET *&index, GSIZET  &n_distinct);
+inline GSIZET distinctrng(GSIZET istart, GSIZET n, GSIZET is,  T *&vals, GSIZET *&index, GSIZET  &n_distinct, T * const &tunique, GSIZET * const &itmp);
     #pragma acc routine vector
-    GSIZET distinctrng(GSIZET istart, GSIZET n, GSIZET is,  GSIZET *&index, GSIZET  &n_distinct);
+inline GSIZET distinctrng(GSIZET istart, GSIZET n, GSIZET is,  GSIZET *&index, GSIZET  &n_distinct, T * const &tunique, GSIZET * const &itmp);
     #pragma acc routine vector
-    GSIZET distinctrng_floor(GSIZET istart, GSIZET n, GSIZET is, T *&vals, GSIZET *&index, GSIZET  &n_distinct, T floor);
+inline GSIZET distinctrng_floor(GSIZET istart, GSIZET n, GSIZET is, T *&vals, GSIZET *&index, GSIZET  &n_distinct, T floor, T * const &tunique, GSIZET * const &itmp);
     #pragma acc routine vector
-    GSIZET distinctrng_floor(GSIZET istart, GSIZET n, GSIZET is, GSIZET *&index, GSIZET  &n_distinct, T floor);
+inline GSIZET distinctrng_floor(GSIZET istart, GSIZET n, GSIZET is, GSIZET *&index, GSIZET  &n_distinct, T floor, T * const &tunique, GSIZET * const &itmp);
     #pragma acc routine vector
-    GSIZET distinct(GSIZET *&index, GSIZET  &n_distinct);
+inline GSIZET distinct(GSIZET *&index, GSIZET  &n_distinct, T * const &tunique, GSIZET * const &itmp);
     #pragma acc routine vector
-    GSIZET distinct_floor(GSIZET *&index, GSIZET  &n_distinct, T floor);
+inline GSIZET distinct_floor(GSIZET *&index, GSIZET  &n_distinct, T floor, T * const &tunique, GSIZET * const &itmp);
     #pragma acc routine vector
-    GSIZET multiplicity(T val);
+inline GSIZET multiplicity(T val);
     #pragma acc routine vector
-    GSIZET multiplicity(T val, GSIZET *&index, GSIZET &n);
+inline GSIZET multiplicity(T val, GSIZET *&index, GSIZET &n);
     #pragma acc routine vector
-    GSIZET multiplicity_floor(T val, T floor);
+inline GSIZET multiplicity_floor(T val, T floor);
     #pragma acc routine vector
-    GSIZET multiplicity_ceil(T val, T ceil);
+inline GSIZET multiplicity_ceil(T val, T ceil);
     #pragma acc routine vector
-    GSIZET multiplicity_floor(T val, GSIZET *&index, GSIZET &n, T floor);
+inline GSIZET multiplicity_floor(T val, GSIZET *&index, GSIZET &n, T floor);
 
     #pragma acc routine vector
-    void   sortincreasing();
+       void   sortincreasing();
     #pragma acc routine vector
-    void   sortincreasing(GTVector<GSIZET> &);
+       void   sortincreasing(GTVector<GSIZET> &);
     #pragma acc routine vector
-    void   sortdecreasing();
+       void   sortdecreasing();
     #pragma acc routine vector
-    void   sortdecreasing(GTVector<GSIZET> &);
+       void   sortdecreasing(GTVector<GSIZET> &);
 
     #pragma acc routine vector
-    void concat(T *array, GSIZET n);
+       void concat(T *array, GSIZET n);
 
   private:
 
@@ -228,19 +228,19 @@ template <class T> class GTVector
 
 
   #pragma acc routine vector 
-  GTVector add_impl_(const GTVector &b, std::true_type);
+   GTVector add_impl_(const GTVector &b, std::true_type);
   #pragma acc routine vector 
-  GTVector add_impl_(const GTVector &b, std::false_type);
+   GTVector add_impl_(const GTVector &b, std::false_type);
   
   #pragma acc routine vector 
-  GTVector sub_impl_(const GTVector &b, std::true_type);
+   GTVector sub_impl_(const GTVector &b, std::true_type);
   #pragma acc routine vector 
-  GTVector sub_impl_(const GTVector &b, std::false_type);
+   GTVector sub_impl_(const GTVector &b, std::false_type);
 
   #pragma acc routine vector
-  GTVector mul_impl_(const GTVector &b, std::true_type);
+   GTVector mul_impl_(const GTVector &b, std::true_type);
     #pragma acc routine vector
-  GTVector mul_impl_(const GTVector &b, std::false_type);
+   GTVector mul_impl_(const GTVector &b, std::false_type);
 };
 
 

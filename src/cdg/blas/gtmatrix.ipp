@@ -541,7 +541,7 @@ GBOOL GTMatrix<T>::resizem(GSIZET new1, GSIZET new2)
 //**********************************************************************************
 // METHOD : dim
 // DESC   : Array dimension (usable)
-//          in direction idir 
+//          in direction idir  (1 or 2)
 // ARGS   :
 // RETURNS: GSIZET   size
 //**********************************************************************************
@@ -2187,9 +2187,9 @@ GSIZET GTMatrix<T>::multiplicity(T val, GSIZET *&irow, GSIZET *&icol, GSIZET &n)
     icol = new GSIZET [n];
   }
  
-  GSIZET m;
-  for ( GSIZET i=0,m=0; i<n1_; i++ ) {
-    for ( GSIZET j=0; j<n2_; j++ ) {
+  GSIZET i, j, m;
+  for ( i=0,m=0; i<n1_; i++ ) {
+    for ( j=0; j<n2_; j++ ) {
     
       if ( (*this)(i,j) == val ) {
         irow[m] = i ; icol[m] = j; 
@@ -2222,21 +2222,18 @@ GSIZET GTMatrix<T>::multiplicity(T val, GSZBuffer &irow, GSZBuffer &icol)
 
   if ( mult == 0 ) return mult;
  
-  if ( irow.size() < mult ) {
-    irow.resize(mult);
-  }
-  if ( icol.size() < mult ) {
-    icol.resize(mult);
-  }
+  irow.resizem(mult);
+  icol.resizem(mult);
  
-  GSIZET m;
-  for ( GSIZET i=0,m=0; i<n1_; i++ ) {
-    for ( GSIZET j=0; j<n2_; j++ ) {
+  GSIZET i, j, m;
+  for ( i=0,m=0; i<n1_; i++ ) {
+    for ( j=0; j<n2_; j++ ) {
     
       if ( (*this)(i,j) == val ) {
         irow[m] = i ; icol[m] = j; 
         m++;
       }
+
     }
   }
  
@@ -2250,21 +2247,27 @@ GSIZET GTMatrix<T>::multiplicity(T val, GSZBuffer &irow, GSZBuffer &icol)
 // METHOD : distinctrow
 // DESC   : Find for a given row, the distinct values in that row. 
 // ARGS   :
-//          irow : Specified row
-//          vals : distinct values found for row irow. Will be resized if
-//                 number distinct vals found > n.
-//          icol : Resized if mult > n to contain columns where 'vals' appear.
-//          n    : size of vals and icol arrays on output if n < number distinct
-//                 values found, nv, else, n = nv
+//          irow   : Specified row
+//          vals   : distinct values found for row irow. Will be resized if
+//                   number distinct vals found > n.
+//          icol   : Resized if mult > n to contain columns where 'vals' appear.
+//          n      : size of vals and icol arrays on output if n < number distinct
+//                   values found, nv, else, n = nv
+//          tunique: tmp vector required by GTVector call, resized here if necessary
+//          itmp   : tmp vector required by GTVector call, resized here if necessary
 // RETURNS: nv = number of distinct values found (may not be 0)
 //**********************************************************************************
 template<class T>
-GSIZET GTMatrix<T>::distinctrow( GSIZET irow, T *&val, GSIZET *&icol, GSIZET &n)
+GSIZET GTMatrix<T>::distinctrow( GSIZET irow, T *&val, GSIZET *&icol, GSIZET &n, GTVector<T> &tunique, GTVector<GSIZET> &itmp)
 {
   static_assert(std::is_arithmetic<T>::value || std::is_pointer<T>::value,
     "Invalid template type: GTMatrix<T>::distinctrow(GSIZET,T*,GSIZET*,GSIZET&)");
 
-  GSIZET nd = data_.distinctrng(irow*n2_, n1_*n2_, n1_, val, icol, n); 
+  tunique.resizem(n1_*n2_);
+  itmp   .resizem(n1_*n2_);
+  GSIZET *psz = itmp.data();
+  T      *pt  = tunique.data();
+  GSIZET nd = data_.distinctrng(irow*n2_, n1_*n2_, n1_, val, icol, n, pt, psz); 
 
   return nd;
 
@@ -2276,14 +2279,16 @@ GSIZET GTMatrix<T>::distinctrow( GSIZET irow, T *&val, GSIZET *&icol, GSIZET &n)
 // METHOD : distinctrow
 // DESC   : Find for a given row, the distinct values in that row. 
 // ARGS   :
-//          irow : Specified row
-//          vals : distinct values found for row irow. Will be resized if
-//                 number distinct vals found > n.
-//          icol : Resized if mult > current size to contain columns where 'vals' appear.
+//          irow   : Specified row
+//          vals   : distinct values found for row irow. Will be resized if
+//                   number distinct vals found > n.
+//          icol   : Resized if mult > current size to contain columns where 'vals' appear.
+//          tunique: tmp vector required by GTVector call, resized here if necessary
+//          itmp   : tmp vector required by GTVector call, resized here if necessary
 // RETURNS: nv = number of distinct values found (may not be 0)
 //**********************************************************************************
 template<class T>
-GSIZET GTMatrix<T>::distinctrow( GSIZET irow, GTVector<T> &val, GSZBuffer &icol)
+GSIZET GTMatrix<T>::distinctrow( GSIZET irow, GTVector<T> &val, GSZBuffer &icol,                                 GTVector<T> &tunique, GTVector<GSIZET> &itmp)
 {
   static_assert(std::is_arithmetic<T>::value || std::is_pointer<T>::value,
     "Invalid template type: GTMatrix<T>::distinctrow(GSIZET,T*,GTVector<T>&,GSZBuffer&)");
@@ -2291,7 +2296,11 @@ GSIZET GTMatrix<T>::distinctrow( GSIZET irow, GTVector<T> &val, GSZBuffer &icol)
   GSIZET *index=0, nd, nv=0;
   T      *vvals=0;
  
-  nd = data_.distinctrng(irow*n2_, n1_*n2_, n1_, vvals, index, nv); 
+  tunique.resizem(n1_*n2_);
+  itmp   .resizem(n1_*n2_);
+  GSIZET *psz = itmp.data();
+  T      *pt  = tunique.data();
+  nd = data_.distinctrng(irow*n2_, n1_*n2_, n1_, vvals, index, nv, pt, psz); 
   
   if ( val .size() < nd || icol.size() < nd ) {
     val .resize(nd); 
@@ -2324,15 +2333,21 @@ GSIZET GTMatrix<T>::distinctrow( GSIZET irow, GTVector<T> &val, GSZBuffer &icol)
 //          n    : size of vals and icol arrays on output if n < number distinct
 //                 values found, nv, else, n = nv
 //          floor: all distinct vals must be > floor
+//          tunique: tmp vector required by GTVector call, resized here if necessary
+//          itmp   : tmp vector required by GTVector call, resized here if necessary
 // RETURNS: nv = number of distinct values found (may not be 0)
 //**********************************************************************************
 template<class T>
-GSIZET GTMatrix<T>::distinctrow_floor( GSIZET irow, T *&val, GSIZET *&icol, GSIZET &n, T floor)
+GSIZET GTMatrix<T>::distinctrow_floor( GSIZET irow, T *&val, GSIZET *&icol, GSIZET &n, T floor, GTVector<T> &tunique, GTVector<GSIZET> &itmp)
 {
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::distinctrow_floor(GSIZET,T*,GSIZET*,GSIZET&)");
 
-  GSIZET nd = data_.distinctrng_floor(irow*n2_, n1_*n2_, n1_, val, icol, n, floor); 
+  tunique.resizem(n1_*n2_);
+  itmp   .resizem(n1_*n2_);
+  GSIZET *psz = itmp.data();
+  T      *pt  = tunique.data();
+  GSIZET nd = data_.distinctrng_floor(irow*n2_, n1_*n2_, n1_, val, icol, n, floor, pt, psz);
 
   return nd;
 
@@ -2345,15 +2360,17 @@ GSIZET GTMatrix<T>::distinctrow_floor( GSIZET irow, T *&val, GSIZET *&icol, GSIZ
 // DESC   : Find for a given row, the distinct values in that row, considering
 //          only values > floor
 // ARGS   :
-//          irow : Specified row
-//          vals : distinct values found for row irow. Will be resized if
+//          irow   : Specified row
+//          vals   : distinct values found for row irow. Will be resized if
 //                 number distinct vals found > n.
-//          icol : Resized if mult > icol size to contain columns where 'vals' appear.
-//          floor: all distinct vals must be > floor
+//          icol   : Resized if mult > icol size to contain columns where 'vals' appear.
+//          floor  : all distinct vals must be > floor
+//          tunique: tmp vector required by GTVector call, resized here if necessary
+//          itmp   : tmp vector required by GTVector call, resized here if necessary
 // RETURNS: nv = number of distinct values found (may not be 0)
 //**********************************************************************************
 template<class T>
-GSIZET GTMatrix<T>::distinctrow_floor( GSIZET irow, GTVector<T> &val, GSZBuffer &icol, T floor)
+GSIZET GTMatrix<T>::distinctrow_floor( GSIZET irow, GTVector<T> &val, GSZBuffer &icol, T floor, GTVector<T> &tunique, GTVector<GSIZET> &itmp)
 {
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::distinctrow_floor(GSIZET,T*,GSIZET*,GSIZET&)");
@@ -2361,7 +2378,12 @@ GSIZET GTMatrix<T>::distinctrow_floor( GSIZET irow, GTVector<T> &val, GSZBuffer 
   T      *vval=0;
   GSIZET  nm=0;
   GSIZET *vicol=0;
-  GSIZET nd = data_.distinctrng_floor(irow*n2_, n1_*n2_, n1_, vval, vicol, nm, floor); 
+
+  tunique.resizem(n1_*n2_);
+  itmp   .resizem(n1_*n2_);
+  GSIZET *psz = itmp.data();
+  T      *pt  = tunique.data();
+  GSIZET nd = data_.distinctrng_floor(irow*n2_, n1_*n2_, n1_, vval, vicol, nm, floor, pt, psz); 
   if ( val.size() < nd || icol.size() < nd ) {
     val .resize(nd); 
     icol.resize(nd); 
@@ -2381,22 +2403,29 @@ GSIZET GTMatrix<T>::distinctrow_floor( GSIZET irow, GTVector<T> &val, GSZBuffer 
 // METHOD : distinctcol
 // DESC   : Find for a given column, the distinct values in that column. 
 // ARGS   :
-//          icol : Specified col
-//          vals : distinct values found for col icol. Will be resized if
-//                 number distinct vals found > n.
-//          irow : Resized if mult > n to contain rows where 'vals' appear.
-//          n    : size of vals and irow arrays on output if n < number distinct
-//                 values found, nv, else, n = nv
+//          icoa   : Specified col
+//          vals   : distinct values found for col icol. Will be resized if
+//                   number distinct vals found > n.
+//          irow   : Resized if mult > n to contain rows where 'vals' appear.
+//          n      : size of vals and irow arrays on output if n < number distinct
+//                   values found, nv, else, n = nv
+//          tunique: tmp vector required by GTVector call, resized here if necessary
+//          itmp   : tmp vector required by GTVector call, resized here if necessary
 // RETURNS: nv = number of distinct values found (may not be 0)
 //**********************************************************************************
 template<class T>
-GSIZET GTMatrix<T>::distinctcol( GSIZET icol, T *&val, GSIZET *&irow, GSIZET &n)
+GSIZET GTMatrix<T>::distinctcol( GSIZET icol, T *&val, GSIZET *&irow, GSIZET &n, GTVector<T> &tunique, GTVector<GSIZET> &itmp)
 {
   static_assert(std::is_arithmetic<T>::value || std::is_pointer<T>::value,
     "Invalid template type: GTMatrix<T>::distinctcol(GSIZET,T*,GSIZET*,GSIZET&)");
 
   // Since data is col-major, can locate contiguous data and use GTVector function:
-  GSIZET nd = data_.distinctrng(icol*n1_, n1_, 1, val, irow, n); 
+  tunique.resizem(n1_*n2_);
+  itmp   .resizem(n1_*n2_);
+  GSIZET *psz = itmp.data();
+  T      *pt  = tunique.data();
+
+  GSIZET nd = data_.distinctrng(icol*n1_, n1_, 1, val, irow, n, pt, psz); 
 
   return nd;
 
@@ -2408,14 +2437,17 @@ GSIZET GTMatrix<T>::distinctcol( GSIZET icol, T *&val, GSIZET *&irow, GSIZET &n)
 // METHOD : distinctcol
 // DESC   : Find for a given column, the distinct values in that column. 
 // ARGS   :
-//          icol : Specified column
-//          vals : distinct values found for col icol. Will be resized if
-//                 number distinct vals found > n.
-//          irow : Resized if mult > current size to contain rows where 'vals' appear.
+//          icol   : Specified column
+//          vals   : distinct values found for col icol. Will be resized if
+//                   number distinct vals found > n.
+//          irow   : Resized if mult > current size to contain rows where 'vals' appear.
+//          tunique: tmp vector required by GTVector call, resized here if necessary
+//          itmp   : tmp vector required by GTVector call, resized here if necessary
 // RETURNS: nv = number of distinct values found (may not be 0)
 //**********************************************************************************
 template<class T>
-GSIZET GTMatrix<T>::distinctcol( GSIZET icol, GTVector<T> &val, GSZBuffer &irow)
+GSIZET GTMatrix<T>::distinctcol( GSIZET icol, GTVector<T> &val, GSZBuffer &irow,
+                                 GTVector<T> &tunique, GTVector<GSIZET> &itmp)
 {
   static_assert(std::is_arithmetic<T>::value || std::is_pointer<T>::value,
     "Invalid template type: GTMatrix<T>::distinctcol(GSIZET,T*,GTVector<T>&,GSZBuffer&)");
@@ -2424,7 +2456,12 @@ GSIZET GTMatrix<T>::distinctcol( GSIZET icol, GTVector<T> &val, GSZBuffer &irow)
   T      *vvals=0;
  
   // Since data is col-major, can locate contiguous data and use GTVector function:
-  nd = data_.distinctrng(icol*n1_, n1_, 1, vvals, index, nv); 
+  tunique.resizem(n1_*n2_);
+  itmp   .resizem(n1_*n2_);
+  GSIZET *psz = itmp.data();
+  T      *pt  = tunique.data();
+
+  nd = data_.distinctrng(icol*n1_, n1_, 1, vvals, index, nv, pt, psz); 
   
   if ( val .size() < nd || irow.size() < nd ) {
     val .resize(nd); 
@@ -2450,23 +2487,30 @@ GSIZET GTMatrix<T>::distinctcol( GSIZET icol, GTVector<T> &val, GSZBuffer &irow)
 // DESC   : Find for a given column, the distinct values in that column, considering
 //          only values > floor
 // ARGS   :
-//          icol : Specified col 
-//          vals : distinct values found for col icol. Will be resized if
-//                 number distinct vals found > n.
-//          irow : Resized if mult > n to contain rows where 'vals' appear.
-//          n    : size of vals and irow arrays on output if n < number distinct
-//                 values found, nv, else, n = nv
-//          floor: all distinct vals must be > floor
+//          icol   : Specified col 
+//          vals   : distinct values found for col icol. Will be resized if
+//                   number distinct vals found > n.
+//          irow   : Resized if mult > n to contain rows where 'vals' appear.
+//          n      : size of vals and irow arrays on output if n < number distinct
+//                   values found, nv, else, n = nv
+//          floor  : all distinct vals must be > floor
+//          tunique: tmp vector required by GTVector call, resized here if necessary
+//          itmp   : tmp vector required by GTVector call, resized here if necessary
 // RETURNS: nv = number of distinct values found (may not be 0)
 //**********************************************************************************
 template<class T>
-GSIZET GTMatrix<T>::distinctcol_floor( GSIZET icol, T *&vals, GSIZET *&irow, GSIZET &n, T floor)
+GSIZET GTMatrix<T>::distinctcol_floor( GSIZET icol, T *&vals, GSIZET *&irow, GSIZET &n, T floor, GTVector<T> &tunique, GTVector<GSIZET> &itmp)
 {
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::distinctcol_floor(GSIZET,T*,GSIZET*,GSIZET&)");
 
   // Since data is col-major, can locate contiguous data and use GTVector function:
-  GSIZET nd = data_.distinctrng_floor(icol*n1_, n1_, 1, vals, irow, n, floor); 
+  tunique.resizem(n1_*n2_);
+  itmp   .resizem(n1_*n2_);
+  GSIZET *psz = itmp.data();
+  T      *pt  = tunique.data();
+
+  GSIZET nd = data_.distinctrng_floor(icol*n1_, n1_, 1, vals, irow, n, floor, pt, psz); 
 
   return nd;
 
@@ -2479,15 +2523,17 @@ GSIZET GTMatrix<T>::distinctcol_floor( GSIZET icol, T *&vals, GSIZET *&irow, GSI
 // DESC   : Find for a given column , the distinct values in that column, considering
 //          only values > floor
 // ARGS   :
-//          icol : Specified column
-//          vals : distinct values found for row irow. Will be resized if
-//                 number distinct vals found > n.
-//          irow : Resized if mult > irow size to contain rows where 'vals' appear.
-//          floor: all distinct vals must be > floor
-// RETURNS: nv = number of distinct values found (may not be 0)
+//          icol   : Specified column
+//          vals   : distinct values found for row irow. Will be resized if
+//                   number distinct vals found > n.
+//          irow   : Resized if mult > irow size to contain rows where 'vals' appear.
+//          floor  : all distinct vals must be > floor
+//          tunique: tmp vector required by GTVector call, resized here if necessary
+//          itmp   : tmp vector required by GTVector call, resized here if necessary
+// RETURNS: nd = number of distinct values found (may not be 0)
 //**********************************************************************************
 template<class T>
-GSIZET GTMatrix<T>::distinctcol_floor( GSIZET icol, GTVector<T> &vals, GSZBuffer &irow, T floor)
+GSIZET GTMatrix<T>::distinctcol_floor( GSIZET icol, GTVector<T> &vals, GSZBuffer &irow, T floor, GTVector<T> &tunique, GTVector<GSIZET> &itmp)
 {
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::distinctcol_floor(GSIZET,T*,GSIZET*,GSIZET&)");
@@ -2497,7 +2543,12 @@ GSIZET GTMatrix<T>::distinctcol_floor( GSIZET icol, GTVector<T> &vals, GSZBuffer
   GSIZET *vind=0;
   
   // Since data is row-major, can locate contiguous data and use GTVector function:
-  GSIZET nd = data_.distinctrng_floor(icol*n1_, n1_, 1, vvals, vind, nm, floor); 
+  tunique.resizem(n1_*n2_);
+  itmp   .resizem(n1_*n2_);
+  GSIZET *psz = itmp.data();
+  T      *pt  = tunique.data();
+
+  GSIZET nd = data_.distinctrng_floor(icol*n1_, n1_, 1, vvals, vind, nm, floor, pt, psz);
   if ( vals.size() < nd || irow.size() < nd ) {
     vals.resize(nd); 
     irow.resize(nd); 

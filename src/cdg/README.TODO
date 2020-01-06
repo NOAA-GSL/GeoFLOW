@@ -21,3 +21,8 @@ done: 13.  Generalize the application of initial conditions.
 19. IMPORTANT: (a) code the do_face_normals virtual methods in GGridBox and GGridIcos. These find normals at all element face nodes, and are used to compute integral of fluxes at element faces used for conservative methods; (b) code the do_bdy_normals in GGridBox and GGridIcos classes. These compute the normals at canonical domain boundaries, and are required to specify, e.g., Neuman boundary conditions at those surfaces.
 20. Abstract the io: create new class for gio; add factory for different types. Move gioposix to general observer that uses new factory to decide which IO scheme to use.
 21. There is a bug in GGFX if GNODEID is size_t
+22. I/O restarts and re-decomposition + MPI I/O
+32.convective PDE
+33. mat-mat when computing derivatives--assuming that p doesn't change between elements
+34 test flux formalism
+35 terrain-following coordinates

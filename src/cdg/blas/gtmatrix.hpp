@@ -83,18 +83,18 @@ public:
          void               setCacheBlockingFactor(GINT icsz);
          void               set(T);
          void               set(T *, GSIZET n1, GSIZET n2);
-         GSIZET             distinctrow( GSIZET irow, T *&val, GSIZET *&icol, GSIZET &n);
-         GSIZET             distinctrow( GSIZET irow, GTVector<T> &val, GSZBuffer &icol);
-         GSIZET             distinctrow_floor( GSIZET irow, T *&val, GSIZET *&icol, GSIZET &n, T floor);
-         GSIZET             distinctrow_floor( GSIZET irow, GTVector<T> &val, GSZBuffer &icol, T floor);
-         GSIZET             distinctcol( GSIZET icol, T *&val, GSIZET *&irow, GSIZET &n);
-         GSIZET             distinctcol( GSIZET icol, GTVector<T> &val, GSZBuffer &irow);
-         GSIZET             distinctcol_floor( GSIZET icol, T *&val, GSIZET *&irow, GSIZET &n, T floor);
-         GSIZET             distinctcol_floor( GSIZET icol, GTVector<T> &val, GSZBuffer &irow, T floor);
-         GSIZET             multiplicity   (T val);
-         GSIZET             multiplicity   (T val, GSIZET *&irow, GSIZET *&icol, GSIZET &n);
-         GSIZET             multiplicity   (T val, GSZBuffer &irow, GSZBuffer &icol);
-         GSIZET             distinctr(GSIZET row, GSIZET, GSIZET *&col, GSIZET &n);
+inline   GSIZET             distinctrow( GSIZET irow, T *&val, GSIZET *&icol, GSIZET &n, GTVector<T> &tunique, GTVector<GSIZET> &itmp);
+inline   GSIZET             distinctrow( GSIZET irow, GTVector<T> &val, GSZBuffer &icol, GTVector<T> &tunique, GTVector<GSIZET> &itmp);
+inline   GSIZET             distinctrow_floor( GSIZET irow, T *&val, GSIZET *&icol, GSIZET &n, T floor, GTVector<T> &tunique, GTVector<GSIZET> &itmp);
+inline   GSIZET             distinctrow_floor( GSIZET irow, GTVector<T> &val, GSZBuffer &icol, T floor, GTVector<T> &tunique, GTVector<GSIZET> &itmp);
+inline   GSIZET             distinctcol( GSIZET icol, T *&val, GSIZET *&irow, GSIZET &n, GTVector<T> &tunique, GTVector<GSIZET> &itmp);
+inline   GSIZET             distinctcol( GSIZET icol, GTVector<T> &val, GSZBuffer &irow, GTVector<T> &tunique, GTVector<GSIZET> &itmp);
+inline   GSIZET             distinctcol_floor( GSIZET icol, T *&val, GSIZET *&irow, GSIZET &n, T floor, GTVector<T> &tunique, GTVector<GSIZET> &itmp);
+inline   GSIZET             distinctcol_floor( GSIZET icol, GTVector<T> &val, GSZBuffer &irow, T floor, GTVector<T> &tunique, GTVector<GSIZET> &itmp);
+inline   GSIZET             multiplicity   (T val);
+inline   GSIZET             multiplicity   (T val, GSIZET *&irow, GSIZET *&icol, GSIZET &n);
+inline   GSIZET             multiplicity   (T val, GSZBuffer &irow, GSZBuffer &icol);
+//       GSIZET             distinctr(GSIZET row, GSIZET, GSIZET *&col, GSIZET &n);
 
 
          // Device/accelerator data methods

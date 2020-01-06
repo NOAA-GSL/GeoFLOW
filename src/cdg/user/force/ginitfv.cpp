@@ -34,7 +34,7 @@ GBOOL impl_abc_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Tim
 
   GINT         kdn, kup, p, pdef; 
   GSIZET       nn ;
-  GFTYPE       A, B, C, E0, pi2, x, y, z;
+  GFTYPE       A, B, C, E0, kn, x, y, z;
   PropertyTree vtree;
   GTVector<GTVector<GFTYPE>>
               *xnodes = &grid.xNodes();
@@ -67,9 +67,9 @@ GBOOL impl_abc_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Tim
   for ( GSIZET j=0; j<nn; j++ ) {
     x = (*xnodes)[0][j]; y = (*xnodes)[1][j];
     for ( GINT k=kdn; k<=kup; k++ ) {
-      pi2         = 2.0*PI*k;
-      (*uf[0])[j] +=  B*pi2*cos(pi2*y) / pow(k,p);
-      (*uf[1])[j] += -A*pi2*sin(pi2*x) / pow(k,p);
+      kn           = 2.0*PI*k;
+      (*uf[0])[j] +=  B*kn*cos(kn*y) / pow(k,p);
+      (*uf[1])[j] += -A*kn*sin(kn*x) / pow(k,p);
     }
   }
  
@@ -81,10 +81,10 @@ GBOOL impl_abc_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Tim
   for ( GSIZET j=0; j<nn; j++ ) {
     x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j]; 
     for ( GINT k=kdn; k<kup; k++ ) {
-      pi2         = 2.0*PI*k;
-      (*uf[0])[j] +=  ( B*cos(pi2*y) + C*sin(pi2*z) ) / pow(k,p);
-      (*uf[1])[j] +=  ( A*sin(pi2*x) + C*cos(pi2*z) ) / pow(k,p);
-      (*uf[2])[j] +=  ( A*cos(pi2*x) + B*sin(pi2*y) ) / pow(k,p);
+      kn           = 2.0*PI*k;
+      (*uf[0])[j] +=  ( B*cos(kn*y) + C*sin(kn*z) ) / pow(k,p);
+      (*uf[1])[j] +=  ( A*sin(kn*x) + C*cos(kn*z) ) / pow(k,p);
+      (*uf[2])[j] +=  ( A*cos(kn*x) + B*sin(kn*y) ) / pow(k,p);
     }
   }
 
@@ -120,7 +120,7 @@ GBOOL impl_abc_icos(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Ti
 
   GINT         kdn, kup, p, pdef;
   GSIZET       nn ;
-  GFTYPE       A, B, C, E0, x, y, z;
+  GFTYPE       A, B, C, E0, kn, x, y, z;
   GFTYPE       alat, along, r;
   PropertyTree vtree ;
   GTVector<GTVector<GFTYPE>*>
@@ -171,16 +171,16 @@ GBOOL impl_abc_icos(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Ti
 
 #elif defined(_G_IS3D)
 
-  *u[0] = 0.0;
-  *u[1] = 0.0;
-  *u[2] = 0.0;
+  *uf[0] = 0.0;
+  *uf[1] = 0.0;
+  *uf[2] = 0.0;
   for ( GSIZET j=0; j<nn; j++ ) {
     x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
     for ( GINT k=kdn; k<kup; k++ ) {
-      pi2         = 2.0*PI*k;
-      (*uf[0])[j] +=  ( B*cos(pi2*y) + C*sin(pi2*z) ) / pow(k,p);
-      (*uf[1])[j] +=  ( A*sin(pi2*x) + C*cos(pi2*z) ) / pow(k,p);
-      (*uf[2])[j] +=  ( A*cos(pi2*x) + B*sin(pi2*y) ) / pow(k,p);
+      kn           = 2.0*PI*k;
+      (*uf[0])[j] +=  ( B*cos(kn*y) + C*sin(kn*z) ) / pow(k,p);
+      (*uf[1])[j] +=  ( A*sin(kn*x) + C*cos(kn*z) ) / pow(k,p);
+      (*uf[2])[j] +=  ( A*cos(kn*x) + B*sin(kn*y) ) / pow(k,p);
 
     }
   }

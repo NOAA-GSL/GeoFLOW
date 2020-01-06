@@ -108,13 +108,22 @@ GBOOL GInitForceFactory<EquationType>::set_by_comp(const PropertyTree& ptree, GG
 {
   GBOOL           bret    = TRUE;
   GSIZET          mvar, ndist, nvar;
-  GSIZET         *idist, *ivar;
+  GSIZET         *idist, *ivar, *pisz;
   GString         sblk    = ptree.getValue<GString>("initforce_block");
   GString         sinit;
   GStateCompType  itype;
   PropertyTree    vtree   = ptree.getPropertyTree(sblk);
   State           comp;
   CompDesc       *icomptype = &peqn->comptype();
+  GStateCompType *pct;
+  GTVector<GStateCompType> cdesc;
+  GTVector<GSIZET>   itmp;
+
+  cdesc.resize(icomptype->size());
+  itmp .resize(icomptype->size());
+  pct = cdesc.data();
+  pisz = itmp.data();
+
 
   ndist = 0; // # distinct comp types
   idist = NULLPTR; // list of ids for  distinct comp types
@@ -122,8 +131,9 @@ GBOOL GInitForceFactory<EquationType>::set_by_comp(const PropertyTree& ptree, GG
   mvar  = 0; // # max of specific comp types
   ivar  = NULLPTR;  // list of ids for specific comp types
 
+
   // Get distinct component types:
-  icomptype->distinct(idist, ndist);
+  icomptype->distinct(idist, ndist, pct, pisz);
 
   // Cycle over all types required, get components of that
   // type, and initialize all of them. There should be a member

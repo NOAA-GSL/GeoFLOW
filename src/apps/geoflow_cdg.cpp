@@ -155,7 +155,6 @@ int main(int argc, char **argv)
     //***************************************************
     GComm::Synch();
     EH_MESSAGE("geoflow: do time stepping...");
-    GTimerReset();
     GTimerStart("time_loop");
 
     pIntegrator_->time_integrate(t, uf_, ub_, u_);
@@ -166,7 +165,11 @@ int main(int argc, char **argv)
     //***************************************************
     // Do benchmarking if required:
     //***************************************************
+    EH_MESSAGE("geoflow: do benchmark...");
+    GTimerStart("benchmark_timer");
     do_bench("benchmark.txt", pIntegrator_->get_numsteps());
+    EH_MESSAGE("geoflow: benchmark done.");
+    GTimerStop("benchmark_timer");
 
     //***************************************************
     // Compare solution if required:
@@ -174,6 +177,7 @@ int main(int argc, char **argv)
     compare(ptree_, *grid_, pEqn_, t, utmp_, ub_, u_);
  
 #if defined(_G_USE_GPTL)
+    GComm::Synch();
 //  GPTLpr(myrank);
     GPTLpr_file("timings.txt");
     GPTLpr_summary(comm_);
@@ -383,19 +387,28 @@ void do_bench(GString fname, GSIZET ncyc)
 
     GINT   myrank   = GComm::WorldRank(comm_);
     GINT   ntasks   = GComm::WorldSize(comm_);
-    GINT   nthreads = 0;
+    GINT   nthreads = 1;
     GFTYPE dxmin, lmin;
     GFTYPE ttotal;
     GFTYPE tggfx;
     GFTYPE texch;
+    GFTYPE tgrid;
+    GFTYPE tggfxinit;
     std::ifstream itst;
     std::ofstream ios;
     GTVector<GSIZET> lsz(2), gsz(2);
 
-    // Get global no elements and dof:
+    #pragma omp parallel //num_threads(3)
+    {
+     nthreads = omp_get_num_threads();
+    }
+
+    // Get global no elements and dof & lengths:
     lsz[0] = grid_->nelems();
     lsz[1] = grid_->ndof();
     GComm::Allreduce(lsz.data(), gsz.data(), 2, T2GCDatatype<GSIZET>() , GC_OP_SUM, comm_);
+    dxmin = grid_->minnodedist();
+    lmin  = grid_->minlength();
     if ( myrank == 0 ) {
       itst.open(fname);
       ios.open(fname,std::ios_base::app);
@@ -410,7 +423,9 @@ void do_bench(GString fname, GSIZET ncyc)
         ios << "nthreads" << "  ";
         ios << "ttotal"   << "  ";
         ios << "tggfx"    << "  ";
-        ios << "texch"           ;
+        ios << "texch"    << "  ";
+        ios << "tgrid"    << "  ";
+        ios << "tggfxinit"       ;
         ios << endl;
       }
       itst.close();
@@ -418,20 +433,21 @@ void do_bench(GString fname, GSIZET ncyc)
       GPTLget_wallclock("time_loop"     , 0,  &ttotal); ttotal /= ncyc;
       GPTLget_wallclock("ggfx_doop"     , 0,  &tggfx ); tggfx  /= ncyc;
       GPTLget_wallclock("ggfx_doop_exch", 0,  &texch ); texch  /= ncyc;
+      GPTLget_wallclock("gen_grid"      , 0,  &tgrid); 
+      GPTLget_wallclock("init_ggfx_op"  , 0,  &tggfxinit); 
 
-      dxmin = grid_->minnodedist();
-      lmin  = grid_->minlength();
-  
       ios << gsz[0]          << "   " ;
       ios << gsz[1]          << "   " ;
       ios << dxmin           << "   " ;
       ios << lmin            << "   " ;
       ios << ntasks          << "   " ;
-      ios << nthreads        << "   ";
-      ios << ttotal          << "   ";
-      ios << tggfx           << "   ";
-      ios << texch                   ;
-      ios << endl;
+      ios << nthreads        << "   " ;
+      ios << ttotal          << "   " ;
+      ios << tggfx           << "   " ;
+      ios << texch           << "   " ;
+      ios << tgrid           << "   " ;
+      ios << tggfxinit                ;
+      ios << endl                     ;
 
       ios.close();
     }

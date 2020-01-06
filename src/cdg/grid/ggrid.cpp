@@ -79,14 +79,14 @@ void GGrid::do_typing()
   GSIZET *ind=NULLPTR;
   GSIZET  nd=0;
   GSIZET  nfound;
-  for ( GSIZET j=0; j<gelems_.size(); j++ ) itmp[j] = gelems_[j]->elemtype();
+  for ( auto j=0; j<gelems_.size(); j++ ) itmp[j] = gelems_[j]->elemtype();
 
   itype_.resize(GE_MAX);
   ntype_.resize(GE_MAX);
   ntype_ = 0;
-  for ( GSIZET j=0; j<GE_MAX; j++ ) {
+  for ( auto j=0; j<GE_MAX; j++ ) {
     nfound = itmp.contains(static_cast<GElemType>(j),ind,nd);
-    for ( GSIZET i=0; i<nfound; i++ ) itype_[j].push_back(ind[i]);
+    for ( auto i=0; i<nfound; i++ ) itype_[j].push_back(ind[i]);
     ntype_[j] = nfound;
   }
   if ( ind != NULLPTR ) delete [] ind;
@@ -582,7 +582,7 @@ void GGrid::def_geom_init()
    for ( GSIZET e=0; e<gelems_.size(); e++ ) {
      ibeg  = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
      ifbeg = gelems_[e]->ifbeg(); ifend = gelems_[e]->ifend();
-     ibbeg = gelems_[e]->ibbeg(); ibend = gelems_[e]->ibend();
+//   ibbeg = gelems_[e]->ibbeg(); ibend = gelems_[e]->ibend();
 
      xe    = &gelems_[e]->xNodes();
 
@@ -671,14 +671,14 @@ void GGrid::reg_geom_init()
    for ( GSIZET e=0; e<gelems_.size(); e++ ) {
      ibeg  = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
      ifbeg = gelems_[e]->ifbeg(); ifend = gelems_[e]->ifend();
-     ibbeg = gelems_[e]->ibbeg(); ibend = gelems_[e]->ibend();
+//   ibbeg = gelems_[e]->ibbeg(); ibend = gelems_[e]->ibend();
   
      xe    = &gelems_[e]->xNodes();
 
      // Restrict global data to local scope:
      for ( GSIZET j=0; j<nxy; j++ ) {
        faceNormal_[j].range(ifbeg, ifend); 
-       bdyNormal_ [j].range(ibbeg, ibend); 
+//     bdyNormal_ [j].range(ibbeg, ibend); 
      }
      for ( GSIZET j=0; j<dXidX_.size(2); j++ ) {
        for ( GSIZET i=0; i<dXidX_.size(1); i++ )  {
@@ -1121,11 +1121,24 @@ void GGrid::init_bc_info()
   // specification, for _each_ natural/canonical domain face:
   config_bdy(ptree_, igbdy_bydface_, igbdyt_bydface_);
 
+#if 0
+  // Do a consistency check of no. global bdy indices:
+  GSIZET nebdy=0;
+  for ( auto j=0; j<gelems_.size(); j++ ) { 
+    nebdy += gelems_[j]->bdy_indices().size();
+  }
+#endif
+
   // Flatten these 2 bdy index & types indirection arrays:
   GSIZET      nind=0, nw=0;
   for ( auto j=0; j<igbdy_bydface_.size(); j++ ) {
-    nind += igbdy_bydface_[j].size();
+    nind += igbdy_bydface_[j].size(); // by-domain-face
   }
+
+#if 0
+  assert(nebdy == nind && "Global bdy count inconsistent");
+#endif
+
   igbdy_ .resize(nind);
   igbdyt_.resize(nind);
   nind = 0;
@@ -1135,7 +1148,7 @@ void GGrid::init_bc_info()
       igbdyt_[nind++] = igbdyt_bydface_[j][i];
     }
   }
- 
+
 
   // Create bdy type bins (one bin for each GBdyType), and
   // for each type, set the indirection indices into global
@@ -1143,11 +1156,11 @@ void GGrid::init_bc_info()
   GBdyType         itype;
   GSIZET    *ind=NULLPTR;
   igbdy_binned_.resize(GBDY_MAX); // set of bdy indices for each type
-  for ( GSIZET k=0; k<GBDY_MAX; k++ ) { // cycle over each bc type
+  for ( auto k=0; k<GBDY_MAX; k++ ) { // cycle over each bc type
     itype = static_cast<GBdyType>(k);
     nind = igbdyt_.contains(itype, ind, nw);
     igbdy_binned_[k].resize(nind);
-    for ( GSIZET j=0; j<nind; j++ ) igbdy_binned_[k][j] = igbdy_[ind[j]];
+    for ( auto j=0; j<nind; j++ ) igbdy_binned_[k][j] = igbdy_[ind[j]];
     nind = 0;
   } // end, element loop
 

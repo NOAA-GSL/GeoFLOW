@@ -9,6 +9,7 @@
 #if !defined(GEOFLOW_CDG_MAIN_H)
 #define GEOFLOW_CDG_MAIN_H
 
+#include <omp.h>
 #include "gexec.h"
 #include "gtypes.h"
 #include <stdio.h>
@@ -44,7 +45,6 @@
 #include "tbox/input_manager.hpp"
 #if defined(_G_USE_GPTL)
   #include "gptl.h"
-  #include "gptlmpi.h"
 #endif
 
 using namespace geoflow::pdeint;

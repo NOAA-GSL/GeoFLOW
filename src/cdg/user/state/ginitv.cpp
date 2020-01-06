@@ -225,7 +225,7 @@ GBOOL impl_simpsum1d_box(const PropertyTree &ptree, GString &sconfig, GGrid &gri
 
   GINT         kdn, kup, pdef;
   GSIZET       nn ;
-  GFTYPE       E0, kn, L, p, x, y, z;
+  GFTYPE       E0, kn, knh, L, p, x, y, z;
   GFTYPE       phase1, phase2;
   GTPoint<GFTYPE>
                G0(2), G1(2);
@@ -263,13 +263,15 @@ GBOOL impl_simpsum1d_box(const PropertyTree &ptree, GString &sconfig, GGrid &gri
   *u[0] = 0.0;
   *u[1] = 0.0;
   for ( GINT k=kdn; k<=kup; k++ ) {
-    kn = 2.0*PI*static_cast<GFTYPE>(k)/L;
+    kn  = 2.0*PI*static_cast<GFTYPE>(k)/L;
+    knh = 2.0*PI*static_cast<GFTYPE>(k+0.5)/L;
     phase1 = (*distribution)(generator);
     phase2 = (*distribution)(generator);
     for ( GSIZET j=0; j<nn; j++ ) {
       x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; 
 //    (*u[0])[j] +=  (cos(kn*x+phase1) + sin(kn*x+phase2)) / pow(kn,p);
-      (*u[0])[j] +=  ( sin(kn*x+phase1) + 4.0*sin((kn+0.5)*x+phase2) ) / pow(kn,p);
+
+      (*u[0])[j] +=  ( sin(kn*x+phase1) + 4.0*sin(knh*x+phase2) ) / pow(kn,p);
     }
   }
   
@@ -308,15 +310,18 @@ GBOOL impl_simpsum_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
 
   GINT         kdn, kup, pdef;
   GSIZET       nn ;
-  GFTYPE       E0, kn, knx, kny, knz, L[3], p, x, y, z;
+  GFTYPE       E0, L[GDIM], p, x, y, z;
+  GFTYPE       kn, knx, kny, knz, knxh, knyh, knzh;
   GFTYPE       phase1, phase2, phase3;
   GTPoint<GFTYPE>
-               G0, G1;
+               G0(GDIM), G1(GDIM);
   PropertyTree vtree ;
   GTVector<GTVector<GFTYPE>>
               *xnodes = &grid.xNodes();
-  std::default_random_engine generator;
-  std::normal_distribution<GFTYPE> *distribution;
+  std::default_random_engine 
+               generator;
+  std::normal_distribution<GFTYPE> 
+              *distribution;
 
 #if defined(_G_IS3D)
   pdef = 2;
@@ -347,16 +352,18 @@ GBOOL impl_simpsum_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
   *u[0] = 0.0;
   *u[1] = 0.0;
   for ( GINT ky=kdn; ky<=kup; ky++ ) {
-    kny = 2.0*PI*static_cast<GFTYPE>(ky)/L[1];
+    kny  = 2.0*PI*static_cast<GFTYPE>(ky)/L[1];
+    knyh = 2.0*PI*static_cast<GFTYPE>(ky+0.5)/L[1];
     phase2 = (*distribution)(generator);
     for ( GINT kx=kdn; kx<=kup; kx++ ) {
-      knx = 2.0*PI*static_cast<GFTYPE>(kx)/L[0];
-      kn  = sqrt(knx*knx + kny*kny);
+      knx    = 2.0*PI*static_cast<GFTYPE>(kx)/L[0];
+      knxh   = 2.0*PI*static_cast<GFTYPE>(kx+0.5)/L[0];
+      kn     = sqrt(knx*knx + kny*kny);
       phase1 = (*distribution)(generator);
       for ( GSIZET j=0; j<nn; j++ ) {
         x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; 
-        (*u[0])[j] +=  ( sin(knx*x+phase1) + 4.0*sin((kn+0.5)*x+phase1) ) / pow(kn,p);
-        (*u[1])[j] +=  ( sin(kny*y+phase2) + 4.0*sin((kn+0.5)*y+phase2) ) / pow(kn,p);
+        (*u[0])[j] +=  ( sin(knx*x+phase1) + 4.0*sin(knxh*x+phase1) ) / pow(kn,p);
+        (*u[1])[j] +=  ( sin(kny*y+phase2) + 4.0*sin(knyh*y+phase2) ) / pow(kn,p);
       }
     }
   }
@@ -371,18 +378,21 @@ GBOOL impl_simpsum_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
   *u[2] = 0.0;
   for ( GINT m=0; m<3; m++ ) {
     for ( GINT kz=kdn; kz<=kup; kz++ ) {
-      knz = 2.0*PI*static_cast<GFTYPE>(zy)/L[2];
+      knz  = 2.0*PI*static_cast<GFTYPE>(kz)/L[2];
+      knzh = 2.0*PI*static_cast<GFTYPE>(kz+0.5)/L[2];
       phase3 = (*distribution)(generator);
       for ( GINT ky=kdn; ky<=kup; ky++ ) {
-        kny = 2.0*PI*static_cast<GFTYPE>(ky)/L[1];
+        kny  = 2.0*PI*static_cast<GFTYPE>(ky)/L[1];
+        knyh = 2.0*PI*static_cast<GFTYPE>(ky+0.5)/L[1];
         phase2 = (*distribution)(generator);
         for ( GINT kx=kdn; kx<=kup; kx++ ) {
-          knx = 2.0*PI*static_cast<GFTYPE>(kx)/L[0];
+          knx  = 2.0*PI*static_cast<GFTYPE>(kx)/L[0];
+          knxh = 2.0*PI*static_cast<GFTYPE>(kx+0.5)/L[0];
           kn  = sqrt(knx*knx + kny*kny + knz*knz);
           phase1 = (*distribution)(generator);
           for ( GSIZET j=0; j<nn; j++ ) {
-            x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (xnodes)[2][j];
-            (*u[m])[j] +=  ( sin(knx*x+phase1) + 4.0*sin((kny+0.5)*y+phase2) + 2.0* sin((knz+0.25)*z+phase3) ) / pow(kn,p);
+            x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
+            (*u[m])[j] +=  ( sin(knx*x+phase1) + 4.0*sin(knyh*y+phase2) + 2.0* sin(knzh*z+phase3) ) / pow(kn,p);
           }
         }
       }

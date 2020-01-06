@@ -559,7 +559,7 @@ T &GTVector<T>::back() const
 template<class T> 
 T *GTVector<T>::data() 
 {
-  return data_+gindex_.beg();
+  return data_; //+gindex_.beg();
 } // end, method data 
 
 
@@ -573,7 +573,7 @@ T *GTVector<T>::data()
 template<class T> 
 const T *GTVector<T>::data() const 
 {
-  return data_+gindex_.beg();
+  return data_ ; //gindex_.beg();
 } // end, method data (const)
 
 
@@ -1576,7 +1576,7 @@ GTVector<T>::multiplicity(T val, GSIZET *&index, GSIZET &n)
 //assert(std::is_arithmetic<T>::value || std::is_arithmetic<T>::value || std::is_pointer<T>::value &&
 //  "Invalid template type: multiplicity(T,GSIZET*,GSIZET&)");
 
-  GLLONG  m=0;
+  GLLONG m=0;
   GSIZET mult=0;
 
   for ( GLLONG i=this->gindex_.beg(); i<=this->gindex_.end(); i+=this->gindex_.stride() ) {
@@ -1968,29 +1968,27 @@ GTVector<T>::contains_ceil(T val, GSIZET  &iwhere, T ceil, GSIZET istart)
 //                    the distinct values. Must be dimensioned >= any possible nd,
 //                    as no checking is done. This array is deleted and re-allocated.
 //          nd      : number of distinct values. nd=0 is not considered an error
+//          tunique : tmp array of type T, of size at least of size()
+//          itmp    : tmp array of type GSIZET, of size at least of size()
 // RETURNS    :  TRUE on success; else FALSE 
 //**********************************************************************************
 #pragma acc routine vector
 template<class T>
 GSIZET
 GTVector<T>::distinctrng(GSIZET ibeg, GSIZET n, GSIZET is, T *&vals,
-                                GSIZET *&indices, GSIZET  &nd)
+                         GSIZET *&indices, GSIZET  &nd, T * const &tunique, GSIZET * const &itmp)
 {
 
   GLLONG i, j, nfound;
   GBOOL bcont;
 
-  T tunique[this->n_];
-  GSIZET itmp[this->n_]; 
-
   // This is the brute-force method, and is _slow_
   nfound = 0;
   for ( i=this->gindex_.beg()+ibeg; i<this->gindex_.beg()+ibeg+n && i<=this->gindex_.end(); i+=this->gindex_.stride()+is-1 ) {
     bcont = FALSE;
-    for ( j=0; j<nfound;j++ ) {
-      if ( this->data_[i] == tunique[j] ) break;
+    for ( j=0; j<nfound && !bcont;j++ ) {
+      bcont = this->data_[i] == tunique[j];
     }
-    if ( j < nfound ) bcont= TRUE; // contained in tunique
 
     if ( !bcont ) { // if not in unique buff, add it:
       itmp   [nfound] = i;
@@ -2032,29 +2030,28 @@ GTVector<T>::distinctrng(GSIZET ibeg, GSIZET n, GSIZET is, T *&vals,
 //                    the distinct values. Must be dimensioned >= any possible nd,
 //                    as no checking is done. This array is deleted and re-allocated.
 //          nd      : number of distinct values. nd=0 is not considered an error
+//          tunique : tmp array of type T, of size at least of size()
+//          itmp    : tmp array of type GSIZET, of size at least of size()
 // RETURNS    :  TRUE on success; else FALSE 
 //**********************************************************************************
 #pragma acc routine vector
 template<class T>
 GSIZET
 GTVector<T>::distinctrng(GSIZET ibeg, GSIZET n, GSIZET is,
-                                GSIZET *&indices, GSIZET  &nd)
+                         GSIZET *&indices, GSIZET  &nd,
+                         T * const &tunique, GSIZET * const &itmp)
 {
 
   GLLONG i, j, nfound;
   GBOOL bcont;
 
-  GSIZET tunique[this->n_];
-  GSIZET itmp[this->n_]; 
-
   // This is the brute-force method, and is _slow_
   nfound = 0;
   for ( i=this->gindex_.beg()+ibeg; i<this->gindex_.beg()+ibeg+n && i<=this->gindex_.end(); i+=this->gindex_.stride()+is-1 ) {
     bcont = FALSE;
-    for ( j=0; j<nfound; j++ ) {
-      if ( this->data_[i] == tunique[j] ) break;
+    for ( j=0; j<nfound && !bcont; j++ ) {
+      bcont = this->data_[i] == tunique[j];
     }
-    if ( j < nfound ) bcont= TRUE; // contained in tunique
 
     if ( !bcont ) { // if not in unique buff, add it:
       itmp   [nfound] = i;
@@ -2094,30 +2091,28 @@ GTVector<T>::distinctrng(GSIZET ibeg, GSIZET n, GSIZET is,
 //                    Must be deleted by caller.
 //          nd      : number of distinct values. nd=0 is not considered an error
 //          floor   : s.t. vals > floor
+//          tunique : tmp array of type T, of size at least size()
+//          itmp    : tmp array of type GSIZET, of size at least size()
 // RETURNS    :  number distinct values found
 //**********************************************************************************
 #pragma acc routine vector
 template<class T>
 GSIZET
 GTVector<T>::distinctrng_floor(GSIZET ibeg, GSIZET n, GSIZET is, T *&vals,
-                                      GSIZET *&indices, GSIZET  &nd, T floor)
+                               GSIZET *&indices, GSIZET  &nd, T floor, 
+                               T * const &tunique, GSIZET * const &itmp)
 {
-
   GLLONG i, j, nfound;
   GBOOL bcont;
-
-  T tunique[this->n_];
-  GSIZET itmp[this->n_]; 
 
   // This is the brute-force method, and is _slow_
   nfound = 0;
   for ( i=this->gindex_.beg()+ibeg; i<this->gindex_.beg()+ibeg+n && i<=this->gindex_.end(); i+=this->gindex_.stride()+is-1 ) {
     if ( this->data_[i] <= floor ) continue;
     bcont = FALSE;
-    for ( j=0; j<nfound; j++ ) {
-      if ( this->data_[i] == tunique[j] ) break;
+    for ( j=0; j<nfound && !bcont; j++ ) {
+      bcont = this->data_[i] == tunique[j];
     }
-    if ( j < nfound ) bcont= TRUE; // contained in tunique
 
     if ( !bcont ) { // if not in unique buff, add it:
       itmp   [nfound] = i;
@@ -2162,31 +2157,30 @@ GTVector<T>::distinctrng_floor(GSIZET ibeg, GSIZET n, GSIZET is, T *&vals,
 //                    Must be deleted by caller.
 //          nd      : number of distinct values. nd=0 is not considered an error
 //          floor   : s.t. vals > floor
+//          tunique : tmp array of type T, of size at least of size()
+//          itmp    : tmp array of type GSIZET, of size at least of size()
 // RETURNS    :  number distinct values found
 //**********************************************************************************
 #pragma acc routine vector
 template<class T>
 GSIZET
 GTVector<T>::distinctrng_floor(GSIZET ibeg, GSIZET n, GSIZET is, 
-                                      GSIZET *&indices, GSIZET  &nd, T floor)
+                               GSIZET *&indices, GSIZET  &nd, T floor,
+                               T * const &tunique, GSIZET * const &itmp)
 {
 
   GLLONG i, j, nfound;
   GBOOL bcont;
-
-  GSIZET tunique[this->n_];
-  GSIZET itmp[this->n_]; 
 
   // This is the brute-force method, and is _slow_
   nfound = 0;
   for ( i=this->gindex_.beg()+ibeg; i<this->gindex_.beg()+n; i+=is+this->gindex_.stride()-1 ) {
     if ( this->data_[i] <= floor ) continue;
     bcont = FALSE;
-    for ( j=0; j<nfound;j++ ) {
-      if ( this->data_[i] == tunique[j] ) break;
+    for ( j=0; j<nfound && !bcont; j++ ) {
+      bcont = this->data_[i] == tunique[j];
     }
-    if ( j < nfound ) bcont= TRUE; // contained in tunique
-
+    
     if ( !bcont ) { // if not in unique buff, add it:
       itmp   [nfound] = i;
       tunique[nfound] = this->data_[i];
@@ -2218,15 +2212,18 @@ GTVector<T>::distinctrng_floor(GSIZET ibeg, GSIZET n, GSIZET is,
 //                    the distinct values. Must be dimensioned >= any possible nd,
 //                    as no checking is done. This array is deleted and re-allocated.
 //          nd      : number of distinct values. nd=0 is not considered an error
+//          tunique : tmp array of type T, of size at least of size()
+//          itmp    : tmp array of type GSIZET, of size at least of size()
 // RETURNS    :  no. distinct elements
 //**********************************************************************************
 #pragma acc routine vector
 template<class T>
 GSIZET
-GTVector<T>::distinct(GSIZET  *&indices, GSIZET  &nd)
+GTVector<T>::distinct(GSIZET  *&indices, GSIZET  &nd, 
+                      T * const &tunique, GSIZET *const &itmp)
 {
 
-  GSIZET n = distinctrng(this->gindex_.beg(), this->gindex_.end()-this->gindex_.end()+1, 1, indices, nd);
+  GSIZET n = distinctrng(this->gindex_.beg(), this->gindex_.end()-this->gindex_.end()+1, 1, indices, nd, tunique, itmp);
 
   return n; 
 
@@ -2243,19 +2240,22 @@ GTVector<T>::distinct(GSIZET  *&indices, GSIZET  &nd)
 // ARGS   : indices : GTVector containing indices into the buffer which contain
 //                    the distinct values. Must be dimensioned >= any possible nd,
 //                    as no checking is done. This array is deleted and re-allocated.
-//          nd      : number of distinct values. nd=0 is not considered an error
-//         floor   : min value; s.t. distinct value is >= floor
-// RETURNS :  TRUE on success; else FALSE 
+//          nd      : size of 'indices' array; modified as necessary
+//          floor   : min value; s.t. distinct value is >= floor
+//          tunique : tmp array of type T, of size at least of size()
+//          itmp    : tmp array of type GSIZET, of size at least of size()
+// RETURNS :  no. distinct elements
 //**********************************************************************************
 #pragma acc routine vector
 template<class T>
 GSIZET
-GTVector<T>::distinct_floor(GSIZET  *&indices, GSIZET  &nd, T floor)
+GTVector<T>::distinct_floor(GSIZET  *&indices, GSIZET  &nd, 
+                            T floor, T * const &tunique, GSIZET * const &itmp)
 {
   assert(std::is_arithmetic<T>::value || std::is_arithmetic<T>::value &&
     "Invalid template type: distinct_floor(GSIZET*, GSIZET&, T)");
 
-  GSIZET n = distinctrng_floor(this->gindex_.beg(), this->gindex_.end()-this->gindex_.end()+1, 1, indices, nd, floor);
+  GSIZET n = distinctrng_floor(this->gindex_.beg(), this->gindex_.end(), 1, indices, nd, floor, tunique, itmp);
 
   return n;
 } // end of method distinct_floor

@@ -19,6 +19,8 @@
 // Comm Datatypes
 //--------------------------------------------------------------------------------
 #if defined(_G_USE_MPI)
+#include <stdint.h>
+#include <limits.h>
 #include "mpi.h"
 
 #define GC_COMM         MPI_Comm
@@ -28,6 +30,20 @@
 #define GCommDatatype   MPI_Datatype
 #define AGINT           MPI_Aint
 
+#if SIZE_MAX == UCHAR_MAX
+   #define my_MPI_SIZE_T MPI_UNSIGNED_CHAR
+#elif SIZE_MAX == USHRT_MAX
+   #define my_MPI_SIZE_T MPI_UNSIGNED_SHORT
+#elif SIZE_MAX == UINT_MAX
+   #define my_MPI_SIZE_T MPI_UNSIGNED
+#elif SIZE_MAX == ULONG_MAX
+   #define my_MPI_SIZE_T MPI_UNSIGNED_LONG
+#elif SIZE_MAX == ULLONG_MAX
+   #define my_MPI_SIZE_T MPI_UNSIGNED_LONG_LONG
+#else
+   #error "what is happening here?"
+#endif
+
 //  Just take the MPI defs...
 //   NOTE: Make sure there is a 1-to-1 correspondence
 //         between these types, and GD_**** types in gtypes.h:
@@ -35,7 +51,7 @@ const GCommDatatype GC_DATATYPE[] =
                         {MPI_BYTE     , MPI_C_BOOL            , MPI_UNSIGNED_CHAR, MPI_BYTE              ,
                          MPI_SHORT    , MPI_UNSIGNED_SHORT    , MPI_INT          , MPI_UNSIGNED          ,
                          MPI_LONG     , MPI_UNSIGNED_LONG     , MPI_LONG_LONG    , MPI_INT               ,
-                         MPI_LONG     , MPI_UNSIGNED_LONG_LONG, MPI_LONG_LONG    , MPI_UNSIGNED_LONG_LONG,
+                         MPI_LONG     , MPI_UNSIGNED_LONG_LONG, MPI_LONG_LONG    , my_MPI_SIZE_T         ,
                          MPI_LONG_LONG, MPI_FLOAT             , MPI_DOUBLE       , MPI_LONG_DOUBLE       };
 
 // Make sure there is a 1-1 corresp between GC_Optype and GC_OP
