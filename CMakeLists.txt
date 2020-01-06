@@ -9,6 +9,8 @@ cmake_minimum_required(VERSION 3.1.0 FATAL_ERROR)
 # Default: 
 # > cmake -D GCONF=default ..
 #
+
+
 set(GCONF "default" CACHE STRING "Default GeoFLOW Configuration File")
 set(GCONF_FILE "${CMAKE_SOURCE_DIR}/cmake/build.${GCONF}")
 message("Loading Configuration -> ${GCONF_FILE}")
