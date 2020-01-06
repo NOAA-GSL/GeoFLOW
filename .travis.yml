@@ -36,6 +36,8 @@ before_script:
   - export BUILD_TYPE=complete
   - export LIBRARY_NAME=versioned
   - ./bootstrap.sh --with-toolset=${TOOLSET} --with-libraries=${BUILD_LIBS} --prefix=${INSTALL_LOC} &> /dev/null
+  - printf "\n# MPI Compiler Details\n"          >> project-config.jam
+  - printf "using mpi : %s ;\n" "${MPI_WRAPPER}" >> project-config.jam
   - ./b2 -j ${NPROC} install --build-type=${BUILD_TYPE} --layout=${LIBRARY_NAME} --target=${LIBRARY_TARGETS} &> /dev/null
   - popd
 env:
