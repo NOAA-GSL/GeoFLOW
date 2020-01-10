@@ -29,4 +29,3 @@ NOTES:
     In the case of template classes, this would, e.g., also contain
     those methods that are fully specialized (e.g., as in GTVector).
     
-
