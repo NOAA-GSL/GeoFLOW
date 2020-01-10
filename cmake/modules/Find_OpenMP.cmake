@@ -1,5 +1,5 @@
 #
-# OpenMP
+# Find OpenMP Compiler Features
 # 
 # Find and configure for OpenMP usage
 #
@@ -55,7 +55,6 @@ if(NOT TARGET OpenMP::OpenMP_C)
     add_library(OpenMP::OpenMP_C IMPORTED INTERFACE)
     set_property(TARGET OpenMP::OpenMP_C
                  PROPERTY INTERFACE_COMPILE_OPTIONS ${OpenMP_C_FLAGS})
-    # Only works if the same flag is passed to the linker; use CMake 3.9+ otherwise (Intel, AppleClang)
     set_property(TARGET OpenMP::OpenMP_C
                  PROPERTY INTERFACE_LINK_LIBRARIES ${OpenMP_C_FLAGS} Threads::Threads)
 endif()
@@ -65,7 +64,6 @@ if(NOT TARGET OpenMP::OpenMP_CXX)
     add_library(OpenMP::OpenMP_CXX IMPORTED INTERFACE)
     set_property(TARGET OpenMP::OpenMP_CXX
                  PROPERTY INTERFACE_COMPILE_OPTIONS ${OpenMP_CXX_FLAGS})
-    # Only works if the same flag is passed to the linker; use CMake 3.9+ otherwise (Intel, AppleClang)
     set_property(TARGET OpenMP::OpenMP_CXX
                  PROPERTY INTERFACE_LINK_LIBRARIES ${OpenMP_CXX_FLAGS} Threads::Threads)
 endif()
@@ -75,7 +73,6 @@ if(NOT TARGET OpenMP::OpenMP_Fortran)
     add_library(OpenMP::OpenMP_Fortran IMPORTED INTERFACE)
     set_property(TARGET OpenMP::OpenMP_Fortran
                  PROPERTY INTERFACE_COMPILE_OPTIONS ${OpenMP_Fortran_FLAGS})
-    # Only works if the same flag is passed to the linker; use CMake 3.9+ otherwise (Intel, AppleClang)
     set_property(TARGET OpenMP::OpenMP_Fortran
                  PROPERTY INTERFACE_LINK_LIBRARIES ${OpenMP_Fortran_FLAGS} Threads::Threads)
 endif()
