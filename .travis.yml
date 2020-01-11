@@ -29,10 +29,9 @@ before_script:
   - export CC=mpicc
   - export FC=mpif90
   - export CXX=mpicxx
-  - export CPPFLAGS='-I/usr/include'
   - wget https://dl.bintray.com/boostorg/release/1.72.0/source/boost_1_72_0.tar.gz
   - tar -xzf boost_1_72_0.tar.gz
-  - pushd boost_1_72_0
+  - cd boost_1_72_0
   - export TOOLSET=gcc
   - export MPI_WRAPPER=${CXX}
   - export NPROC=12
@@ -40,7 +39,6 @@ before_script:
   - export BUILD_LIBS=mpi,serialization
   - ./bootstrap.sh --with-toolset=${TOOLSET} --with-libraries=${BUILD_LIBS} --prefix=${INSTALL_LOC}
   - ./b2 -j ${NPROC} install
-  - popd
 env:
   global:
     - CC=mpicc
@@ -52,11 +50,6 @@ env:
   
 script:
   - pwd
-  - ls /home/travis/build/NOAA-GSD
-  - ls /home/travis/build/NOAA-GSD/boost_1_72_0
-  - ls /home/travis/build/NOAA-GSD/boost_1_72_0/gcc
-  - ls /home/travis/build/NOAA-GSD/boost_1_72_0/gcc/include
-  - ls /home/travis/build/NOAA-GSD/boost_1_72_0/gcc/lib
   - cd ${GEOFLOW_DIR}
   - pwd
   - mkdir -p build
@@ -64,7 +57,6 @@ script:
   - pwd
   - ls
   - export BOOST_ROOT=${BASE_DIR}/boost_1_72_0/gcc
-  - export CPLUS_INCLUDE_PATH=${BOOST_ROOT}/include:${CPLUS_INCLUDE_PATH}
   - cmake -DBOOST_ROOT=boost_1_72_0/gcc -DBoost_INCLUDE_DIR=${BOOST_ROOT}/include ..
 #  - make VERBOSE=1
 #  - make tests VERBOSE=1
