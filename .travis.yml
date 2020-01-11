@@ -44,6 +44,7 @@ before_script:
 env:
   global:
     - CC=mpicc
+    - CXX=mpicxx
     - FC=mpif90
     - CPPFLAGS='-I/usr/include'
     - CFLAGS='-std=c99'
