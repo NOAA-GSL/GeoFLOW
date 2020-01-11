@@ -51,6 +51,12 @@ env:
     - LDFLAGS='-L/usr/lib'
   
 script:
+  - pwd
+  - ls /home/travis/build/NOAA-GSD/GeoFLOW
+  - ls /home/travis/build/NOAA-GSD/GeoFLOW/boost_1_72_0
+  - ls /home/travis/build/NOAA-GSD/GeoFLOW/boost_1_72_0/gcc
+  - ls /home/travis/build/NOAA-GSD/GeoFLOW/boost_1_72_0/gcc/include
+  - ls /home/travis/build/NOAA-GSD/GeoFLOW/boost_1_72_0/gcc/include/boost
   - mkdir -p build
   - cd build
   - pwd
