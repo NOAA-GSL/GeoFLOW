@@ -56,8 +56,7 @@ script:
   - cd build
   - pwd
   - ls
-  - export BOOST_ROOT=${BASE_DIR}/boost_1_72_0/gcc
-  - cmake -DBOOST_ROOT=boost_1_72_0/gcc ..
+  - cmake -DBOOST_ROOT=${BASE_DIR}/boost_1_72_0/gcc ..
   - make VERBOSE=1
 #  - make tests VERBOSE=1
 #  - make test VERBOSE=1
