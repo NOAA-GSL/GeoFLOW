@@ -35,11 +35,12 @@ before_script:
   - export NPROC=12
   - export INSTALL_LOC=`pwd`/gcc
   - export BUILD_LIBS=mpi,serialization
-  - export LIBRARY_TARGETS=shared,static
-  - export BUILD_TYPE=complete
-  - export LIBRARY_NAME=system
-  - ./bootstrap.sh --with-toolset=${TOOLSET} --with-libraries=${BUILD_LIBS} --prefix=${INSTALL_LOC}
-  - ./b2 -j ${NPROC} install --build-type=${BUILD_TYPE} --layout=${LIBRARY_NAME} --target=${LIBRARY_TARGETS}
+#  - export LIBRARY_TARGETS=shared,static
+#  - export BUILD_TYPE=complete
+#  - export LIBRARY_NAME=versioned
+   - ./bootstrap.sh --with-toolset=${TOOLSET} --with-libraries=${BUILD_LIBS} --prefix=${INSTALL_LOC}
+#  - ./b2 -j ${NPROC} install --build-type=${BUILD_TYPE} --layout=${LIBRARY_NAME} --target=${LIBRARY_TARGETS}
+  - ./b2 -j ${NPROC} install
   - popd
 env:
   global:
