@@ -23,31 +23,6 @@ find_package(OpenMP REQUIRED)
 LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules/)
 	
 #
-# Report what we found
-#
-message("")
-message("OpenMP Found          = ${OpenMP_FOUND}")
-message("OpenMP Version        = ${OpenMP_VERSION}")
-message("")
-message("C")
-message(" - Found      = ${OpenMP_C_FOUND}")
-message(" - Comp Flags = ${OpenMP_C_FLAGS}")
-message(" - Lib Names  = ${OpenMP_C_LIB_NAMES}")
-message(" - Libraries  = ${OpenMP_C_LIBRARIES}")
-message("C++")
-message(" - Found      = ${OpenMP_CXX_FOUND}")
-message(" - Comp Flags = ${OpenMP_CXX_FLAGS}")
-message(" - Lib Names  = ${OpenMP_CXX_LIB_NAMES}")
-message(" - Libraries  = ${OpenMP_CXX_LIBRARIES}")
-message("Fortran:")
-message(" - Found      = ${OpenMP_Fortran_FOUND}")
-message(" - Comp Flags = ${OpenMP_Fortran_FLAGS}")
-message(" - Lib Names  = ${OpenMP_Fortran_LIB_NAMES}")
-message(" - Libraries  = ${OpenMP_Fortran_LIBRARIES}")
-message(" - omp_lib.h  = ${OpenMP_Fortran_HAVE_OMPLIB_HEADER}")
-message(" - omp_lib    = ${OpenMP_Fortran_HAVE_OMPLIB_MODULE}")
-
-#
 # For CMake < 3.9, we need to make the target ourselves
 #
 if(NOT TARGET OpenMP::OpenMP_C)
@@ -76,6 +51,33 @@ if(NOT TARGET OpenMP::OpenMP_Fortran)
     set_property(TARGET OpenMP::OpenMP_Fortran
                  PROPERTY INTERFACE_LINK_LIBRARIES ${OpenMP_Fortran_FLAGS} Threads::Threads)
 endif()
+
+#
+# Report what we found
+#
+if(CMAKE_VERBOSE_MAKEFILE)
+message("")
+message("OpenMP Found          = ${OpenMP_FOUND}")
+message("OpenMP Version        = ${OpenMP_VERSION}")
+message("")
+message("C")
+message(" - Found      = ${OpenMP_C_FOUND}")
+message(" - Comp Flags = ${OpenMP_C_FLAGS}")
+message(" - Lib Names  = ${OpenMP_C_LIB_NAMES}")
+message(" - Libraries  = ${OpenMP_C_LIBRARIES}")
+message("C++")
+message(" - Found      = ${OpenMP_CXX_FOUND}")
+message(" - Comp Flags = ${OpenMP_CXX_FLAGS}")
+message(" - Lib Names  = ${OpenMP_CXX_LIB_NAMES}")
+message(" - Libraries  = ${OpenMP_CXX_LIBRARIES}")
+message("Fortran:")
+message(" - Found      = ${OpenMP_Fortran_FOUND}")
+message(" - Comp Flags = ${OpenMP_Fortran_FLAGS}")
+message(" - Lib Names  = ${OpenMP_Fortran_LIB_NAMES}")
+message(" - Libraries  = ${OpenMP_Fortran_LIBRARIES}")
+message(" - omp_lib.h  = ${OpenMP_Fortran_HAVE_OMPLIB_HEADER}")
+message(" - omp_lib    = ${OpenMP_Fortran_HAVE_OMPLIB_MODULE}")
+endif(CMAKE_VERBOSE_MAKEFILE)
 
 endif(USE_OPENMP)
 

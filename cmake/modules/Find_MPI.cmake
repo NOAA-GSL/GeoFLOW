@@ -27,6 +27,45 @@ message("")
 message("--------------------- MPI Libraries ------------------------")
 
 #
+# Determine if existing CC, CXX, FC compiler is capable of compiling 
+# MPI code
+#
+include(CheckCSourceCompiles)
+CHECK_C_SOURCE_COMPILES(
+"
+#include <mpi.h>
+int main() {
+    MPI_Init(NULL, NULL);
+    MPI_Finalize();
+    return 0;
+}
+"
+CC_IS_MPI_WRAPPER)
+
+include(CheckCXXSourceCompiles)
+CHECK_CXX_SOURCE_COMPILES(
+"
+#include <mpi.h>
+int main() {
+    MPI_Init(NULL, NULL);
+    MPI_Finalize();
+    return 0;
+}
+"
+CXX_IS_MPI_WRAPPER)
+
+include(CheckFortranSourceCompiles)
+check_fortran_source_compiles(
+"
+integer :: ierr
+include 'mpif.h'
+call mpi_init(ierr)
+call mpi_finalize(ierr)
+end
+"
+FC_IS_WRAPPER SRC_EXT F90)
+
+#
 # First attempt to use the CMake tools to locate the library
 # - Disable ${CMAKE_SOURCE_DIR}/cmake/modules for module lookup
 # - Use CMake built in script
@@ -34,6 +73,37 @@ message("--------------------- MPI Libraries ------------------------")
 LIST(REMOVE_ITEM CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules/)
 find_package(MPI REQUIRED)
 LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules/)
+
+
+# For supporting CMake < 3.9:
+if(NOT TARGET MPI::MPI_C)
+	add_library(MPI::MPI_C IMPORTED INTERFACE)
+    set_property(TARGET MPI::MPI_C
+                 PROPERTY INTERFACE_COMPILE_OPTIONS ${MPI_C_COMPILE_OPTIONS})
+    set_property(TARGET MPI::MPI_C
+                 PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${MPI_C_INCLUDE_DIRS}")
+    set_property(TARGET MPI::MPI_C
+                 PROPERTY INTERFACE_LINK_LIBRARIES ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES})
+endif()
+if(NOT TARGET MPI::MPI_CXX)
+	add_library(MPI::MPI_CXX IMPORTED INTERFACE)
+    set_property(TARGET MPI::MPI_CXX
+                 PROPERTY INTERFACE_COMPILE_OPTIONS ${MPI_CXX_COMPILE_OPTIONS})
+    set_property(TARGET MPI::MPI_CXX
+                 PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${MPI_CXX_INCLUDE_DIRS}")
+    set_property(TARGET MPI::MPI_CXX
+                 PROPERTY INTERFACE_LINK_LIBRARIES ${MPI_CXX_LINK_FLAGS} ${MPI_CXX_LIBRARIES})
+endif()
+if(NOT TARGET MPI::MPI_Fortran)
+	add_library(MPI::MPI_Fortran IMPORTED INTERFACE)
+    set_property(TARGET MPI::MPI_Fortran
+                 PROPERTY INTERFACE_COMPILE_OPTIONS ${MPI_Fortran_COMPILE_OPTIONS})
+    set_property(TARGET MPI::MPI_Fortran
+                 PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${MPI_Fortran_INCLUDE_DIRS}")
+    set_property(TARGET MPI::MPI_Fortran
+                 PROPERTY INTERFACE_LINK_LIBRARIES ${MPI_Fortran_LINK_FLAGS} ${MPI_Fortran_LIBRARIES})
+endif()
+
 
 #
 # Report what we found
@@ -68,34 +138,5 @@ message(" - Include Dir = ${MPI_Fortran_INCLUDE_DIRS}")
 message(" - Link Flags  = ${MPI_Fortran_LINK_FLAGS}")
 message(" - Libraries   = ${MPI_Fortran_LIBRARIES}")
 endif(CMAKE_VERBOSE_MAKEFILE)
-
-# For supporting CMake < 3.9:
-if(NOT TARGET MPI::MPI_C)
-	add_library(MPI::MPI_C IMPORTED INTERFACE)
-    set_property(TARGET MPI::MPI_C
-                 PROPERTY INTERFACE_COMPILE_OPTIONS ${MPI_C_COMPILE_OPTIONS})
-    set_property(TARGET MPI::MPI_C
-                 PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${MPI_C_INCLUDE_DIRS}")
-    set_property(TARGET MPI::MPI_C
-                 PROPERTY INTERFACE_LINK_LIBRARIES ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES})
-endif()
-if(NOT TARGET MPI::MPI_CXX)
-	add_library(MPI::MPI_CXX IMPORTED INTERFACE)
-    set_property(TARGET MPI::MPI_CXX
-                 PROPERTY INTERFACE_COMPILE_OPTIONS ${MPI_CXX_COMPILE_OPTIONS})
-    set_property(TARGET MPI::MPI_CXX
-                 PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${MPI_CXX_INCLUDE_DIRS}")
-    set_property(TARGET MPI::MPI_CXX
-                 PROPERTY INTERFACE_LINK_LIBRARIES ${MPI_CXX_LINK_FLAGS} ${MPI_CXX_LIBRARIES})
-endif()
-if(NOT TARGET MPI::MPI_Fortran)
-	add_library(MPI::MPI_Fortran IMPORTED INTERFACE)
-    set_property(TARGET MPI::MPI_Fortran
-                 PROPERTY INTERFACE_COMPILE_OPTIONS ${MPI_Fortran_COMPILE_OPTIONS})
-    set_property(TARGET MPI::MPI_Fortran
-                 PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${MPI_Fortran_INCLUDE_DIRS}")
-    set_property(TARGET MPI::MPI_Fortran
-                 PROPERTY INTERFACE_LINK_LIBRARIES ${MPI_Fortran_LINK_FLAGS} ${MPI_Fortran_LIBRARIES})
-endif()
 
 endif(USE_MPI)
