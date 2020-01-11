@@ -38,7 +38,7 @@ before_script:
   - export INSTALL_LOC=`pwd`/gcc
   - export BUILD_LIBS=mpi,serialization
   - ./bootstrap.sh --with-toolset=${TOOLSET} --with-libraries=${BUILD_LIBS} --prefix=${INSTALL_LOC}
-  - "echo using mpi : mpicxx ;" >> project-config.jam
+  - "echo using mpi : mpicxx ; >> project-config.jam"
   - ./b2 -j ${NPROC} install
 env:
   global:
