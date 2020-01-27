@@ -70,7 +70,23 @@ public:
 	 */
 	static PropertyTree getInputPropertyTree();
 
-
+	/**
+	 * Access method for the parsed command line arguments held by the InputManager.
+	 * Inputs are read from the command line and held within the map.
+	 * This method returns the CommandLine, allowing any class
+	 * to access the information inside it using the CommandLine interface.
+	 * For example, the following could appear in a class:
+	 *
+	 *  // Get Command Line args
+	 *  auto command_line = InputManager::getInputCommandLine();
+	 *
+	 *  // Test if "-b" or "--bench" was passed
+	 *  bool bench_requested = command_line.exists("b","bench");
+	 *
+	 *  // Get -i or --input with default argument
+	 *  std::string name = command_line.get("i","input","def_arg");
+	 *
+	 */
 	static CommandLine getInputCommandLine();
 
 
