@@ -14,6 +14,7 @@ namespace geoflow {
 namespace tbox {
 
 PropertyTree InputManager::ptree_;
+CommandLine  InputManager::cline_;
 
 //
 // TODO: Remove the -h requirement
