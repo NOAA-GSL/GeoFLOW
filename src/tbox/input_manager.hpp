@@ -11,6 +11,7 @@
 #include <string>
 
 #include "tbox/property_tree.hpp"
+#include "tbox/command_line.hpp"
 
 
 namespace geoflow {
@@ -70,12 +71,16 @@ public:
 	static PropertyTree getInputPropertyTree();
 
 
+	static CommandLine getInputCommandLine();
+
+
 	InputManager(const InputManager&)    = delete; // Don't allow copy
 	void operator=(const InputManager&)  = delete; // Don't allow assign
 
 private:
 
 	static PropertyTree ptree_;
+	static CommandLine  cline_;
 
 	// Load data from the specified input file.
 	static void loadInputFile(const std::string& filename);
