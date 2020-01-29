@@ -9,7 +9,7 @@ set(test_cdg_files
 		  gtest_blas.cpp    
 		  gtest_ggfx.cpp
 		  gtest_gmtk.cpp
-		  gtest_mass.cpp
+		# gtest_mass.cpp
 		# gtest_advect.cpp  # Only compiles with GPTL
 		# gtest_binding.cpp
 		# gtest_burgers.cpp
@@ -43,7 +43,21 @@ set(include_headers "")
 set(linked_libraries 
 		cdg 
 	)
-		             
+	
+# 
+# MPI launch commands
+# CTest does not like them to be all within one command
+# 
+if(${USE_MPI})
+	set(LAUNCH_COMMAND "mpirun")  
+	set(LAUNCH_ARGS    "-np")
+	set(LAUNCH_PROCS   "4")
+else()
+	set(LAUNCH_COMMAND "")  
+	set(LAUNCH_ARGS    "")
+	set(LAUNCH_PROCS   "")
+endif()	       
+      
 #
 # Loop over each test building and adding to ctest
 # - Build test name
@@ -54,6 +68,7 @@ FOREACH(test_src ${test_cdg_files})
 	target_compile_options(${test_name} PRIVATE ${compiler_options})
 	target_include_directories(${test_name} PRIVATE ${include_headers})
 	target_link_libraries(${test_name} ${linked_libraries})
-	add_test(${test_name} ${test_name})
+	add_test(NAME ${test_name} 
+		     COMMAND ${LAUNCH_COMMAND} ${LAUNCH_ARGS} ${LAUNCH_PROCS} $<TARGET_FILE:${test_name}>)
 ENDFOREACH(test_src)
 

@@ -5,54 +5,104 @@
  *      Author: bryan.flynt
  */
 
-#include <algorithm>
-#include "tbox/assert.hpp"
+
+
 #include "tbox/command_line.hpp"
 
-#include <algorithm>
 
 namespace geoflow {
 namespace tbox {
 
 
-CommandLine::~CommandLine(){
+CommandLine::CommandLine(int argc, char* argv[]){
+    this->process(argc,argv);
 }
 
-CommandLine::CommandLine(int argc, char* argv[]){
-	for (int i = 1; i < argc; ++i) {
-		this->tokens_.push_back(std::string(argv[i]));
+void
+CommandLine::process(int argc, char* argv[]) {
+    for (int i = 1; i < argc; ++i) {
+        if( this->is_key_(std::string(argv[i])) ){
+            std::string tagged_key = std::string(argv[i]);
+
+            std::string value;
+            if( ((i+1) < argc) && !this->is_key_(std::string(argv[i+1])) ){
+                value = std::string(argv[i+1]);
+                ++i;
+            }
+            auto kvpairs = generate_pairs_(tagged_key,value);
+            key_value_pairs_.insert(kvpairs.begin(),kvpairs.end());
+        }
     }
 }
 
-CommandLine::CommandLine(const CommandLine& CL){
-	tokens_ = CL.tokens_;
+void
+CommandLine::insert(const std::string& key, const std::string& value){
+    key_value_pairs_[key] = value;
 }
 
-CommandLine& CommandLine::operator=(CommandLine CL){
-	tokens_.swap(CL.tokens_);
-	return *this;
+
+bool
+CommandLine::exists(const std::string& key) const{
+    return (key_value_pairs_.count(key) > 0);
 }
 
 bool
-CommandLine::tagExists(const std::string& tag) const{
-	bool ans = false;
-	auto loc = std::find(tokens_.begin(), tokens_.end(), tag);
-	if( loc != tokens_.end() ){
-		ans = true;
-	}
-	return ans;
+CommandLine::exists(const std::string& short_key, const std::string& long_key) const{
+    return ( this->exists(short_key) || this->exists(long_key) );
 }
 
 std::string
-CommandLine::getValue(const std::string& tag) const{
-	std::string ans("");
-	auto loc = std::find(tokens_.begin(), tokens_.end(), tag);
-	if (loc != tokens_.end() && ++loc != tokens_.end()){
-		ans = *loc;
+CommandLine::get(const std::string& key, const std::string& def) {
+    std::string ans(def);
+    if( this->exists(key) ){
+        ans = key_value_pairs_[key];
     }
-	return ans;
+    return ans;
 }
 
+std::string
+CommandLine::get(const std::string& short_key,
+                 const std::string& long_key,
+                 const std::string& def) {
+    std::string ans(def);
+    if( this->exists(short_key) ){
+        ans = key_value_pairs_[short_key];
+    }
+    else if( this->exists(long_key) ){
+        ans = key_value_pairs_[long_key];
+    }
+    return ans;
+}
+
+bool
+CommandLine::is_key_(const std::string& str) const {
+    return (str.find("-") == 0);
+}
+
+bool
+CommandLine::is_short_key_(const std::string& str) const {
+    return (str.rfind("-") == 0);
+}
+
+std::string
+CommandLine::get_key_(const std::string& str) const{
+    return str.substr(str.rfind("-")+1);
+}
+
+typename CommandLine::key_value_type
+CommandLine::generate_pairs_(const std::string& tagged_key,const std::string& value)const{
+    key_value_type ans;
+    auto key = get_key_(tagged_key);
+    if( is_short_key_(tagged_key) ){
+        for(auto it = key.begin(); it != key.end(); ++it){
+            ans[std::string(1,*it)] = value;
+        }
+    }
+    else {
+        ans[key] = value;
+    }
+    return ans;
+}
 
 } // namespace tbox
 } // namespace geoflow
