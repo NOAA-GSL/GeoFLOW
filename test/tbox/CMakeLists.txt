@@ -33,7 +33,21 @@ set(include_headers "")
 set(linked_libraries 
 		tbox
 	)
-		             
+		      
+# 
+# MPI launch commands
+# CTest does not like them to be all within one command
+# 
+if(${USE_MPI})
+	set(LAUNCH_COMMAND "mpirun")  
+	set(LAUNCH_ARGS    "-np")
+	set(LAUNCH_PROCS   "4")
+else()
+	set(LAUNCH_COMMAND "")  
+	set(LAUNCH_ARGS    "")
+	set(LAUNCH_PROCS   "")
+endif()
+
 #
 # Loop over each test building and adding to ctest
 # - Build test name
@@ -44,13 +58,15 @@ FOREACH(test_src ${test_tbox_files})
 	target_compile_options(${test_name} PRIVATE ${compiler_options})
 	target_include_directories(${test_name} PRIVATE ${include_headers})
 	target_link_libraries(${test_name} ${linked_libraries})
-	add_test(${test_name} ${test_name})
+	
+	add_test(NAME ${test_name} 
+		     COMMAND ${LAUNCH_COMMAND} ${LAUNCH_ARGS} ${LAUNCH_PROCS} $<TARGET_FILE:${test_name}>)
 ENDFOREACH(test_src)
 
 
 # Install test data
 install(
-	DIRECTORY "${MY_PROJECT_TSTDIR}/tbox/data"
+	DIRECTORY "${MY_PROJECT_TSTDIR}/tbox/data/"
 	DESTINATION "${MY_INSTALL_TSTDIR}/tbox"  
 	FILES_MATCHING 
 	PATTERN "*"

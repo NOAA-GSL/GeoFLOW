@@ -1,11 +1,12 @@
 language: c
-dist: trusty
+dist: bionic
 sudo: false
 
 branches:
   only:
-  - master
-  - develop
+  - /.*/
+#  - master
+#  - develop
 
 addons:
   apt:
@@ -17,43 +18,37 @@ addons:
 before_install:
   - test -n $CC && unset CC
   - test -n $FC && unset FC
+  - test -n $CXX && unset CXX
   - test -n $CPPFLAGS && unset CPPFLAGS
   - test -n FCFLAGS && unset FCFLAGS
 
 before_script:
+  - cd ..
+  - export BASE_DIR=`pwd`
+  - export GEOFLOW_DIR=`pwd`/GeoFLOW
   - export CC=mpicc
   - export FC=mpif90
-  - export CPPFLAGS='-I/usr/include'
-  - wget https://dl.bintray.com/boostorg/release/1.72.0/source/boost_1_72_0.tar.gz
-  - tar -xzf boost_1_72_0.tar.gz
-  - pushd boost_1_72_0
-  - export TOOLSET=gcc
-  - export MPI_WRAPPER=mpicxx
-  - export NPROC=12
-  - export INSTALL_LOC=`pwd`/gcc
-  - export BUILD_LIBS=mpi,serialization
-  - export LIBRARY_TARGETS=shared,static
-  - export BUILD_TYPE=complete
-  - export LIBRARY_NAME=versioned
-  - ./bootstrap.sh --with-toolset=${TOOLSET} --with-libraries=${BUILD_LIBS} --prefix=${INSTALL_LOC} &> /dev/null
-  - ./b2 -j ${NPROC} install --build-type=${BUILD_TYPE} --layout=${LIBRARY_NAME} --target=${LIBRARY_TARGETS} &> /dev/null
-  - popd
+  - export CXX=mpicxx
+  - bash ${GEOFLOW_DIR}/scripts/build_boost.sh
+  
 env:
   global:
     - CC=mpicc
+    - CXX=mpicxx
     - FC=mpif90
     - CPPFLAGS='-I/usr/include'
     - CFLAGS='-std=c99'
     - LDFLAGS='-L/usr/lib'
   
 script:
+  - pwd
+  - cd ${GEOFLOW_DIR}
+  - pwd
   - mkdir -p build
   - cd build
   - pwd
   - ls
-  - export BOOST_ROOT=boost_1_72_0/gcc
-  - export CPLUS_INCLUDE_PATH=${BOOST_ROOT}/include:${CPLUS_INCLUDE_PATH}
-#  - cmake -DBOOST_ROOT=boost_1_72_0/gcc -DBoost_INCLUDE_DIR=${BOOST_ROOT}/include ..
-#  - make VERBOSE=1
-#  - make tests VERBOSE=1
-#  - make test VERBOSE=1
+  - cmake -DBOOST_ROOT=${BASE_DIR}/boost_1_72_0/gcc ..
+  - make install
+  - make test
+  

@@ -18,7 +18,7 @@ int main() {
 
 	PropertyTree pt;
 
-	pt.load_file("data/input.jsn");
+	pt.load_file("input.jsn");
 
 	auto keys = pt.getKeys();
 	assert( keys.size() == 9 );

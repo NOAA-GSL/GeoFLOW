@@ -30,7 +30,7 @@ int main(int argc, char **argv)
     // Read main prop tree; may ovewrite with
     // certain command line args:
     EH_MESSAGE("geoflow::call load prop tree...");
-    ptree_    = InputManager::getInputPropertyTree();       // main param file structure
+    ptree_ = InputManager::getInputPropertyTree();
     EH_MESSAGE("geoflow: prop tree loaded.");
 
     // Create other prop trees for various objects:
@@ -38,34 +38,9 @@ int main(int argc, char **argv)
     pstd        = ptree_.getArray   <GINT>("exp_order");
     bench_      = ptree_.getValue  <GBOOL>("benchmark");
 
-    // Parse command line. ':' after char
-    // option indicates that it takes an argument.
-    // Note: -i reserved for InputManager:
-    while ((iopt = getopt(argc, argv, "i:bh")) != -1) {
-      switch (iopt) {
-      case 'i': // handled by InputManager
-          break;
-      case 'b': // do benchmark
-          bench_ = TRUE;
-          break;
-      case 'h': // help
-          std::cout << "usage: " << std::endl <<
-          argv[0] << " [-h] [-b]" << std::endl;
-          std::cout << "Note: '-b' sets benchmark flag" << std::endl;
-          exit(1); 
-          break;
-      case ':': // missing option argument
-          std::cout << argv[0] << ": option " << optopt << " requires an argument" << std::endl;
-          exit(1); 
-          break;
-      case '?':
-      default: // invalid option
-          std::cout << argv[0] << ": option " << optopt << " invalid" << std::endl;
-          exit(1);
-          break;
-      }
-    }
-
+    // Process Command Line Flags
+    cline_ = InputManager::getInputCommandLine();
+    bench_ = bench_ || cline_.exists("b","bench");
 
 #if defined(_G_USE_GPTL)
     // Set GTPL options:

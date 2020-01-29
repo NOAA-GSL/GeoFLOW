@@ -9,7 +9,10 @@
 #if !defined(GEOFLOW_CDG_MAIN_H)
 #define GEOFLOW_CDG_MAIN_H
 
-#include <omp.h>
+#if defined(_OPENMP)
+   #include <omp.h>
+#endif
+
 #include "gexec.h"
 #include "gtypes.h"
 #include <stdio.h>
@@ -39,6 +42,7 @@
 #include "ginitforce_factory.hpp"
 #include "ginitbdy_factory.hpp"
 #include "gupdatebdy_factory.hpp"
+#include "tbox/command_line.hpp"
 #include "tbox/property_tree.hpp"
 #include "tbox/mpixx.hpp"
 #include "tbox/global_manager.hpp"
@@ -100,7 +104,8 @@ GTVector<GFTYPE> nu_(3);       // viscosity
 BasisBase        gbasis_(GDIM);// basis vector
 EqnBasePtr       pEqn_;        // equation pointer
 IntegratorPtr    pIntegrator_; // integrator pointer
-PropertyTree     ptree_;       // main prop tree
+PropertyTree     ptree_;       // main prop tree    (TODO: should never be passed)
+CommandLine      cline_;       // command line args (TODO: should never be passed)
 GGFX<GFTYPE>    *ggfx_=NULLPTR;// DSS operator
 GC_COMM          comm_ ;       // communicator
 

@@ -14,6 +14,7 @@ namespace geoflow {
 namespace tbox {
 
 PropertyTree InputManager::ptree_;
+CommandLine  InputManager::cline_;
 
 //
 // TODO: Remove the -h requirement
@@ -24,22 +25,24 @@ PropertyTree InputManager::ptree_;
 //
 void
 InputManager::initialize(int argc, char* argv[]){
-	CommandLine cline(argc,argv);
-	if( cline.tagExists("-h") ){
-		pio::pout << "IGNORE INPUT FILE: '-h' found on command line\n";
-		return; // "-h" tag negates any file reading
-	}
 
-	std::string file_name = "input.jsn";
-	if( cline.tagExists("-i") ){
-		file_name = cline.getValue("-i");
-	}
-	InputManager::loadInputFile(file_name);
+    // Process command lines
+    cline_.process(argc,argv);
+
+    // Read input file if requested
+    if( not cline_.exists("h","help") ) {
+        auto file_name = cline_.get("i","input","input.jsn");
+        InputManager::loadInputFile(file_name);
+    }
 }
 
 PropertyTree
 InputManager::getInputPropertyTree(){
 	return ptree_;
+}
+
+CommandLine InputManager::getInputCommandLine(){
+    return cline_;
 }
 
 void
