@@ -49,6 +49,6 @@ script:
   - pwd
   - ls
   - cmake -DBOOST_ROOT=${BASE_DIR}/boost_1_72_0/gcc ..
-  - make VERBOSE=1
-#  - make tests VERBOSE=1
-#  - make test VERBOSE=1
+  - make install
+  - make test
+  
