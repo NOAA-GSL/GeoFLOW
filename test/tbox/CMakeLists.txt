@@ -22,7 +22,6 @@ set(test_tbox_files
 #
 set(compiler_options 
 		"$<$<CXX_COMPILER_ID:AppleClang>:-Wno-comment>"
-		"$<$<BOOL:${OpenMP_FOUND}>:${OpenMP_CXX_FLAGS}>"
 	)
 		       
 # Set include headers unique to testing
@@ -32,6 +31,9 @@ set(include_headers "")
 # - Gets library include paths from here
 set(linked_libraries 
 		tbox
+		MPI::MPI_CXX
+		OpenMP::OpenMP_CXX
+		Boost::boost
 	)
 		      
 # 
