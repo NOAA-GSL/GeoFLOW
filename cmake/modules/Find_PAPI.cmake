@@ -1,82 +1,125 @@
 #
 # Try to find PAPI library
 #
+#
+#  -- Prefered Method --
+#  PAPI_ROOT         Set this variable to the root installation of PAPI
+#
+#  -- Alternatively --
+#  A user can specify the header and library directories independently
+#
+#  PAPI_INCLUDE_DIR  The directory containing papi.h
+#
+#  PAPI_LIBRARY      The directory containing the library
+#
+#
 # Once done this will define
 #  PAPI_FOUND 	      - If system found PAPI library
 #  PAPI_INCLUDE_DIRS  - The PAPI include directories
 #  PAPI_LIBRARIES     - The libraries needed to use PAPI
-#  PAPI_FLAGS 	      - Compiler flags required for using PAPI
 #
 
+# Find_PAPI
+# ----------------
 #
-# Set possible hints where to find PAPI
+# Finds the PAPI library.
 #
-set(PAPI_HINTS 
-	       ${PAPI_ROOT}
-	       $ENV{PAPI_ROOT}
+# Imported Targets
+# ^^^^^^^^^^^^^^^^
+#
+# This module provides the following imported targets, if found:
+#
+# ""PAPI::PAPI"
+# The PAPI library
+#
+# Result Variables
+# ^^^^^^^^^^^^^^^^
+#
+# This will define the following variables:
+#
+# "PAPI_FOUND"         - True if the system has the PAPI library.
+# "PAPI_INCLUDE_DIRS"  - Include directories needed to use PAPI.
+# "PAPI_LIBRARIES"     - Libraries needed to link to PAPI.
+#
+# Cache Variables
+# ^^^^^^^^^^^^^^^
+#
+# The following cache variables may also be set:
+#
+# "PAPI_ROOT"        - The root directory of the PAPI library.
+# "PAPI_INCLUDE_DIR" - The directory containing "papi.h".
+# "PAPI_LIBRARY"     - The path to the PAPI library.
+#
+
+if(USE_PAPI)
+message(VERBOSE "")
+message(VERBOSE "--------------------- PAPI Libraries -----------------------")
+message(VERBOSE "")
+message(VERBOSE "Search Locations:")
+message(VERBOSE "PAPI_ROOT            = ${PAPI_ROOT}")
+message(VERBOSE "PAPI_INCLUDE_DIR     = ${PAPI_INCLUDE_DIR}")
+message(VERBOSE "PAPI_INCLUDE_LIBRARY = ${PAPI_INCLUDE_LIBRARY}")
+
+find_path(PAPI_INCLUDE_DIR
+    NAMES papi.h
+    PATHS ${PAPI_ROOT} $ENV{PAPI_ROOT}
+    PATH_SUFFIXES 
+    	include
 )
 
-#
-# Set installation guesses
-#
-set(PAPI_PATHS
-	/usr
-	/usr/local
-	/usr/local/opt
+find_library(PAPI_LIBRARY
+    NAMES libpapi.so libpapi.a papi
+    PATHS ${PAPI_ROOT} $ENV{PAPI_ROOT}
+    PATH_SUFFIXES 
+    	lib 
+    	lib64
 )
 
-#
-# Attempt to find the include directories
-#
-find_path(PAPI_INCLUDE_DIRS
-	NAMES papi.h
-	HINTS 
-	      ${PAPI_HINTS}
-	PATH_SUFFIXES
-		include
-	PATHS 
-	      ${PAPI_PATHS}
-	DOC 
-	    "PAPI header file papi.h"
-)
-mark_as_advanced(PAPI_INCLUDE_DIRS)
-
-#
-# Attempt to find the PAPI Library
-#
-find_library(PAPI_LIBRARIES
-	NAMES 
-	      libpapi.so
-	      libpapi.a
-	      papi
-	HINTS
-		${PAPI_HINTS}
-	PATH_SUFFIXES
-		lib
-	PATHS
-		${PAPI_PATHS}
-	DOC
-		"PAPI library"
-)
-mark_as_advanced(PAPI_LIBRARIES)
-
-# ========================================================================
-
-#
-# Custom Notification Messages
-#
-if(NOT PAPI_INCLUDE_DIRS)
-    message(STATUS "Could NOT find 'papi.h', install PAPI or set PAPI_ROOT")
-endif()
-if(NOT PAPI_LIBRARIES)
-    message(STATUS "Could NOT find a libpapi*, install PAPI or set PAPI_ROOT")
-endif()
-
-#
-# Determines whether library was found
-# - Set the PAPI_FOUND variable depending on checks it does
-#
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(PAPI DEFAULT_MSG PAPI_INCLUDE_DIRS PAPI_LIBRARIES)
+find_package_handle_standard_args(PAPI 
+	FOUND_VAR
+		PAPI_FOUND
+	REQUIRED_VARS
+    	PAPI_LIBRARY
+    	PAPI_INCLUDE_DIR
+)
 
-# =========================================================================
+#
+# Set the returned values
+#
+if(PAPI_FOUND)
+  set(PAPI_LIBRARIES ${PAPI_LIBRARY})
+  set(PAPI_INCLUDE_DIRS ${PAPI_INCLUDE_DIR})
+endif()
+
+#
+# Allow these values to be in cache
+#
+mark_as_advanced(
+    PAPI_ROOT
+    PAPI_LIBRARY
+    PAPI_INCLUDE_DIR
+)
+
+#
+# Define Imported Targets
+#
+if(PAPI_FOUND AND NOT TARGET PAPI::PAPI)
+  add_library(PAPI::PAPI UNKNOWN IMPORTED)
+  set_target_properties(PAPI::PAPI PROPERTIES
+    IMPORTED_LOCATION "${PAPI_LIBRARY}"
+    INTERFACE_COMPILE_OPTIONS "${PC_PAPI_CFLAGS_OTHER}"
+    INTERFACE_INCLUDE_DIRECTORIES "${PAPI_INCLUDE_DIR}"
+  )
+endif()
+
+#
+# Display Results if Requested
+#
+message(VERBOSE "")
+message(VERBOSE "Results:")
+message(VERBOSE "PAPI Found     = ${PAPI_FOUND}")
+message(VERBOSE "PAPI Includes  = ${PAPI_INCLUDE_DIRS}")
+message(VERBOSE "PAPI Libraries = ${PAPI_LIBRARIES}")
+
+endif(USE_PAPI)

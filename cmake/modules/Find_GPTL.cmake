@@ -1,97 +1,121 @@
 #
-# Try to find GPTL library
+# Find_GPTL
+# ----------------
 #
-# Once done this will define
-#  GPTL_FOUND 	      - If system found GPLT library
-#  GPTL_INCLUDE_DIRS  - The GPTL include directories
-#  GPTL_LIBRARIES     - The libraries needed to use GPTL
-#  GPTL_FLAGS 	      - Compiler flags required for using GPTL
+# Finds the GPTL library.
+#
+# Imported Targets
+# ^^^^^^^^^^^^^^^^
+#
+# This module provides the following imported targets, if found:
+#
+# ""GPTL::GPTL"
+# The GPTL library
+#
+# Result Variables
+# ^^^^^^^^^^^^^^^^
+#
+# This will define the following variables:
+#
+# "GPTL_FOUND"         - True if the system has the GPTL library.
+# "GPTL_INCLUDE_DIRS"  - Include directories needed to use GPTL.
+# "GPTL_LIBRARIES"     - Libraries needed to link to GPTL.
+#
+# Cache Variables
+# ^^^^^^^^^^^^^^^
+#
+# The following cache variables may also be set:
+#
+# "GPTL_ROOT"        - The root directory of the GPTL library.
+# "GPTL_INCLUDE_DIR" - The directory containing "gptl.h".
+# "GPTL_LIBRARY"     - The path to the GPTL library.
 #
 
-#
-# Set possible hints where to find GPTL
-#
-set(GPTL_HINTS 
-	${GPTL_ROOT}
-	$ENV{GPLT_ROOT}
-)
+if(USE_GPTL)
+message(VERBOSE "")
+message(VERBOSE "--------------------- GPTL Libraries -----------------------")
+message(VERBOSE "")
+message(VERBOSE "Search Locations:")
+message(VERBOSE "GPTL_ROOT            = ${GPTL_ROOT}")
+message(VERBOSE "GPTL_INCLUDE_DIR     = ${GPTL_INCLUDE_DIR}")
+message(VERBOSE "GPTL_INCLUDE_LIBRARY = ${GPTL_INCLUDE_LIBRARY}")
 
-#
-# Set installation guesses
-#
-set(GPTL_PATHS
-	/usr
-	/usr/local
-	/usr/local/opt
-)
-
-#
-# Attempt to find the include directories
-#
-find_path(GPTL_INCLUDE_DIRS
-	NAMES gptl.h
-	HINTS 
-	      ${GPTL_HINTS}
-	PATH_SUFFIXES
-		include 
-		bluegene/include
+find_path(GPTL_INCLUDE_DIR
+    NAMES gptl.h
+    PATHS ${GPTL_ROOT} $ENV{GPTL_ROOT}
+    PATH_SUFFIXES 
+    	include
+    	bluegene/include
 		cray/include
 		lahey/include
 		linux/include
 		macos/include
-		pgi/include	
+		pgi/include
 		xeon/include
 		xeonphi/include
-	PATHS 
-	      ${GPTL_PATHS}
-	DOC 
-	    "GPTL header file gptl.h"
 )
-mark_as_advanced(GPTL_INCLUDE_DIRS)
 
-#
-# Attempt to find the GPTL Library
-#
-find_library(GPTL_LIBRARIES
-	NAMES 
-	      gptl
-	      gptl_pmpi
-	HINTS
-		${GPTL_HINTS}
-	PATH_SUFFIXES
-		lib
-		bluegene/lib
+find_library(GPTL_LIBRARY
+    NAMES libgptl.so libgptl.a libgptl libgptl_pmpi.so libgptl_pmpi.a libgptl_pmpi
+    PATHS ${GPTL_ROOT} $ENV{GPTL_ROOT}
+    PATH_SUFFIXES 
+    	lib 
+    	bluegene/lib
 		cray/lib
-        lahey/lib
-        linux/lib
-        macos/lib
-        pgi/lib
+		lahey/lib
+		linux/lib
+		macos/lib
+		pgi/lib
 		xeon/lib
-        xeonphi/lib
-	PATHS
-		${GPTL_PATHS}
-	DOC
-		"GPTL library"
+		xeonphi/lib
 )
-mark_as_advanced(GPTL_LIBRARIES)
 
-# ========================================================================
-
-#
-# Custom Notification Messages
-#
-if(NOT GPTL_INCLUDE_DIRS)
-    message(STATUS "Could NOT find 'gptl.h', install GPTL or set GPTL_ROOT")
-endif()
-if(NOT GPTL_LIBRARIES)
-    message(STATUS "Could NOT find a libgptl*, install GPTL or set GPTL_ROOT")
-endif()
-
-#
-# Determines whether library was found
-# - Set the GPTL_FOUND variable depending on checks it does
-#
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(GPTL DEFAULT_MSG GPTL_INCLUDE_DIRS GPTL_LIBRARIES)
+find_package_handle_standard_args(GPTL 
+	FOUND_VAR
+		GPTL_FOUND
+	REQUIRED_VARS
+    	GPTL_LIBRARY
+    	GPTL_INCLUDE_DIR
+)
 
-# =========================================================================
+#
+# Set the returned values
+#
+if(GPTL_FOUND)
+  set(GPTL_LIBRARIES ${GPTL_LIBRARY})
+  set(GPTL_INCLUDE_DIRS ${GPTL_INCLUDE_DIR})
+endif()
+
+#
+# Allow these values to be in cache
+#
+mark_as_advanced(
+    GPTL_ROOT
+    GPTL_LIBRARY
+    GPTL_INCLUDE_DIR
+)
+
+#
+# Define Imported Targets
+#
+if(GPTL_FOUND AND NOT TARGET GPTL::GPTL)
+  add_library(GPTL::GPTL UNKNOWN IMPORTED)
+  set_target_properties(GPTL::GPTL PROPERTIES
+    IMPORTED_LOCATION "${GPTL_LIBRARY}"
+    INTERFACE_COMPILE_OPTIONS "${PC_GPTL_CFLAGS_OTHER}"
+    INTERFACE_INCLUDE_DIRECTORIES "${GPTL_INCLUDE_DIR}"
+  )
+endif()
+
+#
+# Display Results if Requested
+#
+message(VERBOSE "")
+message(VERBOSE "Results:")
+message(VERBOSE "GPTL Found     = ${GPTL_FOUND}")
+message(VERBOSE "GPTL Includes  = ${GPTL_INCLUDE_DIRS}")
+message(VERBOSE "GPTL Libraries = ${GPTL_LIBRARIES}")
+
+endif(USE_GPTL)
+

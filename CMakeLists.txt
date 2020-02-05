@@ -37,7 +37,7 @@ set(DEFAULT_BUILD_TYPE "Release")
 #---------------------------------------------------------------------
 # Set location of *.cmake modules
 #---------------------------------------------------------------------
-set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+#set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/modules" ${CMAKE_MODULE_PATH})
 
 #
@@ -49,21 +49,33 @@ include(InSourceBuild)
 
 #
 #---------------------------------------------------------------------
-# Directory Report
+# Load any special functions we want to use
 #---------------------------------------------------------------------
 #
-if(CMAKE_VERBOSE_MAKEFILE)
-	message("")
-	message("--------------------- Directory Report -----------------------")
-	message(" ") # CMAKE directories are from top level CMakeLists.txt
-	message("Top Level Directories:")
-	message("CMAKE_SOURCE_DIR  = ${CMAKE_SOURCE_DIR}")
-	message("CMAKE_BINARY_DIR  = ${CMAKE_BINARY_DIR}")
-	message(" ") # PROJECT directories are for recent project call
-	message("Project Level Directories:")
-	message("PROJECT_SOURCE_DIR = ${PROJECT_SOURCE_DIR}")
-	message("PROJECT_BINARY_DIR = ${PROJECT_BINARY_DIR}")
-endif(CMAKE_VERBOSE_MAKEFILE)
+
+
+
+#
+#---------------------------------------------------------------------
+# Directory Report
+#---------------------------------------------------------------------
+#                                   
+# --log-level=<ERROR|WARNING|NOTICE|STATUS|VERBOSE|DEBUG|TRACE>
+# --loglevel=  Older versions of CMake
+# STATUS == Default
+#
+message(VERBOSE "")
+message(VERBOSE "")
+message(VERBOSE "--------------------- Directory Report -----------------------")
+message(VERBOSE "") # CMAKE directories are from top level CMakeLists.txt
+message(VERBOSE "Top Level Directories:")
+message(VERBOSE "CMAKE_SOURCE_DIR  = ${CMAKE_SOURCE_DIR}")
+message(VERBOSE "CMAKE_BINARY_DIR  = ${CMAKE_BINARY_DIR}")
+message(VERBOSE "") # PROJECT directories are for recent project call
+message(VERBOSE "Project Level Directories:")
+message(VERBOSE "PROJECT_SOURCE_DIR = ${PROJECT_SOURCE_DIR}")
+message(VERBOSE "PROJECT_BINARY_DIR = ${PROJECT_BINARY_DIR}")
+
 
 #---------------------------------------------------------------------
 # Locations of Installation & Report
@@ -84,24 +96,22 @@ set(MY_INSTALL_LIBDIR ${MY_INSTALL_PREFIX}/lib)
 set(MY_INSTALL_TSTDIR ${MY_INSTALL_PREFIX}/test)
 set(MY_INSTALL_EXADIR ${MY_INSTALL_PREFIX}/examples)
 
-if(CMAKE_VERBOSE_MAKEFILE)
-	message(" ")
-	message("Using Directories:")
-	message("--- Original Locations ---")
-	message("MY_PROJECT_PREFIX = ${MY_PROJECT_PREFIX}")
-	message("MY_PROJECT_INCDIR = ${MY_PROJECT_INCDIR}")
-	message("MY_PROJECT_SRCDIR = ${MY_PROJECT_SRCDIR}")
-	message("MY_PROJECT_TSTDIR = ${MY_PROJECT_TSTDIR}")
-	message(" ")
-	message("--- Installation Locations ---")
-	message("MY_INSTALL_PREFIX = ${MY_INSTALL_PREFIX}")
-	message("MY_INSTALL_BINDIR = ${MY_INSTALL_BINDIR}")
-	message("MY_INSTALL_INCDIR = ${MY_INSTALL_INCDIR}")
-	message("MY_INSTALL_SRCDIR = ${MY_INSTALL_SRCDIR}")
-	message("MY_INSTALL_LIBDIR = ${MY_INSTALL_LIBDIR}")
-	message("MY_INSTALL_TSTDIR = ${MY_INSTALL_TSTDIR}")
-	message("MY_INSTALL_EXADIR = ${MY_INSTALL_EXADIR}")
-endif(CMAKE_VERBOSE_MAKEFILE)
+message(VERBOSE " ")
+message(VERBOSE "Using Directories:")
+message(VERBOSE "--- Original Locations ---")
+message(VERBOSE "MY_PROJECT_PREFIX = ${MY_PROJECT_PREFIX}")
+message(VERBOSE "MY_PROJECT_INCDIR = ${MY_PROJECT_INCDIR}")
+message(VERBOSE "MY_PROJECT_SRCDIR = ${MY_PROJECT_SRCDIR}")
+message(VERBOSE "MY_PROJECT_TSTDIR = ${MY_PROJECT_TSTDIR}")
+message(VERBOSE " ")
+message(VERBOSE "--- Installation Locations ---")
+message(VERBOSE "MY_INSTALL_PREFIX = ${MY_INSTALL_PREFIX}")
+message(VERBOSE "MY_INSTALL_BINDIR = ${MY_INSTALL_BINDIR}")
+message(VERBOSE "MY_INSTALL_INCDIR = ${MY_INSTALL_INCDIR}")
+message(VERBOSE "MY_INSTALL_SRCDIR = ${MY_INSTALL_SRCDIR}")
+message(VERBOSE "MY_INSTALL_LIBDIR = ${MY_INSTALL_LIBDIR}")
+message(VERBOSE "MY_INSTALL_TSTDIR = ${MY_INSTALL_TSTDIR}")
+message(VERBOSE "MY_INSTALL_EXADIR = ${MY_INSTALL_EXADIR}")
 
 #---------------------------------------------------------------------
 # Detect Configuration for Record
@@ -111,65 +121,20 @@ include(RecordVars)
 #---------------------------------------------------------------------
 # Detect Library includes, flags, etc.
 #---------------------------------------------------------------------
-message("")
-message("================================================================")
-message("                    Searching for Libraries                     ")
-message("================================================================")
+message(STATUS "")
+message(STATUS "================================================================")
+message(STATUS "                    Searching for Libraries                     ")
+message(STATUS "================================================================")
 if(${CMAKE_VERSION} VERSION_GREATER "3.11.999") 
 	cmake_policy(SET CMP0074 NEW) # find_package search <name>_ROOT
 endif()
 
-
 find_package(_OpenMP)
 find_package(_MPI)
+find_package(_Boost)
+find_package(_GPTL)
+find_package(_PAPI)
 
-
-
-if(USE_GPTL)
-message("")
-message("------------------------ GPTL Libraries --------------------------")
-message("GPTL_ROOT = ${GPTL_ROOT}")
-find_package(GPTL REQUIRED)
-if(CMAKE_VERBOSE_MAKEFILE)
-	message("")
-	message("GPTL Found        = ${GPTL_FOUND}")
-	message("GPTL Comp Flags   = ${GPTL_FLAGS}")
-	message("GPTL Includes     = ${GPTL_INCLUDE_DIRS}")
-	message("GPTL Libraries    = ${GPTL_LIBRARIES}")
-endif(CMAKE_VERBOSE_MAKEFILE)
-endif(USE_GPTL)
-
-if(USE_PAPI)
-message("")
-message("------------------------ PAPI Libraries --------------------------")
-message("PAPI_ROOT = ${PAPI_ROOT}")
-find_package(PAPI REQUIRED)
-if(CMAKE_VERBOSE_MAKEFILE)
-	message("")
-	message("PAPI Found        = ${PAPI_FOUND}")
-	message("PAPI Comp Flags   = ${PAPI_FLAGS}")
-	message("PAPI Includes     = ${PAPI_INCLUDE_DIRS}")
-	message("PAPI Libraries    = ${PAPI_LIBRARIES}")
-endif(CMAKE_VERBOSE_MAKEFILE)
-endif(USE_PAPI)  
-
-message("")
-message("--------------------- Boost Libraries ------------------------")
-message("BOOST_ROOT = ${BOOST_ROOT}")
-set(Boost_DEBUG OFF)              # Enable debug output from FIND_PACKAGE
-set(Boost_NO_SYSTEM_PATHS ON)     # Do not search system paths before BOOST_ROOT
-set(Boost_USE_STATIC_LIBS ON)     # Static link to Boost libraries
-set(Boost_USE_STATIC_RUNTIME OFF) # Use Boost static linked to C++ runtime
-#set(Boost_USE_MULTITHREADED OFF)  # Use Boost multi-threaded code
-find_package(Boost 1.65.0 COMPONENTS mpi serialization REQUIRED)
-if(CMAKE_VERBOSE_MAKEFILE)
-	message("")
-	message("Boost Found               = ${Boost_FOUND}")
-	message("Boost Version             = ${Boost_VERSION}")
-	message("Boost Includes            = ${Boost_INCLUDE_DIRS}")
-	message("Boost Link Libraries      = ${Boost_LIBRARY_DIRS}")
-	message("Boost Component Libraries = ${Boost_LIBRARIES}")
-endif(CMAKE_VERBOSE_MAKEFILE)
 
 #
 #---------------------------------------------------------------------

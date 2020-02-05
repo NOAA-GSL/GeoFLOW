@@ -23,50 +23,46 @@
 #
 
 if(USE_MPI)
-message("")
-message("--------------------- MPI Libraries ------------------------")
+message(STATUS "")
+message(STATUS "--------------------- MPI Libraries ------------------------")
 
 #
 # First attempt to use the CMake tools to locate the library
-# - Disable ${CMAKE_SOURCE_DIR}/cmake/modules for module lookup
-# - Use CMake built in script
-# - ReAdd ${CMAKE_SOURCE_DIR}/cmake/modules for module lookup
-LIST(REMOVE_ITEM CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules/)
+#
 find_package(MPI REQUIRED)
-LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules/)
 
 #
 # Report what we found
 #
 if(CMAKE_VERBOSE_MAKEFILE)
-message("")
-message("MPI Found          = ${MPI_FOUND}")
-message("MPI Version        = ${MPI_VERSION}")
-message("")
-message("C")
-message(" - Found       = ${MPI_C_FOUND}")
-message(" - Compiler    = ${MPI_C_COMPILER}")
-message(" - Options     = ${MPI_C_COMPILE_OPTIONS}")
-message(" - Definitions = ${MPI_C_COMPILE_DEFINITIONS}")
-message(" - Include Dir = ${MPI_C_INCLUDE_DIRS}")
-message(" - Link Flags  = ${MPI_C_LINK_FLAGS}")
-message(" - Libraries   = ${MPI_C_LIBRARIES}")
-message("C++")
-message(" - Found       = ${MPI_CXX_FOUND}")
-message(" - Compiler    = ${MPI_CXX_COMPILER}")
-message(" - Options     = ${MPI_CXX_COMPILE_OPTIONS}")
-message(" - Definitions = ${MPI_CXX_COMPILE_DEFINITIONS}")
-message(" - Include Dir = ${MPI_CXX_INCLUDE_DIRS}")
-message(" - Link Flags  = ${MPI_CXX_LINK_FLAGS}")
-message(" - Libraries   = ${MPI_CXX_LIBRARIES}")
-message("Fortran:")
-message(" - Found       = ${MPI_Fortran_FOUND}")
-message(" - Compiler    = ${MPI_Fortran_COMPILER}")
-message(" - Options     = ${MPI_Fortran_COMPILE_OPTIONS}")
-message(" - Definitions = ${MPI_Fortran_COMPILE_DEFINITIONS}")
-message(" - Include Dir = ${MPI_Fortran_INCLUDE_DIRS}")
-message(" - Link Flags  = ${MPI_Fortran_LINK_FLAGS}")
-message(" - Libraries   = ${MPI_Fortran_LIBRARIES}")
+message(VERBOSE "")
+message(VERBOSE "MPI Found          = ${MPI_FOUND}")
+message(VERBOSE "MPI Version        = ${MPI_VERSION}")
+message(VERBOSE "")
+message(VERBOSE "C")
+message(VERBOSE " - Found       = ${MPI_C_FOUND}")
+message(VERBOSE " - Compiler    = ${MPI_C_COMPILER}")
+message(VERBOSE " - Options     = ${MPI_C_COMPILE_OPTIONS}")
+message(VERBOSE " - Definitions = ${MPI_C_COMPILE_DEFINITIONS}")
+message(VERBOSE " - Include Dir = ${MPI_C_INCLUDE_DIRS}")
+message(VERBOSE " - Link Flags  = ${MPI_C_LINK_FLAGS}")
+message(VERBOSE " - Libraries   = ${MPI_C_LIBRARIES}")
+message(VERBOSE "C++")
+message(VERBOSE " - Found       = ${MPI_CXX_FOUND}")
+message(VERBOSE " - Compiler    = ${MPI_CXX_COMPILER}")
+message(VERBOSE " - Options     = ${MPI_CXX_COMPILE_OPTIONS}")
+message(VERBOSE " - Definitions = ${MPI_CXX_COMPILE_DEFINITIONS}")
+message(VERBOSE " - Include Dir = ${MPI_CXX_INCLUDE_DIRS}")
+message(VERBOSE " - Link Flags  = ${MPI_CXX_LINK_FLAGS}")
+message(VERBOSE " - Libraries   = ${MPI_CXX_LIBRARIES}")
+message(VERBOSE "Fortran:")
+message(VERBOSE " - Found       = ${MPI_Fortran_FOUND}")
+message(VERBOSE " - Compiler    = ${MPI_Fortran_COMPILER}")
+message(VERBOSE " - Options     = ${MPI_Fortran_COMPILE_OPTIONS}")
+message(VERBOSE " - Definitions = ${MPI_Fortran_COMPILE_DEFINITIONS}")
+message(VERBOSE " - Include Dir = ${MPI_Fortran_INCLUDE_DIRS}")
+message(VERBOSE " - Link Flags  = ${MPI_Fortran_LINK_FLAGS}")
+message(VERBOSE " - Libraries   = ${MPI_Fortran_LIBRARIES}")
 endif(CMAKE_VERBOSE_MAKEFILE)
 
 # For supporting CMake < 3.9:
