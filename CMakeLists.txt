@@ -234,6 +234,10 @@ add_subdirectory(analysis/src)
 # Build Executables
 #add_subdirectory(src/apps)
 
-# Build Tests for Libraries
-add_subdirectory(test)
+include(CTest)
+if(BUILD_TESTING)
+  add_subdirectory(test)
+endif()
+
+
 
