@@ -57,13 +57,13 @@ string(TIMESTAMP CONFIGURE_TIME "%Y-%m-%d %H:%M:%S +0000" UTC)
 #
 # Report if requested
 #
-if(CMAKE_VERBOSE_MAKEFILE)
-	message("")
-	message("--------------------- Version Report -----------------------")
-	message("PROJECT_VERSION = ${PROJECT_VERSION}")
-	message("CONFIGURE_TIME  = ${CONFIGURE_TIME}")
-	message("GIT_COMMIT_TIME = ${GIT_COMMIT_TIME}")
-	message("GIT_SHORT_HASH  = ${GIT_SHORT_HASH}")
-	message("GIT_LONG_HASH   = ${GIT_LONG_HASH}")
-endif(CMAKE_VERBOSE_MAKEFILE)
+message(VERBOSE "")
+message(VERBOSE "--------------------- Version Report -----------------------")
+message(VERBOSE "")
+message(VERBOSE "PROJECT_VERSION = ${PROJECT_VERSION}")
+message(VERBOSE "CONFIGURE_TIME  = ${CONFIGURE_TIME}")
+message(VERBOSE "GIT_COMMIT_TIME = ${GIT_COMMIT_TIME}")
+message(VERBOSE "GIT_SHORT_HASH  = ${GIT_SHORT_HASH}")
+message(VERBOSE "GIT_LONG_HASH   = ${GIT_LONG_HASH}")
+
 

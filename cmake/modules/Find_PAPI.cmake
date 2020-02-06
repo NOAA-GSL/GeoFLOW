@@ -29,7 +29,7 @@
 #
 # This module provides the following imported targets, if found:
 #
-# ""PAPI::PAPI"
+# "PAPI::PAPI"
 # The PAPI library
 #
 # Result Variables

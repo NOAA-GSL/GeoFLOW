@@ -16,36 +16,8 @@ message(STATUS "--------------------- OpenMP Libraries ------------------------"
 # First attempt to use the CMake tools to locate the library
 #
 find_package(OpenMP REQUIRED)
-	
-#
-<<<<<<< HEAD
-# Report what we found
-#
-message(VERBOSE "")
-message(VERBOSE "OpenMP Found          = ${OpenMP_FOUND}")
-message(VERBOSE "OpenMP Version        = ${OpenMP_VERSION}")
-message(VERBOSE "")
-message(VERBOSE "C")
-message(VERBOSE " - Found      = ${OpenMP_C_FOUND}")
-message(VERBOSE " - Comp Flags = ${OpenMP_C_FLAGS}")
-message(VERBOSE " - Lib Names  = ${OpenMP_C_LIB_NAMES}")
-message(VERBOSE " - Libraries  = ${OpenMP_C_LIBRARIES}")
-message(VERBOSE "C++")
-message(VERBOSE " - Found      = ${OpenMP_CXX_FOUND}")
-message(VERBOSE " - Comp Flags = ${OpenMP_CXX_FLAGS}")
-message(VERBOSE " - Lib Names  = ${OpenMP_CXX_LIB_NAMES}")
-message(VERBOSE " - Libraries  = ${OpenMP_CXX_LIBRARIES}")
-message(VERBOSE "Fortran:")
-message(VERBOSE " - Found      = ${OpenMP_Fortran_FOUND}")
-message(VERBOSE " - Comp Flags = ${OpenMP_Fortran_FLAGS}")
-message(VERBOSE " - Lib Names  = ${OpenMP_Fortran_LIB_NAMES}")
-message(VERBOSE " - Libraries  = ${OpenMP_Fortran_LIBRARIES}")
-message(VERBOSE " - omp_lib.h  = ${OpenMP_Fortran_HAVE_OMPLIB_HEADER}")
-message(VERBOSE " - omp_lib    = ${OpenMP_Fortran_HAVE_OMPLIB_MODULE}")
 
 #
-=======
->>>>>>> branch 'feature/new_cmake_mpi' of https://github.com/NOAA-GSD/GeoFLOW.git
 # For CMake < 3.9, we need to make the target ourselves
 #
 if(NOT TARGET OpenMP::OpenMP_C)
@@ -78,29 +50,29 @@ endif()
 #
 # Report what we found
 #
-if(CMAKE_VERBOSE_MAKEFILE)
-message("")
-message("OpenMP Found          = ${OpenMP_FOUND}")
-message("OpenMP Version        = ${OpenMP_VERSION}")
-message("")
-message("C")
-message(" - Found      = ${OpenMP_C_FOUND}")
-message(" - Comp Flags = ${OpenMP_C_FLAGS}")
-message(" - Lib Names  = ${OpenMP_C_LIB_NAMES}")
-message(" - Libraries  = ${OpenMP_C_LIBRARIES}")
-message("C++")
-message(" - Found      = ${OpenMP_CXX_FOUND}")
-message(" - Comp Flags = ${OpenMP_CXX_FLAGS}")
-message(" - Lib Names  = ${OpenMP_CXX_LIB_NAMES}")
-message(" - Libraries  = ${OpenMP_CXX_LIBRARIES}")
-message("Fortran:")
-message(" - Found      = ${OpenMP_Fortran_FOUND}")
-message(" - Comp Flags = ${OpenMP_Fortran_FLAGS}")
-message(" - Lib Names  = ${OpenMP_Fortran_LIB_NAMES}")
-message(" - Libraries  = ${OpenMP_Fortran_LIBRARIES}")
-message(" - omp_lib.h  = ${OpenMP_Fortran_HAVE_OMPLIB_HEADER}")
-message(" - omp_lib    = ${OpenMP_Fortran_HAVE_OMPLIB_MODULE}")
-endif(CMAKE_VERBOSE_MAKEFILE)
+message(VERBOSE "")
+message(VERBOSE "OpenMP Found          = ${OpenMP_FOUND}")
+message(VERBOSE "")
+message(VERBOSE "C")
+message(VERBOSE " - Found      = ${OpenMP_C_FOUND}")
+message(VERBOSE " - Version    = ${OpenMP_C_VERSION}")
+message(VERBOSE " - Comp Flags = ${OpenMP_C_FLAGS}")
+message(VERBOSE " - Lib Names  = ${OpenMP_C_LIB_NAMES}")
+message(VERBOSE " - Libraries  = ${OpenMP_C_LIBRARIES}")
+message(VERBOSE "C++")
+message(VERBOSE " - Found      = ${OpenMP_CXX_FOUND}")
+message(VERBOSE " - Version    = ${OpenMP_CXX_VERSION}")
+message(VERBOSE " - Comp Flags = ${OpenMP_CXX_FLAGS}")
+message(VERBOSE " - Lib Names  = ${OpenMP_CXX_LIB_NAMES}")
+message(VERBOSE " - Libraries  = ${OpenMP_CXX_LIBRARIES}")
+message(VERBOSE "Fortran:")
+message(VERBOSE " - Found      = ${OpenMP_Fortran_FOUND}")
+message(VERBOSE " - Version    = ${OpenMP_Fortran_VERSION}")
+message(VERBOSE " - Comp Flags = ${OpenMP_Fortran_FLAGS}")
+message(VERBOSE " - Lib Names  = ${OpenMP_Fortran_LIB_NAMES}")
+message(VERBOSE " - Libraries  = ${OpenMP_Fortran_LIBRARIES}")
+message(VERBOSE " - omp_lib.h  = ${OpenMP_Fortran_HAVE_OMPLIB_HEADER}")
+message(VERBOSE " - omp_lib    = ${OpenMP_Fortran_HAVE_OMPLIB_MODULE}")
 
 endif(USE_OPENMP)
 
