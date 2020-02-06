@@ -51,7 +51,6 @@
 # "PAPI_LIBRARY"     - The path to the PAPI library.
 #
 
-if(USE_PAPI)
 message(VERBOSE "")
 message(VERBOSE "--------------------- PAPI Libraries -----------------------")
 message(VERBOSE "")
@@ -82,6 +81,8 @@ find_package_handle_standard_args(PAPI
 	REQUIRED_VARS
     	PAPI_LIBRARY
     	PAPI_INCLUDE_DIR
+    FAIL_MESSAGE
+    	"PAPI was not found. Set PAPI_ROOT to installation directory"
 )
 
 #
@@ -121,5 +122,3 @@ message(VERBOSE "Results:")
 message(VERBOSE "PAPI Found     = ${PAPI_FOUND}")
 message(VERBOSE "PAPI Includes  = ${PAPI_INCLUDE_DIRS}")
 message(VERBOSE "PAPI Libraries = ${PAPI_LIBRARIES}")
-
-endif(USE_PAPI)

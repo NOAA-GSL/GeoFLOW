@@ -30,9 +30,15 @@ project("GeoFLOW" VERSION 0.0.0.1 LANGUAGES C CXX Fortran)
 #---------------------------------------------------------------------
 # User Configure Build Process
 #---------------------------------------------------------------------
-set(CMAKE_VERBOSE_MAKEFILE TRUE)
+set(CMAKE_VERBOSE_MAKEFILE ${VERBOSE_MAKE})
 set(CMAKE_COLOR_MAKEFILE TRUE)
 set(DEFAULT_BUILD_TYPE "Release")
+
+# Control message level of CMake
+# Should be set on command line as follow by user
+# --log-level=<ERROR|WARNING|NOTICE|STATUS|VERBOSE|DEBUG|TRACE>
+# --loglevel=  Older versions of CMake
+set(CMAKE_MESSAGE_LOG_LEVEL STATUS)
 
 #---------------------------------------------------------------------
 # Set location of *.cmake modules
@@ -49,20 +55,8 @@ include(InSourceBuild)
 
 #
 #---------------------------------------------------------------------
-# Load any special functions we want to use
-#---------------------------------------------------------------------
-#
-
-
-
-#
-#---------------------------------------------------------------------
 # Directory Report
 #---------------------------------------------------------------------
-#                                   
-# --log-level=<ERROR|WARNING|NOTICE|STATUS|VERBOSE|DEBUG|TRACE>
-# --loglevel=  Older versions of CMake
-# STATUS == Default
 #
 message(VERBOSE "")
 message(VERBOSE "")
@@ -121,19 +115,31 @@ include(RecordVars)
 #---------------------------------------------------------------------
 # Detect Library includes, flags, etc.
 #---------------------------------------------------------------------
-message(STATUS "")
-message(STATUS "================================================================")
-message(STATUS "                    Searching for Libraries                     ")
-message(STATUS "================================================================")
+message(VERBOSE "")
+message(VERBOSE "================================================================")
+message(VERBOSE "                    Searching for Libraries                     ")
+message(VERBOSE "================================================================")
 if(${CMAKE_VERSION} VERSION_GREATER "3.11.999") 
 	cmake_policy(SET CMP0074 NEW) # find_package search <name>_ROOT
 endif()
 
-find_package(_OpenMP)
-find_package(_MPI)
+if(USE_OPENMP) 
+	find_package(_OpenMP) 
+endif()
+
+if(USE_MPI)
+	find_package(_MPI)
+endif()
+
 find_package(_Boost)
-find_package(_GPTL)
-find_package(_PAPI)
+
+if(USE_GPTL)
+	find_package(GPTL REQUIRED)
+endif()
+
+if(USE_PAPI)
+	find_package(PAPI REQUIRED)
+endif()
 
 
 #

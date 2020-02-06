@@ -17,8 +17,6 @@ set(apps_files
 #
 set(apps_include_headers 		
 	PUBLIC
-		"$<$<BOOL:${USE_PAPI}>:${PAPI_INCLUDE_DIRS}>"
-		"$<$<BOOL:${USE_GPTL}>:${GPTL_INCLUDE_DIRS}>"
 )
 
 #
@@ -26,9 +24,7 @@ set(apps_include_headers
 #
 set(apps_compiler_options 
 		"$<$<CXX_COMPILER_ID:AppleClang>:-Wno-comment>"
-		"$<$<BOOL:${OpenMP_FOUND}>:${OpenMP_CXX_FLAGS}>"
-		"$<$<BOOL:${MPI_CXX_FOUND}>:${MPI_CXX_FLAGS}>" 
-	)
+)
 
 #
 # Set the library names needed by applications
@@ -36,9 +32,17 @@ set(apps_compiler_options
 # - These are only things not previously linked by a GeoFLOW library
 #
 set(apps_linked_libraries 
-	tbox 
-	cdg
-	)	
+	PUBLIC
+		tbox
+		cdg
+	PRIVATE
+		"$<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX>"
+		"$<$<BOOL:${MPI_CXX_FOUND}>:MPI::MPI_CXX>"
+		"$<$<BOOL:${Boost_SERIALIZATION_FOUND}>:Boost::serialization>"
+		"$<$<BOOL:${Boost_MPI_FOUND}>:Boost::mpi>"
+		"$<$<BOOL:${PAPI_FOUND}>:PAPI::PAPI>"
+		"$<$<BOOL:${GPTL_FOUND}>:GPTL::GPTL>"
+)		
 				             
 #
 # Loop over each building & installing

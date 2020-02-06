@@ -42,8 +42,7 @@ target_compile_features(cdg
 # 
 target_compile_options(cdg 
 	PRIVATE
-#		"$<$<CXX_COMPILER_ID:AppleClang>:-Wno-comment>"
-		"$<$<BOOL:${OpenMP_FOUND}>:${OpenMP_CXX_FLAGS}>"
+		"$<$<CXX_COMPILER_ID:AppleClang>:-Wno-comment>"
 	)
 
 #
@@ -58,10 +57,6 @@ target_include_directories(cdg
 		"$<INSTALL_INTERFACE:${MY_INSTALL_INCDIR}>"
 		"$<BUILD_INTERFACE:${MY_PROJECT_INCDIR}>"
 		"$<BUILD_INTERFACE:${MY_INSTALL_SRCDIR}>"
-		"$<$<BOOL:${OpenMP_FOUND}>:${OpenMP_CXX_INCLUDE_PATH}>"
-		"$<$<BOOL:${MPI_CXX_FOUND}>:${MPI_CXX_INCLUDE_PATH}>"
-		"$<$<BOOL:${PAPI_FOUND}>:${PAPI_INCLUDE_DIRS}>"
-		"$<$<BOOL:${GPTL_FOUND}>:${GPTL_INCLUDE_DIRS}>"
 	)
 
 #
@@ -70,10 +65,13 @@ target_include_directories(cdg
 target_link_libraries(cdg 
 	PUBLIC
 		tbox
-		"$<$<BOOL:${OpenMP_FOUND}>:${OpenMP_CXX_LIBRARIES}>"
-		"$<$<BOOL:${MPI_CXX_FOUND}>:${MPI_CXX_LIBRARIES}>"
-		"$<$<BOOL:${PAPI_FOUND}>:${PAPI_LIBRARIES}>"
-		"$<$<BOOL:${GPTL_FOUND}>:${GPTL_LIBRARIES}>"	
+	PRIVATE
+		"$<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX>"
+		"$<$<BOOL:${MPI_CXX_FOUND}>:MPI::MPI_CXX>"
+		"$<$<BOOL:${Boost_SERIALIZATION_FOUND}>:Boost::serialization>"
+		"$<$<BOOL:${Boost_MPI_FOUND}>:Boost::mpi>"
+		"$<$<BOOL:${PAPI_FOUND}>:PAPI::PAPI>"
+		"$<$<BOOL:${GPTL_FOUND}>:GPTL::GPTL>"
 	)
 
 #

@@ -31,7 +31,6 @@
 # "GPTL_LIBRARY"     - The path to the GPTL library.
 #
 
-if(USE_GPTL)
 message(VERBOSE "")
 message(VERBOSE "--------------------- GPTL Libraries -----------------------")
 message(VERBOSE "")
@@ -77,6 +76,8 @@ find_package_handle_standard_args(GPTL
 	REQUIRED_VARS
     	GPTL_LIBRARY
     	GPTL_INCLUDE_DIR
+    FAIL_MESSAGE
+    	"GPTL was not found. Set GPTL_ROOT to installation directory" 	
 )
 
 #
@@ -116,6 +117,4 @@ message(VERBOSE "Results:")
 message(VERBOSE "GPTL Found     = ${GPTL_FOUND}")
 message(VERBOSE "GPTL Includes  = ${GPTL_INCLUDE_DIRS}")
 message(VERBOSE "GPTL Libraries = ${GPTL_LIBRARIES}")
-
-endif(USE_GPTL)
 

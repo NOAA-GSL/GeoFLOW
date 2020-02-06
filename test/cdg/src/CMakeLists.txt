@@ -32,7 +32,6 @@ set(test_cdg_files
 #
 set(compiler_options 
 		"$<$<CXX_COMPILER_ID:AppleClang>:-Wno-comment>"
-		"$<$<BOOL:${OpenMP_FOUND}>:${OpenMP_CXX_FLAGS}>"
 	)
 		       
 # Set include headers unique to testing
@@ -42,13 +41,19 @@ set(include_headers "")
 # - Gets library include paths from here
 set(linked_libraries 
 		cdg 
+		"$<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX>"
+		"$<$<BOOL:${MPI_CXX_FOUND}>:MPI::MPI_CXX>"
+		"$<$<BOOL:${Boost_SERIALIZATION_FOUND}>:Boost::serialization>"
+		"$<$<BOOL:${Boost_MPI_FOUND}>:Boost::mpi>"
+		"$<$<BOOL:${PAPI_FOUND}>:PAPI::PAPI>"
+		"$<$<BOOL:${GPTL_FOUND}>:GPTL::GPTL>"
 	)
 	
 # 
 # MPI launch commands
 # CTest does not like them to be all within one command
 # 
-if(${USE_MPI})
+if(${MPI_FOUND})
 	set(LAUNCH_COMMAND "mpirun")  
 	set(LAUNCH_ARGS    "-np")
 	set(LAUNCH_PROCS   "4")

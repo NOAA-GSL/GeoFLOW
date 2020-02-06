@@ -7,7 +7,7 @@
 #
 set(analysis_files
         gcdg_pdf1d.cpp
-   )
+)
 
 #		       	
 # Include headers unique to analysis tools
@@ -21,16 +21,24 @@ set(analysis_files
 #
 set(analysis_compiler_options 
 		"$<$<CXX_COMPILER_ID:AppleClang>:-Wno-comment>"
-		"$<$<BOOL:${OpenMP_FOUND}>:${OpenMP_CXX_FLAGS}>"
-		"$<$<BOOL:${MPI_CXX_FOUND}>:${MPI_CXX_FLAGS}>" 
-	)
+)
 
 #
 # Set the library names needed by tools
 # Note:
 # - These are only things not previously linked by a GeoFLOW library
 #
-set(analysis_linked_libraries tbox cdg)	
+set(analysis_linked_libraries 
+	PRIVATE
+		tbox 
+		cdg
+		"$<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX>"
+		"$<$<BOOL:${MPI_CXX_FOUND}>:MPI::MPI_CXX>"
+		"$<$<BOOL:${Boost_SERIALIZATION_FOUND}>:Boost::serialization>"
+		"$<$<BOOL:${Boost_MPI_FOUND}>:Boost::mpi>"
+		"$<$<BOOL:${PAPI_FOUND}>:PAPI::PAPI>"
+		"$<$<BOOL:${GPTL_FOUND}>:GPTL::GPTL>"
+)	
 				             
 #
 # Loop over each building & installing

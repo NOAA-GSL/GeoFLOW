@@ -48,15 +48,31 @@ target_compile_options(tbox
 )
 
 #
+# Include directories for building library
+# Note: 
+# - The configure.hpp file is within ${MY_INSTALL_SRCDIR}
+#   until it gets installed to ${MY_INSTALL_INCDIR} at the end.
+#
+target_include_directories(tbox
+	PUBLIC  
+		"$<INSTALL_INTERFACE:${MY_INSTALL_INCDIR}>"
+		"$<BUILD_INTERFACE:${MY_PROJECT_INCDIR}>"
+		"$<BUILD_INTERFACE:${MY_INSTALL_SRCDIR}>"
+)
+
+
+#
 # Links required by library
 # 
 target_link_libraries(tbox 
 	PRIVATE
-		MPI::MPI_CXX
-		"${Boost_LIBRARIES}"
-		"$<$<BOOL:${OpenMP_FOUND}>:${OpenMP_CXX_LIBRARIES}>"
+		"$<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX>"
+		"$<$<BOOL:${MPI_CXX_FOUND}>:MPI::MPI_CXX>"
+		"$<$<BOOL:${Boost_SERIALIZATION_FOUND}>:Boost::serialization>"
+		"$<$<BOOL:${Boost_MPI_FOUND}>:Boost::mpi>"
+		"$<$<BOOL:${PAPI_FOUND}>:PAPI::PAPI>"
+		"$<$<BOOL:${GPTL_FOUND}>:GPTL::GPTL>"
 )
-
 
 #
 # Install public headers

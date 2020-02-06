@@ -8,9 +8,8 @@
 # you to have the C language enabled.
 #
 
-if(USE_OPENMP)
-message(STATUS "")
-message(STATUS "--------------------- OpenMP Libraries ------------------------")
+message(VERBOSE "")
+message(VERBOSE "--------------------- OpenMP Libraries ------------------------")
 
 #
 # First attempt to use the CMake tools to locate the library
@@ -73,6 +72,4 @@ message(VERBOSE " - Lib Names  = ${OpenMP_Fortran_LIB_NAMES}")
 message(VERBOSE " - Libraries  = ${OpenMP_Fortran_LIBRARIES}")
 message(VERBOSE " - omp_lib.h  = ${OpenMP_Fortran_HAVE_OMPLIB_HEADER}")
 message(VERBOSE " - omp_lib    = ${OpenMP_Fortran_HAVE_OMPLIB_MODULE}")
-
-endif(USE_OPENMP)
 
