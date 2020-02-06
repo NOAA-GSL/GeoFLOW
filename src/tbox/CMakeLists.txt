@@ -48,6 +48,17 @@ target_compile_options(tbox
 )
 
 #
+# Links required by library
+# 
+target_link_libraries(tbox 
+	PRIVATE
+		MPI::MPI_CXX
+		"${Boost_LIBRARIES}"
+		"$<$<BOOL:${OpenMP_FOUND}>:${OpenMP_CXX_LIBRARIES}>"
+)
+
+
+#
 # Install public headers
 #
 install(
