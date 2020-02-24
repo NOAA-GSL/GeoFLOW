@@ -116,7 +116,13 @@ int main(int argc, char* argv[]) {
 	assert( string_array[3] == "array" );
 	assert( string_array[4] == "work");
 
-
+	//
+	// Missing Keys
+	//
+	assert( pt.keyExists("missing_key")      == false  );
+	assert( pt.isValue<int>("missing_key")   == false  );
+	assert( pt.isArray<int>("missing_key")   == false  );
+	assert( pt.isPropertyTree("missing_key") == false  );
 
 	// Call shutdown call backs
 	GlobalManager::shutdown();
