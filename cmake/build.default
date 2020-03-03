@@ -14,7 +14,7 @@ option(USE_GBLAS      "USE_GBLAS"     ON)   # Use GBlas instead of C
 option(USE_GPTL       "USE_GPTL"      OFF)  # Build with GPTL?
 option(USE_PAPI       "USE_PAPI"      OFF)  # Is GPTL built with PAPI support?
 option(DO_AUTO_PROF   "DO_AUTO_PROF"  OFF)  # Do auto-profing with GPTL?
-option(VERBOSE_MAKE   "VERBOSE_MAKE"  OFF)   # Verbose MakeFile Ouput
+option(VERBOSE_MAKE   "VERBOSE_MAKE"  ON)   # Verbose MakeFile Ouput
 option(ENABLE_TESTS   "ENABLE_TESTS"  ON)   # Enable Testing
 
 #
