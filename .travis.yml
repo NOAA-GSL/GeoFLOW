@@ -39,6 +39,7 @@ env:
     - CPPFLAGS='-I/usr/include'
     - CFLAGS='-std=c99'
     - LDFLAGS='-L/usr/lib'
+    - OMPI_SKIP_MPICXX=1
   
 script:
   - pwd
