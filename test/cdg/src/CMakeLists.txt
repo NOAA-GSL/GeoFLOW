@@ -9,7 +9,7 @@ set(test_cdg_files
 		  gtest_blas.cpp    
 		  gtest_ggfx.cpp
 		  gtest_gmtk.cpp
-		# gtest_mass.cpp
+		  gtest_mass.cpp
 		# gtest_advect.cpp  # Only compiles with GPTL
 		# gtest_binding.cpp
 		# gtest_burgers.cpp
