@@ -15,16 +15,24 @@ set(test_ode_files
 #
 # Build list of compiler options for tests
 #
-set(compiler_options "$<$<CXX_COMPILER_ID:AppleClang>:-Wno-comment>"
-		             "$<$<BOOL:${OpenMP_FOUND}>:${OpenMP_CXX_FLAGS}>"
-		             "$<$<BOOL:${MPI_CXX_FOUND}>:${MPI_CXX_FLAGS}>" )
+set(compiler_options 
+		"$<$<CXX_COMPILER_ID:AppleClang>:-Wno-comment>"
+	)
 		       
 # Set include headers unique to testing
 set(include_headers "")
 
 # Set libraries the test need
 # - Gets library include paths from here
-set(linked_libraries tbox)
+set(linked_libraries 
+		cdg
+		"$<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX>"
+		"$<$<BOOL:${MPI_CXX_FOUND}>:MPI::MPI_CXX>"
+		"$<$<BOOL:${Boost_SERIALIZATION_FOUND}>:Boost::serialization>"
+		"$<$<BOOL:${Boost_MPI_FOUND}>:Boost::mpi>"
+		"$<$<BOOL:${PAPI_FOUND}>:PAPI::PAPI>"
+		"$<$<BOOL:${GPTL_FOUND}>:GPTL::GPTL>"
+	)
 		             
 #
 # Loop over each test building and adding to ctest
