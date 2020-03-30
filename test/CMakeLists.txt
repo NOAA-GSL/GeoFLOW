@@ -4,7 +4,8 @@
 # Add SandBox Testing 
 # (Not included in Travis Testing)
 #
-add_subdirectory(sandbox/cdg)
+add_subdirectory(sandbox/cdg/data)
+add_subdirectory(sandbox/cdg/src)
 
 
 #
