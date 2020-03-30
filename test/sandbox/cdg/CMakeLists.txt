@@ -55,8 +55,7 @@ FOREACH(test_src ${test_cdg_files})
 	target_compile_options(${test_name} PRIVATE ${compiler_options})
 	target_include_directories(${test_name} PRIVATE ${include_headers})
 	target_link_libraries(${test_name} ${linked_libraries})
-	add_test(NAME ${test_name} 
-		     COMMAND ${LAUNCH_COMMAND} ${LAUNCH_ARGS} ${LAUNCH_PROCS} $<TARGET_FILE:${test_name}>)
+	install(TARGETS ${test_name} DESTINATION  "${MY_INSTALL_TSTDIR}/sandbox/cdg")
 ENDFOREACH(test_src)
 
 #
