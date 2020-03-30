@@ -6,7 +6,7 @@
 # Build list of all tests to create
 #
 set(test_cdg_files
-		  src/gtest_mass.cpp
+		  mass.cpp
 )
 
 #
@@ -30,28 +30,14 @@ set(linked_libraries
 		"$<$<BOOL:${PAPI_FOUND}>:PAPI::PAPI>"
 		"$<$<BOOL:${GPTL_FOUND}>:GPTL::GPTL>"
 	)
-	
-# 
-# MPI launch commands
-# CTest does not like them to be all within one command
-# 
-if(${MPI_FOUND})
-	set(LAUNCH_COMMAND "mpirun")  
-	set(LAUNCH_ARGS    "-np")
-	set(LAUNCH_PROCS   "4")
-else()
-	set(LAUNCH_COMMAND "")  
-	set(LAUNCH_ARGS    "")
-	set(LAUNCH_PROCS   "")
-endif()	       
-      
+	      
 #
 # Loop over each test building and adding to ctest
 # - Build test name
 #	             
 FOREACH(test_src ${test_cdg_files})
 	string(REPLACE ".cpp" "" test_name ${test_src})
-	add_executable(${test_name} ${test_src})
+	add_executable(${test_name} src/${test_src})
 	target_compile_options(${test_name} PRIVATE ${compiler_options})
 	target_include_directories(${test_name} PRIVATE ${include_headers})
 	target_link_libraries(${test_name} ${linked_libraries})
