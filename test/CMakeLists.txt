@@ -1,5 +1,5 @@
 
 
 # Add test executables
-add_subdirectory(tbox)
-add_subdirectory(cdg)
+add_subdirectory(sandbox)
+add_subdirectory(travis)

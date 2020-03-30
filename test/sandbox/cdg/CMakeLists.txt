@@ -6,26 +6,7 @@
 # Build list of all tests to create
 #
 set(test_cdg_files
-		  gtest_cg.cpp    
-		  gtest_blas.cpp    
-		  gtest_ggfx.cpp
-		  gtest_gmtk.cpp
-		  gtest_mass.cpp
-		# gtest_advect.cpp  # Only compiles with GPTL
-		# gtest_binding.cpp
-		# gtest_burgers.cpp
-		# gtest_class_acc.cpp
-		# gtest_contig.cpp
-		# gtest_derivs.cpp
-		# gtest_ggrid.cpp
-		# gtest_gll.cpp
-		# gtest_gmm.cpp
-		# gtest_helm.cpp
-		# gtest_morton.cpp
-		# gtest_pingpong.cpp
-		# gtest_rk.cpp
-		# gtest_vec_access.cpp
-		# gtest_vec.cpp
+		  src/gtest_mass.cpp
 )
 
 #
@@ -84,8 +65,8 @@ ENDFOREACH(test_src)
 
 # Install test data
 install(
-	DIRECTORY "${MY_PROJECT_TSTDIR}/cdg/data/"
-	DESTINATION "${MY_INSTALL_TSTDIR}/cdg"  
+	DIRECTORY "${MY_PROJECT_TSTDIR}/sandbox/cdg/data/"
+	DESTINATION "${MY_INSTALL_TSTDIR}/sandbox/cdg"  
 	FILES_MATCHING 
 	PATTERN "*"
 )
