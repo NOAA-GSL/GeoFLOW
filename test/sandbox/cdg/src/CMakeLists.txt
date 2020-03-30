@@ -5,12 +5,16 @@
 # 
 # Build list of all tests to create
 #
-set(test_cdg_files 
-		  cdg_blas.cpp 
-		  cdg_cg.cpp    
-		  cdg_ggfx.cpp
-		  cdg_gmtk.cpp
-		  cdg_mass.cpp
+set(test_cdg_files
+		  gtest_mass.cpp
+		# gtest_gll.cpp
+		# gtest_gmm.cpp
+		# gtest_helm.cpp
+		# gtest_morton.cpp
+		# gtest_pingpong.cpp
+		# gtest_rk.cpp
+		# gtest_vec_access.cpp
+		# gtest_vec.cpp
 )
 
 #
@@ -34,45 +38,20 @@ set(linked_libraries
 		"$<$<BOOL:${PAPI_FOUND}>:PAPI::PAPI>"
 		"$<$<BOOL:${GPTL_FOUND}>:GPTL::GPTL>"
 	)
-	
-# 
-# MPI launch commands
-# CTest does not like them to be all within one command
-# 
-if(${MPI_FOUND})
-	set(LAUNCH_COMMAND "mpirun")  
-	set(LAUNCH_ARGS    "-np")
-	set(LAUNCH_PROCS   "4")
-else()
-	set(LAUNCH_COMMAND "")  
-	set(LAUNCH_ARGS    "")
-	set(LAUNCH_PROCS   "")
-endif()	       
-      
+	      
 #
-# Loop over each test building and adding to ctest
+# Loop over each test building
 # - Build test name
 #	             
 FOREACH(test_src ${test_cdg_files})
 	string(REPLACE ".cpp" "" test_name ${test_src})
+	
 	add_executable(${test_name} ${test_src})
 	target_compile_options(${test_name} PRIVATE ${compiler_options})
 	target_include_directories(${test_name} PRIVATE ${include_headers})
 	target_link_libraries(${test_name} ${linked_libraries})
-	add_test(NAME ${test_name} 
-		     COMMAND ${LAUNCH_COMMAND} ${LAUNCH_ARGS} ${LAUNCH_PROCS} $<TARGET_FILE:${test_name}>)
+	install(TARGETS ${test_name} DESTINATION  "${MY_INSTALL_TSTDIR}/sandbox/cdg")
 ENDFOREACH(test_src)
 
-#
-# Copy Test data into executable directory
-#
-
-# Install test data
-install(
-	DIRECTORY "${MY_PROJECT_TSTDIR}/travis/cdg/data/"
-	DESTINATION "${MY_INSTALL_TSTDIR}/travis/cdg"  
-	FILES_MATCHING 
-	PATTERN "*"
-)
 
 

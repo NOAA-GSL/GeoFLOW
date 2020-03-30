@@ -1,59 +1,16 @@
 #
-# === Unit Tests
+# === SandBox CDG Tests & Data
 #
 
-# 
-# Build list of all tests to create
 #
-set(test_cdg_files
-		  mass.cpp
-)
+# Copy testing data over
+#
+add_subdirectory(data)
 
 #
-# Build list of compiler options for tests
+# Build testing executables
 #
-set(compiler_options 
-		"$<$<CXX_COMPILER_ID:AppleClang>:-Wno-comment>"
-	)
-		       
-# Set include headers unique to testing
-set(include_headers "")
+add_subdirectory(src)
 
-# Set libraries the test need
-# - Gets library include paths from here
-set(linked_libraries 
-		cdg 
-		"$<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX>"
-		"$<$<BOOL:${MPI_CXX_FOUND}>:MPI::MPI_CXX>"
-		"$<$<BOOL:${Boost_SERIALIZATION_FOUND}>:Boost::serialization>"
-		"$<$<BOOL:${Boost_MPI_FOUND}>:Boost::mpi>"
-		"$<$<BOOL:${PAPI_FOUND}>:PAPI::PAPI>"
-		"$<$<BOOL:${GPTL_FOUND}>:GPTL::GPTL>"
-	)
-	      
-#
-# Loop over each test building and adding to ctest
-# - Build test name
-#	             
-FOREACH(test_src ${test_cdg_files})
-	string(REPLACE ".cpp" "" test_name ${test_src})
-	add_executable(${test_name} src/${test_src})
-	target_compile_options(${test_name} PRIVATE ${compiler_options})
-	target_include_directories(${test_name} PRIVATE ${include_headers})
-	target_link_libraries(${test_name} ${linked_libraries})
-	install(TARGETS ${test_name} DESTINATION  "${MY_INSTALL_TSTDIR}/sandbox/cdg")
-ENDFOREACH(test_src)
-
-#
-# Copy Test data into executable directory
-#
-
-# Install test data
-install(
-	DIRECTORY "${MY_PROJECT_TSTDIR}/sandbox/cdg/data/"
-	DESTINATION "${MY_INSTALL_TSTDIR}/sandbox/cdg"  
-	FILES_MATCHING 
-	PATTERN "*"
-)
 
 

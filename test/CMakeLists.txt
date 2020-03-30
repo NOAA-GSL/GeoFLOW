@@ -1,5 +1,14 @@
 
 
-# Add test executables
-add_subdirectory(sandbox)
-add_subdirectory(travis)
+#
+# Add SandBox Testing 
+# (Not included in Travis Testing)
+#
+add_subdirectory(sandbox/cdg)
+
+
+#
+# Add Travis Testing
+#
+add_subdirectory(travis/cdg)
+add_subdirectory(travis/tbox)
