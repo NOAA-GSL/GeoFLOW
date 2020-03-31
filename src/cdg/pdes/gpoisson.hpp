@@ -34,7 +34,6 @@ template<typename TypePack>
 class GPoisson 
 {
 public:
-//                    enum  GPoissonERR         {GPoissonERR_NONE=0, GPoissonERR_NOCONVERGE, GPoissonERR_SOLVE, GPoissonERR_PRECOND,  GPoissonERR_BADITERNUM};
                       using Types          = TypePack;
                       using SolverBase     = LinSolverBase<Types>;
                       using LapOperator    = typename types::LapOperator
@@ -76,12 +75,12 @@ public:
 
 private:
 // Private methods:
-                      void     init();
+                      
 // Private data:
      GC_COMM          comm_;        // communicator
      GBOOL            disc_rhs_;    // discretize RHS (multiply by -M_L)
      State           *tmppack_;     // tmp vector pool
-     State           tmpcg_;        // tmp vector pool given to linear solver
+     State            tmpcg_;       // tmp vector pool given to linear solver
      Grid            *grid_;        // grid object
      GMass           *gmass_;       // mass matrix operator
      Preconditioner  *precond_;     // preconditioner
@@ -91,7 +90,7 @@ private:
 
 };
 
-#include "gcg.ipp"
+#include "gpoisson.ipp"
 
 #endif
 

@@ -14,15 +14,6 @@
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
-#include <cmath>
-#include <type_traits>
-#include <cassert>
-#include <limits>
-#include "ggfx.hpp"
-#include "gcomm.hpp"
-#include "tbox/error_handler.hpp"
-
-using namespace std;
 
 //************************************************************************************
 //************************************************************************************
@@ -36,8 +27,8 @@ using namespace std;
 //          tmppack: temp vector list
 // RETURNS: GPoisson
 //************************************************************************************
-template<typename Types>
-GPoisson<Types>::GPoisson(Traits& traits, Grid& grid, LapOperator& Lap, Preconditioner* precond,  ConnectivityOp& ggfx, State& tmppack)
+template<typename TypePack>
+GPoisson<TypePack>::GPoisson(Traits& traits, Grid& grid, LapOperator& Lap, Preconditioner* precond,  ConnectivityOp& ggfx, State& tmppack)
 comm_            (ggfx.getComm()),
 disc_rhs_                  (TRUE),
 tmppack_               (&tmppack),
@@ -50,7 +41,7 @@ cg_                     (NULLPTR)
   tmpcg_.resize(tmppack_->size());
   for ( auto j=0; j<tmpcg_.size(); j++ ) tmpcg_[j] = tmppack_[j+1];
 
-  cg_ = new CG<Types>(traits, *grid_, *ggfx_, *tmpcg_);
+  cg_ = new CG<TypePack>(traits, *grid_, *ggfx_, *tmpcg_);
   if ( precond_ != NULLPTR ) cg_->set_precond(*precond_);
 
   gmass_ = new GMass(grid);
@@ -65,8 +56,8 @@ cg_                     (NULLPTR)
 // ARGS   : none.
 // RETURNS: none.
 //************************************************************************************
-template<typename Types>
-GPoisson<Types>::~GPoisson()
+template<typename TypePack>
+GPoisson<TypePack>::~GPoisson()
 {
   if ( cg_    != NULLPTR ) delete cg_;
   if ( gmass_ != NULLPTR ) delete gmass_;
@@ -81,8 +72,8 @@ GPoisson<Types>::~GPoisson()
 // RETURNS: none
 //************************************************************************************
 // Copy constructor method
-template<typename Types>
-GPoisson<Types>::GPoisson(const GPoisson<Types> &a)
+template<typename TypePack>
+GPoisson<TypePack>::GPoisson(const GPoisson<TypePack> &a)
 {
 
 } // end of copy constructor method
@@ -95,8 +86,8 @@ GPoisson<Types>::GPoisson(const GPoisson<Types> &a)
 // ARGS   : GPoisson
 // RETURNS: GPoisson
 //************************************************************************************
-template<typename Types>
-GPoisson<Types>& GPoisson<Types>::operator=(const GPoisson<Types> &a)
+template<typename TypePack>
+GPoisson<TypePack>& GPoisson<TypePack>::operator=(const GPoisson<TypePack> &a)
 {
 
   return *this;
@@ -114,8 +105,8 @@ GPoisson<Types>& GPoisson<Types>::operator=(const GPoisson<Types> &a)
 //          x    : solution, returned
 // RETURNS: integer error code; 0 on success
 //************************************************************************************
-template<typename Types>
-GINT GPoisson<Types>::solve(const StateComp& b, StateComp& x)
+template<typename TypePack>
+GINT GPoisson<TypePack>::solve(const StateComp& b, StateComp& x)
 {
   GINT iret; 
 
@@ -147,8 +138,8 @@ GINT GPoisson<Types>::solve(const StateComp& b, StateComp& x)
 // ARGS   : 
 // RETURNS: integer error code; 0 on success
 //************************************************************************************
-template<typename Types>
-GINT GPoisson<Types>::solve(const StateComp& b, const StateComp& xb, StateComp& x)
+template<typename TypePack>
+GINT GPoisson<TypePack>::solve(const StateComp& b, const StateComp& xb, StateComp& x)
 {
   GINT iret;
 
