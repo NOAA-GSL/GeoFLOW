@@ -66,7 +66,7 @@ public:
                       GINT         solve_impl(Operator& A, const StateComp& b, 
                                               const StateComp& xb, StateComp& x);
                       GINT         solve_impl(const StateComp& b, StateComp& x) {assert(FALSE);}
-                      void         set_precond(Predonditioner& precond)
+                      void         set_precond(Preconditioner& precond)
                                    {precond_ = &precond;}
                       StateComp&   get_residuals() { return residuals_; }  
                       GFTYPE       get_resid_max() { return residmax_; }
@@ -76,9 +76,11 @@ public:
 
 private:
 // Private methods:
-
+                       void        init();
+                       GFTYPE      compute_norm(const StateComp& x, State& tmp);
 // Private data:
      GC_COMM           comm_;        // communicator
+     GBOOL             bInit_;       // initialization flag
      GBOOL             bbv_;         // is there a bdy vector?
      GINT              irank_;       // rank
      GINT              iter_;        // iteration number
@@ -92,7 +94,7 @@ private:
 
 };
 
-#include "gpoisson.ipp"
+#include "gcg.ipp"
 
 #endif
 
