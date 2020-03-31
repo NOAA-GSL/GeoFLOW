@@ -54,9 +54,9 @@ public:
                       GPoisson  &operator=(const GPoisson &);
                    
 
-                      GINT     solve(const StateComp& b, StateComp& x);
+                      GINT     solve(const StateComp& b, StateComp& u);
                       GINT     solve(const StateComp& b, 
-                                     const StateComp& xb, StateComp& x);
+                                     const StateComp& ub, StateComp& u);
 
                       StateComp&   get_residuals() { return cg_->get_residuals(); }  
                       GFTYPE       get_resid_max() { return cg_->get_resid_max(); }
