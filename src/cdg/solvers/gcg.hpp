@@ -2,7 +2,10 @@
 // Module       : gcg.hpp
 // Date         : 3/7/20 (DLR)
 // Description  : Encapsulates the methods and data associated with
-//                a conjugate Gradient (CG) solver
+//                a Poisson solver. The (continuous) Poisson equation 
+//                is solved:
+//                        Nabla^2 (u + ub) = f,
+//                where ub is the continuous boundary solution.
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
@@ -63,6 +66,8 @@ public:
                       GINT         solve_impl(Operator& A, const StateComp& b, 
                                               const StateComp& xb, StateComp& x);
                       GINT         solve_impl(const StateComp& b, StateComp& x) {assert(FALSE);}
+                      void         set_precond(Predonditioner& precond)
+                                   {precond_ = &precond;}
                       StateComp&   get_residuals() { return residuals_; }  
                       GFTYPE       get_resid_max() { return residmax_; }
                       GFTYPE       get_resid_min() { return residmin_; }
@@ -71,11 +76,9 @@ public:
 
 private:
 // Private methods:
-                      void     init();
-                      GFTYPE   compute_norm(const StateComp&, State&);
+
 // Private data:
      GC_COMM           comm_;        // communicator
-     GBOOL             bInit_;       // object initialized?
      GBOOL             bbv_;         // is there a bdy vector?
      GINT              irank_;       // rank
      GINT              iter_;        // iteration number
@@ -89,7 +92,7 @@ private:
 
 };
 
-#include "gcg.ipp"
+#include "gpoisson.ipp"
 
 #endif
 
