@@ -5,7 +5,12 @@
 //                a Poisson solver.The (continuous) Poisson equation 
 //                is solved:
 //                        Nabla^2 (u + ub) = f,
-//                where ub is the continuous boundary solution.
+//                where ub is the continuous boundary solution. If
+//                disc_rhs_==TRUE, then solver will 'discretize'
+//                the RHS, assuming the one provided is smooth/continuous.
+//                'Discretizing' RHS means multiplying by -M_L, where
+//                M_L is the local mass matrix. Otherwise, it is assumed
+//                this is done by caller.
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
@@ -34,15 +39,21 @@ using namespace std;
 template<typename Types>
 GPoisson<Types>::GPoisson(Traits& traits, Grid& grid, LapOperator& Lap, Preconditioner* precond,  ConnectivityOp& ggfx, State& tmppack)
 comm_            (ggfx.getComm()),
-bInit_                    (FALSE),
+disc_rhs_                  (TRUE),
 tmppack_               (&tmppack),
 grid_                    (&grid_),
 Lap_                       (&Lap),
 precond_                (precond),
 cg_                     (NULLPTR)
 {
-  cg_ = new CG<Types>(traits, *grid_, *ggfx_, *tmppack_);
+  // Save one element of tmppack for computation:
+  tmpcg_.resize(tmppack_->size());
+  for ( auto j=0; j<tmpcg_.size(); j++ ) tmpcg_[j] = tmppack_[j+1];
+
+  cg_ = new CG<Types>(traits, *grid_, *ggfx_, *tmpcg_);
   if ( precond_ != NULLPTR ) cg_->set_precond(*precond_);
+
+  gmass_ = new GMass(grid);
 
 } // end of constructor (2) method
 
@@ -57,7 +68,8 @@ cg_                     (NULLPTR)
 template<typename Types>
 GPoisson<Types>::~GPoisson()
 {
-  if ( cg_ != NULLPTR ) delete cg_;
+  if ( cg_    != NULLPTR ) delete cg_;
+  if ( gmass_ != NULLPTR ) delete gmass_;
 }
 
 
@@ -107,7 +119,16 @@ GINT GPoisson<Types>::solve(const StateComp& b, StateComp& x)
 {
   GINT iret; 
 
-  iret = cg.solve(*L_, b, x);
+  // 'Discretize' rhs by multiplying by
+  //   b <- -M_L b, wherer M_L is local (not assembled)
+  // mass matrix:
+  (*tmppack_)[0] = b;
+  if ( disc_rhs_ ) { 
+    (*tmppack_)[0].pointProd(*(gmass_->data()));
+    (*tmppack_)[0] *= -1.0;
+  }
+
+  iret = cg.solve(*L_, (*tmppack_)[0], x);
 
   return iret;
 
@@ -121,7 +142,7 @@ GINT GPoisson<Types>::solve(const StateComp& b, StateComp& x)
 //          assuming an initial guess, x
 // ARGS   : 
 //          b    : right-hand side vector
-//          xb   : boundary solution
+//          xb   : boundary solution. Must be smooth, but not assembled
 //          x    : solution, x0+xb, returned, where x0=homogeneous solution
 // ARGS   : 
 // RETURNS: integer error code; 0 on success
@@ -131,7 +152,16 @@ GINT GPoisson<Types>::solve(const StateComp& b, const StateComp& xb, StateComp& 
 {
   GINT iret;
 
-  iret = cg.solve(*L_, b, xb, x);
+  // 'Discretize' rhs by multiplying by
+  //   b <- -M_L b, wherer M_L is local (not assembled)
+  // mass matrix:
+  (*tmppack_)[0] = b;
+  if ( disc_rhs_ ) { 
+    (*tmppack_)[0].pointProd(*(gmass_->data()));
+    (*tmppack_)[0] *= -1.0;
+  }
+
+  iret = cg.solve(*L_, (*tmppack_)[0], xb, x);
   
   return iret;
 

@@ -2,7 +2,15 @@
 // Module       : gpoisson.hpp
 // Date         : 3/27/20 (DLR)
 // Description  : Encapsulates the methods and data associated with
-//                a Poisson solver.
+//                a Poisson solver. he (continuous) Poisson equation
+//                is solved:
+//                        Nabla^2 (u + ub) = f,
+//                where ub is the continuous boundary solution. If
+//                disc_rhs_==TRUE, then solver will 'discretize'
+//                the RHS, assuming the one provided is smooth/continuous.
+//                'Discretizing' RHS means multiplying by -M_L, where
+//                M_L is the local mass matrix. Otherwise, it is assumed
+//                this is done by caller.
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
@@ -13,6 +21,7 @@
 #include <sstream>
 #include "gtvector.hpp"
 #include "gtmatrix.hpp"
+#include "gmass.hpp"
 #include "gcg.hpp"
 #include "gcomm.hpp"
 #include "ggfx.hpp"
@@ -54,9 +63,10 @@ public:
                       GPoisson  &operator=(const GPoisson &);
                    
 
-                      GINT     solve(const StateComp& b, StateComp& u);
-                      GINT     solve(const StateComp& b, 
+                      GINT         solve(const StateComp& b, StateComp& u);
+                      GINT         solve(const StateComp& b, 
                                      const StateComp& ub, StateComp& u);
+                      void         discretize_rhs(GBOOL flag) { discrete_rhs_=flag; };
 
                       StateComp&   get_residuals() { return cg_->get_residuals(); }  
                       GFTYPE       get_resid_max() { return cg_->get_resid_max(); }
@@ -69,9 +79,11 @@ private:
                       void     init();
 // Private data:
      GC_COMM          comm_;        // communicator
-     GBOOL            bInit_;       // object initialized?
+     GBOOL            disc_rhs_;    // discretize RHS (multiply by -M_L)
      State           *tmppack_;     // tmp vector pool
+     State           tmpcg_;        // tmp vector pool given to linear solver
      Grid            *grid_;        // grid object
+     GMass           *gmass_;       // mass matrix operator
      Preconditioner  *precond_;     // preconditioner
      LapOperator     *L_;           // Laplacian operator
      GCG<Types>      *cg_;          // Conjugate gradient operator
