@@ -25,16 +25,22 @@ mkdir build
 cd build
 ```
 
-3. Configure your system to have the proper libraries visable to the build system.
-This is usually done by your system administratior but the listing below will show
-the enviroment variables CMake is expecting to find.  *Note:* These are environment 
-variables used by CMake and not part of the GeoFLOW application. 
-```console
-export BOOST_ROOT=/my/dir/to/boost/1.71.0
-export MPI_C_COMPILER=/my/path/to/mpi/wrapped/mpicc           # MPI Wrapped C Compiler
-export MPI_CXX_COMPILER=/my/path/to/mpi/wrapped/mpicxx        # MPI Wrapped C++ Compiler
-export MPI_Fortran_COMPILER=/my/path/to/mpi/wrapped/mpifort   # MPI Wrapped F Compiler
-```
+3. Configure your system to have the proper libraries visable to the CMake build system:  
+These variables should be set by your system administrator or by loading modules.  In case 
+they are not, a short description of what CMake expects is provided.
+    - Boost
+    System will first check BOOST_ROOT then system paths for libraries
+    ```console
+	export BOOST_ROOT=/my/dir/to/boost/1.71.0                     # Boost Installation
+	```
+	- MPI
+	CMake will first check path of mpiexec for compilers then env variables
+	```console 
+    export MPI_C_COMPILER=/my/path/to/mpi/wrapped/mpicc           # MPI Wrapped C Compiler
+    export MPI_CXX_COMPILER=/my/path/to/mpi/wrapped/mpicxx        # MPI Wrapped C++ Compiler
+    export MPI_Fortran_COMPILER=/my/path/to/mpi/wrapped/mpifort   # MPI Wrapped F Compiler
+    ```
+**Note:** These are environment variables used by CMake and not part of the GeoFLOW application.
 
 4. Run cmake to generate the Makefile:
 ```console
