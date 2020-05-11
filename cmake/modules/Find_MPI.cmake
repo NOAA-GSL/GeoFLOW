@@ -3,7 +3,7 @@
 #
 # This wrapper uses the CMake provided function for
 # locating the MPI compiler and options. The following 
-# details are an short description of how to use it.
+# details are a short description of how to use it.
 #
 # Languages <lang>
 # =======================

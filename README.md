@@ -3,12 +3,13 @@ Geo FLuid Object Workbench
 
 ## Compilation from Source on UNIX
 To compile the source distribution, you need at least the following to build the executable:
-* [CMake](https://cmake.org/) version 3.1.0 or later to generate the Makefile for your platform. 
-* C++ compiler, supporting the C++11 standard or later.
-    * OpenMP directives (optional).
+* [CMake](https://cmake.org/) version 3.1.0 or later to generate the Makefile for your platform 
+* C++ compiler, supporting the C++11 standard or later
+    * OpenMP directives (optional)
+* MPI Library compatible with your C++ compiler    
 * [Boost C++](https://www.boost.org/) headers with the mpi and serialization libraries compiled
     * This requirment may be removed in the future
-* MPI Library compatible with your C++ compiler
+
 
 ## Compilation is done by performing the following steps
 
@@ -24,23 +25,34 @@ mkdir build
 cd build
 ```
 
-3. Run cmake to generate the Makefile:
+3. Configure your system to have the proper libraries visable to the build system.
+This is usually done by your system administratior but the listing below will show
+the enviroment variables CMake is expecting to find.  *Note:* These are environment 
+variables used by CMake and not part of the GeoFLOW application. 
+```console
+export BOOST_ROOT=/my/dir/to/boost/1.71.0
+export MPI_C_COMPILER=/my/path/to/mpi/wrapped/mpicc           # MPI Wrapped C Compiler
+export MPI_CXX_COMPILER=/my/path/to/mpi/wrapped/mpicxx        # MPI Wrapped C++ Compiler
+export MPI_Fortran_COMPILER=/my/path/to/mpi/wrapped/mpifort   # MPI Wrapped F Compiler
+```
+
+4. Run cmake to generate the Makefile:
 ```console
 cmake ..
 ```
 cmake tries to determine the platform you use, and will look for the requires tools. It will report if something is missing.
 
-4. Compile the program by running make:
+5. Compile the program by running make:
 ```console
 make
 ```
 
-5. Optional: Run tests cases.
+6. Optional: Run tests cases.
 ```console
 make test
 ```
 
-6. Optional: Generate the documentation. 
+7. Optional: Generate the documentation. 
 ```console
 make docs
 ```
