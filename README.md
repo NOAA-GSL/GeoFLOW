@@ -26,11 +26,13 @@ cd build
 ```
 
 3. Configure your system to have the proper libraries visable to the CMake build system:  
-    - Boost - CMake will check BOOST_ROOT then system paths for Boost libraries
+    - Boost 
+        - CMake will check BOOST_ROOT then system paths for Boost libraries
     ```console
 	export BOOST_ROOT=/my/dir/to/boost/1.71.0                     # Boost Installation
 	```
-	- MPI - CMake will check path of *mpiexec* for compilers then envirnment variables
+	- MPI 
+	    - CMake will check path of *mpiexec* for compilers then envirnment variables
 	```console 
     export MPI_C_COMPILER=/my/path/to/mpi/wrapped/mpicc           # MPI Wrapped C Compiler
     export MPI_CXX_COMPILER=/my/path/to/mpi/wrapped/mpicxx        # MPI Wrapped C++ Compiler
