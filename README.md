@@ -2,13 +2,19 @@
 Geo FLuid Object Workbench
 
 ## Compilation from Source on UNIX
+
 To compile the source distribution, you need at least the following to build the executable:
 * [CMake](https://cmake.org/) version 3.1.0 or later to generate the Makefile for your platform 
-* C++ compiler, supporting the C++11 standard or later
+* C++ compiler, supporting the C++11 standard or newer
     * OpenMP directives (optional)
 * MPI Library compatible with your C++ compiler    
 * [Boost C++](https://www.boost.org/) headers with the mpi and serialization libraries compiled
     * This requirment may be removed in the future
+
+Optional tasks can be performed using the following additional applications:
+* [DOxygen](http://www.doxygen.nl/) to generate API documentation
+* [ParaView](https://www.paraview.org/) to visualize grid and solution files
+* [Python 3](https://www.python.org/) for post processing grid and solution files
 
 
 ## Compilation is done by performing the following steps
@@ -44,14 +50,14 @@ cd build
 ```console
 cmake ..
 ```
-cmake tries to determine the platform you use, and will look for the required tools. It will report if something is missing.
+CMake tries to determine the platform you use, and will look for the required tools. It will report if something is missing.
 
-5. Compile the program by running make:
+5. Compile and install the program by running make:
 ```console
-make
+make install
 ```
 
-6. Optional: Run tests cases.
+6. Optional: Run test cases.
 ```console
 make test
 ```
