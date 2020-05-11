@@ -26,7 +26,7 @@ cd build
 ```
 
 3. Configure your system to have the proper libraries visable to the CMake build system:  
-**Note:** These are environment variables used by CMake and not part of the GeoFLOW application
+**Note:** These rules and variables used by CMake and not part of the GeoFLOW application
     - Boost 
         - CMake will check BOOST_ROOT then system paths for Boost libraries
     ```console
@@ -44,7 +44,7 @@ cd build
 ```console
 cmake ..
 ```
-cmake tries to determine the platform you use, and will look for the requires tools. It will report if something is missing.
+cmake tries to determine the platform you use, and will look for the required tools. It will report if something is missing.
 
 5. Compile the program by running make:
 ```console
