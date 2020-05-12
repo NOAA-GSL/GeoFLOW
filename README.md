@@ -77,7 +77,7 @@ application.
 ## Examples and Program Usage
 
 For examples and instructions on how to run GeoFLOW see our 
-examples page [here](docs/doxy/examples.md)
+[examples page](docs/doxy/examples.md)
 
 
 
