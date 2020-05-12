@@ -10,13 +10,13 @@ package contains a collection of classes that are logically-related with respect
 play in spectral element applications. Links to the package contents follow the list of package 
 descriptions:
 
-* [tbox](@ref ToolBoxDoxy):  
+* [tbox](@ref ToolBox)  
     The "Tool Box" package which provides basic utility classes that are used throught the application 
-development 
+    development 
 
-* [kitchen sink](@ref KitchenDoxy):  
+* [pdeint](@ref PDE_Int)  
+    The PDE Integrators package provided templated classes that are used to integrate systems 
+    of equations forward in time
+    
+* [kitchen sink](@ref Kitchen)  
     The "Kitchen Sink" package which provides everything else 
-
-## Examples On Usage
-
-[Examples](@ref ExamplesDoxy)

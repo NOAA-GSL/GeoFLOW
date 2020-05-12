@@ -1,3 +1,3 @@
-# ToolBox Documentation {#ToolBoxDoxy}
+# ToolBox Documentation {#ToolBox}
 
 ## Add Details Here

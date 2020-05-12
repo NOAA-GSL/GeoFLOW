@@ -1,1 +1,1 @@
-# GeoFLOW Examples {#ExamplesDoxy}
+# GeoFLOW Examples

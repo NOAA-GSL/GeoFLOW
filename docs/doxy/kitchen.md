@@ -1,3 +1,3 @@
-# Kitchen Sink Documentation {#KitchenDoxy}
+# Kitchen Sink Documentation {#Kitchen}
 
 ## Add Details Here
