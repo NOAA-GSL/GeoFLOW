@@ -67,6 +67,9 @@ make test
 make docs
 ```
 
+## Examples and Program Usage
+
+For examples and instructions on how to run GeoFLOW see our examples page [here](docs/examples.md)
 
 
 
