@@ -791,8 +791,8 @@ WARN_LOGFILE           =
 # spaces. See also FILE_PATTERNS and EXTENSION_MAPPING
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = @MY_PROJECT_DOCDIR@ @MY_PROJECT_SRCDIR@
-USE_MDFILE_AS_MAINPAGE = @MY_PROJECT_DOCDIR@/mainpage.md
+INPUT                  = @MY_PROJECT_DOCDIR@/doxy @MY_PROJECT_SRCDIR@
+USE_MDFILE_AS_MAINPAGE = @MY_PROJECT_DOCDIR@/doxy/mainpage.md
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
