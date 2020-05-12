@@ -66,10 +66,23 @@ make test
 ```console
 make docs
 ```
+To view the detailed API documentation point a web browser at
+[docs/html/index.html](docs/html/index.html) within the *build*
+directory.
+
+The API documentation is intended for developers who want to 
+see details of the code inside the GeoFLOW framework.  It is 
+not intended for GeoFLOW users who simply want to run an 
+application.  
+
+
 
 ## Examples and Program Usage
 
-For examples and instructions on how to run GeoFLOW see our examples page [here](docs/examples.md)
+For examples and instructions on how to run GeoFLOW see our 
+examples page [docs/examples.md](docs/examples.md)
+
+To view the 
 
 
 
