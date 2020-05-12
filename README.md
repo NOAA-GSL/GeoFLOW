@@ -4,7 +4,7 @@ Geo FLuid Object Workbench
 ## Compilation from Source on UNIX
 
 To compile the source distribution, you need at least the following to build the executable:
-* [CMake](https://cmake.org/) version 3.1.0 or later to generate the Makefile for your platform 
+* [CMake](https://cmake.org/) version 3.9.0 or later to generate the Makefile for your platform 
 * C++ compiler, supporting the C++11 standard or newer
     * OpenMP directives (optional)
 * MPI Library compatible with your C++ compiler    
