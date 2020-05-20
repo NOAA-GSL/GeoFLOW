@@ -38,6 +38,10 @@ GBOOL GSpecBdyFactory::dospec(const geoflow::tbox::PropertyTree& sptree, GGrid &
     return bret;
   }
 
+  if ( "user" != sinit ) {
+    assert(FALSE && "Unknown bdy_class");
+  }
+
   // Else, call specified config method:
   if ( "specb_none" == sinit
     || "none"       == sinit
