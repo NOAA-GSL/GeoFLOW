@@ -163,15 +163,29 @@ GBOOL GInitStateFactory<EquationType>::set_by_comp(const PropertyTree& ptree, GG
         for ( GINT i=0; i<nvar; i++ ) comp[i] = u[ivar[i]];
         bret = doinitb(ptree, sinit, grid, time, utmp, ub, comp);
         break;
-      case GSC_ACTIVE_SCALAR:
-        sinit = vtree.getValue<GString>("inits");
+      case GSC_DENSITYT:
+        sinit = vtree.getValue<GString>("initdt");
         nvar  = icomptype->contains(itype, ivar, mvar);
         comp.resize(nvar);
         for ( GINT i=0; i<nvar; i++ ) comp[i] = u[ivar[i]];
         bret = doinits(ptree, sinit, grid, time, utmp, ub, comp);
         break;
-      case GSC_PASSIVE_SCALAR:
-        sinit = vtree.getValue<GString>("initp");
+      case GSC_DENSITY1:
+        sinit = vtree.getValue<GString>("initd1");
+        nvar  = icomptype->contains(itype, ivar, mvar);
+        comp.resize(nvar);
+        for ( GINT i=0; i<nvar; i++ ) comp[i] = u[ivar[i]];
+        bret = doinits(ptree, sinit, grid, time, utmp, ub, comp);
+        break;
+      case GSC_DENSITY2:
+        sinit = vtree.getValue<GString>("initd2");
+        nvar  = icomptype->contains(itype, ivar, mvar);
+        comp.resize(nvar);
+        for ( GINT i=0; i<nvar; i++ ) comp[i] = u[ivar[i]];
+        bret = doinits(ptree, sinit, grid, time, utmp, ub, comp);
+        break;
+      case GSC_TEMPERATURE:
+        sinit = vtree.getValue<GString>("inittemp");
         nvar  = icomptype->contains(itype, ivar, mvar);
         comp.resize(nvar);
         for ( GINT i=0; i<nvar; i++ ) comp[i] = u[ivar[i]];
@@ -315,10 +329,10 @@ GBOOL GInitStateFactory<EquationType>::doinitb(const PropertyTree &ptree, GStrin
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : doinits
-// DESC   : Do init of active scalar components. Full list of available
-//          scalar (passive & active) initializations are contained here.
-//          Only scalar components are passed in.
+// METHOD : doinitdt
+// DESC   : Do init of total density component. Full list of available
+//          initializations is contained here.
+//          Only total density components are passed in.
 // ARGS   : ptree  : main property tree
 //          sconfig: ptree block name containing scalar config
 //          grid   : grid object
@@ -329,7 +343,7 @@ GBOOL GInitStateFactory<EquationType>::doinitb(const PropertyTree &ptree, GStrin
 // RETURNS: TRUE on success; else FALSE
 //**********************************************************************************
 template<typename EquationType>
-GBOOL GInitStateFactory<EquationType>::doinits(const PropertyTree &ptree, GString &sconfig, GGrid &grid,  Time &time, State &utmp, State &ub, State &u)
+GBOOL GInitStateFactory<EquationType>::doinitdt(const PropertyTree &ptree, GString &sconfig, GGrid &grid,  Time &time, State &utmp, State &ub, State &u)
 {
   GBOOL           bret    = TRUE;
   GString         sinit;
@@ -358,10 +372,10 @@ GBOOL GInitStateFactory<EquationType>::doinits(const PropertyTree &ptree, GStrin
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : doinitps
-// DESC   : Do init of passive scalar components. Full list of available
-//          scalar (passive & active) initializations are contained here.
-//          Only scalar components are passed in.
+// METHOD : doinitd1
+// DESC   : Do init of 1-density component. Full list of available
+//          initializations are contained here.
+//          Only d1 components are passed in.
 // ARGS   : ptree  : initial condition property tree
 //          sconfig: ptree block name containing passive scalar config
 //          grid   : grid object
@@ -372,7 +386,7 @@ GBOOL GInitStateFactory<EquationType>::doinits(const PropertyTree &ptree, GStrin
 // RETURNS: TRUE on success; else FALSE
 //**********************************************************************************
 template<typename EquationType>
-GBOOL GInitStateFactory<EquationType>::doinitps(const PropertyTree &ptree, GString &sconfig, GGrid &grid,  Time &time, State &utmp, State &ub, State &u)
+GBOOL GInitStateFactory<EquationType>::doinitd1(const PropertyTree &ptree, GString &sconfig, GGrid &grid,  Time &time, State &utmp, State &ub, State &u)
 {
   GBOOL           bret = FALSE;
   GString         sinit;
@@ -396,7 +410,93 @@ GBOOL GInitStateFactory<EquationType>::doinitps(const PropertyTree &ptree, GStri
   }
 
   return bret;
-} // end, doinitps method
+} // end, doinitd1 method
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : doinitd2
+// DESC   : Do init of 2-density component. Full list of available
+//          initializations are contained here.
+//          Only d2 components are passed in.
+// ARGS   : ptree  : initial condition property tree
+//          sconfig: ptree block name containing passive scalar config
+//          grid   : grid object
+//          time   : initialization time
+//          utmp   : tmp arrays
+//          ub     : boundary state (also initialized here)
+//          u      : state to be initialized. 
+// RETURNS: TRUE on success; else FALSE
+//**********************************************************************************
+template<typename EquationType>
+GBOOL GInitStateFactory<EquationType>::doinitd2(const PropertyTree &ptree, GString &sconfig, GGrid &grid,  Time &time, State &utmp, State &ub, State &u)
+{
+  GBOOL           bret = FALSE;
+  GString         sinit;
+  PropertyTree    vtree = ptree.getPropertyTree(sconfig); 
+
+  sinit = vtree.getValue<GString>("name");
+
+  if      ( "null"   == sinit
+       ||   ""             == sinit ) {
+    bret = TRUE;
+  }
+  else if ( "zero" == sinit ) {
+    for ( GINT i=0; i<u.size(); i++ ) *u[i] = 0.0;
+    bret = TRUE;
+  }
+  else if ( "random" == sinit ) {
+    bret = ginits::impl_rand(ptree, sconfig, grid, time, utmp, ub, u);
+  } 
+  else {
+    assert(FALSE && "Unknown b-field initialization method");
+  }
+
+  return bret;
+} // end, doinitd2 method
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : doinittemp
+// DESC   : Do init of temparature component. Full list of available
+//          initializations are contained here.
+//          Only temperature components are passed in.
+// ARGS   : ptree  : initial condition property tree
+//          sconfig: ptree block name containing passive scalar config
+//          grid   : grid object
+//          time   : initialization time
+//          utmp   : tmp arrays
+//          ub     : boundary state (also initialized here)
+//          u      : state to be initialized. 
+// RETURNS: TRUE on success; else FALSE
+//**********************************************************************************
+template<typename EquationType>
+GBOOL GInitStateFactory<EquationType>::doinittemp(const PropertyTree &ptree, GString &sconfig, GGrid &grid,  Time &time, State &utmp, State &ub, State &u)
+{
+  GBOOL           bret = FALSE;
+  GString         sinit;
+  PropertyTree    vtree = ptree.getPropertyTree(sconfig); 
+
+  sinit = vtree.getValue<GString>("name");
+
+  if      ( "null"   == sinit
+       ||   ""             == sinit ) {
+    bret = TRUE;
+  }
+  else if ( "zero" == sinit ) {
+    for ( GINT i=0; i<u.size(); i++ ) *u[i] = 0.0;
+    bret = TRUE;
+  }
+  else if ( "random" == sinit ) {
+    bret = ginits::impl_rand(ptree, sconfig, grid, time, utmp, ub, u);
+  } 
+  else {
+    assert(FALSE && "Unknown b-field initialization method");
+  }
+
+  return bret;
+} // end, doinittemp method
 
 
 

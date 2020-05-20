@@ -43,8 +43,11 @@ class GInitStateFactory
 
         static GBOOL doinitv      (const PropertyTree &ptree, GString &sconfig,  GGrid &grid, Time &time, State &utmp, State &ub, State &u);
         static GBOOL doinitb      (const PropertyTree &ptree, GString &sconfig,  GGrid &grid, Time &time, State &utmp, State &ub, State &u);
-        static GBOOL doinits      (const PropertyTree &ptree, GString &sconfig,  GGrid &grid, Time &time, State &utmp, State &ub, State &u);
-        static GBOOL doinitps     (const PropertyTree &ptree, GString &sconfig,  GGrid &grid, Time &time, State &utmp, State &ub, State &u);
+        static GBOOL doinitdt     (const PropertyTree &ptree, GString &sconfig,  GGrid &grid, Time &time, State &utmp, State &ub, State &u);
+        static GBOOL doinitd1     (const PropertyTree &ptree, GString &sconfig,  GGrid &grid, Time &time, State &utmp, State &ub, State &u);
+        static GBOOL doinitc      (const PropertyTree &ptree, GString &sconfig,  GGrid &grid, Time &time, State &utmp, State &ub, State &u);
+        static GBOOL doinitd2     (const PropertyTree &ptree, GString &sconfig,  GGrid &grid, Time &time, State &utmp, State &ub, State &u);
+        static GBOOL doinittemp   (const PropertyTree &ptree, GString &sconfig,  GGrid &grid, Time &time, State &utmp, State &ub, State &u);
         static GBOOL doinitc      (const PropertyTree &ptree, GString &sconfig,  GGrid &grid, Time &time, State &utmp, State &ub, State &u);
 
 }; // end, class GInitStateFactory
