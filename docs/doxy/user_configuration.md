@@ -2,8 +2,8 @@
 
 # I. Introduction.
 
-  The entry point to run all problems is to use a user-configuralbe JSON file.
- The default file name is 'input.jsn' it is assumed to lie in the the run 
+ The primary point of interaction with GeoFLOW is the user-configurable JSON file.
+ The default file name is 'input.jsn', and it is assumed to lie in the run 
  (working) directory. On the command line, this default config file name may be changed 
  by using the "-i" command line argument:
 
@@ -13,7 +13,7 @@
  Inside this config text file, there are several items that must be set in order
  to run a problem. User must at a minumum: <br>
 A. Specify a solver name that tells us which initial value-boundary value 
-    (IVBV) partial differential equation set to solve; <br>
+    (IVBV) partial differential equation (PDE) set to solve; <br>
 B. Specify a time-stepping scheme <br>
 C. Specify which grid to use, and probably also the basis expansion order <br>
 D. Specify a set of boundary conditions <br>
@@ -351,7 +351,23 @@ setting:
   |"norm_type"          | norm to use in establishing Krylov loop residual. Valid values
                         are provided in src/pdeint.in_solver_base.hpp: "GCG_NORM_INF",
                        "GCG_NORM_EUC", "GCG_NORM_L2", "GCG_NORM_L1". Used if doing terrain.\
-      
+  
+
+  For the GeoFLOW Spectrarl Element-like discretizations, there is one "grid-like"
+  quantity that is important for the user to be able set. This is the polynomial
+  expansion order within each direction within each element. This is currently
+  specified outside of the "grid_type" config block. It is set in the config file example
+  with the JSON expressions:
+  ```json
+  "exp_order"            : [4, 4, 4],
+  "exp_order_type"       : "constant",
+  ```
+  At this time, the only "exp_order_type" available is "constant", and this means that
+  the expansion order for each direction is the same for all elements. In the future, 
+  it's possible we will loosen this restriction. The "exp_order" vector must be of 
+  size at least GDIM in the JSON file, and the expansion order may be specified 
+  independently in each direction.
+
 
 ## D. Boundary condition specification.
 
@@ -563,7 +579,7 @@ E. Specify state initial conditions.
   ```
   This block not only names the method in the factory, but it also provides
   tunable parameters for the method. The "direct" methods are a good way to
-  set an entire state with ``canned'' but tunable initial data.
+  set an entire state with ``canned'' but tunable idealized initial data.
 
   On the other hand, assume we have a PDE solver that accommodates a complicated state 
   consisting of velocity, temperature and density components that we want to 
@@ -614,6 +630,35 @@ E. Specify state initial conditions.
 
 F. Specify evolution time.
 
+  The user must be able to specify a number of time cycles for which to 
+  integrate the PDE. This is done in the JSON file with the following block:
+  ```json
+  "time_integration": {
+    "integ_type" : "cycle",
+    "time_end"   : 0.150,
+    "cycle_end"  : 1,
+    "dt"         : 2.0e-6
+  }
+  ```
+  Valid values for "integ_type" are "cycle" or "time", which means that the
+  iterator will be based on the time _cycle_ or the evolutionary _time_. 
+  So, if "integ_tupe" is "cycle", then the itegration will proceed from the 
+  current cycle to the "cycle_end" value. If "integ_type" is "time", then
+  the integration will proceed from the current value to "time_end". The time
+  step size, "dt", is always dimensioned.
+
+  A related issue is the restart. Each binary output file  contains a complete
+  snapshot of the PDE state that also encodes the timestamp and cycle number
+  at which the dump was made. The time or cycle cadence of these output files 
+  is described in Sec. G, but we point out that upon restart, the initial time
+  cycle and time stamp are taken from the restart file. Each restart file is
+  created with a time index, so to restart from one of these indexed files, the
+  user must simply specify the restart index:
+  ```json
+  "restart_index"        : 50,
+  ```
+  in the JSON input file. If the "restart_index" is 0, this always refers to 
+  a new run.
 
 G. Configure output.
 H. Configure external forcing.
