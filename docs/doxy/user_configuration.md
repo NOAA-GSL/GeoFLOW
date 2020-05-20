@@ -54,6 +54,7 @@ discretizations only.
   "benchmark"            : false,
   "do_comparison"        : true,
   "observer_list"        : ["gio_observer", "global_diag_basic"],
+  "terrain_type"         : ""
   "initv": {
     "name"  : "abc",
     "kdn"   : 2,
@@ -131,9 +132,9 @@ discretizations only.
     "num_radial_elems"  : 10,
     "bdy_inner"         : "dirichlet_fixed",
     "bdy_outer"         : "sponge_layer",
+    "use_state_init"    : false
     "bdy_init_method  " : "",
     "bdy_update_method" : "",
-    "use_state_init"    : false
   },
   "fully_periodic": {
     "base_type"        : "GBDY_PERIODIC"
@@ -161,9 +162,9 @@ discretizations only.
     "bdy_y_1"   : "fully_periodic",
     "bdy_z_0"   : "fully_periodic",
     "bdy_z_1"   : "fully_periodic",
+    "use_state_init"    : true,
     "bdy_init_method  " : "",
     "bdy_update_method" : "",
-    "use_state_init"    : true,
     "maxit"     : 128,
     "tol"       : 1.0e-8,
     "norm_type" : "GCG_NORM_INF"
@@ -230,11 +231,9 @@ discretizations only.
 } 
 
 
-#################################################################
-#################################################################
-III. Describe each configuration step.
+#III. Describe each configuration step.
 
-    (A) Specify a solver name.
+    ##(A) Specify a solver name.
 
         To specify a PDE solver, simply provide it in the input.jsn file by 
 setting:
@@ -253,7 +252,7 @@ setting:
     "forcing_comp" tells us which components to apply forcing to, if we use forcing. 
     this will be discussed later.
 
-    (B) Specify a solver name.
+    ##(B) Specify a solver name.
 
         In the current configuration, the time stepping configuration is not "attached"
     to the PDE solver; it a future version it likely will be, and it will take an
@@ -285,7 +284,7 @@ setting:
     from the timestep method when "variable_dt" = true, so that the Courant condition
     isn't violated
 
-    (C) Select and configure grid.
+    ##(C) Select and configure grid.
 
         The grid type is specified at the top of the JSON file by setting the 
     "grid_type" variable. Like with PDE specification, this is a quantity that
@@ -293,15 +292,16 @@ setting:
 
     "grid_type"   : "grid_icos",
 
-    Valid "grid_type"'s are: "grid_icos", or "grid_box".  If GDIM=2, then "grid_box"
-    will refer to a planar Cartesian grid; if GDIM=3, it will refer to a 3D Cartesian
-    box grid. 
+    Valid "grid_type"'s are: "grid_icos", or "grid_box".  
+
+    If GDIM=2, then "grid_box" will refer to a planar Cartesian grid; if GDIM=3, 
+    it will refer to a 3D Cartesian box grid. 
 
     If GDIM=2, the "grid_icos" refers to a 2D spherical surface grid, constructed from
     a base icosohedron; if GDIM=3, "grid_icos" uses the 2D "grid_icos" grid at the 
     surface, and constructs elements radially from this "base" 2D grid.
 
-      (i) Configuring the box grids:
+      ###(i) Configuring the box grids:
 
       The self-referential config block for the "grid_box" grids  look like:
 
@@ -338,8 +338,8 @@ setting:
                             Used if GDIM=3
       "bdy_z_1"           : name of config block defining boundary conditions on top face
                             Used if GDIM=3
-      "bdy_init_method  " : NOT USED.
-      "bdy_update_method" : NOT USED.
+      "bdy_init_method"   : if specified, determines how boundaries are initialized
+      "bdy_update_method" : if specified, determines how boundaries are updated
       "use_state_init"    : If specified, the boundary initialization for DIRICHLET type 
                             conditions will be taken from the initial conditions
       "maxit"             : max no. Krylov iterations if using terrain
@@ -349,7 +349,7 @@ setting:
  			    "GCG_NORM_EUC", "GCG_NORM_L2", "GCG_NORM_L1". Used if doing terrain.
       
 
-       Boundary condition specification block. 
+       #### Boundary condition specification block. 
 
            In the "grid_box" configuration, each enumerated natural boundary is configured 
        to use a "fully_peridoc" boundary condition in each direction via a statement like:
@@ -357,12 +357,12 @@ setting:
        "bdy_x_0"           : "fully_periodic"
        "bdy_x_1"           : "fully_periodic"
 
-       The name on the right specifies a configuration block in the JSON file that actually
-       configures that boundary. It's important to remember that these blocks govern 
-       _specification_ of the boundary, not, e.g., boundary _initialization_. Boundar 
-       initialization and evolution is considered below. 
+       The name on the right specifies a self-referenced configuration block in the 
+       JSON file that actually configures that boundary. It's important to remember 
+       that these blocks govern _specification_ of the boundary, not, e.g., boundary 
+       _initialization_. Boundary initialization and evolution is considered below. 
 
-       These boundary specification blocks, in general, have the form:
+       These boundary spec blocks, in general, have the form:
 
        "fully_periodic": {
          "base_type"        : "GBDY_PERIODIC"
@@ -371,29 +371,141 @@ setting:
        },
 
        Valid "base_type" values are provided in 
+
          src/cdg/include/gtypes.h
-       in the the sGBdyType array.  The "bdy_class" may be either "uniform" or "user"; 
-       the default is "uniform", which means that the condition is applied automatically 
-       to the entire natural boundary.  If "bdy_class" is "user", then the user MUST 
-       specify a valid "bdy_config_method" with which to set the boundary condition type. 
+
+       in the the sGBdyType array. Currently, BDY_DIRICHLET (or GBDY_INFLOWT, 
+       these are the same thing), and GBDY_PERIODIC work currently. The types GBDY_0FLUX 
+       and GBDY_SPONGE will be implemented soon. 
+
+       Valid "bdy_class" expressions may be: "uniform" or "user". 
+     
+       "uniform" : the condition is applied automatically to the entire natural boundary
+       "user"    : if specified the user MUST specify the "bdy_config_method".
+       
+       The named "bdy_config_method" is used to set the boundary condition type. 
        Methods that may be provided are specified in the factory associated with 
        boundary specification: 
          src/cdg/init/gspecbdy_factory.cpp. 
        The steps by which to add a new boundary specification method is discussed later.
 
        "GBDY_PERIODIC" boundary conditions are somewhat special. They may be specified
-       for only for "grid_box" boundaries, and if applied must be applied to the entire 
-       boundary; i.e., will require that the "bdy_class" is "uniform". Also, they must 
+       for only "grid_box" boundaries, and, if applied, must be applied to the entire 
+       boundary; i.e., it will require that the "bdy_class" is "uniform". Also, they must 
        be applied pairwise between associated boundaries. So the following would be 
        incorrect:
 
        "bdy_x_0"   : "fully_periodic",
        "bdy_x_1"   : "burgers_inflow".
 
-       
-       
-	
+       Note that if the user wants "bdy_class" to be "uniform", since this is the default,
+       neither the "bdy_class" nor the "bdy_config_method" need to be provided in the
+       boundary spec block; these two parameters need be specified only if "bdy_class" 
+       is set to "user". 
 
+       Note that a "user" specified spec method may require other parameters
+       to be specified in the spec block.
+       
+
+       #### Boundary condition initialization and updating. 
+
+           If a boundary type is GBDY_DIRICHLET/GBDY_INFLOWT or GBDY_SPONGE (when 
+       ready), the boundary values must be initialized and evolved. Here we describe
+       how this is done.
+      
+       Two variables in the "grid_box" config block determine how the boundaries are
+       initialized:
+
+       "use_state_init"    : true,
+       "bdy_init_method  " : "",
+       "bdy_update_method" : "",
+
+       If "use_state_init" = true, then the next two parameters are not required.
+       This options suggests that the boundaries are initialized (and evolved)
+       by using the initial (and evolving) state vector.
+
+       If "use_state_init" = false, then the boundary initialization method must be
+       provided by setting the "bdy_init_method".  The valid methods can be found in 
+
+         src/cdg/init/ginitbdy_factory.ipp
+
+       If "use_state_init" = false, then the boundary update method should also be
+       provided by setting the "bdy_update_method".  The valid methods can be found in 
+
+         src/cdg/init/gupdatebdy_factory.ipp
+
+       We discuss later how to write new boundary initial and update methods and 
+       make them available in the system.
+
+      ###(ii) Configuring spherical grids:
+
+      When GDIM=2, we use the following configuration block for a spherical
+      surface:
+      "grid_icos": {
+        "grid_name"         : "grid_icos",
+        "radius"            : 1.0,
+        "ilevel"            : 2,
+        "refine_type"       : "GICOS_BISECTION",
+      },
+
+      where
+
+      "grid_name"         : "grid_box", not required
+      "radius"            : scalar radius
+      "refine_type"       : type of refinement: either "GICOS_BISECTION"" or "GICOS_LAGRANGIAN" 
+      "ilevel"            : if "refine_type" = "GICOS_BISECTION", then this is the number
+                            of bisection levels, yielding a grid with 60*(2^ilevel) elements.
+                            If "refine_type" = "GICOS_LAGRANGIAN", ilevel gives the number of
+                            divisions along a triangle edge, yielding 60*(ilevel+1)^2 
+                            elements on the grid.
+
+      Note: there are no boundaries on the 2d sphere, so no boundary conditions need to
+      be specified.
+
+
+      When GDIM=3, we use the following configuration block for a spherical
+      surface:
+
+      "grid_sphere" : {
+        "grid_name"         : "grid_sphere",
+        "radiusi"           : 1.0,
+        "radiuso"           : 2.0,
+        "num_radial_elems"  : 10,
+        "refine_type"       : "GICOS_BISECTION",
+        "ilevel"            : 2,
+        "num_radial_elems"  : 10,
+        "bdy_inner"         : "dirichlet_fixed",
+        "bdy_outer"         : "sponge_layer",
+        "use_state_init"    : false
+        "bdy_init_method  " : "",
+        "bdy_update_method" : "",
+      },
+
+      where entries and their descriptions are:
+       
+      "grid_name"         : "grid_box", not required
+      "radiusi"           : scalar inner radius
+      "radiuso"           : scalar outer radius (not used if GDIM=2)
+      "refine_type"       : type of refinement: either "GICOS_BISECTION"" or "GICOS_LAGRANGIAN" 
+      "ilevel"            : if "refine_type" = "GICOS_BISECTION", then this is the number
+                            of bisection levels, yielding a grid with 60*(2^ilevel) elements.
+                            If "refine_type" = "GICOS_LAGRANGIAN", ilevel gives the number of
+                            divisions along a triangle edge, yielding 60*(ilevel+1)^2 
+                            elements on the grid.
+      "num_radial_elems"  : number of elements in radial direction
+      "bdy_inner"         : name of config block defining boundary conditions on inner surface
+      "bdy_outer"         : name of config block defining boundary conditions on outersurface
+      "bdy_init_method"   : if specified, determines how boundaries are initialized
+      "bdy_update_method" : if specified, determines how boundaries are updated
+      "use_state_init"    : If specified, the boundary initialization for DIRICHLET type 
+                            conditions will be taken from the initial conditions
+      
+       Note: The 3d spherical grid is built upon the 2d surface grid by extending elements
+       radially. The boundary condition spec, initilization, and update methods work
+       the same was as for box grids.
+
+
+    ##(D) Select and configure grid.
 
 
 
