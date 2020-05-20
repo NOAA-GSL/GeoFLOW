@@ -1,8 +1,6 @@
   GeoFLOW: How to set up a problem and interact with the system
 
-#################################################################
-#################################################################
-I. Introduction.
+#I. Introduction.
 
     The entry point to run all problems is to use a user-configuralbe JSON file.
 The default file name is 'input.jsn' it is assumed to lie in the the run 
@@ -34,9 +32,7 @@ which is specified by defining the preprocessor variables _G_IS2D, or _G_IS3D
 at build time. This is described in XXX. We simply refer to this as necessary
 below.
 
-#################################################################
-#################################################################
-II. Config file example.
+#II. Config file example.
 
 Before getting started, here is a sample configuration file. Let's assume it's 
 given the name "input.jsn" if we need that later. We will refer to this as 
@@ -141,6 +137,8 @@ discretizations only.
   },
   "fully_periodic": {
     "base_type"        : "GBDY_PERIODIC"
+    "bdy_class"        : "uniform"
+    "bdy_config_method": ""
   },
   "compound_inflow_example": {
     "bdy_class"        : "user",
@@ -344,12 +342,57 @@ setting:
       "bdy_update_method" : NOT USED.
       "use_state_init"    : If specified, the boundary initialization for DIRICHLET type 
                             conditions will be taken from the initial conditions
-      "maxit"             : 
-      "tol"               : 1.0e-8,
-      "norm_type"         : "GCG_NORM_INF"
+      "maxit"             : max no. Krylov iterations if using terrain
+      "tol"               : Krylov loop tolerance is using terrain
+      "norm_type"         : norm to use in establishing Krylov loop residual. Valid values
+                            are provided in src/pdeint.in_solver_base.hpp: "GCG_NORM_INF",
+ 			    "GCG_NORM_EUC", "GCG_NORM_L2", "GCG_NORM_L1". Used if doing terrain.
       
 
+       Boundary condition specification block. 
 
+           In the "grid_box" configuration, each enumerated natural boundary is configured 
+       to use a "fully_peridoc" boundary condition in each direction via a statement like:
+      
+       "bdy_x_0"           : "fully_periodic"
+       "bdy_x_1"           : "fully_periodic"
+
+       The name on the right specifies a configuration block in the JSON file that actually
+       configures that boundary. It's important to remember that these blocks govern 
+       _specification_ of the boundary, not, e.g., boundary _initialization_. Boundar 
+       initialization and evolution is considered below. 
+
+       These boundary specification blocks, in general, have the form:
+
+       "fully_periodic": {
+         "base_type"        : "GBDY_PERIODIC"
+         "bdy_class"        : "uniform"
+         "bdy_config_method": ""
+       },
+
+       Valid "base_type" values are provided in 
+         src/cdg/include/gtypes.h
+       in the the sGBdyType array.  The "bdy_class" may be either "uniform" or "user"; 
+       the default is "uniform", which means that the condition is applied automatically 
+       to the entire natural boundary.  If "bdy_class" is "user", then the user MUST 
+       specify a valid "bdy_config_method" with which to set the boundary condition type. 
+       Methods that may be provided are specified in the factory associated with 
+       boundary specification: 
+         src/cdg/init/gspecbdy_factory.cpp. 
+       The steps by which to add a new boundary specification method is discussed later.
+
+       "GBDY_PERIODIC" boundary conditions are somewhat special. They may be specified
+       for only for "grid_box" boundaries, and if applied must be applied to the entire 
+       boundary; i.e., will require that the "bdy_class" is "uniform". Also, they must 
+       be applied pairwise between associated boundaries. So the following would be 
+       incorrect:
+
+       "bdy_x_0"   : "fully_periodic",
+       "bdy_x_1"   : "burgers_inflow".
+
+       
+       
+	
 
 
 
