@@ -56,7 +56,7 @@ discretizations.
   "do_comparison"        : true,
   "observer_list"        : ["gio_observer", "global_diag_basic"],
   "terrain_type"         : ""
-  "initv": {
+  "initvabc": {
     "name"  : "abc",
     "kdn"   : 2,
     "kup"   : 3,
@@ -66,10 +66,10 @@ discretizations.
     "C"     : 1.1,
     "E0"    : 1.0
   },
-  "mystateinit": {
-    "initv"   : "initvss",
-    "initps"  : "zero",
-    "initc"   : "zero"
+  "compinit": {
+    "initv"     : "initvabc",
+    "initdt"    : "random",
+    "inittemp"  : "zero",
   },
   "initstate_icosgaussburgers": {
     "latitude0"  : [0.0, -40.0],
@@ -529,7 +529,7 @@ setting:
 E. Specify state initial conditions.
 
   In the sample config file in Sec. II, there are two primary statements that control
-  state initialization. These are:
+  state initialization:
 
 ```json
   "initstate_block"      : "initstate_icosnwave",
@@ -547,8 +547,11 @@ E. Specify state initial conditions.
                           config blocks that initializes state vector component-
                           by component|
 
-  For example
-  ```json 
+  In the sample JSON file, we assume we are calling the method "initstate_icosnwave"
+  in the ginitstate_factory.ipp, and this method is of type "direct", and so
+  sets the entire state vector, which may consist of velocity, pressure, density
+  temperature, ... components. The named direct state initialization block
+  has the form
 
   ```json 
   "initstate_icosnwave": {
@@ -558,13 +561,17 @@ E. Specify state initial conditions.
     "t0"         : [0.08, 0.16]
   },
   ```
-                          configure state vector components by component type. 
-                          Valid component
-                          types are provided in src/cdg/include/gtypes.h in 
-                          the GStateCompType enumerated type. Specified "pde_name"
-                          solver must support the named component type. |
+  This block not only names the method in the factory, but it also provides
+  tunable parameters for the method. The "direct" methods are a good way to
+  set an entire state with ``canned'' but tunable initial data.
 
-  "initv": {
+  On the other hand, assume we have a PDE solver that accommodates a complicated state 
+  consisting of velocity, temperature and density components that we want to 
+  initialize independently. Then we might set 
+```json
+  "initstate_block"      : "compinit",
+  "initstate_type"       : "component",
+  "initvabc": {
     "name"  : "abc",
     "kdn"   : 2,
     "kup"   : 3,
@@ -574,14 +581,36 @@ E. Specify state initial conditions.
     "C"     : 1.1,
     "E0"    : 1.0
   },
-  "mystateinit": {
-    "initv"   : "initvss",
-    "initps"  : "zero",
-    "initc"   : "zero"
+  "compinit": {
+    "initv"     : "initvabc",
+    "initdt"    : "random",
+    "inittemp"  : "zero",
   },
 
-  
-                          
+``
+  which tells us to use the named block, "initvabc" to set the velocity components, 
+  and to initialize the total density, "initdt", using the built-in scheme to set 
+  random values, and, finally,  to set the temperature, "inittemp" using the built-in zeroing
+  method. The "initvabc" block tells us to use the method named "abc" to set the velocity
+  components for an Arnoldi, Beltrami,  Childress flow,  and this method is defined 
+  in ginitstate_fatory.ipp. If we had, say a
+  magnetic field vector as well, we could also initialize it to use the "abc" method,
+  if we wanted to or we could use a different vector initialization scheme.
+
+  The currently available JSON names for corresponding component types, 
+  GStateCompType in the src/cdg/gtypes.h file are provided here:
+
+  | JSON componet name  | GStateCompType   | description
+  |---------------------|------------------|--------------------------|
+  | "initv"             | GSC_KINETIC      | velocity components      |
+  | "initb"             | GSC_MAGNETIC     | magnetic field components|
+  | "initdt"            | GSC_DENSITYT     | total density            |
+  | "initd1"            | GSC_DENSITY1     | 1-density component      |
+  | "initd2"            | GSC_DENSITY2     | 2-density component      |
+  | "inittemp"          | GSC_TEMPERATURE  | temperature  component   |
+  | "initc"             | GSC_PRESCRIBED   | prescribed component (e.g.,
+                                             advection velocity components)   |
+
 
 F. Specify evolution time.
 
