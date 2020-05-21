@@ -830,6 +830,7 @@ setting:
 
 
   Note that the three parameters in the grid config block 
+
      ```json
      "maxit"     : 128,
      "tol"       : 1.0e-8,
