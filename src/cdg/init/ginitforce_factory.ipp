@@ -163,7 +163,7 @@ GBOOL GInitForceFactory<EquationType>::set_by_comp(const PropertyTree& ptree, GG
         nvar  = icomptype->contains(itype, ivar, mvar);
         comp.resize(nvar);
         for ( GINT i=0; i<nvar; i++ ) comp[i] = uf[ivar[i]];
-        bret = doinitfs(ptree, sinit, grid, time, utmp, ub, comp);
+        bret = doinitftemp(ptree, sinit, grid, time, utmp, ub, comp);
         break;
       case GSC_PRESCRIBED:
       case GSC_NONE:

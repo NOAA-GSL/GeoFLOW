@@ -168,28 +168,28 @@ GBOOL GInitStateFactory<EquationType>::set_by_comp(const PropertyTree& ptree, GG
         nvar  = icomptype->contains(itype, ivar, mvar);
         comp.resize(nvar);
         for ( GINT i=0; i<nvar; i++ ) comp[i] = u[ivar[i]];
-        bret = doinits(ptree, sinit, grid, time, utmp, ub, comp);
+        bret = doinitdt(ptree, sinit, grid, time, utmp, ub, comp);
         break;
       case GSC_DENSITY1:
         sinit = vtree.getValue<GString>("initd1");
         nvar  = icomptype->contains(itype, ivar, mvar);
         comp.resize(nvar);
         for ( GINT i=0; i<nvar; i++ ) comp[i] = u[ivar[i]];
-        bret = doinits(ptree, sinit, grid, time, utmp, ub, comp);
+        bret = doinitd1(ptree, sinit, grid, time, utmp, ub, comp);
         break;
       case GSC_DENSITY2:
         sinit = vtree.getValue<GString>("initd2");
         nvar  = icomptype->contains(itype, ivar, mvar);
         comp.resize(nvar);
         for ( GINT i=0; i<nvar; i++ ) comp[i] = u[ivar[i]];
-        bret = doinits(ptree, sinit, grid, time, utmp, ub, comp);
+        bret = doinitd2(ptree, sinit, grid, time, utmp, ub, comp);
         break;
       case GSC_TEMPERATURE:
         sinit = vtree.getValue<GString>("inittemp");
         nvar  = icomptype->contains(itype, ivar, mvar);
         comp.resize(nvar);
         for ( GINT i=0; i<nvar; i++ ) comp[i] = u[ivar[i]];
-        bret = doinits(ptree, sinit, grid, time, utmp, ub, comp);
+        bret = doinittemp(ptree, sinit, grid, time, utmp, ub, comp);
         break;
       case GSC_PRESCRIBED:
         sinit = vtree.getValue<GString>("initc");
