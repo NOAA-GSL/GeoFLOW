@@ -561,7 +561,7 @@ E. Specify state initial conditions.
   | expression          | description                                     |
   |---------------------|-------------------------------------------------|
   | "initstate_block"   | specifes JSON block that configures initial conditions|
-  | "initstate_type"    | if "direct", then named block will specify a method available in src/cdg/init/ginitstate_factory.ipp that initializes entire state vector in one call; if "component", then named block will specify named config blocks that initializes state vector component- by component|
+  | "initstate_type"    | if "direct", then named block will specify a method available in src/cdg/init/ginitstate_factory.ipp that initializes entire state vector in one call; if "component", then named block will specify named config blocks that initialize state vector component-by-component|
 
   In the sample JSON file, we assume we are calling the method "initstate_icosnwave"
   in the ginitstate_factory.ipp, and this method is of type "direct", and so
