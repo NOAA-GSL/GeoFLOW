@@ -16,7 +16,7 @@ clean:
 	cd ../../build ; \
 	make clean  ; \
 	cd ../test/cdg
-clear:  
+cleanall:  
 	cd ../../build ; \
 	/bin/rm -r  *; \
 	cd ../test/cdg
