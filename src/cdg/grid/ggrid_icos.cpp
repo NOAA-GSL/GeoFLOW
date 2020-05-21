@@ -264,7 +264,7 @@ void GGridIcos::lagrefine()
   }
 
   // Re-dimension mesh points to be 3d: Expect
-  // 20 * (ileve+1)^2, and 20 * (ilevel+1)^2 * 3 quads
+  // 20 * (ileve+1)^2 triangles, and 20 * (ilevel+1)^2 * 3 quads
   tmesh_.resize(20*(nrows_*(nrows_+2)+1)); // refined triangular mesh
   for ( j=0; j<tmesh_.size(); j++ ) tmesh_[j].resize(3);
 
