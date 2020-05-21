@@ -630,7 +630,7 @@ setting:
   The currently available JSON names for corresponding component types, 
   GStateCompType in the src/cdg/gtypes.h file are provided here:
 
-  | JSON componet name  | GStateCompType   | description
+  | JSON component name  | GStateCompType   | description             |
   |---------------------|------------------|--------------------------|
   | "initv"             | GSC_KINETIC      | velocity components      |
   | "initb"             | GSC_MAGNETIC     | magnetic field components|
@@ -638,7 +638,7 @@ setting:
   | "initd1"            | GSC_DENSITY1     | 1-density component      |
   | "initd2"            | GSC_DENSITY2     | 2-density component      |
   | "inittemp"          | GSC_TEMPERATURE  | temperature  component   |
-  | "initc"             | GSC_PRESCRIBED   | prescribed component (e.g., advection velocity components)   |
+  | "initc"             | GSC_PRESCRIBED   | prescribed component     |
 
 
 ## F. Specify evolution time.
