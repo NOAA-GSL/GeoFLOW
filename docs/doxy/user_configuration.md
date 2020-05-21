@@ -628,9 +628,9 @@ setting:
   scheme.
 
   The currently available JSON names for corresponding component types, 
-  GStateCompType in the src/cdg/gtypes.h file are provided here:
+  GStateCompType, in the src/cdg/gtypes.h file are provided here:
 
-  | JSON component name  | GStateCompType   | description             |
+  | JSON component name | GStateCompType   | description              |
   |---------------------|------------------|--------------------------|
   | "initv"             | GSC_KINETIC      | velocity components      |
   | "initb"             | GSC_MAGNETIC     | magnetic field components|
@@ -638,10 +638,10 @@ setting:
   | "initd1"            | GSC_DENSITY1     | 1-density component      |
   | "initd2"            | GSC_DENSITY2     | 2-density component      |
   | "inittemp"          | GSC_TEMPERATURE  | temperature  component   |
-  | "initc"             | GSC_PRESCRIBED   | prescribed component     |
+  | "initc"             | GSC_PRESCRIBED   | prescribed component; e.g., linear advection velocity     |
 
 
-  ## F. Specify evolution time.
+## F. Specify evolution time.
 
   The user must be able to specify a number of time cycles for which to 
   integrate the PDE. This is done in the JSON file with the following block:
