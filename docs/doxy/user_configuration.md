@@ -66,7 +66,6 @@ discretizations.
   "initforce_type"       : "",
   "restart_index"        : 0,
   "benchmark"            : false,
-  "do_comparison"        : true,
   "observer_list"        : ["binary_observer", "diag_observer"],
   "IO_implementation"    : "gio",
   "terrain_type"         : "myboxterrain",
@@ -247,7 +246,6 @@ discretizations.
     "indirectory"        : ".",
     "outdirectory"       : ".",
     "interval_freq_fact" : 10.0,
-    "treat_as_1d"        : false
   },
   "dissipation_traits": {
     "nu"      : 1.0e-1,
@@ -710,7 +708,6 @@ G. Configure output and ``Observers''.
     "indirectory"        : ".",
     "outdirectory"       : ".",
     "interval_freq_fact" : 10.0,
-    "treat_as_1d"        : false
   },
   ```
   The "observer_list" simply contains a vector of the configuration blocks, which 
