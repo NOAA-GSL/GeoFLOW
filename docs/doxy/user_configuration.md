@@ -831,11 +831,12 @@ setting:
 
   Note that the three parameters in the grid config block 
 
-     ```json
-     "maxit"     : 128,
-     "tol"       : 1.0e-8,
-     "norm_type" : "GCG_NORM_INF"
-     ```
+  ```json
+   "maxit"     : 128,
+   "tol"       : 1.0e-8,
+   "norm_type" : "GCG_NORM_INF"
+  ```
+
   control the iterative Krylov solution for the Poisson grid solution, as described
   in the "grid_box" table in Sec. C..
 
