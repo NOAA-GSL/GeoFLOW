@@ -2,6 +2,16 @@
 
 # I. Introduction.
 
+ This document describes the way a problem may be configured to run with GeoFLOW. It is
+ a ``living'' document, and will be added to as additional capability is developed. 
+ The information provided is reasonably complete, but in some ways does not 
+ provide the full list and descriptions of options available. This is 
+ particularly true for the configuration parameters for the various user-definable 
+ or modifiable functions. In addition, we do not always indicate which options are
+ required and which are optional, and what the defaults are. These deficiencies
+ will be addressed in future versions of this document.
+ 
+
  The primary point of interaction with GeoFLOW is the user-configurable JSON file.
  The default file name is 'input.jsn', and it is assumed to lie in the run 
  (working) directory. On the command line, this default config file name may be changed 
@@ -37,6 +47,9 @@ below.
 Before getting started, here is a sample configuration file. Let's assume it's 
 given the name "input.jsn" if we need that later. We will refer to this as 
 we proceed, and the user will have a concrete example to serve as a template.
+Note that there are config blocks provided in this sample that are not referred to
+below. This is intentional, so that the user may see other potential examples.
+
 For the time being, we assume that we are configuring only GeoFLOW Spectral Element 
 discretizations.
 
@@ -275,7 +288,7 @@ setting:
 ## B. Specify a time-stepping scheme
 
   In the current configuration, the time stepping configuration is not "attached"
-  to the PDE solver; it a future version it likely will be, and it will take an
+  to the PDE solver; in a future version it likely will be, and it will take an
   arbitrary name. For now, this block is called "stepper_props", and contains the 
   following configurable items
     	
@@ -365,8 +378,8 @@ setting:
   |"norm_type"          | norm to use in establishing Krylov loop residual. Valid values are provided in src/pdeint.in_solver_base.hpp: "GCG_NORM_INF", "GCG_NORM_EUC", "GCG_NORM_L2", "GCG_NORM_L1". Used if doing terrain.|
   
 
-  For the GeoFLOW Spectrarl Element-like discretizations, there is one "grid-like"
-  quantity that is important for the user to be able set. This is the polynomial
+  For the GeoFLOW Spectral Element-like discretizations, there is one "grid-like"
+  quantity that is important for the user to be able to vary. This is the polynomial
   expansion order within each direction within each element. This is currently
   specified outside of the "grid_type" config block. It is set in the config file example
   with the JSON parameters:
@@ -627,8 +640,7 @@ E. Specify state initial conditions.
   | "initd1"            | GSC_DENSITY1     | 1-density component      |
   | "initd2"            | GSC_DENSITY2     | 2-density component      |
   | "inittemp"          | GSC_TEMPERATURE  | temperature  component   |
-  | "initc"             | GSC_PRESCRIBED   | prescribed component (e.g.,
-                                             advection velocity components)   |
+  | "initc"             | GSC_PRESCRIBED   | prescribed component (e.g., advection velocity components)   |
 
 
 F. Specify evolution time.
@@ -733,7 +745,9 @@ G. Configure output and ``Observers''.
   The implementation used is specified in the "IO_implementation" variable in the JSON 
   file, which 
   names an implementation type in src/pdeint/io_factory.ipp. The implementation determines, for
-  instance, how IO is done, whether collectively or task-by-task. Currently, there is only one such
+  instance, how IO is done, whether collectively or task-by-task, and it also
+  handles the construction of file names, which depends on the type of IO
+  being done. Currently, there is only one such
   implementation available, the "gio" implementation, and it provides IO according
   to the GIO class in src/cdg/io/gio.hpp. In the future, it may be desirable to have, say, 
   a NetCDF IO implementation, which will have its own set of configuration parameters.
@@ -765,7 +779,7 @@ H. Configure external forcing.
 
   External forcing configuration works almost exactly like the state initialization described 
   in Sec. E. But because the procedure by which the forcing may be updated is not
-  yet generalized, we postpone further discussion of this topic. 
+  yet generalized, we postpone further discussion of this topic. At this time, it's best not to use this feature.
 
 I. Configure terrain.
 
@@ -803,7 +817,21 @@ I. Configure terrain.
   for 2d and 3d spherical grids.
 
   Valid terrain "name" parameters for spherical and box grids are set in 
-  src/cdg/init/gspecterrain_factory.ipp.
+  src/cdg/init/gspecterrain_factory.ipp. 
+  The configuration parameters for each type of terrain
+  may be determined directly from he code; they will be documented later.
+  Valid terrain "name"'s currently available are 
+  provided here for each grid type. Note that currently, the terrain code
+  still needs to be written, as it's currently stubbed out.
+
+  | grid type       | "name" parameter     |   description   |
+  |-----------------|----------------------|-----------------|
+  | sphere 2d/3d    | "sphgauss_range"     | superposition of Gaussian ``hills'', stubbed|
+  | sphere 2d/3d    | "sphpoly_range"      | superposition of polynomial ``hills'', stubbed|
+  | box 2d/3d       | "boxgauss_range"     | superposition of Gaussian ``hills''|
+  | box 2d/3d       | "boxpoly_range"      | superposition of polynomial ``hills''|
+  | box 2d          | "boxschar_range"     | Schar mountain rrange|
+
 
   Note that the three parameters in the grid config block 
      ```json
