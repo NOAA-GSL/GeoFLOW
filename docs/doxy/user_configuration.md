@@ -817,8 +817,8 @@ setting:
   The configuration parameters for each type of terrain
   may be determined directly from he code; they will be documented later.
   Valid terrain "name"'s currently available are 
-  provided here for each grid type. Note that currently, the terrain code
-  still needs to be written, as it's currently stubbed out.
+  provided here for each grid type. Note that the terrain code
+  still needs to be written for spherical grids, as it's currently stubbed out.
 
   | grid type       | "name" parameter     |   description   |
   |-----------------|----------------------|-----------------|
