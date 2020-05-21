@@ -558,7 +558,7 @@ setting:
   radially. The boundary condition spec, initilization, and update methods work
   the same was as for box grids.
 
-E. Specify state initial conditions.
+## E. Specify state initial conditions.
 
   In the sample config file in Sec. II, there are two primary statements that control
   state initialization:
@@ -641,7 +641,7 @@ E. Specify state initial conditions.
   | "initc"             | GSC_PRESCRIBED   | prescribed component (e.g., advection velocity components)   |
 
 
-F. Specify evolution time.
+## F. Specify evolution time.
 
   The user must be able to specify a number of time cycles for which to 
   integrate the PDE. This is done in the JSON file with the following block:
@@ -675,7 +675,7 @@ F. Specify evolution time.
   in the JSON input file. If the "restart_index" is 0, this always starts
   a new run.
 
-G. Configure output and ``Observers''.
+## G. Configure output and ``Observers''.
 
   Output is necessary if we want to analyze PDE solutions, to monitor a run, or
   if we simply want to be able to restart a solution to continue an integration.
@@ -772,13 +772,13 @@ G. Configure output and ``Observers''.
   | "wtask"    | width of MPI task field when doing "POSIX" IO|
   | "wfile"    | maximum width of filename|
   
-H. Configure external forcing.
+## H. Configure external forcing.
 
   External forcing configuration works almost exactly like the state initialization described 
   in Sec. E. But because the procedure by which the forcing may be updated is not
   yet generalized, we postpone further discussion of this topic. At this time, it's best not to use this feature.
 
-I. Configure terrain.
+## I. Configure terrain.
 
   GeoFLOW provides the ability to generate grid terrain. This is done by starting with
   a basic grid (described in Sec, C.), then providing the grid terrain as a boundary 
