@@ -127,6 +127,6 @@ GBOOL GSpecTerrainFactory<Types>::spec_sphere(const PropertyTree& ptree, Grid &g
 
   return bret;
 
-} // end, spec_box method
+} // end, spec_sphere method
 
 
