@@ -792,7 +792,7 @@ setting:
   associated parameters.
 
   For example, assume GDIM=2, and we have provided a "grid_box" grid as in the
-  JSON file sample. Then
+  JSON file sample. Then the following config code
 
   ```json
   "terrain_type"         : "myboxterrain",
