@@ -735,7 +735,6 @@ setting:
   | "agg_state_name"     | ``aggregate'' state file name if all state components are placed in a single file. Whether this can be done is determined by the capabilities of the specified "IO_implementation"|
   | "agg_grid_name"      | ``aggregate'' grid file name if all grid components are placed in a single file. Whether this can be done is determined by the capabilities of the specified "IO_implementation".|
   | "derived_quantities" | quantities to compute from basic state for output only. These are not evolved. These names refer to self-referential config blocks within the JSON file|
-
   | "filename_size"      | maximum filename size|
 
   Under the hood, the "binary_observer" can take any type of IO implementation, in principle. 
