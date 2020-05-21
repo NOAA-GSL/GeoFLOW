@@ -3,7 +3,7 @@
 # I. Introduction.
 
  This document describes the way a problem may be configured to run with GeoFLOW. It is
- a ``living'' document, and will be added to as additional capability is developed. 
+ a "living" document, and will be added to as additional capability is developed. 
  The information provided is reasonably complete, but in some ways does not 
  provide the full list and descriptions of options available. This is 
  particularly true for the configuration parameters for the various user-definable 
@@ -624,7 +624,7 @@ setting:
   in src/cdg/init/ginitstate_fatory.ipp. If we had, say a
   magnetic field vector as well, we could also initialize it to use the the same "abc" method,
   if we wanted to or we could use a different vector initialization scheme. We reserve for 
-  another chapter a discussion about how a user may construct and ``wire in'' a new initialization
+  another chapter a discussion about how a user may construct and "wire in" a new initialization
   scheme.
 
   The currently available JSON names for corresponding component types, 
@@ -675,11 +675,11 @@ setting:
   in the JSON input file. If the "restart_index" is 0, this always starts
   a new run.
 
-## G. Configure output and ``Observers''.
+## G. Configure output and "Observers".
 
   Output is necessary if we want to analyze PDE solutions, to monitor a run, or
   if we simply want to be able to restart a solution to continue an integration.
-  In GeoFLOW, each type of output is considered to be an ``observer'', which
+  In GeoFLOW, each type of output is considered to be an "observer", which
   refers to something that peeks at the solution while it's being integrated.
 
   Currently, there are two classes of observers: binary output or restart observers,
@@ -732,8 +732,8 @@ setting:
   | "state_index"        | array of state component indices to output|
   | "state_names"        | file name prefixes for component indices in "state_index" |
   | "grid_names"         | names for the grid files; there should be >= GDIMS entries|
-  | "agg_state_name"     | ``aggregate'' state file name if all state components are placed in a single file. Whether this can be done is determined by the capabilities of the specified "IO_implementation"|
-  | "agg_grid_name"      | ``aggregate'' grid file name if all grid components are placed in a single file. Whether this can be done is determined by the capabilities of the specified "IO_implementation".|
+  | "agg_state_name"     | "aggregate" state file name if all state components are placed in a single file. Whether this can be done is determined by the capabilities of the specified "IO_implementation"|
+  | "agg_grid_name"      | "aggregate" grid file name if all grid components are placed in a single file. Whether this can be done is determined by the capabilities of the specified "IO_implementation".|
   | "derived_quantities" | quantities to compute from basic state for output only. These are not evolved. These names refer to self-referential config blocks within the JSON file|
   | "filename_size"      | maximum filename size|
 
@@ -806,7 +806,7 @@ setting:
   },
   ```
   specifies that we will use the "boxgauss_range" method to generate terrain. This method
-  allows one to configure a superposition of as many Gaussian ``hills'' as desired, with 
+  allows one to configure a superposition of as many Gaussian "hills" as desired, with 
   different locations, 
   FWHM values and heights, in order to model a mountain range. When GDIM=2, "y0" should be
   0.0, and the y-FWHM will not be used. The same procedure is used to specify terrain 
@@ -822,10 +822,10 @@ setting:
 
   | grid type       | "name" parameter     |   description   |
   |-----------------|----------------------|-----------------|
-  | sphere 2d/3d    | "sphgauss_range"     | superposition of Gaussian ``hills'', stubbed|
-  | sphere 2d/3d    | "sphpoly_range"      | superposition of polynomial ``hills'', stubbed|
-  | box 2d/3d       | "boxgauss_range"     | superposition of Gaussian ``hills''|
-  | box 2d/3d       | "boxpoly_range"      | superposition of polynomial ``hills''|
+  | sphere 2d/3d    | "sphgauss_range"     | superposition of Gaussian "hills", stubbed|
+  | sphere 2d/3d    | "sphpoly_range"      | superposition of polynomial "hills", stubbed|
+  | box 2d/3d       | "boxgauss_range"     | superposition of Gaussian "hills"|
+  | box 2d/3d       | "boxpoly_range"      | superposition of polynomial "hills"|
   | box 2d          | "boxschar_range"     | Schar mountain rrange|
 
 
