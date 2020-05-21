@@ -45,7 +45,7 @@ discretizations.
   "pde_name"             : "pde_burgers",
   "exp_order"            : [4, 4, 4],
   "exp_order_type"       : "constant",
-  "grid_type"            : "grid_icos",
+  "grid_type"            : "grid_box",
   "initstate_block"      : "initstate_icosnwave",
   "initforce_block"      : "",
   "use_forcing"          : false,
@@ -54,8 +54,17 @@ discretizations.
   "restart_index"        : 0,
   "benchmark"            : false,
   "do_comparison"        : true,
-  "observer_list"        : ["gio_observer", "global_diag_basic"],
-  "terrain_type"         : ""
+  "observer_list"        : ["binary_observer", "diag_observer"],
+  "IO_implementation"    : "gio",
+  "terrain_type"         : "myboxterrain",
+  "myboxterrain": {
+    "name"    : "boxgauss_range",
+    "x0"      : [0.5],
+    "y0"      : [0.0],
+    "xsigma"  : [0.1],
+    "ysigma"  : [0.1],
+    "h0"      : [0.15]
+  },
   "initvabc": {
     "name"  : "abc",
     "kdn"   : 2,
@@ -177,6 +186,14 @@ discretizations.
     "variable_dt"      : false,
     "courant"          : 0.04
   },
+  "gio": {
+    "ivers"   : 0,
+    "multivar" : false,
+    "io_type"  : "collective",
+    "wtime"    : 6,
+    "wtask"    : 5,
+    "wfile"    : 2048
+  },
   "curlv": {
     "state_index" : [0, 1, 2],
     "names"       : ["omegax", "omegay", "omegaz"],
@@ -197,7 +214,7 @@ discretizations.
     "names"       : ["gradx", "grady", "gradz"],
     "mathop"      : "grad"
   },
-  "gio_observer": {
+  "binary_observer": {
     "observer_name"      : "gio_observer",
     "indirectory"        : "outs",
     "outdirectory"       : "outs",
@@ -207,12 +224,12 @@ discretizations.
     "state_index"        : [0, 1],
     "state_names"        : ["u1", "u2", "u3"],
     "grid_names"         : ["xgrid", "ygrid", "zgrid"],
+    "agg_state_name"     : "u",
+    "agg_grid_name "     : "grid",
     "derived_quantities" : ["vmag", "curlvmag"],
-    "time_field_width"   : 6,
-    "task_field_width"   : 5,
     "filename_size"      : 2048
   },
-  "global_diag_basic": {
+  "diag_observer": {
     "observer_name"      : "global_diag_basic",
     "indirectory"        : ".",
     "outdirectory"       : ".",
@@ -338,26 +355,22 @@ setting:
   |"bdy_x_1"            | name of config block defining boundary conditions on east face|
   |"bdy_y_0"            | name of config block defining boundary conditions on south face|
   |"bdy_y_1"            | name of config block defining boundary conditions on north face|
-  |"bdy_z_0"            | name of config block defining boundary conditions on bottom face. |
-                        Used if GDIM=3|
-  |"bdy_z_1"            | name of config block defining boundary conditions on top face
-                        Used if GDIM=3|
-  |"bdy_init_method"    | if specified, determines how boundaries are initialized<br>|
+  |"bdy_z_0"            | name of config block defining boundary conditions on bottom face.  Used if GDIM=3|
+  |"bdy_z_1"            | name of config block defining boundary conditions on top face Used if GDIM=3|
+  |"bdy_init_method"    | if specified, determines how boundaries are initialized|
   |"bdy_update_method"  | if specified, determines how boundaries are updated|
-  |"use_state_init"     | If specified, the boundary initialization for DIRICHLET type 
-                        conditions will be taken from the initial conditions|
+  |"use_state_init"     | If specified, the boundary initialization for DIRICHLET-type conditions will be taken from the initial conditions|
   |"maxit"              | max no. Krylov iterations if using terrain|
   |"tol"                | Krylov loop tolerance is using terrain|
-  |"norm_type"          | norm to use in establishing Krylov loop residual. Valid values
-                        are provided in src/pdeint.in_solver_base.hpp: "GCG_NORM_INF",
-                       "GCG_NORM_EUC", "GCG_NORM_L2", "GCG_NORM_L1". Used if doing terrain.\
+  |"norm_type"          | norm to use in establishing Krylov loop residual. Valid values are provided in src/pdeint.in_solver_base.hpp: "GCG_NORM_INF", "GCG_NORM_EUC", "GCG_NORM_L2", "GCG_NORM_L1". Used if doing terrain.|
   
 
   For the GeoFLOW Spectrarl Element-like discretizations, there is one "grid-like"
   quantity that is important for the user to be able set. This is the polynomial
   expansion order within each direction within each element. This is currently
   specified outside of the "grid_type" config block. It is set in the config file example
-  with the JSON expressions:
+  with the JSON parameters:
+
   ```json
   "exp_order"            : [4, 4, 4],
   "exp_order_type"       : "constant",
@@ -413,7 +426,7 @@ setting:
   Methods that may be provided are specified in the factory associated with 
   boundary specification: 
     src/cdg/init/gspecbdy_factory.cpp. 
-  The steps by which to add a new boundary specification method is discussed later.
+  The steps by which to add a new boundary specification method are discussed later.
 
   "GBDY_PERIODIC" boundary conditions are somewhat special. They may be specified
   for only "grid_box" boundaries, and, if applied, must be applied to the entire 
@@ -431,8 +444,8 @@ setting:
   boundary spec block; these two parameters need be specified only if "bdy_class" 
   is set to "user". 
 
-  that a "user" specified spec method may require other parameters
-       to be specified in the spec block.
+  Note that a "user" specified spec method may require other parameters
+  to be specified in the spec block.
        
 
 ### Boundary condition initialization and updating. 
@@ -467,10 +480,11 @@ setting:
   We discuss later how to write new boundary initial and update methods and 
   make them available in the system.
 
-### (ii) Configuring spherical grids:
+### (ii) Configuring spherical grids.
 
   When GDIM=2, we use the following configuration block for a spherical
   surface:
+
 ```json
       "grid_icos": {
         "grid_name"         : "grid_icos",
@@ -484,21 +498,17 @@ setting:
 
   | expression         | description                                     |
   |--------------------|-------------------------------------------------|
-  |"grid_name"        :|"grid_box", not required|
-  |"radius"           :|scalar radius|
-  |"refine_type"      :|type of refinement: either "GICOS_BISECTION"" or "GICOS_LAGRANGIAN" |
-  |"ilevel"           :|if "refine_type" = "GICOS_BISECTION", then this is the number
-                       of bisection levels, yielding a grid with 60*(2^ilevel) elements.
-                       If "refine_type" = "GICOS_LAGRANGIAN", ilevel gives the number of
-                       divisions along a triangle edge, yielding 60*(ilevel+1)^2 
-                       elements on the grid.|
+  |"grid_name"         |"grid_box", not required|
+  |"radius"            |scalar radius|
+  |"refine_type"       |type of refinement: either "GICOS_BISECTION"" or "GICOS_LAGRANGIAN" |
+  |"ilevel"            |if "refine_type" = "GICOS_BISECTION", then this is the number of bisection levels, yielding a grid with 60*(2^ilevel) elements.  If "refine_type" = "GICOS_LAGRANGIAN", ilevel gives the number of divisions along a triangle edge, yielding 60*(ilevel+1)^2 elements on the grid.|
 
   Note: there are no boundaries on the 2d sphere, so no boundary conditions need to
   be specified.
 
 
   When GDIM=3, we use the following configuration block for a spherical
-  surface:
+  grid:
 
 ```json
       "grid_sphere" : {
@@ -525,18 +535,13 @@ setting:
   |"radiusi"            | scalar inner radius|
   |"radiuso"            | scalar outer radius (not used if GDIM=2)|
   |"refine_type"        | type of refinement: either "GICOS_BISECTION"" or "GICOS_LAGRANGIAN" 
-  |"ilevel"             | if "refine_type" = "GICOS_BISECTION", then this is the number
-                        of bisection levels, yielding a grid with 60*(2^ilevel) elements.
-                        If "refine_type" = "GICOS_LAGRANGIAN", ilevel gives the number of
-                        divisions along a triangle edge, yielding 60*(ilevel+1)^2 
-                        elements on the grid.|
+  |"ilevel"             | if "refine_type" = "GICOS_BISECTION", then this is the number of bisection levels, yielding a grid with 60*(2^ilevel) elements.  If "refine_type" = "GICOS_LAGRANGIAN", ilevel gives the number of divisions along a triangle edge, yielding 60*(ilevel+1)^2 elements on the grid.|
   |"num_radial_elems"   | number of elements in radial direction|
   |"bdy_inner"          | name of config block defining boundary conditions on inner surface|
   |"bdy_outer"          | name of config block defining boundary conditions on outersurface|
   |"bdy_init_method"    | if specified, determines how boundaries are initialized|
   |"bdy_update_method"  | if specified, determines how boundaries are updated|
-  |"use_state_init"     | If specified, the boundary initialization for DIRICHLET type 
-                        conditions will be taken from the initial conditions|
+  |"use_state_init"     | If specified, the boundary initialization for DIRICHLET type conditions will be taken from the initial conditions|
       
   Note: The 3d spherical grid is built upon the 2d surface grid by extending elements
   radially. The boundary condition spec, initilization, and update methods work
@@ -556,12 +561,7 @@ E. Specify state initial conditions.
   | expression          | description                                     |
   |---------------------|-------------------------------------------------|
   | "initstate_block"   | specifes JSON block that configures initial conditions|
-  | "initstate_type"    | if "direct", then named block will specify a method
-                          available in src/cdg/init/ginitstate_factory.ipp 
-                          that initializes entire state vector in one call;
-                          if "component", then named block will specify named
-                          config blocks that initializes state vector component-
-                          by component|
+  | "initstate_type"    | if "direct", then named block will specify a method available in src/cdg/init/ginitstate_factory.ipp that initializes entire state vector in one call; if "component", then named block will specify named config blocks that initializes state vector component- by component|
 
   In the sample JSON file, we assume we are calling the method "initstate_icosnwave"
   in the ginitstate_factory.ipp, and this method is of type "direct", and so
@@ -584,6 +584,7 @@ E. Specify state initial conditions.
   On the other hand, assume we have a PDE solver that accommodates a complicated state 
   consisting of velocity, temperature and density components that we want to 
   initialize independently. Then we might set 
+
 ```json
   "initstate_block"      : "compinit",
   "initstate_type"       : "component",
@@ -608,10 +609,12 @@ E. Specify state initial conditions.
   and to initialize the total density, "initdt", using the built-in scheme to set 
   random values, and, finally,  to set the temperature, "inittemp" using the built-in zeroing
   method. The "initvabc" block tells us to use the method named "abc" to set the velocity
-  components for an Arnoldi, Beltrami,  Childress flow,  and this method is defined 
-  in ginitstate_fatory.ipp. If we had, say a
-  magnetic field vector as well, we could also initialize it to use the "abc" method,
-  if we wanted to or we could use a different vector initialization scheme.
+  components for an Arnoldi, Beltrami, Childress ABC) flow,  and this method is defined 
+  in src/cdg/init/ginitstate_fatory.ipp. If we had, say a
+  magnetic field vector as well, we could also initialize it to use the the same "abc" method,
+  if we wanted to or we could use a different vector initialization scheme. We reserve for 
+  another chapter a discussion about how a user may construct and ``wire in'' a new initialization
+  scheme.
 
   The currently available JSON names for corresponding component types, 
   GStateCompType in the src/cdg/gtypes.h file are provided here:
@@ -632,6 +635,7 @@ F. Specify evolution time.
 
   The user must be able to specify a number of time cycles for which to 
   integrate the PDE. This is done in the JSON file with the following block:
+
   ```json
   "time_integration": {
     "integ_type" : "cycle",
@@ -654,17 +658,160 @@ F. Specify evolution time.
   cycle and time stamp are taken from the restart file. Each restart file is
   created with a time index, so to restart from one of these indexed files, the
   user must simply specify the restart index:
+
   ```json
   "restart_index"        : 50,
   ```
-  in the JSON input file. If the "restart_index" is 0, this always refers to 
+  in the JSON input file. If the "restart_index" is 0, this always starts
   a new run.
 
-G. Configure output.
+G. Configure output and ``Observers''.
+
+  Output is necessary if we want to analyze PDE solutions, to monitor a run, or
+  if we simply want to be able to restart a solution to continue an integration.
+  In GeoFLOW, each type of output is considered to be an ``observer'', which
+  refers to something that peeks at the solution while it's being integrated.
+
+  Currently, there are two classes of observers: binary output or restart observers,
+  and diagnostic observers, and there is one implementation of each. Configuration
+  of each of these is done in the sample config file by way of the following statements:
+
+  ```json
+  "observer_list"        : ["binary_observer", "diag_observer"],
+  "binary_observer": {
+    "observer_name"      : "gio_observer",
+    "indirectory"        : "outs",
+    "outdirectory"       : "outs",
+    "cadence_type"       : "cycle",
+    "cycle_interval"     : 800,
+    "time_interval"      : 0.01,
+    "state_index"        : [0, 1],
+    "state_names"        : ["u1", "u2", "u3"],
+    "grid_names"         : ["xgrid", "ygrid", "zgrid"],
+    "derived_quantities" : ["vmag", "curlvmag"],
+    "agg_state_name"     : "u",
+    "agg_grid_name "     : "grid",
+    "filename_size"      : 2048
+  },
+  "diag_observer": {
+    "observer_name"      : "global_diag_basic",
+    "indirectory"        : ".",
+    "outdirectory"       : ".",
+    "interval_freq_fact" : 10.0,
+    "treat_as_1d"        : false
+  },
+  ```
+  The "observer_list" simply contains a vector of the configuration blocks, which 
+  carry out the configuration of the observer, src/pdeint/observer_factory.ipp.
+
+  "binary_observer" is an observer that handles binary (restart) output.
+  (parallel) IO and Posix IO. The "diag_observer" observer is a basic 
+  diagnostic capability that will be generalized in the futurre to more
+  cleanly accommodate state vectors with many different component types, 
+  and it will likely also become configurable.
+
+  Following are the descriptions of the "binary_observer" parameters:
+
+  | expression           | description                                     |
+  |----------------------|-------------------------------------------------|
+  | "observer_name"      | name of observer in src/pdeint/observer_factory.cpp|
+  | "indirectory"        | input directory name (for reads)|
+  | "outdirectory"       | output directory name (for writes)|
+  | "cadence_type"       | either "cycle" or time, as in Sec. F.|
+  | "cycle_interval"     | cycle cadence if outputting in terms of "cycle"'s|
+  | "time_interval"      | time cadence if outputting in terms of evol. time|
+  | "state_index"        | array of state component indices to output|
+  | "state_names"        | file name prefixes for component indices in "state_index" |
+  | "grid_names"         | names for the grid files; there should be >= GDIMS entries|
+  | "agg_state_name"     | ``aggregate'' state file name if all state components are placed in a single file. Whether this can be done is determined by the capabilities of the specified "IO_implementation"|
+  | "agg_grid_name"      | ``aggregate'' grid file name if all grid components are placed in a single file. Whether this can be done is determined by the capabilities of the specified "IO_implementation".|
+  | "derived_quantities" | quantities to compute from basic state for output only. These are not evolved. These names refer to self-referential config blocks within the JSON file|
+
+  | "filename_size"      | maximum filename size|
+
+  Under the hood, the "binary_observer" can take any type of IO implementation, in principle. 
+  The implementation used is specified in the "IO_implementation" variable in the JSON 
+  file, which 
+  names an implementation type in src/pdeint/io_factory.ipp. The implementation determines, for
+  instance, how IO is done, whether collectively or task-by-task. Currently, there is only one such
+  implementation available, the "gio" implementation, and it provides IO according
+  to the GIO class in src/cdg/io/gio.hpp. In the future, it may be desirable to have, say, 
+  a NetCDF IO implementation, which will have its own set of configuration parameters.
+  
+  The following are the allowed parameters for configuring the "gio" IO implementation:
+
+  ```json
+  "gio": {
+    "ivers"    : 0,
+    "multivar" : false,
+    "io_type"  : "collective",
+    "wtime"    : 6,
+    "wtask"    : 5,
+    "wfile"    : 2048
+  },
+  ```
+  with the configuration parameters described here:
+
+  | expression           | description                                     |
+  |----------------------|-------------------------------------------------|
+  | "ivers"    | version number. Default is 0, and that's the only one available currently|
+  | "multivar" | flag telling GIO to place all state variables in the same file|
+  | "io_type"  | may be "collective" or "POSIX" for collective (MPIIO) or by-task IO, respetively|
+  | "wtime"    | width of time index field in filename|
+  | "wtask"    | width of MPI task field when doing "POSIX" IO|
+  | "wfile"    | maximum width of filename|
+  
 H. Configure external forcing.
+
+  External forcing configuration works almost exactly like the state initialization described 
+  in Sec. E. But because the procedure by which the forcing may be updated is not
+  yet generalized, we postpone further discussion of this topic. 
+
 I. Configure terrain.
 
+  GeoFLOW provides the ability to generate grid terrain. This is done by starting with
+  a basic grid (described in Sec, C.), then providing the grid terrain as a boundary 
+  condition to the 
+  Laplace equation for each grid terrain coordinate. This yields a Poisson equation for
+  each grid coordinate. Once we solve for the new grid coordinates, we then modify the
+  original grid with the new grid solutions. 
 
+  Terrain configuration consists of setting the parameter "terrain_type" to
+  a config block name. The config block then contains the name of a valid
+  terrain specification method in src/cdg/gspecterrain_factory.ipp, and the
+  associated parameters.
 
+  For example, assume GDIM=2, and we have provided a "grid_box" grid as in the
+  JSON file sample. Then
+
+  ```json
+  "terrain_type"         : "myboxterrain",
+  "myboxterrain": {
+    "name"    : "boxgauss_range",
+    "x0"      : [0.25, 0.75],
+    "y0"      : [0.0, 0.0],
+    "xsigma"  : [0.1, 0.2]
+    "ysigma"  : [0.1, 0.2],
+    "h0"      : [0.15, 0.4]
+  },
+  ```
+  specifies that we will use the "boxgauss_range" method to generate terrain. This method
+  allows one to configure a superposition of as many Gaussian ``hills'' as desired, with 
+  different locations, 
+  FWHM values and heights, in order to model a mountain range. When GDIM=2, "y0" should be
+  0.0, and the y-FWHM will not be used. The same procedure is used to specify terrain 
+  for 2D and 3D spherical grids.
+
+  Valid terrain "name" parameters for spherical and box grids are set in 
+  src/cdg/init/gspecterrain_factory.ipp.
+
+  Note that the three parameters in the grid config block 
+     ```json
+     "maxit"     : 128,
+     "tol"       : 1.0e-8,
+     "norm_type" : "GCG_NORM_INF"
+     ```
+  control the iterative Krylov solution for the Poisson grid solution, as described
+  in the "grid_box" table in Sec. C..
 
 
