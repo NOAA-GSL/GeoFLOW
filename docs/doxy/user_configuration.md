@@ -347,7 +347,7 @@ setting:
 
   |expression           |  description                                      |
   |---------------------|---------------------------------------------------|
-  |"grid_name"          | "grid_box", not required|       
+  |"grid_name"          | name of grid from src/cdg/grid/ggrid_factory.ipp ; e.g., "grid_box"|       
   |"xyz0"               | tuple of startig lower left of box. Must be of size >= GDIM.|
   |"delxyz"             | tuple of widths in each direction. Must be of size >= GDIM.|
   |"num_elems"          | number of elements in each direction. Must be of size >= GDIM.|
@@ -498,7 +498,7 @@ setting:
 
   | expression         | description                                     |
   |--------------------|-------------------------------------------------|
-  |"grid_name"         |"grid_box", not required|
+  |"grid_name"         |"grid_icos"|
   |"radius"            |scalar radius|
   |"refine_type"       |type of refinement: either "GICOS_BISECTION"" or "GICOS_LAGRANGIAN" |
   |"ilevel"            |if "refine_type" = "GICOS_BISECTION", then this is the number of bisection levels, yielding a grid with 60*(2^ilevel) elements.  If "refine_type" = "GICOS_LAGRANGIAN", ilevel gives the number of divisions along a triangle edge, yielding 60*(ilevel+1)^2 elements on the grid.|
@@ -531,7 +531,7 @@ setting:
        
   | expression          | description                                     |
   |---------------------|-------------------------------------------------|
-  |"grid_name"          | "grid_box", not required|
+  |"grid_name"          | "grid_icos"|
   |"radiusi"            | scalar inner radius|
   |"radiuso"            | scalar outer radius (not used if GDIM=2)|
   |"refine_type"        | type of refinement: either "GICOS_BISECTION"" or "GICOS_LAGRANGIAN" 
