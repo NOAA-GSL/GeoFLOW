@@ -615,7 +615,7 @@ setting:
     "inittemp"  : "zero",
   },
 
-``
+```
   which tells us to use the named block, "initvabc" to set the velocity components, 
   and to initialize the total density, "initdt", using the built-in scheme to set 
   random values, and, finally,  to set the temperature, "inittemp" using the built-in zeroing
