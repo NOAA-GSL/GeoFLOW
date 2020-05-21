@@ -77,7 +77,7 @@ application.
 ## Examples and Program Usage
 
 For examples and instructions on how to configure GeoFLOW see our 
-[user configuration page](docs/doxy/user-configuration.md)
+[user configuration page](docs/doxy/user_configuration.md)
 
 
 
