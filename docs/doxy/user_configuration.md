@@ -641,7 +641,7 @@ setting:
   | "initc"             | GSC_PRESCRIBED   | prescribed component     |
 
 
-## F. Specify evolution time.
+  ## F. Specify evolution time.
 
   The user must be able to specify a number of time cycles for which to 
   integrate the PDE. This is done in the JSON file with the following block:
