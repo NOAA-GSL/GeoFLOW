@@ -312,11 +312,11 @@ setting:
   Valid "grid_type"'s are: "grid_icos", or "grid_box".  
 
   If GDIM=2, then "grid_box" will refer to a planar Cartesian grid; if GDIM=3, 
-  it will refer to a 3D Cartesian box grid. 
+  it will refer to a 3d Cartesian box grid. 
 
-  If GDIM=2, the "grid_icos" refers to a 2D spherical surface grid, constructed from
-  a base icosohedron; if GDIM=3, "grid_icos" uses the 2D "grid_icos" grid at the 
-  surface, and constructs elements radially from this "base" 2D grid.
+  If GDIM=2, the "grid_icos" refers to a 2d spherical surface grid, constructed from
+  a base icosohedron; if GDIM=3, "grid_icos" uses the 2d "grid_icos" grid at the 
+  surface, and constructs elements radially from this "base" 2d grid.
 
 ### (i) Configuring the box grids:
 
@@ -800,7 +800,7 @@ I. Configure terrain.
   different locations, 
   FWHM values and heights, in order to model a mountain range. When GDIM=2, "y0" should be
   0.0, and the y-FWHM will not be used. The same procedure is used to specify terrain 
-  for 2D and 3D spherical grids.
+  for 2d and 3d spherical grids.
 
   Valid terrain "name" parameters for spherical and box grids are set in 
   src/cdg/init/gspecterrain_factory.ipp.
