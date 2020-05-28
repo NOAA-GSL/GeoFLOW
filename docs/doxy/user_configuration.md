@@ -211,12 +211,12 @@ discretizations.
     "names"       : ["omegax", "omegay", "omegaz"],
     "mathop"      : "curl"
   },
-  "curlvmag": {
+  "mycurlvmag": {
     "state_index" : [0, 1, 2],
     "names"       : ["omega"],
     "mathop"      : "curlmag"
   },
-  "vmag": {
+  "myvmag": {
     "state_index" : [0, 1, 2],
     "names"       : ["vmag"],
     "mathop"      : "vmag"
@@ -238,7 +238,7 @@ discretizations.
     "grid_names"         : ["xgrid", "ygrid", "zgrid"],
     "agg_state_name"     : "u",
     "agg_grid_name "     : "grid",
-    "derived_quantities" : ["vmag", "curlvmag"],
+    "derived_quantities" : ["myvmag", "mycurlvmag"],
     "filename_size"      : 2048
   },
   "diag_observer": {
@@ -698,7 +698,7 @@ setting:
     "state_index"        : [0, 1],
     "state_names"        : ["u1", "u2", "u3"],
     "grid_names"         : ["xgrid", "ygrid", "zgrid"],
-    "derived_quantities" : ["vmag", "curlvmag"],
+    "derived_quantities" : ["myvmag", "mycurlvmag"],
     "agg_state_name"     : "u",
     "agg_grid_name "     : "grid",
     "filename_size"      : 2048
@@ -712,6 +712,8 @@ setting:
   ```
   The "observer_list" simply contains a vector of the configuration blocks, which 
   carry out the configuration of the observer, src/pdeint/observer_factory.ipp.
+
+### (i) Binary output observers:
 
   "binary_observer" is an observer that handles binary (restart) output.
   (parallel) IO and Posix IO. The "diag_observer" observer is a basic 
@@ -765,12 +767,102 @@ setting:
   | expression           | description                                     |
   |----------------------|-------------------------------------------------|
   | "ivers"    | version number. Default is 0, and that's the only one available currently|
-  | "multivar" | flag telling GIO to place all state variables in the same file|
+  | "multivar" | flag telling GIO to place all state variables in the same file. Only available for "collective" IO types|
   | "io_type"  | may be "collective" or "POSIX" for collective (MPIIO) or by-task IO, respetively|
   | "wtime"    | width of time index field in filename|
   | "wtask"    | width of MPI task field when doing "POSIX" IO|
   | "wfile"    | maximum width of filename|
   
+  {\it Derived quantities}
+
+  The "gio_observer" above also enables a user to configure the binary output of "derived_quantities".
+  These are fields that that are computed from the PDE's state variables but are not evolved
+  explicitly.
+  These are specified in "gio_observer" as an array of arbitrary length, that specified the names
+  of configuration blocks in the JSON file that describe the quantity to be derived from
+  the PDE state. For example, specifying
+
+  ```json
+    "derived_quantities" : ["myvmag", "mycurlvmag"],
+  ```
+
+  tells the parser to use the config blocks "myvmag" and "mycurlmag" to determine what
+  new quantities to compute from the state. These blocks look like:
+
+  ```json
+  "myvmag": {
+    "state_index" : [0, 1, 2],
+    "names"       : ["vmag"],
+    "mathop"      : "vmag"
+  },
+  ```
+  where the parameters are described here:
+
+  | expression           | description                                     |
+  |----------------------|-------------------------------------------------|
+  | "state_index"        | array of state indices to use in computing new quantity|
+  | "names"              | array of the quantities' file name prefixes     |
+  | "mathop"             | which math operation to perform                 |
+  
+  The valid "mathop" parameters currently available are:
+
+  | expression     | description                                     |
+  |----------------|-------------------------------------------------|
+  | "div"          | compute (strong) divergence. Takes vector field components, yields a scalar field.   |
+  | "grad"         | compute (strong) gradient. Takes a scalar field, yields a vector|
+  | "gradmag"      | compute (strong) gradient magnitude. Takes a scalar field, yields a scalar field|
+  | "curl"         | compute (strong) curl. Takes vector field components, yields a vector field|
+  | "curlmag"      | compute magnitude of (strong) curl. Takes vector field components, yields a scalar field|
+  | "vmag"         | compute magnitude of vector field. Takes vector field components, yields a scalar field|
+  | "lapderivs"    | computes second derivatives ('Laplacian derivatives'. Takes a scalar field, yields a scalar field|
+
+  It is very easy to add new "derived_quantities": simply modify the method "domathop" 
+  in src/cdg/blas/gmtk.cpp by adding a new description, a new calculation, and doing
+  basic checks for the number of input and output arrays.
+
+  Note that all derived quantities are output in with the same file name formats and cadence as for the
+  the PDE state varialbes, "state_names", and using the same "IO_implementation". These files
+  are *not* required restart.
+
+### (ii) Diagnostic output observers:
+
+  There is a rudimetary diagnostics package availble that produces simple text data 
+  diagnostics at a configuratble cadence, possibly  different from that used for binary IO.
+  In the above example the following parameters are used:
+
+  | expression     | description                                     |
+  |----------------|-------------------------------------------------|
+  | "observer_name"      | name of the method called in src/pdeint/observer_factory.ipp. "global_diag_basic" is currently the only one available|
+  | "indirectory"        | input directory. Currently unused.|
+  | "outdirectory"       | output directory |
+  | "interval_freq_fact" | ouput frequency with respect to binary restart IO cadence|
+
+  The output cadence is tied to the restart binary output frequency using the 
+  "interval_freq_fact" parameter. This says that there should be this number of diagnostic outputs
+  during every interval between the restart (binary) outputs. 
+
+  Currently, there are two diagnostics produced: those that consider globally sptially integrated
+  (quasi-) conserved quantities, and those that consider the infinity norm of the
+  same quantities. These lead to the productino of two files: "gbalance.txt" and "gmax.txt" containing
+  these diagnostics in different columns. At this time, these are a description of the columns of the
+  diagnostics files:
+
+  | column number  | description                                     |
+  |----------------|-------------------------------------------------|
+  | 1              | evolution time |           
+  | 2              | kinetic energy |           
+  | 3              | kinetic enstropyh |           
+  | 4              | kinetic energy injection rate (f.v)|           
+  | 5              | kinetic helicity |
+  | 6              | kinetic relative helicity |
+
+
+  At this time, these diagnostics are always computed. In the future we will likely allow
+  the user to configure other diagnostics to be outputted in to the diagnostics files,
+  although the files will continue to output conserved quantities in a pariculr set of PDEs
+  since these are required
+  to diagnose the progress of a run. Expect changes to this description of diagnostic output!
+
 ## H. Configure external forcing.
 
   External forcing configuration works almost exactly like the state initialization described 
