@@ -715,8 +715,9 @@ setting:
 
 ### (i) Binary output observers:
 
-  "binary_observer" is an observer that handles binary (restart) output.
-  (parallel) IO and Posix IO. The "diag_observer" observer is a basic 
+  A "binary_observer" is an observer that handles binary output. These same
+  files are also used for restarting a run.
+  The "diag_observer" observer is a basic 
   diagnostic capability that will be generalized in the futurre to more
   cleanly accommodate state vectors with many different component types, 
   and it will likely also become configurable.
@@ -768,18 +769,18 @@ setting:
   |----------------------|-------------------------------------------------|
   | "ivers"    | version number. Default is 0, and that's the only one available currently|
   | "multivar" | flag telling GIO to place all state variables in the same file. Only available for "collective" IO types|
-  | "io_type"  | may be "collective" or "POSIX" for collective (MPIIO) or by-task IO, respetively|
+  | "io_type"  | may be "collective" or "POSIX" for collective (MPIIO) or by-task IO, respectively|
   | "wtime"    | width of time index field in filename|
   | "wtask"    | width of MPI task field when doing "POSIX" IO|
   | "wfile"    | maximum width of filename|
   
-  {\it Derived quantities}
+### Derived quantities
 
   The "gio_observer" above also enables a user to configure the binary output of "derived_quantities".
   These are fields that that are computed from the PDE's state variables but are not evolved
   explicitly.
-  These are specified in "gio_observer" as an array of arbitrary length, that specified the names
-  of configuration blocks in the JSON file that describe the quantity to be derived from
+  These are specified in "gio_observer" as an array of arbitrary length, that provides the names
+  of configuration blocks in the JSON file describing quantities to be derived from
   the PDE state. For example, specifying
 
   ```json
@@ -806,7 +807,7 @@ setting:
   
   The valid "mathop" parameters currently available are:
 
-  | expression     | description                                     |
+  | math operation | description                                     |
   |----------------|-------------------------------------------------|
   | "div"          | compute (strong) divergence. Takes vector field components, yields a scalar field.   |
   | "grad"         | compute (strong) gradient. Takes a scalar field, yields a vector|
@@ -814,15 +815,20 @@ setting:
   | "curl"         | compute (strong) curl. Takes vector field components, yields a vector field|
   | "curlmag"      | compute magnitude of (strong) curl. Takes vector field components, yields a scalar field|
   | "vmag"         | compute magnitude of vector field. Takes vector field components, yields a scalar field|
-  | "lapderivs"    | computes second derivatives ('Laplacian derivatives'. Takes a scalar field, yields a scalar field|
+  | "lapderivs"    | computes second derivatives ('Laplacian derivatives'). Takes a scalar field, yields a scalar field|
+
+  If one uses a math operation that requires a vector, then they must provide the correct 
+  number of "state_index" component indices.
+  Similarly, if one specifies an operation that outputs a vector field, then the "names"
+  array in the JOSN file must contain enough prefixes for each vector component.
 
   It is very easy to add new "derived_quantities": simply modify the method "domathop" 
   in src/cdg/blas/gmtk.cpp by adding a new description, a new calculation, and doing
   basic checks for the number of input and output arrays.
 
-  Note that all derived quantities are output in with the same file name formats and cadence as for the
+  Note that all derived quantities are output with the same file name formats and cadence as for the
   the PDE state varialbes, "state_names", and using the same "IO_implementation". These files
-  are *not* required restart.
+  are __not__ required on restart.
 
 ### (ii) Diagnostic output observers:
 
@@ -835,10 +841,10 @@ setting:
   | "observer_name"      | name of the method called in src/pdeint/observer_factory.ipp. "global_diag_basic" is currently the only one available|
   | "indirectory"        | input directory. Currently unused.|
   | "outdirectory"       | output directory |
-  | "interval_freq_fact" | ouput frequency with respect to binary restart IO cadence|
+  | "interval_freq_fact" | output frequency with respect to binary restart IO cadence|
 
   The output cadence is tied to the restart binary output frequency using the 
-  "interval_freq_fact" parameter. This says that there should be this number of diagnostic outputs
+  "interval_freq_fact" parameter. This indicates the number of diagnostic outputs
   during every interval between the restart (binary) outputs. 
 
   Currently, there are two diagnostics produced: those that consider globally sptially integrated
@@ -851,16 +857,16 @@ setting:
   |----------------|-------------------------------------------------|
   | 1              | evolution time |           
   | 2              | kinetic energy |           
-  | 3              | kinetic enstropyh |           
-  | 4              | kinetic energy injection rate (f.v)|           
+  | 3              | kinetic enstrophy |           
+  | 4              | kinetic energy injection rate (when external forcing is used) |           
   | 5              | kinetic helicity |
-  | 6              | kinetic relative helicity |
+  | 6              | realative kinetic helicity |
 
 
   At this time, these diagnostics are always computed. In the future we will likely allow
-  the user to configure other diagnostics to be outputted in to the diagnostics files,
-  although the files will continue to output conserved quantities in a pariculr set of PDEs
-  since these are required
+  the user to configure additional diagnostics to be provided in the diagnostics files,
+  although we will continue to insist that dianostics of conserved quantities in a 
+  pariculr set of PDEs be produced, since these are required
   to diagnose the progress of a run. Expect changes to this description of diagnostic output!
 
 ## H. Configure external forcing.
