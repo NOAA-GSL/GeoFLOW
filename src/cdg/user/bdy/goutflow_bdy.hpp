@@ -1,14 +1,14 @@
 //==================================================================================
-// Module       : gsponge_bdy.hpp
+// Module       : goutflow_bdy.hpp
 // Date         : 7/5/20 (DLR)
 // Description  : Object that handles the the time updates for 
-//                'sponge' boundaries.
+//                simple outflow boundaries
 //                
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : UpdateBdyBase.
 //==================================================================================
-#if !defined(_GSPONGE_UPDATE_HPP)
-#define _GSPONGE_UPDATE_HPP
+#if !defined(_GOUTFLOW_BDY_HPP)
+#define _GOUTFLOW_BDY_HPP
 
 #include "gtypes.h"
 #include <functional>
@@ -24,11 +24,10 @@ using namespace geoflow::pdeint;
 using namespace std;
 
 template<typename TypePack>
-class GSpongeBdy : public UpdateBdyBase<TypePack>
+class GOutflowBdy : public UpdateBdyBase<TypePack>
 {
 public:
         using Interface  = UpdateBdyBaseBase<TypePack>;
-        using Base       = Interface;
         using State      = typename Interface::State;
         using Grid       = typename Interface::Grid;
         using Ftype      = typename Interface::Value;
@@ -42,23 +41,16 @@ public:
         static_assert(std::is_same<Grid,GGrid>::value,
                "Grid is of incorrect type");
 
-        // GSpongeBdy solver traits:
+        // GOutflowBdy solver traits:
         struct Traits {
-          GINT            idir  = GDIM;  
-                                     // canonical coord direction definining surfaces
           GTVector<GINT>  istate;    // state indices to operate on
-          GTVector<Ftype> farfield;  // far-field solution for each istate
-          GTVector<Ftype> exponent;  // fall-off exponent for solution
-          GTVector<Ftype> sigma;     // 'diffusion' factor in sponge layer
-          GTVector<Ftype> rs;        // vector defining sponge surface
-          GTVector<Ftype> ro;        // vector defining outer-most surface
         };
 
-        GSpongeBdy() = delete; 
-        GSpongeBdy(GSpongeBdy<TypePack>::Traits &traits);
-       ~GSpongeBdy();
-        GSpongeBdy(const GSpongeBdy &bu) = default;
-        GSpongeBdy &operator=(const GSpongeBdy &bu) = default;
+        GOutflowBdy() = delete; 
+        GOutflowBdy(GOutflowBdy<TypePack>::Traits &traits);
+       ~GOutflowBdy();
+        GOutflowBdy(const GOutflowBdy &bu) = default;
+        GOutflowBdy &operator=(const GOutflowBdy &bu) = default;
 
 
 protected:
@@ -72,29 +64,11 @@ protected:
         
 private:
 
-//      void                init(GSpongeBdy::Traits &);                     // initialize 
-        GBOOL               update_cart (
-                              Grid      &grid,
-                              StateInfo &stinfo,
-                              Time      &time,
-                              State     &utmp,
-                              State     &u,
-                              State     &ub);
 
-        GBOOL               update_sphere(
-                              Grid      &grid,
-                              StateInfo &stinfo,
-                              Time      &time,
-                              State     &utmp,
-                              State     &u,
-                              State     &ub);
-       
-
-//      GBOOL               doheat_;        // flag to do heat equation alone
         Traits              traits_;        // Traits structure
 
 };
 
-#include "gsponge_bdy.ipp"
+#include "goutflow_bdy.ipp"
 
 #endif

@@ -11,7 +11,7 @@
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : Constructor method  (1)
+// METHOD : Constructor method 
 // DESC   : 
 // RETURNS: none
 //**********************************************************************************
@@ -143,8 +143,10 @@ GBOOL GSpongeBdy<TypePack>::update_cart(
   //       and u_infinity is the far-field solution
   // Note: We may have to re-form this scheme if we use semi-implicit
   //       or implicit time stepping methods!
-  for ( auto k=0; k<istate.size(); k++ ) { // for each state component
-    idstate = istate[k];
+  for ( auto k=0; k<traits_.istate.size(); k++ ) { // for each state component
+    idstate = traits_.istate[k];
+    if ( stinfo.compdesc[idstate] == GSC_PRESCRIBED
+      || stinfo.compdesc[idstate] == GSC_NONE ) continue;
     for ( auto j=0; j<u[idstate]->size(); j++ ) { // for all grid points
 //    igb  = (*igbdy)  [GBDY_SPONGE][j];
 //    igf  = (*igbdycf)[GBDY_SPONGE][j];
@@ -220,8 +222,8 @@ GBOOL GSpongeBdy<TypePack>::update_sphere (
   // Note: traits.idir is ignored here, since, for the sphere,
   //       sponge layers are only defined in the radial 
   //       direction in idirection of outer boundary
-  for ( auto k=0; k<istate.size(); k++ ) { // for each state component
-    idstate = istate[k];
+  for ( auto k=0; k<traitstraits__istate.size(); k++ ) { // for each state component
+    idstate = traits_.istate[k];
     for ( auto j=0; j<u[idstate]->size(); j++ ) { // for all grid points
       x    = (*xnodes)[0][k]; y = (*xnodes)[1][k]; z = (*xnodes)[2][k];
       r    = sqrt(x*x + y*y + z*z); 
