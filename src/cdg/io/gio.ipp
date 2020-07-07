@@ -86,6 +86,7 @@ void GIO<IOType>::init()
 {
 
   if ( this->traits_.io_type != IOBase<IOType>::GIO_COLL ) {
+    bInit_ = TRUE;
     return; // nothing more to do
   }
 
@@ -124,7 +125,7 @@ void GIO<IOType>::init()
 #endif
   bInit_ = TRUE;
 
-} // end of method update_type
+} // end of method init
 
 
 
