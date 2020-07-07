@@ -24,12 +24,11 @@ template<typename TypePack>
 class NullUpdateBdy : public UpdateBdyBase<TypePack> {
 
 public:
-        enum GIOType        {GIO_POSIX=0, GIO_COLL}; // POSIX or collective
         using Types        = TypePack;
 	using State        = typename Types::State;
 	using StateInfo    = typename Types::StateInfo; // May contain time, time index, var name etc
 	using Grid         = typename Types::Grid;
-	using Ftype        = typename Types::Ftype;
+	using Ftype        = typename Types::Value;
         using Time         = typename Types::Time;
 	using Size         = typename Types::Size;
 
