@@ -44,15 +44,8 @@ public:
 
         // GFromInitBdy solver traits:
         struct Traits {
-          std::function<void(const geoflow::tbox::PropertyTree& ptree,
-                             GString &supdate, Grid &grid,
-                             StateInfo &stinfo, 
-                             Time &time, 
-                             State &utmp, 
-                             State &u, 
-                             State &ub)>
-          callback = NULLPTR;
-//        GTVector<GINT>  istate;    // state indices to operate on
+          PropertyTree    ptree;     // main ptree
+          GTVector<GINT>  istate;    // state indices to operate on
         };
 
         GFromInitBdy() = delete; 
