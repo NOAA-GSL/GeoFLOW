@@ -153,16 +153,23 @@ const GINT GD_DATATYPE_SZ[] =
 // in gcommdata_t.h):
 #if !defined(_GC_OP_DEF)
 #define _GC_OP_DEF
-enum GC_OP              {GC_OP_MAX=0,GC_OP_MIN  ,GC_OP_SUM  ,GC_OP_PROD,
-                         GC_OP_LAND ,GC_OP__BAND,GC_OP_LOR  ,GC_OP_BOR ,
+enum GC_OP              {GC_OP_MAX=0,GC_OP_MIN ,GC_OP_SUM ,GC_OP_PROD,
+                         GC_OP_LAND ,GC_OP_BAND,GC_OP_LOR ,GC_OP_BOR ,
                          GC_OP_LXOR ,GC_OP_BXOR};
 #endif
 
 #if !defined(_G_BDYTYPE_DEF)
 #define _G_BDYTYPE_DEF
-enum GBdyType                    { GBDY_DIRICHLET=0 , GBDY_INFLOWT, GBDY_NOSLIP , GBDY_0FLUX , GBDY_PERIODIC , GBDY_OUTFLOW , GBDY_SPONGE , GBDY_USER0 , GBDY_USER1 , GBDY_NONE };
+enum GBdyType                    { GBDY_DIRICHLET=0 , GBDY_INFLOWT , GBDY_NOSLIP , GBDY_0FLUX , GBDY_PERIODIC , GBDY_OUTFLOW , GBDY_SPONGE , GBDY_USER0 , GBDY_USER1 , GBDY_NONE };
 const char * const sGBdyType [] ={"GBDY_DIRICHLET"  ,"GBDY_INFLOWT","GBDY_NOSLIP","GBDY_0FLUX","GBDY_PERIODIC","GBDY_OUTFLOW","GBDY_SPONGE","GBDY_USER0","GBDY_USER1","GBDY_NONE"};
 #define GBDY_MAX GBDY_NONE
+// DIRICHLET  : May be variable in space, but constant in time
+// INFLOWT    : May be variable in space, and time 
+// NOSLIP     : Applies only to velocity, and is 0 on bdy, constant in time
+// 0FLUX      : Applies only to velocity, normal compoment to surf is 0; time variable
+// PERIODIC   : No user configuration required
+// OUTFLOW    : Variable in space, time; TBD
+// SPONGE     : Variable in space, time
 #endif
 
 #if !defined(_G_ELEMTYPE_DEF)
