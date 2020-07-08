@@ -293,15 +293,26 @@ void GBurgers<TypePack>::step_impl(const Time &t, State &uin, State &uf, State &
   // These are not deep copies:
   if ( doheat_ ) {
     uevolve_[0] = uin[0]; 
+    this->stateinfo_.nevolve = 1;
+    this->stateinfo_.icomptype.resize(1);
+    this->stateinfo_.icomptype.push_back(GSC_KINETIC);
   }
   else if ( bpureadv_ ) {
     uevolve_[0] = uin[0]; 
     if ( bpureadv_ ) {
       for ( auto j=0; j<c_.size(); j++ ) c_ [j] = uin[j+1];
     }
+    this->stateinfo_.nevolve = 1;
+    this->stateinfo_.npresc  = c_.size();
+    this->stateinfo_.icomptype.push_back(GSC_KINETIC);
+    for ( auto j=0; j<c_.size(); j++ ) 
+      this->stateinfo_.icomptype.puush_back(GSC_PRESCRIBED);
   }
   else {
     for ( auto j=0; j<uin.size(); j++ ) uevolve_ [j] = uin[j];
+    this->stateinfo_.nevolve = uin.size();
+    this->stateinfo_.icomptype.resize(uin.size());
+    for ( auto j=0; j<uin.size(); j++ ) this->stateinfo_.icomptype[j] = GSC_KINETIC;
   }
 
   switch ( isteptype_ ) {
