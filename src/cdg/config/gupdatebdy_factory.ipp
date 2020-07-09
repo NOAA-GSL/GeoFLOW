@@ -31,7 +31,7 @@ GUpdateBdyFactory<TypePack>::build(const PropertyTree& ptree, Grid &grid, StateI
   sblock    = gtree.getValue<GString>("bdy_update_scheme","none");
 
   UpdateBdyBasePtr base_ptr;
-  if ( "none"         == sblock
+  if      ( "none"         == sblock
     || ""             == sblock ) {
     using UpdateImpl = NullUpdateBdy<TypesPack>
 
@@ -57,7 +57,7 @@ GUpdateBdyFactory<TypePack>::build(const PropertyTree& ptree, Grid &grid, StateI
   
   uptree    = ptree.getPropertyTree(sblock);
   supdate   = uptree.getValue<GString>("update_method");
-  if ( "simple_outflow" == supdate ) {
+  if      ( "simple_outflow" == supdate ) {
     using UpdateImpl = GSimpleOutflowBdy<TypesPack>
     UpdateImpl::Traits traits;
     traits.istate.resize(stinfo.nevolve);
