@@ -91,7 +91,7 @@ private:
        
 
         GBOOL               bcomputed_;     // already computed?
-        GBOOL               bcomput_once_;  // compute once??
+        GBOOL               bcompute_once_; // compute once??
         Traits              traits_;        // Traits structure
 
 };

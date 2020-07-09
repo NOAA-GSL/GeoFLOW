@@ -20,7 +20,7 @@ template<typename TypePack>
 G0FluxBdy<TypePack>::G0FluxBdy(G0FluxBdy<TypePack>::Traits &traits) :
 UpdateBdyBase<TypePack>(),
 bcomputed_               (FALSE),
-bcomput_once_            (FALSE),
+bcompute_once_           (FALSE),
 nstate_                      (0),
 traits_                 (traits)
 {

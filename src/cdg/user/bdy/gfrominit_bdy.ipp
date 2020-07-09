@@ -19,7 +19,7 @@ template<typename TypePack>
 GFromInitBdy<TypePack>::GFromInitBdy(GFromInitBdy<TypePack>::Traits &traits) :
 UpdateBdyBase<TypePack>(),
 bcomputed_               (FALSE),
-bcomput_once_            (FALSE),
+bcompute_once_           (FALSE),
 traits_                 (traits)
 {
 

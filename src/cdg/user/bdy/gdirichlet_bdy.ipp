@@ -19,7 +19,7 @@ template<typename TypePack>
 GDirichletBdy<TypePack>::GDirichletBdy(GDirichletBdy<TypePack>::Traits &traits) :
 UpdateBdyBase<TypePack>(),
 bcomputed_               (FALSE),
-bcomput_once_             (TRUE),
+bcompute_once_            (TRUE),
 traits_                 (traits)
 {
 

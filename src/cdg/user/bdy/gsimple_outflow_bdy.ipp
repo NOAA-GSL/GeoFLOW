@@ -20,7 +20,7 @@ GSimpleOutflowBdyBdy<TypePack>::GSimpleOutflowBdyBdy(GSimpleOutflowBdyBdy<TypePa
 UpdateBdyBase<TypePack>(),
 traits_                 (traits)
 bcomputed_               (FALSE),
-bcomput_once_            (FALSE),
+bcompute_once_           (FALSE),
 {
 } // end of constructor method 
 

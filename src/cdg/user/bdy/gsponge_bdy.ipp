@@ -19,7 +19,7 @@ template<typename TypePack>
 GSpongeBdy<TypePack>::GSpongeBdy(GSpongeBdy<TypePack>::Traits &traits) :
 UpdateBdyBase<TypePack>(),
 bcomputed_               (FALSE),
-bcomput_once_            (FALSE),
+bcompute_once_           (FALSE),
 traits_                 (traits)
 {
   // Do some checks:
