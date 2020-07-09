@@ -1,8 +1,8 @@
 //==================================================================================
-// Module       : gsimple_outflow_bdy.hpp
+// Module       : gdirichlet_bdy.hpp
 // Date         : 7/5/20 (DLR)
 // Description  : Object that handles the the time updates for
-//                simple outflow boundaries
+//                Dirichlet boundaries
 //
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : UpdateBdyBase.
@@ -16,12 +16,16 @@
 // RETURNS: none
 //**********************************************************************************
 template<typename TypePack>
-GSimpleOutflowBdyBdy<TypePack>::GSimpleOutflowBdyBdy(GSimpleOutflowBdyBdy<TypePack>::Traits &traits) :
+GDirichletBdy<TypePack>::GDirichletBdy(GDirichletBdy<TypePack>::Traits &traits) :
 UpdateBdyBase<TypePack>(),
-traits_                 (traits)
 bcomputed_               (FALSE),
 bcomput_once_            (FALSE),
+traits_                 (traits)
 {
+
+  assert( traits_.value.size() == traits_.istate.size() 
+       && "State info structure invalid");
+
 } // end of constructor method 
 
 
@@ -33,7 +37,7 @@ bcomput_once_            (FALSE),
 // RETURNS: none
 //**********************************************************************************
 template<typename TypePack>
-GSimpleOutflowBdyBdy<TypePack>::~GSimpleOutflowBdyBdy()
+GDirichletBdy<TypePack>::~GDirichletBdy()
 {
 } // end, destructor
 
@@ -52,7 +56,7 @@ GSimpleOutflowBdyBdy<TypePack>::~GSimpleOutflowBdyBdy()
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-GBOOL GSimpleOutflowBdyBdy<TypePack>::update_impl(
+GBOOL GDirichletBdy<TypePack>::update_impl(
                               Grid      &grid,
                               StateInfo &stinfo,
                               Time      &time,
@@ -60,29 +64,31 @@ GBOOL GSimpleOutflowBdyBdy<TypePack>::update_impl(
                               State     &u,
                               State     &ub)
 {
-   GString    serr = "GSimpleOutflowBdyBdy<TypePack>::update_impl: ";
+   GString    serr = "GDirichletBdy<TypePack>::update_impl: ";
+   GBOOL      bret;
    GINT       idstate, ind;
 
   GTVector<GTVector<GSIZET>> *igbdy = &grid.igbdy_binned();
 
   if ( bcompute_once_ && bcomputed_ ) return TRUE;
 
-  assert( u.size() == stinfo.compdesc.size() && "State info structure invalid");
 
-  // Set from State vector, u:
-  for ( auto n=0; n<traits_.istate.size(); n++ ) { // apply to specified state comps
+  // Set boundary vector with initialized state:
+  for ( auto n=0; n<traits_.istate.size() && bret; n++ ) { 
     idstate = traits_.istate[n];
     if ( stinfo.compdesc[idstate] == GSC_PRESCRIBED
       || stinfo.compdesc[idstate] == GSC_NONE ) continue;
-    for ( auto j=0; j<(*igbdy)[GBDY_OUTFLOW].size()
+    }
+    // Set from initialized State vector, 
+    for ( auto j=0; j<(*igbdy)[GBDY_DIRICHLET].size()
        && ub[idstate] != NULLPTR; j++ ) {
-      ind = (*igbdy)[GBDY_OUTFLOW][j];
-      (*ub[idstate])[j] = (*u[idstate])[(*igbdy)[ind];
+      ind = (*igbdy)[GBDY_DIRICHLET][j];
+      (*ub[idstate])[j] = traits_.value[n];
     }
   }
-  bcomputed_ = TRUE;
+  bcomputed = bret;
 
-  return TRUE;
+  return bret;
 
 } // end of method update_impl
 

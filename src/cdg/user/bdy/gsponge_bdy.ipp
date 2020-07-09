@@ -18,6 +18,8 @@
 template<typename TypePack>
 GSpongeBdy<TypePack>::GSpongeBdy(GSpongeBdy<TypePack>::Traits &traits) :
 UpdateBdyBase<TypePack>(),
+bcomputed_               (FALSE),
+bcomput_once_            (FALSE),
 traits_                 (traits)
 {
   // Do some checks:
@@ -70,6 +72,8 @@ GBOOL GSpongeBdy<TypePack>::update_impl(
    GBOOL      bret = FALSE;
    GGridBox   *box = std::dynamic_cast<GGridBox*>(grid_);
    GGridIcos  *sphere = std::dynamic_cast<GGridIcos*>(grid_);
+
+  if ( bcompute_once_ && bcomputed_ ) return TRUE;
 
    if ( box != NULLPTR ) {
      bret = update_cart(grid, stinfo, time, utmp, u, ub);
@@ -157,8 +161,9 @@ GBOOL GSpongeBdy<TypePack>::update_cart(
       (*u[idstate])[j] -= sig0*beta*( (*u[idstate])[j] - farfield[k] );
     }
   }
+  bcomputed_ = bret;
 
-   return bret;
+  return bret;
 
 } // end of method update_cart
 
@@ -199,6 +204,8 @@ GBOOL GSpongeBdy<TypePack>::update_sphere (
   GTVector<GTVector<GFTYPE>> 
                   *xnodes = &grid.xNodes();
 
+
+
   assert(GDIM == 3);
 
   // Get parameters from ptree:
@@ -238,7 +245,9 @@ GBOOL GSpongeBdy<TypePack>::update_sphere (
     }
   }
 
+  bcomputed_ = TRUE;
 
+  return TRUE;
 } // end of method update_sphere
 
 

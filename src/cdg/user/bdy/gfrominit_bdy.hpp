@@ -68,6 +68,8 @@ private:
 
 
         Traits              traits_;        // Traits structure
+        GBOOL               bcomputed_;     // tell us that operation was called
+        GBOOL               bcompute_once_; // tell us that computation is done once
         State               unew_;          // helper vector
         State               tmpnew_;        // helper vector
 

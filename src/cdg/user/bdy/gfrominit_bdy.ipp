@@ -18,6 +18,8 @@
 template<typename TypePack>
 GFromInitBdy<TypePack>::GFromInitBdy(GFromInitBdy<TypePack>::Traits &traits) :
 UpdateBdyBase<TypePack>(),
+bcomputed_               (FALSE),
+bcomput_once_            (FALSE),
 traits_                 (traits)
 {
 
@@ -68,6 +70,8 @@ GBOOL GFromInitBdy<TypePack>::update_impl(
 
   GTVector<GTVector<GSIZET>> *igbdy = &grid.igbdy_binned();
 
+  if ( bcompute_once_ && bcomputed_ ) return TRUE;
+
   assert( u.size() == stinfo.compdesc.size() && "State info structure invalid");
 
   assert(utmp.size() >= u.size());
@@ -94,6 +98,7 @@ GBOOL GFromInitBdy<TypePack>::update_impl(
       (*ub[idstate])[j] = (*unew_[idstate])[ind];
     }
   }
+   bcomputed = bret;
 
    return bret;
 

@@ -1,14 +1,14 @@
 //==================================================================================
-// Module       : gsponge_bdy.hpp
+// Module       : g0flux_bdy.hpp
 // Date         : 7/5/20 (DLR)
 // Description  : Object that handles the the time updates for 
-//                'sponge' boundaries.
+//                0-flux boundary conditions
 //                
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : UpdateBdyBase.
 //==================================================================================
-#if !defined(_GSPONGE_UPDATE_HPP)
-#define _GSPONGE_UPDATE_HPP
+#if !defined(_G0FLUX_BDY_HPP)
+#define _G0FLUX_BDY_HPP
 
 #include "gtypes.h"
 #include <functional>
@@ -24,7 +24,7 @@ using namespace geoflow::pdeint;
 using namespace std;
 
 template<typename TypePack>
-class GSpongeBdy : public UpdateBdyBase<TypePack>
+class G0FluxBdy : public UpdateBdyBase<TypePack>
 {
 public:
         using Interface  = UpdateBdyBaseBase<TypePack>;
@@ -42,23 +42,16 @@ public:
         static_assert(std::is_same<Grid,GGrid>::value,
                "Grid is of incorrect type");
 
-        // GSpongeBdy solver traits:
+        // G0FluxBdy solver traits:
         struct Traits {
-          GINT            idir  = GDIM;  
-                                     // canonical coord direction definining surfaces
           GTVector<GINT>  istate;    // state indices to operate on
-          GTVector<Ftype> farfield;  // far-field solution for each istate
-          GTVector<Ftype> exponent;  // fall-off exponent for solution
-          GTVector<Ftype> sigma;     // 'diffusion' factor in sponge layer
-          GTVector<Ftype> rs;        // vector defining sponge surface
-          GTVector<Ftype> ro;        // vector defining outer-most surface
         };
 
-        GSpongeBdy() = delete; 
-        GSpongeBdy(GSpongeBdy<TypePack>::Traits &traits);
-       ~GSpongeBdy();
-        GSpongeBdy(const GSpongeBdy &bu) = default;
-        GSpongeBdy &operator=(const GSpongeBdy &bu) = default;
+        G0FluxBdy() = delete; 
+        G0FluxBdy(G0FluxBdy<TypePack>::Traits &traits);
+       ~G0FluxBdy();
+        G0FluxBdy(const G0FluxBdy &bu) = default;
+        G0FluxBdy &operator=(const G0FluxBdy &bu) = default;
 
 
 protected:
@@ -72,30 +65,13 @@ protected:
         
 private:
 
-//      void                init(GSpongeBdy::Traits &);                     // initialize 
-        GBOOL               update_cart (
-                              Grid      &grid,
-                              StateInfo &stinfo,
-                              Time      &time,
-                              State     &utmp,
-                              State     &u,
-                              State     &ub);
 
-        GBOOL               update_sphere(
-                              Grid      &grid,
-                              StateInfo &stinfo,
-                              Time      &time,
-                              State     &utmp,
-                              State     &u,
-                              State     &ub);
-       
-
-        GBOOL               bcomputed_;     // already computed?
-        GBOOL               bcomput_once_;  // compute once??
         Traits              traits_;        // Traits structure
+        GBOOL               bcomputed_;     // tell us that operation was called
+        GBOOL               bcompute_once_; // tell us that computation is done once
 
 };
 
-#include "gsponge_bdy.ipp"
+#include "gdirichlet_bdy.ipp"
 
 #endif

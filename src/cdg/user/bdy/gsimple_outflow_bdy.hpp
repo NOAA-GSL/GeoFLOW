@@ -64,6 +64,8 @@ protected:
         
 private:
 
+        GBOOL               bcomputed_;     // was computation done?
+        GBOOL               bcompute_once_; // do computation once?
 
         Traits              traits_;        // Traits structure
 
