@@ -48,7 +48,7 @@ GNoSlipBdy<TypePack>::~GNoSlipBdy()
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : update_impl
-// DESC   : Entry method for doing a sponge-layer update
+// DESC   : Entry method for hahdling no-slip bdyconditions
 // ARGS   : 
 //          grid  : grid object (necessary?)
 //          stinfo: state info structure

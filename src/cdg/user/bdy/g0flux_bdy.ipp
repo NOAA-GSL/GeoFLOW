@@ -48,7 +48,7 @@ G0FluxBdy<TypePack>::~G0FluxBdy()
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : update_impl
-// DESC   : Entry method for doing a sponge-layer update
+// DESC   : Entry method for updating 0-Flux bdy conditions
 // ARGS   : 
 //          grid  : grid object (necessary?)
 //          stinfo: state info structure

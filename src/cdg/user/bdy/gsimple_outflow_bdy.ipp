@@ -40,7 +40,7 @@ GSimpleOutflowBdyBdy<TypePack>::~GSimpleOutflowBdyBdy()
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : update_impl
-// DESC   : Entry method for doing a sponge-layer update
+// DESC   : Entry method for updateing a simple outflow bdy condition
 // ARGS   : 
 //          grid  : grid object (necessary?)
 //          stinfo: state info structure
