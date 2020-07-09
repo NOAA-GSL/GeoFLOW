@@ -1,9 +1,16 @@
 //==================================================================================
-// Description  : Object defining a (global) icosahedral grid, that
-//                uses gnomonic projections to locate element vertices.
-// Copyright    : Copyright 2018. Colorado State University. All rights reserved
+// Module       : ggrid_icos.cpp
+// Date         : 8/31/18 (DLR)
+// Description  : Object defining a (global) icosahedral grid, that in 2d
+//                uses (extrinsic) gnomonic projections to locate element vertices.
+//                Vertices always reside on sphere, so centroids will
+//                not (will reside within). In 3d, the base is computed from
+//                the same procedure as in 2d, but we use isoparameteric
+//                representation on the sphere.
+// Copyright    : Copyright 2018. Colorado State University. All rights reserved.
 // Derived From : GGrid.
 //==================================================================================
+
 
 #include <cstdlib>
 #include <memory>
@@ -264,7 +271,9 @@ void GGridIcos::lagrefine()
   }
 
   // Re-dimension mesh points to be 3d: Expect
-  // 20 * (ileve+1)^2 triangles, and 20 * (ilevel+1)^2 * 3 quads
+  // 20 * (nrows+1)^2 triangles, and 20 * (nrows+1)^2 * 3 quads
+  // Total number of points (in horizontal) is
+  // 6(
   tmesh_.resize(20*(nrows_*(nrows_+2)+1)); // refined triangular mesh
   for ( j=0; j<tmesh_.size(); j++ ) tmesh_[j].resize(3);
 
