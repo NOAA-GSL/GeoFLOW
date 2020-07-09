@@ -1,8 +1,8 @@
 //==================================================================================
-// Module       : g0flux_bdy.hpp
+// Module       : gnoslip_bdy.hpp
 // Date         : 7/5/20 (DLR)
 // Description  : Object that handles the the time updates for 
-//                0-flux boundary conditions. Acts on kinetic
+//                no-slip boundary conditions. Acts on kinetic
 //                vector.
 //                
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
@@ -25,7 +25,7 @@ using namespace geoflow::pdeint;
 using namespace std;
 
 template<typename TypePack>
-class G0FluxBdy : public UpdateBdyBase<TypePack>
+class GNoSlipBdy : public UpdateBdyBase<TypePack>
 {
 public:
         using Interface  = UpdateBdyBaseBase<TypePack>;
@@ -43,16 +43,16 @@ public:
         static_assert(std::is_same<Grid,GGrid>::value,
                "Grid is of incorrect type");
 
-        // G0FluxBdy solver traits:
+        // GNoSlipBdy solver traits:
         struct Traits {
           GTVector<GINT>  istate;    // state indices to operate on
         };
 
-        G0FluxBdy() = delete; 
-        G0FluxBdy(G0FluxBdy<TypePack>::Traits &traits);
-       ~G0FluxBdy();
-        G0FluxBdy(const G0FluxBdy &bu) = default;
-        G0FluxBdy &operator=(const G0FluxBdy &bu) = default;
+        GNoSlipBdy() = delete; 
+        GNoSlipBdy(GNoSlipBdy<TypePack>::Traits &traits);
+       ~GNoSlipBdy();
+        GNoSlipBdy(const GNoSlipBdy &bu) = default;
+        GNoSlipBdy &operator=(const GNoSlipBdy &bu) = default;
 
 
 protected:
@@ -74,6 +74,6 @@ private:
 
 };
 
-#include "g0flux_bdy.ipp"
+#include "gnoslip_bdy.ipp"
 
 #endif

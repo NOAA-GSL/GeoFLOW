@@ -1,8 +1,8 @@
 //==================================================================================
-// Module       : g0flux_bdy.hpp
+// Module       : gnoslip_bdy.hpp
 // Date         : 7/5/20 (DLR)
 // Description  : Object that handles the the time updates for
-//                0-flux boundaries. Acts on kinetic
+//                no-slip boundary conditions. Acts on kinetic
 //                vector.
 //
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
@@ -17,7 +17,7 @@
 // RETURNS: none
 //**********************************************************************************
 template<typename TypePack>
-G0FluxBdy<TypePack>::G0FluxBdy(G0FluxBdy<TypePack>::Traits &traits) :
+GNoSlipBdy<TypePack>::GNoSlipBdy(GNoSlipBdy<TypePack>::Traits &traits) :
 UpdateBdyBase<TypePack>(),
 bcomputed_               (FALSE),
 bcomput_once_            (FALSE),
@@ -41,7 +41,7 @@ traits_                 (traits)
 // RETURNS: none
 //**********************************************************************************
 template<typename TypePack>
-G0FluxBdy<TypePack>::~G0FluxBdy()
+GNoSlipBdy<TypePack>::~GNoSlipBdy()
 {
 } // end, destructor
 
@@ -60,7 +60,7 @@ G0FluxBdy<TypePack>::~G0FluxBdy()
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-GBOOL G0FluxBdy<TypePack>::update_impl(
+GBOOL GNoSlipBdy<TypePack>::update_impl(
                               Grid      &grid,
                               StateInfo &stinfo,
                               Time      &time,
@@ -68,53 +68,15 @@ GBOOL G0FluxBdy<TypePack>::update_impl(
                               State     &u,
                               State     &ub)
 {
-   GString    serr = "G0FluxBdy<TypePack>::update_impl: ";
-   GBdyType   itype;
-   GINT       id, ind, k;
-   GSIZET     il;
-   Ftype      sum, xn;
-   GTVector<GTVector<Ftype>>  *bdyNormals;
-   GTVector<GINT>             *idepComp;
-   GTVector<GTVector<GSIZET>> *igbdy;
-   GTVector<GTVector<GSIZET>> *ilbdy;
-
-
-  GTVector<GTVector<GSIZET>> *igbdy = &grid.igbdy_binned();
+  GString    serr = "GNoSlipBdy<TypePack>::update_impl: ";
 
   if ( bcompute_once_ && bcomputed_ ) return TRUE;
 
-  for ( auto j=0; j<traits_.istate.size(); j++ ) {
-    assert(ub[istate[j]] != NULL && "Illegal bdy vector");
-  }
-
-  // Handle 0-Flux bdy conditions. This
-  // is computed by solving
-  //    vec{n} \cdot vec{u} = 0
-  // for 'dependent' component set in grid.
-  //
-  // Note: We may want to switch the order of the
-  //       following loops to have a better chance
-  //       of vectorization. Unrolling likely
-  //       won't occur:
-  bdyNormals = &grid.bdyNormals(); // bdy normal vector
-  idepComp   = &grid.idepComp();   // dependent components
-  igbdy      = &grid_->igbdy_binned();
-  ilbdy      = &grid_->ilbdy_binned();
-  itype      = GBDY_0FLUX;
-  for ( auto j=0; j<(*igbdy)[itype].size() ) {
-    ind = (*igbdy)[itype][j]; // index into long vector array
-    il  = (*ilbdy)[itype][j]; // index into bdy array (for normals, e.g.)
-    id  = (*idep)[ind];       // dependent vector component
-    xn  = (*n)[id][ind];      // n_id == normal component for dependent vector comp
-    sum = 0.0;
-    for ( auto k=0; k<nstate_; k++ ) { // for each vector component
-      sum -= (*n)[k][il] * (*u[istate[k]])[ind];
-//    if ( k != (*idep)[ind] ) sum -= (*n)[idstate][il] * (*u[idstate])[ind];
-
-      // Set all comps here, then reset the dependent one:
-      (*ub[k])[ind] = (*u[k])[ind]; 
+  for ( auto k=0; k<nstate_; k++ ) { // for each vector component
+    for ( auto j=0; j<(*igbdy)[GBYD_0FLUX].size() ) { // all bdy points
+      ind = (*igbdy)[itype][j]; // index into long vector array
+      (*ub[k])[ind] = 0.0;
     }
-    (*ub[id])[ind] = ( sum + (*n)[id][il] * (*u[id])[ind] ) / xn;
   }
 
   bcomputed = TRUE;

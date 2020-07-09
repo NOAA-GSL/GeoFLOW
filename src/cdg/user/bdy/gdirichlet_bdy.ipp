@@ -19,7 +19,7 @@ template<typename TypePack>
 GDirichletBdy<TypePack>::GDirichletBdy(GDirichletBdy<TypePack>::Traits &traits) :
 UpdateBdyBase<TypePack>(),
 bcomputed_               (FALSE),
-bcomput_once_            (FALSE),
+bcomput_once_             (TRUE),
 traits_                 (traits)
 {
 
@@ -65,7 +65,6 @@ GBOOL GDirichletBdy<TypePack>::update_impl(
                               State     &ub)
 {
    GString    serr = "GDirichletBdy<TypePack>::update_impl: ";
-   GBOOL      bret;
    GINT       idstate, ind;
 
   GTVector<GTVector<GSIZET>> *igbdy = &grid.igbdy_binned();
@@ -73,8 +72,8 @@ GBOOL GDirichletBdy<TypePack>::update_impl(
   if ( bcompute_once_ && bcomputed_ ) return TRUE;
 
 
-  // Set boundary vector with initialized state:
-  for ( auto n=0; n<traits_.istate.size() && bret; n++ ) { 
+  // Set boundary vector to corresp. value:
+  for ( auto n=0; n<traits_.istate.size(); n++ ) { 
     idstate = traits_.istate[n];
     if ( stinfo.compdesc[idstate] == GSC_PRESCRIBED
       || stinfo.compdesc[idstate] == GSC_NONE ) continue;
@@ -86,9 +85,9 @@ GBOOL GDirichletBdy<TypePack>::update_impl(
       (*ub[idstate])[j] = traits_.value[n];
     }
   }
-  bcomputed = bret;
+  bcomputed = TRUE;
 
-  return bret;
+  return TRUE;
 
 } // end of method update_impl
 
