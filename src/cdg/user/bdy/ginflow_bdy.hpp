@@ -48,6 +48,12 @@ public:
           GBOOL     compute_once=FALSE; // compute bdy cond once?
           GBOOL        buse_init=FALSE; // set via state initialzation method?
           GTVector<GINT>        istate; // state indices to operate on
+          std::function<void(Grid       &grid, 
+                             StateInfo  &stinfo,
+                             Time       &time,
+                             State      &utmp,
+                             State      &u,
+                             State      &ub)> callback = NULLPTR;
         };
 
         GInflowBdy() = delete; 

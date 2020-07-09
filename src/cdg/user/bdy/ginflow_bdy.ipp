@@ -99,44 +99,15 @@ GBOOL GFromInitBdy<TypePack>::update_from_user(
                               State     &u,
                               State     &ub)
 {
-   GString    serr = "GFromInitBdy<TypePack>::update_from_user: ";
-   GBOOL      bret;
-   GINT       idstate, ind;
-   State      tmp;
+  GString    serr = "GFromInitBdy<TypePack>::update_from_user: ";
+  GBOOL      bret;
 
-  GTVector<GTVector<GSIZET>> *igbdy = &grid.igbdy_binned();
+  assert(traits_.callback != NULLPTR);  
 
-  if ( traits_.compute_once && bcomputed_ ) return TRUE;
+  bret = traits_.callback(grid, stinfo, time, utmp, u, ub);
+  bcomputed = bret;
 
-  assert( u.size() == stinfo.compdesc.size() && "State info structure invalid");
-
-  assert(utmp.size() >= u.size());
-  if ( unew_.size() < u.size() ) {
-    unew_.resizem(u.size();
-    tmpnew_.resizem(utmp.size()-u.size());
-  }
-  for ( auto j=0; j<u.size(); j++ ) unew_ [j] = utmp[j];
-  for ( auto j=0; j<utmp.size()-u.size(); j++ ) tmpnew_[j] = utmp[u.size()+j];
-
-  // Call initialization method with utmp:
-  bret = GInitStateFactory<TypePack>::init(traits_.ptree, grid, stinfo, time, tmpnew_, ub, unew_);
-
-  // Set boundary vector with initialized state:
-  for ( auto n=0; n<traits_.istate.size() && bret; n++ ) { 
-    idstate = traits_.istate[n];
-    if ( stinfo.compdesc[idstate] == GSC_PRESCRIBED
-      || stinfo.compdesc[idstate] == GSC_NONE ) continue;
-    }
-    // Set from initialized State vector, 
-    for ( auto j=0; j<(*igbdy)[GBDY_INFLOW].size()
-       && ub[idstate] != NULLPTR; j++ ) {
-      ind = (*igbdy)[GBDY_INFLOW][j];
-      (*ub[idstate])[j] = (*unew_[idstate])[ind];
-    }
-  }
-   bcomputed = bret;
-
-   return bret;
+  return bret;
 
 } // end of method update_from_user
 
