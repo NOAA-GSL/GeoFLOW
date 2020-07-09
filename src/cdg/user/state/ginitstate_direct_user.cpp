@@ -64,7 +64,7 @@ GBOOL impl_boxnwaveburgers(const PropertyTree &ptree, GString &sconfig, GGrid &g
   bc[2] = boxptree.getValue<GString>("bdy_y_0");
   bc[3] = boxptree.getValue<GString>("bdy_y_1");
   bc[4] = boxptree.getValue<GString>("bdy_z_0");
-//    && "INFLOWT boundaries must be set on all boundaries");
+//    && "INFLOW boundaries must be set on all boundaries");
 
   nxy = (*xnodes)[0].size(); // same size for x, y, z
 
@@ -335,7 +335,7 @@ cout << "impl_boxdirgauss: sconfig=" << sconfig << endl;
   bc[3] = boxptree.getValue<GString>("bdy_y_1");
   bc[4] = boxptree.getValue<GString>("bdy_z_0");
   bc[5] = boxptree.getValue<GString>("bdy_z_1");
-  assert(bc.multiplicity("GBDY_INFLOWT") >= 2*GDIM
+  assert(bc.multiplicity("GBDY_INFLOW") >= 2*GDIM
       && "GBDY_INFLOW boundaries must be set on all boundaries");
 
   nxy = (*xnodes)[0].size(); // same size for x, y, z

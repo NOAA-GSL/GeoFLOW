@@ -120,7 +120,30 @@
   },
   "my_dirichlet": {
     "bdy_class"        : "uniform",
-    "base_type"        : "GBDY_DIRICHLET"
+    "base_type"        : "GBDY_DIRICHLET",
+    "istate"           : {0  , 1  , 2},
+    "value"            : {1.0, 1.0, 1.0}
+  },
+  "my_0flux": {
+    "bdy_class"        : "uniform",
+    "base_type"        : "GBDY_0FLUX",
+    "istate"           : {},
+  },
+  "my_uniform_inflow": {
+    "bdy_class"        : "uniform",
+    "base_type"        : "GBDY_INFLOW",
+    "istate"           : {},
+    "update_method"    : "use_init_state",
+  },
+  "my_zsponge": {
+    "bdy_class"        : "uniform",
+    "base_type"        : "GBDY_SPONGE",
+    "istate"           : {0  , 1  , 2},
+    "idir"             : 3,
+    "farfield"         : {0.0, 0.0, 0.0},
+    "exponent"         : {4.0, 4.0, 4.0},
+    "sigma0"           : {1.0, 1.0, 1.0},
+    "zstart"           : {0.9, 0.9, 0.9}
   },
   "fully_periodic": {
     "bdy_class"        : "uniform",

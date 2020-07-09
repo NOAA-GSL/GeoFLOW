@@ -160,16 +160,16 @@ enum GC_OP              {GC_OP_MAX=0,GC_OP_MIN ,GC_OP_SUM ,GC_OP_PROD,
 
 #if !defined(_G_BDYTYPE_DEF)
 #define _G_BDYTYPE_DEF
-enum GBdyType                    { GBDY_DIRICHLET=0 , GBDY_INFLOWT , GBDY_NOSLIP , GBDY_0FLUX , GBDY_PERIODIC , GBDY_OUTFLOW , GBDY_SPONGE , GBDY_USER0 , GBDY_USER1 , GBDY_NONE };
-const char * const sGBdyType [] ={"GBDY_DIRICHLET"  ,"GBDY_INFLOWT","GBDY_NOSLIP","GBDY_0FLUX","GBDY_PERIODIC","GBDY_OUTFLOW","GBDY_SPONGE","GBDY_USER0","GBDY_USER1","GBDY_NONE"};
+enum GBdyType                    { GBDY_DIRICHLET=0 , GBDY_INFLOW , GBDY_NOSLIP , GBDY_0FLUX , GBDY_PERIODIC , GBDY_OUTFLOW , GBDY_SPONGE , GBDY_USER0 , GBDY_USER1 , GBDY_NONE };
+const char * const sGBdyType [] ={"GBDY_DIRICHLET"  ,"GBDY_INFLOW","GBDY_NOSLIP","GBDY_0FLUX","GBDY_PERIODIC","GBDY_OUTFLOW","GBDY_SPONGE","GBDY_USER0","GBDY_USER1","GBDY_NONE"};
 #define GBDY_MAX GBDY_NONE
-// DIRICHLET  : May be variable in space, but constant in time
-// INFLOWT    : May be variable in space, and time 
-// NOSLIP     : Applies only to velocity, and is 0 on bdy, constant in time
-// 0FLUX      : Applies only to velocity, normal compoment to surf is 0; time variable
-// PERIODIC   : No user configuration required
-// OUTFLOW    : Variable in space, time; TBD
-// SPONGE     : Variable in space, time
+// DIRICHLET  : Acts on state directly; may be variable in space, but constant in time
+// INFLOW     : Acts on state directly; may be variable in space, and time 
+// NOSLIP     : Acts only on velocity, and is 0 on bdy, constant in time
+// 0FLUX      : Acts only to velocity, normal compoment to surf is 0; time variable
+// PERIODIC   : Acts on entire state; no user configuration required
+// OUTFLOW    : Acts on state directly; variable in space, time; TBD
+// SPONGE     : Acts on state directly; variable in space, time
 #endif
 
 #if !defined(_G_ELEMTYPE_DEF)

@@ -91,9 +91,9 @@ GBOOL GFromInitBdy<TypePack>::update_impl(
       || stinfo.compdesc[idstate] == GSC_NONE ) continue;
     }
     // Set from initialized State vector, 
-    for ( auto j=0; j<(*igbdy)[GBDY_INFLOWT].size()
+    for ( auto j=0; j<(*igbdy)[GBDY_INFLOW].size()
        && ub[idstate] != NULLPTR; j++ ) {
-      ind = (*igbdy)[GBDY_INFLOWT][j];
+      ind = (*igbdy)[GBDY_INFLOW][j];
       (*ub[idstate])[j] = (*unew_[idstate])[ind];
     }
   }

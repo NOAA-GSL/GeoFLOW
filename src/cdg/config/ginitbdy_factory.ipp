@@ -81,9 +81,9 @@ void GInitBdyFactory<EquationType>::set_bdy_from_state(const geoflow::tbox::Prop
        && ub[k] != NULLPTR; j++ ) {
       (*ub[k])[j] = (*u[k])[(*igbdy)[GBDY_DIRICHLET][j]];
     }
-    for ( auto j=0; j<(*igbdy)[GBDY_INFLOWT].size()
+    for ( auto j=0; j<(*igbdy)[GBDY_INFLOW].size()
        && ub[k] != NULLPTR; j++ ) {
-      (*ub[k])[j] = (*u[k])[(*igbdy)[GBDY_INFLOWT][j]];
+      (*ub[k])[j] = (*u[k])[(*igbdy)[GBDY_INFLOW][j]];
     }
   }
 

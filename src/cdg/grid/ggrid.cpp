@@ -1195,8 +1195,8 @@ void GGrid::init_bc_info()
   for ( auto j=0; j<igbdy_binned_[GBDY_DIRICHLET].size(); j++ ) {
     mask_[igbdy_binned_[GBDY_DIRICHLET][j]] = 0.0;
   }
-  for ( auto j=0; j<igbdy_binned_[GBDY_INFLOWT].size(); j++ ) {
-    mask_[igbdy_binned_[GBDY_INFLOWT][j]] = 0.0;
+  for ( auto j=0; j<igbdy_binned_[GBDY_INFLOW].size(); j++ ) {
+    mask_[igbdy_binned_[GBDY_INFLOW][j]] = 0.0;
   }
 
 
