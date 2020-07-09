@@ -43,6 +43,7 @@ public:
 
         // GSimpleOutflowBdy solver traits:
         struct Traits {
+          GBOOL     compute_once=FALSE; // compute bdy cond once?
           GTVector<GINT>  istate;    // state indices to operate on
         };
 
@@ -65,7 +66,6 @@ protected:
 private:
 
         GBOOL               bcomputed_;     // was computation done?
-        GBOOL               bcompute_once_; // do computation once?
 
         Traits              traits_;        // Traits structure
 

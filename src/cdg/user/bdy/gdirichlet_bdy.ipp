@@ -19,7 +19,6 @@ template<typename TypePack>
 GDirichletBdy<TypePack>::GDirichletBdy(GDirichletBdy<TypePack>::Traits &traits) :
 UpdateBdyBase<TypePack>(),
 bcomputed_               (FALSE),
-bcompute_once_            (TRUE),
 traits_                 (traits)
 {
 
@@ -69,7 +68,7 @@ GBOOL GDirichletBdy<TypePack>::update_impl(
 
   GTVector<GTVector<GSIZET>> *igbdy = &grid.igbdy_binned();
 
-  if ( bcompute_once_ && bcomputed_ ) return TRUE;
+  if ( traits_.compute_once && bcomputed_ ) return TRUE;
 
 
   // Set boundary vector to corresp. value:

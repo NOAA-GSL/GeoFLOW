@@ -19,7 +19,6 @@ template<typename TypePack>
 GSpongeBdy<TypePack>::GSpongeBdy(GSpongeBdy<TypePack>::Traits &traits) :
 UpdateBdyBase<TypePack>(),
 bcomputed_               (FALSE),
-bcompute_once_           (FALSE),
 traits_                 (traits)
 {
   // Do some checks:
@@ -73,7 +72,7 @@ GBOOL GSpongeBdy<TypePack>::update_impl(
    GGridBox   *box = std::dynamic_cast<GGridBox*>(grid_);
    GGridIcos  *sphere = std::dynamic_cast<GGridIcos*>(grid_);
 
-  if ( bcompute_once_ && bcomputed_ ) return TRUE;
+  if ( traits_.compute_once && bcomputed_ ) return TRUE;
 
    if ( box != NULLPTR ) {
      bret = update_cart(grid, stinfo, time, utmp, u, ub);

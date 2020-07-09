@@ -20,7 +20,6 @@ template<typename TypePack>
 GNoSlipBdy<TypePack>::GNoSlipBdy(GNoSlipBdy<TypePack>::Traits &traits) :
 UpdateBdyBase<TypePack>(),
 bcomputed_               (FALSE),
-bcomput_once_            (FALSE),
 nstate_                      (0),
 traits_                 (traits)
 {
@@ -70,7 +69,7 @@ GBOOL GNoSlipBdy<TypePack>::update_impl(
 {
   GString    serr = "GNoSlipBdy<TypePack>::update_impl: ";
 
-  if ( bcompute_once_ && bcomputed_ ) return TRUE;
+  if ( traits_.compute_once && bcomputed_ ) return TRUE;
 
   for ( auto k=0; k<nstate_; k++ ) { // for each vector component
     for ( auto j=0; j<(*igbdy)[GBYD_0FLUX].size() ) { // all bdy points

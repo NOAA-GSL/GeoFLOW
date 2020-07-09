@@ -20,7 +20,6 @@ template<typename TypePack>
 G0FluxBdy<TypePack>::G0FluxBdy(G0FluxBdy<TypePack>::Traits &traits) :
 UpdateBdyBase<TypePack>(),
 bcomputed_               (FALSE),
-bcompute_once_           (FALSE),
 nstate_                      (0),
 traits_                 (traits)
 {
@@ -81,7 +80,7 @@ GBOOL G0FluxBdy<TypePack>::update_impl(
 
   GTVector<GTVector<GSIZET>> *igbdy = &grid.igbdy_binned();
 
-  if ( bcompute_once_ && bcomputed_ ) return TRUE;
+  if ( traits_.compute_once && bcomputed_ ) return TRUE;
 
   for ( auto j=0; j<traits_.istate.size(); j++ ) {
     assert(ub[istate[j]] != NULL && "Illegal bdy vector");

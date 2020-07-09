@@ -45,6 +45,7 @@ public:
 
         // G0FluxBdy solver traits:
         struct Traits {
+          GBOOL     compute_once=FALSE;    // compute bdy once?
           GTVector<GINT>  istate;    // state indices to operate on
         };
 
@@ -69,7 +70,6 @@ private:
 
         Traits              traits_;        // Traits structure
         GBOOL               bcomputed_;     // tell us that operation was called
-        GBOOL               bcompute_once_; // tell us that computation is done once
         GINT                nstate_;        // size of traits_.istate
 
 };
