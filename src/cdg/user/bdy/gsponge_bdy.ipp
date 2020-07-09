@@ -114,7 +114,7 @@ GBOOL GSpongeBdy<TypePack>::update_cart(
   GString          serr = "GSpongeBdy<TypePack>::update_cart: ";
   Time             tt = time;
   GINT             idstate;
-  GFTYPE           beta, ifact, rtst, sig0;
+  GFTYPE           beta, ifact, rtst, sig0, sgn;
 //GTVector<GTVector<GINT>> 
 //                *igbdycf = &grid.igbdycf_binned(); 
 //GTVector<GTVector<GSIZET>> 
@@ -137,6 +137,8 @@ GBOOL GSpongeBdy<TypePack>::update_cart(
   //   traits.idir X ( r - rs ) > 0 defines the r values
   // that sit in the layer.
 
+  sgn = traits_.idir / abs(traits_.idir);
+
   // Update state due to sponge layer:
   // Note: This is equiavalent to adding a dissipation 
   //       term to the RH of the operator-split equation, s.t.:
@@ -153,7 +155,7 @@ GBOOL GSpongeBdy<TypePack>::update_cart(
     for ( auto j=0; j<u[idstate]->size(); j++ ) { // for all grid points
 //    igb  = (*igbdy)  [GBDY_SPONGE][j];
 //    igf  = (*igbdycf)[GBDY_SPONGE][j];
-      rtst = traits_.idir*( (*xnodes)[abs(idir-1)][k] - rs[0] );
+      rtst = sgn * ( (*xnodes)[abs(idir-1)][k] - rs[0] );
       beta = rtst > 0 ? pow(ifact*fabs(rtst),exponent) : 0.0; // check if in sponge layer
 //    (*u[idstate])[j]  = (1.0-beta)*(*u[idstate])[j] + beta*farfield[k];
       sig0 = traits_.sigma.size() > 1 ? traits_.sigma[k] : traits_.sigma[0];
