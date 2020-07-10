@@ -6,31 +6,28 @@
 // Derived From : none.
 //==================================================================================
 
+
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : build
 // DESC   : Build bdy update object
-// ARGS   : ptree  : main property tree
-//          grid   : GGrid operator
-//          stinfo : StateInfo
+// ARGS   : ptree  : main property tree 
+//          supdate: string naming bdy update prop tree
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
 typename UpdateBdyFactory<TypePack>::UpdateBasePtr
-GUpdateBdyFactory<TypePack>::build(const PropertyTree& ptree, Grid &grid, StateInfo &stinfo)
+GUpdateBdyFactory<TypePack>::build(const PropertyTree& ptree, GString &supdate, GBdyType bdytype)
 {
-  GBOOL         bret = FALSE, use_inits;
-  State         uu(u.size());
-  GString       sblock, sgrid, supdate;
-  PropertyTree  gtree, uptree;
-//std::function<void(const geoflow::tbox::PropertyTree& ptree,GString &supdate, Grid &grid,
-//                   StateInfo &stinfo, Time &time, State &utmp, State &u, State &ub)>
-//              mycallback;
-  sgrid     = ptree.getValue<GString>("grid_type");
-  gtree     = ptree.getPropertyTree(sgrid);
-  sblock    = gtree.getValue<GString>("bdy_update_scheme","none");
+  GBOOL              bret = FALSE;
+  GString            sblock;
+  PropertyTree       bptree;
+  UpdateBdyBasePtr   base_ptr;
+  std::vector<GINT>  ivec;
+  std::vector<Ftype> fvec;
 
-  UpdateBdyBasePtr base_ptr;
+  bptree     = ptree.getPropertyTree(supdate);
+
   if      ( "none"         == sblock
     || ""             == sblock ) {
     using UpdateImpl = NullUpdateBdy<TypesPack>
@@ -42,10 +39,24 @@ GUpdateBdyFactory<TypePack>::build(const PropertyTree& ptree, Grid &grid, StateI
     base_ptr = obs_impl;
     return base_ptr;
   }
-  else if ( "use_state_init" == sblock ) {
-    using UpdateImpl = GFromInitBdy<TypesPack>
+
+  uptree    = ptree.getPropertyTree(sblock);
+  supdate   = uptree.getValue<GString>("update_method");
+
+  assert(bptree.isArray<GINT>("istate") && "istate vector missing");
+  ivec = bptree.getArray<GINT>("istate");
+
+  if       ( GBDY_DIRICHLET == bdytype ) {
+    using UpdateImpl = GDirichletBdy<TypesPack>
     UpdateImpl::Traits traits;
-    traits.ptree = ptree;
+
+    traits.istate = ivec;
+    assert(bptree.isArray<Ftype>("value") && "value array missing");
+    traits.value = fvec;
+    if ( bptree.isValue<GBOOL>("compute_once") ) {
+      traits.compute_once = bptree.getValue<GBOOL>("compute_once");
+    }
+
     // Allocate observer Implementation
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
 
@@ -53,23 +64,85 @@ GUpdateBdyFactory<TypePack>::build(const PropertyTree& ptree, Grid &grid, StateI
     base_ptr = obs_impl;
     return base_ptr;
   }
-
-  
-  uptree    = ptree.getPropertyTree(sblock);
-  supdate   = uptree.getValue<GString>("update_method");
-  if      ( "simple_outflow" == supdate ) {
-    using UpdateImpl = GSimpleOutflowBdy<TypesPack>
+  else if ( GBDY_INFLOW == bdytype ) {
+    using UpdateImpl = GInflowBdy<TypesPack>
     UpdateImpl::Traits traits;
-    traits.istate.resize(stinfo.nevolve);
-    for ( auto j=0; j<traits.istate.size(); j++ ) traits.istate[j] = j;
+
+    traits.istate = ivec;
+    assert(bptree.isArray<Ftype>("value") && "value array missing");
+    traits.value = fvec;
+
+    if ( bptree.isValue<GBOOL>("compute_once") ) {
+      traits.compute_once = bptree.getValue<GBOOL>("compute_once");
+    }
+    assert( bptree.isValue<GBOOL>("use_init") && "use_init boolean missing") {
+    traits.use_init = bptree.getValue<GBOOL>("use_init");
+    if ( !traits.use_init ) {
+      assert( bptree.isValue<GString>("inflow_method") 
+           && "inflow_method required if use_init==FALSE" ) 
+      sblock = bptree.getValue<GString>("inflow_method");
+      traits.callback = get_inflow_callback(sblock);
+    }
     // Allocate observer Implementation
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
   }
-  else if ( "sponge" == supdate ) {
+  else if ( GBDY_NOSLIP == bdytype ) {
+    using UpdateImpl = GNoSlipBdy<TypesPack>
+    UpdateImpl::Traits traits;
+
+    traits.istate = ivec;
+    if ( bptree.isValue<GBOOL>("compute_once") ) {
+      traits.compute_once = bptree.getValue<GBOOL>("compute_once");
+    }
+    
+    // Allocate observer Implementation
+    std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
+  }
+  else if ( GBDY_0FLUX == bdytype ) {
+    using UpdateImpl = G0FluxBdy<TypesPack>
+    UpdateImpl::Traits traits;
+
+    traits.istate = ivec;
+    if ( bptree.isValue<GBOOL>("compute_once") ) {
+      traits.compute_once = bptree.getValue<GBOOL>("compute_once");
+    }
+    
+    // Allocate observer Implementation
+    std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
+
+  }
+  else if ( GBDY_OUTFLOW == bdytype ) {
+    assert(FALSE); // not available yet
+    using UpdateImpl = GOutflowBdy<TypesPack>
+    UpdateImpl::Traits traits;
+
+    traits.istate = ivec;
+    if ( bptree.isValue<GBOOL>("compute_once") ) {
+      traits.compute_once = bptree.getValue<GBOOL>("compute_once");
+    }
+    
+    // Allocate observer Implementation
+    std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
+  }
+  else if ( GBDY_SPONGE == bdytype ) {
     using UpdateImpl = GSpongeBdy<TypesPack>
     UpdateImpl::Traits traits;
-    traits.istate.resize(stinfo.nevolve);
-    for ( auto j=0; j<traits.istate.size(); j++ ) traits.istate[j] = j;
+
+    traits.istate = ivec;
+    if ( bptree.isValue<GBOOL>("compute_once") ) {
+      traits.compute_once = bptree.getValue<GBOOL>("compute_once");
+    }
+    assert(bptree.isValue<GINT>("idir") && "idir value missing");
+    traits.idir = bptree.getValue<GINT>("idir");
+    assert(bptree.isArray<Ftype>("farfield") && "farfield array missing");
+    traits.idir = bptree.getValue<Ftype>("farfield");
+    assert(bptree.isArray<Ftype>("exponent") && "exponent array missing");
+    traits.idir = bptree.getValue<Ftype>("exponent");
+    assert(bptree.isArray<Ftype>("sigma0") && "sigma0 array missing");
+    traits.idir = bptree.getValue<Ftype>("sigma0");
+    assert(bptree.isArray<Ftype>("xstart") && "xstart array missing");
+    traits.idir = bptree.getValue<Ftype>("xstart");
+    
     // Allocate observer Implementation
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
   }
@@ -84,40 +157,35 @@ GUpdateBdyFactory<TypePack>::build(const PropertyTree& ptree, Grid &grid, StateI
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : set_bdy_from_state
-// DESC   : use state var, u, to set bdy, ub
-// ARGS   : ptree  : main property tree
-//          sconfig: config block name
-//          grid   : GGrid operator
-//          stinfo : StateInfo
-//          time   : initialization time
-//          utmp   : tmp arrays
-//          u      : state to be initialized. 
-//          ub     : boundary state 
-// RETURNS: none.
+// METHOD : get_inflow_callback
+// DESC   : Gets CallbackPtr corresponding to sname arg for inflow conditions.
+//          the function are gottne from the gns_inflow_user.* namespace
+//          collection of methods, which the user may modify.
+// ARGS   : sname : inflow function name
+// RETURNS: CallbackPtr for callback function
 //**********************************************************************************
 template<typename TypePack>
-void GUpdateBdyFactory<TypePack>::set_bdy_from_state(const geoflow::tbox::PropertyTree& ptree, GString &sconfig, Grid &grid, StateInfo &stinfo, Time &time, State &utmp, State &u, State &ub)
+typename UpdateBdyFactory<TypePack>::CallbackPtr
+GUpdateBdyFactory<TypePack>::get_inflow_callback(const GString& sname)
 {
-  GBOOL         bret=FALSE;
-  GBOOL         use_inits; // use state init method to set bdy?
-  GString       sgrid, supdate;
+  GBOOL              bret = FALSE;
+  CallbackPtr        callback;
 
-  GTVector<GTVector<GSIZET>> *igbdy = &grid.igbdy_binned();
 
-  bret = GInitStateFactory<TypePack>::init(ptree, grid, stinfo, time, utmp, ub, u);
-
-  // Set from State vector, u and others that we _can_ set:
-  for ( auto k=0; k<u.size(); k++ ) {
-    for ( auto j=0; j<(*igbdy)[GBDY_DIRICHLET].size()
-       && ub[k] != NULLPTR; j++ ) {
-      (*ub[k])[j] = (*u[k])[(*igbdy)[GBDY_DIRICHLET][j]];
-    }
-    for ( auto j=0; j<(*igbdy)[GBDY_INFLOW].size()
-       && ub[k] != NULLPTR; j++ ) {
-      (*ub[k])[j] = (*u[k])[(*igbdy)[GBDY_INFLOW][j]];
-    }
+  if      ( "myinflow"     == sname ) {
+    callback = 
+      [GInflowBdyMethods](Grid      &grid,
+                          StateInfo &stinfo,
+                          Time      &time,
+                          State     &utmp,
+                          State     &u,
+                          State     &ub){myinflow(grid, stinfo, time, utmp, u, ub);}; 
+  else {
+    assert(FALSE && "Specified inflow bdy update method unknown");
   }
 
-} // end, set_bdy_from_state
+  return callback;
+
+} // end, init method get_inflow_callback
+
 

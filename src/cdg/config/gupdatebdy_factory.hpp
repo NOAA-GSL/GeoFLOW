@@ -12,9 +12,12 @@
 #include "gcomm.hpp"
 #include "gtvector.hpp"
 #include "ggrid.hpp"
-#include "gfrominit_bdy.hpp"
+#include "gdirichlet_bdy.hpp"
+#include "ginflow_bdy.hpp"
+#include "gnoslip_bdy.hpp"
 #include "gsimple_outflow_bdy.hpp"
 #include "gsponge_bdy.hpp"
+#include "gns_inflow_user.hpp"
 
 using namespace geoflow;
 using namespace geoflow::tbox;
@@ -32,12 +35,19 @@ class GUpdateBdyFactory
         using Time          = typename Equation::Time;
         using UpdateBase    = UpdateBdyBase<Types>
         using UpdateBasePtr = std::shared_prt<Types>
+        using CallbackPtr   = std::function<void(
+                                Grid       &grid,
+                                StateInfo  &stinfo,
+                                Time       &time,
+                                State      &utmp,
+                                State      &u,
+                                State      &ub)>;
 
 
 	static UpdateBdyBasePtr build(const PropertyTree& ptree, Grid &grid, StateInfo &stinfo);
+	static CallbackPtr      get_inflow_callback(const GString &name);
 
   private:
-        static void  set_bdy_from_state(const PropertyTree& ptree, GString &sconfig, Grid &grid, StateInfo &stinfo, Time &time, State &utmp, State &u, State &ub);
 
 }; // class GUpdateBdyFactory
 
