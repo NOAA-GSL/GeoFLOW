@@ -34,6 +34,9 @@ class GGridFactory
         using IOBaseType  = IOBase<Types>;
         using IOBasePtr   = std::shared_ptr<IOBaseType>;
         using ObsTraits   = typename ObserverBase<Types>::Traits;
+        using BdyUpdatePtr= std::vector<std::shared_ptr<UpdateBdyBase<TypePack><Types>>>;
+
+
 
 	static GGrid *build(const geoflow::tbox::PropertyTree& ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis, IOBasePtr pIO, ObsTraits &obstraits, GC_COMM &comm);
 

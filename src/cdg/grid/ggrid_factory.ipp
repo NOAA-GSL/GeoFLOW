@@ -47,7 +47,7 @@ GGrid *GGridFactory<TypePack>::build(const geoflow::tbox::PropertyTree& ptree, G
       grid = new GGridIcos(ptree, gbasis, comm);
       grid->grid_init();
     }
-    else if ( "grid_box"    ==  gname) { // 2d or 3D Cart grid
+    else if ( "grid_box"    ==  gname) { // 2d or 3d Cart grid
       grid = new GGridBox(ptree, gbasis, comm);
       grid->grid_init();
     }
@@ -67,7 +67,7 @@ GGrid *GGridFactory<TypePack>::build(const geoflow::tbox::PropertyTree& ptree, G
       grid = new GGridIcos(ptree, gbasis, comm);
       grid->grid_init(p, xnodes);
     }
-    else if ( "grid_box"    ==  gname) { // 2d or 3D Cart grid
+    else if ( "grid_box"    ==  gname) { // 2d or 3d Cart grid
       grid = new GGridBox(ptree, gbasis, comm);
       grid->grid_init(p, xnodes);
     }

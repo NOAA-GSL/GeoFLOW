@@ -24,31 +24,48 @@
 #include "glinop.hpp"
 #include "ghelmholtz.hpp"
 #include "gcg.hpp"
+#include "gstateupdate.hpp"
+#include "g0flux.hpp"
+#include "gdirichlet.hpp"
+#include "ginflow.hpp"
+#include "gnoslip.hpp"
+#include "gsimple_outflow.hpp"
+#include "gsponge.hpp"
 #include "tbox/property_tree.hpp"
 
 
 using namespace geoflow::tbox;
 using namespace std;
 
-/*
-template< // define terrain typepack
-typename OperatorType        = GHelmholtz,
+
 typename PrecondType         = GLinOp,
-typename StateType           = GTVector<GTVector<GFTYPE>*>,
-typename StateCompType       = GTVector<GFTYPE>,
-typename GridType            = GGrid,
-typename ValueType           = GFTYPE,
-typename ConnectivityOpType  = GGFX<GFTYPE>
->
-*/
-struct CGTypePack {
+typename State               = GTVector<GTVector<GFTYPE>*>,
+typename StateComp           = GTVector<GFTYPE>,
+typename StateInfo           = GStateInfo;
+typename Grid                = GGrid,
+typename Value               = GFTYPE,
+typename Time                = GFTYPE,
+
+struct BdyTypePack { // define bdy update typepack
+        using Types            = BdyTypePack;
+        using State            = GTVector<GTVector<GFTYPE>*>;
+        using StateComp        = GTVector<GFTYPE>;
+        using StateInfo        = GStateInfo;
+        using Grid             = GGrid;
+        using Value            = GFTYPE;
+        using Time             = GFTYPE;
+};
+
+struct CGTypePack { // define terrain typepack
         using Types            = CGTypePack;
         using Operator         = class GHelmholtz;
         using Preconditioner   = LinSolverBase<Types>;
         using State            = GTVector<GTVector<GFTYPE>*>;
         using StateComp        = GTVector<GFTYPE>;
+        using StateInfo        = GStateInfo;
         using Grid             = GGrid;
         using Value            = GFTYPE;
+        using Time             = GFTYPE;
         using ConnectivityOp   = GGFX<GFTYPE>;
 };
 

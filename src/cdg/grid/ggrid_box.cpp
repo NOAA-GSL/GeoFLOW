@@ -1635,3 +1635,62 @@ void GGridBox::do_bdy_normals3d(GTMatrix<GTVector<GFTYPE>>    &dXdXi,
 
 } // end, method do_bdy_normals3d
 
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : config_bdy_update
+// DESC   : Read bdy prop tree to configure bdy update methods
+// ARGS   : bptree: boundary coordinates
+// RETURNS: none.
+//**********************************************************************************
+void GGridBox::config_bdy_update(const PropertyTree &bptree)
+{ 
+  
+  std::vector<GINT>   viarray;
+  std::vector<Ftype>  vfarray;
+
+  // Operate on the bdy type vectors, because these
+  // may be changed based on a user function s.t.
+  // prop tree may not capture the bdy type:
+  if      ( igbdy_binned_[GBDY_DIRICHLET].size() > 0 ) {
+    GDirichelBdy<BdyTypePack>::Traits dtraits;
+    if ( bptree.isValue("compute_once") ) {
+      dtraits.compute_once = bptree.getValue("compute_once");
+    }
+    viarray = bptree("istate"); dtraits.istate.resize(viarray.size());
+    dtraits.istate= viarray;
+    vfarray = bptree("value"); dtraits.value.resize(vfarray.size());
+    dtraits.value = vfarray;
+  }
+  else if ( igbdy_binned_[GBDY_INFLOW].size() > 0 ) {
+    GInflowBdy<BdyTypePack>::Traits itraits;
+    if ( bptree.isValue("compute_once") ) {
+      itraits.compute_once = bptree.getValue("compute_once");
+    }
+    viarray = bptree("istate"); itraits.istate.resize(viarray.size());
+    itraits.istate= viarray;
+  }
+  else if ( igbdy_binned_[GBDY_NOSLIP].size() > 0 ) {
+    GNoSlipBdy<BdyTypePack>::Traits ntraits;
+    if ( bptree.isValue("compute_once") ) {
+      ntraits.compute_once = bptree.getValue("compute_once");
+    }
+    viarray = bptree("istate"); ntraits.istate.resize(viarray.size());
+    ntraits.istate= viarray;
+  }
+  else if ( igbdy_binned_[GBDY_0FLUX].size() > 0 ) {
+    G0FluxBdy<BdyTypePack>::Traits ztraits;
+    ztraits.
+  }
+  else if ( igbdy_binned_[GBDY_OUTFLOW].size() > 0 ) {
+    GSimpleOutflowBdy<BdyTypePack>::Traits otraits;
+    otraits.
+  }
+  else if ( igbdy_binned_[GBDY_SPONGE].size() > 0 ) {
+    GSpongeBdy<BdyTypePack>::Traits straits;
+    straits.
+  }
+ 
+
+} // end of method config_bdy_update
+

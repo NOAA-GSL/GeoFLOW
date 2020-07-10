@@ -1139,6 +1139,7 @@ void GGrid::init_bc_info()
   // Find boundary indices & types from config file 
   // specification, for _each_ natural/canonical domain face:
   config_bdy(ptree_, igbdy_bdyface_, igbdyt_bdyface_);
+  config_bdy_update(ptree_, igbdy_bdyface_, igbdyt_bdyface_);
 
 
   // Flatten these 2 bdy index & types indirection arrays:
@@ -1278,4 +1279,5 @@ void GGrid::add_terrain(const State &xb, State &utmp)
   ivolume_ = 1.0 / volume_;
 
 } // end of method add_terrain
+
 
