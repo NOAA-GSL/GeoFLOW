@@ -22,12 +22,14 @@ using namespace geoflow::tbox;
 typedef GFTYPE                      Time;
 typedef GTVector<GTVector<GFTYPE>*> State;
 typedef GStateInfo                  StateInfo;
+typedef GGrid                       Grid;
 
 
-namespace ginitbdy
+namespace GInflowBdyMethods
 {
 
-GBOOL impl_mybdyinit        (const PropertyTree& stree, GGrid &grid, StateInfo &stinfo, Time &time, State &utmp, State &u, State &ub);
+GBOOL myinflow  (Grid &grid, StateInfo &stinfo, Time &time, State &utmp, State &u, State &ub);
+
 };
 
 #endif

@@ -6,20 +6,19 @@
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
-#include "ginitbdy_user.hpp"
+#include "gns_inflow_user.hpp"
 
 
-namespace ginitbdy {
+namespace GInflowBdyMethods {
 
 
 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : impl_mybdyinit
-// DESC   : Initialize bdy using state initialization method 
-//          specified by ptree
-// ARGS   : ptree : main prop tree
+// METHOD : myinflow
+// DESC   : Place holder template for inflow update methods
+// ARGS   : 
 //          grid  : grid
 //          stinfo: StateInfo
 //          t     : time
@@ -28,7 +27,7 @@ namespace ginitbdy {
 //          ub    : bdy vectors (one for each state element)
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_mybdyinit(const PropertyTree &ptree, GGrid &grid, StateInfo &stinfo, Time &time, State &utmp, State &u, State &ub)
+GBOOL myinflow(GGrid &grid, StateInfo &stinfo, Time &time, State &utmp, State &u, State &ub)
 {
 #if 0
   Time             tt = t;
@@ -52,21 +51,11 @@ GBOOL impl_mybdyinit(const PropertyTree &ptree, GGrid &grid, StateInfo &stinfo, 
 
   return TRUE;
 
-#else
-
-  /* 
-     Fill in here; change function name 
-     if desired. Add (unique) function name to 
-     ginitb_factory.ipp.
-  */
-
-
-  return FALSE;
 #endif
 
-} // end, impl_mybdyinit
+} // end, myinflow
 
 
 
 
-} // end, ginitbdy namespace
+} // end, GInflowBdyMethods
