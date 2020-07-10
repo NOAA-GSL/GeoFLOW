@@ -11,6 +11,10 @@
 #include <cassert>
 #include "gtypes.h"
 #include "ggrid.hpp"
+#include "tbox/property_tree.hpp"
+
+using namespace geoflow::pdeint;
+using namespace std;
 
 
 namespace geoflow
@@ -22,6 +26,8 @@ GBOOL          file_empty(GString filename);
 
 template<typename T>
 void           smooth(GGrid &grid, GGFX_OP op,  GTVector<T> &tmp, GTVector<T> &v);
+template<typename T>
+void           coord_dims(const PropertyTree& ptree, GTVector<T> &xmin, GTVector<T> &xmax);
 
 
 } // end, namespace

@@ -18,6 +18,7 @@
 #include "gsimple_outflow_bdy.hpp"
 #include "gsponge_bdy.hpp"
 #include "gns_inflow_user.hpp"
+#include "gutils.hpp"
 
 using namespace geoflow;
 using namespace geoflow::tbox;

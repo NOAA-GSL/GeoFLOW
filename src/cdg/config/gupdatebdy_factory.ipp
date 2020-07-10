@@ -132,8 +132,7 @@ GUpdateBdyFactory<TypePack>::build(const PropertyTree& ptree, GString &supdate, 
     if ( bptree.isValue<GBOOL>("compute_once") ) {
       traits.compute_once = bptree.getValue<GBOOL>("compute_once");
     }
-    assert(bptree.isValue<GINT>("idir") && "idir value missing");
-    traits.idir = bptree.getValue<GINT>("idir");
+
     assert(bptree.isArray<Ftype>("farfield") && "farfield array missing");
     traits.idir = bptree.getValue<Ftype>("farfield");
     assert(bptree.isArray<Ftype>("exponent") && "exponent array missing");
@@ -143,8 +142,20 @@ GUpdateBdyFactory<TypePack>::build(const PropertyTree& ptree, GString &supdate, 
     assert(bptree.isArray<Ftype>("xstart") && "xstart array missing");
     traits.idir = bptree.getValue<Ftype>("xstart");
     
+    GINT            ndim;
+    GTVector<Ftype> xmin, xmax;
+    geoflow::coord_dims(ptree, xmin, xmax, ndim);// get coord min/max from ptree
+
+    assert(bptree.isValue<GINT>("idir") && "idir value missing");
+    traits.idir = bptree.getValue<GINT>("idir");
+    assert(traits.idir >= 1 && traits.idir <= xmax.size()); // validate idir
+
+    if ( traits.idir < 0 ) traits.ro = xmin[abs(traits.idir)-1];
+    else                   traits.ro = xmax[abs(traits.idir)-1];
+
     // Allocate observer Implementation
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
+
   }
   else {
     assert(FALSE && "Specified bdy update method unknown");
