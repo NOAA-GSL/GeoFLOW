@@ -19,6 +19,7 @@
 #include "gsponge_bdy.hpp"
 #include "gns_inflow_user.hpp"
 #include "gutils.hpp"
+#include "gspecbdy_user.hpp"
 
 using namespace geoflow;
 using namespace geoflow::tbox;
@@ -34,8 +35,9 @@ class GUpdateBdyFactory
         using Grid          = typename Equation::Grid;
         using Value         = typename Equation::Value;
         using Time          = typename Equation::Time;
-        using UpdateBase    = UpdateBdyBase<Types>
-        using UpdateBasePtr = std::shared_prt<Types>
+        using UpdateBase    = UpdateBdyBase<Types>;
+        using UpdateBasePtr = std::shared_prt<UpdateBase>;
+        using UpdateBaseList= std::vector<UpdateBasePtr>;
         using CallbackPtr   = std::function<void(
                                 Grid       &grid,
                                 StateInfo  &stinfo,
@@ -49,6 +51,9 @@ class GUpdateBdyFactory
 	static CallbackPtr      get_inflow_callback(const GString &name);
 
   private:
+	UpdateBdyBaseList handle_uniform(const PropertyTree& sptree, GString &supdate, Grid &grid, const GINT id, BdyIndices &ibdy, BdyTypes &tbdy);
+	UpdateBdyBaseList handle_mixed  (const PropertyTree& sptree, GString &supdate, Grid &grid, const GINT id, BdyIndices &ibdy, BdyTypes &tbdy);
+	UpdateBdyBasePtr  get_bdy_class (const PropertyTree& sptree, GString &supdate, Grid &grid, const GINT id, const GBdyType bdytype);
 
 }; // class GUpdateBdyFactory
 
