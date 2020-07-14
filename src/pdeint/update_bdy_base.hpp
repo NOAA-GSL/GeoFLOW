@@ -16,7 +16,7 @@ namespace geoflow {
 namespace pdeint {
 
 /**
- * Base to handle time updates of bdy information 
+ * Base to handle specification and time updates of bdy information 
  * (or possibly state due to bdy) 
  *
  */
@@ -48,8 +48,12 @@ public:
 	/**
 	 * Update bdy conditions with state at t
 	 *
-	 * @param[in,out] ptree  Initial time at start, and final time
-	 * @param[in,out] u  Current state values
+	 * @param[in,out] grid   : initial time at start, and final time
+	 * @param[in,out] stinfo : StateInfo object
+	 * @param[in,out] time   : current time
+	 * @param[in,out] utmp   : tmp arrays
+	 * @param[in,out] u      : current state array
+	 * @param[in,out] ub     : bdy arrays for each state component
 	 */
 	bool update (Grid      &grid, 
                      StateInfo &stinfo, 
@@ -61,6 +65,7 @@ public:
                      }
 
 protected:
+
 	bool update_impl (
                      Grid      &grid, 
                      StateInfo &stinfo, 
