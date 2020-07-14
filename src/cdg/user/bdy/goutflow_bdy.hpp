@@ -44,6 +44,7 @@ public:
         // GOutflowBdy solver traits:
         struct Traits {
           GBOOL     compute_once=FALSE; // compute bdy cond once?
+          GINT             bdyid;    // bdy id
           GTVector<GINT>  istate;    // state indices to operate on
         };
 

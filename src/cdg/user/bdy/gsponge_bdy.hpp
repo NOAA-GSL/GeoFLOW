@@ -48,6 +48,7 @@ public:
            
           GINT            idir  = GDIM;  
                                      // canonical coord direction definining surfaces
+          GINT            bdyid;     // bdy id
           GTVector<GINT>  istate;    // state indices to operate on
           GTVector<Ftype> farfield;  // far-field solution for each istate
           GTVector<Ftype> exponent;  // fall-off exponent for solution

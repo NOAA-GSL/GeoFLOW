@@ -47,6 +47,7 @@ public:
         struct Traits {
           GBOOL     compute_once=FALSE; // compute bdy cond once?
           GBOOL        buse_init=FALSE; // set via state initialzation method?
+          GINT                   bdyid; // bdy id
           GTVector<GINT>        istate; // state indices to operate on
           std::function<void(Grid       &grid, 
                              StateInfo  &stinfo,

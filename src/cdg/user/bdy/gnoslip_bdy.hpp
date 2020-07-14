@@ -46,6 +46,7 @@ public:
         // GNoSlipBdy solver traits:
         struct Traits {
           GBOOL     compute_once=TRUE; // compute bdy cond once?
+          GINT             bdyid;    // bdy id
           GTVector<GINT>  istate;    // state indices to operate on
         };
 

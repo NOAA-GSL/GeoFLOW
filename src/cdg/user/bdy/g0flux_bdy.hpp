@@ -46,6 +46,7 @@ public:
         // G0FluxBdy solver traits:
         struct Traits {
           GBOOL     compute_once=FALSE;    // compute bdy once?
+          GINT             bdyid;    // bdy id
           GTVector<GINT>  istate;    // state indices to operate on
         };
 

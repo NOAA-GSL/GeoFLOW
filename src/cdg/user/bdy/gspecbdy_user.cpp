@@ -37,4 +37,25 @@ GBOOL impl_uniform(const PropertyTree &sptree, GGrid &grid, const GINT id, GTVec
 } // end, method impl_uniform
 
 
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : impl_my_mixed_bdy
+// DESC   : Template for a mixed bdy-specification method
+// ARGS   : sptree : specification prop tree
+//          grid   : grid
+//          id     : may serve as canonical bdy id
+//          ibdy   : indirection array into state indicating global bdy
+//          tbdy   : array of size ibdy.size giving bdy condition type, returned
+// RETURNS: TRUE on success; else FALSE 
+//**********************************************************************************
+GBOOL impl_my_mixed_bdy(const PropertyTree &sptree, GGrid &grid, const GINT id, GTVector<GSIZET> &ibdy, GTVector<GBdyType> &tbdy)
+{
+  GBdyType btype = geoflow::str2bdytype(sptree.getValue<GString>("base_type", "GBDY_NONE"));
+
+
+  return FALSE;
+
+} // end, method impl_my_mixed_bdy
+
+
 } // end, gspecbdy namespace
