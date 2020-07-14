@@ -115,8 +115,8 @@
     "radiusi"   : 1.0,
     "radiuso"   : 2.0,
     "num_elems" : [10, 10, 10],
-    "bdy_inner": "GBDY_DIRICHLET",
-    "bdy_outer": "GBDY_SPONGE"
+    "bdy_inner": "my_0flux",
+    "bdy_outer": "my_zsponge"
   },
   "my_dirichlet": {
     "bdy_class"        : "uniform",
@@ -127,13 +127,7 @@
   "my_0flux": {
     "bdy_class"        : "uniform",
     "base_type"        : "GBDY_0FLUX",
-    "istate"           : {},
-  },
-  "my_uniform_inflow": {
-    "bdy_class"        : "uniform",
-    "base_type"        : "GBDY_INFLOW",
-    "istate"           : {},
-    "update_method"    : "use_init_state",
+    "istate"           : {0, 1, 2},
   },
   "my_zsponge": {
     "bdy_class"        : "uniform",
