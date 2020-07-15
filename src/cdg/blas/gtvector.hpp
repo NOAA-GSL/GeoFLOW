@@ -205,8 +205,6 @@ inline GSIZET distinctrng_floor(GSIZET istart, GSIZET n, GSIZET is, T *&vals, GS
     #pragma acc routine vector
 inline GSIZET distinctrng_floor(GSIZET istart, GSIZET n, GSIZET is, GSIZET *&index, GSIZET  &n_distinct, T floor, T * const &tunique, GSIZET * const &itmp);
     #pragma acc routine vector
-inline void unique(GSIZET ibeg, GSIZET iend, GTVector<GSIZET> &iunique);
-    #pragma acc routine vector
 inline GSIZET distinct(GSIZET *&index, GSIZET  &n_distinct, T * const &tunique, GSIZET * const &itmp);
     #pragma acc routine vector
 inline GSIZET distinct_floor(GSIZET *&index, GSIZET  &n_distinct, T floor, T * const &tunique, GSIZET * const &itmp);

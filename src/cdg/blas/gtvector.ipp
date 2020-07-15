@@ -2130,42 +2130,6 @@ GTVector<T>::contains_ceil(T val, GSIZET  &iwhere, T ceil, GSIZET istart)
 //          Use apariingly, as this is slow, and unoptimized.
 // ARG    : 
 //          ibeg    : beginning of range (after gindexd_.beg())
-//          iend    : end range
-//          iunique : indices of unique elements
-// RETURNS:  none.
-//**********************************************************************************
-#pragma acc routine vector
-template<class T>
-void 
-GTVector<T>::unique(GSIZET ibeg, GSIZET iend, GTVector<GSIZET> iunique)
-{
-  GSIZET n=0;
-  T      val;
-  GTVector<GSIZET> tmp(this->size());
-
-  for ( auto i=this->gindex_.beg()+ibeg; i<this->gindex_.beg()+ibeg+n && i<=this->gindex_.end(); i+=this->gindex_.stride()+is-1 ) {
-    val = (*this)[i];
-    if ( !iunique.containsn(val,n) ) {
-      tmp[n] = val;
-      n++;
-    }
-  }
-
-  iunique.resize(n);
-  for ( auto i=0; i<n; i++ ) iunique[i] = tmp[i];
-
-
-} // end, unique
-
-
-//**********************************************************************************
-//**********************************************************************************
-// METHOD : distinctrng 
-// DESC   : From buffer, within range given by [ibeg,iend], get indices where there 
-//          are distinct values. 
-//          Use apariingly, as this is slow, and unoptimized.
-// ARG    : 
-//          ibeg    : beginning of range (after gindexd_.beg())
 //          n       : number of elements to scan
 //          is      : stride count for search
 //          vals    : array of values of size nd if nd > number of distinct values
