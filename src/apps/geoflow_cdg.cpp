@@ -872,7 +872,7 @@ void compare(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &t, 
   bret = GInitStateFactory<MyTypes>::init(ptree, grid, peqn->stateinfo(), tt, utmp, ub, ua);
   assert(bret && "state initialization failed");
 
-#if 1
+#if 0
   // Set up and output the analytic solution
   // and difference solution as well as
   // advection velocity if one exists:
