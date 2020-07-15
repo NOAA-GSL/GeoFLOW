@@ -14,6 +14,7 @@
 #include "gutils.hpp"
 #include "ggrid_box.hpp"
 #include "gspecbdy_factory.hpp"
+#include "gutils.hpp"
 #include "tbox/mpixx.hpp"
 #include "tbox/global_manager.hpp"
 
@@ -902,8 +903,8 @@ void GGridBox::find_subdomain()
 // ARGS   : 
 //          ptree : main prop tree 
 //          igbdy : For each natural/canonical global boundary face,
-//                  gives vector of global bdy ids
-//          igbdyt: bdy type ids for each index in igbdy
+//                  gives vector of global bdy ids. Allocated here.
+//          igbdyt: bdy type ids for each index in igbdy. Allocated here.
 // RETURNS: none.
 //**********************************************************************************
 void GGridBox::config_bdy(const PropertyTree &ptree, 
@@ -917,7 +918,7 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
   GTVector<GBOOL>    buniform(2*GDIM);
   GTVector<GBdyType> bdytype(2*GDIM);
   GTVector<GBdyType> btmp;
-  GTVector<GSIZET>   itmp;
+  GTVector<GSIZET>   itmp, iunique;
   GTVector<GString>  bdynames (2*GDIM);
   GTVector<GString>  confmthd (2*GDIM);
   GString            gname, sbdy, bdyclass;
@@ -1008,9 +1009,9 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
     igbdyt[j].resize(itmp.size()); igbdyt[j] = btmp;
 
     // Configure update methods:
-    btmp.unique(0, btmp.size()-1, iunique);
+    geoflow::unique<GBdyType>(btmp, 0, nbtmp.size()-1, iunique);
     for ( auto k=0; k< iunique.size(); k++ ) {
-      base_ptr = GUpdateBdyFactory::get_bdy_class(bdytree, j, unique[k]); 
+      base_ptr = GUpdateBdyFactory::get_bdy_class(bdytree, j, iunique[k]); 
       bdy_update_list_[j].push_back(base_ptr);
     }
     itmp.clear();
@@ -1653,29 +1654,4 @@ void GGridBox::do_bdy_normals3d(GTMatrix<GTVector<GFTYPE>>    &dXdXi,
 
 } // end, method do_bdy_normals3d
 
-
-//**********************************************************************************
-//**********************************************************************************
-// METHOD : config_bdy_update
-// DESC   : Configure bdy update methods, based on
-//          bcs on each face
-//  config_bdy_update(ptree_, igbdy_bdyface_, igbdyt_bdyface_);
-// ARGS   : ptree : main prop tree
-//          ibdyperface: arrays of bdy indices on each domain face
-//          tbdyperface: arrays of bdy types on each domain face
-// RETURNS: none.
-//**********************************************************************************
-void GGrid::config_bdy_update(const PropertyTree &ptree, GTVector<GTVector<GSIZET>> &ibdyperface, GTVector<GTVector<GBdyType>> &tbdyperface)
-{
-  GINT               nbdy = ibdyperface.size();
-  GSIZET             nperface;
-  GTVector<GBdyType> iunique;
-  UpdateBasePtr      base_ptr;
-  
-  for ( auto j=0; j<nbdy; j++ ) { // for each natural bdy
-    nperface = tbdyperface[j].size();
-    tbdyperface[j].unique(0, nperface, iunique);
-  }
-
-} // end of config_bdy_update
 

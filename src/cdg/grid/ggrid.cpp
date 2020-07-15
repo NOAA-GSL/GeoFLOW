@@ -17,6 +17,7 @@
 #include "gmass.hpp"
 #include "gcomm.hpp"
 #include "ggfx.hpp"
+#include "gutils.hpp"
 #include "tbox/error_handler.hpp"
 
 using namespace std;
@@ -1132,58 +1133,55 @@ void GGrid::init_bc_info()
 {
   GBOOL                        bret;
   GSIZET                       ibeg, iend; // beg, end indices for global array
-  GTVector<GINT>              *iebdy;  // domain bdy indices
-  GTVector<GTVector<GINT>>    *ieface; // domain face indices
-  GTVector<GINT>               igbdycf; // canonical bdy face
 
   // Find boundary indices & types from config file 
   // specification, for _each_ natural/canonical domain face:
   config_bdy(ptree_, igbdy_bdyface_, igbdyt_bdyface_);
 
-  // Flatten these 2 bdy index & types indirection arrays:
+  // Flatten bdy index indirection array:
   GSIZET      nind=0, nw=0;
-  for ( auto j=0; j<igbdy_bdyface_.size(); j++ ) {
+  for ( auto j=0; j<igbdy_bdyface_.size(); j++ ) { // over dom can. bdy faces
     nind += igbdy_bdyface_[j].size(); // by-domain-face
   }
-
   igbdy_  .resize(nind); // indices of bdy nodes in volume
-  igbdyt_ .resize(nind); // type of each of igbdy
-  igbdycf .resize(nind); // canonical face each igbdy resides on
+
   nind = 0;
-  for ( auto j=0; j<igbdy_bdyface_.size(); j++ ) {
+  for ( auto j=0; j<igbdy_bdyface_.size(); j++ ) { // over can. bdy faces
     for ( auto i=0; i<igbdy_bdyface_[j].size(); i++ ) {
       igbdy_  [nind] = igbdy_bdyface_ [j][i];
-      igbdyt_ [nind] = igbdyt_bdyface_[j][i];
-      igbdycf [nind] = j;
       nind++;
     }
   }
 
-
   // Create bdy type bins for each domain bdy:
   //   [Dom bdy][bdytype][volume index]:
-  GBdyType         itype;
-  GSIZET    *ind=NULLPTR;
-  GSIZET               n;
-  igbdy_binned_ .resize(GBDY_MAX); // set of bdy indices in volume arrays
-  igbdycf_binned_.resize(GBDY_MAX); // canonical face of igbdy_binned
-  ilbdy_binned_ .resize(GBDY_MAX); // set of bdy indices in bdy arrays
-  n = 0;
-  for ( auto k=0; k<GBDY_MAX; k++ ) { // cycle over each bc type
-    itype = static_cast<GBdyType>(k);
-    nind = igbdyt_.contains(itype, ind, nw);
-    igbdy_binned_  [k].resize(nind); // index into global arrays
-    ilbdy_binned_  [k].resize(nind); // index into bdy arrays for each bdy type
-    igbdycf_binned_[k].resize(nind); // canonical face of igbdy_binned
-    for ( auto j=0; j<nind; j++ ) {
-      igbdy_binned_  [k][j] = igbdy_[ind[j]];
-      ilbdy_binned_  [k][j] = n;     
-      igbdycf_binned_[k][j] = igbdycf[ind[j]];
-      n++;
-    }
-    nind = 0;
-  } // end, element loop
-
+  GSIZET          *ind=NULLPTR;
+  GSIZET           n, nbdy, nind=0;
+  GTVector<GSIZET> iunique;
+    
+  // Compute 'binned' structures for global indices
+  // defining bdys, and to which index in bdy normal vectors
+  // a given bdy node corresponds:
+  n = 0; // cycle over all bdy nodes
+  igbdy_binned_.resize(gbdy_bdyface_.size();
+  ilbdy_binned_.resize(gbdy_bdyface_.size();
+  for ( auto k=0; k<gbdy_bdyface_.size(); k++ ) { // cycle over canonical bdy face
+    nbdy = igbdyt_bdyface_[k].size();
+    igbdy_binned_ [k].resize(GBDY_MAX);
+    ilbdy_binned_ [k].resize(GBDY_MAX); // index into bdy arrays for each bdy type
+    for ( auto j=0; j<GBDY_MAX; j++ ) { // cycle over each bc type
+      itype = static_cast<GBdyType>(j);
+      val  = igbdyt_bdyface_[k][itype];
+      nbdy = igbdyt_bdyface_[k].multiplicity(val, ind, nind);
+      igbdy_binned[k][j].resize(nbdy);
+      ilbdy_binned[k][j].resize(nbdy);
+      for ( auto i=0; i<nbdy; i++ ) { // assign comp. volume index
+        igbdy_binned[k][j][i] = igbdy_bdyface_[k][j][ind[i]];
+        ilbdy_binned_  [k][j] = n;     
+        n++;
+      }
+    } // end, bdy cond type loop
+  } // end, can. bdy loop
   if ( ind != NULLPTR ) delete [] ind;
 
   // Compute mask matrix from bdy vector:

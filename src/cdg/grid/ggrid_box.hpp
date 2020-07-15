@@ -97,7 +97,6 @@ private:
          void               find_bdy_ind3d(GINT, GBOOL, GTVector<GSIZET> &);// find global bdy indices for specified bdy in 3d
          GBOOL              is_global_vertex(GTPoint<GFTYPE> &pt);          // pt on global vertex?
          GBOOL              on_global_edge(GINT iface, GTPoint<GFTYPE> &pt);// pt on global edge?
-         void               config_bdy_update(const PropertyTree &ptree);  // config bdy update methods
 
 
 

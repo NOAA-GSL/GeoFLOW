@@ -16,11 +16,11 @@
 #include <memory>
 #include <cmath>
 //#include "omp.h"  // Are we calling API functions ?
-#include "gutils.hpp"
 #include "gspecbdy_factory.hpp"
 #include "gelem_base.hpp"
 #include "ggrid_icos.hpp"
 #include "gtpoint.hpp"
+#include "gutils.hpp"
 
 using namespace std;
 
@@ -872,8 +872,8 @@ void GGridIcos::print(const GString &filename, GCOORDSYST icoord)
 // ARGS   : 
 //          ptree : main prop tree 
 //          igbdy : For each natural/canonical global boundary face,
-//                  gives vector of global bdy ids
-//          igbdyt: bdy type ids for each index in igbdy
+//                  gives vector of global bdy ids. Allocated here.
+//          igbdyt: bdy type ids for each index in igbdy. Allocated here.
 // RETURNS: none.
 //**********************************************************************************
 void GGridIcos::config_bdy(const PropertyTree &ptree, 
@@ -887,7 +887,7 @@ void GGridIcos::config_bdy(const PropertyTree &ptree,
   GTVector<GBOOL>    uniform(2);
   GTVector<GBdyType> bdytype(2);
   GTVector<GBdyType> btmp;
-  GTVector<GSIZET>   itmp;
+  GTVector<GSIZET>   itmp, iunique;
   GTVector<GFTYPE>   rbdy(2);
   GTVector<GString>  bdynames(2);
   GTVector<GString>  confmthd (2);
@@ -949,9 +949,9 @@ void GGridIcos::config_bdy(const PropertyTree &ptree,
     igbdyt[j].resize(itmp.size()); igbdyt[j] = btmp;
 
     // Configure update methods:
-    btmp.unique(0, btmp.size()-1, iunique);
+    geoflow::unique<GBdyType>(btmp, 0, btmp.size()-1, iunique);
     for ( auto k=0; k< iunique.size(); k++ ) {
-      base_ptr = GUpdateBdyFactory::get_bdy_class(bdytree, j, unique[k]);
+      base_ptr = GUpdateBdyFactory::get_bdy_class(bdytree, j, iunique[k]);
       bdy_update_list_[j].push_back(base_ptr);
     }
 
