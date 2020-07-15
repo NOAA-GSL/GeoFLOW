@@ -104,7 +104,7 @@ lshapefcn_             (NULLPTR)
   }
 
   ne_.resize(b.size());
-  for ( GSIZET j=0; j<b.size(); j++ ) {
+  for( auto j=0; j<b.size(); j++ ) {
     Lbox_[j] = fabs(dP_[j]);
     ne_  [j] = sne[j];
   }
@@ -146,7 +146,7 @@ std::ostream &operator<<(std::ostream &str, GGridBox &e)
   
   str << "    Lbox: " << e.Lbox_;
   str << std::endl << " Centroids: " ;
-  for ( GSIZET i=0; i<e.ftcentroids_.size(); i++ )
+  for( auto i=0; i<e.ftcentroids_.size(); i++ )
      str << (e.ftcentroids_[i]) << " " ;
   str << std::endl;
 
@@ -705,8 +705,8 @@ void GGridBox::print(const GString &filename)
 
   ios.open(filename);
   if ( ndim_ == 2 ) {
-    for ( GSIZET i=0; i<qmesh_.size(); i++ ) { // for each quad/hex
-      for ( GSIZET j=0; j<pow(2,ndim_); j++ ) { // for each vertex of reg polygon
+    for( auto i=0; i<qmesh_.size(); i++ ) { // for each quad/hex
+      for( auto j=0; j<pow(2,ndim_); j++ ) { // for each vertex of reg polygon
           pt = *qmesh_[i].v[j];
           ios << pt.x1 << " " <<  pt.x2 << std::endl;
           ios << pt.x1 << " " << pt.x2 << " " <<  pt.x3 << std::endl;
@@ -715,8 +715,8 @@ void GGridBox::print(const GString &filename)
   } 
 
   if ( ndim_ == 3 ) {
-    for ( GSIZET i=0; i<hmesh_.size(); i++ ) { // for each quad/hex
-      for ( GSIZET j=0; j<pow(2,ndim_); j++ ) { // for each vertex of reg polygon
+    for( auto i=0; i<hmesh_.size(); i++ ) { // for each quad/hex
+      for( auto j=0; j<pow(2,ndim_); j++ ) { // for each vertex of reg polygon
           pt = *hmesh_[i].v[j];
           ios << pt.x1 << " " <<  pt.x2 << std::endl;
           ios << pt.x1 << " " << pt.x2 << " " <<  pt.x3 << std::endl;
@@ -747,17 +747,17 @@ void GGridBox::periodize()
   periodicdirs_.clear();
 
   // Coords set to correspond to bottom-most domain point:
-  for ( GSIZET k=0; k<x.size(); k++ ) x[k] = P0_[k];
+  for( auto k=0; k<x.size(); k++ ) x[k] = P0_[k];
 
   GUINT  bit;
   GSIZET id;
   periodicids_ .resize(igbdy_binned_[GBDY_PERIODIC].size());
   periodicdirs_.resize(igbdy_binned_[GBDY_PERIODIC].size());
-  for ( GSIZET k=0; k<igbdy_binned_[GBDY_PERIODIC].size(); k++ ) { // for each blobal bdy node
+  for( auto k=0; k<igbdy_binned_[GBDY_PERIODIC].size(); k++ ) { // for each blobal bdy node
     id = igbdy_binned_[GBDY_PERIODIC][k];
     periodicids_ [k] = id;       
     periodicdirs_[k] = 0;
-    for ( GSIZET i=0; i<xNodes_.size(); i++ ) { // for x, y, z dirs
+    for( auto i=0; i<xNodes_.size(); i++ ) { // for x, y, z dirs
       if ( FUZZYEQ(P1_[i],xNodes_[i][id],eps_) ) { // right/top-most coord will change
         periodicdirs_[k] |= 1U << i;  // position right-most direction bit  
       }
@@ -765,9 +765,9 @@ void GGridBox::periodize()
   }
 
   // Now, cycle through periodic nodes and periodize coordinates:
-  for ( GSIZET k=0; k<periodicids_.size(); k++ ) { // for each periodic node
+  for( auto k=0; k<periodicids_.size(); k++ ) { // for each periodic node
     id = periodicids_[k];
-    for ( GSIZET i= 0; i<xNodes_.size(); i++ ) { // coord direction
+    for( auto i= 0; i<xNodes_.size(); i++ ) { // coord direction
       // Set coord in this direction if corresp bit is set:
       bit = (periodicdirs_[k] >> i) & 1; 
       if ( bit ) xNodes_[i][id] = x[i];
@@ -792,14 +792,14 @@ void GGridBox::unperiodize()
   GTVector<GFTYPE>  x(xNodes_.size()); // coord values to set to
 
   // Coords to set to correspond to top-most domain point:
-  for ( GSIZET k=0; k<x.size(); k++ ) x[k] = P1_[k];
+  for( auto k=0; k<x.size(); k++ ) x[k] = P1_[k];
 
   // Cycle through periodic nodes and un-periodize coordinates:
   GUINT  bit;
   GSIZET id;
-  for ( GSIZET k=0; k<periodicids_.size(); k++ ) { // for each periodic node
+  for( auto k=0; k<periodicids_.size(); k++ ) { // for each periodic node
     id = periodicids_[k];
-    for ( GSIZET i= 0; i<xNodes_.size(); i++ ) { // coord direction
+    for( auto i= 0; i<xNodes_.size(); i++ ) { // coord direction
       // Set coord in this direction if corresp bit is set:
       bit = (periodicdirs_[k] >> i) & 1; 
       if ( bit ) xNodes_[i][id] = x[i];
@@ -831,14 +831,14 @@ void GGridBox::find_subdomain()
   GTPoint<GFTYPE> dx(ndim_);
 
   nglobal = 1; // total num elements in global grid
-  for ( GSIZET k=0; k<ne_.size(); k++ ) nglobal *= ne_[k];
+  for( auto k=0; k<ne_.size(); k++ ) nglobal *= ne_[k];
  
   nperrank = nglobal / nprocs_; // #elems per rank
   nthisrank = irank_ != nprocs_-1 ? nperrank : nglobal - (nprocs_-1)*nperrank;
 
 
  // Get uniform element sizes:
-  for ( GSIZET k=0; k<ndim_; k++ ) {
+  for( auto k=0; k<ndim_; k++ ) {
     dx[k] = Lbox_[k] / static_cast<GFTYPE>(ne_[k]);
   }
 
@@ -1086,7 +1086,7 @@ void GGridBox::find_bdy_ind2d(GINT bdyid, GBOOL incl_vert, GTVector<GSIZET> &ibd
 
   switch ( bdyid ) {
     case 0: // lower horiz bdy:
-      for ( GSIZET i=0; i<xNodes_[0].size(); i++ ) { 
+      for( auto i=0; i<xNodes_[0].size(); i++ ) { 
         if ( FUZZYEQ(P0_.x2,xNodes_[1][i],eps_) ) {
           pt.assign(xNodes_, i);
           if ( incl_vert  || !is_global_vertex(pt) ) ibdy.push_back(i);
@@ -1095,7 +1095,7 @@ void GGridBox::find_bdy_ind2d(GINT bdyid, GBOOL incl_vert, GTVector<GSIZET> &ibd
       break;
 
     case 1: // right vert bdy:
-      for ( GSIZET i=0; i<xNodes_[0].size(); i++ ) { // bdy 1
+      for( auto i=0; i<xNodes_[0].size(); i++ ) { // bdy 1
         if ( FUZZYEQ(P1_.x1,xNodes_[0][i],eps_) ) {
           pt.assign(xNodes_, i);
           if ( incl_vert  || !is_global_vertex(pt) ) ibdy.push_back(i);
@@ -1104,7 +1104,7 @@ void GGridBox::find_bdy_ind2d(GINT bdyid, GBOOL incl_vert, GTVector<GSIZET> &ibd
       break;
 
     case 2: // top horiz bdy:
-      for ( GSIZET i=0; i<xNodes_[0].size(); i++ ) { // bdy 2
+      for( auto i=0; i<xNodes_[0].size(); i++ ) { // bdy 2
         if ( FUZZYEQ(P1_.x2,xNodes_[1][i],eps_) ) {
           pt.assign(xNodes_, i);
           if ( incl_vert  || !!is_global_vertex(pt) ) ibdy.push_back(i);
@@ -1113,7 +1113,7 @@ void GGridBox::find_bdy_ind2d(GINT bdyid, GBOOL incl_vert, GTVector<GSIZET> &ibd
       break;
 
     case 3: // left vert bdy:
-      for ( GSIZET i=0; i<xNodes_[0].size(); i++ ) { // bdy 3
+      for( auto i=0; i<xNodes_[0].size(); i++ ) { // bdy 3
         if ( FUZZYEQ(P0_.x1,xNodes_[0][i],eps_) ) {
           pt.assign(xNodes_, i);
           if ( incl_vert  || !is_global_vertex(pt) ) ibdy.push_back(i);
@@ -1152,14 +1152,14 @@ void GGridBox::find_bdy_ind3d(GINT bdyid, GBOOL incl_edge, GTVector<GSIZET> &ibd
   nbdy = n = 0;
   switch ( bdyid ) {
     case 0: // southern vert face:
-      for ( GSIZET i=0; i<xNodes_[0].size(); i++ ) { // face 0
+      for( auto i=0; i<xNodes_[0].size(); i++ ) { // face 0
         if ( FUZZYEQ(P0_.x2,xNodes_[1][i],eps_) ) {
           pt.assign(xNodes_, i);
           if ( incl_edge || !on_global_edge(0,pt) ) nbdy++;
         }
       }
       ibdy.resize(nbdy);
-      for ( GSIZET i=0; i<xNodes_[0].size(); i++ ) { // face 0
+      for( auto i=0; i<xNodes_[0].size(); i++ ) { // face 0
         if ( FUZZYEQ(P0_.x2,xNodes_[1][i],eps_) ) {
           pt.assign(xNodes_, i);
           if ( incl_edge || !on_global_edge(0,pt) ) ibdy[n++] = i;
@@ -1168,14 +1168,14 @@ void GGridBox::find_bdy_ind3d(GINT bdyid, GBOOL incl_edge, GTVector<GSIZET> &ibd
       break;
 
     case 1: // eastern vert. face:
-      for ( GSIZET i=0; i<xNodes_[0].size(); i++ ) { // face 1
+      for( auto i=0; i<xNodes_[0].size(); i++ ) { // face 1
         if ( FUZZYEQ(P1_.x1,xNodes_[0][i],eps_) ) {
           pt.assign(xNodes_, i);
           if ( incl_edge || !on_global_edge(1,pt) ) nbdy++;
         }
       }
       ibdy.resize(nbdy);
-      for ( GSIZET i=0; i<xNodes_[0].size(); i++ ) { // face 1
+      for( auto i=0; i<xNodes_[0].size(); i++ ) { // face 1
         if ( FUZZYEQ(P1_.x1,xNodes_[0][i],eps_) ) {
           pt.assign(xNodes_, i);
           if ( incl_edge || !on_global_edge(1,pt) ) ibdy[n++] = i;
@@ -1184,14 +1184,14 @@ void GGridBox::find_bdy_ind3d(GINT bdyid, GBOOL incl_edge, GTVector<GSIZET> &ibd
       break;
 
     case 2: // northern vert. face:
-      for ( GSIZET i=0; i<xNodes_[0].size(); i++ ) { // face 2
+      for( auto i=0; i<xNodes_[0].size(); i++ ) { // face 2
         if ( FUZZYEQ(P1_.x2,xNodes_[1][i],eps_) ) {
           pt.assign(xNodes_, i);
           if ( incl_edge || !on_global_edge(2,pt) ) nbdy++;
         }
       }
       ibdy.resize(nbdy);
-      for ( GSIZET i=0; i<xNodes_[0].size(); i++ ) { // face 2
+      for( auto i=0; i<xNodes_[0].size(); i++ ) { // face 2
         if ( FUZZYEQ(P1_.x2,xNodes_[1][i],eps_) ) {
           pt.assign(xNodes_, i);
           if ( incl_edge || !on_global_edge(2,pt) ) ibdy[n++] = i;
@@ -1200,14 +1200,14 @@ void GGridBox::find_bdy_ind3d(GINT bdyid, GBOOL incl_edge, GTVector<GSIZET> &ibd
       break;
 
     case 3: // western vertical face:
-      for ( GSIZET i=0; i<xNodes_[0].size(); i++ ) { // face 3
+      for( auto i=0; i<xNodes_[0].size(); i++ ) { // face 3
         if ( FUZZYEQ(P0_.x1,xNodes_[0][i],eps_) ) {
           pt.assign(xNodes_, i);
           if ( incl_edge || !on_global_edge(3,pt) ) nbdy++;
         }
       }
       ibdy.resize(nbdy);
-      for ( GSIZET i=0; i<xNodes_[0].size(); i++ ) { // face 3
+      for( auto i=0; i<xNodes_[0].size(); i++ ) { // face 3
         if ( FUZZYEQ(P0_.x1,xNodes_[0][i],eps_) ) {
           pt.assign(xNodes_, i);
           if ( incl_edge || !on_global_edge(3,pt) ) ibdy[n++] = i;
@@ -1216,14 +1216,14 @@ void GGridBox::find_bdy_ind3d(GINT bdyid, GBOOL incl_edge, GTVector<GSIZET> &ibd
       break;
 
     case 4: // bottom horiz face:
-      for ( GSIZET i=0; i<xNodes_[0].size(); i++ ) { // face 4
+      for( auto i=0; i<xNodes_[0].size(); i++ ) { // face 4
         if ( FUZZYEQ(P0_.x3,xNodes_[2][i],eps_) ) {
           pt.assign(xNodes_, i);
           if ( incl_edge || !on_global_edge(4,pt) ) nbdy++;
         }
       }
       ibdy.resize(nbdy);
-      for ( GSIZET i=0; i<xNodes_[0].size(); i++ ) { // face 4
+      for( auto i=0; i<xNodes_[0].size(); i++ ) { // face 4
         if ( FUZZYEQ(P0_.x3,xNodes_[2][i],eps_) ) {
           pt.assign(xNodes_, i);
           if ( incl_edge || !on_global_edge(4,pt) ) ibdy[n++] = i;
@@ -1232,14 +1232,14 @@ void GGridBox::find_bdy_ind3d(GINT bdyid, GBOOL incl_edge, GTVector<GSIZET> &ibd
       break;
 
     case 5: // top horiz face:
-      for ( GSIZET i=0; i<xNodes_[0].size(); i++ ) { // face 5
+      for( auto i=0; i<xNodes_[0].size(); i++ ) { // face 5
         if ( FUZZYEQ(P1_.x3,xNodes_[2][i],eps_) ) {
           pt.assign(xNodes_, i);
           if ( incl_edge || !on_global_edge(5,pt) ) nbdy++;
         }
       }
       ibdy.resize(nbdy);
-      for ( GSIZET i=0; i<xNodes_[0].size(); i++ ) { // face 5
+      for( auto i=0; i<xNodes_[0].size(); i++ ) { // face 5
         if ( FUZZYEQ(P1_.x3,xNodes_[2][i],eps_) ) {
           pt.assign(xNodes_, i);
           if ( incl_edge || !on_global_edge(5,pt) ) ibdy[n++] = i;
@@ -1267,7 +1267,7 @@ GBOOL GGridBox::is_global_vertex(GTPoint<GFTYPE> &pt)
 {
   GBOOL           bret = FALSE;
 
-  for ( GSIZET j=0; j<pow(2,ndim_) && !bret; j++ ) {
+  for( auto j=0; j<pow(2,ndim_) && !bret; j++ ) {
     bret = bret || ( pt == gverts_[j] ); // There is fuzziness in ==
   }
 
@@ -1376,16 +1376,16 @@ void GGridBox::do_face_normals2d()
    GTVector<GSIZET>            gieface; // global element face indices
    GTVector<GINT>             *iverts ; // elem vertex indices
    gieface.resize(gieface_.size());
-   for ( GSIZET e=0; e<gelems_.size(); e++ ) {
+   for( auto e=0; e<gelems_.size(); e++ ) {
      ibeg   = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
      ifbeg  = gelems_[e]->ifbeg(); ifend = gelems_[e]->ifend();
      ibbeg  = gelems_[e]->ibbeg(); ibend = gelems_[e]->ibend();
      ieface = &gelems_[e]->face_indices();
   
 
-     for ( GSIZET j=0; j<ieface->size(); j++ ) { // cycle over all elem faces
+     for( auto j=0; j<ieface->size(); j++ ) { // cycle over all elem faces
        iverts = &gelems_[e]->vert_indices(j);
-       for ( GSIZET k=0; k<(*ieface)[j].size(); k++ ) {
+       for( auto k=0; k<(*ieface)[j].size(); k++ ) {
          ig = nn + (*ieface)[j][k];
          if ( !gieface.containsn(ig, m) ) { // don't include repeated face ind
            gieface[m] = ig;

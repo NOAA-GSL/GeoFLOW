@@ -112,7 +112,7 @@ std::ostream &operator<<(std::ostream &str, GGridIcos &e)
   str << " level  : " << e.ilevel_;
   str << " nrows  : " << e.nrows_;
   str << std::endl << " Centroids: " ;
-  for ( GSIZET i=0; i<e.ftcentroids_.size(); i++ )
+  for ( auto i=0; i<e.ftcentroids_.size(); i++ )
      str << (e.ftcentroids_[i]) << " " ;
   str << std::endl;
 
@@ -213,10 +213,10 @@ fv0_(11,0) = -0.276393202250021; fv0_(11,1) = -0.850650808352040; fv0_(11,2) = -
   // Copy base data to new structure:
   GTPoint<GTICOS> pt;
   tbase_.resize(ifv0_.size(1));
-  for ( GSIZET j=0; j<tbase_.size(); j++ ) tbase_[j].resize(3);
-  for ( GSIZET i=0; i<ifv0_.size(1); i++ ) { // for all triangles:
-    for ( GSIZET j=0; j<ifv0_.size(2); j++ ) { // for each vertex:
-      for ( GSIZET k=0; k<3; k++ ) pt[k] = fv0_(ifv0_(i,j),k);
+  for ( auto j=0; j<tbase_.size(); j++ ) tbase_[j].resize(3);
+  for ( auto i=0; i<ifv0_.size(1); i++ ) { // for all triangles:
+    for ( auto j=0; j<ifv0_.size(2); j++ ) { // for each vertex:
+      for ( auto k=0; k<3; k++ ) pt[k] = fv0_(ifv0_(i,j),k);
       *tbase_[i].v[j] = pt;
     }
   }
@@ -395,8 +395,8 @@ void GGridIcos::do_elems2d(GINT irank)
   if ( gdd_ == NULLPTR ) gdd_ = new GDD_base<GTICOS>(nprocs_);
 
   // Resize points to appropriate size:
-  for ( GSIZET j=0; j<tmesh_.size(); j++ ) tmesh_[j].resize(3);
-  for ( GSIZET j=0; j<4; j++ ) {
+  for ( auto j=0; j<tmesh_.size(); j++ ) tmesh_[j].resize(3);
+  for ( auto j=0; j<4; j++ ) {
     cverts[j].resize(3); // is a 3d point
     gverts[j].resize(3); // is only a 2d point
     tverts[j].resize(2); // is only a 2d point
@@ -432,7 +432,7 @@ void GGridIcos::do_elems2d(GINT irank)
     // Compute element vertices:
     // NOTE: Is this ordering compatible with shape functions 
     // (placement of +/-1 with physical point)?
-    for ( GSIZET j=0; j<3; j++ ) { // 3 new elements for each triangle
+    for ( auto j=0; j<3; j++ ) { // 3 new elements for each triangle
       pelem = new GElem_base(GE_2DEMBEDDED, gbasis_);
       cverts[0] = v1; cverts[1] = (v1+v2)*0.5; cverts[2] = ct; cverts[3] = (v1+v3)*0.5;
 #if 0
@@ -700,7 +700,7 @@ void GGridIcos::do_elems2d(GTMatrix<GINT> &p,
 
   // Now, treat the gbasis_ as a pool that we search
   // to find bases we need:
-  for ( GSIZET j=0; j<ppool.size(); j++ ) ppool[j] = gbasis_[j]->getOrder();
+  for ( auto j=0; j<ppool.size(); j++ ) ppool[j] = gbasis_[j]->getOrder();
 
 
   // Set element internal dof from input data:
@@ -710,9 +710,9 @@ void GGridIcos::do_elems2d(GTMatrix<GINT> &p,
   GSIZET icurr = 0; // current global index
   GSIZET fcurr = 0; // current global face index
   // For each triangle in base mesh owned by this rank...
-  for ( GSIZET i=0; i<p.size(1); i++ ) { 
+  for ( auto i=0; i<p.size(1); i++ ) { 
     nvnodes = 1;
-    for ( GSIZET j=0; j<GDIM; j++ ) { // set basis from pool
+    for ( auto j=0; j<GDIM; j++ ) { // set basis from pool
       assert(ppool.contains(p(i,j),iwhere) && "Expansion order not found");
       gb[j] = gbasis_[iwhere];
       nvnodes *= (p(i,j) + 1);
@@ -723,11 +723,11 @@ void GGridIcos::do_elems2d(GTMatrix<GINT> &p,
     // Set internal node positions from input data.
     // Note that gxnodes are 'global' and xNodes is
     // element-local:
-    for ( GSIZET j=0; j<GDIM; j++ ) {
+    for ( auto j=0; j<GDIM; j++ ) {
        gxnodes[j].range(icurr, icurr+nvnodes-1);
       (*xNodes)[j] = gxnodes[j];
     }
-    for ( GSIZET j=0; j<GDIM; j++ ) gxnodes[j].range_reset();
+    for ( auto j=0; j<GDIM; j++ ) gxnodes[j].range_reset();
 
     pelem->init(*xNodes);
     gelems_.push_back(pelem);
@@ -769,7 +769,7 @@ void GGridIcos::do_elems3d(GTMatrix<GINT> &p,
 
   // Now, treat the gbasis_ as a pool that we search
   // to find bases we need:
-  for ( GSIZET j=0; j<ppool.size(); j++ ) ppool[j] = gbasis_[j]->getOrder();
+  for ( auto j=0; j<ppool.size(); j++ ) ppool[j] = gbasis_[j]->getOrder();
 
 
   // Set element internal dof from input data:
@@ -779,9 +779,9 @@ void GGridIcos::do_elems3d(GTMatrix<GINT> &p,
   GSIZET icurr = 0; // current global index
   GSIZET fcurr = 0; // current global face index
   // For each triangle in base mesh owned by this rank...
-  for ( GSIZET i=0; i<p.size(1); i++ ) { 
+  for ( auto i=0; i<p.size(1); i++ ) { 
     nvnodes = 1;
-    for ( GSIZET j=0; j<GDIM; j++ ) { // set basis from pool
+    for ( auto j=0; j<GDIM; j++ ) { // set basis from pool
       assert(ppool.contains(p(i,j),iwhere) && "Expansion order not found");
       gb[j] = gbasis_[iwhere];
       nvnodes *= (p(i,j) + 1);
@@ -792,11 +792,11 @@ void GGridIcos::do_elems3d(GTMatrix<GINT> &p,
     // Set internal node positions from input data.
     // Note that gxnodes are 'global' and xNodes is
     // element-local:
-    for ( GSIZET j=0; j<GDIM; j++ ) {
+    for ( auto j=0; j<GDIM; j++ ) {
        gxnodes[j].range(icurr, icurr+nvnodes-1);
       (*xNodes)[j] = gxnodes[j];
     }
-    for ( GSIZET j=0; j<GDIM; j++ ) gxnodes[j].range_reset();
+    for ( auto j=0; j<GDIM; j++ ) gxnodes[j].range_reset();
 
     pelem->init(*xNodes);
     gelems_.push_back(pelem);
@@ -836,8 +836,8 @@ void GGridIcos::print(const GString &filename, GCOORDSYST icoord)
 
   ios.open(filename);
   if ( icoord == GICOS_LATLONG) { // print in lat-long
-    for ( GSIZET i=0; i<tmesh_.size(); i++ ) { // for each triangle
-      for ( GSIZET j=0; j<3; j++ ) { // for each vertex of triangle
+    for ( auto i=0; i<tmesh_.size(); i++ ) { // for each triangle
+      for ( auto j=0; j<3; j++ ) { // for each vertex of triangle
         pt = *tmesh_[i].v[j];
         r = sqrt(pt.x1*pt.x1 + pt.x2*pt.x2 + pt.x3*pt.x3);
         xlat  = asin(pt.x3/r);
@@ -852,8 +852,8 @@ void GGridIcos::print(const GString &filename, GCOORDSYST icoord)
     }
   }
   else if ( icoord == GICOS_CART ) { // print in Cartesian
-    for ( GSIZET i=0; i<tmesh_.size(); i++ ) { // for each triangle
-      for ( GSIZET j=0; j<3; j++ ) { // for each vertex of triangle
+    for ( auto i=0; i<tmesh_.size(); i++ ) { // for each triangle
+      for ( auto j=0; j<3; j++ ) { // for each vertex of triangle
         pt = *tmesh_[i].v[j];
         ios << pt.x1 << " " << pt.x2 << " " << pt.x3 << std::endl ;
       }
@@ -998,7 +998,7 @@ void GGridIcos::find_bdy_ind3d(GFTYPE radius, GTVector<GSIZET> &ibdy)
   ibdy.clear();
   eps = 100*std::numeric_limits<GFTYPE>::epsilon();
 
-  for ( GSIZET i=0; i<xNodes_[0].size(); i++ ) { // face 0
+  for ( auto i=0; i<xNodes_[0].size(); i++ ) { // face 0
       r = sqrt(pow(xNodes_[0][i],2)+pow(xNodes_[1][i],2)+pow(xNodes_[2][i],2));
       if ( FUZZYEQ(r, radius, eps) ) {
         ibdy.push_back(i);
