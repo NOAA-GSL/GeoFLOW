@@ -69,7 +69,7 @@ struct CGTypePack { // define terrain typepack
 
 typename UpdateBase          = UpdateBdyBase<BdyTypePack>;
 typename UpdateBasePtr       = std::shared_prt<UpdateBase>;
-typename UpdateBaseList      = GTVector<GTVector<UpdateBasePtr>>;
+typename BdyUpdateList      = GTVector<GTVector<UpdateBasePtr>>;
 
 class GMass;
 
@@ -169,7 +169,7 @@ virtual void                 print(const GString &filename){}          // print 
         GTVector<GFTYPE>    &Jac();                                    // global Jacobian
         GTVector<GFTYPE>
                             &faceJac();                                // global face Jacobian
-        UpdateBdyList       &bdy_update_list() 
+        BdyUpdateList       &bdy_update_list() 
                              { return bdy_update_list_; }              // bdy_update_list pointers
         GTVector<GTVector<GFTYPE>>
                             &faceNormal();                             // global face normals
@@ -250,7 +250,7 @@ virtual void                        do_bdy_normals(GTMatrix<GTVector<GFTYPE>>
        GTVector<GTVector<GSIZET>>   igbdy_bdyface_; // volumbe index for each bdy node on each face
        GTVector<GTVector<GBdyType>> igbdyt_bdyface_; // bdy type for each igbdt_bdyface_
         GTVector<GSIZET>            igbdy_;         // index into global field indicating a domain bdy
-        UpdateBaseList              bdy_update_list_;
+        BdyUpdateList               bdy_update_list_;
                                                     // bdy update class list
         GTVector<GFTYPE>            mask_;          // bdy mask
         PropertyTree                ptree_;         // main prop tree
