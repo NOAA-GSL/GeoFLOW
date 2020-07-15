@@ -38,18 +38,17 @@ GBOOL GSpecBdyFactory::dospec(const geoflow::tbox::PropertyTree& sptree, GGrid &
     return bret;
   }
 
-  if ( "user" != sinit ) {
-    assert(FALSE && "Unknown bdy_class");
-  }
-
-  // Else, call specified config method:
+  // Else, is mixed; call specified config method.
+  // These methods allow user to _both_ configure
+  // bdy and to update it, if desired:
   if ( "specb_none" == sinit
     || "none"       == sinit
     || ""           == sinit 
     || ibdy.size()  == 0     ) {
     bret = TRUE;
   }
-  else if ( "mybdyspec"        == sinit ) {
+  else if ( "mixed"        == sinit ) {
+    
 //  bret = gspecbdy::mybdyspec(sptree, grid, id, ibdy, tbdy);
     bret = FALSE;
   }

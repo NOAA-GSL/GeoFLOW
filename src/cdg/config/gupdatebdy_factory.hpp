@@ -47,13 +47,14 @@ class GUpdateBdyFactory
                                 State      &ub)>;
 
 
-	static UpdateBdyBasePtr build(const PropertyTree& ptree, Grid &grid, StateInfo &stinfo);
-	static CallbackPtr      get_inflow_callback(const GString &name);
+	static UpdateBdyBaseList build(const PropertyTree& ptree, Grid &grid, StateInfo &stinfo);
+	static CallbackPtr       get_inflow_callback(const GString &name);
 
-  private:
-	UpdateBdyBaseList handle_uniform(const PropertyTree& sptree, GString &supdate, Grid &grid, const GINT id, BdyIndices &ibdy, BdyTypes &tbdy);
-	UpdateBdyBaseList handle_mixed  (const PropertyTree& sptree, GString &supdate, Grid &grid, const GINT id, BdyIndices &ibdy, BdyTypes &tbdy);
-	UpdateBdyBasePtr  get_bdy_class (const PropertyTree& sptree, GString &supdate, Grid &grid, const GINT id, const GBdyType bdytype);
+	static UpdateBdyBaseList handle_uniform(const PropertyTree& sptree, GString &supdate, Grid &grid, const GINT id, BdyIndices &ibdy, BdyTypes &tbdy);
+
+	static UpdateBdyBaseList handle_mixed  (const PropertyTree& sptree, GString &supdate, Grid &grid, const GINT id, BdyIndices &ibdy, BdyTypes &tbdy);
+
+	static UpdateBdyBasePtr  get_bdy_class (const PropertyTree& sptree, Grid &grid, const GINT id, const GBdyType bdytype);
 
 }; // class GUpdateBdyFactory
 

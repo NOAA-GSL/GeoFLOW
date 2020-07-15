@@ -22,7 +22,7 @@
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-typename UpdateBdyFactory<TypePack>::UpdateBasePtr
+typename UpdateBdyFactory<TypePack>::UpdateBdyBaseList
 GUpdateBdyFactory<TypePack>::build(const PropertyTree& sptree, GString &supdate, Grid &grid, const GINT id, BdyIndices &ibdy, BdyTypes &tbdy)
 {
   GBOOL              bret = FALSE;
@@ -212,8 +212,7 @@ GUpdateBdyFactory<TypePack>::get_inflow_callback(const GString& sname)
 //**********************************************************************************
 // METHOD : get_bdy_class
 // DESC   : get bdy class for specified bdy type
-// ARGS   : ptree   : main property tree
-//          supdate : string naming bdy update prop tree block 
+// ARGS   : sptree  : bdy spec subtree
 //          grid    : grid object
 //          id      : canonical bdy id
 //          bdytype : bdy type triggering construction of class
@@ -223,10 +222,9 @@ GUpdateBdyFactory<TypePack>::get_inflow_callback(const GString& sname)
 //**********************************************************************************
 template<typename TypePack>
 typename UpdateBdyFactory<TypePack>::UpdateBasePtr
-GUpdateBdyFactory<TypePack>::get_bdy_class(const PropertyTree& sptree, GString &supdate, Grid &grid, const GINT id, const GBdyType bdytype)
+GUpdateBdyFactory<TypePack>::get_bdy_class(const PropertyTree& sptree, Grid &grid, const GINT id, const GBdyType bdytype)
 {
   GString            sblock, stype, sclass;
-  GBdyType           bdytype;
   PropertyTree       sptree; // update block tree
   UpdateBdyBasePtr   base_ptr;
   std::vector<GINT>  ivec;
@@ -244,6 +242,7 @@ GUpdateBdyFactory<TypePack>::get_bdy_class(const PropertyTree& sptree, GString &
     traits.istate = ivec;
     assert(sptree.isArray<Ftype>("value") && "value array missing");
     traits.value = fvec;
+    traits.bdyid = id;
     if ( sptree.isValue<GBOOL>("compute_once") ) {
       traits.compute_once = sptree.getValue<GBOOL>("compute_once");
     }
@@ -262,6 +261,7 @@ GUpdateBdyFactory<TypePack>::get_bdy_class(const PropertyTree& sptree, GString &
     traits.istate = ivec;
     assert(sptree.isArray<Ftype>("value") && "value array missing");
     traits.value = fvec;
+    traits.bdyid = id;
 
     if ( sptree.isValue<GBOOL>("compute_once") ) {
       traits.compute_once = sptree.getValue<GBOOL>("compute_once");
@@ -282,6 +282,7 @@ GUpdateBdyFactory<TypePack>::get_bdy_class(const PropertyTree& sptree, GString &
     UpdateImpl::Traits traits;
 
     traits.istate = ivec;
+    traits.bdyid  = id;
     if ( sptree.isValue<GBOOL>("compute_once") ) {
       traits.compute_once = sptree.getValue<GBOOL>("compute_once");
     }
@@ -294,6 +295,7 @@ GUpdateBdyFactory<TypePack>::get_bdy_class(const PropertyTree& sptree, GString &
     UpdateImpl::Traits traits;
 
     traits.istate = ivec;
+    traits.bdyid  = id;
     if ( sptree.isValue<GBOOL>("compute_once") ) {
       traits.compute_once = sptree.getValue<GBOOL>("compute_once");
     }
@@ -308,6 +310,7 @@ GUpdateBdyFactory<TypePack>::get_bdy_class(const PropertyTree& sptree, GString &
     UpdateImpl::Traits traits;
 
     traits.istate = ivec;
+    traits.bdyid  = id;
     if ( sptree.isValue<GBOOL>("compute_once") ) {
       traits.compute_once = sptree.getValue<GBOOL>("compute_once");
     }
@@ -320,6 +323,7 @@ GUpdateBdyFactory<TypePack>::get_bdy_class(const PropertyTree& sptree, GString &
     UpdateImpl::Traits traits;
 
     traits.istate = ivec;
+    traits.bdyid  = id;
     if ( sptree.isValue<GBOOL>("compute_once") ) {
       traits.compute_once = sptree.getValue<GBOOL>("compute_once");
     }
