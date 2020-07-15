@@ -487,10 +487,10 @@ void GBurgers<TypePack>::init(GBurgers::Traits &traits)
       uoptmp_ .resize(nop); // RHS operator work space
       // Make sure there is no overlap between tmp arrays:
       n = 0;
-      for ( GSIZET j=0; j<nsolve         ; j++, n++ ) uold_   [j] = utmp_[n];
-      for ( GSIZET j=0; j<urktmp_ .size(); j++, n++ ) urktmp_ [j] = utmp_[n];
-      for ( GSIZET j=0; j<urhstmp_.size(); j++, n++ ) urhstmp_[j] = utmp_[n];
-      for ( GSIZET j=0; j<uoptmp_ .size(); j++, n++ ) uoptmp_ [j] = utmp_[n];
+     for ( auto j=0; j<nsolve         ; j++, n++ ) uold_   [j] = utmp_[n];
+     for ( auto j=0; j<urktmp_ .size(); j++, n++ ) urktmp_ [j] = utmp_[n];
+     for ( auto j=0; j<urhstmp_.size(); j++, n++ ) urhstmp_[j] = utmp_[n];
+     for ( auto j=0; j<uoptmp_ .size(); j++, n++ ) uoptmp_ [j] = utmp_[n];
       break;
     case GSTEPPER_BDFAB:
       dthist_.resize(MAX(itorder_,inorder_));
@@ -501,7 +501,7 @@ void GBurgers<TypePack>::init(GBurgers::Traits &traits)
       tcoeffs_ = tcoeff_obj->getCoeffs(); 
       acoeffs_ = acoeff_obj->getCoeffs();
       uold_   .resize(nsolve); // solution at time level n
-      for ( GSIZET j=0; j<nsolve; j++ ) uold_[j] = utmp_[j];
+     for ( auto j=0; j<nsolve; j++ ) uold_[j] = utmp_[j];
       bmultilevel = TRUE;
       break;
     case GSTEPPER_BDFEXT:
@@ -513,7 +513,7 @@ void GBurgers<TypePack>::init(GBurgers::Traits &traits)
       tcoeffs_ = tcoeff_obj->getCoeffs(); 
       acoeffs_ = acoeff_obj->getCoeffs();
       urhstmp_.resize(utmp_.size()-urktmp_.size());
-      for ( GSIZET j=0; j<utmp_.size(); j++ ) urhstmp_[j] = utmp_[j];
+     for ( auto j=0; j<utmp_.size(); j++ ) urhstmp_[j] = utmp_[j];
       bmultilevel = TRUE;
       break;
     default:
@@ -623,72 +623,38 @@ void GBurgers<TypePack>::set_nu(GTVector<GFTYPE> &nu)
 template<typename TypePack>
 void GBurgers<TypePack>::apply_bc_impl(const Time &t, State &u, const State &ub)
 {
-  GTVector<GTVector<GSIZET>>  *igbdy = &grid_->igbdy_binned();
-  GTVector<GTVector<GSIZET>>  *ilbdy = &grid_->ilbdy_binned();
+
+  BdyUpdateList *updatelist = &grid_->bdy_update_list();;
+
+
+  // Update bdy values if required to:
+  for ( k=0; k<updatelist->size(); k++ ) { // foreach grid bdy
+    for ( j=0; j<(*updatelist)[j].size(); j++ ) { // each update method
+      (*updatelist)[j]->update(*grid_, this->stateinfo_, t, utmp_, u, ub););
+    }
+  }
 
   // Use indirection to set the global field node values
-  // with domain boundary data. ub must be updated outside 
-  // of this method.
-
-  // NOTE: This is useful to set Dirichlet-type bcs only. 
-  // Neumann bcs type have to be set with the
-  // differential operators themselves, though the node
-  // points in the operators may still be set from ub
- 
+  // with domain boundary data. 
+  GINT     nbdy = grid_->igbdy_binned().size();
   GSIZET   ib;
   GBdyType itype; 
-  for ( GSIZET m=0; m<igbdy->size(); m++ ) { // for each type of bdy in gtypes.h
-    itype = static_cast<GBdyType>(m);
-    if (// itype == GBDY_NEUMANN
-         itype == GBDY_PERIODIC
-     ||  itype == GBDY_OUTFLOW
-     ||  itype == GBDY_SPONGE 
-     ||  itype == GBDY_NONE   ) continue;
-    for ( GSIZET k=0; k<u.size(); k++ ) { // for each state component
-      if ( ub[k] == NULLPTR ) continue;
-      for ( GSIZET j=0; j<(*igbdy)[m].size(); j++ ) { // set Dirichlet-like value
-        ib = (*igbdy)[m][j];
-        (*u[k])[ib] = (*ub[k])[j];
-      } 
-    } 
-  } 
-
-  // Handle 0-Flux bdy conditions. This
-  // is computed by solving
-  //    vec{n} \cdot vec{u} = 0
-  // for 'dependent' component set in grid.
-  //
-  // Note: We may want to switch the order of the
-  //       following loops to have a better chance
-  //       of vectorization. Unrolling likely
-  //       won't occur:
-  GINT                         id;
-  GSIZET                       il;
-  GFTYPE                       sum, xn;
-  GTVector<GTVector<GFTYPE>>  *n    = &grid_->bdyNormals();
-  GTVector<GINT>              *idep = &grid_->idepComp  ();
-
-  itype = GBDY_0FLUX;
-  for ( auto j=0; j<(*igbdy)[itype].size(); j++ ) { 
-    ib = (*igbdy)[itype][j]; // index into vector array
-    il = (*ilbdy)[itype][j]; // index into bdy array (for normals, e.g.)
-    id = (*idep)[ib];        // dependent vector component
-    xn = (*n)[id][ib];       // n_id == normal component for dependent vector comp
-    sum = 0.0;
-    for ( auto k=0; k<u.size(); k++ ) { // for each vector component
-      if ( k != (*idep)[ib] ) sum -= (*n)[k][il] * (*u[k])[ib];
-    }
-    (*u[id])[ib] = sum / xn;
-  }
-
-  // Handle no-slip bdy conditions.
-  itype = GBDY_NOSLIP;
-  for ( auto k=0; k<u.size(); k++ ) { // for each velocity component
-    for ( auto j=0; j<(*igbdy)[itype].size(); j++ ) { 
-      ib = (*igbdy)[itype][j]; // index into vector array
-      (*u[k])[ib] = 0.0;
-    }
-  }
+  GTVector<GTVector<GSIZET>>  *igbdy;
+  for ( auto k=0; k<nbdy; k++ ) {            // for each grid bdy
+    itype = static_cast<GBdyType>(k);
+    if ( itype == GBDY_PERIODIC
+     ||  itype == GBDY_NONE ) continue;      // no bdy value for these
+    igbdy = &grid_->igbdy_binned()[k];
+    for ( auto j=0; j<igbdy->size(); j++ ) { // for each type of bdy in gtypes.h
+      for ( auto i=0; i<u.size(); i++ ) {    // for each state component
+        if ( ub[i] == NULLPTR ) continue;
+        for ( auto m=0; m<(*igbdy)[j].size(); m++ ) { // set from ub
+          ib = (*igbdy)[j][m];
+          (*u[i])[ib] = (*ub[i])[m];
+        } // end, bdy node loop
+      } // end, state comp. loop
+    } // end, GBdyType loop 
+  } // end, grid bdy loop  
 
 } // end of method apply_bc_impl
 
