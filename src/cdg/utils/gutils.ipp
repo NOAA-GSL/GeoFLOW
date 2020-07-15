@@ -12,6 +12,40 @@ namespace geoflow
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD : unique
+// DESC   : Finds indices of unique variables in input vector
+// ARGS   : 
+//          vec    : input vector
+//          ibeg,
+//          iend   : begining, ending indices to search in vec
+//          iunique: beginning indices for unique elements. Is resized to
+//                   exact amount to account for the number of unique
+//                   elements found.
+// RETURNS: none.
+//************************************************************************************
+template<typename T>
+void unique(GTVector<T> &vec, GSIZET ibeg, GSIZET iend, GTVector<GSIZET> &iunique);
+{
+  GSIZET n=0;
+  T      val;
+  GTVector<GSIZET> tmp(this->size());
+
+  for ( auto i=this->gindex_.beg()+ibeg; i<this->gindex_.beg()+ibeg+n && i<=this->gindex_.end(); i+=this->gindex_.stride()+is-1 ) {
+    val = (*this)[i];
+    if ( !iunique.containsn(val,n) ) {
+      tmp[n] = val;
+      n++;
+    }
+  }
+
+  iunique.resize(n);
+  for ( auto i=0; i<n; i++ ) iunique[i] = tmp[i];
+
+} // end, unique method
+
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD : smooth
 // DESC   :
 //          
@@ -42,11 +76,10 @@ void smooth(GGrid &grid, GGFX_OP op, GTVector<T> &tmp, GTVector<T> &u)
 
 } // end, smooth method
 
+
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : smooth
-// DESC   :
-//          
 // DESC   : Computes a weighted average.
 //              Calculates:
 //                u <- DSS(M_L u) / DSS(M_L),
