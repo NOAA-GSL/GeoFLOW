@@ -65,7 +65,7 @@ GBOOL GOutflowBdyBdy<TypePack>::update_impl(
    GString    serr = "GOutflowBdyBdy<TypePack>::update_impl: ";
    GINT       idstate, ind;
 
-  GTVector<GTVector<GSIZET>> *igbdy = &grid.igbdy_binned();
+  GTVector<GTVector<GSIZET>> *igbdy = &grid.igbdy_binned()[traits_.bdyid];
 
   if ( traits_.compute_once && bcomputed_ ) return TRUE;
 

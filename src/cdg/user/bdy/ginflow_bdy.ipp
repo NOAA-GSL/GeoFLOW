@@ -140,7 +140,7 @@ GBOOL GFromInitBdy<TypePack>::update_from_init(
    GINT       idstate, ind;
    State      tmp;
 
-  GTVector<GTVector<GSIZET>> *igbdy = &grid.igbdy_binned();
+  GTVector<GTVector<GSIZET>> *igbdy = &grid.igbdy_binned()[traits_.bdyid];
 
   if ( traits_.compute_once && bcomputed_ ) return TRUE;
 

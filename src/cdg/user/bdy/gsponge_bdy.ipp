@@ -115,10 +115,8 @@ GBOOL GSpongeBdy<TypePack>::update_cart(
   Time             tt = time;
   GINT             idstate;
   GFTYPE           beta, ifact, rtst, sig0, sgn;
-//GTVector<GTVector<GINT>> 
-//                *igbdycf = &grid.igbdycf_binned(); 
-//GTVector<GTVector<GSIZET>> 
-//                *igbdy = &grid.igbdy_binned();
+  GTVector<GTVector<GSIZET>> 
+                  *igbdy = &grid.igbdy_binned()[traits_.bdyid];
 
   GTVector<GTVector<GFTYPE>> 
                   *xnodes = &grid.xNodes();
@@ -153,8 +151,6 @@ GBOOL GSpongeBdy<TypePack>::update_cart(
     if ( stinfo.compdesc[idstate] == GSC_PRESCRIBED
       || stinfo.compdesc[idstate] == GSC_NONE ) continue;
     for ( auto j=0; j<u[idstate]->size(); j++ ) { // for all grid points
-//    igb  = (*igbdy)  [GBDY_SPONGE][j];
-//    igf  = (*igbdycf)[GBDY_SPONGE][j];
       rtst = sgn * ( (*xnodes)[abs(idir-1)][k] - rs[0] );
       beta = rtst > 0 ? pow(ifact*fabs(rtst),exponent) : 0.0; // check if in sponge layer
 //    (*u[idstate])[j]  = (1.0-beta)*(*u[idstate])[j] + beta*farfield[k];
@@ -162,6 +158,21 @@ GBOOL GSpongeBdy<TypePack>::update_cart(
       (*u[idstate])[j] -= sig0*beta*( (*u[idstate])[j] - farfield[k] );
     }
   }
+
+  // Set bdy vectors:
+  for ( auto k=0; k<traits_.istate.size(); k++ ) {
+    idstate = traits_.istate[n];
+    if ( stinfo.compdesc[idstate] == GSC_PRESCRIBED
+      || stinfo.compdesc[idstate] == GSC_NONE ) continue;
+    }
+    // Set from initialized State vector,
+    for ( auto j=0; j<(*igbdy)[GBDY_SPONGE].size()
+       && ub[idstate] != NULLPTR; j++ ) {
+      ind = (*igbdy)[GBDY_DIRICHLET][j];
+      (*ub[idstate])[j] = traits_.farfield[k];
+    }
+  }
+
   bcomputed_ = bret;
 
   return bret;
@@ -197,10 +208,8 @@ GBOOL GSpongeBdy<TypePack>::update_sphere (
   GINT             idstate;
   GFTYPE           beta, ifact, sig0;
   GFTYPE           r, x, y, z;
-//GTVector<GTVector<GINT>> 
-//                *igbdycf = &grid.igbdycf_binned(); 
-//GTVector<GTVector<GSIZET>> 
-//                *igbdy = &grid.igbdy_binned();
+  GTVector<GTVector<GSIZET>> 
+                  *igbdy = &grid.igbdy_binned()[traits_.bdyid];
 
   GTVector<GTVector<GFTYPE>> 
                   *xnodes = &grid.xNodes();
@@ -230,19 +239,31 @@ GBOOL GSpongeBdy<TypePack>::update_sphere (
   // Note: traits.idir is ignored here, since, for the sphere,
   //       sponge layers are only defined in the radial 
   //       direction in idirection of outer boundary
-  for ( auto k=0; k<traitstraits__istate.size(); k++ ) { // for each state component
+  for ( auto k=0; k<traitstraits_.istate.size(); k++ ) { // for each state component
     idstate = traits_.istate[k];
     for ( auto j=0; j<u[idstate]->size(); j++ ) { // for all grid points
-      x    = (*xnodes)[0][k]; y = (*xnodes)[1][k]; z = (*xnodes)[2][k];
+      x    = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
       r    = sqrt(x*x + y*y + z*z); 
-//    igb  = (*igbdy)  [GBDY_SPONGE][j];
-//    igf  = (*igbdycf)[GBDY_SPONGE][j];
       beta = r >= rs[0] ? pow(ifact*(r-rs[0]),exponent) : 0.0; // check if in sponge layer
-//    (*u[idstate])[j]  = (1.0-beta)*(*u[idstate])[j] + beta*farfield[k];
+//    (*u[idstate])[j]  = (1.0-beta)*(*u[idstate])[j] + beta*traits_.farfield[k];
       if ( traits_.sigma.size() > 1 )
-        (*u[idstate])[j] -= traits_.sigma[k]*beta*( (*u[idstate])[j] - farfield[k] );
+        (*u[idstate])[j] -= traits_.sigma[k]*beta*( (*u[idstate])[j] - traits_.farfield[k] );
       else
-        (*u[idstate])[j] -= traits_.sigma[0]*beta*( (*u[idstate])[j] - farfield[k] );
+        (*u[idstate])[j] -= traits_.sigma[0]*beta*( (*u[idstate])[j] - traits_.farfield[k] );
+    }
+  }
+ 
+  // Set bdy vectors:
+  for ( auto k=0; k<traits_.istate.size(); k++ ) {
+    idstate = traits_.istate[n];
+    if ( stinfo.compdesc[idstate] == GSC_PRESCRIBED
+      || stinfo.compdesc[idstate] == GSC_NONE ) continue;
+    }
+    // Set from initialized State vector,
+    for ( auto j=0; j<(*igbdy)[GBDY_SPONGE].size()
+       && ub[idstate] != NULLPTR; j++ ) {
+      ind = (*igbdy)[GBDY_DIRICHLET][j];
+      (*ub[idstate])[j] = traits_.farfield[k];
     }
   }
 

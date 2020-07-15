@@ -69,6 +69,8 @@ GBOOL GNoSlipBdy<TypePack>::update_impl(
 {
   GString    serr = "GNoSlipBdy<TypePack>::update_impl: ";
 
+  GTVector<GTVector<GSIZET>> *igbdy = &grid.igbdy_binned()[traits_.bdyid];
+
   if ( traits_.compute_once && bcomputed_ ) return TRUE;
 
   for ( auto k=0; k<nstate_; k++ ) { // for each vector component

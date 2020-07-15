@@ -22,19 +22,20 @@ namespace GInflowBdyMethods {
 //          grid  : grid
 //          stinfo: StateInfo
 //          t     : time
+//          id    : canonical bdy id
 //          utmp  : tmp arrays
 //          u     : current state, overwritten here
 //          ub    : bdy vectors (one for each state element)
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL myinflow(GGrid &grid, StateInfo &stinfo, Time &time, State &utmp, State &u, State &ub)
+GBOOL myinflow(GGrid &grid, StateInfo &stinfo, Time &time, const GINT id, State &utmp, State &u, State &ub)
 {
 #if 0
   Time             tt = t;
   GString          serr = "impl_mybdyinit: ";
 
 
-  GTVector<GTVector<GSIZET>> *igbdy = &grid.igbdy();
+  GTVector<GTVector<GSIZET>> *igbdy = &grid.igbdy_binned()[id];
 
 
   // Set from State vector, u and others that we _can_ set:

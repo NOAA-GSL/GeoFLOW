@@ -69,7 +69,7 @@ GBOOL G0FluxBdy<TypePack>::update_impl(
 {
    GString    serr = "G0FluxBdy<TypePack>::update_impl: ";
    GBdyType   itype;
-   GINT       id, ind, k;
+   GINT       nid, ind, k;
    GSIZET     il;
    Ftype      sum, xn;
    GTVector<GTVector<Ftype>>  *bdyNormals;
@@ -78,7 +78,6 @@ GBOOL G0FluxBdy<TypePack>::update_impl(
    GTVector<GTVector<GSIZET>> *ilbdy;
 
 
-  GTVector<GTVector<GSIZET>> *igbdy = &grid.igbdy_binned();
 
   if ( traits_.compute_once && bcomputed_ ) return TRUE;
 
@@ -97,18 +96,17 @@ GBOOL G0FluxBdy<TypePack>::update_impl(
   //       won't occur:
   bdyNormals = &grid.bdyNormals(); // bdy normal vector
   idepComp   = &grid.idepComp();   // dependent components
-  igbdy      = &grid_->igbdy_binned();
-  ilbdy      = &grid_->ilbdy_binned();
+  igbdy      = &grid_->igbdy_binned()[traits_.bdyid]; // for this can bdy 
+  ilbdy      = &grid_->ilbdy_binned()[traits_.bdyid];
   itype      = GBDY_0FLUX;
-  for ( auto j=0; j<(*igbdy)[itype].size() ) {
-    ind = (*igbdy)[itype][j]; // index into long vector array
-    il  = (*ilbdy)[itype][j]; // index into bdy array (for normals, e.g.)
-    id  = (*idep)[ind];       // dependent vector component
-    xn  = (*n)[id][ind];      // n_id == normal component for dependent vector comp
+  for ( auto j=0; j<(*igbdy)[i][itype].size() ) {
+    ind = (*igbdy)[i][itype][j];  // index into long vector array
+    il  = (*ilbdy)[i][itype][j];  // index into bdy array (for normals, e.g.)
+    nid = (*idep)[ind];           // dependent vector component
+    xn  = (*bdyNormals)[nid][ind];// n_id == normal component for dependent vector comp
     sum = 0.0;
     for ( auto k=0; k<nstate_; k++ ) { // for each vector component
-      sum -= (*n)[k][il] * (*u[istate[k]])[ind];
-//    if ( k != (*idep)[ind] ) sum -= (*n)[idstate][il] * (*u[idstate])[ind];
+      sum -= (*bdyNormals)[k][il] * (*u[istate[k]])[ind];
 
       // Set all comps here, then reset the dependent one:
       (*ub[k])[ind] = (*u[k])[ind]; 
