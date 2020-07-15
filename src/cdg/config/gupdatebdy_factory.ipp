@@ -163,7 +163,7 @@ GUpdateBdyFactory<TypePack>::handle_mixed(const PropertyTree& sptree, GString &s
   // Search tbdy types returned from sspec call, and 
   // create a base_ptr for for each unique type found:
   GTVector<GBdyType> iunique;
-  tbdy.unique(0, tbdy.size()-1, iunique);
+  geoflow::unique(tbdy, 0, tbdy.size()-1, iunique);
   for ( auto j=0; j<iunique.size(); j++ ) {
     base_ptr = get_bdy_class (sptree, supdate, grid, id, tbdy[iunique[j]] ); 
     list.push_back(base_ptr);
@@ -181,11 +181,12 @@ GUpdateBdyFactory<TypePack>::handle_mixed(const PropertyTree& sptree, GString &s
 //          the function are gottne from the gns_inflow_user.* namespace
 //          collection of methods, which the user may modify.
 // ARGS   : sname : inflow function name
+//          id    : canonical bdy id
 // RETURNS: CallbackPtr for callback function
 //**********************************************************************************
 template<typename TypePack>
 typename UpdateBdyFactory<TypePack>::CallbackPtr
-GUpdateBdyFactory<TypePack>::get_inflow_callback(const GString& sname)
+GUpdateBdyFactory<TypePack>::get_inflow_callback(const GString& sname, const GINT id)
 {
   GBOOL              bret = FALSE;
   CallbackPtr        callback;
@@ -198,7 +199,7 @@ GUpdateBdyFactory<TypePack>::get_inflow_callback(const GString& sname)
                           Time      &time,
                           State     &utmp,
                           State     &u,
-                          State     &ub){myinflow(grid, stinfo, time, utmp, u, ub);}; 
+                          State     &ub){myinflow(grid, stinfo, time, id, utmp, u, ub);}; 
   else {
     assert(FALSE && "Specified inflow bdy update method unknown");
   }
@@ -272,7 +273,7 @@ GUpdateBdyFactory<TypePack>::get_bdy_class(const PropertyTree& sptree, Grid &gri
       assert( sptree.isValue<GString>("inflow_method") 
            && "inflow_method required if use_init==FALSE" ) 
       sblock = sptree.getValue<GString>("inflow_method");
-      traits.callback = get_inflow_callback(sblock);
+      traits.callback = get_inflow_callback(sblock, id);
     }
     // Allocate observer Implementation
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
