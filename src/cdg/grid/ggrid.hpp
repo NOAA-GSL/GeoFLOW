@@ -25,12 +25,7 @@
 #include "ghelmholtz.hpp"
 #include "gcg.hpp"
 #include "gstateupdate.hpp"
-#include "g0flux.hpp"
-#include "gdirichlet.hpp"
-#include "ginflow.hpp"
-#include "gnoslip.hpp"
-#include "gsimple_outflow.hpp"
-#include "gsponge.hpp"
+#include "gupdatebdy_factory.hpp"
 #include "tbox/property_tree.hpp"
 
 
@@ -45,6 +40,9 @@ typename StateInfo           = GStateInfo;
 typename Grid                = GGrid,
 typename Value               = GFTYPE,
 typename Time                = GFTYPE,
+typename BinnedBdyIndex      = GTVector<GTVector<GTVector<GSIZET>>>;
+typename BinnedBdyType       = GTVector<GTVector<GTVector<GBdyType>>>;
+
 
 struct BdyTypePack { // define bdy update typepack
         using Types            = BdyTypePack;
@@ -68,6 +66,10 @@ struct CGTypePack { // define terrain typepack
         using Time             = GFTYPE;
         using ConnectivityOp   = GGFX<GFTYPE>;
 };
+
+typename UpdateBase          = UpdateBdyBase<BdyTypePack>;
+typename UpdateBasePtr       = std::shared_prt<UpdateBase>;
+typename UpdateBaseList      = GTVector<GTVector<UpdateBasePtr>>;
 
 class GMass;
 
@@ -123,8 +125,6 @@ virtual void                 print(const GString &filename){}          // print 
         GElemType            gtype() { return gtype_; }               // get unique elem type on grid       
         void                 deriv(GTVector<GFTYPE> &u, GINT idir, GTVector<GFTYPE> &tmp,
                                    GTVector<GFTYPE> &du );            // derivative of global vector
-//std::function<void(const geoflow::tbox::PropertyTree& ptree,GString &supdate, Grid &grid,
-//                   StateInfo &stinfo, Time &time, State &utmp, State &u, State &ub)>
 
         void                 set_bdy_update_callback(
                              std::function<void(const geoflow::tbox::PropertyTree &ptree,
@@ -169,20 +169,22 @@ virtual void                 print(const GString &filename){}          // print 
         GTVector<GFTYPE>    &Jac();                                    // global Jacobian
         GTVector<GFTYPE>
                             &faceJac();                                // global face Jacobian
+        UpdateBdyList       &bdy_update_list() 
+                             { return bdy_update_list_; }              // bdy_update_list pointers
         GTVector<GTVector<GFTYPE>>
                             &faceNormal();                             // global face normals
         GTVector<GSIZET>
                             &gieface() { return gieface_;}             // elem face indices into glob u for all elem faces
-        GTVector<GTVector<GSIZET>>
+        BinnedBdyIndex
                             &igbdy_binned() { return igbdy_binned_;}   // global dom bdy indices binned into GBdyType
-        GTVector<GTVector<GSIZET>>
+        BinnedBdyIndex
                             &ilbdy_binned() { return ilbdy_binned_;}   // indices into bdy arrays binned into GBdyType
         GTVector<GTVector<GINT>>
                             &igbdycf_binned() { return igbdycf_binned_;} // canonical faces that igbdy_binned reside on
         GTVector<GTVector<GSIZET>>
-                            &igbdy_bdyface() { return igbdy_bdyface_;} // global dom bdy indices for each face
+                            &igbdy_bdyface() { return igbdy_bdyface_;} // global dom bdy indices for each can. bdy surf
         GTVector<GTVector<GBdyType>>
-                            &igbdyt_bdyface(){ return igbdyt_bdyface_;}// global dom bdy type for each face
+                            &igbdyt_bdyface(){ return igbdyt_bdyface_;}// global dom bdy type for each can. bdy surf
         GTVector<GSIZET>
                             &igbdy() { return igbdy_;}                 // global dom bdy indices into u
         GTVector<GTVector<GFTYPE>>
@@ -257,6 +259,8 @@ virtual void                        do_bdy_normals(GTMatrix<GTVector<GFTYPE>>
         GTVector<GBdyType>          igbdyt_;        // global domain bdy types for each igbdy index
         GTVector<GTVector<GBdyType>>
                                     igbdyt_bdyface_;// global domain bdy types for each igbdy index
+        UpdateBaseList              bdy_update_list_;
+                                                    // bdy update class list
         GTVector<GFTYPE>            mask_;          // bdy mask
         PropertyTree                ptree_;         // main prop tree
         GGFX<GFTYPE>               *ggfx_;          // connectivity operator

@@ -1139,8 +1139,6 @@ void GGrid::init_bc_info()
   // Find boundary indices & types from config file 
   // specification, for _each_ natural/canonical domain face:
   config_bdy(ptree_, igbdy_bdyface_, igbdyt_bdyface_);
-  config_bdy_update(ptree_, igbdy_bdyface_, igbdyt_bdyface_);
-
 
   // Flatten these 2 bdy index & types indirection arrays:
   GSIZET      nind=0, nw=0;
@@ -1162,10 +1160,8 @@ void GGrid::init_bc_info()
   }
 
 
-  // Create bdy type bins (one bin for each GBdyType), and
-  // for each type, set the indirection indices into global
-  // vectors that have that type. Also find for each type
-  // the index of that point in the bdy arrays:
+  // Create bdy type bins for each domain bdy:
+  //   [Dom bdy][bdytype][volume index]:
   GBdyType         itype;
   GSIZET    *ind=NULLPTR;
   GSIZET               n;

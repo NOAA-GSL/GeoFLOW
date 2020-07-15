@@ -922,6 +922,7 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
   GTVector<GString>  confmthd (2*GDIM);
   GString            gname, sbdy, bdyclass;
   PropertyTree       bdytree, gridptree, spectree;
+  UpdateBdyBasePtr   base_ptr;
 
   bdynames[0] = "bdy_x_0";
   bdynames[1] = "bdy_x_1";
@@ -990,8 +991,10 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
   //       but the bdy indices & corresp. types are concatenated into 
   //       single arrays:
   for ( auto j=0; j<2*GDIM; j++ ) { 
-    // First, find global bdy indices:
     if ( buniform[j] ) continue;
+    sbdy         = gridptree.getValue<GString>(bdynames[j]);
+    bdytree      = ptree.getPropertyTree(sbdy);
+    // First, find global bdy indices:
     if ( ndim_ == 2 ) {
       find_bdy_ind2d(j, TRUE, itmp); // include vertices
     }
@@ -1003,6 +1006,13 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
     assert(bret && "Boundary specification failed");
     igbdy [j].resize(itmp.size()); igbdy [j] = itmp;
     igbdyt[j].resize(itmp.size()); igbdyt[j] = btmp;
+
+    // Configure update methods:
+    btmp.unique(0, btmp.size()-1, iunique);
+    for ( auto k=0; k< iunique.size(); k++ ) {
+      base_ptr = GUpdateBdyFactory::get_bdy_class(bdytree, j, unique[k]); 
+      bdy_update_list_[j].push_back(base_ptr);
+    }
     itmp.clear();
     btmp.clear();
   }
@@ -1010,6 +1020,8 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
   // Fill in uniform bdy types:
   for ( auto j=0; j<2*GDIM; j++ ) { // for each global bdy face 
     if ( !buniform[j] ) continue;
+    sbdy         = gridptree.getValue<GString>(bdynames[j]);
+    bdytree      = ptree.getPropertyTree(sbdy);
     // First, find global bdy indices:
     if ( bperiodic && bdytype[j] != GBDY_PERIODIC  ) {
       if ( ndim_ == 2 ) {
@@ -1034,8 +1046,14 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
     for ( auto i=0; i<itmp.size(); i++ ) {
       btmp[i] = bdytype[j]; 
     }
+
+    // Configure update methods:
+    base_ptr = GUpdateBdyFactory::get_bdy_class(bdytree, j, bdytype[j]); 
+    bdy_update_list_[j].push_back(base_ptr);
+
     igbdy [j].resize(itmp.size()); igbdy [j] = itmp;
     igbdyt[j].resize(itmp.size()); igbdyt[j] = btmp;
+
     itmp.clear();
     btmp.clear();
 
@@ -1639,58 +1657,25 @@ void GGridBox::do_bdy_normals3d(GTMatrix<GTVector<GFTYPE>>    &dXdXi,
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : config_bdy_update
-// DESC   : Read bdy prop tree to configure bdy update methods
-// ARGS   : bptree: boundary coordinates
+// DESC   : Configure bdy update methods, based on
+//          bcs on each face
+//  config_bdy_update(ptree_, igbdy_bdyface_, igbdyt_bdyface_);
+// ARGS   : ptree : main prop tree
+//          ibdyperface: arrays of bdy indices on each domain face
+//          tbdyperface: arrays of bdy types on each domain face
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::config_bdy_update(const PropertyTree &bptree)
-{ 
+void GGrid::config_bdy_update(const PropertyTree &ptree, GTVector<GTVector<GSIZET>> &ibdyperface, GTVector<GTVector<GBdyType>> &tbdyperface)
+{
+  GINT               nbdy = ibdyperface.size();
+  GSIZET             nperface;
+  GTVector<GBdyType> iunique;
+  UpdateBasePtr      base_ptr;
   
-  std::vector<GINT>   viarray;
-  std::vector<Ftype>  vfarray;
+  for ( auto j=0; j<nbdy; j++ ) { // for each natural bdy
+    nperface = tbdyperface[j].size();
+    tbdyperface[j].unique(0, nperface, iunique);
+  }
 
-  // Operate on the bdy type vectors, because these
-  // may be changed based on a user function s.t.
-  // prop tree may not capture the bdy type:
-  if      ( igbdy_binned_[GBDY_DIRICHLET].size() > 0 ) {
-    GDirichelBdy<BdyTypePack>::Traits dtraits;
-    if ( bptree.isValue("compute_once") ) {
-      dtraits.compute_once = bptree.getValue("compute_once");
-    }
-    viarray = bptree("istate"); dtraits.istate.resize(viarray.size());
-    dtraits.istate= viarray;
-    vfarray = bptree("value"); dtraits.value.resize(vfarray.size());
-    dtraits.value = vfarray;
-  }
-  else if ( igbdy_binned_[GBDY_INFLOW].size() > 0 ) {
-    GInflowBdy<BdyTypePack>::Traits itraits;
-    if ( bptree.isValue("compute_once") ) {
-      itraits.compute_once = bptree.getValue("compute_once");
-    }
-    viarray = bptree("istate"); itraits.istate.resize(viarray.size());
-    itraits.istate= viarray;
-  }
-  else if ( igbdy_binned_[GBDY_NOSLIP].size() > 0 ) {
-    GNoSlipBdy<BdyTypePack>::Traits ntraits;
-    if ( bptree.isValue("compute_once") ) {
-      ntraits.compute_once = bptree.getValue("compute_once");
-    }
-    viarray = bptree("istate"); ntraits.istate.resize(viarray.size());
-    ntraits.istate= viarray;
-  }
-  else if ( igbdy_binned_[GBDY_0FLUX].size() > 0 ) {
-    G0FluxBdy<BdyTypePack>::Traits ztraits;
-    ztraits.
-  }
-  else if ( igbdy_binned_[GBDY_OUTFLOW].size() > 0 ) {
-    GSimpleOutflowBdy<BdyTypePack>::Traits otraits;
-    otraits.
-  }
-  else if ( igbdy_binned_[GBDY_SPONGE].size() > 0 ) {
-    GSpongeBdy<BdyTypePack>::Traits straits;
-    straits.
-  }
- 
-
-} // end of method config_bdy_update
+} // end of config_bdy_update
 

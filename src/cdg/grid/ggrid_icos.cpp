@@ -894,6 +894,7 @@ void GGridIcos::config_bdy(const PropertyTree &ptree,
   GTVector<GString>  bdyupdate(2);
   GString            gname, sbdy, bdyclass;
   PropertyTree       bdytree, gridptree, spectree;
+  UpdateBdyBasePtr   base_ptr;
 
   // Clear input arrays:
   igbdy .clear();
@@ -935,8 +936,11 @@ void GGridIcos::config_bdy(const PropertyTree &ptree,
   //       but the bdy indices & corresp. types are concatenated into 
   //       single arrays:
   for ( auto j=0; j<2; j++ ) { 
-    // First, find global bdy indices:
     if ( uniform[j] ) continue;
+
+    // First, find global bdy indices:
+    sbdy         = gridptree.getValue<GString>(bdynames[j]);
+    bdytree      = ptree.getPropertyTree(sbdy);
     find_bdy_ind3d(rbdy[j], itmp); 
     spectree  = ptree.getPropertyTree(confmthd[j]);
     bret = GSpecBdyFactory::dospec(spectree, *this, j, itmp, btmp); // get user-defined bdy spec
@@ -944,11 +948,21 @@ void GGridIcos::config_bdy(const PropertyTree &ptree,
     igbdy [j].resize(itmp.size()); igbdy [j] = itmp;
     igbdyt[j].resize(itmp.size()); igbdyt[j] = btmp;
 
+    // Configure update methods:
+    btmp.unique(0, btmp.size()-1, iunique);
+    for ( auto k=0; k< iunique.size(); k++ ) {
+      base_ptr = GUpdateBdyFactory::get_bdy_class(bdytree, j, unique[k]);
+      bdy_update_list_[j].push_back(base_ptr);
+    }
+
   }
   
   // Fill in uniform bdy types:
   for ( auto j=0; j<2; j++ ) { 
     if ( !uniform[j] ) continue;
+    sbdy         = gridptree.getValue<GString>(bdynames[j]);
+    bdytree      = ptree.getPropertyTree(sbdy);
+
     // First, find global bdy indices:
     find_bdy_ind3d(rbdy[j], itmp); 
     // Set type for each bdy index:
@@ -957,6 +971,10 @@ void GGridIcos::config_bdy(const PropertyTree &ptree,
     }
     igbdy [j].resize(itmp.size()); igbdy [j] = itmp;
     igbdyt[j].resize(itmp.size()); igbdyt[j] = btmp;
+
+    // Configure update methods:
+    base_ptr = GUpdateBdyFactory::get_bdy_class(bdytree, j, bdytype[j]);
+    bdy_update_list_[j].push_back(base_ptr);
   }
 
 } // end of method config_bdy
