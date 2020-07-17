@@ -985,12 +985,9 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
     }
   }
        
-  // Handle non-uniform (user-configured) bdy types first;
+  // Handle non-uniform (user-configured) bdy types first:
   // Note: If "uniform" not specified for a boundary, then
   //       user MUST supply a method to configure it.
-  //       Also, each natural face may be configured independently,
-  //       but the bdy indices & corresp. types are concatenated into 
-  //       single arrays:
   for ( auto j=0; j<2*GDIM; j++ ) { 
     if ( buniform[j] ) continue;
     sbdy         = gridptree.getValue<GString>(bdynames[j]);
@@ -1008,9 +1005,9 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
     igbdy [j].resize(itmp.size()); igbdy [j] = itmp;
     igbdyt[j].resize(itmp.size()); igbdyt[j] = btmp;
 
-    // Configure update methods:
+    // Configure update classes:
     geoflow::unique<GBdyType>(btmp, 0, nbtmp.size()-1, iunique);
-    for ( auto k=0; k< iunique.size(); k++ ) {
+    for ( auto k=0; k<iunique.size(); k++ ) {
       base_ptr = GUpdateBdyFactory::get_bdy_class(bdytree, j, iunique[k]); 
       bdy_update_list_[j].push_back(base_ptr);
     }

@@ -882,8 +882,9 @@ void GGridIcos::config_bdy(const PropertyTree &ptree,
 {
   // Cycle over all geometric boundaries, and configure:
 
-  GBOOL              bret, buniform=FALSE;
+  GBOOL              bret;
   GSIZET             iwhere;
+  GTVector<GINT>     istate;
   GTVector<GBOOL>    uniform(2);
   GTVector<GBdyType> bdytype(2);
   GTVector<GBdyType> btmp;
@@ -892,6 +893,10 @@ void GGridIcos::config_bdy(const PropertyTree &ptree,
   GTVector<GString>  bdynames(2);
   GTVector<GString>  confmthd (2);
   GTVector<GString>  bdyupdate(2);
+  std::vector<std::vector<GINT>>
+                        ivvec;;
+  std::vector<GBdyType> tbdyvec;
+  std::vector<GString>  sbdyvec;
   GString            gname, sbdy, bdyclass;
   PropertyTree       bdytree, gridptree, spectree;
   UpdateBdyBasePtr   base_ptr;
@@ -909,7 +914,7 @@ void GGridIcos::config_bdy(const PropertyTree &ptree,
   gridptree = ptree.getPropertyTree(gname);
 
 
-  bdyupdate = gridptree.getValue<GString>("update_method","");
+//bdyupdate = gridptree.getValue<GString>("update_method","");
   rbdy[0] = radiusi_;
   rbdy[1] = radiuso_;
 
@@ -919,22 +924,52 @@ void GGridIcos::config_bdy(const PropertyTree &ptree,
   //       outer spherical surfaces. But the bdy indices 
   //       and types returned on exist contain info for all bdys:
   for ( auto j=0; j<2; j++ ) { // cycle over 2 spherical surfaces
+    sbdyvec      = gridptree.getArray<GString>(bdynames[j]);
     sbdy         = gridptree.getValue<GString>(bdynames[j]);
     bdytree      = gridptree.getPropertyTree(sbdy);
     bdyclass     = bdytree.getValue<GString>("bdy_class", "uniform");
-    bdytype  [j] = geoflow::str2bdytype(bdytree.getValue<GString>("base_type", "GBDY_NONE"));
-    assert(bdytype  [j] == GBDY_PERIODIC && "Invalid boundary condition");
+//  bdytype  [j] = geoflow::str2bdytype(bdytree.getValue<GString>("base_type", "GBDY_NONE"));
+    tbdyvec      = geoflow::str2bdytype(bdytree.getArray<GString>("base_type"));
+    assert(bdytype  [j] != GBDY_PERIODIC && "Invalid boundary condition");
     uniform  [j] = bdyclass == "uniform" ? TRUE : FALSE;
     confmthd [j] = bdytree.getValue<GString>("bdy_config_method","");
-    buniform     = buniform || uniform[j];
+    if ( uniform[j] ) { // uniform bdy conditions
+      ivvec = bdytree.getValue<GINT>("istate");
+      if ( ivvec.size() != sbdyvec.size() ) {
+        cout << "GGridIcos::config_bdy: Incompatible number of state vectors and bdy types" << endl;
+        assert(FALSE);
+      }
+      // May have different uniform bdys for different state comps:
+      for ( auto k=0; k<tbdyvec.size(); k++ ) { /
+        istate.resize(ivvec[k].size()); istate = ivvec[k];
+        find_bdy_ind3d(rbdy[j], itmp); 
+        base_ptr = GUpdateBdyFactory::build(ptree, sbdy, *grid_,  j, tbdyvec[k], istate, itmp);
+        bdy_update_list_[j].push_back(base_ptr);
+      }
+    }
+    else { // mixed bdy conditions
+      sbdyvec = gridptree.getArray<GString>("mixed_bdy_blocks"]);
+      for ( auto i=0; i<sbdyvec.size(); i++ ) {
+      bdytree = gridptree.getPropertyTree(sbdy);
+      ivvec = bdytree.getValue<GINT>("istate");
+      if ( ivvec.size() != sbdyvec.size() ) {
+        cout << "GGridIcos::config_bdy: Incompatible number of state vectors and bdy types" << endl;
+        assert(FALSE);
+      }
+      // May have different uniform bdys for different state comps:
+      for ( auto k=0; k<tbdyvec.size(); k++ ) { /
+        istate.resize(ivvec[k].size()); istate = ivvec[k];
+        find_bdy_ind3d(rbdy[j], itmp); 
+        base_ptr = GUpdateBdyFactory::build(ptree, sbdy, *grid_,  j, tbdyvec[k], istate, itmp);
+        bdy_update_list_[j].push_back(base_ptr);
+      }
+      }
+    }
   }
 
   // Handle non-uniform (user-configured) bdy types first;
   // Note: If "uniform" not specified for a boundary, then
   //       user MUST supply a method to configure it.
-  //       Also, each natural face may be configured independently,
-  //       but the bdy indices & corresp. types are concatenated into 
-  //       single arrays:
   for ( auto j=0; j<2; j++ ) { 
     if ( uniform[j] ) continue;
 
