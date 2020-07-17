@@ -1877,6 +1877,31 @@ GTVector<T>::multiplicity_ceil(T val, T ceil)
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD : onlycontains 
+// DESC   : Determines if only candidate value is in the buffer
+// ARGS   : val : member to search for in buffer
+// RETURNS: TRUE if member is in list, else FALSE. 
+//**********************************************************************************
+#pragma acc routine vector
+template<class T>
+GBOOL
+GTVector<T>::onlycontains(T val)
+{
+
+  if ( this->data_ == NULLPTR ) return FALSE;
+
+  GLLONG i=this->gindex_.beg();
+
+  while ( i <= this->gindex_.end() && this->data_[i] == val ) i++;
+
+  if ( i > this->gindex_.end() ) return TRUE;
+
+  return FALSE;
+
+} // end of method onlycontains 
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD : contains (1)
 // DESC   : Determines if candidate value is in the buffer
 // ARGS   : val : member to search for in buffer

@@ -183,6 +183,8 @@ template <class T> class GTVector
     #pragma acc routine vector
         void abs();
     #pragma acc routine vector
+inline GBOOL onlycontains(T val); // Buffer contains only val?
+    #pragma acc routine vector
 inline GBOOL contains(T val);     // Buffer contains val?
     #pragma acc routine vector
 inline GSIZET contains(T val, GSIZET *&iwhere, GSIZET &nw);
