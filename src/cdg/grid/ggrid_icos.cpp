@@ -944,7 +944,7 @@ void GGridIcos::config_bdy(const PropertyTree &ptree,
       }
     }
     else if ( "mixed" == bdyclass ) { // mixed bdy conditions
-      assert( bdytree.isArray<GString>("bdy_blocks") && "bdy_blocks not specified") 
+      assert( bdytree.isArray<GString>("bdy_blocks") && "No bdy_blocks specified") 
       svec = bdytree.getArray<GString>("bdy_blocks");
       for ( auto i=0; i<svec.size(); i++ ) {
         sbdytree = ptree.getPropertyTree(svec[i]);
@@ -964,7 +964,7 @@ void GGridIcos::config_bdy(const PropertyTree &ptree,
       } 
     }
     else {
-      assert(FALSE && "Invalide bdy_class");
+      assert(FALSE && "Invalid bdy_class");
     }
   } // end, canonical bdy loop
 
