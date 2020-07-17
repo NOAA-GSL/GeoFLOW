@@ -84,13 +84,13 @@ public:
 
 protected:
 
-	bool spec   (PropertyTree &sptree,
+	virtual bool spec   (PropertyTree &sptree,
                      Grid         &grid, 
                      int           bdyid, 
                      IBdyVol      &ibdy, 
-                     TBdyvol      &tbdy) = 0;
+                     TBdyvol      &tbdy) { return true;}
                      
-	bool update_impl (
+	virtual bool update_impl (
                      Grid      &grid, 
                      StateInfo &stinfo, 
                      Time      &time, 
