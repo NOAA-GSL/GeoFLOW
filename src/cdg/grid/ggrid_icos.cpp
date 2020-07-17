@@ -901,12 +901,23 @@ void GGridIcos::config_bdy(const PropertyTree &ptree,
   bdynames[0] = "bdy_inner";
   bdynames[1] = "bdy_outer";
 
+  if ( !ptree.isValue<GString>(gname) ) {
+    cout << "GGridIcos::config_bdy: grid_type not set" << endl;
+    assert(FALSE);
+  }
   gname     = ptree.getValue<GString>("grid_type");
-  gridptree = ptree.getPropertyTree(gname);
 
+  if ( !ptree.isPropertyTree(gname) ) {
+    cout << "GGridIcos::config_bdy: grid_type block " << gname << " not found" << endl;
+    assert(FALSE);
+  }
+  gridptree = ptree.getPropertyTree(gname);
 
   rbdy[0] = radiusi_;
   rbdy[1] = radiuso_;
+
+  igbdy.resize(2); // 2 canonical bdys
+  tgbdy.resize(2); // 2 canonical bdys
 
   // Get properties from the main prop tree. 
   // Note: bdys are configured by way of geometry's
@@ -918,14 +929,17 @@ void GGridIcos::config_bdy(const PropertyTree &ptree,
     sbdy         = gridptree.getValue<GString>(bdynames[j]);
     bdytree      = gridptree.getPropertyTree(sbdy);
     bdyclass     = bdytree.getValue<GString>("bdy_class", "uniform");
+    find_bdy_ind3d(rbdy[j], itmp); 
+    igbdy[j].resize(itmp.size()); igbdy[j] = itmp;
+    tgbdy[j].resize(itmp.size()); tgbdy[j] = GBDY_NONE;
     if ( "uniform" == bdyclass ) { // uniform bdy conditions
       geoflow::get_bdy_block(bdytree, stblock);
       assert(!stblock.tbdy.contains(GBDY_PERIODIC) && "Invalid boundary condition");
       // May have different uniform bdys for different state comps:
-      find_bdy_ind3d(rbdy[j], itmp); 
-      for ( auto k=0; k<stblock.tbdy.size(); k++ ) { /
+      for ( auto k=0; k<stblock.tbdy.size(); k++ ) { 
         base_ptr = GUpdateBdyFactory::build(ptree, sbdy, *grid_,  j, 
                                             stblock.tbdy[k], stblock.istate[k], itmp);
+        if ( stblock.tbdy[k] != GBDY_NONE ) tbdy[j] = stblock.tbdy[k];
         bdy_update_list_[j].push_back(base_ptr);
       }
     }
@@ -933,12 +947,18 @@ void GGridIcos::config_bdy(const PropertyTree &ptree,
       assert( bdytree.isArray<GString>("bdy_blocks") && "bdy_blocks not specified") 
       svec = bdytree.getArray<GString>("bdy_blocks");
       for ( auto i=0; i<svec.size(); i++ ) {
+        sbdytree = ptree.getPropertyTree(svec[i]);
         geoflow::get_bdy_block(bdytree, stblock);
         assert(!stblock.tbdy.contains(GBDY_PERIODIC) && "Invalid boundary condition");
-        GSpecBdyFactory::dospec(bdytree, *grid_, j, itmp);
+        SpecBdyFactory::dospec(bdytree, *grid_, j, itmp);
         for ( auto k=0; k<svec.size(); k++ ) { // for each sub-block
           base_ptr = GUpdateBdyFactory::build(ptree, svec[k], *grid_,  j, 
                                               stblock.tbdy[k], stblock.istate[k], itmp);
+          
+          for ( auto m=0; m<tmp.size(); m++ ) {
+            if ( igbdy[j].contains(itmp[m]) ) tgbdy[j][m] = stblock.tbdy[k];
+          }
+          if ( stblock.tbdy[k] != GBDY_NONE ) tbdy[j] = stblock.tbdy[k];
           bdy_update_list_[j].push_back(base_ptr);
         }
       } 
