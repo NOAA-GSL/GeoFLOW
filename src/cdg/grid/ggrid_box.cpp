@@ -917,12 +917,12 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
   GSIZET             iwhere;
   GTVector<GBOOL>    buniform(2*GDIM);
   GTVector<GBdyType> bdytype(2*GDIM);
-  GTVector<GBdyType> btmp;
-  GTVector<GSIZET>   itmp, iunique;
+  GTVector<GSIZET>   itmp;
   GTVector<GString>  bdynames (2*GDIM);
-  GTVector<GString>  confmthd (2*GDIM);
+  std::vector<GString>
+                     svec;
   GString            gname, sbdy, bdyclass;
-  PropertyTree       bdytree, gridptree, spectree;
+  PropertyTree       bdytree, gridptree;
   UpdateBdyBasePtr   base_ptr;
 
   bdynames[0] = "bdy_x_0";
@@ -940,36 +940,66 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
 
 
   // Clear input arrays:
-  igbdy .clear();
-  igbdyt.clear();
-
   igbdy .resize(2*GDIM);
   igbdyt.resize(2*GDIM);
 
-#if 0
-  bdyupdate = gridptree.getValue<GString>("update_method","");
-  bdyinit   = gridptree.getValue<GString>("bdy_init_method","");
-  buseinit  = gridptree.getValue<GBOOL>  ("use_state_init_method",FALSE);
-#endif
 
-
-  // Get properties from the main prop tree. 
-  // Note: bdys are configured by way of geometry's
-  //       natural decomposition: here, by face (3d) or
-  //       edge (2d). But the bdy indices and types
-  //       returned on exist contain info for all bdys:
-  for ( auto j=0; j<2*GDIM; j++ ) { // cycle over faces
+  // Handle uniform, nonuniform bdy conditions:
+  // Note: If "uniform" not specified for a boundary, then
+  //       user MUST supply a method to configure it.
+  for ( auto j=0; j<2*GDIM; j++ ) { 
+    svec         = gridptree.getArray<GString>(bdynames[j]);
     sbdy         = gridptree.getValue<GString>(bdynames[j]);
-    bdytree      = ptree.getPropertyTree(sbdy);
+    bdytree      = gridptree.getPropertyTree(sbdy);
     bdyclass     = bdytree.getValue<GString>("bdy_class", "uniform");
-    bdytype  [j] = geoflow::str2bdytype(bdytree.getValue<GString>("base_type", "GBDY_NONE"));
-    buniform [j] = bdyclass == "uniform" ? TRUE : FALSE;
-    confmthd [j] = bdytree.getValue<GString>("bdy_config_method","");
-    bperiodic    = bperiodic || bdytype[j] == GBDY_PERIODIC;
-    if ( bperiodic ) {
-      assert(buniform[j] && "GBDY_PERIODIC boundary must have bdy_class = uniform");
+    if ( ndim_ == 2 ) 
+      find_bdy_ind3d(rbdy[j], itmp);
+    if ( ndim_ == 3 ) 
+      find_bdy_ind3d(rbdy[j], itmp);
+    igbdy[j].resize(itmp.size()); igbdy[j] = itmp;
+    tgbdy[j].resize(itmp.size()); tgbdy[j] = GBDY_NONE;
+    if ( "uniform" == bdyclass ) { // uniform bdy conditions
+      geoflow::get_bdy_block(bdytree, stblock);
+      if ( stblock.tbdy.contains(GBDY_PERIODIC) ) {
+        assert(stblock.tbdy.onlycontains(GBDY_PERIODIC) && "All variables must be GBDY_PERIODIC");
+        bdytype  [j] = GBDY_PERIODIC;
+        bperiodic    = bperiodic || bdytype[j] == GBDY_PERIODIC;
+      
+      }
+      // May have different uniform bdys for different state comps:
+      for ( auto k=0; k<stblock.tbdy.size() && !bperiodic; k++ ) {
+        base_ptr = GUpdateBdyFactory::build(ptree, sbdy, *grid_,  j,
+                                            stblock.tbdy[k], stblock.istate[k], itmp);
+        tbdy[j] = stblock.tbdy[k];
+        bdy_update_list_[j].push_back(base_ptr);
+      }
     }
-  }
+    else if ( "mixed" == bdyclass ) { // mixed bdy conditions
+      assert( bdytree.isArray<GString>("bdy_blocks") && "no bdy_blocks specified")
+      svec = bdytree.getArray<GString>("bdy_blocks");
+      for ( auto i=0; i<svec.size(); i++ ) { // loop over bdy blocks
+        sbdytree = ptree.getPropertyTree(svec[i]);
+        geoflow::get_bdy_block(bdytree, stblock);
+        assert(!stblock.tbdy.contains(GBDY_PERIODIC) && "GBDY_PERIODIC bdys must be uniform");
+        SpecBdyFactory::dospec(bdytree, *grid_, j, itmp);
+        for ( auto k=0; k<svec.size(); k++ ) { // for each sub-block
+          base_ptr = GUpdateBdyFactory::build(ptree, svec[k], *grid_,  j,
+                                              stblock.tbdy[k], stblock.istate[k], itmp);
+
+          for ( auto m=0; m<tmp.size(); m++ ) {
+            if ( igbdy[j].contains(itmp[m]) ) tgbdy[j][m] = stblock.tbdy[k];
+          }
+          if ( stblock.tbdy[k] != GBDY_NONE ) tbdy[j] = stblock.tbdy[k];
+          bdy_update_list_[j].push_back(base_ptr);
+        }
+      }
+    }
+    else {
+      assert(FALSE && "Invalid bdy_class");
+    }
+
+
+  } // end, global bdy face loop
 
   if ( bperiodic ) {
     if ( ndim_ == 2 ) {
@@ -984,78 +1014,6 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
              &&  "Incompatible GBDY_PERIODIC boundary specification");
     }
   }
-       
-  // Handle non-uniform (user-configured) bdy types first:
-  // Note: If "uniform" not specified for a boundary, then
-  //       user MUST supply a method to configure it.
-  for ( auto j=0; j<2*GDIM; j++ ) { 
-    if ( buniform[j] ) continue;
-    sbdy         = gridptree.getValue<GString>(bdynames[j]);
-    bdytree      = ptree.getPropertyTree(sbdy);
-    // First, find global bdy indices:
-    if ( ndim_ == 2 ) {
-      find_bdy_ind2d(j, TRUE, itmp); // include vertices
-    }
-    else {
-      find_bdy_ind3d(j, TRUE, itmp); // include edges
-    }
-    spectree  = ptree.getPropertyTree(confmthd[j]);
-    bret = GSpecBdyFactory::dospec(spectree, *this, j, itmp, btmp); // get user-defined bdy spec
-    assert(bret && "Boundary specification failed");
-    igbdy [j].resize(itmp.size()); igbdy [j] = itmp;
-    igbdyt[j].resize(itmp.size()); igbdyt[j] = btmp;
-
-    // Configure update classes:
-    geoflow::unique<GBdyType>(btmp, 0, nbtmp.size()-1, iunique);
-    for ( auto k=0; k<iunique.size(); k++ ) {
-      base_ptr = GUpdateBdyFactory::get_bdy_class(bdytree, j, iunique[k]); 
-      bdy_update_list_[j].push_back(base_ptr);
-    }
-    itmp.clear();
-    btmp.clear();
-  }
-  
-  // Fill in uniform bdy types:
-  for ( auto j=0; j<2*GDIM; j++ ) { // for each global bdy face 
-    if ( !buniform[j] ) continue;
-    sbdy         = gridptree.getValue<GString>(bdynames[j]);
-    bdytree      = ptree.getPropertyTree(sbdy);
-    // First, find global bdy indices:
-    if ( bperiodic && bdytype[j] != GBDY_PERIODIC  ) {
-      if ( ndim_ == 2 ) {
-        find_bdy_ind2d(j, FALSE, itmp); // doesn't include vertices
-      }
-      else {
-        find_bdy_ind3d(j, FALSE, itmp); // doesn't include edges
-      }
-
-    }
-    else {
-      if ( ndim_ == 2 ) {
-        find_bdy_ind2d(j, TRUE, itmp); // include vertices
-      }
-      else {
-        find_bdy_ind3d(j, TRUE, itmp); // include edges
-      }
-    }
-
-    // Set type for each bdy index:
-    btmp.resize(itmp.size());
-    for ( auto i=0; i<itmp.size(); i++ ) {
-      btmp[i] = bdytype[j]; 
-    }
-
-    // Configure update methods:
-    base_ptr = GUpdateBdyFactory::get_bdy_class(bdytree, j, bdytype[j]); 
-    bdy_update_list_[j].push_back(base_ptr);
-
-    igbdy [j].resize(itmp.size()); igbdy [j] = itmp;
-    igbdyt[j].resize(itmp.size()); igbdyt[j] = btmp;
-
-    itmp.clear();
-    btmp.clear();
-
-  } // end, global bdy face loop
 
 
 } // end of method config_bdy
