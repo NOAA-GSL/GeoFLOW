@@ -883,23 +883,14 @@ void GGridIcos::config_bdy(const PropertyTree &ptree,
   // Cycle over all geometric boundaries, and configure:
 
   GBOOL              bret;
-  GSIZET             iwhere;
-  GTVector<GINT>     istate;
-  GTVector<GBOOL>    uniform(2);
-  GTVector<GBdyType> bdytype(2);
-  GTVector<GBdyType> btmp;
-  GTVector<GSIZET>   itmp, iunique;
+  GTVector<GSIZET>   itmp;
   GTVector<GFTYPE>   rbdy(2);
   GTVector<GString>  bdynames(2);
-  GTVector<GString>  confmthd (2);
-  GTVector<GString>  bdyupdate(2);
-  std::vector<std::vector<GINT>>
-                        ivvec;;
-  std::vector<GBdyType> tbdyvec;
-  std::vector<GString>  sbdyvec;
+  std::vector<GString>  svec;
   GString            gname, sbdy, bdyclass;
-  PropertyTree       bdytree, gridptree, spectree;
+  PropertyTree       bdytree, gridptree;
   UpdateBdyBasePtr   base_ptr;
+  stBdyBlock         stblock;
 
   // Clear input arrays:
   igbdy .clear();
@@ -914,7 +905,6 @@ void GGridIcos::config_bdy(const PropertyTree &ptree,
   gridptree = ptree.getPropertyTree(gname);
 
 
-//bdyupdate = gridptree.getValue<GString>("update_method","");
   rbdy[0] = radiusi_;
   rbdy[1] = radiuso_;
 
@@ -924,93 +914,39 @@ void GGridIcos::config_bdy(const PropertyTree &ptree,
   //       outer spherical surfaces. But the bdy indices 
   //       and types returned on exist contain info for all bdys:
   for ( auto j=0; j<2; j++ ) { // cycle over 2 spherical surfaces
-    sbdyvec      = gridptree.getArray<GString>(bdynames[j]);
+    svec         = gridptree.getArray<GString>(bdynames[j]);
     sbdy         = gridptree.getValue<GString>(bdynames[j]);
     bdytree      = gridptree.getPropertyTree(sbdy);
     bdyclass     = bdytree.getValue<GString>("bdy_class", "uniform");
-//  bdytype  [j] = geoflow::str2bdytype(bdytree.getValue<GString>("base_type", "GBDY_NONE"));
-    tbdyvec      = geoflow::str2bdytype(bdytree.getArray<GString>("base_type"));
-    assert(bdytype  [j] != GBDY_PERIODIC && "Invalid boundary condition");
-    uniform  [j] = bdyclass == "uniform" ? TRUE : FALSE;
-    confmthd [j] = bdytree.getValue<GString>("bdy_config_method","");
-    if ( uniform[j] ) { // uniform bdy conditions
-      ivvec = bdytree.getValue<GINT>("istate");
-      if ( ivvec.size() != sbdyvec.size() ) {
-        cout << "GGridIcos::config_bdy: Incompatible number of state vectors and bdy types" << endl;
-        assert(FALSE);
-      }
+    if ( "uniform" == bdyclass ) { // uniform bdy conditions
+      geoflow::get_bdy_block(bdytree, stblock);
+      assert(!stblock.tbdy.contains(GBDY_PERIODIC) && "Invalid boundary condition");
       // May have different uniform bdys for different state comps:
-      for ( auto k=0; k<tbdyvec.size(); k++ ) { /
-        istate.resize(ivvec[k].size()); istate = ivvec[k];
-        find_bdy_ind3d(rbdy[j], itmp); 
-        base_ptr = GUpdateBdyFactory::build(ptree, sbdy, *grid_,  j, tbdyvec[k], istate, itmp);
+      find_bdy_ind3d(rbdy[j], itmp); 
+      for ( auto k=0; k<stblock.tbdy.size(); k++ ) { /
+        base_ptr = GUpdateBdyFactory::build(ptree, sbdy, *grid_,  j, 
+                                            stblock.tbdy[k], stblock.istate[k], itmp);
         bdy_update_list_[j].push_back(base_ptr);
       }
     }
-    else { // mixed bdy conditions
-      sbdyvec = gridptree.getArray<GString>("mixed_bdy_blocks"]);
-      for ( auto i=0; i<sbdyvec.size(); i++ ) {
-      bdytree = gridptree.getPropertyTree(sbdy);
-      ivvec = bdytree.getValue<GINT>("istate");
-      if ( ivvec.size() != sbdyvec.size() ) {
-        cout << "GGridIcos::config_bdy: Incompatible number of state vectors and bdy types" << endl;
-        assert(FALSE);
-      }
-      // May have different uniform bdys for different state comps:
-      for ( auto k=0; k<tbdyvec.size(); k++ ) { /
-        istate.resize(ivvec[k].size()); istate = ivvec[k];
-        find_bdy_ind3d(rbdy[j], itmp); 
-        base_ptr = GUpdateBdyFactory::build(ptree, sbdy, *grid_,  j, tbdyvec[k], istate, itmp);
-        bdy_update_list_[j].push_back(base_ptr);
-      }
-      }
+    else if ( "mixed" == bdyclass ) { // mixed bdy conditions
+      assert( bdytree.isArray<GString>("bdy_blocks") && "bdy_blocks not specified") 
+      svec = bdytree.getArray<GString>("bdy_blocks");
+      for ( auto i=0; i<svec.size(); i++ ) {
+        geoflow::get_bdy_block(bdytree, stblock);
+        assert(!stblock.tbdy.contains(GBDY_PERIODIC) && "Invalid boundary condition");
+        GSpecBdyFactory::dospec(bdytree, *grid_, j, itmp);
+        for ( auto k=0; k<svec.size(); k++ ) { // for each sub-block
+          base_ptr = GUpdateBdyFactory::build(ptree, svec[k], *grid_,  j, 
+                                              stblock.tbdy[k], stblock.istate[k], itmp);
+          bdy_update_list_[j].push_back(base_ptr);
+        }
+      } 
     }
-  }
-
-  // Handle non-uniform (user-configured) bdy types first;
-  // Note: If "uniform" not specified for a boundary, then
-  //       user MUST supply a method to configure it.
-  for ( auto j=0; j<2; j++ ) { 
-    if ( uniform[j] ) continue;
-
-    // First, find global bdy indices:
-    sbdy         = gridptree.getValue<GString>(bdynames[j]);
-    bdytree      = ptree.getPropertyTree(sbdy);
-    find_bdy_ind3d(rbdy[j], itmp); 
-    spectree  = ptree.getPropertyTree(confmthd[j]);
-    bret = GSpecBdyFactory::dospec(spectree, *this, j, itmp, btmp); // get user-defined bdy spec
-    assert(bret && "Boundary specification failed");
-    igbdy [j].resize(itmp.size()); igbdy [j] = itmp;
-    igbdyt[j].resize(itmp.size()); igbdyt[j] = btmp;
-
-    // Configure update methods:
-    geoflow::unique<GBdyType>(btmp, 0, btmp.size()-1, iunique);
-    for ( auto k=0; k< iunique.size(); k++ ) {
-      base_ptr = GUpdateBdyFactory::get_bdy_class(bdytree, j, iunique[k]);
-      bdy_update_list_[j].push_back(base_ptr);
+    else {
+      assert(FALSE && "Invalide bdy_class");
     }
-
-  }
-  
-  // Fill in uniform bdy types:
-  for ( auto j=0; j<2; j++ ) { 
-    if ( !uniform[j] ) continue;
-    sbdy         = gridptree.getValue<GString>(bdynames[j]);
-    bdytree      = ptree.getPropertyTree(sbdy);
-
-    // First, find global bdy indices:
-    find_bdy_ind3d(rbdy[j], itmp); 
-    // Set type for each bdy index:
-    for ( auto i=0; i<itmp.size(); i++ ) {
-      btmp[i] = bdytype[j]; 
-    }
-    igbdy [j].resize(itmp.size()); igbdy [j] = itmp;
-    igbdyt[j].resize(itmp.size()); igbdyt[j] = btmp;
-
-    // Configure update methods:
-    base_ptr = GUpdateBdyFactory::get_bdy_class(bdytree, j, bdytype[j]);
-    bdy_update_list_[j].push_back(base_ptr);
-  }
+  } // end, canonical bdy loop
 
 } // end of method config_bdy
 
