@@ -66,7 +66,7 @@ GBOOL GDirichletBdy<TypePack>::update_impl(
    GString    serr = "GDirichletBdy<TypePack>::update_impl: ";
    GINT       idstate, ind;
 
-  GTVector<GTVector<GSIZET>> *igbdy = &grid.igbdy_binned()[traits_.bdyid];
+  GTVector<GTVector<GSIZET>> *igbdy = &traits_.ibdyvol;
 
   if ( traits_.compute_once && bcomputed_ ) return TRUE;
 
@@ -78,10 +78,11 @@ GBOOL GDirichletBdy<TypePack>::update_impl(
       || stinfo.compdesc[idstate] == GSC_NONE ) continue;
     }
     // Set from initialized State vector, 
-    for ( auto j=0; j<(*igbdy)[GBDY_DIRICHLET].size()
+    for ( auto j=0; j<igbdy->size()
        && ub[idstate] != NULLPTR; j++ ) {
-      ind = (*igbdy)[GBDY_DIRICHLET][j];
-      (*ub[idstate])[j] = traits_.value[k];
+      ind = (*igbdy)[j];
+//    (*ub[idstate])[j] = traits_.value[k];
+      (*ub[idstate])[ind] = traits_.value[k];
     }
   }
   bcomputed = TRUE;

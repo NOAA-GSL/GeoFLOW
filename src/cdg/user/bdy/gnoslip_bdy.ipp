@@ -69,14 +69,15 @@ GBOOL GNoSlipBdy<TypePack>::update_impl(
 {
   GString    serr = "GNoSlipBdy<TypePack>::update_impl: ";
 
-  GTVector<GTVector<GSIZET>> *igbdy = &grid.igbdy_binned()[traits_.bdyid];
+  GTVector<GTVector<GSIZET>> *igbdy = &traits_.ibdyvol;
 
   if ( traits_.compute_once && bcomputed_ ) return TRUE;
 
   for ( auto k=0; k<nstate_; k++ ) { // for each vector component
-    for ( auto j=0; j<(*igbdy)[GBYD_0FLUX].size() ) { // all bdy points
-      ind = (*igbdy)[itype][j]; // index into long vector array
-      (*ub[k])[ind] = 0.0;
+    for ( auto j=0; j<igbdy->size() ) { // all bdy points
+      ind = (*igbdy)[j]; // index into long vector array
+//    (*ub[k])[ind] = 0.0;
+      (*u[k])[ind] = 0.0;
     }
   }
 

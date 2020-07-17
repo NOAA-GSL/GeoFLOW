@@ -46,15 +46,16 @@ public:
         struct Traits {
           GBOOL  compute_once=FALSE; // compjte bdy cond once?
            
-          GINT            idir  = GDIM;  
+          GINT             idir  = GDIM;  
                                      // canonical coord direction definining surfaces
-          GINT            bdyid;     // bdy id
-          GTVector<GINT>  istate;    // state indices to operate on
-          GTVector<Ftype> farfield;  // far-field solution for each istate
-          GTVector<Ftype> exponent;  // fall-off exponent for solution
-          GTVector<Ftype> sigma;     // 'diffusion' factor in sponge layer
-          GTVector<Ftype> rs;        // vector defining sponge surface
-          Ftype           ro;        // outer-most surface (may be nexative)
+          GINT             bdyid;    // bdy id
+          GTVector<GSIZET> ibdyvol;  // indir. inidices into comput volume
+          GTVector<GINT>   istate;   // state indices to operate on
+          GTVector<Ftype>  farfield; // far-field solution for each istate
+          GTVector<Ftype>  exponent; // fall-off exponent for solution
+          GTVector<Ftype>  sigma;    // 'diffusion' factor in sponge layer
+          GTVector<Ftype>  rs;       // vector defining sponge surface
+          Ftype            ro;       // outer-most surface (may be nexative)
         };
 
         GSpongeBdy() = delete; 

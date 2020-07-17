@@ -140,7 +140,7 @@ GBOOL GFromInitBdy<TypePack>::update_from_init(
    GINT       idstate, ind;
    State      tmp;
 
-  GTVector<GTVector<GSIZET>> *igbdy = &grid.igbdy_binned()[traits_.bdyid];
+  GTVector<GTVector<GSIZET>> *igbdy = &traits_.ibdyvol;
 
   if ( traits_.compute_once && bcomputed_ ) return TRUE;
 
@@ -164,10 +164,11 @@ GBOOL GFromInitBdy<TypePack>::update_from_init(
       || stinfo.compdesc[idstate] == GSC_NONE ) continue;
     }
     // Set from initialized State vector, 
-    for ( auto j=0; j<(*igbdy)[GBDY_INFLOW].size()
+    for ( auto j=0; j<igbdy->size()
        && ub[idstate] != NULLPTR; j++ ) {
-      ind = (*igbdy)[GBDY_INFLOW][j];
-      (*ub[idstate])[j] = (*unew_[idstate])[ind];
+      ind = (*igbdy)[j];
+//    (*ub[idstate])[j] = (*unew_[idstate])[ind];
+      (*u [idstate])[ind] = (*unew_[idstate])[ind];
     }
   }
    bcomputed = bret;

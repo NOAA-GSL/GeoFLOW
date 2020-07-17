@@ -45,7 +45,9 @@ public:
         struct Traits {
           GBOOL     compute_once=FALSE; // compute bdy cond once?
           GINT             bdyid;    // bdy id
-          GTVector<GINT>  istate;    // state indices to operate on
+          GTVector<GINT>   istate;   // state indices to operate on
+          GTVector<GSIZET> ibdyvol;  // indir. inidices into comput volume
+
         };
 
         GOutflowBdy() = delete; 

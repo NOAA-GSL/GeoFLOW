@@ -75,15 +75,17 @@ GBOOL G0FluxBdy<TypePack>::update_impl(
    GTVector<GTVector<Ftype>>  *bdyNormals;
    GTVector<GINT>             *idepComp;
    GTVector<GTVector<GSIZET>> *igbdy;
-   GTVector<GTVector<GSIZET>> *ilbdy;
+// GTVector<GTVector<GSIZET>> *ilbdy;
 
 
 
   if ( traits_.compute_once && bcomputed_ ) return TRUE;
 
+#if 0
   for ( auto j=0; j<traits_.istate.size(); j++ ) {
     assert(ub[istate[j]] != NULL && "Illegal bdy vector");
   }
+#endif
 
   // Handle 0-Flux bdy conditions. This
   // is computed by solving
@@ -96,12 +98,12 @@ GBOOL G0FluxBdy<TypePack>::update_impl(
   //       won't occur:
   bdyNormals = &grid.bdyNormals(); // bdy normal vector
   idepComp   = &grid.idepComp();   // dependent components
-  igbdy      = &grid_->igbdy_binned()[traits_.bdyid]; // for this can bdy 
+  igbdy      = &traits_.ibdy;
   ilbdy      = &grid_->ilbdy_binned()[traits_.bdyid];
   itype      = GBDY_0FLUX;
   for ( auto j=0; j<(*igbdy)[i][itype].size() ) {
-    ind = (*igbdy)[i][itype][j];  // index into long vector array
-    il  = (*ilbdy)[i][itype][j];  // index into bdy array (for normals, e.g.)
+    ind = (*igbdy)[i][itype][j];  // index into volume array
+//  il  = (*ilbdy)[i][itype][j];  // index into bdy array (for normals, e.g.)
     nid = (*idep)[ind];           // dependent vector component
     xn  = (*bdyNormals)[nid][ind];// n_id == normal component for dependent vector comp
     sum = 0.0;
@@ -111,7 +113,8 @@ GBOOL G0FluxBdy<TypePack>::update_impl(
       // Set all comps here, then reset the dependent one:
       (*ub[k])[ind] = (*u[k])[ind]; 
     }
-    (*ub[id])[ind] = ( sum + (*n)[id][il] * (*u[id])[ind] ) / xn;
+//  (*ub[id])[ind] = ( sum + (*n)[id][il] * (*u[id])[ind] ) / xn;
+    (*u[id])[ind] = ( sum + (*n)[id][il] * (*u[id])[ind] ) / xn;
   }
 
   bcomputed = TRUE;

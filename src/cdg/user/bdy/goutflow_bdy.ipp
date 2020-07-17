@@ -65,7 +65,7 @@ GBOOL GOutflowBdyBdy<TypePack>::update_impl(
    GString    serr = "GOutflowBdyBdy<TypePack>::update_impl: ";
    GINT       idstate, ind;
 
-  GTVector<GTVector<GSIZET>> *igbdy = &grid.igbdy_binned()[traits_.bdyid];
+  GTVector<GTVector<GSIZET>> *igbdy = &traits_.ibdyvol;
 
   if ( traits_.compute_once && bcomputed_ ) return TRUE;
 
@@ -76,10 +76,10 @@ GBOOL GOutflowBdyBdy<TypePack>::update_impl(
     idstate = traits_.istate[n];
     if ( stinfo.compdesc[idstate] == GSC_PRESCRIBED
       || stinfo.compdesc[idstate] == GSC_NONE ) continue;
-    for ( auto j=0; j<(*igbdy)[GBDY_OUTFLOW].size()
+    for ( auto j=0; j<igbdy->size()
        && ub[idstate] != NULLPTR; j++ ) {
-      ind = (*igbdy)[GBDY_OUTFLOW][j];
-      (*ub[idstate])[j] = (*u[idstate])[(*igbdy)[ind];
+      ind = (*igbdy)[j];
+      (*u[idstate])[ind] = (*u[idstate])[ind];
     }
   }
   bcomputed_ = TRUE;

@@ -116,7 +116,7 @@ GBOOL GSpongeBdy<TypePack>::update_cart(
   GINT             idstate;
   GFTYPE           beta, ifact, rtst, sig0, sgn;
   GTVector<GTVector<GSIZET>> 
-                  *igbdy = &grid.igbdy_binned()[traits_.bdyid];
+                  *igbdy = &traits_.ibdyvol;
 
   GTVector<GTVector<GFTYPE>> 
                   *xnodes = &grid.xNodes();
@@ -166,9 +166,9 @@ GBOOL GSpongeBdy<TypePack>::update_cart(
       || stinfo.compdesc[idstate] == GSC_NONE ) continue;
     }
     // Set from initialized State vector,
-    for ( auto j=0; j<(*igbdy)[GBDY_SPONGE].size()
+    for ( auto j=0; j<igbdy->size()
        && ub[idstate] != NULLPTR; j++ ) {
-      ind = (*igbdy)[GBDY_DIRICHLET][j];
+      ind = (*igbdy)[j];
       (*ub[idstate])[j] = traits_.farfield[k];
     }
   }
@@ -209,7 +209,7 @@ GBOOL GSpongeBdy<TypePack>::update_sphere (
   GFTYPE           beta, ifact, sig0;
   GFTYPE           r, x, y, z;
   GTVector<GTVector<GSIZET>> 
-                  *igbdy = &grid.igbdy_binned()[traits_.bdyid];
+                  *igbdy = &traits_.ibdyvol;
 
   GTVector<GTVector<GFTYPE>> 
                   *xnodes = &grid.xNodes();
@@ -260,10 +260,11 @@ GBOOL GSpongeBdy<TypePack>::update_sphere (
       || stinfo.compdesc[idstate] == GSC_NONE ) continue;
     }
     // Set from initialized State vector,
-    for ( auto j=0; j<(*igbdy)[GBDY_SPONGE].size()
+    for ( auto j=0; j<igbdy->size()
        && ub[idstate] != NULLPTR; j++ ) {
-      ind = (*igbdy)[GBDY_DIRICHLET][j];
-      (*ub[idstate])[j] = traits_.farfield[k];
+      ind = (*igbdy)[j];
+//    (*ub[idstate])[j] = traits_.farfield[k];
+      (*u[idstate])[ind] = traits_.farfield[k];
     }
   }
 

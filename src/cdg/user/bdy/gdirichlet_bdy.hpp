@@ -47,7 +47,9 @@ public:
           GBOOL    compute_once=TRUE;     // compute bdy condition once?
           GINT             bdyid;    // bdy id
           GTVector<FType>  value;    // Diriclet value for each istate 
-          GTVector<GINT>  istate;    // state indices to operate on
+          GTVector<GINT>   istate;   // state indices to operate on
+          GTVector<GSIZET> ibdyvol;  // indir. inidices into comput volume
+
         };
 
         GDirichletBdy() = delete; 

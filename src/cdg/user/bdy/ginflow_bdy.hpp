@@ -49,6 +49,8 @@ public:
           GBOOL        buse_init=FALSE; // set via state initialzation method?
           GINT                   bdyid; // bdy id
           GTVector<GINT>        istate; // state indices to operate on
+          GTVector<GSIZET>     ibdyvol; // indir. inidices into comput volume
+
           std::function<void(Grid       &grid, 
                              StateInfo  &stinfo,
                              Time       &time,
