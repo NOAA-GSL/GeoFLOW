@@ -28,6 +28,8 @@ public:
         using Types        = TypePack;
 	using State        = typename Types::State;
 	using StateInfo    = typename Types::StateInfo; // May contain time, time index, var name etc
+	using IBdyVol      = typename Types::IBdyVol;  
+	using TBdyVol      = typename Types::TBdyVol;  
 	using Grid         = typename Types::Grid;
 	using Ftype        = typename Types::Ftype;
         using Time         = typename Types::Time;
@@ -45,6 +47,22 @@ public:
 	~UpdateBdyBase() = default;
 	UpdateBdyBase& operator=(const UpdateBdyBase& I) = default;
 
+	/**
+	 * spec bdy conditions 
+	 *
+	 * @param[in]     sptree : property tree block for specification
+	 * @param[in]     grid   : grid object
+	 * @param[in]     bdyid  : bdy id
+	 * @param[in]     ibdy   : indirection array into volmume indicating bdy indices
+	 * @param[in,out] tbdy   : bdy types for each ibdy element
+	 */
+	bool spec   (PropertyTree &sptree,
+                     Grid         &grid, 
+                     int           bdyid, 
+                     IBdyVol      &ibdy, 
+                     TBdyvol      &tbdy){
+                        return this->spec_impl(sptree, grid, bdyid, ibdy, tbdy);
+                     }
 	/**
 	 * Update bdy conditions with state at t
 	 *
@@ -66,6 +84,12 @@ public:
 
 protected:
 
+	bool spec   (PropertyTree &sptree,
+                     Grid         &grid, 
+                     int           bdyid, 
+                     IBdyVol      &ibdy, 
+                     TBdyvol      &tbdy) = 0;
+                     
 	bool update_impl (
                      Grid      &grid, 
                      StateInfo &stinfo, 
