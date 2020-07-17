@@ -248,16 +248,7 @@ GSIZET GGrid::nfacedof()
 //**********************************************************************************
 GSIZET GGrid::nbdydof()
 {
-   // Use unique boundary indices to compute
-   // number bdy surface dof. This list, unlike element
-   // face indices, may conatin embedded booundary 
-   // surfaces too:
-   GSIZET nftot=0;
-   for ( auto j=0; j<gbdy_bdyface_.size(); j++ ) { // for each bdy face
-     nftot += igbdy_bdyface_[j].size();
-   }
-   
-   return nftot;
+   return igbdt_.size();;
 } // end of method nbdydof
 
 
@@ -767,7 +758,7 @@ void GGrid::do_normals()
   }
   
   // Set domain boundary node normals:
-  do_bdy_normals(dXdXi_, igbdy_bdyface_, bdyNormals_, idepComp_);
+  do_bdy_normals(dXdXi_, igbdy_bdyface__, bdyNormals_, idepComp_);
    
 } // end of method do_normals
 
@@ -1134,10 +1125,13 @@ void GGrid::init_bc_info()
 {
   GBOOL                        bret;
   GSIZET                       ibeg, iend; // beg, end indices for global array
+  GBdyType                     btype;
+  GTVector<GTVector<GBdyType>> igbdyt_bdyface;
+
 
   // Find boundary indices & types from config file 
   // specification, for _each_ natural/canonical domain face:
-  config_bdy(ptree_, igbdy_bdyface_, igbdyt_bdyface_);
+  config_bdy(ptree_, igbdy_bdyface_, igbdyt_bdyface);
 
   // Flatten bdy index indirection array:
   GSIZET      nind=0, nw=0;
@@ -1164,21 +1158,21 @@ void GGrid::init_bc_info()
   // defining bdys, and to which index in bdy normal vectors
   // a given bdy node corresponds:
   n = 0; // cycle over all bdy nodes
-  igbdy_binned_.resize(gbdy_bdyface_.size();
-  ilbdy_binned_.resize(gbdy_bdyface_.size();
-  for ( auto k=0; k<gbdy_bdyface_.size(); k++ ) { // cycle over canonical bdy face
-    nbdy = igbdyt_bdyface_[k].size();
+  igbdy_binned_.resize(igbdy_bdyface_.size();
+//ilbdy_binned_.resize(igbdy_bdyface_.size();
+  for ( auto k=0; k<igbdy_bdyface_.size(); k++ ) { // cycle over canonical bdy face
+    nbdy = igbdyt_bdyface[k].size();
     igbdy_binned_ [k].resize(GBDY_MAX);
-    ilbdy_binned_ [k].resize(GBDY_MAX); // index into bdy arrays for each bdy type
+//  ilbdy_binned_ [k].resize(GBDY_MAX); // index into bdy arrays for each bdy type
     for ( auto j=0; j<GBDY_MAX; j++ ) { // cycle over each bc type
       itype = static_cast<GBdyType>(j);
-      val  = igbdyt_bdyface_[k][itype];
-      nbdy = igbdyt_bdyface_[k].multiplicity(val, ind, nind);
-      igbdy_binned[k][j].resize(nbdy);
-      ilbdy_binned[k][j].resize(nbdy);
+      val  = igbdyt_bdyface[k][itype];
+      nbdy = igbdyt_bdyface[k].multiplicity(val, ind, nind);
+      igbdy_binned_[k][j].resize(nbdy);
+//    ilbdy_binned_[k][j].resize(nbdy);
       for ( auto i=0; i<nbdy; i++ ) { // assign comp. volume index
-        igbdy_binned[k][j][i] = igbdy_bdyface_[k][j][ind[i]];
-        ilbdy_binned_  [k][j] = n;     
+        igbdy_binned_[k][j][i] = igbdy_bdyface_[k][j][ind[i]];
+//      ilbdy_binned_[k][j]    = n;     
         n++;
       }
     } // end, bdy cond type loop
@@ -1188,11 +1182,15 @@ void GGrid::init_bc_info()
   // Compute mask matrix from bdy vector:
   mask_.resize(ndof()); 
   mask_ = 1.0;
-  for ( auto j=0; j<igbdy_binned_[GBDY_DIRICHLET].size(); j++ ) {
-    mask_[igbdy_binned_[GBDY_DIRICHLET][j]] = 0.0;
-  }
-  for ( auto j=0; j<igbdy_binned_[GBDY_INFLOW].size(); j++ ) {
-    mask_[igbdy_binned_[GBDY_INFLOW][j]] = 0.0;
+  for ( auto k=0; k<igbdy_binned_.size(); k++ ) {
+    for ( auto j=0; j<GBDY_MAX; j++ ) {
+      btype = std::static_cast<BdyType>(mbdy);
+      if ( btype != GBDY_NONE && btype != GBDY_PERIODIC ) {
+        for ( auto i=0; i<igbdy_binned_[k][j].size(); i++ ) {
+          mask_[igbdy_binned_[k][j][i]] = 0.0;
+        }
+      }
+    }
   }
 
 

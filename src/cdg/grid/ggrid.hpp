@@ -69,7 +69,7 @@ struct CGTypePack { // define terrain typepack
 
 typename UpdateBase          = UpdateBdyBase<BdyTypePack>;
 typename UpdateBasePtr       = std::shared_prt<UpdateBase>;
-typename BdyUpdateList      = GTVector<GTVector<UpdateBasePtr>>;
+typename BdyUpdateList       = GTVector<GTVector<UpdateBasePtr>>;
 
 class GMass;
 
@@ -177,8 +177,10 @@ virtual void                 print(const GString &filename){}          // print 
                             &gieface() { return gieface_;}             // elem face indices into glob u for all elem faces
         BinnedBdyIndex
                             &igbdy_binned() { return igbdy_binned_;}   // global dom bdy indices binned into GBdyType
+#if 0
         BinnedBdyIndex
                             &ilbdy_binned() { return ilbdy_binned_;}   // indices into bdy arrays binned into GBdyType
+#endif
         GTVector<GSIZET>
                             &igbdy() { return igbdy_;}                 // global dom bdy indices into u
         GTVector<GTVector<GFTYPE>>
@@ -246,9 +248,9 @@ virtual void                        do_bdy_normals(GTMatrix<GTVector<GFTYPE>>
         GTVector<GTVector<GFTYPE>>  bdyNormals_;    // normal to surface at each bdy node point (2d & 3d), global
         GTVector<GINT>              idepComp_;      // dependent component index at each bdy point
         GTVector<GTVector<GSIZET>>  igbdy_binned_;  // index into global field indicating a domain bdy--by type
-        GTVector<GTVector<GSIZET>>  ilbdy_binned_;  // index into bdy arrays--by type
-       GTVector<GTVector<GSIZET>>   igbdy_bdyface_; // volumbe index for each bdy node on each face
-       GTVector<GTVector<GBdyType>> igbdyt_bdyface_; // bdy type for each igbdt_bdyface_
+//      GTVector<GTVector<GSIZET>>  ilbdy_binned_;  // index into bdy arrays--by type
+//      GTVector<GTVector<GSIZET>>  igbdy_bdyface_;// volumbe index for each bdy node on each face
+        GTVector<GTVector<GBdyType>> igbdyt_bdyface_;// bdy type for each igbdt_bdyface_
         GTVector<GSIZET>            igbdy_;         // index into global field indicating a domain bdy
         BdyUpdateList               bdy_update_list_;
                                                     // bdy update class list
