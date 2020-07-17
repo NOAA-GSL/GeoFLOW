@@ -12,6 +12,35 @@ namespace geoflow
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD : append
+// DESC   : Appends add vector to base vector, modifying base
+// ARGS   : 
+//          base   : input vector to be modified
+//          add    : vector to append to base
+// RETURNS: none.
+//************************************************************************************
+template<typename T>
+void append(GTVector<T> &base, GTVector<T> &add)
+{
+  GSIZET sznew;
+  GTVector<T> tmp(base.size());
+
+  sznew = base.size() + add.size();
+  for ( auto i=0; i<base.size(); i++ ) {
+    tmp[i] = base[i];
+  }
+  for ( auto i=base.size(); i<sznew; i++ ) {
+    tmp[i] = add[i-base.size()];
+  }
+
+  base.resize(sznew);
+  base = tmp;
+
+
+} // end, unique method
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD : unique
 // DESC   : Finds indices of unique variables in input vector
 // ARGS   : 
@@ -28,10 +57,10 @@ void unique(GTVector<T> &vec, GSIZET ibeg, GSIZET iend, GTVector<GSIZET> &iuniqu
 {
   GSIZET n=0;
   T      val;
-  GTVector<GSIZET> tmp(this->size());
+  GTVector<GSIZET> tmp(vec.size());
 
-  for ( auto i=this->gindex_.beg()+ibeg; i<this->gindex_.beg()+ibeg+n && i<=this->gindex_.end(); i+=this->gindex_.stride()+is-1 ) {
-    val = (*this)[i];
+  for ( auto i=ibeg; i<iend+1; i+=vec.gindex_.stride() ) {
+    val = vec[i];
     if ( !iunique.containsn(val,n) ) {
       tmp[n] = val;
       n++;

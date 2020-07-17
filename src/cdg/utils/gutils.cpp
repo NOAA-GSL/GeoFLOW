@@ -68,6 +68,67 @@ GBOOL file_empty(GString sfile)
 
   return bret;
 
+
+} // end, method file_empty
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : get_bdy_block
+// DESC   : Get bdy config block info
+// ARGS   : sptree : prop tree for the block
+//          stblock: stBdyBlock containing return info
+// RETURNS: GBOOL
+//**********************************************************************************
+GBOOL get_bdy_block(const PropertyTree &sptree, stBdyBlock &stblock)
+{
+
+  GBOOL                bret=TRUE;
+  GString              sconf;
+  std::vector<GString> svec;
+  std::vector<std::vector<GString>> 
+                       ivecvec;
+  
+  // Clear out structure data:
+  stblock.istate.clear();
+  stblock.tbdy  .clear();
+  stblock.config_method.clear();
+  stblock.inflow_method.clear();
+
+  // Get bdy block data:
+  
+  if ( !sptree.isArray<GString>("base_type") ){
+    cout << "GUtils::get_bdy_block: base_type array is missing" << endl;
+    assert(FALSE); 
+  }
+  if ( !sptree.isArray<GINT>("istate") ){
+    cout << "GUtils::get_bdy_block: istate array is missing" << endl;
+    assert(FALSE); 
+  }
+  svec = sptree.getArray<GString>("base_type");
+  ivecvec = sptree.getArray<std::vector<std::vector<GINT>>>("istate");
+  
+  if ( svec.size() != ivecvec.size() ) {
+    cout << "GUtils::get_bdy_block: istate and base_type array sizes not equal" << endl;
+    assert(FALSE); 
+  }
+
+  stblock.tbdy.resize(svec.size());
+  sfor ( auto j=0; j<svec.size(); j++ ) {
+    stblock.tbdy[j] = geoflow::str2bdytype(svec[j]);
+  }
+
+  stblock.istate.resize(svec.size());
+  for ( j=0; j<svec.size(); j++ ) {
+    stblock.istate[j].resize(ivecvec[j].size());
+    stblock.istate[j] = ivecvec[j];
+  }
+
+  stblock.config_method = sptree.getValue<GString>("config_method", "");
+  stblock.inflow_method = sptree.getValue<GString>("inflow_method", "");
+
+  return bret;
+
 } // end, method file_empty
 
 
