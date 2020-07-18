@@ -28,18 +28,16 @@ template<typename TypePack>
 class G0FluxBdy : public UpdateBdyBase<TypePack>
 {
 public:
-        using Interface  = UpdateBdyBaseBase<TypePack>;
-        using Base       = Interface;
-        using State      = typename Interface::State;
-        using Grid       = typename Interface::Grid;
-        using Ftype      = typename Interface::Value;
-        using Time       = typename Interface::Time;
-        using CompDesc   = typename Interface::CompDesc;
+        using Types      = UpdateBdyBase<TypePack>;
+        using Base       = Types;
+        using State      = typename Types::State;
+        using Grid       = typename Types::Grid;
+        using Ftype      = typename Types::Value;
+        using Time       = typename Types::Time;
+        using StateInfo  = typename Types::StateInfo;
 
         static_assert(std::is_same<State,GTVector<GTVector<Ftype>*>>::value,
                "State is of incorrect type");
-        static_assert(std::is_same<Derivative,GTVector<GTVector<Ftype>*>>::value,
-               "Derivative is of incorrect type");
         static_assert(std::is_same<Grid,GGrid>::value,
                "Grid is of incorrect type");
 
@@ -52,7 +50,7 @@ public:
         };
 
         G0FluxBdy() = delete; 
-        G0FluxBdy(G0FluxBdy<TypePack>::Traits &traits);
+        G0FluxBdy(typename G0FluxBdy<Types>::Traits &traits);
        ~G0FluxBdy();
         G0FluxBdy(const G0FluxBdy &bu) = default;
         G0FluxBdy &operator=(const G0FluxBdy &bu) = default;

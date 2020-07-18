@@ -33,16 +33,10 @@ public:
 	using Size         = typename Types::Size;
 
       
-	UpdateBdyBase() = delete;
-
-	/**
-	 * Constructor to initialize everything needed to do IO
-	 *
-	 */
-	UpdateBdyBase();
-	UpdateBdyBase(const UpdateBdyBase& I) = default;
-	~UpdateBdyBase() = default;
-	UpdateBdyBase& operator=(const UpdateBdyBase& I) = default;
+	NullUpdateBdy() = delete;
+	NullUpdateBdy(const NullUpdateBdy& I) = default;
+	~NullUpdateBdy() = default;
+	NullUpdateBdy& operator=(const NullUpdateBdy& I) = default;
 
 	/**
 	 * Update bdy conditions with state at t

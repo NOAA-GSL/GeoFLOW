@@ -170,15 +170,15 @@ GBOOL GInitStateFactory<EquationType>::set_by_comp(const PropertyTree& ptree, GG
         for ( GINT i=0; i<nvar; i++ ) comp[i] = u[ivar[i]];
         bret = doinitdt(ptree, sinit, grid, stinfo, time, utmp, ub, comp);
         break;
-      case GSC_DENSITY1:
-        sinit = vtree.getValue<GString>("initd1");
+      case GSC_MASSFRAC:
+        sinit = vtree.getValue<GString>("initmassfrac");
         nvar  = icomptype->contains(itype, ivar, mvar);
         comp.resize(nvar);
         for ( GINT i=0; i<nvar; i++ ) comp[i] = u[ivar[i]];
         bret = doinitd1(ptree, sinit, grid, stinfo, time, utmp, ub, comp);
         break;
-      case GSC_DENSITY2:
-        sinit = vtree.getValue<GString>("initd2");
+      case GSC_ENERGY:
+        sinit = vtree.getValue<GString>("inite");
         nvar  = icomptype->contains(itype, ivar, mvar);
         comp.resize(nvar);
         for ( GINT i=0; i<nvar; i++ ) comp[i] = u[ivar[i]];

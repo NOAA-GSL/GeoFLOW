@@ -16,7 +16,6 @@
 #include "gtypes.h"
 #include "gstateinfo.hpp"
 #include "gtvector.hpp"
-#include "ggrid.hpp"
 #include "gcomm.hpp"
 #include "gutils.hpp"
 
@@ -26,6 +25,8 @@ using namespace geoflow::tbox;
 typedef GFTYPE                      Time;
 typedef GTVector<GTVector<GFTYPE>*> State;
 typedef GStateInfo                  StateInfo;
+
+class GGrid;
 
 
 namespace ginitstate

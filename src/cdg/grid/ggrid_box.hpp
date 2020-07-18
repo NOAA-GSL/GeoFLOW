@@ -25,12 +25,15 @@
 
 typedef GTMatrix<GFTYPE> GFTMatrix;
 
+using namespace geoflow::pdeint;
+using namespace std;
+
 class GGridBox : public GGrid
 {
 
 public:
-        using              GGrid::faceNormals_;
-        using              GGrid::bdyNormals_;
+//      using              GGrid::faceNormals_;
+//      using              GGrid::bdyNormals_;
 
         // Box grid traits:
         struct Traits {

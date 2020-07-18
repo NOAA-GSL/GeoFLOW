@@ -27,18 +27,16 @@ template<typename TypePack>
 class GSpongeBdy : public UpdateBdyBase<TypePack>
 {
 public:
-        using Interface  = UpdateBdyBaseBase<TypePack>;
-        using Base       = Interface;
-        using State      = typename Interface::State;
-        using Grid       = typename Interface::Grid;
-        using Ftype      = typename Interface::Value;
-        using Time       = typename Interface::Time;
-        using CompDesc   = typename Interface::CompDesc;
+        using Types      = UpdateBdyBase<TypePack>;
+        using Base       = Types;
+        using State      = typename Types::State;
+        using Grid       = typename Types::Grid;
+        using Ftype      = typename Types::Value;
+        using Time       = typename Types::Time;
+        using StateInfo  = typename Types::StateInfo;
 
         static_assert(std::is_same<State,GTVector<GTVector<Ftype>*>>::value,
                "State is of incorrect type");
-        static_assert(std::is_same<Derivative,GTVector<GTVector<Ftype>*>>::value,
-               "Derivative is of incorrect type");
         static_assert(std::is_same<Grid,GGrid>::value,
                "Grid is of incorrect type");
 
@@ -59,7 +57,7 @@ public:
         };
 
         GSpongeBdy() = delete; 
-        GSpongeBdy(GSpongeBdy<TypePack>::Traits &traits);
+        GSpongeBdy(typename GSpongeBdy<Types>::Traits &traits);
        ~GSpongeBdy();
         GSpongeBdy(const GSpongeBdy &bu) = default;
         GSpongeBdy &operator=(const GSpongeBdy &bu) = default;

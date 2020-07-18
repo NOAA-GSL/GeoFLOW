@@ -22,6 +22,7 @@
 #include "gtpoint.hpp"
 #include "gutils.hpp"
 
+using namespace geoflow::tbox;
 using namespace std;
 
 //**********************************************************************************
@@ -876,7 +877,7 @@ void GGridIcos::print(const GString &filename, GCOORDSYST icoord)
 //          igbdyt: bdy type ids for each index in igbdy. Allocated here.
 // RETURNS: none.
 //**********************************************************************************
-void GGridIcos::config_bdy(const PropertyTree &ptree, 
+void GGridIcos::config_bdy(const geoflow::tbox::PropertyTree &ptree, 
                            GTVector<GTVector<GSIZET>> &igbdy, 
                            GTVector<GTVector<GBdyType>> &igbdyt)
 {

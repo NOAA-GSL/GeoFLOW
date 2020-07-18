@@ -15,11 +15,11 @@
 // DESC   : 
 // RETURNS: none
 //**********************************************************************************
-template<typename TypePack>
-GOutflowBdyBdy<TypePack>::GOutflowBdyBdy(GOutflowBdyBdy<TypePack>::Traits &traits) :
-UpdateBdyBase<TypePack>(),
+template<typename Types>
+GOutflowBdy<Types>::GOutflowBdy(typename GOutflowBdy<Types>::Traits &traits) :
+UpdateBdyBase<Types>(),
+bcomputed_               (FALSE),
 traits_                 (traits)
-bcomputed_               (FALSE)
 {
 
   assert(FALSE && "Not yet implemented");
@@ -34,8 +34,8 @@ bcomputed_               (FALSE)
 // ARGS   : none
 // RETURNS: none
 //**********************************************************************************
-template<typename TypePack>
-GOutflowBdyBdy<TypePack>::~GOutflowBdyBdy()
+template<typename Types>
+GOutflowBdy<Types>::~GOutflowBdy()
 {
 } // end, destructor
 
@@ -53,8 +53,8 @@ GOutflowBdyBdy<TypePack>::~GOutflowBdyBdy()
 //          ub    : bdy vector
 // RETURNS: none.
 //**********************************************************************************
-template<typename TypePack>
-GBOOL GOutflowBdyBdy<TypePack>::update_impl(
+template<typename Types>
+GBOOL GOutflowBdy<Types>::update_impl(
                               Grid      &grid,
                               StateInfo &stinfo,
                               Time      &time,
@@ -62,20 +62,21 @@ GBOOL GOutflowBdyBdy<TypePack>::update_impl(
                               State     &u,
                               State     &ub)
 {
-   GString    serr = "GOutflowBdyBdy<TypePack>::update_impl: ";
-   GINT       idstate, ind;
+   GString    serr = "GOutflowBdy<Types>::update_impl: ";
+   GINT       idstate;
+   GSIZET     ind;
 
-  GTVector<GTVector<GSIZET>> *igbdy = &traits_.ibdyvol;
+  GTVector<GSIZET> *igbdy = &traits_.ibdyvol;
 
   if ( traits_.compute_once && bcomputed_ ) return TRUE;
 
-  assert( u.size() == stinfo.compdesc.size() && "State info structure invalid");
+  assert( u.size() == stinfo.icomptype.size() && "State info structure invalid");
 
   // Set from State vector, u:
   for ( auto n=0; n<traits_.istate.size(); n++ ) { // apply to specified state comps
     idstate = traits_.istate[n];
-    if ( stinfo.compdesc[idstate] == GSC_PRESCRIBED
-      || stinfo.compdesc[idstate] == GSC_NONE ) continue;
+    if ( stinfo.icomptype[idstate] == GSC_PRESCRIBED
+      || stinfo.icomptype[idstate] == GSC_NONE ) continue;
     for ( auto j=0; j<igbdy->size()
        && ub[idstate] != NULLPTR; j++ ) {
       ind = (*igbdy)[j];

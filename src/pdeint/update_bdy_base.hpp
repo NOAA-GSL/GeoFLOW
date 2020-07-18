@@ -24,29 +24,23 @@ template<typename TypePack>
 class UpdateBdyBase {
 
 public:
-        enum GIOType        {GIO_POSIX=0, GIO_COLL}; // POSIX or collective
         using Types        = TypePack;
 	using State        = typename Types::State;
 	using StateInfo    = typename Types::StateInfo; // May contain time, time index, var name etc
-	using IBdyVol      = typename Types::IBdyVol;  
-	using TBdyVol      = typename Types::TBdyVol;  
 	using Grid         = typename Types::Grid;
 	using Ftype        = typename Types::Ftype;
         using Time         = typename Types::Time;
 	using Size         = typename Types::Size;
+	using IBdyVol      = typename Types::IBdyVol;
+	using TBdyVol      = typename Types::TBdyVol;
 
       
 	UpdateBdyBase() = delete;
-
-	/**
-	 * Constructor to initialize everything needed to do IO
-	 *
-	 */
-	UpdateBdyBase();
 	UpdateBdyBase(const UpdateBdyBase& I) = default;
 	~UpdateBdyBase() = default;
 	UpdateBdyBase& operator=(const UpdateBdyBase& I) = default;
 
+#if 0
 	/**
 	 * spec bdy conditions 
 	 *
@@ -63,6 +57,9 @@ public:
                      TBdyvol      &tbdy){
                         return this->spec_impl(sptree, grid, bdyid, ibdy, tbdy);
                      }
+#endif
+
+
 	/**
 	 * Update bdy conditions with state at t
 	 *
@@ -84,11 +81,13 @@ public:
 
 protected:
 
+#if 0
 	virtual bool spec   (PropertyTree &sptree,
                      Grid         &grid, 
                      int           bdyid, 
                      IBdyVol      &ibdy, 
                      TBdyvol      &tbdy) { return true;}
+#endif
                      
 	virtual bool update_impl (
                      Grid      &grid, 

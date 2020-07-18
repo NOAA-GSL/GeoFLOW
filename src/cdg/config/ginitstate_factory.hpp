@@ -12,11 +12,11 @@
 #include "pdeint/equation_base.hpp"
 #include "gcomm.hpp"
 #include "gtvector.hpp"
+#include "ginitstate_direct_user.hpp"
+#include "ginitstate_comp.h"
 #include "ggrid.hpp"
 #include "ggrid_icos.hpp"
 #include "ggrid_box.hpp"
-#include "ginitstate_direct_user.hpp"
-#include "ginitstate_comp.h"
 
 using namespace geoflow::pdeint;
 using namespace std;

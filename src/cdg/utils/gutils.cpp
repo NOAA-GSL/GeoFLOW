@@ -2,11 +2,13 @@
 // Module       : gutils.cpp
 // Date         : 1/31/19 (DLR)
 // Description  : GeoFLOW utilities namespace
-// Copyright    : Copyright 2019. Colorado State University. All rights reserved
+// Copyright    : Copyright 2019. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
 #include "gutils.hpp"
 #include "gcomm.hpp"
+
+
 
 namespace geoflow
 {
@@ -80,7 +82,7 @@ GBOOL file_empty(GString sfile)
 //          stblock: stBdyBlock containing return info
 // RETURNS: GBOOL
 //**********************************************************************************
-GBOOL get_bdy_block(const PropertyTree &sptree, stBdyBlock &stblock)
+GBOOL get_bdy_block(const geoflow::tbox::PropertyTree &sptree, stBdyBlock &stblock)
 {
 
   GBOOL                bret=TRUE;

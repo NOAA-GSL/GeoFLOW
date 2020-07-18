@@ -20,10 +20,10 @@
 #include "gnbasis.hpp"
 #include "gelem_base.hpp"
 #include "gdd_base.hpp"
-#include "ggrid.hpp"
 #include "gshapefcn_linear.hpp"
 #include "gshapefcn_embed.hpp"
 #include "polygon.h"
+#include "ggrid.hpp"
 
 // GICOS_BASE refers to the refined, projected triangular
 //   'base' frame which are then partitioned into quad/hex elements
@@ -37,6 +37,9 @@ enum GCOORDSYST      {GICOS_CART, GICOS_LATLONG};
 
 typedef GTMatrix<GFTYPE> GFTMatrix;
 typedef GFTYPE GTICOS;
+
+using namespace geoflow::pdeint;
+using namespace std;
 
 class GGridIcos : public GGrid
 {
@@ -71,7 +74,7 @@ public:
                            &get_hmesh(){ return hmesh_;}                  // get complete hex  mesh
         void                print(const GString &filename, 
                             GCOORDSYST icoord=GICOS_LATLONG);             // print grid to file
-        void                config_bdy(const PropertyTree &ptree,
+        void                config_bdy(const geoflow::tbox::PropertyTree &ptree,
                                        GTVector<GSIZET> &igbdy,
                                        GTVector<GSIZET> &igbdyt);         // config dy cond
 
@@ -146,7 +149,7 @@ friend  std::ostream&       operator<<(std::ostream&, GGridIcos &);       // Out
                               GTVector<GTVector<GFTYPE>> &xnodes); // do 2d grid restart
          void               do_elems3d(GTMatrix<GINT> &p,
                               GTVector<GTVector<GFTYPE>> &xnodes); // do 3d grid restart
-         void               config_bdy(const PropertyTree &ptree,
+         void               config_bdy(const geoflow::tbox::PropertyTree &ptree,
                             GTVector<GTVector<GSIZET>>   &igbdy,
                             GTVector<GTVector<GBdyType>> &igbdyt); // configure bdy
          void               find_bdy_ind3d(GFTYPE radius, 

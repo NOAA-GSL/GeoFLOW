@@ -15,9 +15,9 @@
 // DESC   : 
 // RETURNS: none
 //**********************************************************************************
-template<typename TypePack>
-GDirichletBdy<TypePack>::GDirichletBdy(GDirichletBdy<TypePack>::Traits &traits) :
-UpdateBdyBase<TypePack>(),
+template<typename Types>
+GDirichletBdy<Types>::GDirichletBdy(typename GDirichletBdy<Types>::Traits &traits) :
+UpdateBdyBase<Types>(),
 bcomputed_               (FALSE),
 traits_                 (traits)
 {
@@ -35,8 +35,8 @@ traits_                 (traits)
 // ARGS   : none
 // RETURNS: none
 //**********************************************************************************
-template<typename TypePack>
-GDirichletBdy<TypePack>::~GDirichletBdy()
+template<typename Types>
+GDirichletBdy<Types>::~GDirichletBdy()
 {
 } // end, destructor
 
@@ -54,8 +54,8 @@ GDirichletBdy<TypePack>::~GDirichletBdy()
 //          ub    : bdy vector
 // RETURNS: none.
 //**********************************************************************************
-template<typename TypePack>
-GBOOL GDirichletBdy<TypePack>::update_impl(
+template<typename Types>
+GBOOL GDirichletBdy<Types>::update_impl(
                               Grid      &grid,
                               StateInfo &stinfo,
                               Time      &time,
@@ -63,20 +63,21 @@ GBOOL GDirichletBdy<TypePack>::update_impl(
                               State     &u,
                               State     &ub)
 {
-   GString    serr = "GDirichletBdy<TypePack>::update_impl: ";
-   GINT       idstate, ind;
+   GString    serr = "GDirichletBdy<Types>::update_impl: ";
+   GINT       idstate;
+   GSIZET     ind;
 
-  GTVector<GTVector<GSIZET>> *igbdy = &traits_.ibdyvol;
+  GTVector<GSIZET> *igbdy = &traits_.ibdyvol;
 
   if ( traits_.compute_once && bcomputed_ ) return TRUE;
 
 
   // Set boundary vector to corresp. value:
   for ( auto k=0; k<traits_.istate.size(); k++ ) { 
-    idstate = traits_.istate[n];
-    if ( stinfo.compdesc[idstate] == GSC_PRESCRIBED
-      || stinfo.compdesc[idstate] == GSC_NONE ) continue;
-    }
+    idstate = traits_.istate[k];
+    if ( stinfo.icomptype[idstate] == GSC_PRESCRIBED
+      || stinfo.icomptype[idstate] == GSC_NONE ) continue;
+    
     // Set from initialized State vector, 
     for ( auto j=0; j<igbdy->size()
        && ub[idstate] != NULLPTR; j++ ) {
@@ -85,7 +86,7 @@ GBOOL GDirichletBdy<TypePack>::update_impl(
       (*ub[idstate])[ind] = traits_.value[k];
     }
   }
-  bcomputed = TRUE;
+  bcomputed_ = TRUE;
 
   return TRUE;
 

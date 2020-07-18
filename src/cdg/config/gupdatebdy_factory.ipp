@@ -21,35 +21,32 @@
 //                   
 // RETURNS: none.
 //**********************************************************************************
-template<typename TypePack>
-typename UpdateBdyFactory<TypePack>::UpdateBdyBaseList
-GUpdateBdyFactory<TypePack>::build(const PropertyTree& ptree, GString &supdate, Grid &grid, const GINT id, GBdyType bdytype, GTVector<GINT> &istate, GTVector<GSIZET> &ibdy)
+template<typename Types>
+typename GUpdateBdyFactory<Types>::UpdateBdyBasePtr
+GUpdateBdyFactory<Types>::build(const PropertyTree& ptree, GString &supdate, Grid &grid, const GINT id, GBdyType bdytype, GTVector<GINT> &istate, GTVector<GSIZET> &ibdy)
 {
   GBOOL              bret = FALSE;
-  PropertyTree       sptree; // update block tree
   UpdateBdyBasePtr   base_ptr;
 
 
   if ( "none"         == supdate
     || ""             == supdate ) {
-    using UpdateImpl = NullUpdateBdy<TypesPack>
+    using UpdateImpl = NullUpdateBdy<Types>;
 
     // Allocate observer Implementation
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl());
 
     // Set back to base type
-    base_ptr = obs_impl;
-    list.push_back(base_ptr);
-    return list;
+    base_ptr = update_impl;
+    return base_ptr;
   }
 
   if ( !ptree.isPropertyTree(supdate) ) {
-    cout << "GUpdateBdyFactory<TypePack>::build: PropertyTree " << supdate << " not found" << endl;
+    cout << "GUpdateBdyFactory<Types>::build: PropertyTree " << supdate << " not found" << endl;
     assert(FALSE);
   }
-  sptree = ptree.getPropertyTree(supdate);
 
-  base_ptr = get_bdy_class(sptree, grid, id, bdytype, ibdy);
+  base_ptr = GUpdateBdyFactory<Types>::get_bdy_class(ptree, supdate, grid, id, bdytype, ibdy);
 
   return base_ptr;
 
@@ -66,9 +63,9 @@ GUpdateBdyFactory<TypePack>::build(const PropertyTree& ptree, GString &supdate, 
 //          id    : canonical bdy id
 // RETURNS: CallbackPtr for callback function
 //**********************************************************************************
-template<typename TypePack>
-typename UpdateBdyFactory<TypePack>::CallbackPtr
-GUpdateBdyFactory<TypePack>::get_inflow_callback(const GString& sname, const GINT id)
+template<typename Types>
+typename GUpdateBdyFactory<Types>::CallbackPtr
+GUpdateBdyFactory<Types>::get_inflow_callback(const GString& sname, const GINT id)
 {
   GBOOL              bret = FALSE;
   CallbackPtr        callback;
@@ -80,12 +77,14 @@ GUpdateBdyFactory<TypePack>::get_inflow_callback(const GString& sname, const GIN
   }
   if      ( "myinflow"     == sname ) {
     callback = 
-      [GInflowBdyMethods](Grid      &grid,
-                          StateInfo &stinfo,
-                          Time      &time,
-                          State     &utmp,
-                          State     &u,
-                          State     &ub){myinflow(grid, stinfo, time, id, utmp, u, ub);}; 
+      [](Grid      &grid,
+         StateInfo &stinfo,
+         Time      &time,
+         const GINT id,
+         State     &utmp,
+         State     &u,
+         State     &ub){GInflowBdyMethods::myinflow(grid, stinfo, time, id, utmp, u, ub);}; 
+  }
   else {
     assert(FALSE && "Specified inflow bdy update method unknown");
   }
@@ -99,7 +98,8 @@ GUpdateBdyFactory<TypePack>::get_inflow_callback(const GString& sname, const GIN
 //**********************************************************************************
 // METHOD : get_bdy_class
 // DESC   : get bdy class for specified bdy type
-// ARGS   : sptree  : bdy spec subtree
+// ARGS   : ptree   : main prop tree
+//          supdate : update block name
 //          grid    : grid object
 //          id      : canonical bdy id
 //          bdytype : bdy type triggering construction of class
@@ -109,23 +109,24 @@ GUpdateBdyFactory<TypePack>::get_inflow_callback(const GString& sname, const GIN
 //                   
 // RETURNS: none.
 //**********************************************************************************
-template<typename TypePack>
-typename UpdateBdyFactory<TypePack>::UpdateBasePtr
-GUpdateBdyFactory<TypePack>::get_bdy_class(const PropertyTree& sptree, Grid &grid, const GINT id, const GBdyType bdytype, GTVector<GINT> &istate, GTVector<GSIZET> &ibdy)
+template<typename Types>
+typename GUpdateBdyFactory<Types>::UpdateBdyBasePtr
+GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree& ptree, GString &supdate, Grid &grid, const GINT id, const GBdyType bdytype, GTVector<GINT> &istate, GTVector<GSIZET> &ibdy)
 {
   GINT               nstate;
   GString            sblock ;
-  UpdateBdyBasePtr   base_ptr;
   std::vector<Ftype> fvec;
+  UpdateBdyBasePtr   base_ptr;
+  PropertyTree       sptree; // update block tree
   
 
-  sstr = sptree.getValue<GString>("update_method");
   nstate = istate.size();
   
+  sptree = ptree.getPropertyTree(supdate);
 
   if       ( GBDY_DIRICHLET == bdytype ) {
-    using UpdateImpl = GDirichletBdy<TypesPack>
-    UpdateImpl::Traits traits;
+    using UpdateImpl = GDirichletBdy<Types>;
+    typename GDirichletBdy<Types>::Traits traits;
 
     traits.istate.resize(nstate); traits.istate = istate;
     assert(sptree.isArray<Ftype>("value") && "value array missing");
@@ -140,12 +141,12 @@ GUpdateBdyFactory<TypePack>::get_bdy_class(const PropertyTree& sptree, Grid &gri
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
 
     // Set back to base type
-    base_ptr = obs_impl;
+    base_ptr = update_impl;
     return base_ptr;
   }
   else if ( GBDY_INFLOW == bdytype ) {
-    using UpdateImpl = GInflowBdy<TypesPack>
-    UpdateImpl::Traits traits;
+    using UpdateImpl = GInflowBdy<Types>;
+    typename GInflowBdy<Types>::Traits traits;
 
     traits.istate.resize(nstate); traits.istate = istate;
     traits.bdyid = id;
@@ -153,20 +154,20 @@ GUpdateBdyFactory<TypePack>::get_bdy_class(const PropertyTree& sptree, Grid &gri
     if ( sptree.isValue<GBOOL>("compute_once") ) {
       traits.compute_once = sptree.getValue<GBOOL>("compute_once");
     }
-    assert( sptree.isValue<GBOOL>("use_init") && "use_init boolean missing") {
+    assert( sptree.isValue<GBOOL>("use_init") && "use_init boolean missing");
     traits.use_init = sptree.getValue<GBOOL>("use_init");
     if ( !traits.use_init ) {
       assert( sptree.isValue<GString>("inflow_method") 
-           && "inflow_method required if use_init==FALSE" ) 
+           && "inflow_method required if use_init==FALSE" ); 
       sblock = sptree.getValue<GString>("inflow_method");
-      traits.callback = get_inflow_callback(sblock, id);
+      traits.callback = GUpdateBdyFactory<Types>::get_inflow_callback(sblock, id);
     }
     // Allocate observer Implementation
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
   }
   else if ( GBDY_NOSLIP == bdytype ) {
-    using UpdateImpl = GNoSlipBdy<TypesPack>
-    UpdateImpl::Traits traits;
+    using UpdateImpl = GNoSlipBdy<Types>;
+    typename GNoSlipBdy<Types>::Traits traits;
 
     traits.istate.resize(nstate); traits.istate = istate;
     traits.bdyid  = id;
@@ -179,8 +180,8 @@ GUpdateBdyFactory<TypePack>::get_bdy_class(const PropertyTree& sptree, Grid &gri
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
   }
   else if ( GBDY_0FLUX == bdytype ) {
-    using UpdateImpl = G0FluxBdy<TypesPack>
-    UpdateImpl::Traits traits;
+    using UpdateImpl = G0FluxBdy<Types>;
+    typename G0FluxBdy<Types>::Traits traits;
 
     traits.istate.resize(nstate); traits.istate = istate;
     traits.bdyid  = id;
@@ -195,8 +196,8 @@ GUpdateBdyFactory<TypePack>::get_bdy_class(const PropertyTree& sptree, Grid &gri
   }
   else if ( GBDY_OUTFLOW == bdytype ) {
     assert(FALSE); // not available yet
-    using UpdateImpl = GOutflowBdy<TypesPack>
-    UpdateImpl::Traits traits;
+    using UpdateImpl = GOutflowBdy<Types>;
+    typename GOutflowBdy<Types>::Traits traits;
 
     traits.istate.resize(nstate); traits.istate = istate;
     traits.bdyid  = id;
@@ -209,8 +210,8 @@ GUpdateBdyFactory<TypePack>::get_bdy_class(const PropertyTree& sptree, Grid &gri
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
   }
   else if ( GBDY_SPONGE == bdytype ) {
-    using UpdateImpl = GSpongeBdy<TypesPack>
-    UpdateImpl::Traits traits;
+    using UpdateImpl = GSpongeBdy<Types>;
+    typename GSpongeBdy<Types>::Traits traits;
 
     traits.istate.resize(nstate); traits.istate = istate;
     traits.bdyid  = id;

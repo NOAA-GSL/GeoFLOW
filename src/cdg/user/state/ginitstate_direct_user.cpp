@@ -11,6 +11,8 @@
 //==================================================================================
 #include "gmtk.hpp"
 #include "ginitstate_direct_user.hpp"
+#include "ggrid_box.hpp"
+#include "ggrid_icos.hpp"
 
 
 namespace ginitstate {

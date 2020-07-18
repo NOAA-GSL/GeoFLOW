@@ -16,9 +16,9 @@
 // DESC   : 
 // RETURNS: none
 //**********************************************************************************
-template<typename TypePack>
-G0FluxBdy<TypePack>::G0FluxBdy(G0FluxBdy<TypePack>::Traits &traits) :
-UpdateBdyBase<TypePack>(),
+template<typename Types>
+G0FluxBdy<Types>::G0FluxBdy(typename G0FluxBdy<Types>::Traits &traits) :
+UpdateBdyBase<Types>(),
 bcomputed_               (FALSE),
 nstate_                      (0),
 traits_                 (traits)
@@ -39,8 +39,8 @@ traits_                 (traits)
 // ARGS   : none
 // RETURNS: none
 //**********************************************************************************
-template<typename TypePack>
-G0FluxBdy<TypePack>::~G0FluxBdy()
+template<typename Types>
+G0FluxBdy<Types>::~G0FluxBdy()
 {
 } // end, destructor
 
@@ -58,8 +58,8 @@ G0FluxBdy<TypePack>::~G0FluxBdy()
 //          ub    : bdy vector
 // RETURNS: none.
 //**********************************************************************************
-template<typename TypePack>
-GBOOL G0FluxBdy<TypePack>::update_impl(
+template<typename Types>
+GBOOL G0FluxBdy<Types>::update_impl(
                               Grid      &grid,
                               StateInfo &stinfo,
                               Time      &time,
@@ -67,19 +67,20 @@ GBOOL G0FluxBdy<TypePack>::update_impl(
                               State     &u,
                               State     &ub)
 {
-   GString    serr = "G0FluxBdy<TypePack>::update_impl: ";
+   GString    serr = "G0FluxBdy<Types>::update_impl: ";
    GBdyType   itype;
-   GINT       nid, ind, k;
-   GSIZET     il;
+   GINT       nid, k;
+   GSIZET     il, ind;
    Ftype      sum, xn;
    GTVector<GTVector<Ftype>>  *bdyNormals;
    GTVector<GINT>             *idepComp;
-   GTVector<GTVector<GSIZET>> *igbdy;
+   GTVector<GSIZET>           *igbdy;
 // GTVector<GTVector<GSIZET>> *ilbdy;
 
 
 
   if ( traits_.compute_once && bcomputed_ ) return TRUE;
+
 
 #if 0
   for ( auto j=0; j<traits_.istate.size(); j++ ) {
@@ -101,8 +102,8 @@ GBOOL G0FluxBdy<TypePack>::update_impl(
   igbdy      = &traits_.ibdy;
   ilbdy      = &grid_->ilbdy_binned()[traits_.bdyid];
   itype      = GBDY_0FLUX;
-  for ( auto j=0; j<(*igbdy)[i][itype].size() ) {
-    ind = (*igbdy)[i][itype][j];  // index into volume array
+  for ( auto j=0; j<igbdy->size() ) {
+    ind = (*igbdy)[i][j];         // index into volume array
 //  il  = (*ilbdy)[i][itype][j];  // index into bdy array (for normals, e.g.)
     nid = (*idep)[ind];           // dependent vector component
     xn  = (*bdyNormals)[nid][ind];// n_id == normal component for dependent vector comp
@@ -113,11 +114,11 @@ GBOOL G0FluxBdy<TypePack>::update_impl(
       // Set all comps here, then reset the dependent one:
       (*ub[k])[ind] = (*u[k])[ind]; 
     }
-//  (*ub[id])[ind] = ( sum + (*n)[id][il] * (*u[id])[ind] ) / xn;
-    (*u[id])[ind] = ( sum + (*n)[id][il] * (*u[id])[ind] ) / xn;
+//  (*ub[nid])[ind] = ( sum + (*n)[nid][il] * (*u[nid])[ind] ) / xn;
+    (*u[nid])[ind] = ( sum + (*n)[nid][il] * (*ua[nid])[ind] ) / xn;
   }
 
-  bcomputed = TRUE;
+  bcomputed_ = TRUE;
 
   return TRUE;
 

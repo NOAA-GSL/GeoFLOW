@@ -15,9 +15,9 @@
 // DESC   : 
 // RETURNS: none
 //**********************************************************************************
-template<typename TypePack>
-GFromInitBdy<TypePack>::GFromInitBdy(GFromInitBdy<TypePack>::Traits &traits) :
-UpdateBdyBase<TypePack>(),
+template<typename Types>
+GInflowBdy<Types>::GInflowBdy(typename GInflowBdy<Types>::Traits &traits) :
+UpdateBdyBase<Types>(),
 bcomputed_               (FALSE),
 traits_                 (traits)
 {
@@ -33,8 +33,8 @@ traits_                 (traits)
 // ARGS   : none
 // RETURNS: none
 //**********************************************************************************
-template<typename TypePack>
-GFromInitBdy<TypePack>::~GFromInitBdy()
+template<typename Types>
+GInflowBdy<Types>::~GInflowBdy()
 {
 } // end, destructor
 
@@ -52,8 +52,8 @@ GFromInitBdy<TypePack>::~GFromInitBdy()
 //          ub    : bdy vector
 // RETURNS: none.
 //**********************************************************************************
-template<typename TypePack>
-GBOOL GFromInitBdy<TypePack>::update_impl(
+template<typename Types>
+GBOOL GInflowBdy<Types>::update_impl(
                               Grid      &grid,
                               StateInfo &stinfo,
                               Time      &time,
@@ -61,7 +61,7 @@ GBOOL GFromInitBdy<TypePack>::update_impl(
                               State     &u,
                               State     &ub)
 {
-   GString    serr = "GFromInitBdy<TypePack>::update_impl: ";
+   GString    serr = "GInflowBdy<Types>::update_impl: ";
    GBOOL      bret;
 
    if ( traits_.buse_init ) {
@@ -90,8 +90,8 @@ GBOOL GFromInitBdy<TypePack>::update_impl(
 //          ub    : bdy vector
 // RETURNS: none.
 //**********************************************************************************
-template<typename TypePack>
-GBOOL GFromInitBdy<TypePack>::update_from_user(
+template<typename Types>
+GBOOL GInflowBdy<Types>::update_from_user(
                               Grid      &grid,
                               StateInfo &stinfo,
                               Time      &time,
@@ -99,13 +99,13 @@ GBOOL GFromInitBdy<TypePack>::update_from_user(
                               State     &u,
                               State     &ub)
 {
-  GString    serr = "GFromInitBdy<TypePack>::update_from_user: ";
+  GString    serr = "GInflowBdy<Types>::update_from_user: ";
   GBOOL      bret;
 
   assert(traits_.callback != NULLPTR);  
 
   bret = traits_.callback(grid, stinfo, time, utmp, u, ub);
-  bcomputed = bret;
+  bcomputed_ = bret;
 
   return bret;
 
@@ -126,8 +126,8 @@ GBOOL GFromInitBdy<TypePack>::update_from_user(
 //          ub    : bdy vector
 // RETURNS: none.
 //**********************************************************************************
-template<typename TypePack>
-GBOOL GFromInitBdy<TypePack>::update_from_init(
+template<typename Types>
+GBOOL GInflowBdy<Types>::update_from_init(
                               Grid      &grid,
                               StateInfo &stinfo,
                               Time      &time,
@@ -135,34 +135,34 @@ GBOOL GFromInitBdy<TypePack>::update_from_init(
                               State     &u,
                               State     &ub)
 {
-   GString    serr = "GFromInitBdy<TypePack>::update_from_init: ";
+   GString    serr = "GInflowBdy<Types>::update_from_init: ";
    GBOOL      bret;
    GINT       idstate, ind;
    State      tmp;
 
-  GTVector<GTVector<GSIZET>> *igbdy = &traits_.ibdyvol;
+  GTVector<GSIZET> *igbdy = &traits_.ibdyvol;
 
   if ( traits_.compute_once && bcomputed_ ) return TRUE;
 
-  assert( u.size() == stinfo.compdesc.size() && "State info structure invalid");
+  assert( u.size() == stinfo.icomptype.size() && "State info structure invalid");
 
   assert(utmp.size() >= u.size());
   if ( unew_.size() < u.size() ) {
-    unew_.resizem(u.size();
+    unew_.resizem(u.size());
     tmpnew_.resizem(utmp.size()-u.size());
   }
   for ( auto j=0; j<u.size(); j++ ) unew_ [j] = utmp[j];
   for ( auto j=0; j<utmp.size()-u.size(); j++ ) tmpnew_[j] = utmp[u.size()+j];
 
   // Call initialization method with utmp:
-  bret = GInitStateFactory<TypePack>::init(traits_.ptree, grid, stinfo, time, tmpnew_, ub, unew_);
+  bret = GInitStateFactory<Types>::init(traits_.ptree, grid, stinfo, time, tmpnew_, ub, unew_);
 
   // Set boundary vector with initialized state:
   for ( auto n=0; n<traits_.istate.size() && bret; n++ ) { 
     idstate = traits_.istate[n];
-    if ( stinfo.compdesc[idstate] == GSC_PRESCRIBED
-      || stinfo.compdesc[idstate] == GSC_NONE ) continue;
-    }
+    if ( stinfo.icomptype[idstate] == GSC_PRESCRIBED
+      || stinfo.icomptype[idstate] == GSC_NONE ) continue;
+    
     // Set from initialized State vector, 
     for ( auto j=0; j<igbdy->size()
        && ub[idstate] != NULLPTR; j++ ) {
@@ -171,9 +171,9 @@ GBOOL GFromInitBdy<TypePack>::update_from_init(
       (*u [idstate])[ind] = (*unew_[idstate])[ind];
     }
   }
-   bcomputed = bret;
+  bcomputed_ = bret;
 
-   return bret;
+  return bret;
 
 } // end of method update_from_init
 

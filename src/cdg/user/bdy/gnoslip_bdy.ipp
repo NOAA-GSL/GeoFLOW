@@ -16,9 +16,9 @@
 // DESC   : 
 // RETURNS: none
 //**********************************************************************************
-template<typename TypePack>
-GNoSlipBdy<TypePack>::GNoSlipBdy(GNoSlipBdy<TypePack>::Traits &traits) :
-UpdateBdyBase<TypePack>(),
+template<typename Types>
+GNoSlipBdy<Types>::GNoSlipBdy(typename GNoSlipBdy<Types>::Traits &traits) :
+UpdateBdyBase<Types>(),
 bcomputed_               (FALSE),
 nstate_                      (0),
 traits_                 (traits)
@@ -39,8 +39,8 @@ traits_                 (traits)
 // ARGS   : none
 // RETURNS: none
 //**********************************************************************************
-template<typename TypePack>
-GNoSlipBdy<TypePack>::~GNoSlipBdy()
+template<typename Types>
+GNoSlipBdy<Types>::~GNoSlipBdy()
 {
 } // end, destructor
 
@@ -58,8 +58,8 @@ GNoSlipBdy<TypePack>::~GNoSlipBdy()
 //          ub    : bdy vector
 // RETURNS: none.
 //**********************************************************************************
-template<typename TypePack>
-GBOOL GNoSlipBdy<TypePack>::update_impl(
+template<typename Types>
+GBOOL GNoSlipBdy<Types>::update_impl(
                               Grid      &grid,
                               StateInfo &stinfo,
                               Time      &time,
@@ -67,21 +67,22 @@ GBOOL GNoSlipBdy<TypePack>::update_impl(
                               State     &u,
                               State     &ub)
 {
-  GString    serr = "GNoSlipBdy<TypePack>::update_impl: ";
+  GString    serr = "GNoSlipBdy<Types>::update_impl: ";
 
-  GTVector<GTVector<GSIZET>> *igbdy = &traits_.ibdyvol;
+  GSIZET            ind;
+  GTVector<GSIZET> *igbdy = &traits_.ibdyvol;
 
   if ( traits_.compute_once && bcomputed_ ) return TRUE;
 
   for ( auto k=0; k<nstate_; k++ ) { // for each vector component
-    for ( auto j=0; j<igbdy->size() ) { // all bdy points
+    for ( auto j=0; j<igbdy->size(); j++ ) { // all bdy points
       ind = (*igbdy)[j]; // index into long vector array
 //    (*ub[k])[ind] = 0.0;
       (*u[k])[ind] = 0.0;
     }
   }
 
-  bcomputed = TRUE;
+  bcomputed_ = TRUE;
 
   return TRUE;
 

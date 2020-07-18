@@ -24,7 +24,6 @@
 #include "glinop.hpp"
 #include "ghelmholtz.hpp"
 #include "gcg.hpp"
-#include "gstateupdate.hpp"
 #include "gupdatebdy_factory.hpp"
 #include "tbox/property_tree.hpp"
 
@@ -33,13 +32,13 @@ using namespace geoflow::tbox;
 using namespace std;
 
 
-typename PrecondType         = GLinOp,
-typename State               = GTVector<GTVector<GFTYPE>*>,
-typename StateComp           = GTVector<GFTYPE>,
+typename PrecondType         = GLinOp;
+typename State               = GTVector<GTVector<GFTYPE>*>;
+typename StateComp           = GTVector<GFTYPE>;
 typename StateInfo           = GStateInfo;
-typename Grid                = GGrid,
-typename Value               = GFTYPE,
-typename Time                = GFTYPE,
+typename Grid                = GGrid;
+typename Value               = GFTYPE;
+typename Time                = GFTYPE;
 typename BinnedBdyIndex      = GTVector<GTVector<GTVector<GSIZET>>>;
 typename BinnedBdyType       = GTVector<GTVector<GTVector<GBdyType>>>;
 
@@ -52,6 +51,8 @@ struct BdyTypePack { // define bdy update typepack
         using Grid             = GGrid;
         using Value            = GFTYPE;
         using Time             = GFTYPE;
+        using IBdyVol          = GTVector<GSIZET>;
+        using TBdyVol          = GTVector<GBdyType>;
 };
 
 struct CGTypePack { // define terrain typepack
@@ -68,7 +69,7 @@ struct CGTypePack { // define terrain typepack
 };
 
 typename UpdateBase          = UpdateBdyBase<BdyTypePack>;
-typename UpdateBasePtr       = std::shared_prt<UpdateBase>;
+typename UpdateBasePtr       = std::shared_ptr<UpdateBase>;
 typename BdyUpdateList       = GTVector<GTVector<UpdateBasePtr>>;
 
 class GMass;

@@ -16,9 +16,9 @@
 #include <memory>
 #include <cmath>
 #include "gtvector.hpp"
-#include "ggrid.hpp"
 #include "ggfx.hpp"
 #include "pdeint/update_bdy_base.hpp"
+#include "ggrid.hpp"
 
 using namespace geoflow::pdeint;
 using namespace std;
@@ -27,33 +27,31 @@ template<typename TypePack>
 class GDirichletBdy : public UpdateBdyBase<TypePack>
 {
 public:
-        using Interface  = UpdateBdyBaseBase<TypePack>;
-        using Base       = Interface;
-        using State      = typename Interface::State;
-        using Grid       = typename Interface::Grid;
-        using Ftype      = typename Interface::Value;
-        using Time       = typename Interface::Time;
-        using CompDesc   = typename Interface::CompDesc;
+        using Types      = UpdateBdyBase<TypePack>;
+        using Base       = Types;
+        using State      = typename Types::State;
+        using Grid       = typename Types::Grid;
+        using Ftype      = typename Types::Value;
+        using Time       = typename Types::Time;
+        using StateInfo  = typename Types::StateInfo;
 
         static_assert(std::is_same<State,GTVector<GTVector<Ftype>*>>::value,
                "State is of incorrect type");
-        static_assert(std::is_same<Derivative,GTVector<GTVector<Ftype>*>>::value,
-               "Derivative is of incorrect type");
         static_assert(std::is_same<Grid,GGrid>::value,
                "Grid is of incorrect type");
 
         // GDirichletBdy solver traits:
         struct Traits {
-          GBOOL    compute_once=TRUE;     // compute bdy condition once?
+          GBOOL    compute_once=FALSE;     // compute bdy condition once?
           GINT             bdyid;    // bdy id
-          GTVector<FType>  value;    // Diriclet value for each istate 
+          GTVector<Ftype>  value;    // Diriclet value for each istate 
           GTVector<GINT>   istate;   // state indices to operate on
           GTVector<GSIZET> ibdyvol;  // indir. inidices into comput volume
 
         };
 
         GDirichletBdy() = delete; 
-        GDirichletBdy(GDirichletBdy<TypePack>::Traits &traits);
+        GDirichletBdy(typename GDirichletBdy<Types>::Traits &traits);
        ~GDirichletBdy();
         GDirichletBdy(const GDirichletBdy &bu) = default;
         GDirichletBdy &operator=(const GDirichletBdy &bu) = default;
