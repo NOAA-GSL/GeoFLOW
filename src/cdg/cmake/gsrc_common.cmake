@@ -33,9 +33,8 @@
                     ${GHOME}/sem/gadvect.cpp
     )
 
- set(CDG_USER_SRC   ${GHOME}/user/bdy/ginitbdy_user.cpp 
+ set(CDG_USER_SRC  
                     ${GHOME}/user/bdy/gspecbdy_user.cpp 
-                    ${GHOME}/user/bdy/gupdatebdy_user.cpp 
                     ${GHOME}/user/force/ginitfb.cpp 
                     ${GHOME}/user/force/ginitforce_direct_user.cpp 
                     ${GHOME}/user/force/ginitfps.cpp 
