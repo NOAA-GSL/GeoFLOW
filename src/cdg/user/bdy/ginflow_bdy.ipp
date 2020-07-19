@@ -64,7 +64,7 @@ GBOOL GInflowBdy<Types>::update_impl(
    GString    serr = "GInflowBdy<Types>::update_impl: ";
    GBOOL      bret;
 
-   if ( traits_.buse_init ) {
+   if ( traits_.use_init ) {
      bret = update_from_init(grid, stinfo, time, utmp, u, ub);
    }
    else {

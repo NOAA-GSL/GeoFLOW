@@ -27,8 +27,8 @@ template<typename TypePack>
 class GOutflowBdy : public UpdateBdyBase<TypePack>
 {
 public:
-        using Types      = UpdateBdyBase<TypePack>;
-        using State      = typename Types::State;
+        using Types      = TypePack;
+        using Base       = UpdateBdyBase<Types>;
         using Grid       = typename Types::Grid;
         using Ftype      = typename Types::Value;
         using Time       = typename Types::Time;

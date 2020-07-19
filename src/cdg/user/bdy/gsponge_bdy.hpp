@@ -29,8 +29,8 @@ template<typename TypePack>
 class GSpongeBdy : public UpdateBdyBase<TypePack>
 {
 public:
-        using Types      = UpdateBdyBase<TypePack>;
-        using Base       = Types;
+        using Types      = TypePack;
+        using Base       = UpdateBdyBase<Types>;
         using State      = typename Types::State;
         using Grid       = typename Types::Grid;
         using Ftype      = typename Types::Value;

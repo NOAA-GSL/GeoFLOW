@@ -29,8 +29,8 @@ template<typename TypePack>
 class GInflowBdy : public UpdateBdyBase<TypePack>
 {
 public:
-        using Types      = UpdateBdyBase<TypePack>;
-        using Base       = Types;
+        using Types      = TypePack;
+        using Base       = UpdateBdyBase<Types>;
         using State      = typename Types::State;
         using Grid       = typename Types::Grid;
         using Ftype      = typename Types::Value;
@@ -45,7 +45,7 @@ public:
         // GInflowBdy solver traits:
         struct Traits {
           GBOOL     compute_once=FALSE; // compute bdy cond once?
-          GBOOL        buse_init=FALSE; // set via state initialzation method?
+          GBOOL         use_init=FALSE; // set via state initialzation method?
           GINT                   bdyid; // bdy id
           GTVector<GINT>        istate; // state indices to operate on
           GTVector<GSIZET>     ibdyvol; // indir. inidices into comput volume

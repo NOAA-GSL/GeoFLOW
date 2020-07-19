@@ -27,16 +27,16 @@ template<typename TypePack>
 class GDirichletBdy : public UpdateBdyBase<TypePack>
 {
 public:
-        using Types      = UpdateBdyBase<TypePack>;
-        using Base       = Types;
+        using Types      = TypePack;
+        using Base       = UpdateBdyBase<Types>;
         using State      = typename Types::State;
         using Grid       = typename Types::Grid;
         using Ftype      = typename Types::Value;
         using Time       = typename Types::Time;
         using StateInfo  = typename Types::StateInfo;
 
-        static_assert(std::is_same<State,GTVector<GTVector<Ftype>*>>::value,
-               "State is of incorrect type");
+//      static_assert(std::is_same<State,GTVector<GTVector<GFTYPE>*>>::value,
+//             "State is of incorrect type");
 //      static_assert(std::is_same<Grid,GGrid>::value,
 //             "Grid is of incorrect type");
 

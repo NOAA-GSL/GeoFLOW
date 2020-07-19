@@ -34,11 +34,11 @@ class GUpdateBdyFactory
 {
   public:
         using Types            = TypePack;
-        using State            = typename TypePack::State;
-        using StateInfo        = typename TypePack::StateInfo;
-        using Grid             = typename TypePack::Grid;
-        using Ftype            = typename TypePack::Value;
-        using Time             = typename TypePack::Time;
+        using State            = typename Types::State;
+        using StateInfo        = typename Types::StateInfo;
+        using Grid             = typename Types::Grid;
+        using Ftype            = typename Types::Value;
+        using Time             = typename Types::Time;
         using UpdateBdyBase    = UpdateBdyBase<Types>;
         using UpdateBdyBasePtr = shared_ptr<UpdateBdyBase>;
         using CallbackPtr      = std::function<void(

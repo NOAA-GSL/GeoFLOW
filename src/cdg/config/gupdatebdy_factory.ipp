@@ -229,9 +229,8 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree& ptree, GString &supd
     assert(sptree.isArray<Ftype>("xstart") && "xstart array missing");
     traits.idir = sptree.getValue<Ftype>("xstart");
     
-    GINT            ndim;
     GTVector<Ftype> xmin, xmax;
-    geoflow::coord_dims(ptree, xmin, xmax, ndim);// get coord min/max from ptree
+    geoflow::coord_dims(ptree, xmin, xmax);// get coord min/max from ptree
 
     assert(sptree.isValue<GINT>("idir") && "idir value missing");
     traits.idir = sptree.getValue<GINT>("idir");

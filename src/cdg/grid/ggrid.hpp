@@ -32,24 +32,14 @@ using namespace geoflow::tbox;
 using namespace std;
 
 
-typedef GLinOp                                 PrecondType;
-typedef GTVector<GTVector<GFTYPE>*>            State;
-typedef GTVector<GFTYPE>                       StateComp;
-typedef GStateInfo                             StateInfo;
-typedef GGrid                                  grid;
-typedef GFTYPE                                 Value;
-typedef GFTYPE                                 Time;
-typedef GTVector<GTVector<GTVector<GSIZET>>>   BinnedBdyIndex;
-typedef GTVector<GTVector<GTVector<GBdyType>>> BinnedBdyType;
-
 
 struct BdyTypePack { // define bdy update typepack
-        using Types            = BdyTypePack;
         using State            = GTVector<GTVector<GFTYPE>*>;
         using StateComp        = GTVector<GFTYPE>;
         using StateInfo        = GStateInfo;
         using Grid             = GGrid;
         using Value            = GFTYPE;
+        using Ftype            = GFTYPE;
         using Time             = GFTYPE;
         using IBdyVol          = GTVector<GSIZET>;
         using TBdyVol          = GTVector<GBdyType>;
@@ -71,6 +61,16 @@ struct CGTypePack { // define terrain typepack
 typedef UpdateBdyBase<BdyTypePack> UpdateBase;
 typedef std::shared_ptr<UpdateBase> UpdateBasePtr;
 typedef GTVector<GTVector<UpdateBasePtr>> BdyUpdateList;
+
+typedef GLinOp                                 PrecondType;
+typedef GTVector<GTVector<GFTYPE>*>            State;
+typedef GTVector<GFTYPE>                       StateComp;
+typedef GStateInfo                             StateInfo;
+typedef GGrid                                  Grid;
+typedef GFTYPE                                 Value;
+typedef GFTYPE                                 Time;
+typedef GTVector<GTVector<GTVector<GSIZET>>>   BinnedBdyIndex;
+typedef GTVector<GTVector<GTVector<GBdyType>>> BinnedBdyType;
 
 typedef GTVector<GElem_base*> GElemList;
 typedef GFTYPE                Time;

@@ -29,12 +29,12 @@ public:
 	using StateInfo    = typename Types::StateInfo; // May contain time, time index, var name etc
 	using Grid         = typename Types::Grid;
 	using Ftype        = typename Types::Value;
-    using Time         = typename Types::Time;
+        using Time         = typename Types::Time;
 	using IBdyVol      = typename Types::IBdyVol;
 	using TBdyVol      = typename Types::TBdyVol;
 
       
-	UpdateBdyBase() = delete;
+	UpdateBdyBase() = default;
 	UpdateBdyBase(const UpdateBdyBase& I) = default;
 	~UpdateBdyBase() = default;
 	UpdateBdyBase& operator=(const UpdateBdyBase& I) = default;
