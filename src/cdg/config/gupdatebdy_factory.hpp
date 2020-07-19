@@ -11,6 +11,8 @@
 #include "gcomm.hpp"
 #include "gtvector.hpp"
 #include "ggrid.hpp"
+#include "ggrid_box.hpp"
+#include "ggrid_icos.hpp"
 #include "g0flux_bdy.hpp"
 #include "gdirichlet_bdy.hpp"
 #include "ginflow_bdy.hpp"

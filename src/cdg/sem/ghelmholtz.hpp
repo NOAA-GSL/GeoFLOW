@@ -20,8 +20,8 @@
 #define _GHELMHOLTZOP_HPP
 #include "gtvector.hpp"
 #include "gnbasis.hpp"
-#include "ggrid.hpp"
 #include "gmass.hpp"
+#include "ggrid.hpp"
 #include "glinop.hpp"
 
 class GHelmholtz: public GLinOp

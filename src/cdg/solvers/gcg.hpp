@@ -19,6 +19,7 @@
 #include "glinop.hpp"
 #include "gcomm.hpp"
 #include "ggfx.hpp"
+#include "gmtk.hpp"
 #include "pdeint/lin_solver_base.hpp"
 
 using namespace geoflow::pdeint;

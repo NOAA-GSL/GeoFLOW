@@ -22,6 +22,8 @@
 #include "polygon.h"
 #include "gtpoint.hpp"
 #include "ggrid.hpp"
+#include "gmtk.hpp"
+#include "gutils.hpp"
 
 typedef GTMatrix<GFTYPE> GFTMatrix;
 
@@ -54,7 +56,7 @@ public:
         void                set_basis(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b); // set element basis
         void                periodize();                                     // periodize coords, if allowed
         void                unperiodize();                                   // un-periodize coords, if allow
-        void                config_bdy(const PropertyTree &ptree,
+        void                config_bdy(const geoflow::tbox::PropertyTree &ptree,
                               GTVector<GTVector<GSIZET>>   &igbdy, 
                               GTVector<GTVector<GBdyType>> &igbdyt);         // config bdy
         void                do_bdy_normals  (

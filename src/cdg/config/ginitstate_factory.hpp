@@ -36,19 +36,19 @@ class GInitStateFactory
         using Time          = typename Equation::Time;
 
 
-	static GBOOL init(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &u);
+	static GBOOL init(const geoflow::tbox::PropertyTree& ptree, Grid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &u);
 
   private:
-	static GBOOL set_by_direct(const PropertyTree& ptree, GGrid &grid, StateInfo &stinfo,  Time &time, State &utmp, State &ub, State &u);
-	static GBOOL set_by_comp  (const PropertyTree& ptree, GGrid &grid, StateInfo &stinfo,  Time &time, State &utmp, State &ub, State &u);
+	static GBOOL set_by_direct(const PropertyTree& ptree, Grid &grid, StateInfo &stinfo,  Time &time, State &utmp, State &ub, State &u);
+	static GBOOL set_by_comp  (const PropertyTree& ptree, Grid &grid, StateInfo &stinfo,  Time &time, State &utmp, State &ub, State &u);
 
-        static GBOOL doinitv      (const PropertyTree &ptree, GString &sconfig,  GGrid &grid, StateInfo &stinfo,  Time &time, State &utmp, State &ub, State &u);
-        static GBOOL doinitb      (const PropertyTree &ptree, GString &sconfig,  GGrid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &u);
-        static GBOOL doinitdt     (const PropertyTree &ptree, GString &sconfig,  GGrid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &u);
-        static GBOOL doinitd1     (const PropertyTree &ptree, GString &sconfig,  GGrid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &u);
-        static GBOOL doinitd2     (const PropertyTree &ptree, GString &sconfig,  GGrid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &u);
-        static GBOOL doinittemp   (const PropertyTree &ptree, GString &sconfig,  GGrid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &u);
-        static GBOOL doinitc      (const PropertyTree &ptree, GString &sconfig,  GGrid &grid, StateInfo &stinfo,  Time &time, State &utmp, State &ub, State &u);
+        static GBOOL doinitv      (const PropertyTree &ptree, GString &sconfig,  Grid &grid, StateInfo &stinfo,  Time &time, State &utmp, State &ub, State &u);
+        static GBOOL doinitb      (const PropertyTree &ptree, GString &sconfig,  Grid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &u);
+        static GBOOL doinitdt     (const PropertyTree &ptree, GString &sconfig,  Grid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &u);
+        static GBOOL doinitmfrac  (const PropertyTree &ptree, GString &sconfig,  Grid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &u);
+        static GBOOL doinitenergy (const PropertyTree &ptree, GString &sconfig,  Grid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &u);
+        static GBOOL doinittemp   (const PropertyTree &ptree, GString &sconfig,  Grid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &u);
+        static GBOOL doinitc      (const PropertyTree &ptree, GString &sconfig,  Grid &grid, StateInfo &stinfo,  Time &time, State &utmp, State &ub, State &u);
 
 }; // end, class GInitStateFactory
 

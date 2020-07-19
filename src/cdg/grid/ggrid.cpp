@@ -1274,3 +1274,34 @@ void GGrid::add_terrain(const State &xb, State &utmp)
 } // end of method add_terrain
 
 
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : smooth
+// DESC   :
+//
+// DESC   : Computes a weighted average.
+//              Calculates:
+//                u <- DSS(M_L u) / DSS(M_L),
+//          where u is the field expressed in local format;
+//          M_L is the local mass matrix (unassembled);
+//          DSS is the application of Q Q^T, or the direct stiffness operator.
+// ARGS   :
+//          tmp  : tmp space
+//          op   : GGFX_OP operation
+//          u    : Locally expressed field to smooth
+// RETURNS: none.
+//************************************************************************************
+void GGrid::smooth(GGFX_OP op, GTVector<GFTYPE> &tmp, GTVector<GFTYPE> &u)
+{
+
+  tmp = u;
+
+  u.pointProd(*(this->massop().data()));
+  tmp = *(this->imassop().data());
+  this->ggfx_->doOp(tmp, op);  // DSS(mass_local)
+
+  u.pointProd(tmp);      // M_assembled u M_L
+
+} // end, smooth method
+
+

@@ -19,6 +19,7 @@
 #include "gindex.hpp"
 #include "cff_blas.h"
 #include "gcomm.hpp"
+#include "gmtk.hpp"
 
 #include <cstdlib>
 #include <limits>

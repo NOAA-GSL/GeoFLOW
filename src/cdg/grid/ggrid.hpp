@@ -25,6 +25,8 @@
 #include "ghelmholtz.hpp"
 #include "gcg.hpp"
 #include "gupdatebdy_factory.hpp"
+#include "gmtk.hpp"
+#include "gutils.hpp"
 #include "tbox/property_tree.hpp"
 
 
@@ -32,15 +34,15 @@ using namespace geoflow::tbox;
 using namespace std;
 
 
-typename PrecondType         = GLinOp;
-typename State               = GTVector<GTVector<GFTYPE>*>;
-typename StateComp           = GTVector<GFTYPE>;
-typename StateInfo           = GStateInfo;
-typename Grid                = GGrid;
-typename Value               = GFTYPE;
-typename Time                = GFTYPE;
-typename BinnedBdyIndex      = GTVector<GTVector<GTVector<GSIZET>>>;
-typename BinnedBdyType       = GTVector<GTVector<GTVector<GBdyType>>>;
+typedef GLinOp                                 PrecondType;
+typedef GTVector<GTVector<GFTYPE>*>            State;
+typedef GTVector<GFTYPE>                       StateComp;
+typedef GStateInfo                             StateInfo;
+typedef GGrid                                  grid;
+typedef GFTYPE                                 Value;
+typedef GFTYPE                                 Time;
+typedef GTVector<GTVector<GTVector<GSIZET>>>   BinnedBdyIndex;
+typedef GTVector<GTVector<GTVector<GBdyType>>> BinnedBdyType;
 
 
 struct BdyTypePack { // define bdy update typepack
@@ -68,15 +70,15 @@ struct CGTypePack { // define terrain typepack
         using ConnectivityOp   = GGFX<GFTYPE>;
 };
 
-typename UpdateBase          = UpdateBdyBase<BdyTypePack>;
-typename UpdateBasePtr       = std::shared_ptr<UpdateBase>;
-typename BdyUpdateList       = GTVector<GTVector<UpdateBasePtr>>;
-
-class GMass;
+typedef UpdateBdyBase<BdyTypePack> UpdateBase;
+typedef std::shared_ptr<UpdateBase> UpdateBasePtr;
+typedef GTVector<GTVector<UpdateBasePtr>> BdyUpdateList;
 
 typedef GTVector<GElem_base*> GElemList;
 typedef GFTYPE                Time;
 typedef GStateInfo            StateInfo;
+
+
 
 class GGrid 
 {
@@ -198,6 +200,9 @@ virtual void                 config_bdy(const PropertyTree &ptree,
                                { ggfx_ = &ggfx; }                      // set GGFX op    
         GTVector<GFTYPE>    &get_mask() { return mask_; }              // get mask
 
+        void                 smooth(GGFX_OP op, GTVector<GFTYPE> &tmp, 
+                                    GTVector<GFTYPE> &u);              // H1-smoothing operatrion     
+
 friend  std::ostream&        operator<<(std::ostream&, GGrid &);       // Output stream operator
  
 
@@ -248,8 +253,8 @@ virtual void                        do_bdy_normals(GTMatrix<GTVector<GFTYPE>>
         GTVector<GSIZET>            gieface_;       // index into global field indicating elem face node
         GTVector<GTVector<GFTYPE>>  bdyNormals_;    // normal to surface at each bdy node point (2d & 3d), global
         GTVector<GINT>              idepComp_;      // dependent component index at each bdy point
-        GTVector<GTVector<GSIZET>>  igbdy_binned_;  // index into global field indicating a domain bdy--by type
-//      GTVector<GTVector<GSIZET>>  ilbdy_binned_;  // index into bdy arrays--by type
+        BinnedBdyIndex              igbdy_binned_;  // index into global field indicating a domain bdy--by type
+//      BinnedBdyIndex              ilbdy_binned_;  // index into bdy arrays--by type
 //      GTVector<GTVector<GSIZET>>  igbdy_bdyface_;// volumbe index for each bdy node on each face
         GTVector<GTVector<GBdyType>> igbdyt_bdyface_;// bdy type for each igbdt_bdyface_
         GTVector<GSIZET>            igbdy_;         // index into global field indicating a domain bdy
