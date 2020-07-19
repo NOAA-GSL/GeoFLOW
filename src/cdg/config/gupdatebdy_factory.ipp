@@ -46,7 +46,7 @@ GUpdateBdyFactory<Types>::build(const PropertyTree& ptree, GString &supdate, Gri
     assert(FALSE);
   }
 
-  base_ptr = GUpdateBdyFactory<Types>::get_bdy_class(ptree, supdate, grid, id, bdytype, ibdy);
+  base_ptr = GUpdateBdyFactory<Types>::get_bdy_class(ptree, supdate, grid, id, bdytype, istate,  ibdy);
 
   return base_ptr;
 

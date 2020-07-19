@@ -32,7 +32,7 @@ public:
     using Time         = typename Types::Time;
 
       
-	NullUpdateBdy() = delete;
+	NullUpdateBdy();
 	NullUpdateBdy(const NullUpdateBdy& I) = default;
 	~NullUpdateBdy() = default;
 	NullUpdateBdy& operator=(const NullUpdateBdy& I) = default;
