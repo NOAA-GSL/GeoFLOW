@@ -75,41 +75,6 @@ void unique(GTVector<T> &vec, GSIZET ibeg, GSIZET iend, GTVector<GSIZET> &iuniqu
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : smooth
-// DESC   :
-//          
-// DESC   : Computes a weighted average.
-//              Calculates:
-//                u <- DSS(M_L u) / DSS(M_L),
-//          where u is the field expressed in local format;
-//          M_L is the local mass matrix (unassembled);
-//          DSS is the application of Q Q^T, or the direct stiffness operator.
-// ARGS   : 
-//          grid : GGrid object
-//          tmp  : tmp space 
-//          op   : GGFX_OP 
-//          u    : Locally expressed field to smooth
-// RETURNS: none.
-//************************************************************************************
-template<typename T>
-void smooth(GGrid &grid, GGFX_OP op, GTVector<T> &tmp, GTVector<T> &u)
-{
-  static_assert(std::is_same<T,GFTYPE>::value, "Incorrect type");
-
-  GGFX<T> *ggfx = &grid.get_ggfx();
-  tmp = u;
- 
-  u.pointProd(*(grid.massop().data()));
-  tmp = *(grid.imassop().data());
-  ggfx->doOp(tmp, op);  // DSS(mass_local)
-
-  u.pointProd(tmp);      // M_assembled u M_L
-
-} // end, smooth method
-
-
-//**********************************************************************************
-//**********************************************************************************
 // METHOD : coord_dims
 // DESC   : Gets and or computes coord dimensions from 
 //          prop tree
