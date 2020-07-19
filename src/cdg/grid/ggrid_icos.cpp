@@ -17,9 +17,10 @@
 #include <cmath>
 //#include "omp.h"  // Are we calling API functions ?
 #include "gspecbdy_factory.hpp"
-#include "gelem_base.hpp"
+#include "gupdatebdy_factory.hpp"
 #include "ggrid_icos.hpp"
 #include "gtpoint.hpp"
+#include "gmtk.hpp"
 #include "gutils.hpp"
 
 using namespace geoflow::tbox;
@@ -890,7 +891,7 @@ void GGridIcos::config_bdy(const geoflow::tbox::PropertyTree &ptree,
   std::vector<GString>  svec;
   GString            gname, sbdy, bdyclass;
   PropertyTree       bdytree, gridptree;
-  UpdateBdyBasePtr   base_ptr;
+  UpdateBasePtr      base_ptr;
   stBdyBlock         stblock;
 
   // Clear input arrays:
@@ -918,7 +919,7 @@ void GGridIcos::config_bdy(const geoflow::tbox::PropertyTree &ptree,
   rbdy[1] = radiuso_;
 
   igbdy.resize(2); // 2 canonical bdys
-  tgbdy.resize(2); // 2 canonical bdys
+  igbdyt.resize(2); // 2 canonical bdys
 
   // Get properties from the main prop tree. 
   // Note: bdys are configured by way of geometry's
@@ -932,34 +933,34 @@ void GGridIcos::config_bdy(const geoflow::tbox::PropertyTree &ptree,
     bdyclass     = bdytree.getValue<GString>("bdy_class", "uniform");
     find_bdy_ind3d(rbdy[j], itmp); 
     igbdy[j].resize(itmp.size()); igbdy[j] = itmp;
-    tgbdy[j].resize(itmp.size()); tgbdy[j] = GBDY_NONE;
+    igbdyt[j].resize(itmp.size()); igbdyt[j] = GBDY_NONE;
     if ( "uniform" == bdyclass ) { // uniform bdy conditions
       geoflow::get_bdy_block(bdytree, stblock);
       assert(!stblock.tbdy.contains(GBDY_PERIODIC) && "Invalid boundary condition");
       // May have different uniform bdys for different state comps:
       for ( auto k=0; k<stblock.tbdy.size(); k++ ) { 
-        base_ptr = GUpdateBdyFactory::build(ptree, sbdy, *grid_,  j, 
+        base_ptr = GUpdateBdyFactory<BdyTypePack>::build(ptree, sbdy, *this,  j, 
                                             stblock.tbdy[k], stblock.istate[k], itmp);
-        if ( stblock.tbdy[k] != GBDY_NONE ) tbdy[j] = stblock.tbdy[k];
+        if ( stblock.tbdy[k] != GBDY_NONE ) igbdyt[j] = stblock.tbdy[k];
         bdy_update_list_[j].push_back(base_ptr);
       }
     }
     else if ( "mixed" == bdyclass ) { // mixed bdy conditions
-      assert( bdytree.isArray<GString>("bdy_blocks") && "No bdy_blocks specified") 
+      assert( bdytree.isArray<GString>("bdy_blocks") && "No bdy_blocks specified"); 
       svec = bdytree.getArray<GString>("bdy_blocks");
       for ( auto i=0; i<svec.size(); i++ ) {
-        sbdytree = ptree.getPropertyTree(svec[i]);
+        bdytree = ptree.getPropertyTree(svec[i]);
         geoflow::get_bdy_block(bdytree, stblock);
         assert(!stblock.tbdy.contains(GBDY_PERIODIC) && "Invalid boundary condition");
-        SpecBdyFactory::dospec(bdytree, *grid_, j, itmp);
+        GSpecBdyFactory::dospec(bdytree, *this, j, itmp);
         for ( auto k=0; k<svec.size(); k++ ) { // for each sub-block
-          base_ptr = GUpdateBdyFactory::build(ptree, svec[k], *grid_,  j, 
+          base_ptr = GUpdateBdyFactory<BdyTypePack>::build(ptree, svec[k], *this, j, 
                                               stblock.tbdy[k], stblock.istate[k], itmp);
           
-          for ( auto m=0; m<tmp.size(); m++ ) {
-            if ( igbdy[j].contains(itmp[m]) ) tgbdy[j][m] = stblock.tbdy[k];
+          for ( auto m=0; m<itmp.size(); m++ ) {
+            if ( igbdy[j].contains(itmp[m]) ) igbdyt[j][m] = stblock.tbdy[k];
           }
-          if ( stblock.tbdy[k] != GBDY_NONE ) tbdy[j] = stblock.tbdy[k];
+          if ( stblock.tbdy[k] != GBDY_NONE ) igbdyt[j] = stblock.tbdy[k];
           bdy_update_list_[j].push_back(base_ptr);
         }
       } 

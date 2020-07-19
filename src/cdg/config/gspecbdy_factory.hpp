@@ -25,7 +25,7 @@ class GSpecBdyFactory
   public:
 
 
-        static GBOOL dospec(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, const GINT id,  GTVector<GSIZET> &ibdy, GTVector<GBdyType> &tbdy);
+        static GBOOL dospec(const geoflow::tbox::PropertyTree& ptree, GGrid &grid, const GINT id,  GTVector<GSIZET> &ibdy);
 
 //private:
 }; // class GSpecBdyFactory

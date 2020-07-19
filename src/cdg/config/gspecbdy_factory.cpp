@@ -17,24 +17,23 @@
 //          grid  : GGrid object
 //          id    : can serve as boundary id (which canonical bdy)
 //          ibdy  : indirection array into state indicating global bdy
-//          tbdy  : array of size ibdy.size giving bdy condition type, returned
 // RETURNS: none.
 //**********************************************************************************
-GBOOL GSpecBdyFactory::dospec(const geoflow::tbox::PropertyTree& sptree, GGrid &grid, const GINT id, GTVector<GSIZET> &ibdy, GTVector<GBdyType> &tbdy)
+GBOOL GSpecBdyFactory::dospec(const geoflow::tbox::PropertyTree& sptree, GGrid &grid, const GINT id, GTVector<GSIZET> &ibdy)
 {
   GBOOL         bret    = FALSE;
   GSIZET        nbdy;
   GString       sclass  = sptree.getValue<GString>("bdy_class");
   GString       sinit   = sptree.getValue<GString>("bdy_config_method","");
 
-  // ibdy and tbdy should not come in empty. But they
+  // ibdy should not come in empty. But they
   // generally refer to only individual canonical boundaries 
   // (individual faces for boxes, individual radial surfaces for 
   // icos spheres, etc.), and not the complete list of global bdys:
 
   // If bdy_class is uniform, don't need config method:
   if ( "uniform"    == sclass) { 
-    bret = gspecbdy::impl_uniform    (sptree, grid, id, ibdy, tbdy);
+    bret = gspecbdy::impl_uniform    (sptree, grid, id, ibdy);
     return bret;
   }
 
@@ -49,7 +48,7 @@ GBOOL GSpecBdyFactory::dospec(const geoflow::tbox::PropertyTree& sptree, GGrid &
   }
   else if ( "mixed"        == sinit ) {
     
-//  bret = gspecbdy::mybdyspec(sptree, grid, id, ibdy, tbdy);
+//  bret = gspecbdy::mybdyspec(sptree, grid, id, ibdy);
     bret = FALSE;
   }
   else                                        {

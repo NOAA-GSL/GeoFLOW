@@ -11,9 +11,10 @@
 #include <memory>
 #include <cmath>
 #include "gcomm.hpp"
-#include "gutils.hpp"
 #include "ggrid_box.hpp"
 #include "gspecbdy_factory.hpp"
+#include "gupdatebdy_factory.hpp"
+#include "gmtk.hpp"
 #include "gutils.hpp"
 #include "tbox/mpixx.hpp"
 #include "tbox/global_manager.hpp"
@@ -968,7 +969,7 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
       }
       // May have different uniform bdys for different state comps:
       for ( auto k=0; k<stblock.tbdy.size() && !bperiodic; k++ ) {
-        base_ptr = GUpdateBdyFactory::build(ptree, sbdy, *grid_,  j,
+        base_ptr = GUpdateBdyFactory<BdyTypePack>::build(ptree, sbdy, *grid_,  j,
                                             stblock.tbdy[k], stblock.istate[k], itmp);
         tbdy[j] = stblock.tbdy[k];
         bdy_update_list_[j].push_back(base_ptr);
@@ -981,7 +982,7 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
         sbdytree = ptree.getPropertyTree(svec[i]);
         geoflow::get_bdy_block(bdytree, stblock);
         assert(!stblock.tbdy.contains(GBDY_PERIODIC) && "GBDY_PERIODIC bdys must be uniform");
-        SpecBdyFactory::dospec(bdytree, *grid_, j, itmp);
+        GSpecBdyFactory::dospec(bdytree, *grid_, j, itmp);
         for ( auto k=0; k<svec.size(); k++ ) { // for each sub-block
           base_ptr = GUpdateBdyFactory::build(ptree, svec[k], *grid_,  j,
                                               stblock.tbdy[k], stblock.istate[k], itmp);

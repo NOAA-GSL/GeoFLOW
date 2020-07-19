@@ -9,7 +9,8 @@
 #if !defined(_GLINOP_HPP)
 #define _GLINOP_HPP
 #include "gtvector.hpp"
-#include "ggrid.hpp"
+
+class GGrid;
 
 class GLinOp
 {

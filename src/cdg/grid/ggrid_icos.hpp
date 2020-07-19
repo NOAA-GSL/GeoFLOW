@@ -25,7 +25,6 @@
 #include "polygon.h"
 #include "ggrid.hpp"
 #include "gmtk.hpp"
-#include "gutils.hpp"
 
 
 // GICOS_BASE refers to the refined, projected triangular

@@ -22,8 +22,6 @@
 #include "polygon.h"
 #include "gtpoint.hpp"
 #include "ggrid.hpp"
-#include "gmtk.hpp"
-#include "gutils.hpp"
 
 typedef GTMatrix<GFTYPE> GFTMatrix;
 

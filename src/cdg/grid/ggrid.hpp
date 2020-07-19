@@ -22,11 +22,9 @@
 #include "gcomm.hpp"
 #include "ggfx.hpp"
 #include "glinop.hpp"
-#include "ghelmholtz.hpp"
 #include "gcg.hpp"
-#include "gupdatebdy_factory.hpp"
-#include "gmtk.hpp"
-#include "gutils.hpp"
+#include "ghelmholtz.hpp"
+#include "pdeint/update_bdy_base.hpp"
 #include "tbox/property_tree.hpp"
 
 
@@ -255,7 +253,7 @@ virtual void                        do_bdy_normals(GTMatrix<GTVector<GFTYPE>>
         GTVector<GINT>              idepComp_;      // dependent component index at each bdy point
         BinnedBdyIndex              igbdy_binned_;  // index into global field indicating a domain bdy--by type
 //      BinnedBdyIndex              ilbdy_binned_;  // index into bdy arrays--by type
-//      GTVector<GTVector<GSIZET>>  igbdy_bdyface_;// volumbe index for each bdy node on each face
+        GTVector<GTVector<GSIZET>>  igbdy_bdyface_;// volumbe index for each bdy node on each face
         GTVector<GTVector<GBdyType>> igbdyt_bdyface_;// bdy type for each igbdt_bdyface_
         GTVector<GSIZET>            igbdy_;         // index into global field indicating a domain bdy
         BdyUpdateList               bdy_update_list_;

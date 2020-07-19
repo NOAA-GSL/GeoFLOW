@@ -14,12 +14,12 @@
 #include "gtypes.h"
 #include "cff_blas.h"
 //#include "ggrid.hpp"
-#include "ggrid_box.hpp"
-#include "ggrid_icos.hpp"
+//#include "ggrid_box.hpp"
+//#include "ggrid_icos.hpp"
 
 template<typename T> class GTVector;
 template<typename T> class GTMatrix;
-//                   class GGrid;
+                     class GGrid;
 
 extern GINT szMatCache_;
 extern GINT szVecCache_;
