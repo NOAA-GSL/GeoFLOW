@@ -11,6 +11,8 @@
 #include "gtvector.hpp"
 #include "gtmatrix.hpp"
 #include "ggrid.hpp"
+#include "ggrid_box.hpp"
+#include "ggrid_icos.hpp"
 
 using namespace std;
 
