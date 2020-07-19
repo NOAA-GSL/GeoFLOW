@@ -73,7 +73,7 @@ GBOOL G0FluxBdy<Types>::update_impl(
    GSIZET     il, ind;
    Ftype      sum, xn;
    GTVector<GTVector<Ftype>>  *bdyNormals;
-   GTVector<GINT>             *idepComp;
+   GTVector<GINT>             *idep;
    GTVector<GSIZET>           *igbdy;
 // GTVector<GTVector<GSIZET>> *ilbdy;
 
@@ -98,24 +98,24 @@ GBOOL G0FluxBdy<Types>::update_impl(
   //       of vectorization. Unrolling likely
   //       won't occur:
   bdyNormals = &grid.bdyNormals(); // bdy normal vector
-  idepComp   = &grid.idepComp();   // dependent components
+  idep       = &grid.idepComp();   // dependent components
   igbdy      = &traits_.ibdy;
-  ilbdy      = &grid_->ilbdy_binned()[traits_.bdyid];
+//ilbdy      = &grid_->ilbdy_binned()[traits_.bdyid];
   itype      = GBDY_0FLUX;
-  for ( auto j=0; j<igbdy->size() ) {
-    ind = (*igbdy)[i][j];         // index into volume array
+  for ( auto j=0; j<igbdy->size(); j++ ) {
+    ind = (*igbdy)[j];            // index into volume array
 //  il  = (*ilbdy)[i][itype][j];  // index into bdy array (for normals, e.g.)
     nid = (*idep)[ind];           // dependent vector component
     xn  = (*bdyNormals)[nid][ind];// n_id == normal component for dependent vector comp
     sum = 0.0;
     for ( auto k=0; k<nstate_; k++ ) { // for each vector component
-      sum -= (*bdyNormals)[k][il] * (*u[istate[k]])[ind];
+      sum -= (*bdyNormals)[k][il] * (*u[traits_.istate[k]])[ind];
 
       // Set all comps here, then reset the dependent one:
-      (*ub[k])[ind] = (*u[k])[ind]; 
+//    (*ub[k])[ind] = (*u[k])[ind]; 
     }
-//  (*ub[nid])[ind] = ( sum + (*n)[nid][il] * (*u[nid])[ind] ) / xn;
-    (*u[nid])[ind] = ( sum + (*n)[nid][il] * (*ua[nid])[ind] ) / xn;
+//  (*ub[nid])[ind] = ( sum + (*bdyNormals)[nid][il] * (*u[nid])[ind] ) / xn;
+    (*u[nid])[ind] = ( sum + (*bdyNormals)[nid][il] * (*u[nid])[ind] ) / xn;
   }
 
   bcomputed_ = TRUE;

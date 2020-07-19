@@ -17,6 +17,8 @@
 #include <cmath>
 #include "gtvector.hpp"
 #include "ggrid.hpp"
+#include "ggrid_box.hpp"
+#include "ggrid_icos.hpp"
 #include "ggfx.hpp"
 #include "pdeint/update_bdy_base.hpp"
 

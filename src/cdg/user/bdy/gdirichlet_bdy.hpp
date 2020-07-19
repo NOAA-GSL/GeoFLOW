@@ -17,8 +17,8 @@
 #include <cmath>
 #include "gtvector.hpp"
 #include "ggfx.hpp"
-#include "pdeint/update_bdy_base.hpp"
 #include "ggrid.hpp"
+#include "pdeint/update_bdy_base.hpp"
 
 using namespace geoflow::pdeint;
 using namespace std;
@@ -37,8 +37,8 @@ public:
 
         static_assert(std::is_same<State,GTVector<GTVector<Ftype>*>>::value,
                "State is of incorrect type");
-        static_assert(std::is_same<Grid,GGrid>::value,
-               "Grid is of incorrect type");
+//      static_assert(std::is_same<Grid,GGrid>::value,
+//             "Grid is of incorrect type");
 
         // GDirichletBdy solver traits:
         struct Traits {
