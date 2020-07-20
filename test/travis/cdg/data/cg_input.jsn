@@ -100,28 +100,37 @@
     "radiusi"   : 1.0,
     "radiuso"   : 2.0,
     "num_elems" : [10, 10, 10],
-    "bdy_inner": "GBDY_DIRICHLET",
-    "bdy_outer": "GBDY_SPONGE"
+    "bdy_inner": "",
+    "bdy_outer": ""
+  },
+  "my_inflow": {
+    "bdy_class"        : "uniform",
+    "base_type"        : ["GBDY_INFLOW"],
+    "istate"           : [[0, 1, 2]],
+    "use_init"         : true,
+    "inflow_method"    : ""
   },
   "my_dirichlet": {
     "bdy_class"        : "uniform",
-    "base_type"        : "GBDY_DIRICHLET"
+    "base_type"        : ["GBDY_DIRICHLET"],
+    "istate"           : [[0, 1, 2]]
   },
   "fully_periodic": {
     "bdy_class"        : "uniform",
-    "base_type"        : "GBDY_PERIODIC"
+    "base_type"        : ["GBDY_PERIODIC"],
+    "istate"           : [[0, 1, 2]]
   },
   "grid_box": {
     "grid_name" : "grid_box",
     "xyz0"      : [0.0, 0.0, 0.0],
     "delxyz"    : [1.0, 1.0, 1.0],
     "num_elems" : [4, 4, 1],
-    "bdy_x_0"   : "my_dirichlet",
-    "bdy_x_1"   : "my_dirichlet",
-    "bdy_y_0"   : "my_dirichlet",
-    "bdy_y_1"   : "my_dirichlet",
-    "bdy_z_0"   : "my_dirichlet",
-    "bdy_z_1"   : "my_dirichlet",
+    "bdy_x_0"   : "my_inflow",
+    "bdy_x_1"   : "my_inflow",
+    "bdy_y_0"   : "my_inflow",
+    "bdy_y_1"   : "my_inflow",
+    "bdy_z_0"   : "my_inflow",
+    "bdy_z_1"   : "my_inflow",
     "maxit"     : 256,
     "tol"       : 1.0e-7,
     "norm_type" : "GCG_NORM_INF"
