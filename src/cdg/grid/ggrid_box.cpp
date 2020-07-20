@@ -752,16 +752,22 @@ void GGridBox::periodize()
   for( auto k=0; k<x.size(); k++ ) x[k] = P0_[k];
 
   GUINT  bit;
-  GSIZET id;
-  periodicids_ .resize(igbdy_binned_[GBDY_PERIODIC].size());
-  periodicdirs_.resize(igbdy_binned_[GBDY_PERIODIC].size());
-  for( auto k=0; k<igbdy_binned_[GBDY_PERIODIC].size(); k++ ) { // for each global bdy node
-    id = igbdy_binned_[GBDY_PERIODIC][k];
-    periodicids_ [k] = id;       
-    periodicdirs_[k] = 0;
-    for( auto i=0; i<xNodes_.size(); i++ ) { // for x, y, z dirs
-      if ( FUZZYEQ(P1_[i],xNodes_[i][id],eps_) ) { // right/top-most coord will change
-        periodicdirs_[k] |= 1U << i;  // position right-most direction bit  
+  GSIZET id, n=0, num=0;
+  for ( auto k=0; k<igbdy_binned_.size(); k++ ) {
+    num += igbdy_binned_[GBDY_PERIODIC].size();
+  }
+  periodicids_ .resize(num);
+  periodicdirs_.resize(num);
+
+  for( auto k=0; k<igbdy_binned_.size(); k++ ) { // for each global face
+    for( auto j=0; j<igbdy_binned_[k][GBDY_PERIODIC].size(); j++ ) { // for each global bdy node
+      id = igbdy_binned_[k][GBDY_PERIODIC][k];
+      periodicids_ [n] = id;       
+      periodicdirs_[n] = 0;
+      for( auto i=0; i<xNodes_.size(); i++ ) { // for x, y, z dirs
+        if ( FUZZYEQ(P1_[i],xNodes_[i][id],eps_) ) { // right/top-most coord will change
+          periodicdirs_[n] |= 1U << i;  // position right-most direction bit  
+        }
       }
     }
   }
@@ -925,7 +931,8 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
                      svec;
   GString            gname, sbdy, bdyclass;
   PropertyTree       bdytree, gridptree;
-  UpdateBdyBasePtr   base_ptr;
+  stBdyBlock         stblock;
+  UpdateBasePtr      base_ptr;
 
   bdynames[0] = "bdy_x_0";
   bdynames[1] = "bdy_x_1";
@@ -970,28 +977,29 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
       }
       // May have different uniform bdys for different state comps:
       for ( auto k=0; k<stblock.tbdy.size() && !bperiodic; k++ ) {
-        base_ptr = GUpdateBdyFactory<BdyTypePack>::build(ptree, sbdy, *grid_,  j,
+        base_ptr = GUpdateBdyFactory<BdyTypePack>::build(ptree, sbdy, *this,  j,
                                             stblock.tbdy[k], stblock.istate[k], itmp);
-        tbdy[j] = stblock.tbdy[k];
+        igbdyt[j] = stblock.tbdy[k];
         bdy_update_list_[j].push_back(base_ptr);
       }
     }
     else if ( "mixed" == bdyclass ) { // mixed bdy conditions
-      assert( bdytree.isArray<GString>("bdy_blocks") && "no bdy_blocks specified")
+      assert( bdytree.isArray<GString>("bdy_blocks") && "no bdy_blocks specified");
       svec = bdytree.getArray<GString>("bdy_blocks");
       for ( auto i=0; i<svec.size(); i++ ) { // loop over bdy blocks
-        sbdytree = ptree.getPropertyTree(svec[i]);
+        assert( ptree.isPropertyTree(svec[i]) && "no component bdy_blocks specified");
+        bdytree = ptree.getPropertyTree(svec[i]);
         geoflow::get_bdy_block(bdytree, stblock);
         assert(!stblock.tbdy.contains(GBDY_PERIODIC) && "GBDY_PERIODIC bdys must be uniform");
-        GSpecBdyFactory::dospec(bdytree, *grid_, j, itmp);
+        GSpecBdyFactory::dospec(bdytree, *this, j, itmp);
         for ( auto k=0; k<svec.size(); k++ ) { // for each sub-block
-          base_ptr = GUpdateBdyFactory::build(ptree, svec[k], *grid_,  j,
+          base_ptr = GUpdateBdyFactory<BdyTypePack>::build(ptree, svec[k], *this,  j,
                                               stblock.tbdy[k], stblock.istate[k], itmp);
 
-          for ( auto m=0; m<tmp.size(); m++ ) {
+          for ( auto m=0; m<itmp.size(); m++ ) {
             if ( igbdy[j].contains(itmp[m]) ) igbdyt[j][m] = stblock.tbdy[k];
           }
-          if ( stblock.tbdy[k] != GBDY_NONE ) tbdy[j] = stblock.tbdy[k];
+          if ( stblock.tbdy[k] != GBDY_NONE ) igbdyt[j] = stblock.tbdy[k];
           bdy_update_list_[j].push_back(base_ptr);
         }
       }

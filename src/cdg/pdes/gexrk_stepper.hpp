@@ -52,18 +52,6 @@ public:
                                           { rhs_callback_ = callback; 
                                             bRHS_ = TRUE; }           // RHS callback, required
 
-        void               set_update_bdy_callback(
-                                         std::function<void(
-                                         const geoflow::tbox::PropertyTree& ptree,
-                                         GString &supdate, 
-                                         Grid &grid, 
-                                         StateInfo &stinfo, 
-                                         Time &time, 
-                                         State &utmp, 
-                                         State &u, 
-                                         State &ub)> callback)
-                                         { bdy_update_callback_ =  callback;
-                                           bupdatebc_ = TRUE; }       // set bdy-update callback
         void               set_apply_bdy_callback(
                            std::function<void(const Time &t, State &u,
                                          State &ub)> callback)
@@ -81,7 +69,6 @@ private:
 // Private data:
         GBOOL              bRHS_;
         GBOOL              bapplybc_;
-        GBOOL              bupdatebc_;
         GINT               nstage_;                          // no stages (not nec. 'order'!)
         GButcherRK<T>      butcher_;                         // Butcher tableau
         GTVector<State>    K_;                               // RK stage update vectors
@@ -94,15 +81,6 @@ private:
                            const Time &dt, 
                            State &dudt)>
                            rhs_callback_;                   // RHS callback function
-        std::function<void(const geoflow::tbox::PropertyTree& ptree,
-                           GString &supdate, 
-                           Grid &grid, 
-                           StateInfo &stinfo, 
-                           Time &time, 
-                           State &utmp, 
-                           State &u, 
-                           State &ub)>
-                           bdy_update_callback_;            // bdy update callback
         std::function<void(const Time &t, State &u, State &ub)>
                            bdy_apply_callback_;             // bdy apply callback
 

@@ -19,7 +19,6 @@ GExRKStepper<T>::GExRKStepper(GGrid &grid, GSIZET nstage)
 :
 bRHS_                 (FALSE),
 bapplybc_             (FALSE),
-bupdatebc_            (FALSE),
 nstage_              (nstage),
 grid_                 (&grid),
 ggfx_               (NULLPTR)
@@ -111,7 +110,6 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &uf, State &ub
     }
     GMTK::constrain2sphere(*grid_, u);
 
-    if ( bupdatebc_ ) bdy_update_callback_(tt, u, ub); 
     if ( bapplybc_  ) bdy_apply_callback_ (tt, u, ub); 
     rhs_callback_( tt, u, uf, ub, h, K_[m] ); // k_m at stage m
 
@@ -144,7 +142,6 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &uf, State &ub
    }
 #endif
 
-   if ( bupdatebc_ ) bdy_update_callback_(tt, u, ub); 
    if ( bapplybc_  ) bdy_apply_callback_ (tt, u, ub); 
    rhs_callback_( tt, u, uf, ub, h, K_[0]); // k_M at stage M
 
@@ -242,7 +239,6 @@ void GExRKStepper<T>::step(const Time &t, State &uin, State &uf, State &ub,
      *u[n]  = (*uin[n]) + (*isum);
     }
 
-//  if ( bupdatebc_ ) bdy_update_callback_(tt, u, ub); 
     if ( bapplybc_  ) bdy_apply_callback_ (tt, u, ub); 
     if ( ggfx_ != NULLPTR ) {
       for ( n=0; n<nstate; n++ ) { // for each state member, u
@@ -265,7 +261,6 @@ void GExRKStepper<T>::step(const Time &t, State &uin, State &uf, State &ub,
      *u[n] = (*uin[n]) + (*isum);
       if ( ggfx_ != NULLPTR ) ggfx_->doOp(*u[n], GGFX_OP_SMOOTH);
    }
-   if ( bupdatebc_ ) bdy_update_callback_(tt, u, ub); 
    if ( bapplybc_  ) bdy_apply_callback_ (tt, u, ub); 
    rhs_callback_( tt, u, uf, ub, h, K_[0]); // k_M at stage M
 

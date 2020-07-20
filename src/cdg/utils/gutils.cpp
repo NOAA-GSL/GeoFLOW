@@ -108,6 +108,7 @@ GBOOL get_bdy_block(const geoflow::tbox::PropertyTree &sptree, stBdyBlock &stblo
     assert(FALSE); 
   }
   svec = sptree.getArray<GString>("base_type");
+#if 0
   ivecvec = sptree.getArray<std::vector<std::vector<GINT>>>("istate");
   
   if ( svec.size() != ivecvec.size() ) {
@@ -116,7 +117,7 @@ GBOOL get_bdy_block(const geoflow::tbox::PropertyTree &sptree, stBdyBlock &stblo
   }
 
   stblock.tbdy.resize(svec.size());
-  sfor ( auto j=0; j<svec.size(); j++ ) {
+  for ( auto j=0; j<svec.size(); j++ ) {
     stblock.tbdy[j] = geoflow::str2bdytype(svec[j]);
   }
 
@@ -125,6 +126,7 @@ GBOOL get_bdy_block(const geoflow::tbox::PropertyTree &sptree, stBdyBlock &stblo
     stblock.istate[j].resize(ivecvec[j].size());
     stblock.istate[j] = ivecvec[j];
   }
+#endif
 
   stblock.config_method = sptree.getValue<GString>("config_method", "");
   stblock.inflow_method = sptree.getValue<GString>("inflow_method", "");

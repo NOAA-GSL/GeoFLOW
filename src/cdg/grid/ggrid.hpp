@@ -31,7 +31,7 @@
 using namespace geoflow::tbox;
 using namespace std;
 
-
+class GMass;
 
 struct BdyTypePack { // define bdy update typepack
         using State            = GTVector<GTVector<GFTYPE>*>;

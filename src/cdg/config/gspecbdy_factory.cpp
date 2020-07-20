@@ -31,11 +31,14 @@ GBOOL GSpecBdyFactory::dospec(const geoflow::tbox::PropertyTree& sptree, GGrid &
   // (individual faces for boxes, individual radial surfaces for 
   // icos spheres, etc.), and not the complete list of global bdys:
 
+/*
   // If bdy_class is uniform, don't need config method:
   if ( "uniform"    == sclass) { 
     bret = gspecbdy::impl_uniform    (sptree, grid, id, ibdy);
     return bret;
   }
+*/
+
 
   // Else, is mixed; call specified config method.
   // These methods allow user to _both_ configure

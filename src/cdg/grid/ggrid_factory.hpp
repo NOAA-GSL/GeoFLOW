@@ -34,7 +34,7 @@ class GGridFactory
         using IOBaseType  = IOBase<Types>;
         using IOBasePtr   = std::shared_ptr<IOBaseType>;
         using ObsTraits   = typename ObserverBase<Types>::Traits;
-        using BdyUpdatePtr= std::vector<std::shared_ptr<UpdateBdyBase<TypePack><Types>>>;
+        using BdyUpdatePtr= std::vector<std::shared_ptr<UpdateBdyBase<Types>>>;
 
 
 

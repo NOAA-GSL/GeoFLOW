@@ -23,7 +23,7 @@ struct stBdyBlock {
   GTVector<GTVector<GINT>>  istate; // vector of staet index vectors
   GTVector<GBdyType>        tbdy;   // vector of bdy types; one for each istate vector
   GString                   config_method; // name of bdy node config method
-  GString                   inflow_mehod;  // name of inflow method, if any
+  GString                   inflow_method; // name of inflow method, if any
 };
 
 namespace geoflow

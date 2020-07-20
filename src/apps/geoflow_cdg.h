@@ -45,7 +45,6 @@
 #include "pdeint/null_observer.hpp"
 #include "ginitstate_factory.hpp"
 #include "ginitforce_factory.hpp"
-#include "ginitbdy_factory.hpp"
 #include "gupdatebdy_factory.hpp"
 #include "gspecterrain_factory.hpp"
 #include "tbox/command_line.hpp"

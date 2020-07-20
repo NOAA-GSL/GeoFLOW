@@ -628,8 +628,8 @@ void GBurgers<TypePack>::apply_bc_impl(const Time &t, State &u, const State &ub)
 
 
   // Update bdy values if required to:
-  for ( k=0; k<updatelist->size(); k++ ) { // foreach grid bdy
-    for ( j=0; j<(*updatelist)[j].size(); j++ ) { // each update method
+  for ( auto k=0; k<updatelist->size(); k++ ) { // foreach grid bdy
+    for ( auto j=0; j<(*updatelist)[j].size(); j++ ) { // each update method
       (*updatelist)[j]->update(*grid_, this->stateinfo_, t, utmp_, u, ub););
     }
   }
