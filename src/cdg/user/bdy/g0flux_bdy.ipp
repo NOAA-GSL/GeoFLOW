@@ -99,7 +99,7 @@ GBOOL G0FluxBdy<Types>::update_impl(
   //       won't occur:
   bdyNormals = &grid.bdyNormals(); // bdy normal vector
   idep       = &grid.idepComp();   // dependent components
-  igbdy      = &traits_.ibdy;
+  igbdy      = &traits_.ibdyvol;
 //ilbdy      = &grid_->ilbdy_binned()[traits_.bdyid];
   itype      = GBDY_0FLUX;
   for ( auto j=0; j<igbdy->size(); j++ ) {

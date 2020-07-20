@@ -41,10 +41,11 @@ class GUpdateBdyFactory
         using Time             = typename Types::Time;
         using UpdateBdyBase    = UpdateBdyBase<Types>;
         using UpdateBdyBasePtr = shared_ptr<UpdateBdyBase>;
-        using CallbackPtr      = std::function<void(
+        using CallbackPtr      = std::function<GBOOL(
                                 Grid       &grid,
                                 StateInfo  &stinfo,
                                 Time       &time,
+                                const GINT  id,
                                 State      &utmp,
                                 State      &u,
                                 State      &ub)>;

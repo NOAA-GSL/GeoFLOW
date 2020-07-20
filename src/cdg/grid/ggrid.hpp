@@ -39,8 +39,9 @@ struct BdyTypePack { // define bdy update typepack
         using StateInfo        = GStateInfo;
         using Grid             = GGrid;
         using Value            = GFTYPE;
-        using Ftype            = GFTYPE;
         using Time             = GFTYPE;
+        using Derivative       = GTVector<GTVector<GFTYPE>*>;;
+        using CompDesc         = GTVector<GStateCompType>;
         using IBdyVol          = GTVector<GSIZET>;
         using TBdyVol          = GTVector<GBdyType>;
 };

@@ -104,7 +104,7 @@ GBOOL GInflowBdy<Types>::update_from_user(
 
   assert(traits_.callback != NULLPTR);  
 
-  bret = traits_.callback(grid, stinfo, time, utmp, u, ub);
+  bret = traits_.callback(grid, stinfo, time, traits_.bdyid,  utmp, u, ub);
   bcomputed_ = bret;
 
   return bret;

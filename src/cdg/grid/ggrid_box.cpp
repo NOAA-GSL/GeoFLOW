@@ -741,6 +741,7 @@ void GGridBox::periodize()
 {
   assert(bInitialized_ && "Object not initialized");
 
+  
   GTVector<GFTYPE>  x(xNodes_.size()); // coord values to set to
 
 
@@ -754,7 +755,7 @@ void GGridBox::periodize()
   GSIZET id;
   periodicids_ .resize(igbdy_binned_[GBDY_PERIODIC].size());
   periodicdirs_.resize(igbdy_binned_[GBDY_PERIODIC].size());
-  for( auto k=0; k<igbdy_binned_[GBDY_PERIODIC].size(); k++ ) { // for each blobal bdy node
+  for( auto k=0; k<igbdy_binned_[GBDY_PERIODIC].size(); k++ ) { // for each global bdy node
     id = igbdy_binned_[GBDY_PERIODIC][k];
     periodicids_ [k] = id;       
     periodicdirs_[k] = 0;
@@ -954,11 +955,11 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
     bdytree      = gridptree.getPropertyTree(sbdy);
     bdyclass     = bdytree.getValue<GString>("bdy_class", "uniform");
     if ( ndim_ == 2 ) 
-      find_bdy_ind3d(rbdy[j], itmp);
+      find_bdy_ind2d(j, TRUE, itmp);
     if ( ndim_ == 3 ) 
-      find_bdy_ind3d(rbdy[j], itmp);
-    igbdy[j].resize(itmp.size()); igbdy[j] = itmp;
-    tgbdy[j].resize(itmp.size()); tgbdy[j] = GBDY_NONE;
+      find_bdy_ind3d(j, TRUE, itmp);
+    igbdy [j].resize(itmp.size()); igbdy [j] = itmp;
+    igbdyt[j].resize(itmp.size()); igbdyt[j] = GBDY_NONE;
     if ( "uniform" == bdyclass ) { // uniform bdy conditions
       geoflow::get_bdy_block(bdytree, stblock);
       if ( stblock.tbdy.contains(GBDY_PERIODIC) ) {
@@ -988,7 +989,7 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
                                               stblock.tbdy[k], stblock.istate[k], itmp);
 
           for ( auto m=0; m<tmp.size(); m++ ) {
-            if ( igbdy[j].contains(itmp[m]) ) tgbdy[j][m] = stblock.tbdy[k];
+            if ( igbdy[j].contains(itmp[m]) ) igbdyt[j][m] = stblock.tbdy[k];
           }
           if ( stblock.tbdy[k] != GBDY_NONE ) tbdy[j] = stblock.tbdy[k];
           bdy_update_list_[j].push_back(base_ptr);

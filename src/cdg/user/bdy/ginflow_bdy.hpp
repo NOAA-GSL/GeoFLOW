@@ -21,6 +21,8 @@
 #include "ggfx.hpp"
 #include "ginitstate_factory.hpp"
 #include "pdeint/update_bdy_base.hpp"
+#include "tbox/property_tree.hpp"
+
 
 using namespace geoflow::pdeint;
 using namespace std;
@@ -50,12 +52,14 @@ public:
           GTVector<GINT>        istate; // state indices to operate on
           GTVector<GSIZET>     ibdyvol; // indir. inidices into comput volume
 
-          std::function<void(Grid       &grid, 
-                             StateInfo  &stinfo,
-                             Time       &time,
-                             State      &utmp,
-                             State      &u,
-                             State      &ub)> callback = NULLPTR;
+          std::function<GBOOL(Grid       &grid, 
+                              StateInfo  &stinfo,
+                              Time       &time,
+                              const GINT  id,
+                              State      &utmp,
+                              State      &u,
+                              State      &ub)> callback = NULLPTR;
+          geoflow::tbox::PropertyTree ptree;
         };
 
         GInflowBdy() = delete; 

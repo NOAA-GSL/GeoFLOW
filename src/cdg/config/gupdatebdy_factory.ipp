@@ -76,14 +76,16 @@ GUpdateBdyFactory<Types>::get_inflow_callback(const GString& sname, const GINT i
     assert(FALSE); // Must have a named method
   }
   if      ( "myinflow"     == sname ) {
-    callback = 
-      [](Grid      &grid,
-         StateInfo &stinfo,
-         Time      &time,
-         const GINT id,
-         State     &utmp,
-         State     &u,
-         State     &ub){GInflowBdyMethods::myinflow(grid, stinfo, time, id, utmp, u, ub);}; 
+    callback = NULLPTR;
+/*
+      [=](Grid      &grid,
+          StateInfo &stinfo,
+          Time      &time,
+          const GINT id,
+          State     &utmp,
+          State     &u,
+          State     &ub){GInflowBdyMethods::myinflow(grid, stinfo, time, id, utmp, u, ub);}; 
+*/
   }
   else {
     assert(FALSE && "Specified inflow bdy update method unknown");
@@ -162,6 +164,7 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree& ptree, GString &supd
       sblock = sptree.getValue<GString>("inflow_method");
       traits.callback = GUpdateBdyFactory<Types>::get_inflow_callback(sblock, id);
     }
+    traits.ptree = ptree;
     // Allocate observer Implementation
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
   }

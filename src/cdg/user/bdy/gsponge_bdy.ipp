@@ -10,6 +10,7 @@
 
 
 
+
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : Constructor method 
@@ -27,7 +28,7 @@ traits_                 (traits)
   assert(traits_.exponent.size() == 1 
       || traits_.exponent.size() == traits_.farfield.size());
   assert(traits_.sigma   .size() == 1 
-      || traits_.signa   .size() == traits_.farfield.size());
+      || traits_.sigma   .size() == traits_.farfield.size());
   assert( abs(traits_.idir) > 0 && traits_.idir <= GDIM );
 
 } // end of constructor method 
@@ -70,8 +71,8 @@ GBOOL GSpongeBdy<Types>::update_impl(
 {
    GString    serr = "GSpongeBdy<Types>::update_impl: ";
    GBOOL      bret = FALSE;
-   GGridBox   *box    = dynamic_cast<GGridBox*>(grid);
-   GGridIcos  *sphere = dynamic_cast<GGridIcos*>(grid);
+   GGridBox   *box    = dynamic_cast<GGridBox*>(&grid);
+   GGridIcos  *sphere = dynamic_cast<GGridIcos*>(&grid);
 
   if ( traits_.compute_once && bcomputed_ ) return TRUE;
 
@@ -126,7 +127,7 @@ GBOOL GSpongeBdy<Types>::update_cart(
 
   // Get parameters from ptree:
 
-  ifact    = 1.0/(traits_.ro[0] - traits_.rs[0]);
+  ifact    = 1.0/(traits_.ro - traits_.rs[0]);
 
   // This method applies a sponge layer to only the outer
   // part of a artesian grid. The first values in
@@ -153,7 +154,7 @@ GBOOL GSpongeBdy<Types>::update_cart(
       || stinfo.icomptype[idstate] == GSC_NONE ) continue;
     for ( auto j=0; j<u[idstate]->size(); j++ ) { // for all grid points
       rtst = sgn * ( (*xnodes)[abs(traits_.idir-1)][k] - traits_.rs[0] );
-      beta = rtst > 0 ? pow(ifact*fabs(rtst),traits_.exponent) : 0.0; // check if in sponge layer
+      beta = rtst > 0 ? pow(ifact*fabs(rtst),traits_.exponent[k]) : 0.0; // check if in sponge layer
 //    (*u[idstate])[j]  = (1.0-beta)*(*u[idstate])[j] + beta*traits_.farfield[k];
       sig0 = traits_.sigma.size() > 1 ? traits_.sigma[k] : traits_.sigma[0];
       (*u[idstate])[j] -= sig0*beta*( (*u[idstate])[j] - traits_.farfield[k] );
@@ -221,7 +222,7 @@ GBOOL GSpongeBdy<Types>::update_sphere (
 
   // Get parameters from ptree:
 
-  ifact    = 1.0/(traits_.ro[0] - traits_.rs[0]);
+  ifact    = 1.0/(traits_.ro - traits_.rs[0]);
 
   // This method applies a sponge layer to only the outer
   // part of a spherical grid. Thus, only first values in
@@ -245,7 +246,7 @@ GBOOL GSpongeBdy<Types>::update_sphere (
     for ( auto j=0; j<u[idstate]->size(); j++ ) { // for all grid points
       x    = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
       r    = sqrt(x*x + y*y + z*z); 
-      beta = r >= traits_.rs[0] ? pow(ifact*(r-traits_.rs[0]),traits_.exponent) : 0.0; // check if in sponge layer
+      beta = r >= traits_.rs[0] ? pow(ifact*(r-traits_.rs[0]),traits_.exponent[k]) : 0.0; // check if in sponge layer
 //    (*u[idstate])[j]  = (1.0-beta)*(*u[idstate])[j] + beta*traits_.farfield[k];
       if ( traits_.sigma.size() > 1 )
         (*u[idstate])[j] -= traits_.sigma[k]*beta*( (*u[idstate])[j] - traits_.farfield[k] );
