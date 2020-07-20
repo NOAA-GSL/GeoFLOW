@@ -127,6 +127,15 @@ public:
 	bool isArray(const std::string& key) const;
 
 	/**
+	 * Check if 2D array of type T exists at key
+	 *
+	 * Checks the key value to see if it exists and can
+	 * be converted to 2D array of type T.
+	 */
+	template<typename T>
+	bool isArray2D(const std::string& key) const;
+
+	/**
 	 * Check if a PropertyTree exists at key
 	 *
 	 * Checks the key value to see if it exists and is of
@@ -157,6 +166,16 @@ public:
 	 */
 	template<typename T>
 	std::vector<T> getArray(const std::string& key) const;
+
+	/**
+	 * Return the 2D array at key returned as type T
+	 *
+	 * Get the 2D array stored at key converted to type std::vector<T>.
+	 * If the key doesn't exist or cannot be converted an error
+	 * occurs.
+	 */
+	template<typename T>
+	std::vector<std::vector<T>> getArray2D(const std::string& key) const;
 
 
 	/**
@@ -193,6 +212,18 @@ public:
 	 */
 	template<typename T>
 	std::vector<T> getArray(const std::string& key, const std::vector<T>& dval) const;
+
+	/**
+	 * Get the 2D array at key returned as type T
+	 *
+	 * Get the 2D array stored at key converted to type
+	 * std::vector<std::vector<T>>. If the key doesn't
+	 * exist or cannot be converted the provided default
+	 * value is returned.
+	 */
+	template<typename T>
+	std::vector<std::vector<T>>
+	getArray2D(const std::string& key, const std::vector<std::vector<T>>& dval) const;
 
 	/**
 	 * Get the PropertyTree at key returned as type T
@@ -245,28 +276,38 @@ private:
 	//              [private] Helper Functions
 	// *********************************************************************
 
-	// Determine if key is not array or ptree (No error checks)
-	bool key_is_terminal(const std::string& key) const;
 
-	// Determine if key is array or ptree (No error checks)
-	bool key_is_list(const std::string& key) const;
+	// Determine if key exists
+	bool key_exists_(const std::string& key) const;
 
-	// Determine if key is an array (No error checks)
-	bool key_is_array(const std::string& key) const;
+	// Determine if key has children (i.e. indicates array or tree)
+	bool key_has_children_(const std::string& key) const;
 
-	// Determine if list has none empty keys (No error checks)
-	bool list_has_keys(const std::string& key) const;
+	// Determine if key contains named children (i.e. indicates PropertyTree)
+	bool key_children_have_names_(const std::string& key) const;
 
-	// Implementation of getValue (No error checks)
+	// Test if value can be converted to type T
 	template<typename T>
-	T get_value_impl(const std::string& key) const;
+	bool value_is_type_(const std::string& key) const;
+
+	// Test if array can be converted to type T
+	template<typename T>
+	bool array_is_type_(const std::string& key) const;
+
+	// Test if array or arrays can be converted to type T
+	template<typename T>
+	bool array_is_array_type_(const std::string& key) const;
 
 	// Implementation of getArray (No error checks)
 	template<typename T>
-	std::vector<T> get_array_impl(const std::string& key) const;
+	std::vector<T> get_array_impl_(const std::string& key) const;
+
+	// Implementation of getArray (No error checks)
+	template<typename T>
+	std::vector<std::vector<T>> get_array_of_array_impl_(const std::string& key) const;
 
 	// Implementation of getPropertyTree (No error checks)
-	PropertyTree get_ptree_impl(const std::string& key) const;
+	PropertyTree get_tree_impl_(const std::string& key) const;
 };
 
 
