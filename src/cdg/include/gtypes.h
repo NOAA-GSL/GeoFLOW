@@ -160,8 +160,8 @@ enum GC_OP              {GC_OP_MAX=0,GC_OP_MIN ,GC_OP_SUM ,GC_OP_PROD,
 
 #if !defined(_G_BDYTYPE_DEF)
 #define _G_BDYTYPE_DEF
-enum GBdyType                    { GBDY_DIRICHLET=0 , GBDY_INFLOW , GBDY_NOSLIP , GBDY_0FLUX , GBDY_OUTFLOW , GBDY_SPONGE , GBDY_PERIODIC , GBDY_USER0 , GBDY_USER1 , GBDY_NONE };
-const char * const sGBdyType [] ={"GBDY_DIRICHLET"  ,"GBDY_INFLOW","GBDY_NOSLIP","GBDY_0FLUX","GBDY_OUTFLOW","GBDY_SPONGE","GBDY_PERIODIC","GBDY_USER0","GBDY_USER1","GBDY_NONE"};
+enum GBdyType                    { GBDY_DIRICHLET=0 , GBDY_INFLOW , GBDY_NOSLIP , GBDY_0FLUX , GBDY_OUTFLOW , GBDY_SPONGE , GBDY_PERIODIC , GBDY_NONE };
+const char * const sGBdyType [] ={"GBDY_DIRICHLET"  ,"GBDY_INFLOW","GBDY_NOSLIP","GBDY_0FLUX","GBDY_OUTFLOW","GBDY_SPONGE","GBDY_PERIODIC","GBDY_NONE"};
 #define GBDY_MAX GBDY_NONE
 // DIRICHLET  : Acts on state directly; may be variable in space, but constant in time
 // INFLOW     : Acts on state directly; may be variable in space, and time 
