@@ -32,7 +32,7 @@ namespace geoflow
 GBdyType       str2bdytype (const GString &stype);
 GStateCompType str2comptype(const GString &stype);
 GBOOL          file_empty(GString filename);
-GBOOL          get_bdy_block(const geoflow::tbox::PropertyTree &sptree, stBdyBlock &stblock);
+void           get_bdy_block(const geoflow::tbox::PropertyTree &sptree, stBdyBlock &stblock);
 template<typename T>
 void           append(GTVector<T> &base, GTVector<T> &add);
 template<typename T>
@@ -41,7 +41,7 @@ template<typename T>
 void           coord_dims(const geoflow::tbox::PropertyTree& ptree, GTVector<T> &xmin, GTVector<T> &xmax);
 
 
-} // end, namespace
+} // end, namespace geoflow
 
 #include "gutils.ipp"
 

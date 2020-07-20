@@ -23,7 +23,7 @@ namespace geoflow
 GBdyType str2bdytype(const GString &stype)
 {
   GString s0;
-  for ( auto j=0; j<GBDY_NONE; j++ ) {
+  for ( auto j=0; j<GBDY_MAX; j++ ) {
     s0 = sGBdyType[j];
     if ( stype.compare(s0) == 0 ) return static_cast<GBdyType>(j);
   }
@@ -82,13 +82,11 @@ GBOOL file_empty(GString sfile)
 //          stblock: stBdyBlock containing return info
 // RETURNS: GBOOL
 //**********************************************************************************
-GBOOL get_bdy_block(const geoflow::tbox::PropertyTree &sptree, stBdyBlock &stblock)
+void get_bdy_block(const geoflow::tbox::PropertyTree &sptree, stBdyBlock &stblock)
 {
-
-  GBOOL                bret=TRUE;
   GString              sconf;
   std::vector<GString> svec;
-  std::vector<std::vector<GString>> 
+  std::vector<std::vector<GINT>> 
                        ivecvec;
   
   // Clear out structure data:
@@ -99,17 +97,19 @@ GBOOL get_bdy_block(const geoflow::tbox::PropertyTree &sptree, stBdyBlock &stblo
 
   // Get bdy block data:
   
-  if ( !sptree.isArray<GString>("base_type") ){
+#if 0
+  if ( !sptree.isArray<GString>("base_type") ) {
     cout << "GUtils::get_bdy_block: base_type array is missing" << endl;
     assert(FALSE); 
   }
-  if ( !sptree.isArray<GINT>("istate") ){
+  if ( !sptree.isArray<GINT>("istate") ) {
     cout << "GUtils::get_bdy_block: istate array is missing" << endl;
     assert(FALSE); 
   }
+#endif
   svec = sptree.getArray<GString>("base_type");
-#if 0
-  ivecvec = sptree.getArray<std::vector<std::vector<GINT>>>("istate");
+
+  ivecvec = sptree.getArray2D<GINT>("istate");
   
   if ( svec.size() != ivecvec.size() ) {
     cout << "GUtils::get_bdy_block: istate and base_type array sizes not equal" << endl;
@@ -122,20 +122,15 @@ GBOOL get_bdy_block(const geoflow::tbox::PropertyTree &sptree, stBdyBlock &stblo
   }
 
   stblock.istate.resize(svec.size());
-  for ( j=0; j<svec.size(); j++ ) {
+  for ( auto j=0; j<svec.size(); j++ ) {
     stblock.istate[j].resize(ivecvec[j].size());
     stblock.istate[j] = ivecvec[j];
   }
-#endif
 
-  stblock.config_method = sptree.getValue<GString>("config_method", "");
-  stblock.inflow_method = sptree.getValue<GString>("inflow_method", "");
 
-  return bret;
-
-} // end, method file_empty
+} // end, method get_bdy_block
 
 
 
-} // end, namespace
+} // end, namespace geoflow
 

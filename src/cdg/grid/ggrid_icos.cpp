@@ -922,21 +922,23 @@ void GGridIcos::config_bdy(const geoflow::tbox::PropertyTree &ptree,
   igbdy.resize(2); // 2 canonical bdys
   igbdyt.resize(2); // 2 canonical bdys
 
+  bdy_update_list_.resize(2*GDIM);
+ 
+
   // Get properties from the main prop tree. 
   // Note: bdys are configured by way of geometry's
   //       natural decomposition: here, by inner and
   //       outer spherical surfaces. But the bdy indices 
   //       and types returned on exist contain info for all bdys:
   for ( auto j=0; j<2; j++ ) { // cycle over 2 spherical surfaces
-    svec         = gridptree.getArray<GString>(bdynames[j]);
     sbdy         = gridptree.getValue<GString>(bdynames[j]);
-    bdytree      = gridptree.getPropertyTree(sbdy);
+    bdytree      = ptree.getPropertyTree(sbdy);
     bdyclass     = bdytree.getValue<GString>("bdy_class", "uniform");
     find_bdy_ind3d(rbdy[j], itmp); 
     igbdy[j].resize(itmp.size()); igbdy[j] = itmp;
     igbdyt[j].resize(itmp.size()); igbdyt[j] = GBDY_NONE;
+    geoflow::get_bdy_block(bdytree, stblock);
     if ( "uniform" == bdyclass ) { // uniform bdy conditions
-      geoflow::get_bdy_block(bdytree, stblock);
       assert(!stblock.tbdy.contains(GBDY_PERIODIC) && "Invalid boundary condition");
       // May have different uniform bdys for different state comps:
       for ( auto k=0; k<stblock.tbdy.size(); k++ ) { 

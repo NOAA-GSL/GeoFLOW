@@ -755,7 +755,7 @@ void GGridBox::periodize()
   GUINT  bit;
   GSIZET id, n=0, num=0;
   for ( auto k=0; k<igbdy_binned_.size(); k++ ) {
-    num += igbdy_binned_[GBDY_PERIODIC].size();
+    num += igbdy_binned_[k][GBDY_PERIODIC].size();
   }
   periodicids_ .resize(num);
   periodicdirs_.resize(num);
@@ -953,14 +953,15 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
   igbdy .resize(2*GDIM);
   igbdyt.resize(2*GDIM);
 
+  bdy_update_list_.resize(2*GDIM);
 
   // Handle uniform, nonuniform bdy conditions:
   // Note: If "uniform" not specified for a boundary, then
   //       user MUST supply a method to configure it.
   for ( auto j=0; j<2*GDIM; j++ ) { 
-    svec         = gridptree.getArray<GString>(bdynames[j]);
     sbdy         = gridptree.getValue<GString>(bdynames[j]);
-    bdytree      = gridptree.getPropertyTree(sbdy);
+cout << "config_bdy: getting bdy tree: " << sbdy << endl;
+    bdytree      = ptree.getPropertyTree(sbdy);
     bdyclass     = bdytree.getValue<GString>("bdy_class", "uniform");
     if ( ndim_ == 2 ) 
       find_bdy_ind2d(j, TRUE, itmp);
@@ -969,6 +970,7 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
     igbdy [j].resize(itmp.size()); igbdy [j] = itmp;
     igbdyt[j].resize(itmp.size()); igbdyt[j] = GBDY_NONE;
     if ( "uniform" == bdyclass ) { // uniform bdy conditions
+cout << "config_bdy: extracting data from bdy tree: " << sbdy << endl;
       geoflow::get_bdy_block(bdytree, stblock);
       if ( stblock.tbdy.contains(GBDY_PERIODIC) ) {
         assert(stblock.tbdy.onlycontains(GBDY_PERIODIC) && "All variables must be GBDY_PERIODIC");
@@ -978,6 +980,7 @@ void GGridBox::config_bdy(const PropertyTree &ptree,
       }
       // May have different uniform bdys for different state comps:
       for ( auto k=0; k<stblock.tbdy.size() && !bperiodic; k++ ) {
+cout << "config_bdy: building bc for bdy cond " << k << endl;
         base_ptr = GUpdateBdyFactory<BdyTypePack>::build(ptree, sbdy, *this,  j,
                                             stblock.tbdy[k], stblock.istate[k], itmp);
         igbdyt[j] = stblock.tbdy[k];
