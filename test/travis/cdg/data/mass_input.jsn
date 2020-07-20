@@ -89,19 +89,11 @@
     "bconserved"  : false,
     "forcing_comp": [0, 1, 2]
   },
-  "sponge_layer": {
+  "my_dirichlet": {
     "bdy_class"        : "uniform",
-    "base_type"        : "GBDY_DIRICHLET",
-    "value"            : [0.0, 0.0, 0.0],
-    "beg_radius_frac"  : 0.95,
-    "decimation_type"  : "linear",
-    "bdy_config_method": ""
-  },
-  "dirichlet_fixed": {
-    "bdy_class"        : "uniform",
-    "base_type"        : "GBDY_DIRICHLET",
-    "value"            : [0.0, 0.0, 0.0],
-    "bdy_config_method": ""
+    "base_type"        : ["GBDY_DIRICHLET"],
+    "istate"           : [ [0, 1, 2] ],
+    "value"            : [0.0, 0.0, 0.0]
   },
   "grid_icos": {
     "grid_name"   : "grid_icos",
@@ -117,42 +109,11 @@
     "radiusi"           : 1.0,
     "radiuso"           : 2.0,
     "num_radial_elems"  : 10,
-    "bdy_inner"         : "dirichlet_fixed",
-    "bdy_outer"         : "sponge_layer",
+    "bdy_inner"         : "my_dirichlet",
+    "bdy_outer"         : "my_dirichlet",
     "bdy_init_method  " : "",
     "bdy_update_method" : "", 
     "use_state_init"    : false
-  },
-  "fully_periodic": {
-    "base_type"        : "GBDY_PERIODIC"
-  },
-  "compound_inflow_example": {
-    "bdy_class"        : "user",
-    "base_type"        : "GBDY_DIRICHLET", 
-    "bdy_config_method": "circular_jet"
-  },
-  "burgers_inflow": {
-    "bdy_class"        : "uniform",
-    "base_type"        : "GBDY_INFLOWT",
-    "bdy_config_method": ""
-  },
-  "grid_box": {
-    "grid_name" : "grid_box",
-    "xyz0"      : [0.0, 0.0, 0.0],
-    "delxyz"    : [1.0, 1.0, 1.0],
-    "num_elems" : [16, 16, 1],
-    "bdy_x_0"   : "fully_periodic",
-    "bdy_x_1"   : "fully_periodic",
-    "bdy_y_0"   : "fully_periodic",
-    "bdy_y_1"   : "fully_periodic",
-    "bdy_z_0"   : "fully_periodic",
-    "bdy_z_1"   : "fully_periodic",
-    "bdy_init_method  " : "",
-    "bdy_update_method" : "", 
-    "use_state_init"    : true,
-    "maxit"     : 128,
-    "tol"       : 1.0e-8,
-    "norm_type" : "GCG_NORM_INF"
   },
   "stepper_props": {
     "stepping_method"  : "GSTEPPER_EXRK",
