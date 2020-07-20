@@ -97,7 +97,7 @@ public:
 	 * @param[in,out] u  Is the state of the system of equations
 	 * @param[in]     ub Boundary condition values
 	 */
-	void apply_bc(const Time &t, State &u, const State &ub){
+	void apply_bc(const Time &t, State &u, State &ub){
 		this->apply_bc_impl(t,u,ub);
 	}
 
@@ -166,7 +166,7 @@ protected:
 	/**
 	 * Must be provided by implementation
 	 */
-	virtual void apply_bc_impl(const Time &t, State &u, const State &ub) = 0;
+	virtual void apply_bc_impl(const Time &t, State &u, State &ub) = 0;
 
 	/**
 	 * Must be provided by implementation
@@ -181,8 +181,8 @@ protected:
         std::function<void(const Time &t, State &u, State &ub)> 
                  update_bdy_callback_;
 
-private:
         StateInfo stateinfo_;
+
 };
 
 

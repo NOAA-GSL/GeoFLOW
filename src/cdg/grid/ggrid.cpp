@@ -40,7 +40,6 @@ GGrid::GGrid(const geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,G
 :
 bInitialized_                   (FALSE),
 bapplybc_                       (FALSE),
-bupdatebc_                      (FALSE),
 do_face_normals_                (FALSE),
 nprocs_        (GComm::WorldSize(comm)),
 ngelems_                            (0),
@@ -53,8 +52,7 @@ mass_                         (NULLPTR),
 imass_                        (NULLPTR),
 ggfx_                         (NULLPTR),
 ptree_                          (ptree),
-bdy_apply_callback_           (NULLPTR),
-bdy_update_callback_          (NULLPTR)
+bdy_apply_callback_           (NULLPTR)
 {
 } // end of constructor method (1)
 

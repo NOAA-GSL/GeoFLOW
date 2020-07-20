@@ -53,7 +53,6 @@ doheat_          (traits.doheat),
 bpureadv_      (traits.bpureadv),
 bconserved_  (traits.bconserved),
 bforced_        (traits.bforced),
-bupdatebc_               (FALSE),
 bsteptop_                (FALSE),
 bvariabledt_ (traits.variabledt),
 isteptype_       (GSTEPPER_EXRK),
@@ -306,7 +305,7 @@ void GBurgers<TypePack>::step_impl(const Time &t, State &uin, State &uf, State &
     this->stateinfo_.npresc  = c_.size();
     this->stateinfo_.icomptype.push_back(GSC_KINETIC);
     for ( auto j=0; j<c_.size(); j++ ) 
-      this->stateinfo_.icomptype.puush_back(GSC_PRESCRIBED);
+      this->stateinfo_.icomptype.push_back(GSC_PRESCRIBED);
   }
   else {
     for ( auto j=0; j<uin.size(); j++ ) uevolve_ [j] = uin[j];
@@ -621,8 +620,9 @@ void GBurgers<TypePack>::set_nu(GTVector<GFTYPE> &nu)
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GBurgers<TypePack>::apply_bc_impl(const Time &t, State &u, const State &ub)
+void GBurgers<TypePack>::apply_bc_impl(const Time &t, State &u, State &ub)
 {
+  Time ttime = 1;
 
   BdyUpdateList *updatelist = &grid_->bdy_update_list();;
 
@@ -630,7 +630,7 @@ void GBurgers<TypePack>::apply_bc_impl(const Time &t, State &u, const State &ub)
   // Update bdy values if required to:
   for ( auto k=0; k<updatelist->size(); k++ ) { // foreach grid bdy
     for ( auto j=0; j<(*updatelist)[j].size(); j++ ) { // each update method
-      (*updatelist)[j]->update(*grid_, this->stateinfo_, t, utmp_, u, ub););
+      (*updatelist)[k][j]->update(*grid_, this->stateinfo_, ttime, utmp_, u, ub);
     }
   }
 

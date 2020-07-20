@@ -128,13 +128,6 @@ virtual void                 print(const GString &filename){}          // print 
         void                 deriv(GTVector<GFTYPE> &u, GINT idir, GTVector<GFTYPE> &tmp,
                                    GTVector<GFTYPE> &du );            // derivative of global vector
 
-        void                 set_bdy_update_callback(
-                             std::function<void(const geoflow::tbox::PropertyTree &ptree,
-                                            GString &supdate, Grid &grid,
-                                            StateInfo &stinfo, const Time &t, 
-                                            State &utmp, State &u, State &ub)> callback)
-                                           { bdy_update_callback_ =  callback;
-                                             bupdatebc_ = TRUE; }       // set bdy-update callback
         void                 set_apply_bdy_callback(
                              std::function<void(const Time &t, State &u,
                                          State &ub)> callback)
@@ -268,12 +261,6 @@ virtual void                        do_bdy_normals(GTMatrix<GTVector<GFTYPE>>
         std::function<void(const Time &t, State &u, State &ub)>
                                     bdy_apply_callback_;            
                                                     // bdy apply callback
-        std::function<void(const geoflow::tbox::PropertyTree& ptree,
-                      GString &supdate, Grid &grid,
-                      StateInfo &stinfo, const Time &t, 
-                      State &utmp,  State &u, State &ub)> 
-                                    bdy_update_callback_;            
-                                                    // bdy update callback
 
 };
 
