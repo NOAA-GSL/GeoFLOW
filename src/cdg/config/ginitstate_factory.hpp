@@ -17,6 +17,11 @@
 #include "ggrid.hpp"
 #include "ggrid_icos.hpp"
 #include "ggrid_box.hpp"
+#include "ginitb.hpp"
+#include "ginitc.hpp"
+#include "ginitps.hpp"
+#include "ginits.hpp"
+#include "ginitv.hpp"
 
 using namespace geoflow::pdeint;
 using namespace std;
