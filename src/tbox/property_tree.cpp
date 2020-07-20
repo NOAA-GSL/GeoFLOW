@@ -58,77 +58,79 @@ void PropertyTree::load_string(const std::string& content){
 }
 
 bool
-PropertyTree::keyExists(const std::string& key) const{
-	return (node_.count(key) > 0);
+PropertyTree::keyExists(const std::string& key) const {
+	return this->key_exists_(key);
 }
 
 std::vector<std::string>
-PropertyTree::getKeys() const{
+PropertyTree::getKeys() const {
 	std::vector<std::string> result;
-	//result.reserve(node_.size());
 	for(auto kv : node_){
-		//result.emplace_back(kv.first);
 		result.push_back(kv.first);
 	}
 	return result;
 }
 
-bool PropertyTree::isPropertyTree(const std::string& key) const{
-	return ( this->keyExists(key)     &&
-			 this->key_is_list(key)   &&
-			 this->list_has_keys(key) );
+bool
+PropertyTree::isPropertyTree(const std::string& key) const {
+	return (this->key_exists_(key) &&
+			this->key_has_children_(key) &&
+			this->key_children_have_names_(key));
 }
 
 PropertyTree
-PropertyTree::getPropertyTree(const std::string& key) const{
-	if( !isPropertyTree(key) ){
-		EH_ERROR("PropertyTree::getPropertyTree() key = " << key);
+PropertyTree::getPropertyTree(const std::string& key) const {
+	if( not key_exists_(key) ){
+		EH_ERROR("PropertyTree key '"<<key<<"' does not exist");
 	}
-	return this->get_ptree_impl(key);
+	if( not key_has_children_(key) ){
+		EH_ERROR("PropertyTree key '"<<key<<"' contains single value");
+	}
+	if( not key_children_have_names_(key) ){
+		EH_ERROR("PropertyTree key '"<<key<<"' contains no child names");
+	}
+	return this->get_tree_impl_(key);
 }
 
+/**
+ * Get the PropertyTree at key returned as type T
+ *
+ * Get the PropertyTree stored at key.  If the key
+ * doesn't exist the provided default value is
+ * returned.
+ */
 PropertyTree
-PropertyTree::getPropertyTree(const std::string& key, const PropertyTree& dval) const{
-	if( !isPropertyTree(key) ){
+PropertyTree::getPropertyTree(const std::string& key, const PropertyTree& dval) const {
+	if( this->isPropertyTree(key) ){
 		return dval;
 	}
-	return this->get_ptree_impl(key);
+	return this->get_tree_impl_(key);
 }
-
 
 void
 PropertyTree::setPropertyTree(const std::string& key, const PropertyTree& val){
 	this->node_.put_child(key, val.node_);
 }
 
-
-
-// Key leads to a terminal value (not array or ptree)
-bool PropertyTree::key_is_terminal(const std::string& key) const {
-	ASSERT(this->keyExists(key));
-	boost::property_tree::ptree const child = node_.get_child(key);
-	return (child.empty() && !child.data().empty());
+bool
+PropertyTree::key_exists_(const std::string& key) const {
+	return (node_.count(key) > 0);
 }
 
-// Key leads to a list (array or ptree)
-bool PropertyTree::key_is_list(const std::string& key) const {
-	ASSERT(this->keyExists(key));
-	boost::property_tree::ptree const child = node_.get_child(key);
-	return  (!child.empty() && child.data().empty());
+bool
+PropertyTree::key_has_children_(const std::string& key) const {
+	ASSERT( key_exists_(key) );
+	return (node_.get_child(key).size() > 0);
 }
 
-// Key leads to an array
-bool PropertyTree::key_is_array(const std::string& key) const{
-	ASSERT(this->keyExists(key));
-	return ( this->key_is_list(key)   &&
-			!this->list_has_keys(key) );
-}
-
-// Key leads to a list with key names
-bool PropertyTree::list_has_keys(const std::string& key) const {
-	ASSERT(this->key_is_list(key));
-	for(auto const& kv_pair : node_.get_child(key)){
-		if( !kv_pair.first.empty() ){
+bool
+PropertyTree::key_children_have_names_(const std::string& key) const {
+	ASSERT( key_exists_(key) );
+	ASSERT( key_has_children_(key) );
+	auto key_node =  node_.get_child(key);
+	for(auto const& child_pair : key_node){ // Loop over child nodes
+		auto child_key = child_pair.first;  // Get std::string name of child
+		if( not child_key.empty() ){        // Test if std::string is empty
 			return true;
 		}
 	}
@@ -137,15 +139,14 @@ bool PropertyTree::list_has_keys(const std::string& key) const {
 
 
 PropertyTree
-PropertyTree::get_ptree_impl(const std::string& key) const{
-	ASSERT(this->key_is_list(key) && !this->key_is_array(key));
+PropertyTree::get_tree_impl_(const std::string& key) const {
+	ASSERT(key_exists_(key));
+	ASSERT(key_has_children_(key));
+	ASSERT(key_children_have_names_(key));
 	PropertyTree pt;
 	pt.node_ = node_.get_child(key);
 	return pt;
 }
-
-
-
 
 } // namespace tbox
 } // namespace geoflow

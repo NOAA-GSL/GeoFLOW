@@ -19,87 +19,127 @@ namespace tbox {
 
 
 template<class Archive>
-void PropertyTree::serialize(Archive & ar, const unsigned int version){
-	//boost::property_tree::serialize(ar,this->node_,version);
+void
+PropertyTree::serialize(Archive & ar, const unsigned int version){
 	ar & this->node_;
 }
 
+
 template<typename T>
-bool PropertyTree::isValue(const std::string& key) const{
-	bool result = (keyExists(key) && key_is_terminal(key));
-	if( result ){
-		try{
-			const T b = this->get_value_impl<T>(key);
-		}
-		catch(...){
-			result = false;
-		}
-	}
-	return result;
+bool
+PropertyTree::isValue(const std::string& key) const {
+	return (this->key_exists_(key)            &&
+		   (not this->key_has_children_(key)) &&
+		   (this->value_is_type_<T>(key)) );
 }
 
 template<typename T>
-bool PropertyTree::isArray(const std::string& key) const{
-	bool result = (keyExists(key) && key_is_array(key));
-	if( result ){
-		try{
-			std::vector<T> tmp = this->get_array_impl<T>(key);
-		}
-		catch(...){
-			result = false;
-		}
-	}
-	return result;
+bool
+PropertyTree::isArray(const std::string& key) const {
+	return (this->key_exists_(key) &&
+			this->key_has_children_(key) &&
+		    (not this->key_children_have_names_(key)) &&
+			this->array_is_type_<T>(key)  );
 }
 
-
-
 template<typename T>
-T
-PropertyTree::getValue(const std::string& key) const{
-	if( !isValue<T>(key) ){
-		EH_ERROR("PropertyTree::getValue() key = " << key);
-	}
-	return this->get_value_impl<T>(key);
+bool
+PropertyTree::isArray2D(const std::string& key) const {
+	return (this->key_exists_(key)                    &&
+			this->key_has_children_(key)              &&
+		    (not this->key_children_have_names_(key)) &&
+			this->array_is_array_type_<T>(key) );
 }
 
 template<typename T>
 T
-PropertyTree::getValue(const std::string& key, const T& dval) const{
-	if( !isValue<T>(key) ){
+PropertyTree::getValue(const std::string& key) const {
+	if( not key_exists_(key) ){
+		EH_ERROR("Key '"<<key<<"' does not exist");
+	}
+	if( key_has_children_(key) ){
+		EH_ERROR("Expected single value in key '" << key << "'");
+	}
+	if( not value_is_type_<T>(key) ) {
+		EH_ERROR("Value within key '"<<key<<"' could not be converted to requested type");
+	}
+	return node_.get<T>(key);
+}
+
+template<typename T>
+T
+PropertyTree::getValue(const std::string& key, const T& dval) const {
+	if( not this->isValue<T>(key) ) {
 		return dval;
 	}
-	return this->get_value_impl<T>(key);
+	return node_.get<T>(key);
 }
 
 template<typename T>
 std::vector<T>
-PropertyTree::getArray(const std::string& key) const{
-	if( !isArray<T>(key) ){
-		EH_ERROR("PropertyTree::getArray() key = " << key);
+PropertyTree::getArray(const std::string& key) const {
+	if( not key_exists_(key) ){
+		EH_ERROR("Key '"<<key<<"' does not exist");
 	}
-	return this->get_array_impl<T>(key);
+	if( not key_has_children_(key) ){
+		EH_ERROR("Expected array in key '" << key << "'");
+	}
+	if( key_children_have_names_(key) ){
+		EH_ERROR("Expected array in key '" << key << "'");
+	}
+	if( not array_is_type_<T>(key) ) {
+		EH_ERROR("Value within key '"<<key<<"' could not be converted to requested array type");
+	}
+	return this->get_array_impl_<T>(key);
 }
 
 template<typename T>
 std::vector<T>
-PropertyTree::getArray(const std::string& key, const std::vector<T>& dval) const{
-	if( !isArray<T>(key) ){
+PropertyTree::getArray(const std::string& key, const std::vector<T>& dval) const {
+	if( not this->isArray<T>(key) ) {
 		return dval;
 	}
-	return this->get_array_impl<T>(key);
+	return this->get_array_impl_<T>(key);
 }
 
+template<typename T>
+std::vector<std::vector<T>>
+PropertyTree::getArray2D(const std::string& key) const {
+	if( not key_exists_(key) ){
+		EH_ERROR("Key '"<<key<<"' does not exist");
+	}
+	if( not key_has_children_(key) ){
+		EH_ERROR("Expected 2D array in key '" << key << "'");
+	}
+	if( key_children_have_names_(key) ){
+		EH_ERROR("Expected 2D array in key '" << key << "'");
+	}
+	if( not array_is_array_type_<T>(key) ) {
+		EH_ERROR("Value within key '"<<key<<"' could not be converted to requested 2D array type");
+	}
+	return this->get_array_of_array_impl_<T>(key);
+}
+
+template<typename T>
+std::vector<std::vector<T>>
+PropertyTree::getArray2D(const std::string& key,
+		                 const std::vector<std::vector<T>>& dval) const {
+	if( not this->isArray2D<T>(key) ) {
+		return dval;
+	}
+	return this->get_array_of_array_impl_<T>(key);
+}
 
 template<typename T>
 void
-PropertyTree::setValue(const std::string& key, const T& val){
+PropertyTree::setValue(const std::string& key, const T& val) {
 	node_.put(key,val);
 }
 
+
 template<typename T>
 void
-PropertyTree::setArray(const std::string& key, const std::vector<T>& vec){
+PropertyTree::setArray(const std::string& key, const std::vector<T>& vec) {
 	  boost::property_tree::ptree array;
 	  const std::string empty_string;
 	  for(auto const& val : vec){
@@ -110,27 +150,94 @@ PropertyTree::setArray(const std::string& key, const std::vector<T>& vec){
 	  this->node_.put_child(key,array);
 }
 
+
 template<typename T>
-T
-PropertyTree::get_value_impl(const std::string& key) const{
-	ASSERT(key_is_terminal(key));
-	return node_.get<T>(key);
+bool
+PropertyTree::value_is_type_(const std::string& key) const {
+	ASSERT( key_exists_(key) );
+	ASSERT( not key_has_children_(key) );
+	return node_.get_optional<T>(key).has_value();
 }
 
 template<typename T>
+bool
+PropertyTree::array_is_type_(const std::string& key) const {
+	ASSERT( key_exists_(key) );
+	ASSERT( key_has_children_(key) );
+	ASSERT(not key_children_have_names_(key));
+	auto key_node = node_.get_child(key);
+	for(auto const& child_pair : key_node){ // Loop over child nodes
+		if( not child_pair.second.get_value_optional<T>() ) {
+			return false;
+		}
+	}
+	return true;
+}
+
+template<typename T>
+bool
+PropertyTree::array_is_array_type_(const std::string& key) const {
+	ASSERT( key_exists_(key) );
+	ASSERT( key_has_children_(key) );
+	ASSERT(not key_children_have_names_(key));
+	auto key_node = node_.get_child(key);
+	// Loop over nodes of child with key
+	for(auto const& child_pair : node_.get_child(key)){
+	    // Child must have children
+		if( child_pair.second.empty() ){
+			return false;
+		}
+		// Loop over child nodes
+		for(auto const& sub_child_pair : child_pair.second){
+			// Test if sub_child key is empty std::string
+			if( not sub_child_pair.first.empty() ){
+				return false;
+			}
+			// Test if sub_child value can be converted to T
+			if( not sub_child_pair.second.get_value_optional<T>() ) {
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
+// Implementation of getArray (No error checks)
+template<typename T>
 std::vector<T>
-PropertyTree::get_array_impl(const std::string& key) const{
-	ASSERT(key_is_array(key));
+PropertyTree::get_array_impl_(const std::string& key) const {
+	ASSERT(key_exists_(key));
+	ASSERT(key_has_children_(key));
+	ASSERT(not key_children_have_names_(key));
+	ASSERT(array_is_type_<T>(key));
 	std::vector<T> result;
-	//result.reserve(node_.get_child(key).size());
-	for(auto const& kv_pair : node_.get_child(key)){
-		//result.emplace_back(kv_pair.second.get<T>(""));
-		result.push_back(kv_pair.second.get<T>(""));
+	auto key_node = node_.get_child(key);
+	for(auto const& child_pair : key_node){
+		result.push_back(child_pair.second.get_value<T>());
 	}
 	return result;
 }
 
+// Implementation of getArray (No error checks)
+template<typename T>
+std::vector<std::vector<T>>
+PropertyTree::get_array_of_array_impl_(const std::string& key) const {
+	ASSERT(key_exists_(key));
+	ASSERT(key_has_children_(key));
+	ASSERT(not key_children_have_names_(key));
+	ASSERT(array_is_array_type_<T>(key));
 
+	std::vector<std::vector<T>> result;
+	auto key_node = node_.get_child(key);
+	for(auto const& child_pair : key_node){                  // Loop over child nodes
+		std::vector<T> row;
+		for(auto const& sub_child_pair : child_pair.second){ // Loop over sub-child nodes
+			row.push_back(sub_child_pair.second.get_value<T>());
+		}
+		result.push_back(row);
+	}
+	return result;
+}
 
 
 
