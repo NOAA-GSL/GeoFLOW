@@ -801,7 +801,7 @@ void compare(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &t, 
   nnorm    = 1.0;
 
 
-  tt = 0.0;
+  tt = t;
   bret = GInitStateFactory<MyTypes>::init(ptree, grid, peqn->stateinfo(), tt, utmp, ub, ua);
   assert(bret && "state initialization failed");
   for ( GSIZET j=0; j<nsolve_; j++ ) { // local errors
