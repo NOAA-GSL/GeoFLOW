@@ -172,11 +172,11 @@ int main(int argc, char **argv)
     //***************************************************
     // Do shutdown, cleaning:
     //***************************************************
+    deallocate();
     EH_MESSAGE("geoflow: do shutdown...");
     GlobalManager::shutdown();
     GlobalManager::finalize();
     GComm::TermComm();
-    deallocate();
 
 
     return(0);
