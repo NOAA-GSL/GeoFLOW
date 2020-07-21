@@ -41,7 +41,7 @@ GBOOL impl_boxnwaveburgers(const PropertyTree &ptree, GString &sconfig, GGrid &g
   GINT             nlump=0;
   GSIZET           i, j, nxy;
   GFTYPE           K2, nu, Re, r2, tdenom;
-  GFTYPE           efact, sum, tfact, xfact;
+  GFTYPE           efact, sum, tfact, tt, xfact;
   GTVector<GFTYPE> xx(GDIM), si(GDIM), sig(GDIM), t0;
   GTPoint<GFTYPE>  kprop(3), r0(3), P0(3), gL(3);
   std::vector<GFTYPE>  kxprop, kyprop, kzprop;
@@ -59,6 +59,8 @@ GBOOL impl_boxnwaveburgers(const PropertyTree &ptree, GString &sconfig, GGrid &g
 
   assert(grid.gtype() == GE_REGULAR 
       || grid.gtype() == GE_DEFORMED  && "Invalid element types");
+
+  tt = time;
 
   GTVector<GString> bc(6);
   bc[0] = boxptree.getValue<GString>("bdy_x_0");
@@ -109,19 +111,21 @@ GBOOL impl_boxnwaveburgers(const PropertyTree &ptree, GString &sconfig, GGrid &g
   nlump = xinit.size();
 
   assert( snut == "constant" && "nu_type must bet set to 'constant')");
-  cout << "impl_boxnwaveburgers: nu=" << nu << " Re=" << Re << " time=" << time << endl;
 
-  if ( time <= 10.0*std::numeric_limits<GFTYPE>::epsilon() ) time = t0.max();
+  if ( (time-t0.max()) <= 10.0*std::numeric_limits<GFTYPE>::epsilon() ) time = t0.max();
+
 
   for ( i=0; i<GDIM; i++ ) {
     *u[i] = 0.0;
   }
+
   for ( GINT ilump=0; ilump<nlump; ilump++ ) {
     r0[0]  = xinit[ilump]; r0[1]  = yinit[ilump]; 
     if ( GDIM > 2 ) r0[2]  = zinit[ilump]; 
     kprop[0] = kxprop[ilump]; kprop[1] = kyprop[ilump];
     if ( GDIM > 2 ) kprop[2]  = kzprop[ilump]; 
     Re  = ULparam[ilump]/nu; // set Re from nu and ULparam
+    cout << "impl_boxnwaveburgers: ilump=" << ilump << " nu=" << nu << " Re=" << Re << " tt=" << tt << " time=" << time << endl;
     kprop  *= 1.0/kprop.norm();
     tdenom  = 1.0/(4.0*nu*time);
     tfact   = bplanar[ilump] ? sqrt(time/t0[ilump]): time/t0[ilump];
@@ -145,7 +149,6 @@ GBOOL impl_boxnwaveburgers(const PropertyTree &ptree, GString &sconfig, GGrid &g
         xx[0] = sum;
       }
       for ( i=0, r2=0.0; i<GDIM; i++ ) r2 += xx[i]*xx[i];  
- cout << "impl_boxnwaveburgers: tdenom=" << tdenom << " Re=" << Re << endl; 
       efact   = tfact * exp(r2*tdenom) / ( exp(Re) - 1.0 );
       xfact   = 1.0 /( time * (  1.0 + efact ) );
       // u(x,t) = (x/t) [ 1 + sqrt(t/t0) (e^Re - 1)^-1 exp(x^2/(4 nu t)) ]^-1
@@ -220,7 +223,7 @@ GBOOL impl_icosnwaveburgers(const PropertyTree &ptree, GString &sconfig, GGrid &
       && lat0.size() == t0.size()
       && "lat0, lon0, and t0 must be the same size");
 
-  if ( time <= 10.0*std::numeric_limits<GFTYPE>::epsilon() ) time = t0.max();
+  if ( (time-t0.max()) <= 10.0*std::numeric_limits<GFTYPE>::epsilon() ) time = t0.max();
 
   // Convert initial positions to radians:
   for ( GINT ilump=0; ilump<lat0.size(); ilump++) {
