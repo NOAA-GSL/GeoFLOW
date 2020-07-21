@@ -125,12 +125,12 @@ GBOOL impl_boxnwaveburgers(const PropertyTree &ptree, GString &sconfig, GGrid &g
     kprop[0] = kxprop[ilump]; kprop[1] = kyprop[ilump];
     if ( GDIM > 2 ) kprop[2]  = kzprop[ilump]; 
     Re  = ULparam[ilump]/nu; // set Re from nu and ULparam
-    cout << "impl_boxnwaveburgers: ilump=" << ilump << " nu=" << nu << " Re=" << Re << " tt=" << tt << " time=" << time << endl;
-    kprop  *= 1.0/kprop.norm();
+//   cout << "impl_boxnwaveburgers: ilump=" << ilump << " nu=" << nu << " Re=" << Re << " tt=" << tt << " time=" << time << endl;
+    for ( i=0, K2=0.0; i<GDIM; i++ ) K2 += kprop[i]*kprop[i];
+    assert(K2 > 10.0*std::numeric_limits<GFTYPE>::epsilon() && "Prop direction, kprop, not set");
+    if ( bplanar[ilump] ) kprop  *= 1.0/kprop.norm();
     tdenom  = 1.0/(4.0*nu*time);
     tfact   = bplanar[ilump] ? sqrt(time/t0[ilump]): time/t0[ilump];
-    for ( i=0, K2=0.0; i<GDIM; i++ ) K2 += kprop[i]*kprop[i];
-    assert(K2 != 0 && "Prop direction, kprop, not set");
     // If prop direction has more than one component != 0. Then
     // front is rotated (but still planar):
 //  for ( i=0, brot=TRUE; i<GDIM; i++ ) brot = brot && K[i] != 0.0 ;
