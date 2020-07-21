@@ -139,7 +139,7 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree& ptree, GString &supd
       traits.compute_once = sptree.getValue<GBOOL>("compute_once");
     }
 
-    // Allocate observer Implementation
+    // Allocate update Implementation
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
 
     // Set back to base type
@@ -167,6 +167,10 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree& ptree, GString &supd
     traits.ptree = ptree;
     // Allocate observer Implementation
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
+
+    // Set back to base type
+    base_ptr = update_impl;
+    return base_ptr;
   }
   else if ( GBDY_NOSLIP == bdytype ) {
     using UpdateImpl = GNoSlipBdy<Types>;
@@ -181,6 +185,10 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree& ptree, GString &supd
     
     // Allocate observer Implementation
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
+
+    // Set back to base type
+    base_ptr = update_impl;
+    return base_ptr;
   }
   else if ( GBDY_0FLUX == bdytype ) {
     using UpdateImpl = G0FluxBdy<Types>;
@@ -196,6 +204,9 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree& ptree, GString &supd
     // Allocate observer Implementation
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
 
+    // Set back to base type
+    base_ptr = update_impl;
+    return base_ptr;
   }
   else if ( GBDY_OUTFLOW == bdytype ) {
     assert(FALSE); // not available yet
@@ -211,6 +222,10 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree& ptree, GString &supd
     
     // Allocate observer Implementation
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
+
+    // Set back to base type
+    base_ptr = update_impl;
+    return base_ptr;
   }
   else if ( GBDY_SPONGE == bdytype ) {
     using UpdateImpl = GSpongeBdy<Types>;
@@ -245,6 +260,9 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree& ptree, GString &supd
     // Allocate observer Implementation
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
 
+    // Set back to base type
+    base_ptr = update_impl;
+    return base_ptr;
   }
   else {
     assert(FALSE && "Specified bdy update method unknown");
