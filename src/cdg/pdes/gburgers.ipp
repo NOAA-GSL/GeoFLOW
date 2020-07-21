@@ -622,7 +622,7 @@ void GBurgers<TypePack>::set_nu(GTVector<GFTYPE> &nu)
 template<typename TypePack>
 void GBurgers<TypePack>::apply_bc_impl(const Time &t, State &u, State &ub)
 {
-  Time ttime = 1;
+  Time ttime = t;
 
   BdyUpdateList *updatelist = &grid_->bdy_update_list();;
 
