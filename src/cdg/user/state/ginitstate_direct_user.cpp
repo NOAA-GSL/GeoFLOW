@@ -119,6 +119,7 @@ GBOOL impl_boxnwaveburgers(const PropertyTree &ptree, GString &sconfig, GGrid &g
     *u[i] = 0.0;
   }
 
+  tdenom  = 1.0/(4.0*nu*time);
   for ( GINT ilump=0; ilump<nlump; ilump++ ) {
     r0[0]  = xinit[ilump]; r0[1]  = yinit[ilump]; 
     if ( GDIM > 2 ) r0[2]  = zinit[ilump]; 
@@ -129,7 +130,6 @@ GBOOL impl_boxnwaveburgers(const PropertyTree &ptree, GString &sconfig, GGrid &g
     for ( i=0, K2=0.0; i<GDIM; i++ ) K2 += kprop[i]*kprop[i];
     assert(K2 > 10.0*std::numeric_limits<GFTYPE>::epsilon() && "Prop direction, kprop, not set");
     if ( bplanar[ilump] ) kprop  *= 1.0/kprop.norm();
-    tdenom  = 1.0/(4.0*nu*time);
     tfact   = bplanar[ilump] ? sqrt(time/t0[ilump]): time/t0[ilump];
     // If prop direction has more than one component != 0. Then
     // front is rotated (but still planar):
@@ -236,6 +236,7 @@ GBOOL impl_icosnwaveburgers(const PropertyTree &ptree, GString &sconfig, GGrid &
 
   for ( i=0; i<GDIM+1; i++ ) *u[i] = 0.0;
    
+  tdenom = 1.0/(4.0*nu*time);
   // Initialize each lump:
   for ( GINT ilump=0; ilump<lat0.size(); ilump++) {
     Re = Uparam[ilump]*r/nu; // set Re from nu, U, radius
@@ -246,15 +247,14 @@ GBOOL impl_icosnwaveburgers(const PropertyTree &ptree, GString &sconfig, GGrid &
       for ( i=0; i<GDIM+1; i++ ) { 
         xx[i] = (*xnodes)[i][j] - r0[ilump][i];
       }
-/*
+  
       xx[0] = r*lat;
       xx[1] = r*lon;
-*/
+  
       // find arclength from lump center
       s     = r*acos( sin(lat)*sin(lat0[ilump])
             +       cos(lat)*cos(lat0[ilump])*cos(lon - lon0[ilump]) );
   
-      tdenom = 1.0/(4.0*nu*time);
       tfact  = time/t0[ilump];
       efact  = tfact * exp(s*s*tdenom) / ( exp(Re) - 1.0 );
       xfact  = 1.0 /( time * (  1.0 + efact ) );
@@ -573,9 +573,10 @@ GBOOL impl_icosgauss(const PropertyTree &ptree, GString &sconfig, GGrid &grid, S
   rad   = icosptree.getValue<GFTYPE>("radius");
   E0    = lumpptree.getValue<GFTYPE>("E0");
   alpha = lumpptree.getValue<GFTYPE>("alpha",0.0);
-  nlumps= lumpptree.getValue<GINT>("nlumps",1);
 
   alpha *= PI/180.0;
+
+  nlumps = lat0.size();
 
   nu    = nuptree   .getValue<GFTYPE>("nu");
   snut  = nuptree   .getValue<GString>("nu_type","constant");
