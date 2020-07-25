@@ -13,6 +13,201 @@ namespace GMTK
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD : Plm_cart
+// DESC   : Compute assosiated Legendre polynomials at each grid point
+//          specified by xnodes in Carteswian coordinates.
+//              Note: Adapted from Numerical Recipes
+//
+// ARGS   : l,m,  : orbital ang mom. quantum number, and azimuthal quantum number
+//          xnodes: Cartesian coordinate arrays
+//          plm   : P^l_m for each grid point
+// RETURNS: none
+//**********************************************************************************
+template<typename T>
+void Plm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GTVector<T> &plm)
+{
+  T fact;
+  T pmm, pmmp1, pll, somx2;
+  T colat, phi, r;
+  T x, y, z;
+
+  assert( m >= 0 && m <= l );
+
+  for ( auto j=0; j<xnodes[0].size(); j++ ) {
+    x     = xnodes[0][j]; y = xnodes[1][j]; z = xnodes[2][j];
+    r     = sqrt(x*x +y*y + z*z);
+
+    colat = acos(z/r); // Note: this is co-latitude
+    phi   = atan2(y,x);
+    x     = cos(colat);
+    assert( fabs(x) <= 1.0  );
+    pmm=1.0; // compute Pm_m 
+    if ( m > 0 ) {
+      somx2 = sqrt((1.0-x)*(1.0+x)); 
+      fact  = 1.0;
+      for ( auto i=1; i<=m; i++) {
+        pmm  *= -fact*somx2;
+        fact += 2.0; 
+      }
+    }
+    if (l == m) {
+      plm[j] = pmm; 
+      continue;
+    }
+    else {   // compute P^m_m+1    
+      pmmp1=x*(2*m+1)*pmm; 
+      if (l == (m+1)) {
+        plm[j] = pmmp1; 
+        continue;
+      }
+      else { // compute P^m_l; l > m+1
+        for ( auto ll=m+2; ll<=l; ll++) {
+          pll   = (x*(2*ll-1)*pmmp1 - (ll+m-1)*pmm)/(ll-m); 
+          pmm   = pmmp1;
+          pmmp1 = pll;
+        }
+        plm[j] = pll; 
+        continue;
+      }
+    }
+  } // end, coord loop
+
+} // end, method Plm_cart
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : Ylm_cart
+// DESC   : Compute spherical harmonics at each grid point
+//          specified by xnodes in Carteswian coordinates.
+//          Cmputed as:
+//              Ylm  =  sqrt{ (2l_1)(l-m)! / [4pi (l+m)!] } X
+//                      P_lm exp(i m phi)
+//          if iri = 0; else returns Ylm^*.
+//          
+//   
+// ARGS   : l,m,  : orbital ang mom. quantum number, and azimuthal quantum number
+//          xnodes: Cartesian coordinate arrays
+//          iri   : if 0, return real Ylm, else, return complex conjugate
+//          ylm_r : real comp. of Y^l_m for each grid point
+//          ylm_i : imag. comp. of Y^l_m for each grid point
+// RETURNS: none
+//**********************************************************************************
+template<typename T>
+void Ylm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT iri, GTVector<T> &ylm_r, GTVector<T> &ylm_i)
+{
+  T phi, r;
+  T x, y, z;
+
+  assert( iri >= 0 );
+  GMTK::Plm_cart(l, m, xnodes, ylm_r);
+  for ( auto j=0; j<xnodes[0].size(); j++ ) {
+    x     = xnodes[0][j]; y = xnodes[1][j]; z = xnodes[2][j];
+    r     = sqrt(x*x +y*y + z*z);
+    phi   = atan2(y,x);
+    ylm_r[j] *= cos(phi);
+    ylm_i[j] *= sin(phi);
+  } // end, coord loop
+
+  if ( iri > 0 ) { // create complex conjugate
+    ylm_i *= -1.0;
+  }
+
+} // end, method Ylm_cart
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : Rx3
+// DESC   : Compute finite rotation of amount alpha about x axis, and return
+//          in the input arrays
+//             x_new  = Rx x_old,
+//          where 
+//               | 1    0    0     |
+//          Rx = | 0   cos a sin a |
+//               | 0  -sin a cos a |
+//          Note: This is a 'passive' rotation of coord system. User must
+//                late alpha --> -alpha to get an active rotation of a vector
+//          
+// ARGS   : alpha : angle of rotation
+//          y, z  : arrays of vector components
+// RETURNS: none.
+//**********************************************************************************
+template<typename T>
+void Rx3(T alpha, GTVector<T> &y, GTVector<T> &z)
+{
+  assert( z.size() == y.size() &&  "Incompatible vectors");
+
+  for ( auto j=0; j<y.size(); j++ ) { // cycle over all vector elems
+    y[j]  =  cos(alpha)*y[j] + sin(alpha)*z[j];
+    z[j]  = -sin(alpha)*y[j] + cos(alpha)*z[j];
+  }
+
+} // end of method Rx3 
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : Ry3
+// DESC   : Compute finite rotation of amount alpha about y axis, and return
+//          in the input arrays
+//             x_new  = Ry x_old,
+//          where 
+//               | cos a    0    sin a |
+//          Rx = | 0        1    0     |
+//               | -sin a   0    cos a |
+//          Note: This is a 'passive' rotation of coord system. User must
+//                late alpha --> -alpha to get an active rotation of a vector
+//          
+// ARGS   : alpha : angle of rotation
+//          x, z  : arrays of vector components
+// RETURNS: none.
+//**********************************************************************************
+template<typename T>
+void Ry3(T alpha, GTVector<T> &x, GTVector<T> &z)
+{
+  assert( z.size() == x.size() &&  "Incompatible vectors");
+
+  for ( auto j=0; j<x.size(); j++ ) { // cycle over all vector elems
+    x[j]  =  cos(alpha)*x[j] + sin(alpha)*z[j];
+    z[j]  = -sin(alpha)*x[j] + cos(alpha)*z[j];
+  }
+
+} // end of method Ry3 
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : Rz3
+// DESC   : Compute finite rotation of amount alpha about z axis, and return
+//          in the input arrays
+//             x_new  = Rz x_old,
+//          where 
+//               |  cos a sin a  0 |
+//          Rz = | -sin a cos a  0 |
+//               | 0    0        1 |
+//          Note: This is a 'passive' rotation of coord system. User must
+//                late alpha --> -alpha to get an active rotation of a vector
+//          
+// ARGS   : alpha  : angle of rotation
+//          x, y   : arrays of vector components
+// RETURNS: none.
+//**********************************************************************************
+template<typename T>
+void Rz3(T alpha, GTVector<T> &x, GTVector<T> &y)
+{
+  assert( y.size() == x.size() &&  "Incompatible vectors");
+
+  for ( auto j=0; j<x.size(); j++ ) { // cycle over all vector elems
+    x[j]  =  cos(alpha)*x[j] + sin(alpha)*y[j];
+    y[j]  = -sin(alpha)*x[j] + cos(alpha)*y[j];
+  }
+
+} // end of method Rz3 
+
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD : cross_prod_k (1)
 // DESC   : Compute cross/vector product with hat(k)
 //             C = A X hat(k)

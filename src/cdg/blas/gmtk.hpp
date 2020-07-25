@@ -29,6 +29,18 @@ namespace GMTK
 {
 
   template<typename T>     
+  void Pml(T l, T m, GTVector<T> &y, GTVector<T> &z);
+
+  template<typename T>     
+  void Rx3(T alpha, GTVector<T> &y, GTVector<T> &z);
+
+  template<typename T>     
+  void Ry3(T alpha, GTVector<T> &x, GTVector<T> &z);
+
+  template<typename T>     
+  void Rz3(T alpha, GTVector<T> &x, GTVector<T> &y);
+
+  template<typename T>     
   void D2_X_D1(GTMatrix<T> &D1, GTMatrix<T> &D2T, GTVector<T> &u, 
                GTVector<T> &tmp, GTVector<T> &y);
   template<typename T>     
