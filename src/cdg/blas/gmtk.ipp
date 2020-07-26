@@ -14,6 +14,29 @@ namespace GMTK
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD : fact
+// DESC   : Compute factorial of specified number
+//
+// ARGS   : n  : whole number
+// RETURNS: T factorial
+//**********************************************************************************
+template<typename T>
+T fact(T n)
+{
+   T Tzero = static_cast<T>(0);
+   T Tone  = static_cast<T>(1);
+   if ( n == Tzero || n == Tone ) {
+     return Tone;
+   }
+   else {
+     return n*fact(n-Tone);
+   }
+
+} // end, method fact
+
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD : Plm_cart
 // DESC   : Compute assosiated Legendre polynomials at each grid point
 //          specified by xnodes in Carteswian coordinates.
@@ -82,9 +105,9 @@ void Plm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GTVector<T> &plm)
 // DESC   : Compute spherical harmonics at each grid point
 //          specified by xnodes in Carteswian coordinates.
 //          Cmputed as:
-//              Ylm  =  sqrt{ (2l_1)(l-m)! / [4pi (l+m)!] } X
+//              Ylm  =  sqrt{ (2l+1)(l-m)! / [4pi (l+m)!] } X
 //                      P_lm exp(i m phi)
-//          if iri = 0; else returns Ylm^*.
+//          if iri = 0; else returns Ylm^*. If |m| > l, set Ylm=0
 //          
 //   
 // ARGS   : l,m,  : orbital ang mom. quantum number, and azimuthal quantum number
@@ -97,11 +120,20 @@ void Plm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GTVector<T> &plm)
 template<typename T>
 void Ylm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT iri, GTVector<T> &ylm_r, GTVector<T> &ylm_i)
 {
-  T phi, r;
+  T fact, phi, r;
   T x, y, z;
 
   assert( iri >= 0 );
-  GMTK::Plm_cart(l, m, xnodes, ylm_r);
+
+  if ( abs(m) > l ) {
+    ylm_r = 0.0;
+    ylm_i = 0.0;
+    return;
+  }
+  
+  fact = sqrt( (l-m) );
+
+  GMTK::Plm_cart(l, abs(m), xnodes, ylm_r);
   for ( auto j=0; j<xnodes[0].size(); j++ ) {
     x     = xnodes[0][j]; y = xnodes[1][j]; z = xnodes[2][j];
     r     = sqrt(x*x +y*y + z*z);
@@ -115,6 +147,54 @@ void Ylm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT iri, GTVector<
   }
 
 } // end, method Ylm_cart
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : rYlm_cart
+// DESC   : Compute spherical harmonics at each grid point
+//          specified by xnodes in Carteswian coordinates.
+//          Cmputed as:
+//              Ylm  =  sqrt{ (2l_1)(l-m)! / [4pi (l+m)!] } X
+//                      P_lm exp(i m phi)
+//          if iri = 0; else returns Ylm^*. If |m| > l, set Ylm=0
+//          
+//   
+// ARGS   : l,m,  : orbital ang mom. quantum number, and azimuthal quantum number
+//          xnodes: Cartesian coordinate arrays
+//          iri   : if 0, return real Ylm, else, return complex conjugate
+//          ylm_r : real comp. of Y^l_m for each grid point
+//          ylm_i : imag. comp. of Y^l_m for each grid point
+// RETURNS: none
+//**********************************************************************************
+template<typename T>
+void rYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT iri, GTVector<T> &ylm_r, GTVector<T> &ylm_i)
+{
+  T phi, r;
+  T x, y, z;
+
+  assert( iri >= 0 );
+
+  if ( abs(m) > l ) {
+    ylm_r = 0.0;
+    ylm_i = 0.0;
+    return;
+  }
+
+  GMTK::Plm_cart(l, abs(m), xnodes, ylm_r);
+  for ( auto j=0; j<xnodes[0].size(); j++ ) {
+    x     = xnodes[0][j]; y = xnodes[1][j]; z = xnodes[2][j];
+    r     = sqrt(x*x +y*y + z*z);
+    phi   = atan2(y,x);
+    ylm_r[j] *= cos(phi);
+    ylm_i[j] *= sin(phi);
+  } // end, coord loop
+
+  if ( iri > 0 ) { // create complex conjugate
+    ylm_i *= -1.0;
+  }
+
+} // end, method rYlm_cart
 
 
 //**********************************************************************************

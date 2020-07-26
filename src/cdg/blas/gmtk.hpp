@@ -29,10 +29,16 @@ namespace GMTK
 {
 
   template<typename T>     
+  T fact(T l);
+
+  template<typename T>     
   void Pml_cart(T l, T m, GTVector<GTVector<T>> &xnodes, GTVector<T> &plm);
 
   template<typename T>     
   void Ylm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT iri, GTVector<T> &ylm_r, GTVector<T> &ylm_i);
+
+  template<typename T>     
+  void Ylm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT iri, GTVector<T> &tmp, GTVector<T> &ylm);
 
   template<typename T>     
   void Rx3(T alpha, GTVector<T> &y, GTVector<T> &z);
