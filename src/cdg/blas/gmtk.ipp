@@ -180,7 +180,6 @@ void rYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GTVector<T> &tmp, 
     return;
   }
 
-
   if ( m > 0 ) { 
     rfact = pow(-1.0,m)*sqrt(2.0);
     GMTK::Ylm_cart(l, m, xnodes, rylm, tmp);
