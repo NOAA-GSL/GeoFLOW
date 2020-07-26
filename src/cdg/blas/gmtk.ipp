@@ -120,8 +120,9 @@ void Plm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GTVector<T> &plm)
 template<typename T>
 void Ylm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT iri, GTVector<T> &ylm_r, GTVector<T> &ylm_i)
 {
-  T fact, phi, r;
+  T rfact, phi, r;
   T x, y, z;
+  T xl, xm;
 
   assert( iri >= 0 );
 
@@ -131,15 +132,17 @@ void Ylm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT iri, GTVector<
     return;
   }
   
-  fact = sqrt( (l-m) );
+  xl = l; xm = m;
+  rfact = sqrt( (2.0*xl+1.0)/(4.0*PI) 
+        *       GMTK::fact<T>(xl-xm)/GMTK::fact<T>(xl+m) );
 
   GMTK::Plm_cart(l, abs(m), xnodes, ylm_r);
   for ( auto j=0; j<xnodes[0].size(); j++ ) {
     x     = xnodes[0][j]; y = xnodes[1][j]; z = xnodes[2][j];
-    r     = sqrt(x*x +y*y + z*z);
+    r     = sqrt(x*x + y*y + z*z);
     phi   = atan2(y,x);
-    ylm_r[j] *= cos(phi);
-    ylm_i[j] *= sin(phi);
+    ylm_r[j] *= rfact*cos(phi);
+    ylm_i[j] *= rfact*sin(phi);
   } // end, coord loop
 
   if ( iri > 0 ) { // create complex conjugate
@@ -152,46 +155,44 @@ void Ylm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT iri, GTVector<
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : rYlm_cart
-// DESC   : Compute spherical harmonics at each grid point
+// DESC   : Compute real spherical harmonics at each grid point
 //          specified by xnodes in Carteswian coordinates.
 //          Cmputed as:
-//              Ylm  =  sqrt{ (2l_1)(l-m)! / [4pi (l+m)!] } X
-//                      P_lm exp(i m phi)
-//          if iri = 0; else returns Ylm^*. If |m| > l, set Ylm=0
+//              rYlm  =  (-1)^m/  sqrt(2) (Ylm + Ylm^*); m > 0
+//                                         Yl0         ; m = 0
+//                       (-1)^m/(isqrt(2) (Ylm - Ylm^*); m < 0
 //          
 //   
 // ARGS   : l,m,  : orbital ang mom. quantum number, and azimuthal quantum number
 //          xnodes: Cartesian coordinate arrays
-//          iri   : if 0, return real Ylm, else, return complex conjugate
-//          ylm_r : real comp. of Y^l_m for each grid point
-//          ylm_i : imag. comp. of Y^l_m for each grid point
+//          tmp   : tmp array the size of ylm
+//          rylm  : real comp. of Y^l_m for each grid point
 // RETURNS: none
 //**********************************************************************************
 template<typename T>
-void rYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT iri, GTVector<T> &ylm_r, GTVector<T> &ylm_i)
+void rYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GTVector<T> &tmp, GTVector<T> &rylm)
 {
-  T phi, r;
-  T x, y, z;
+  T rfact;
 
-  assert( iri >= 0 );
 
   if ( abs(m) > l ) {
-    ylm_r = 0.0;
-    ylm_i = 0.0;
+    rylm = 0.0;
     return;
   }
 
-  GMTK::Plm_cart(l, abs(m), xnodes, ylm_r);
-  for ( auto j=0; j<xnodes[0].size(); j++ ) {
-    x     = xnodes[0][j]; y = xnodes[1][j]; z = xnodes[2][j];
-    r     = sqrt(x*x +y*y + z*z);
-    phi   = atan2(y,x);
-    ylm_r[j] *= cos(phi);
-    ylm_i[j] *= sin(phi);
-  } // end, coord loop
 
-  if ( iri > 0 ) { // create complex conjugate
-    ylm_i *= -1.0;
+  if ( m > 0 ) { 
+    rfact = pow(-1.0,m)*sqrt(2.0);
+    GMTK::Ylm_cart(l, m, xnodes, rylm, tmp);
+    rylm *= rfact;
+  }
+  else if ( m < 0 ) {
+    rfact = pow(-1.0,m)*sqrt(2.0);
+    GMTK::Ylm_cart(l, m, xnodes, tmp, rylm);
+    rylm *= rfact;
+  }
+  else {
+    GMTK::Ylm_cart(l, m, xnodes, rylm, tmp);
   }
 
 } // end, method rYlm_cart
