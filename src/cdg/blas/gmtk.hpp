@@ -38,6 +38,12 @@ namespace GMTK
   void Ylm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT iri, GTVector<T> &ylm_r, GTVector<T> &ylm_i);
 
   template<typename T>     
+  void dYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, GINT iri, GTVector<GTVector<T>*> &tmp, GTVector<T> &ylm_r, GTVector<T> &ylm_i);
+
+  template<typename T>     
+  void ddYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, GINT iri, GTVector<GTVector<T>*> &tmp, GTVector<T> &ylm_r, GTVector<T> &ylm_i);
+
+  template<typename T>     
   void rYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT iri, GTVector<T> &tmp, GTVector<T> &ylm);
 
   template<typename T>     
