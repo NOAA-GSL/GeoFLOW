@@ -168,6 +168,7 @@ void Ylm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT iri, GTVector<
 //          xnodes: Cartesian coordinate arrays
 //          idir  : If 1, take d/d\theta; if 2, take d/d\phi
 //          iri   : if 0, return dYlm, else, return complex conjugate, dYlm^*
+//          tmp   : tmp arrays. 2 are required.
 //          dylm_r: real comp. of dY^l_m for each grid point
 //          dylm_i: imag. comp. of dY^l_m for each grid point
 // RETURNS: none
@@ -241,6 +242,7 @@ void dYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir,  GINT i
 //          xnodes: Cartesian coordinate arrays
 //          idir  : If 1, take d^2/d\theta^2; if 2, take d^2/d\phi^2
 //          iri   : if 0, return dYlm, else, return complex conjugate, dYlm^*
+//          tmp   : tmp arrays. 2 are required.
 //          dylm_r: real comp. of dY^l_m for each grid point
 //          dylm_i: imag. comp. of dY^l_m for each grid point
 // RETURNS: none
@@ -352,6 +354,110 @@ void rYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GTVector<T> &tmp, 
   }
 
 } // end, method rYlm_cart
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : drYlm_cart
+// DESC   : Compute idir--derivative real spherical harmonics at each grid point
+//          specified by xnodes in Carteswian coordinates.
+//          Computed as:
+//              rYlm  =  (-1)^m/  sqrt(2) (d_idir Ylm + d_idir Ylm^*); m > 0
+//                                         d_idir Yl0                ; m = 0
+//                       (-1)^m/(isqrt(2) (d_idir Ylm - d_idir Ylm^*); m < 0
+//          
+//   
+// ARGS   : l,m,  : orbital ang mom. quantum number, and azimuthal quantum number
+//          xnodes: Cartesian coordinate arrays
+//          idir  : If 1, computes d/d\theta; if 2, computes d/d\phi
+//          tmp   : tmp arrays. 3 are required.
+//          dylm  : deriv of real comp. of Y^l_m for each grid point
+// RETURNS: none
+//**********************************************************************************
+template<typename T>
+void drYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, GTVector<GTVector<T>*>  &tmp, GTVector<T> &drylm)
+{
+  T rfact;
+  GTVector<T> *dr, *di;  // real and imaginary comps of derivative
+  GTVector<GTVector<T>> mytmp(2);
+
+  if ( abs(m) > l ) {
+    drylm = 0.0;
+    return;
+  }
+
+  assert( idir == 1 || idir == 2 );
+  assert( tmp.size() >= 3 );
+
+  if ( m > 0 ) { 
+    rfact = pow(-1.0,m)*sqrt(2.0);
+    GMTK::dYlm_cart<T>(l, m, xnodes, idir, tmp, drylm, *di);
+    drylm *= rfact;
+  }
+  else if ( m < 0 ) {
+    rfact = pow(-1.0,m)*sqrt(2.0);
+   *dr = tmp[2];
+    GMTK::dYlm_cart<T>(l, m, xnodes, idir, *dr, drylm);
+    drylm *= rfact;
+  }
+  else {
+   *di = tmp[2];
+    GMTK::dYlm_cart<T>(l, m, xnodes, idir, drylm, *di);
+  }
+
+} // end, method drYlm_cart
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : ddrYlm_cart
+// DESC   : Compute idir--2nd derivative of real spherical harmonics at 
+//          each grid point specified by xnodes in Carteswian coordinates.
+//          Computed as:
+//              rYlm  =  (-1)^m/  sqrt(2) (d^2_idir Ylm + d^2_idir Ylm^*); m > 0
+//                                         d^2_idir Yl0                  ; m = 0
+//                       (-1)^m/(isqrt(2) (d^2_idir Ylm - d^2_idir Ylm^*); m < 0
+//          
+//   
+// ARGS   : l,m,  : orbital ang mom. quantum number, and azimuthal quantum number
+//          xnodes: Cartesian coordinate arrays
+//          idir  : If 1, computes d/d\theta; if 2, computes d/d\phi
+//          tmp   : tmp arrays. 3 are required.
+//          dylm  : deriv. of real comp. of Y^l_m for each grid point
+// RETURNS: none
+//**********************************************************************************
+template<typename T>
+void ddrYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, GTVector<GTVector<T>*>  &tmp, GTVector<T> &drylm)
+{
+  T rfact;
+  GTVector<T> *dr, *di;  // real and imaginary comps of derivative
+  GTVector<GTVector<T>> mytmp(2);
+
+  if ( abs(m) > l ) {
+    drylm = 0.0;
+    return;
+  }
+
+  assert( idir == 1 || idir == 2 );
+  assert( tmp.size() >= 3 );
+
+  if ( m > 0 ) { 
+    rfact = pow(-1.0,m)*sqrt(2.0);
+    GMTK::ddYlm_cart<T>(l, m, xnodes, idir, tmp, drylm, *di);
+    drylm *= rfact;
+  }
+  else if ( m < 0 ) {
+    rfact = pow(-1.0,m)*sqrt(2.0);
+   *dr = tmp[2];
+    GMTK::ddYlm_cart<T>(l, m, xnodes, idir, *dr, drylm);
+    drylm *= rfact;
+  }
+  else {
+   *di = tmp[2];
+    GMTK::ddYlm_cart<T>(l, m, xnodes, idir, drylm, *di);
+  }
+
+} // end, method ddrYlm_cart
 
 
 //**********************************************************************************
