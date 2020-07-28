@@ -202,9 +202,9 @@ void dYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir,  GINT i
       colat = acos(z/r);
       phi   = atan2(y,x);
       dylm_r[j] *= xm*cotc*dylm_r[j] 
-                 + rfact*( cos(phi)(*tmp[0])[j] + sin(phi)*(*tmp[1])[j] );
+                 + rfact*( cos(phi)*(*tmp[0])[j] + sin(phi)*(*tmp[1])[j] );
       dylm_i[j] *= xm*cotc*dylm_i[j]
-                 + rfact*( cos(phi)(*tmp[1])[j] - sin(phi)*(*tmp[0])[j] );
+                 + rfact*( cos(phi)*(*tmp[1])[j] - sin(phi)*(*tmp[0])[j] );
     } // end, coord loop
 
   }
@@ -277,10 +277,10 @@ void ddYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, GINT i
       csc   = fabs(sn) < eps ? epsi : 1.0/sn;
 
       phi   = atan2(y,x);
-      dylm_r[j] = xm*(xm*cotc*cotc - csc*csc)*dylm_r[j] 
-                + rfact*cotc*( cos(phi)(*tmp[0])[j] + sin(phi)*(*tmp[1])[j] );
-      dylm_i[j] = xm*(xm*cotc*cotc - csc*csc)*dylm_i[j]
-                + rfact*cotc*( cos(phi)(*tmp[1])[j] - sin(phi)*(*tmp[0])[j] );
+      dylm_r[j] = xm*( xm*cotc*cotc - csc*csc )*dylm_r[j] 
+                + rfact*cotc*( cos(phi)*(*tmp[0])[j] + sin(phi)*(*tmp[1])[j] );
+      dylm_i[j] = xm*( xm*cotc*cotc - csc*csc )*dylm_i[j]
+                + rfact*cotc*( cos(phi)*(*tmp[1])[j] - sin(phi)*(*tmp[0])[j] );
     } // end, coord loop
 
     Ylm_cart<T>(l, m+2, xnodes, 0, *tmp[0], *tmp[1]); // Y^l_m+2
@@ -288,8 +288,8 @@ void ddYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, GINT i
     for ( auto j=0; j<xnodes[0].size(); j++ ) {
       x     = xnodes[0][j]; y = xnodes[1][j]; z = xnodes[2][j];
       phi   = atan2(y,x);
-      dylm_r[j] += rfact*( cos(2.0*phi)(*tmp[0])[j] + sin(2.0*phi)*(*tmp[1])[j] );
-      dylm_i[j] += rfact*( cos(2.0*phi)(*tmp[1])[j] - sin(2.0*phi)*(*tmp[0])[j] );
+      dylm_r[j] += rfact*( cos(2.0*phi)*(*tmp[0])[j] + sin(2.0*phi)*(*tmp[1])[j] );
+      dylm_i[j] += rfact*( cos(2.0*phi)*(*tmp[1])[j] - sin(2.0*phi)*(*tmp[0])[j] );
     } // end, coord loop
 
   }
@@ -341,16 +341,16 @@ void rYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GTVector<T> &tmp, 
 
   if ( m > 0 ) { 
     rfact = pow(-1.0,m)*sqrt(2.0);
-    GMTK::Ylm_cart<T>(l, m, xnodes, rylm, tmp);
+    GMTK::Ylm_cart<T>(l, m, xnodes, 0, rylm, tmp);
     rylm *= rfact;
   }
   else if ( m < 0 ) {
     rfact = pow(-1.0,m)*sqrt(2.0);
-    GMTK::Ylm_cart<T>(l, m, xnodes, tmp, rylm);
+    GMTK::Ylm_cart<T>(l, m, xnodes, 0, tmp, rylm);
     rylm *= rfact;
   }
   else {
-    GMTK::Ylm_cart<T>(l, m, xnodes, rylm, tmp);
+    GMTK::Ylm_cart<T>(l, m, xnodes, 0, rylm, tmp);
   }
 
 } // end, method rYlm_cart
@@ -391,18 +391,18 @@ void drYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, GTVect
 
   if ( m > 0 ) { 
     rfact = pow(-1.0,m)*sqrt(2.0);
-    GMTK::dYlm_cart<T>(l, m, xnodes, idir, tmp, drylm, *di);
+    GMTK::dYlm_cart<T>(l, m, xnodes, idir, 0, tmp, drylm, *di);
     drylm *= rfact;
   }
   else if ( m < 0 ) {
     rfact = pow(-1.0,m)*sqrt(2.0);
-   *dr = tmp[2];
-    GMTK::dYlm_cart<T>(l, m, xnodes, idir, *dr, drylm);
+   *dr = *tmp[2];
+    GMTK::dYlm_cart<T>(l, m, xnodes, idir, 0, tmp, *dr, drylm);
     drylm *= rfact;
   }
   else {
-   *di = tmp[2];
-    GMTK::dYlm_cart<T>(l, m, xnodes, idir, drylm, *di);
+   *di = *tmp[2];
+    GMTK::dYlm_cart<T>(l, m, xnodes, idir, 0, tmp, drylm, *di);
   }
 
 } // end, method drYlm_cart
@@ -443,18 +443,18 @@ void ddrYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, GTVec
 
   if ( m > 0 ) { 
     rfact = pow(-1.0,m)*sqrt(2.0);
-    GMTK::ddYlm_cart<T>(l, m, xnodes, idir, tmp, drylm, *di);
+    GMTK::ddYlm_cart<T>(l, m, xnodes, idir, 0, tmp, drylm, *di);
     drylm *= rfact;
   }
   else if ( m < 0 ) {
     rfact = pow(-1.0,m)*sqrt(2.0);
-   *dr = tmp[2];
-    GMTK::ddYlm_cart<T>(l, m, xnodes, idir, *dr, drylm);
+   *dr = *tmp[2];
+    GMTK::ddYlm_cart<T>(l, m, xnodes, idir, 0, tmp, *dr, drylm);
     drylm *= rfact;
   }
   else {
-   *di = tmp[2];
-    GMTK::ddYlm_cart<T>(l, m, xnodes, idir, drylm, *di);
+   *di = *tmp[2];
+    GMTK::ddYlm_cart<T>(l, m, xnodes, idir, 0, tmp, drylm, *di);
   }
 
 } // end, method ddrYlm_cart
