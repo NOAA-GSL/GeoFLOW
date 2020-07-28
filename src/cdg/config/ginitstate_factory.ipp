@@ -71,8 +71,8 @@ GBOOL GInitStateFactory<EquationType>::set_by_direct(const PropertyTree& ptree, 
       if ( u[i] != NULLPTR ) *u[i] = 0.0;
     } 
   }
-  else if ( "initstate_icosgauss"  == sinit ) {
-    bret = ginitstate::impl_icosgauss       (ptree, sinit, grid, stinfo, time, utmp, ub, u);
+  else if ( "initstate_icosgaussSH"  == sinit ) {
+    bret = ginitstate::impl_icosgaussSH     (ptree, sinit, grid, stinfo, time, utmp, ub, u);
   }
   else if ( "initstate_boxdirgauss"       == sinit ) {
     bret = ginitstate::impl_boxdirgauss     (ptree, sinit, grid, stinfo, time, utmp, ub, u);
