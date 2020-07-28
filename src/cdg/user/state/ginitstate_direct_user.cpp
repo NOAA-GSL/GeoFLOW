@@ -427,7 +427,7 @@ GBOOL impl_boxpergauss(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
 
   assert(grid.gtype() == GE_REGULAR && "Invalid element types");
 
-  eps = 1.0e-4*std::numeric_limits<GFTYPE>::epsilon();
+  eps = 1.0e4*std::numeric_limits<GFTYPE>::epsilon();
 
   // Get periodicity length, gL:
   std::vector<GFTYPE> xyz0 = boxptree.getArray<GFTYPE>("xyz0");
@@ -512,8 +512,9 @@ GBOOL impl_boxpergauss(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : impl_icosgauss
-// DESC   : Initialize state for Burgers with Gauss lump on ICOS grid
+// METHOD : impl_icosgaussSH
+// DESC   : Initialize state for Burgers with Gauss lump on ICOS grid, based
+//          on a spherical harmonic expansion
 // ARGS   : ptree  : main prop tree
 //          sconfig: ptree block name containing variable config
 //          grid   : grid
@@ -524,28 +525,25 @@ GBOOL impl_boxpergauss(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
 //          u      : current state
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_icosgauss(const PropertyTree &ptree, GString &sconfig, GGrid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &u)
+GBOOL impl_icosgaussSH(const PropertyTree &ptree, GString &sconfig, GGrid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &u)
 {
 
-  GString          serr = "impl_icosgauss: ";
-  GBOOL            bContin;
-  GINT             j, k, n, nlumps;
-  GSIZET           nxy;
-  GFTYPE           alpha, argxp;
-  GFTYPE           lat, lon;
-  GFTYPE           x, y, z, r, s;
-  GFTYPE           nu, rad, E0, u0 ;
-  GFTYPE           vtheta, vphi;
-  GFTYPE           tiny = std::numeric_limits<GFTYPE>::epsilon();
-  GTPoint<GFTYPE>           rt(3);
-  GTVector<GFTYPE>          xx(3);
-  GTVector<GFTYPE>          si(4), sig(4), ufact(4);
-  GTVector<GFTYPE>          latp(4), lonp(4);
-  std::vector<GFTYPE>       c0(4), sig0(4);
-  std::vector<GFTYPE>       lat0(4), lon0(4); // up to 4 lumps
-  std::vector<GFTYPE>       Omega;
-  State            c(GDIM+1);
-  GString          snut;
+  GString             serr = "impl_icosgaussSH: ";
+  GBOOL               bContin;
+  GINT                j, k, lmax, n, nlumps;
+  GSIZET              nxy;
+  GFTYPE              alpha, colat, lat, lon;
+  GFTYPE              x, y, z, r, s;
+  GFTYPE              irad, isin, nu, rad;
+  GFTYPE              eps = 1.0e6*std::numeric_limits<GFTYPE>::epsilon();
+  GFTYPE              cs, cotc, del, delmax, epsi, sn; 
+  GFTYPE              ccolat, cphi;
+  GFTYPE              trunc, ulm0, ulm, u0;
+  GTVector<GFTYPE>    si(4), sig(4), ufact(4);
+  GTVector<GFTYPE>    *d1, *d2, *Rhs, *rylm;
+  std::vector<GFTYPE> c0(4), sig0(4);
+  std::vector<GFTYPE> lat0(4), lon0(4); // up to 4 lumps
+  GString             snut;
 
   PropertyTree lumpptree = ptree.getPropertyTree(sconfig);
   PropertyTree icosptree = ptree.getPropertyTree("grid_icos");
@@ -560,21 +558,26 @@ GBOOL impl_icosgauss(const PropertyTree &ptree, GString &sconfig, GGrid &grid, S
   assert(grid.gtype() == GE_2DEMBEDDED && "Invalid element types");
 
 
-  if ( bpureadv ) {
-    for ( GSIZET j=0; j<GDIM+1; j++ ) c[j] = u[j+1];
-  }
+  // Need 3 arrays for utmp below, and 4 for other variables;
+  // use utmp[0-2] as tmp in calls to Ylm methods:
+  assert(utmp.size() >= 7 );
+  rylm = utmp[3];
+  Rhs  = utmp[4];
+  d1   = utmp[5];
+  d2   = utmp[6];
 
   nxy = (*xnodes)[0].size(); // same size for x, y, z
 
-  lat0  = lumpptree.getArray<GFTYPE>("latitude0"); // lat for each lump
-  lon0  = lumpptree.getArray<GFTYPE>("longitude0"); // lon for each lump
-  sig0  = lumpptree.getArray<GFTYPE>("sigma"); // sig for each lump
-  c0    = lumpptree.getArray<GFTYPE>("c0");  // initial concentrations for each lump
+  lat0  = lumpptree.getArray<GFTYPE>("latitude0");       // lat for each lump
+  lon0  = lumpptree.getArray<GFTYPE>("longitude0");      // lon for each lump
+  sig0  = lumpptree.getArray<GFTYPE>("sigma");           // sig for each lump
+  c0    = lumpptree.getArray<GFTYPE>("c0");              // initial concentrations for each lump
+  u0    = lumpptree.getValue<GFTYPE>("u0");              // adv. vel. magnitude
+  alpha = lumpptree.getValue<GFTYPE>("alpha");           // initial concentrations for each lump
+  trunc = lumpptree.getValue<GFTYPE>("trunc", 1.0e-16);  // truncation level for l, m, loop
+  lmax  = lumpptree.getValue<GINT>("lmax");              // max ang mom. quantum number
   rad   = icosptree.getValue<GFTYPE>("radius");
-  E0    = lumpptree.getValue<GFTYPE>("E0");
-  alpha = lumpptree.getValue<GFTYPE>("alpha",0.0);
-
-  alpha *= PI/180.0;
+  irad  = 1.0/rad;
 
   nlumps = lat0.size();
 
@@ -589,83 +592,100 @@ GBOOL impl_icosgauss(const PropertyTree &ptree, GString &sconfig, GGrid &grid, S
     lon0[k] *= PI/180.0;
   }
 
-  // Set velocity here. Taken to be solid body rotation,
-  // u = Omega X r, where rotation rate vector, Omega
-  // is computed by rotating u0 x (0, 0, 1) about x axis by
-  // an amount alpha. These point to components of state u_:
-  u0 = sqrt(2.0*E0);
-  if ( bpureadv ) {
-    for ( k=0; k<nxy; k++ ) {
-      x   = (*xnodes)[0][k]; y = (*xnodes)[1][k]; z = (*xnodes)[2][k];
-      r   = sqrt(x*x + y*y + z*z);
-      // Compute lat & long:
-      lat = asin(z/r);
-      lon = atan2(y,x);
-      // u_lat = u_theta = -u0 sin(lon) sin(alpha)
-      // u_lon = u_phi   =  u0 (cos(theta) cos(alpha) + sin(theta)cos(lon)sin(alpha) )
-      (*utmp[0])[k]  = -u0*sin(lon)*sin(alpha);
-      (*utmp[1])[k]  =  u0*(cos(lat)*cos(alpha) + sin(lat)*cos(lon)*sin(alpha) );
-    }
-    GMTK::vsphere2cart(grid, utmp, GVECTYPE_PHYS, c);
-//  GMTK::constrain2sphere(grid, c);
-  }
+  epsi = 1.0/eps;
+  delmax = -1.0;
 
+  // Compute solution as an expansion in rYlm(theta,phi)=rYlm(colat, phi) as
+  //     u = Sum_l,m = ulm(t) rYlm(theta,phi), where
+  //     ulm = ulm(t=0) exp(R(theta,phi) t),
+  // and 
+  //     ulm(t=0) = Integral(u(t=0, theta,phi) rYlm(theta,phi) dOmega, 
+  // and
+  //     R(theta, phi) = RHS of adv equation in terms of rYlm:
   *u[0] = 0.0;
-  for ( GSIZET k=0; k<nlumps; k++ ) {
+  for ( auto k=0; k<nlumps; k++ ) {
 
-    // Allow different sigma/concentration for each lump:
-    sig  [k] = sqrt(sig0[k]*sig0[k] + 4.0*time*nu); // constant viscosity only
-    si   [k] = 1.0/(sig[k]*sig[k]);
-    ufact[k] = c0[k]*pow(sig0[k]/sig[k],GDIM);
+    bContin = TRUE;
+    for ( auto l=0; l<=lmax && bContin; l++ ) {
+      for ( auto m=-l; m<=l; m++ ) {
 
-    // Find where lat/lon endpoint would be at t, if alpha=0:
-    latp[k]  = lat0[k];
-    lonp[k]  = lon0[k] + (u0/rad) * time;
+        // Compute ulm(t=0):
+        GMTK::rYlm_cart <GFTYPE>(l, m, *xnodes, *utmp[1], *rylm)  ; // rYlm basis 
+        for ( auto j=0; j<nxy; j++ ) { 
+          x     = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
+          r     = sqrt(x*x + y*y + z*z); colat = acos(z/r); lon   = atan2(y,x);
+          s     =  r*acos( sin(lat0[k])*sin(lat) + cos(lat0[k])*cos(lat)*cos(lon-lon0[k]) );
+         (*utmp[0])[j] =  c0[k]*exp( -s*s / (sig0[k]*sig0[k]) ) * (*rylm)[j];  // u(0) * rYlm(theta,lon);
+// cout << "c0=" << c0[k] << "  s=" << s << " u=" << (*utmp[0])[j] << endl;
+        }
+        ulm0 = grid.integrate(*utmp[0], *utmp[1]) * irad*irad; // ulm(t=0)
+if ( !std::isfinite(ulm0) ){
+  cout << "lat=" << lat << " long=" << lon << " ulm0=" << ulm0 << endl;
+}
 
-    // Find where Cart endpoint would be at t, if alpha=0:
-    rt[0] = rad*cos(latp[k])*cos(lonp[k]);
-    rt[1] = rad*cos(latp[k])*sin(lonp[k]);
-    rt[2] = rad*sin(latp[k]);
+        // Advecion velocity compoments from 
+        // Williamson JCP 102:211 (1992):
+        //   v_lat = -u0 sin(lon)sin(alpha)
+        //   v_lon = u0 ( cos(lat) cos(alpha) + sin(lat) sin(lon) sin(alpha))
+        // Convert v_lat to v_colat, and lat to colat
 
-    // Now, rotate rt about x-axis by alpha to
-    // find lat/lon of final position of lump:
-    xx[0] = rt[0]; xx[1] = rt[1]; xx[2] = rt[2];
-    if ( time > 0 ) {
-      xx[1] =  cos(alpha)*rt[1] + sin(alpha)*rt[2];
-      xx[2] = -sin(alpha)*rt[1] + cos(alpha)*rt[2];
-    }
-    latp[k]  = asin(xx[2]/rad);
-    lonp[k]  = atan2(xx[1],xx[0]);
+        // Compute advection terms:
+        // ...get Ylm derivatives required:
+        GMTK::drYlm_cart<GFTYPE>(l, m, *xnodes, 1, utmp,  *d1); // d rYlm/dtheta
+        GMTK::drYlm_cart<GFTYPE>(l, m, *xnodes, 2, utmp,  *d2); // d rYlm/dphi
+        for ( auto j=0; j<nxy; j++ ) { 
+          x     = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
+          r     = sqrt(x*x + y*y + z*z); colat = acos(z/r); lon   = atan2(y,x);
+          cs    = cos(colat); sn = sin(colat);
+          cotc  = fabs(sn) < eps ? cs*epsi : cs/sn;
+          isin  = fabs(sn) < eps ? epsi    : 1.0/sn;
+          ccolat= -u0 * sin(lon) * sin(alpha);
+          cphi  = -u0 * ( sin(colat) * sin(alpha) + cos(colat)*cos(lon)*sin(alpha) );
+         (*Rhs)[j] = ccolat*irad*(*d1)[j]
+                   + cphi *irad*isin*(*d2)[j];
 
-    rt[0] = rad*cos(latp[k])*cos(lonp[k]);
-    rt[1] = rad*cos(latp[k])*sin(lonp[k]);
-    rt[2] = rad*sin(latp[k]);
+if ( !std::isfinite((*Rhs)[j] ) ){
+  cout << "advectve part: lat=" << lat << " long=" << lon << " cotc=" << cotc << " isin=" << isin << " del=" << (*Rhs)[j] << " ccolat=" << ccolat << " cphi=" << cphi <<  endl;
+assert(false);
+}
+        }
+      
+        // Compute diffusion terms:
+        // ...get Ylm derivatives required:
+        GMTK::ddrYlm_cart<GFTYPE>(l, m, *xnodes, 1, utmp, *d1); // d^2 rYlm/dtheta^2
+        GMTK::ddrYlm_cart<GFTYPE>(l, m, *xnodes, 2, utmp, *d2); // d^2 rYlm/dphi^2
+        for ( auto j=0; j<nxy; j++ ) {
+          x     = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
+          r     = sqrt(x*x + y*y + z*z); colat = acos(z/r); lon   = atan2(y,x);
+          cs    = cos(colat); sn = sin(colat);
+          cotc  = fabs(sn) < eps ? cs*epsi : cs/sn;
+          isin  = fabs(sn) < eps ? epsi    : 1.0/sn;
+          
+          del   = nu*irad*irad*(cotc*(*d1)[j] + (*d1)[j]) 
+                + nu*pow(irad*isin,2)*(*d2)[j];
+         (*Rhs)[j] += del;
+if ( !std::isfinite((*Rhs)[j] ) ){
+  cout << "diffusive part: m,l=" << m << ", " << l << " lat=" << lat << " long=" << lon << " cotc=" << cotc << " isin=" << isin << " del=" << del << " d1=" << (*d1)[j] << " d2=" << (*d2)[j] << endl;
+assert(false);
+}
 
-    for ( GSIZET j=0; j<nxy; j++ ) {
-      // Note: following c t is actually Integral_0^t c(t') dt', 
-      //       so if c becomes a function of t, this muct change:
+         ulm        = ulm0 * exp((*Rhs)[j] * time);
+         
+         del         = ulm * (*rylm)[j];
+         delmax      = MAX(delmax, fabs(del));
+         (*u[0])[j] += del;
+        } // end, grid-point loop
+ 
+//      bContin = delmax > trunc * u[0]->infnorm();
 
-      x   = (*xnodes)[0][j];
-      y   = (*xnodes)[1][j];
-      z   = (*xnodes)[2][j];
-#if 1
-      r   = sqrt(x*x + y*y + z*z);
-      lat = asin(z/r);
-      lon = atan2(y,x);
-      // Compute arclength from point to where center _should_ be:
-      s     = r*acos( sin(latp[k])*sin(lat) + cos(latp[k])*cos(lat)*cos(lon-lonp[k]) );
-     (*u[0])[j] += ufact[k]*exp(-s*s*si[k]);
-#else
-     argxp = pow(x-rt[0],2) + pow(y-rt[1],2) + pow(z-rt[2],2);
-     (*u[0])[j] += ufact[k]*exp(-argxp*si[k]);
-#endif
-    } // end, grid-point loop
+      } // end, m-loop
+    } // end, l-loop
 
   } // end, lump loop
 
   return TRUE;
 
-} // end of method impl_icosgauss
+} // end of method impl_icosgaussSH
 
 
 
