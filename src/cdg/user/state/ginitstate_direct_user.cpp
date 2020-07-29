@@ -598,6 +598,7 @@ GBOOL impl_icosgaussSH(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
     lat0[k] *= PI/180.0;
     lon0[k] *= PI/180.0;
   }
+  alpha *= PI/180.0;
 
   epsi = 1.0/eps;
 
