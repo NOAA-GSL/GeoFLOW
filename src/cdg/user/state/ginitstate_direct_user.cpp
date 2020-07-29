@@ -613,7 +613,7 @@ GBOOL impl_icosgaussSH(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
     x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
     r = sqrt(x*x + y*y + z*z); colat = acos(z/r); lon = atan2(y,x);
     (*utmp[0])[j] = -c0 * sin(lon) * sin(alpha);
-    (*utmp[1])[j] =  c0 * ( sin(colat) * sin(alpha) + cos(colat)*cos(lon)*sin(alpha) );
+    (*utmp[1])[j] =  c0 * ( sin(colat) * cos(alpha) - cos(colat)*cos(lon)*sin(alpha) );
   }
   GMTK::vsphere2cart(grid, utmp, GVECTYPE_PHYS, c);
 
@@ -664,7 +664,7 @@ GBOOL impl_icosgaussSH(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
           cotc  = fabs(sn) < eps ? cs*epsi : cs/sn;
           isin  = fabs(sn) < eps ? epsi    : 1.0/sn;
           ccolat= -c0 * sin(lon) * sin(alpha);
-          cphi  =  c0 * ( cos(colat) * sin(alpha) + sin(colat)*cos(lon)*sin(alpha) );
+          cphi  =  c0 * ( sin(colat) * cos(alpha) - cos(colat)*cos(lon)*sin(alpha) );
          (*Rhs)[j] = -ccolat*irad*(*d1)[j]
                    - cphi *irad*isin*(*d2)[j];
         }
