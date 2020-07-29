@@ -108,7 +108,7 @@ void Plm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GTVector<T> &plm)
 // DESC   : Compute spherical harmonics at each grid point
 //          specified by xnodes in Carteswian coordinates.
 //          Computed as:
-//              Ylm  =  sqrt{ (2l+1)(l-m)! / [4pi (l+m)!] } X
+//              Ylm  =  (-1)^m sqrt{ (2l+1)(l-m)! / [4pi (l+m)!] } X
 //                      P_lm exp(i m phi)
 //          If iri = 0, return Ylm; else returns dYlm^*. If |m| > l, set dYlm=0
 //          
@@ -147,8 +147,8 @@ void Ylm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT iri, GTVector<
   for ( auto j=0; j<xnodes[0].size(); j++ ) {
     x     = xnodes[0][j]; y = xnodes[1][j]; z = xnodes[2][j];
     phi   = atan2(y,x);
-    ylm_r[j] *= rfact*cos(xm*phi);
-    ylm_i[j] *= rfact*sin(xm*phi);
+    ylm_r[j] *= pow(-1.0,m)*rfact*cos(xm*phi);
+    ylm_i[j] *= pow(-1.0,m)*rfact*sin(xm*phi);
   } // end, coord loop
 
   if ( iri > 0 ) { // create complex conjugate
@@ -165,7 +165,7 @@ void Ylm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT iri, GTVector<
 //          specified by xnodes in Carteswian coordinates.
 //          Cmputed as:
 //              dYlm/dtheta = m cot theta Ylm + 
-//                            sqrt[(l-m)(l+m_1)] e^(-i phi) Yl(m+1)
+//                            sqrt[(l-m)(l+m+1)] e^(-i phi) Yl(m+1)
 //              dYlm/dphi   = i m Ylm 
 //          If iri = 0, return dYlm; else return dYlm^*. 
 //          
@@ -191,13 +191,13 @@ void dYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir,  GINT i
   assert( idir == 1 || idir == 2 );
   assert( tmp.size() >= 2 );
 
-  eps   = 1.0e6*std::numeric_limits<T>::epsilon();
+  eps   = 1.0e-5;  //1.0e6*std::numeric_limits<T>::epsilon();
   epsi  = 1.0/eps;
   xl    = l; xm = m;
-  rfact = sqrt( fabs((xl-xm)*(xl+xm+1.0)) );
 
   if ( idir == 1 ) {
 
+    rfact = sqrt( fabs((xl-xm)*(xl+xm+1.0)) );
     Ylm_cart<T>(l, m  , xnodes, 0, dylm_r  , dylm_i);   // Ylm
     Ylm_cart<T>(l, m+1, xnodes, 0, *tmp[0], *tmp[1]); // Y^l_m+1
     for ( auto j=0; j<xnodes[0].size(); j++ ) {
@@ -207,10 +207,10 @@ void dYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir,  GINT i
       cotc  = fabs(sn) < eps ? cs*epsi : cs/sn;
       colat = acos(z/r);
       phi   = atan2(y,x);
-      dylm_r[j] *= xm*cotc*dylm_r[j] 
-                 + rfact*( cos(phi)*(*tmp[0])[j] + sin(phi)*(*tmp[1])[j] );
-      dylm_i[j] *= xm*cotc*dylm_i[j]
-                 + rfact*( cos(phi)*(*tmp[1])[j] - sin(phi)*(*tmp[0])[j] );
+      dylm_r[j] = xm*cotc*dylm_r[j] 
+                + rfact*( cos(phi)*(*tmp[0])[j] + sin(phi)*(*tmp[1])[j] );
+      dylm_i[j] = xm*cotc*dylm_i[j]
+                + rfact*( cos(phi)*(*tmp[1])[j] - sin(phi)*(*tmp[0])[j] );
     } // end, coord loop
 
   }
@@ -263,13 +263,11 @@ void ddYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, GINT i
   assert( idir == 1 || idir == 2 );
   assert( tmp.size() >= 2 );
 
-  eps   = 1.0e6*std::numeric_limits<T>::epsilon();
+  eps   = 1.0e-5; //1.0e6*std::numeric_limits<T>::epsilon();
   epsi = 1.0/eps;
   xl   = l; xm = m;
 
  
-T p11, p12;
-T p21, p22;
   if ( idir == 1 ) {
 
     Ylm_cart<T>(l, m  , xnodes, 0, dylm_r  , dylm_i);   // Ylm
@@ -284,32 +282,10 @@ T p21, p22;
       csc   = fabs(sn) < eps ? epsi : 1.0/sn;
       phi   = atan2(y,x);
 
-if ( !std::isfinite(dylm_r[j]) || !std::isfinite(dylm_i[j]) ){
-  std::cout << "ddYlm_cart-0: : m,l=" << m << ", " << l << " colat=" << colat << " cotc=" << cotc << " csc=" << csc << " d_r=" << dylm_r[j] << " d_i=" << dylm_i[j] << std::endl;
-assert(false);
-}
-if ( !std::isfinite((*tmp[0])[j]) || !std::isfinite((*tmp[0])[j]) ){
-  std::cout << "ddYlm_cart-1: : m,l=" << m << ", " << l << " colat=" << colat << " cotc=" << cotc << " csc=" << csc << " d_r=" << (*tmp[0])[j] << " d_i=" << (*tmp[1])[j] << std::endl;
-assert(false);
-}
-/*
       dylm_r[j] = xm*( xm*cotc*cotc - csc*csc )*dylm_r[j] 
                 + rfact*cotc*( cos(phi)*(*tmp[0])[j] + sin(phi)*(*tmp[1])[j] );
       dylm_i[j] = xm*( xm*cotc*cotc - csc*csc )*dylm_i[j]
                 + rfact*cotc*( cos(phi)*(*tmp[1])[j] - sin(phi)*(*tmp[0])[j] );
-*/
-      p11  = xm*( xm*cotc*cotc - csc*csc )*dylm_r[j] ;
-      p12  = rfact*cotc*( cos(phi)*(*tmp[0])[j] + sin(phi)*(*tmp[1])[j] );
-      p21  = xm*( xm*cotc*cotc - csc*csc )*dylm_i[j];
-      p22  = rfact*cotc*( cos(phi)*(*tmp[1])[j] - sin(phi)*(*tmp[0])[j] );
-if ( !std::isfinite(p11) || !std::isfinite(p12) 
-  || !std::isfinite(p21) || !std::isfinite(p22) ){
-  std::cout << "ddYlm_cart-3: : dylm_r=" << dylm_r[j] << " dylm_i=" << dylm_i[j] << std::endl;
-  std::cout << "ddYlm_cart-3: : m,l=" << m << ", " << l << " colat=" << colat << " cotc=" << cotc << " csc=" << csc << " phi=" << phi << " xm=" << xm << " xl=" << xl << " rfact=" << rfact << " p11=" << p11 << " p12=" << p12 << " p21=" << p21 << " p22=" << p22 << std::endl;
-assert(false);
-}
-      dylm_r[j] = p11 + p12;
-      dylm_i[j] = p21 + p22;
 
     } // end, coord loop
 
@@ -347,10 +323,12 @@ assert(false);
 // DESC   : Compute real spherical harmonics at each grid point
 //          specified by xnodes in Carteswian coordinates.
 //          Computed as:
-//              rYlm  =  (-1)^m/  sqrt(2) (Ylm + Ylm^*); m > 0
-//                                         Yl0         ; m = 0
-//                       (-1)^m/(isqrt(2) (Ylm - Ylm^*); m < 0
-//          
+//              rYlm  =  (-1)^m/sqrt(2) (Ylm + Ylm^*); m > 0
+//                                       Yl0         ; m = 0
+//                     -i(-1)^m/sqrt(2) (Ylm - Ylm^*); m < 0
+//           Adapted from 
+//           Miguel A. Blanco, et al., 
+//             J. Mol. Struct. Theochem 419:19 (1997)
 //   
 // ARGS   : l,m,  : orbital ang mom. quantum number, and azimuthal quantum number
 //          xnodes: Cartesian coordinate arrays
@@ -370,14 +348,14 @@ void rYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GTVector<T> &tmp, 
   }
 
   if ( m > 0 ) { 
-    rfact = pow(-1.0,m)*sqrt(2.0);
+    rfact = pow(-1.0,m)/sqrt(2.0);
     GMTK::Ylm_cart<T>(l, m, xnodes, 0, rylm, tmp);
-    rylm *= rfact;
+    rylm *= 2.0*rfact;
   }
   else if ( m < 0 ) {
-    rfact = pow(-1.0,m)*sqrt(2.0);
+    rfact = pow(-1.0,m)/sqrt(2.0);
     GMTK::Ylm_cart<T>(l, m, xnodes, 0, tmp, rylm);
-    rylm *= rfact;
+    rylm *= 2.0*rfact;
   }
   else {
     GMTK::Ylm_cart<T>(l, m, xnodes, 0, rylm, tmp);
@@ -392,9 +370,9 @@ void rYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GTVector<T> &tmp, 
 // DESC   : Compute idir--derivative real spherical harmonics at each grid point
 //          specified by xnodes in Carteswian coordinates.
 //          Computed as:
-//              rYlm  =  (-1)^m/  sqrt(2) (d_idir Ylm + d_idir Ylm^*); m > 0
-//                                         d_idir Yl0                ; m = 0
-//                       (-1)^m/(isqrt(2) (d_idir Ylm - d_idir Ylm^*); m < 0
+//             drYlm  =  (-1)^m/sqrt(2) (d_idir Ylm + d_idir Ylm^*); m > 0
+//                                       d_idir Yl0                ; m = 0
+//                     -i(-1)^m/sqrt(2) (d_idir Ylm - d_idir Ylm^*); m < 0
 //          
 //   
 // ARGS   : l,m,  : orbital ang mom. quantum number, and azimuthal quantum number
@@ -420,16 +398,16 @@ void drYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, GTVect
   assert( tmp.size() >= 3 );
 
   if ( m > 0 ) { 
-    rfact = pow(-1.0,m)*sqrt(2.0);
+    rfact = pow(-1.0,m)/sqrt(2.0);
     di = tmp[2];
     GMTK::dYlm_cart<T>(l, m, xnodes, idir, 0, tmp, drylm, *di);
-    drylm *= rfact;
+    drylm *= 2.0*rfact;
   }
   else if ( m < 0 ) {
-    rfact = pow(-1.0,m)*sqrt(2.0);
+    rfact = pow(-1.0,m)/sqrt(2.0);
     dr = tmp[2];
     GMTK::dYlm_cart<T>(l, m, xnodes, idir, 0, tmp, *dr, drylm);
-    drylm *= rfact;
+    drylm *= 2.0*rfact;
   }
   else {
     di = tmp[2];
@@ -445,9 +423,9 @@ void drYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, GTVect
 // DESC   : Compute idir--2nd derivative of real spherical harmonics at 
 //          each grid point specified by xnodes in Carteswian coordinates.
 //          Computed as:
-//              rYlm  =  (-1)^m/  sqrt(2) (d^2_idir Ylm + d^2_idir Ylm^*); m > 0
-//                                         d^2_idir Yl0                  ; m = 0
-//                       (-1)^m/(isqrt(2) (d^2_idir Ylm - d^2_idir Ylm^*); m < 0
+//            ddrYlm  =  (-1)^m/sqrt(2) (d^2_idir Ylm + d^2_idir Ylm^*); m > 0
+//                                       d^2_idir Yl0                  ; m = 0
+//                     -i(-1)^m/sqrt(2) (d^2_idir Ylm - d^2_idir Ylm^*); m < 0
 //          
 //   
 // ARGS   : l,m,  : orbital ang mom. quantum number, and azimuthal quantum number
@@ -473,16 +451,16 @@ void ddrYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, GTVec
   assert( tmp.size() >= 3 );
 
   if ( m > 0 ) { 
-    rfact = pow(-1.0,m)*sqrt(2.0);
+    rfact = pow(-1.0,m)/sqrt(2.0);
     di = tmp[2];
     GMTK::ddYlm_cart<T>(l, m, xnodes, idir, 0, tmp, drylm, *di);
-    drylm *= rfact;
+    drylm *= 2.0*rfact;
   }
   else if ( m < 0 ) {
-    rfact = pow(-1.0,m)*sqrt(2.0);
+    rfact = pow(-1.0,m)/sqrt(2.0);
     dr = tmp[2];
     GMTK::ddYlm_cart<T>(l, m, xnodes, idir, 0, tmp, *dr, drylm);
-    drylm *= rfact;
+    drylm *= 2.0*rfact;
   }
   else {
     di = tmp[2];
