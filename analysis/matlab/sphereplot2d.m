@@ -1,6 +1,6 @@
-function h = sphereplot2d(svar, tindex, blog, bwire, varargin)
+function h = sphereplot2d(svar, tindex, blog, bwire, dtype, isz, varargin)
 %
-% function h = sphereplot2d(svar, tindex, blog, bwire, varargin)
+% function h = sphereplot2d(svar, tindex, blog, bwire, dtype, varargin)
 %
 % Plots 2d GeoFLOW data onto the sureface of a sphere. 
 % Grid type must be GE_2DEMBEDDED.
@@ -14,6 +14,8 @@ function h = sphereplot2d(svar, tindex, blog, bwire, varargin)
 %    blog    : take log of data?
 %    bwire   : if > 0, print wire frame only; if 0 
 %              print color patches. Default is 0
+%    dtype   : data file type: 'POSIX', 'COLL'. Default is 'COLL'
+%    isz    : floating point size (4 or 8). Default is 8.
 %    varargin: to pass to quadmesh: e.g. to plot
 %              wire mesh only and set to single color, 
 %              set bwire=1, and call:
@@ -33,10 +35,26 @@ end
 if nargin < 3
   bwire = 0;
   blog  = 0;
+  dtype = 'COLL';
+  isz = 8;
 end 
 if nargin < 4
   bwire = 0;
+  dtype = 'COLL';
+  isz = 8;
 end 
+if nargin < 5
+  dtype = 'COLL';
+  isz = 8;
+end 
+if nargin < 6
+  isz = 8;
+end 
+
+if ~strcmp(dtype,'POSIX') & ~strcmp(dtype,'COLL')
+  error(['Invalid dtype: ' dtype]);
+end
+
 
 vartmp = varargin;
 bcolorbarlims = 0;
@@ -57,12 +75,15 @@ end
 
 scoord = {'xgrid','ygrid' 'zgrid'};
 
-[umin, umax] = gminmax_gio(svar, tindex, 8, 'ieee-le');
+[umin, umax] = gminmax_gio(svar, tindex, dtype, isz, 'ieee-le');
 
-d = dir('xgrid.*');
-ntasks = length(d);
-if ntasks<= 0 
-  error('Grid data missing or incomplete');
+ntasks = 1;
+if strcmp(dtype,'POSIX')
+  d = dir('xgrid.*');
+  ntasks = length(d);
+  if ntasks<= 0
+    error('Grid data missing or incomplete');
+  end
 end
 
 
@@ -74,8 +95,12 @@ for itask = 0:ntasks-1
 
   % Read node coords:
   for j=1:3
-    fname = sprintf('%s.%05d.out', scoord{j}, itask)
-    [x{j} dim nelems porder gtype icycle time] = rgeoflow(fname, 8, 'ieee-le');
+    if strcmp(dtype,'POSIX')
+      fname = sprintf('%s.%06d.%05d.out', scoord{j}, 0, itask);
+    elseif dtype == 'COLL'
+      fname = sprintf('%s.%06d.out', scoord{j}, 0);
+    end
+    [x{j} dim nelems porder gtype icycle time mvar] = rgeoflow(fname, isz, 'ieee-le');
     if ( dim ~= 2 )
       error('Grid dimension must be 2');
     end
@@ -83,10 +108,13 @@ for itask = 0:ntasks-1
       error('Grid type must be GE_2DEMBEDDED');
     end
   end
- 
 
-  fname = sprintf('%s.%06d.%05d.out', svar, tindex, itask);
-  [u dim nelems porder gtype icycle time] = rgeoflow(fname, 8, 'ieee-le');
+  if strcmp(dtype,'POSIX')
+    fname = sprintf('%s.%06d.%05d.out', svar, tindex, itask);
+  elseif dtype == 'COLL'
+    fname = sprintf('%s.%06d.out', svar, tindex);
+  end
+  [u dim nelems porder gtype icycle time mvar] = rgeoflow(fname, isz, 'ieee-le');
   if ( itask == 0 )
     figure;
   end
