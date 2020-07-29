@@ -509,7 +509,6 @@ GBOOL impl_boxpergauss(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
 
 } // end, impl_boxpergauss
 
-
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : impl_icosgaussSH
@@ -530,18 +529,21 @@ GBOOL impl_icosgaussSH(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
 
   GString             serr = "impl_icosgaussSH: ";
   GBOOL               bContin;
-  GINT                j, k, lmax, n, nlumps;
+  GINT                l, lmax, n, nlumps;
   GSIZET              nxy;
   GFTYPE              alpha, colat, lat, lon;
   GFTYPE              x, y, z, r, s;
   GFTYPE              irad, isin, nu, rad;
-  GFTYPE              eps = 1.0e6*std::numeric_limits<GFTYPE>::epsilon();
-  GFTYPE              cs, cotc, del, delmax, epsi, sn; 
+  GFTYPE              eps = 1.0e-3; //1.0e6*std::numeric_limits<GFTYPE>::epsilon();
+  GFTYPE              cs, cotc, del, epsi, sn; 
   GFTYPE              ccolat, cphi;
-  GFTYPE              trunc, ulm0, ulm, u0;
+  GFTYPE              trunc, ulm0, ulm, c0;
   GTVector<GFTYPE>    si(4), sig(4), ufact(4);
-  GTVector<GFTYPE>    *d1, *d2, *Rhs, *rylm;
-  std::vector<GFTYPE> c0(4), sig0(4);
+  GTVector<GTVector<GFTYPE>*>
+                      c(3), ytmp(3);
+  GTVector<GFTYPE>    *d1, *d2, *dd1, *dd2;
+  GTVector<GFTYPE>    *psum, *Rhs, *rylm;
+  std::vector<GFTYPE> u0, sig0(4);
   std::vector<GFTYPE> lat0(4), lon0(4); // up to 4 lumps
   GString             snut;
 
@@ -561,18 +563,23 @@ GBOOL impl_icosgaussSH(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
   // Need 3 arrays for utmp below, and 4 for other variables;
   // use utmp[0-2] as tmp in calls to Ylm methods:
   assert(utmp.size() >= 7 );
+  for (auto j=0; j<3; j++ ) ytmp[j] = utmp[j];
+  for (auto j=0; j<c.size(); j++ ) c[j] = u[j+1]; // adv vel. comp.
   rylm = utmp[3];
   Rhs  = utmp[4];
   d1   = utmp[5];
   d2   = utmp[6];
+  dd1  = utmp[6]; // may overlap with d2
+  dd2  = utmp[7];
+  psum = utmp[0]; // partial sum 
 
   nxy = (*xnodes)[0].size(); // same size for x, y, z
 
   lat0  = lumpptree.getArray<GFTYPE>("latitude0");       // lat for each lump
   lon0  = lumpptree.getArray<GFTYPE>("longitude0");      // lon for each lump
   sig0  = lumpptree.getArray<GFTYPE>("sigma");           // sig for each lump
-  c0    = lumpptree.getArray<GFTYPE>("c0");              // initial concentrations for each lump
-  u0    = lumpptree.getValue<GFTYPE>("u0");              // adv. vel. magnitude
+  u0    = lumpptree.getArray<GFTYPE>("u0");              // initial concentrations for each lump
+  c0    = lumpptree.getValue<GFTYPE>("c0");              // adv. vel. magnitude
   alpha = lumpptree.getValue<GFTYPE>("alpha");           // initial concentrations for each lump
   trunc = lumpptree.getValue<GFTYPE>("trunc", 1.0e-16);  // truncation level for l, m, loop
   lmax  = lumpptree.getValue<GINT>("lmax");              // max ang mom. quantum number
@@ -593,7 +600,20 @@ GBOOL impl_icosgaussSH(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
   }
 
   epsi = 1.0/eps;
-  delmax = -1.0;
+
+  // We use (lat,lon) advecting components from 
+  // Williamson JCP 102:211 (1992):
+  //   v_lat = -c0 sin(lon)sin(alpha)
+  //   v_lon =  c0 ( cos(lat) cos(alpha) + sin(lat) sin(lon) sin(alpha))
+  // Below, these are used as (colat,lon) components, but here
+  // we compute the Cartesian components required by the solver:
+  for ( auto j=0; j<nxy; j++ ) { 
+    x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
+    r = sqrt(x*x + y*y + z*z); colat = acos(z/r); lon = atan2(y,x);
+    (*utmp[0])[j] = -c0 * sin(lon) * sin(alpha);
+    (*utmp[1])[j] =  c0 * ( sin(colat) * sin(alpha) + cos(colat)*cos(lon)*sin(alpha) );
+  }
+  GMTK::vsphere2cart(grid, utmp, GVECTYPE_PHYS, c);
 
   // Compute solution as an expansion in rYlm(theta,phi)=rYlm(colat, phi) as
   //     u = Sum_l,m = ulm(t) rYlm(theta,phi), where
@@ -606,54 +626,51 @@ GBOOL impl_icosgaussSH(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
   for ( auto k=0; k<nlumps; k++ ) {
 
     bContin = TRUE;
-    for ( auto l=0; l<=lmax && bContin; l++ ) {
+    for ( l=0; l<=lmax && bContin; l++ ) {
       for ( auto m=-l; m<=l; m++ ) {
 
         // Compute ulm(t=0):
-        GMTK::rYlm_cart <GFTYPE>(l, m, *xnodes, *utmp[1], *rylm)  ; // rYlm basis 
+        GMTK::rYlm_cart <GFTYPE>(l, m, *xnodes, *ytmp[1], *rylm)  ; // rYlm basis 
         for ( auto j=0; j<nxy; j++ ) { 
-          x     = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
-          r     = sqrt(x*x + y*y + z*z); colat = acos(z/r); lon   = atan2(y,x);
-          s     =  r*acos( sin(lat0[k])*sin(lat) + cos(lat0[k])*cos(lat)*cos(lon-lon0[k]) );
-         (*utmp[0])[j] =  c0[k]*exp( -s*s / (sig0[k]*sig0[k]) ) * (*rylm)[j];  // u(0) * rYlm(theta,lon);
-// cout << "c0=" << c0[k] << "  s=" << s << " u=" << (*utmp[0])[j] << endl;
+          x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
+          r = sqrt(x*x + y*y + z*z); colat = acos(z/r); lon   = atan2(y,x);
+          s = r*acos( sin(lat0[k])*sin(lat) + cos(lat0[k])*cos(lat)*cos(lon-lon0[k]) );
+//       (*ytmp[0])[j] =  u0[k]*exp( -s*s / (sig0[k]*sig0[k]) ) * (*rylm)[j];  // u(0) * rYlm(theta,lon);
+//       (*ytmp[0])[j] =  cos(colat)* (*rylm)[j];  // u(0) * rYlm(theta,lon);
+         // Cosine-bell:
+         if ( s < 0.33*rad )
+           (*ytmp[0])[j] =  0.5*u0[k]*(1+cos(PI*s/(0.33*rad)))* (*rylm)[j];  // u(0) * rYlm(theta,lon);
+         else
+           (*ytmp[0])[j] =  0.0;
         }
-        ulm0 = grid.integrate(*utmp[0], *utmp[1]) * irad*irad; // ulm(t=0)
-if ( !std::isfinite(ulm0) ){
-  cout << "lat=" << lat << " long=" << lon << " ulm0=" << ulm0 << endl;
-}
+        ulm0 = grid.integrate(*ytmp[0], *ytmp[1]) * irad*irad; // ulm(t=0)
+  cout << "impl_icosgaussSH: l=" << l << " m=" << m << " ulm0=" << ulm0 << endl; 
 
-        // Advecion velocity compoments from 
-        // Williamson JCP 102:211 (1992):
-        //   v_lat = -u0 sin(lon)sin(alpha)
-        //   v_lon = u0 ( cos(lat) cos(alpha) + sin(lat) sin(lon) sin(alpha))
+        // Advection velocity compoments from Williamson:
+        //   v_lat = -c0 sin(lon)sin(alpha)
+        //   v_lon = c0 ( cos(lat) cos(alpha) + sin(lat) sin(lon) sin(alpha))
         // Convert v_lat to v_colat, and lat to colat
 
         // Compute advection terms:
         // ...get Ylm derivatives required:
-        GMTK::drYlm_cart<GFTYPE>(l, m, *xnodes, 1, utmp,  *d1); // d rYlm/dtheta
-        GMTK::drYlm_cart<GFTYPE>(l, m, *xnodes, 2, utmp,  *d2); // d rYlm/dphi
+        GMTK::drYlm_cart<GFTYPE>(l, m, *xnodes, 1, ytmp,  *d1); // d rYlm/dtheta
+        GMTK::drYlm_cart<GFTYPE>(l, m, *xnodes, 2, ytmp,  *d2); // d rYlm/dphi
         for ( auto j=0; j<nxy; j++ ) { 
           x     = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
           r     = sqrt(x*x + y*y + z*z); colat = acos(z/r); lon   = atan2(y,x);
           cs    = cos(colat); sn = sin(colat);
           cotc  = fabs(sn) < eps ? cs*epsi : cs/sn;
           isin  = fabs(sn) < eps ? epsi    : 1.0/sn;
-          ccolat= -u0 * sin(lon) * sin(alpha);
-          cphi  = -u0 * ( sin(colat) * sin(alpha) + cos(colat)*cos(lon)*sin(alpha) );
-         (*Rhs)[j] = ccolat*irad*(*d1)[j]
-                   + cphi *irad*isin*(*d2)[j];
-
-if ( !std::isfinite((*Rhs)[j] ) ){
-  cout << "advectve part: lat=" << lat << " long=" << lon << " cotc=" << cotc << " isin=" << isin << " del=" << (*Rhs)[j] << " ccolat=" << ccolat << " cphi=" << cphi <<  endl;
-assert(false);
-}
+          ccolat= -c0 * sin(lon) * sin(alpha);
+          cphi  =  c0 * ( cos(colat) * sin(alpha) + sin(colat)*cos(lon)*sin(alpha) );
+         (*Rhs)[j] = -ccolat*irad*(*d1)[j]
+                   - cphi *irad*isin*(*d2)[j];
         }
       
         // Compute diffusion terms:
         // ...get Ylm derivatives required:
-        GMTK::ddrYlm_cart<GFTYPE>(l, m, *xnodes, 1, utmp, *d1); // d^2 rYlm/dtheta^2
-        GMTK::ddrYlm_cart<GFTYPE>(l, m, *xnodes, 2, utmp, *d2); // d^2 rYlm/dphi^2
+        GMTK::ddrYlm_cart<GFTYPE>(l, m, *xnodes, 1, ytmp, *dd1); // d^2 rYlm/dtheta^2
+        GMTK::ddrYlm_cart<GFTYPE>(l, m, *xnodes, 2, ytmp, *dd2); // d^2 rYlm/dphi^2
         for ( auto j=0; j<nxy; j++ ) {
           x     = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
           r     = sqrt(x*x + y*y + z*z); colat = acos(z/r); lon   = atan2(y,x);
@@ -661,25 +678,21 @@ assert(false);
           cotc  = fabs(sn) < eps ? cs*epsi : cs/sn;
           isin  = fabs(sn) < eps ? epsi    : 1.0/sn;
           
-          del   = nu*irad*irad*(cotc*(*d1)[j] + (*d1)[j]) 
-                + nu*pow(irad*isin,2)*(*d2)[j];
+          del   = nu*irad*irad*(cotc*(*d1)[j] + (*dd1)[j]) 
+                + nu*pow(irad*isin,2)*(*dd2)[j];
          (*Rhs)[j] += del;
-if ( !std::isfinite((*Rhs)[j] ) ){
-  cout << "diffusive part: m,l=" << m << ", " << l << " lat=" << lat << " long=" << lon << " cotc=" << cotc << " isin=" << isin << " del=" << del << " d1=" << (*d1)[j] << " d2=" << (*d2)[j] << endl;
-assert(false);
-}
 
-         ulm        = ulm0 * exp((*Rhs)[j] * time);
+         ulm         = ulm0 * exp((*Rhs)[j] * time);
          
-         del         = ulm * (*rylm)[j];
-         delmax      = MAX(delmax, fabs(del));
-         (*u[0])[j] += del;
+         (*psum)     = ulm * (*rylm)[j];
+         (*u[0])[j] += (*psum)[j];
         } // end, grid-point loop
  
-//      bContin = delmax > trunc * u[0]->infnorm();
-
       } // end, m-loop
+cout << endl;
+      bContin = (l <= 1 ) || (psum->infnorm() > trunc * u[0]->infnorm());
     } // end, l-loop
+    cout << "impl_icosgaussSH: l_final=" << l-1 << " lmax=" << lmax << endl << endl;
 
   } // end, lump loop
 
