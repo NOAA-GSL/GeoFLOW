@@ -537,6 +537,7 @@ GBOOL impl_icosgaussSH(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
   GFTYPE              eps = 1.0e-3; //1.0e6*std::numeric_limits<GFTYPE>::epsilon();
   GFTYPE              cs, cotc, del, epsi, sn; 
   GFTYPE              ccolat, cphi;
+  GFTYPE              lnorm[2], gnorm[2];
   GFTYPE              trunc, ulm0, ulm, c0;
   GTVector<GFTYPE>    si(4), sig(4), ufact(4);
   GTVector<GTVector<GFTYPE>*>
@@ -689,10 +690,11 @@ GBOOL impl_icosgaussSH(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
          (*u[0])[j] += (*psum)[j];
         } // end, grid-point loop
  
-        GComm::Synch();
       } // end, m-loop
+      lnorm[0] = psum->infnorm(); lnorm[1] = u[0]->infnorm();
+      GComm::Allreduce(lnorm, gnorm, 2, T2GCDatatype<GFTYPE>(), GC_OP_MAX, grid.get_comm());
 cout << endl;
-      bContin = (l <= 1 ) || (psum->infnorm() > trunc * u[0]->infnorm());
+      bContin = (l <= 1 ) || (gnorm[0] > trunc * gnorm[1]);
     } // end, l-loop
     cout << "impl_icosgaussSH: l_final=" << l-1 << " lmax=" << lmax << endl << endl;
 
