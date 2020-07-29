@@ -686,7 +686,7 @@ GBOOL impl_icosgaussSH(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
 
          ulm         = ulm0 * exp((*Rhs)[j] * time);
          
-         (*psum)     = ulm * (*rylm)[j];
+         (*psum)[j]  = ulm * (*rylm)[j];
          (*u[0])[j] += (*psum)[j];
         } // end, grid-point loop
  
