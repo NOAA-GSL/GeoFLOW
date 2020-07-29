@@ -689,6 +689,7 @@ GBOOL impl_icosgaussSH(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
          (*u[0])[j] += (*psum)[j];
         } // end, grid-point loop
  
+        GComm::Synch();
       } // end, m-loop
 cout << endl;
       bContin = (l <= 1 ) || (psum->infnorm() > trunc * u[0]->infnorm());
