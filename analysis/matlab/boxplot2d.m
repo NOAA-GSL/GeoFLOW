@@ -12,7 +12,7 @@ function h = boxplot2d(svar, tindex, blog, bwire, dtype, isz, varargin)
 %    tindex  : time index for output. Required
 %    blog    : take log of data? Deffault is 0
 %    bwire   : do wire plot? Default is 0
-%    dtype   : data file type: 'POSIX', 'COLLC'. Default is 'COLL'
+%    dtype   : data file type: 'POSIX', 'COLL'. Default is 'COLL'
 %    isz    : floating point size (4 or 8). Default is 8.
 %    varargin: to pass to quadmesh: e.g. to plot
 %              wire mesh only and set to single color,
@@ -95,7 +95,7 @@ for itask = 0:ntasks-1
   % Read node coords:
   for j=1:2
     if strcmp(dtype,'POSIX')
-      fname = sprintf('%s.%06d.%05d.out', scoord{j}, 0);
+      fname = sprintf('%s.%06d.%05d.out', scoord{j}, 0, itask);
     elseif dtype == 'COLL'
       fname = sprintf('%s.%06d.out', scoord{j}, 0);
     end
