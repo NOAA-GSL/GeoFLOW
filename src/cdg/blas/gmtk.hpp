@@ -38,19 +38,19 @@ namespace GMTK
   void Ylm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT iri, GTVector<T> &ylm_r, GTVector<T> &ylm_i);
 
   template<typename T>     
-  void dYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, GINT iri, GTVector<GTVector<T>*> &tmp, GTVector<T> &dylm_r, GTVector<T> &dylm_i);
+  void dYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, GINT iri, T cexcl,  GTVector<GTVector<T>*> &tmp, GTVector<T> &dylm_r, GTVector<T> &dylm_i);
 
   template<typename T>     
-  void ddYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, GINT iri, GTVector<GTVector<T>*> &tmp, GTVector<T> &dylm_r, GTVector<T> &dylm_i);
+  void ddYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, GINT iri, T cexcl, GTVector<GTVector<T>*> &tmp, GTVector<T> &dylm_r, GTVector<T> &dylm_i);
 
   template<typename T>     
   void rYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GTVector<T> &tmp, GTVector<T> &ylm);
 
   template<typename T>     
-  void drYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, GTVector<T> &tmp, GTVector<T> &dylm);
+  void drYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, T cexcl, GTVector<T> &tmp, GTVector<T> &dylm);
 
   template<typename T>     
-  void ddrYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, GTVector<T> &tmp, GTVector<T> &dylm);
+  void ddrYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, T cexcl, GTVector<T> &tmp, GTVector<T> &dylm);
 
   template<typename T>     
   void Rx3(T alpha, GTVector<T> &y, GTVector<T> &z);

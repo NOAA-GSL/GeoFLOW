@@ -174,38 +174,43 @@ void Ylm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT iri, GTVector<
 //          xnodes: Cartesian coordinate arrays
 //          idir  : If 1, take d/d\theta; if 2, take d/d\phi
 //          iri   : if 0, return dYlm, else, return complex conjugate, dYlm^*
+//          cexcl : exclude colat < cexcl and (PI-colat) < cexcl from computation 
+//                  (set to 0). Expressed in degrees.
 //          tmp   : tmp arrays. 2 are required.
 //          dylm_r: real comp. of dY^l_m for each grid point
 //          dylm_i: imag. comp. of dY^l_m for each grid point
 // RETURNS: none
 //**********************************************************************************
 template<typename T>
-void dYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir,  GINT iri, GTVector<GTVector<T>*> &tmp, GTVector<T> &dylm_r, GTVector<T> &dylm_i)
+void dYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir,  GINT iri, T cexcl,  GTVector<GTVector<T>*> &tmp, GTVector<T> &dylm_r, GTVector<T> &dylm_i)
 {
-  T colat, phi, r;
+  T colat, phi, r, rexcl;
   T x, y, z;
   T xl, xm;
-  T cs, cotc, eps, epsi, sn, rfact;
+  T cotc, rfact;
+
+  rexcl = cexcl * PI/180.0;
 
   assert( iri >= 0 );
   assert( idir == 1 || idir == 2 );
   assert( tmp.size() >= 2 );
 
-  eps   = 1.0e-8;  //1.0e6*std::numeric_limits<T>::epsilon();
-  epsi  = 1.0/eps;
   xl    = l; xm = m;
 
   if ( idir == 1 ) {
 
     rfact = sqrt( fabs((xl-xm)*(xl+xm+1.0)) );
-    Ylm_cart<T>(l, m  , xnodes, 0, dylm_r  , dylm_i);   // Ylm
+    Ylm_cart<T>(l, m  , xnodes, 0, dylm_r  , dylm_i); // Ylm
     Ylm_cart<T>(l, m+1, xnodes, 0, *tmp[0], *tmp[1]); // Y^l_m+1
     for ( auto j=0; j<xnodes[0].size(); j++ ) {
       x     = xnodes[0][j]; y = xnodes[1][j]; z = xnodes[2][j];
       r     = sqrt(x*x + y*y + z*z);
-      cs    = cos(colat); sn = sin(colat);
-      cotc  = fabs(sn) < eps ? cs*epsi : cs/sn;
       colat = acos(z/r);
+      if ( colat < rexcl || (PI-colat) < cexcl < rexcl ) {
+        dylm_r[j] = dylm_i[j] = 0.0;
+        continue;
+      }
+      cotc  = cos(colat)/sin(colat);
       phi   = atan2(y,x);
       dylm_r[j] = xm*cotc*dylm_r[j] 
                 + rfact*( cos(phi)*(*tmp[0])[j] + sin(phi)*(*tmp[1])[j] );
@@ -246,25 +251,25 @@ void dYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir,  GINT i
 //          xnodes: Cartesian coordinate arrays
 //          idir  : If 1, take d^2/d\theta^2; if 2, take d^2/d\phi^2
 //          iri   : if 0, return dYlm, else, return complex conjugate, dYlm^*
+//          cexcl : exclude colat < cexcl and (PI-colat) < cexcl from computation 
+//                  (set to 0). Expressed in degrees.
 //          tmp   : tmp arrays. 2 are required.
 //          dylm_r: real comp. of dY^l_m for each grid point
 //          dylm_i: imag. comp. of dY^l_m for each grid point
 // RETURNS: none
 //**********************************************************************************
 template<typename T>
-void ddYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, GINT iri, GTVector<GTVector<T>*> &tmp, GTVector<T> &dylm_r, GTVector<T> &dylm_i)
+void ddYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, GINT iri, T cexcl,  GTVector<GTVector<T>*> &tmp, GTVector<T> &dylm_r, GTVector<T> &dylm_i)
 {
-  T colat, phi, r;
+  T colat, phi, r, rexcl;
   T x, y, z;
   T xl, xm;
-  T cotc, cs, csc, eps, epsi, sn, rfact;
+  T cotc, csc, rfact;
 
   assert( iri >= 0 );
   assert( idir == 1 || idir == 2 );
   assert( tmp.size() >= 2 );
 
-  eps   = 1.0e-8; //1.0e6*std::numeric_limits<T>::epsilon();
-  epsi = 1.0/eps;
   xl   = l; xm = m;
 
  
@@ -277,9 +282,12 @@ void ddYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, GINT i
       x     = xnodes[0][j]; y = xnodes[1][j]; z = xnodes[2][j];
       r     = sqrt(x*x + y*y + z*z);
       colat = acos(z/r);
-      cs    = cos(colat); sn = sin(colat);
-      cotc  = fabs(sn) < eps ? cs*epsi: cs/sn;
-      csc   = fabs(sn) < eps ? epsi : 1.0/sn;
+      if ( colat < rexcl || (PI-colat) < cexcl < rexcl ) {
+        dylm_r[j] = dylm_i[j] = 0.0;
+        continue;
+      }
+      cotc  = cos(colat)/sin(colat);
+      csc   = 1.0 / sin(colat);
       phi   = atan2(y,x);
 
       dylm_r[j] = xm*( xm*cotc*cotc - csc*csc )*dylm_r[j] 
@@ -378,12 +386,14 @@ void rYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GTVector<T> &tmp, 
 // ARGS   : l,m,  : orbital ang mom. quantum number, and azimuthal quantum number
 //          xnodes: Cartesian coordinate arrays
 //          idir  : If 1, computes d/d\theta; if 2, computes d/d\phi
+//          cexcl : exclude colat < cexcl and (PI-colat) < cexcl from computation 
+//                  (set to 0). Expressed in degrees.
 //          tmp   : tmp arrays. 3 are required.
 //          dylm  : deriv of real comp. of Y^l_m for each grid point
 // RETURNS: none
 //**********************************************************************************
 template<typename T>
-void drYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, GTVector<GTVector<T>*>  &tmp, GTVector<T> &drylm)
+void drYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, T cexcl, GTVector<GTVector<T>*>  &tmp, GTVector<T> &drylm)
 {
   T rfact;
   GTVector<T> *dr, *di;  // real and imaginary comps of derivative
@@ -400,18 +410,18 @@ void drYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, GTVect
   if ( m > 0 ) { 
     rfact = pow(-1.0,m)/sqrt(2.0);
     di = tmp[2];
-    GMTK::dYlm_cart<T>(l, m, xnodes, idir, 0, tmp, drylm, *di);
+    GMTK::dYlm_cart<T>(l, m, xnodes, idir, 0, cexcl, tmp, drylm, *di);
     drylm *= 2.0*rfact;
   }
   else if ( m < 0 ) {
     rfact = pow(-1.0,m)/sqrt(2.0);
     dr = tmp[2];
-    GMTK::dYlm_cart<T>(l, m, xnodes, idir, 0, tmp, *dr, drylm);
+    GMTK::dYlm_cart<T>(l, m, xnodes, idir, 0, cexcl, tmp, *dr, drylm);
     drylm *= 2.0*rfact;
   }
   else {
     di = tmp[2];
-    GMTK::dYlm_cart<T>(l, m, xnodes, idir, 0, tmp, drylm, *di);
+    GMTK::dYlm_cart<T>(l, m, xnodes, idir, 0, cexcl, tmp, drylm, *di);
   }
 
 } // end, method drYlm_cart
@@ -431,12 +441,14 @@ void drYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, GTVect
 // ARGS   : l,m,  : orbital ang mom. quantum number, and azimuthal quantum number
 //          xnodes: Cartesian coordinate arrays
 //          idir  : If 1, computes d/d\theta; if 2, computes d/d\phi
+//          cexcl : exclude colat < cexcl and (PI-colat) < cexcl from computation 
+//                  (set to 0). Expressed in degrees.
 //          tmp   : tmp arrays. 3 are required.
 //          dylm  : deriv. of real comp. of Y^l_m for each grid point
 // RETURNS: none
 //**********************************************************************************
 template<typename T>
-void ddrYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, GTVector<GTVector<T>*>  &tmp, GTVector<T> &drylm)
+void ddrYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, T cexcl, GTVector<GTVector<T>*>  &tmp, GTVector<T> &drylm)
 {
   T rfact;
   GTVector<T> *dr, *di;  // real and imaginary comps of derivative
@@ -453,18 +465,18 @@ void ddrYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, GTVec
   if ( m > 0 ) { 
     rfact = pow(-1.0,m)/sqrt(2.0);
     di = tmp[2];
-    GMTK::ddYlm_cart<T>(l, m, xnodes, idir, 0, tmp, drylm, *di);
+    GMTK::ddYlm_cart<T>(l, m, xnodes, idir, 0, cexcl, tmp, drylm, *di);
     drylm *= 2.0*rfact;
   }
   else if ( m < 0 ) {
     rfact = pow(-1.0,m)/sqrt(2.0);
     dr = tmp[2];
-    GMTK::ddYlm_cart<T>(l, m, xnodes, idir, 0, tmp, *dr, drylm);
+    GMTK::ddYlm_cart<T>(l, m, xnodes, idir, 0, cexcl, tmp, *dr, drylm);
     drylm *= 2.0*rfact;
   }
   else {
     di = tmp[2];
-    GMTK::ddYlm_cart<T>(l, m, xnodes, idir, 0, tmp, drylm, *di);
+    GMTK::ddYlm_cart<T>(l, m, xnodes, idir, 0, cexcl, tmp, drylm, *di);
   }
 
 } // end, method ddrYlm_cart
