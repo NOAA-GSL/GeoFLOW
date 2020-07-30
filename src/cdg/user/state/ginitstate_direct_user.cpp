@@ -538,7 +538,7 @@ GBOOL impl_icosgaussSH(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
   GFTYPE              cs, cotc, del, epsi, sn; 
   GFTYPE              ccolat, cphi;
   GFTYPE              lnorm[2], gnorm[2];
-  GFTYPE              trunc, ulm0, ulm, c0;
+  GFTYPE              trunc, ulm0, ulm, c0, ulmmax, ulmmin;
   GTVector<GFTYPE>    si(4), sig(4), ufact(4);
   GTVector<GTVector<GFTYPE>*>
                       c(3), ytmp(3);
@@ -574,6 +574,8 @@ GBOOL impl_icosgaussSH(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
   dd2  = utmp[7];
   psum = utmp[0]; // partial sum 
 
+  ulmmax = 0.0;
+  ulmmin = std::numeric_limits<GFTYPE>::max();
   nxy = (*xnodes)[0].size(); // same size for x, y, z
 
   lat0  = lumpptree.getArray<GFTYPE>("latitude0");       // lat for each lump
@@ -675,7 +677,7 @@ GBOOL impl_icosgaussSH(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
         GMTK::ddrYlm_cart<GFTYPE>(l, m, *xnodes, 2, ytmp, *dd2); // d^2 rYlm/dphi^2
         for ( auto j=0; j<nxy; j++ ) {
           x     = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
-          r     = sqrt(x*x + y*y + z*z); colat = acos(z/r); lon   = atan2(y,x);
+          r     = sqrt(x*x + y*y + z*z); colat = acos(z/r); lon = atan2(y,x);
           cs    = cos(colat); sn = sin(colat);
           cotc  = fabs(sn) < eps ? cs*epsi : cs/sn;
           isin  = fabs(sn) < eps ? epsi    : 1.0/sn;
@@ -683,9 +685,10 @@ GBOOL impl_icosgaussSH(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
           del   = nu*irad*irad*(cotc*(*d1)[j] + (*dd1)[j]) 
                 + nu*pow(irad*isin,2)*(*dd2)[j];
          (*Rhs)[j] += del;
-
+(*Rhs)[j] = MIN((*Rhs)[j],0.0);
          ulm         = ulm0 * exp((*Rhs)[j] * time);
-         
+         ulmmax      = MAX(ulmmax,ulm);
+         ulmmin      = MIN(ulmmin,ulm);
          (*psum)[j]  = ulm * (*rylm)[j];
          (*u[0])[j] += (*psum)[j];
         } // end, grid-point loop
@@ -696,7 +699,7 @@ GBOOL impl_icosgaussSH(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
 cout << endl;
       bContin = (l <= 1 ) || (gnorm[0] > trunc * gnorm[1]);
     } // end, l-loop
-    cout << "impl_icosgaussSH: l_final=" << l-1 << " lmax=" << lmax << endl << endl;
+    cout << "impl_icosgaussSH: l_final=" << l-1 << " lmax=" << lmax << " u_max=" << u[0]->max() << " ulm_max=" << ulmmax << " ulm_min=" << ulmmin << " rylm_max=" << rylm->max() << " rylm_min=" << rylm->min() << endl << endl;
 
   } // end, lump loop
 
