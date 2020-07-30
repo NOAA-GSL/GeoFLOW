@@ -206,7 +206,7 @@ void dYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir,  GINT i
       x     = xnodes[0][j]; y = xnodes[1][j]; z = xnodes[2][j];
       r     = sqrt(x*x + y*y + z*z);
       colat = acos(z/r);
-      if ( colat < rexcl || (PI-colat) < cexcl < rexcl ) {
+      if ( colat < rexcl || (PI-colat) < rexcl ) {
         dylm_r[j] = dylm_i[j] = 0.0;
         continue;
       }
@@ -282,7 +282,7 @@ void ddYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, GINT i
       x     = xnodes[0][j]; y = xnodes[1][j]; z = xnodes[2][j];
       r     = sqrt(x*x + y*y + z*z);
       colat = acos(z/r);
-      if ( colat < rexcl || (PI-colat) < cexcl < rexcl ) {
+      if ( colat < rexcl || (PI-colat) < rexcl ) {
         dylm_r[j] = dylm_i[j] = 0.0;
         continue;
       }
