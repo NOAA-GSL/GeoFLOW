@@ -138,8 +138,8 @@ void Ylm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT iri, GTVector<
   }
   
   xl = l; xm = m;
-  xf1 = GMTK::fact<GDOUBLE>(xl-xm);
-  xf2 = GMTK::fact<GDOUBLE>(xl+xm);
+  xf1 = GMTK::fact<GDOUBLE>(xl-abs(xm));
+  xf2 = GMTK::fact<GDOUBLE>(xl+abs(xm));
   rfact = sqrt( fabs(2.0*xl+1.0)/(4.0*PI) * (xf1 / xf2) ); 
 
   GMTK::Plm_cart<T>(l, abs(m), xnodes, ylm_r);
@@ -191,7 +191,7 @@ void dYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir,  GINT i
   assert( idir == 1 || idir == 2 );
   assert( tmp.size() >= 2 );
 
-  eps   = 1.0e-5;  //1.0e6*std::numeric_limits<T>::epsilon();
+  eps   = 1.0e-8;  //1.0e6*std::numeric_limits<T>::epsilon();
   epsi  = 1.0/eps;
   xl    = l; xm = m;
 
@@ -263,7 +263,7 @@ void ddYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, GINT i
   assert( idir == 1 || idir == 2 );
   assert( tmp.size() >= 2 );
 
-  eps   = 1.0e-5; //1.0e6*std::numeric_limits<T>::epsilon();
+  eps   = 1.0e-8; //1.0e6*std::numeric_limits<T>::epsilon();
   epsi = 1.0/eps;
   xl   = l; xm = m;
 
@@ -304,7 +304,7 @@ void ddYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, GINT i
     Ylm_cart<T>(l, m+1, xnodes, 0, *tmp[0], *tmp[1]);   // Ylm
     for ( auto j=0; j<xnodes[0].size(); j++ ) {
       dylm_r[j] = -xm*xm * (*tmp[0])[j];
-      dylm_i[j] =  xm*xm * (*tmp[1])[j];
+      dylm_i[j] = -xm*xm * (*tmp[1])[j];
     } // end, coord loop
   
 
