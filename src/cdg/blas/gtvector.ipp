@@ -1139,9 +1139,8 @@ void
 GTVector<T>::operator*=(const GTVector &b)
 {
   GLLONG j;
-  T *p = b.data();
   for ( j=this->gindex_.beg(); j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
-    this->data_[j] *= p[j-this->gindex_.beg()];
+    this->data_[j] *= b[j-this->gindex_.beg()];
   }
 
   #if defined(_G_AUTO_UPDATE_DEV)
