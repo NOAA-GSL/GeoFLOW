@@ -1,0 +1,186 @@
+{ 
+  "pde_name"             : "pde_burgers",
+  "exp_order"            : [4, 4, 4],
+  "exp_order_type"       : "constant",
+  "grid_type"            : "grid_icos",
+  "initstate_block"      : "initstate_icosnwave",
+  "initforce_block"      : "",
+  "use_forcing"          : false,
+  "initstate_type"       : "direct",
+  "initforce_type"       : "",
+  "restart_index"        : 0,
+  "benchmark"            : false,
+  "do_comparison"        : true,
+  "observer_list"        : ["gio_observer", "global_diag_basic"],
+  "lmax"                 : 4,
+  "zero"                 : 1e-9,
+  "eps"                  : 1e-9,
+  "initvss": {
+    "name"     : "simplesum",
+    "kdn"      : 2,
+    "kup"      : 60,
+    "kpower"   : 0.025,
+    "E0"       : 1.0
+  },
+  "initv": {
+    "name"  : "abc",
+    "kdn"   : 2,
+    "kup"   : 3,
+    "kpower": 0.5,
+    "A"     : 0.9,
+    "B"     : 1.0,
+    "C"     : 1.1,
+    "E0"    : 1.0
+  },
+  "mystateinit": {
+    "initv"   : "initvss",
+    "initps"  : "zero",
+    "initc"   : "zero"
+  },
+  "initstate_icosbell": {
+    "latitude0"  : 0.0,
+    "longitude0" :-30.0,
+    "sigma"      : 0.15,
+    "alpha"      : 20.0,
+    "u0"         : 1.0
+  },
+  "initstate_icosgaussburgers": {
+    "latitude0"  : [0.0, -40.0], 
+    "longitude0" : [-90.0,-90.0],
+    "sigma"      : [0.25, 0.25],
+    "c0"         : [1.0,1.0],
+    "alpha"      : 0.0,
+    "u0"         : 1.0,
+    "nlumps"     : 1
+  },
+  "initstate_boxpergauss": {
+    "x0"     : 0.5,
+    "y0"     : 0.5,
+    "z0"     : 0.5,
+    "sigma"  : 0.05,
+    "u0"     : 1.0,
+    "adv_vel": [1.0, 0.0, 0.0]
+  },
+  "initstate_boxdirgauss": {
+    "x0"     : 0.5,
+    "y0"     : 0.5,
+    "z0"     : 0.5,
+    "sigma"  : 0.05,
+    "u0"     : 1.0,
+    "adv_vel": [1.0, 0.0, 0.0]
+  },
+  "initstate_boxnwave": {
+    "x0"        : [0.35 , 0.65],
+    "y0"        : [0.35 , 0.65],
+    "z0"        : [0.35 , 0.65],
+    "ULparam"   : [1.0  , 1.0],
+    "t0"        : [0.002, 0.008],
+    "planar"    : [false, false],
+    "prop_dir_x": [0    , 0],
+    "prop_dir_y": [0    , 0],
+    "prop_dir_z": [0    , 0]
+  },
+  "initstate_icosnwave": {
+    "latitude0"  : [10,  40 ],
+    "longitude0" : [280, 330],
+    "Uparam"     : [1.0, 1.0],
+    "t0"         : [0.08, 0.16]
+  },
+  "pde_burgers": {
+    "doheat"      : false,
+    "bpureadv"    : false,
+    "bconserved"  : false,
+    "forcing_comp": [0, 1, 2]
+  },
+  "my_dirichlet": {
+    "bdy_class"        : "uniform",
+    "base_type"        : ["GBDY_DIRICHLET"],
+    "istate"           : [ [0, 1, 2] ],
+    "value"            : [0.0, 0.0, 0.0]
+  },
+  "grid_icos": {
+    "grid_name"   : "grid_icos",
+    "ilevel"      : 2,
+    "refine_type" : "GICOS_BISECTION",
+    "radius"      : 1.0,
+    "maxit"       : 128,
+    "tol"         : 1.0e-8,
+    "norm_type"   : "GCG_NORM_INF"
+  },
+  "grid_sphere" : {
+    "grid_name"         : "grid_sphere",
+    "radiusi"           : 1.0,
+    "radiuso"           : 2.0,
+    "num_radial_elems"  : 10,
+    "bdy_inner"         : "my_dirichlet",
+    "bdy_outer"         : "my_dirichlet",
+    "bdy_init_method  " : "",
+    "bdy_update_method" : "", 
+    "use_state_init"    : false
+  },
+  "stepper_props": {
+    "stepping_method"  : "GSTEPPER_EXRK",
+    "time_deriv_order" : 4,
+    "extrap_order"     : 2,
+    "variable_dt"      : false,
+    "courant"          : 0.04 
+  },
+  "curlv": {
+    "state_index" : [0, 1, 2],
+    "names"       : ["omegax", "omegay", "omegaz"],
+    "mathop"      : "curl"
+  },
+  "curlvmag": {
+    "state_index" : [0, 1, 2],
+    "names"       : ["omega"],
+    "mathop"      : "curlmag"
+  },
+  "vmag": {
+    "state_index" : [0, 1, 2],
+    "names"       : ["vmag"],
+    "mathop"      : "vmag"
+  },
+  "gradv": {
+    "state_index" : [0],
+    "names"       : ["gradx", "grady", "gradz"],
+    "mathop"      : "grad"
+  },
+  "2derivs": {
+    "state_index" : [0],
+    "names"       : ["du1dx2","du1dy2"],
+    "mathop"      : "lapderivs"
+  },
+  "gio_observer": {
+    "observer_name"      : "gio_observer",
+    "indirectory"        : "outs",
+    "outdirectory"       : "outs",
+    "cadence_type"       : "cycle",
+    "cycle_interval"     : 800,
+    "time_interval"      : 0.01,
+    "state_index"        : [0, 1],
+    "state_names"        : ["u1", "u2", "u3"],
+    "grid_names"         : ["xgrid", "ygrid", "zgrid"],
+    "derived_quantities" : ["vmag", "curlvmag"],
+    "time_field_width"   : 6,
+    "task_field_width"   : 5,
+    "filename_size"      : 2048
+  },
+  "global_diag_basic": {
+    "observer_name"      : "global_diag_basic",
+    "indirectory"        : ".",
+    "outdirectory"       : ".",
+    "interval_freq_fact" : 10.0,
+    "treat_as_1d"        : false
+  },
+  "dissipation_traits": {
+    "nu"      : 1.0e-1,
+    "nu_type" : "constant"
+  },
+  "time_integration": {
+    "integ_type" : "cycle",
+    "time_end"   : 0.150,
+    "cycle_end"  : 1,
+    "dt"         : 2.0e-6
+  }
+
+}
