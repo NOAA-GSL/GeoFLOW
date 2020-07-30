@@ -95,11 +95,15 @@ int main(int argc, char **argv)
 {
     GString   serr ="main: ";
     GINT      errcode, gerrcode;
-    GINT      lmax;
+    GINT      itest, lmax;
+    GSIZET    ncheck;
     GFTYPE    eps=1e4*std::numeric_limits<GFTYPE>::epsilon();
+    GFTYPE    cexcl, radius, rexcl;
     GFTYPE    err;
     GFTYPE    zero;
+    GTVector<GFTYPE> vylm(2);
     IOBasePtr pIO;         // ptr to IOBase operator
+    const char * const stest[] = { "orthonormality", "1-derivative"};
 
     typename ObserverBase<MyTypes>::Traits
                    binobstraits;
@@ -145,10 +149,12 @@ int main(int argc, char **argv)
     lmax        = ptree.getValue<GINT>("lmax",4);
     zero        = ptree.getValue<GFTYPE>("zero",1.0e-10);
     eps         = ptree.getValue<GFTYPE>("eps",1.0e-10);
+    cexcl       = ptree.getValue<GFTYPE>("excl_angle",1.0); //exclude angle (deg)
 
     assert(sgrid == "grid_icos" && "Must use ICOS grid for now");
 
-//  radiusi = gtree.getValue<GFTYPE>("radius",1.0);
+    radius = gtree.getValue<GFTYPE>("radius",1.0);
+    rexcl  = cexcl * PI/180.0;
 
     // Create basis:
     GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis(GDIM);
@@ -195,6 +201,7 @@ int main(int argc, char **argv)
 
     GFTYPE integral;
 
+    itest = 0;
     // Check orthonormality of real Ylm:
     GLONG l, m, lp, mp, n;
     for ( l=0, n=0; l<lmax; l++ ) {
@@ -204,7 +211,7 @@ int main(int argc, char **argv)
             GMTK::rYlm_cart <GFTYPE>(l , m , *xnodes, *ytmp[0], rylm)  ; // rYlm basis
             GMTK::rYlm_cart <GFTYPE>(lp, mp, *xnodes, *ytmp[0], rylmp) ; // rYlm' basis
             rylm *= rylmp;
-            integral = grid_->integrate(rylm, *ytmp[0]);
+            integral = grid_->integrate(rylm, *ytmp[0])/(radius*radius);
 //          cout << "main: l=" << l << " m=" << m << " lp=" << lp << " mp=" << mp << " integral=" << integral << endl;
             al   [n] = l;
             am   [n] = m;
@@ -227,7 +234,60 @@ int main(int argc, char **argv)
         if ( fabs(delta[j]) > zero ) ibad[nbad++] = j;
       }
     }
-    
+
+   errcode = nbad == 0 ? 0 : 1;
+   if ( nbad > 0 ) goto prerr;
+
+   EH_MESSAGE("main: Check 1-derivative...");
+
+   // Check first derivative: Integrate over dOMega:
+   //   I_theta =Integral dYlm/dtheta sin theta dtheta dphi
+   //           -Integral cot theta Ylm sin theta dtheta dphi
+   itest = 1;
+
+   GFTYPE x, y, z, colat, lon, r;
+   GFTYPE ci, cotc;
+   for ( l=0, n=0; l<=lmax; l++ ) {
+     for ( m=-l; m<=l; m++, n++ ) {
+
+        // Compute ulm(t=0):
+        GMTK::rYlm_cart <GFTYPE>(l, m, *xnodes, *ytmp[0], rylm)  ; // rYlm basis
+        GMTK::drYlm_cart<GFTYPE>(l, m, *xnodes,  1, cexcl, ytmp, rylmp) ; // drYlm/dth 
+       *ytmp[0] = 0.0;
+        for ( auto j=0; j<(*xnodes)[0].size(); j++ ) {
+          x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
+          r = sqrt(x*x + y*y + z*z); colat = acos(z/r); lon = atan2(y,x);
+          colat = acos(z/r);
+          if ( colat < rexcl || (PI-colat) < rexcl ) continue;
+          cotc  = cos(colat)/sin(colat);
+//        if ( !FUZZYEQ(0.0,colat,eps) ) { vylm[0] = sin(colat)*rylm[j]; }
+//        if ( !FUZZYEQ(PI ,colat,eps) ) { vylm[1] = sin(colat)*rylm[j]; }
+          
+         (*ytmp[0])[j] =  -cotc*rylm[j]; // integrand
+        }
+        integral = grid_->integrate(*ytmp[0], *ytmp[1])/(radius*radius);
+//               + 2.0*PI*(vylm[1] - vylm[0]);
+        ci       = grid_->integrate(rylmp  , *ytmp[1])/(radius*radius); // Integral of deriv
+
+        delta[n] = fabs(ci-integral) / integral; // rel error
+        delta[n] = fabs(ci-integral); 
+  cout << "main: l=" << l << " m=" << m << " integ=" << integral << " cinteg=" << ci << endl;
+     }
+   }
+   ncheck = n;
+
+   cout << "main: number of derivatives to check: " << ncheck << endl;
+
+   nbad   = 0;
+   for ( auto j=0; j< ncheck; j++ ) {
+     if ( delta[j] > eps ) ibad[nbad++] = j;
+   }
+   
+   errcode = nbad == 0 ? 0 : 2;
+   if ( nbad > 0 ) goto prerr;
+
+
+prerr:
 
     EH_MESSAGE("main: Write to file...");
 
@@ -237,6 +297,7 @@ int main(int argc, char **argv)
     ios.open("ylm_err.txt",std::ios_base::app);
 
     if ( itst.peek() == std::ofstream::traits_type::eof() ) {
+      ios << "test" << "  ";
       ios << "#elems" << "  ";
       for ( auto j=0; j<GDIM; j++ ) ios << "p" << j+1 << "  ";
       ios <<  "ndof    l     lp     m      mp      delta" << std::endl;
@@ -252,6 +313,7 @@ int main(int argc, char **argv)
 
     for ( auto jj=0; jj<nbad; jj++ ) {
       j = ibad[jj];
+      ios <<   stest[itest]  << "  ";
       ios <<   gsz[0] << "  ";
       for ( auto k=0; k<GDIM; k++ ) ios << pstd[k] << "  ";
       ios << gsz[1]     << "  "
@@ -264,15 +326,14 @@ int main(int argc, char **argv)
     }
     ios.close();
     
-    errcode = nbad == 0 ? 0 : 1;
 
     // Accumulate errors:
     GComm::Allreduce(&errcode, &gerrcode, 1, T2GCDatatype<GINT>() , GC_OP_MAX, comm_);
 
  
     if ( gerrcode != 0 ) {
-      cout << serr << " Error: code=" << errcode << endl;
-      cout << serr << " Error: nbad=" << nbad    << endl;
+      cout << serr << " Error: test: " << stest[itest] << " code=" << errcode << endl;
+      cout << serr << " Error: nbad: " << nbad << endl;
     }
     else {
       cout << serr << " Success!" << endl;

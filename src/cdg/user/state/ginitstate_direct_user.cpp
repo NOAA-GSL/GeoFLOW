@@ -536,7 +536,7 @@ GBOOL impl_icosgaussSH(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
   GFTYPE              irad, isin, nu, rad;
   GFTYPE              eps = 1.0e-3; //1.0e6*std::numeric_limits<GFTYPE>::epsilon();
   GFTYPE              cs, cotc, del, epsi, sn; 
-  GFTYPE              ccolat, cphi;
+  GFTYPE              cexcl, ccolat, cphi;
   GFTYPE              lnorm[2], gnorm[2];
   GFTYPE              trunc, ulm0, ulm, c0, ulmmax, ulmmin;
   GTVector<GFTYPE>    si(4), sig(4), ufact(4);
@@ -586,6 +586,7 @@ GBOOL impl_icosgaussSH(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
   alpha = lumpptree.getValue<GFTYPE>("alpha");           // initial concentrations for each lump
   trunc = lumpptree.getValue<GFTYPE>("trunc", 1.0e-16);  // truncation level for l, m, loop
   lmax  = lumpptree.getValue<GINT>("lmax");              // max ang mom. quantum number
+  cexcl = lumpptree.getValue<GINT>("excl_angle");        // exclusion angle (degrees)
   rad   = icosptree.getValue<GFTYPE>("radius");
   irad  = 1.0/rad;
 
@@ -657,8 +658,8 @@ GBOOL impl_icosgaussSH(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
 
         // Compute advection terms:
         // ...get Ylm derivatives required:
-        GMTK::drYlm_cart<GFTYPE>(l, m, *xnodes, 1, ytmp,  *d1); // d rYlm/dtheta
-        GMTK::drYlm_cart<GFTYPE>(l, m, *xnodes, 2, ytmp,  *d2); // d rYlm/dphi
+        GMTK::drYlm_cart<GFTYPE>(l, m, *xnodes, 1, cexcl, ytmp,  *d1); // d rYlm/dtheta
+        GMTK::drYlm_cart<GFTYPE>(l, m, *xnodes, 2, cexcl, ytmp,  *d2); // d rYlm/dphi
         for ( auto j=0; j<nxy; j++ ) { 
           x     = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
           r     = sqrt(x*x + y*y + z*z); colat = acos(z/r); lon   = atan2(y,x);
@@ -673,8 +674,8 @@ GBOOL impl_icosgaussSH(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
       
         // Compute diffusion terms:
         // ...get Ylm derivatives required:
-        GMTK::ddrYlm_cart<GFTYPE>(l, m, *xnodes, 1, ytmp, *dd1); // d^2 rYlm/dtheta^2
-        GMTK::ddrYlm_cart<GFTYPE>(l, m, *xnodes, 2, ytmp, *dd2); // d^2 rYlm/dphi^2
+        GMTK::ddrYlm_cart<GFTYPE>(l, m, *xnodes, 1, cexcl, ytmp, *dd1); // d^2 rYlm/dtheta^2
+        GMTK::ddrYlm_cart<GFTYPE>(l, m, *xnodes, 2, cexcl, ytmp, *dd2); // d^2 rYlm/dphi^2
         for ( auto j=0; j<nxy; j++ ) {
           x     = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
           r     = sqrt(x*x + y*y + z*z); colat = acos(z/r); lon = atan2(y,x);
