@@ -190,7 +190,7 @@ int main(int argc, char **argv)
     GTVector<GFTYPE> delta(na);
     GTVector<GFTYPE> rylm (grid_->ndof());
     GTVector<GFTYPE> rylmp(grid_->ndof());
-    GTVector<GTVector<GFTYPE>*> ytmp(3);
+    GTVector<GTVector<GFTYPE>*> ytmp(4);
     GTVector<GTVector<GFTYPE>> *xnodes = &grid_->xNodes();
    
     for ( auto j=0; j<ytmp.size(); j++ ) {
@@ -245,6 +245,11 @@ int main(int argc, char **argv)
    //           -Integral cot theta Ylm sin theta dtheta dphi
    itest = 1;
 
+
+   // Reset lp, mp:
+   alp = 999;
+   amp = 999;
+
    GFTYPE x, y, z, colat, lon, r;
    GFTYPE ci, cotc;
    for ( l=0, n=0; l<=lmax; l++ ) {
@@ -260,15 +265,17 @@ int main(int argc, char **argv)
           colat = acos(z/r);
           if ( colat < rexcl || (PI-colat) < rexcl ) continue;
           cotc  = cos(colat)/sin(colat);
-//        if ( !FUZZYEQ(0.0,colat,eps) ) { vylm[0] = sin(colat)*rylm[j]; }
-//        if ( !FUZZYEQ(PI ,colat,eps) ) { vylm[1] = sin(colat)*rylm[j]; }
+          if ( !FUZZYEQ(0.0,colat,eps) ) { vylm[0] = sin(colat)*rylm[j]; }
+          if ( !FUZZYEQ(PI ,colat,eps) ) { vylm[1] = sin(colat)*rylm[j]; }
           
          (*ytmp[0])[j] =  -cotc*rylm[j]; // integrand
         }
-        integral = grid_->integrate(*ytmp[0], *ytmp[1])/(radius*radius);
-//               + 2.0*PI*(vylm[1] - vylm[0]);
+        integral = grid_->integrate(*ytmp[0], *ytmp[1])/(radius*radius)
+                 + 2.0*PI*(vylm[1] - vylm[0]);
         ci       = grid_->integrate(rylmp  , *ytmp[1])/(radius*radius); // Integral of deriv
 
+        al   [n] = l;
+        am   [n] = m;
         delta[n] = fabs(ci-integral) / integral; // rel error
         delta[n] = fabs(ci-integral); 
   cout << "main: l=" << l << " m=" << m << " integ=" << integral << " cinteg=" << ci << endl;
