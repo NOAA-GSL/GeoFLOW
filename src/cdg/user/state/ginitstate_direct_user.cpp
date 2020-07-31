@@ -585,8 +585,8 @@ GBOOL impl_icosgaussSH(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
   c0    = lumpptree.getValue<GFTYPE>("c0");              // adv. vel. magnitude
   alpha = lumpptree.getValue<GFTYPE>("alpha");           // initial concentrations for each lump
   trunc = lumpptree.getValue<GFTYPE>("trunc", 1.0e-16);  // truncation level for l, m, loop
-  lmax  = lumpptree.getValue<GINT>("lmax");              // max ang mom. quantum number
-  cexcl = lumpptree.getValue<GINT>("excl_angle");        // exclusion angle (degrees)
+  lmax  = lumpptree.getValue  <GINT>("lmax");            // max ang mom. quantum number
+  cexcl = lumpptree.getValue<GFTYPE>("excl_angle");      // exclusion angle (degrees)
   rad   = icosptree.getValue<GFTYPE>("radius");
   irad  = 1.0/rad;
 
