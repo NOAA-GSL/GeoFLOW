@@ -187,18 +187,22 @@ void dYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir,  GINT i
   T colat, phi, r, rexcl;
   T x, y, z;
   T xl, xm;
-  T cotc, rfact;
+  T cotc, rfact, rfact1, rfact2;
 
   rexcl = cexcl * PI/180.0;
 
   assert( iri >= 0 );
   assert( idir == 1 || idir == 2 );
-  assert( tmp.size() >= 2 );
 
   xl    = l; xm = m;
 
   if ( idir == 1 ) {
 
+#if 0
+    // Compute: 
+    // dYlm/dtheta = m cot theta Ylm + 
+    //               sqrt[(l-m)(l+m+1)] e^(-i phi) Yl(m+1)
+    assert( tmp.size() >= 2 );
     rfact = sqrt( fabs((xl-xm)*(xl+xm+1.0)) );
     Ylm_cart<T>(l, m  , xnodes, 0, dylm_r  , dylm_i); // Ylm
     Ylm_cart<T>(l, m+1, xnodes, 0, *tmp[0], *tmp[1]); // Y^l_m+1
@@ -215,12 +219,38 @@ void dYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir,  GINT i
       dylm_r[j] = xm*cotc*dylm_r[j] 
                 + rfact*( cos(phi)*(*tmp[0])[j] + sin(phi)*(*tmp[1])[j] );
       dylm_i[j] = xm*cotc*dylm_i[j]
-                + rfact*( cos(phi)*(*tmp[1])[j] - sin(phi)*(*tmp[0])[j] );
+                - rfact*( cos(phi)*(*tmp[1])[j] - sin(phi)*(*tmp[0])[j] );
     } // end, coord loop
+#else
+    // Compute: 
+    // dYlm/dtheta = exp(-i theta) sqrt((l-m)(l+m+1)) Y^l_m+1
+    //             - exp (i theta) sqrt*(l+m)(l-m+1)) Y^l_m-1
+    assert( tmp.size() >= 2 );
+    rfact1 = sqrt( fabs((xl-xm)*(xl+xm+1.0)) );
+    rfact2 = sqrt( fabs((xl+xm)*(xl-xm+1.0)) );
+    Ylm_cart<T>(l, m+1, xnodes, 0, *tmp[0], *tmp[1]); // Y^l_m+1
+    for ( auto j=0; j<xnodes[0].size(); j++ ) {
+      x     = xnodes[0][j]; y = xnodes[1][j]; z = xnodes[2][j];
+      r     = sqrt(x*x + y*y + z*z);
+      phi   = atan2(y,x);
+      dylm_r[j] = rfact1*(cos(phi)*(*tmp[0])[j] + sin(phi)*(*tmp[1])[j]);
+      dylm_i[j] = rfact1*(cos(phi)*(*tmp[1])[j] - sin(phi)*(*tmp[0])[j]);
+    } // end, coord loop
+
+    Ylm_cart<T>(l, m-1, xnodes, 0, *tmp[0], *tmp[1]); // Y^l_m-1
+    for ( auto j=0; j<xnodes[0].size(); j++ ) {
+      x     = xnodes[0][j]; y = xnodes[1][j]; z = xnodes[2][j];
+      r     = sqrt(x*x + y*y + z*z);
+      phi   = atan2(y,x);
+      dylm_r[j] -= rfact2*(cos(phi)*(*tmp[0])[j] - sin(phi)*(*tmp[1])[j]);
+      dylm_i[j] -= rfact2*(cos(phi)*(*tmp[1])[j] + sin(phi)*(*tmp[0])[j]);
+    } // end, coord loop
+#endif
 
   }
   else if ( idir == 2 ) {
-
+    // Compute:
+    // dYlm/dphi   = i m Ylm 
     Ylm_cart<T>(l, m+1, xnodes, 0, *tmp[0], *tmp[1]);   // Ylm
     for ( auto j=0; j<xnodes[0].size(); j++ ) {
       dylm_r[j] = -xm * (*tmp[1])[j];
@@ -242,9 +272,7 @@ void dYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir,  GINT i
 // METHOD : ddYlm_cart
 // DESC   : Compute 2-derivatives of spherical harmonics at each grid point
 //          specified by xnodes in Carteswian coordinates.
-//          Computed as:
-//                TBD
-//          If iri = 0, return dYlm; else return dYlm^*. 
+//          If iri = 0, return ddYlm; else return ddYlm^*. 
 //          
 //   
 // ARGS   : l,m,  : orbital ang mom. quantum number, and azimuthal quantum number
