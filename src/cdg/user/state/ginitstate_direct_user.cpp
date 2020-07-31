@@ -533,9 +533,8 @@ GBOOL impl_icosgaussSH(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
   GSIZET              nxy;
   GFTYPE              alpha, colat, lat, lon;
   GFTYPE              x, y, z, r, s;
-  GFTYPE              irad, isin, nu, rad;
-  GFTYPE              eps = 1.0e-3; //1.0e6*std::numeric_limits<GFTYPE>::epsilon();
-  GFTYPE              cs, cotc, del, epsi, sn; 
+  GFTYPE              irad, isin, nu, rad, rexcl;
+  GFTYPE              cotc, del; 
   GFTYPE              cexcl, ccolat, cphi;
   GFTYPE              lnorm[2], gnorm[2];
   GFTYPE              trunc, ulm0, ulm, c0, ulmmax, ulmmin;
@@ -591,6 +590,7 @@ GBOOL impl_icosgaussSH(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
   irad  = 1.0/rad;
 
   nlumps = lat0.size();
+  rexcl = cexcl * PI/180.0;
 
   nu    = nuptree   .getValue<GFTYPE>("nu");
   snut  = nuptree   .getValue<GString>("nu_type","constant");
@@ -604,7 +604,6 @@ GBOOL impl_icosgaussSH(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
   }
   alpha *= PI/180.0;
 
-  epsi = 1.0/eps;
 
   // We use (lat,lon) advecting components from 
   // Williamson JCP 102:211 (1992):
@@ -615,8 +614,8 @@ GBOOL impl_icosgaussSH(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
   for ( auto j=0; j<nxy; j++ ) { 
     x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
     r = sqrt(x*x + y*y + z*z); colat = acos(z/r); lon = atan2(y,x);
-    (*utmp[0])[j] = -c0 * sin(lon) * sin(alpha);
-    (*utmp[1])[j] =  c0 * ( sin(colat) * cos(alpha) - cos(colat)*cos(lon)*sin(alpha) );
+    (*utmp[0])[j] = 0.0; //-c0 * sin(lon) * sin(alpha);
+    (*utmp[1])[j] = c0 ; //* ( sin(colat) * cos(alpha) - cos(colat)*cos(lon)*sin(alpha) );
   }
   GMTK::vsphere2cart(grid, utmp, GVECTYPE_PHYS, c);
 
@@ -631,6 +630,7 @@ GBOOL impl_icosgaussSH(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
   for ( auto k=0; k<nlumps; k++ ) {
 
     bContin = TRUE;
+    *Rhs = 0.0;
     for ( l=0; l<=lmax && bContin; l++ ) {
       for ( auto m=-l; m<=l; m++ ) {
 
@@ -649,7 +649,7 @@ GBOOL impl_icosgaussSH(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
            (*ytmp[0])[j] =  0.0;
         }
         ulm0 = grid.integrate(*ytmp[0], *ytmp[1]) * irad*irad; // ulm(t=0)
-  cout << "impl_icosgaussSH: l=" << l << " m=" << m << " ulm0=" << ulm0 << endl; 
+//cout << "impl_icosgaussSH: l=" << l << " m=" << m << " ulm0=" << ulm0 << endl; 
 
         // Advection velocity compoments from Williamson:
         //   v_lat = -c0 sin(lon)sin(alpha)
@@ -663,11 +663,10 @@ GBOOL impl_icosgaussSH(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
         for ( auto j=0; j<nxy; j++ ) { 
           x     = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
           r     = sqrt(x*x + y*y + z*z); colat = acos(z/r); lon   = atan2(y,x);
-          cs    = cos(colat); sn = sin(colat);
-          cotc  = fabs(sn) < eps ? cs*epsi : cs/sn;
-          isin  = fabs(sn) < eps ? epsi    : 1.0/sn;
-          ccolat= -c0 * sin(lon) * sin(alpha);
-          cphi  =  c0 * ( sin(colat) * cos(alpha) - cos(colat)*cos(lon)*sin(alpha) );
+          if ( colat < rexcl || (PI-colat) < rexcl ) continue;
+          isin  = 1.0/sin(colat);
+          ccolat= 0.0; //-c0 * sin(lon) * sin(alpha);
+          cphi  =  c0 ; //* ( sin(colat) * cos(alpha) - cos(colat)*cos(lon)*sin(alpha) );
          (*Rhs)[j] = -ccolat*irad*(*d1)[j]
                    - cphi *irad*isin*(*d2)[j];
         }
@@ -679,14 +678,13 @@ GBOOL impl_icosgaussSH(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
         for ( auto j=0; j<nxy; j++ ) {
           x     = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
           r     = sqrt(x*x + y*y + z*z); colat = acos(z/r); lon = atan2(y,x);
-          cs    = cos(colat); sn = sin(colat);
-          cotc  = fabs(sn) < eps ? cs*epsi : cs/sn;
-          isin  = fabs(sn) < eps ? epsi    : 1.0/sn;
-          
+          if ( colat < rexcl || (PI-colat) < rexcl ) continue;
+          isin  = 1.0/sin(colat);
+          cotc  = isin * cos(colat);
           del   = nu*irad*irad*(cotc*(*d1)[j] + (*dd1)[j]) 
                 + nu*pow(irad*isin,2)*(*dd2)[j];
          (*Rhs)[j] += del;
-(*Rhs)[j] = MIN((*Rhs)[j],0.0);
+//(*Rhs)[j] = MIN((*Rhs)[j],0.0);
          ulm         = ulm0 * exp((*Rhs)[j] * time);
          ulmmax      = MAX(ulmmax,ulm);
          ulmmin      = MIN(ulmmin,ulm);
@@ -700,7 +698,7 @@ GBOOL impl_icosgaussSH(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
 cout << endl;
       bContin = (l <= 1 ) || (gnorm[0] > trunc * gnorm[1]);
     } // end, l-loop
-    cout << "impl_icosgaussSH: l_final=" << l-1 << " lmax=" << lmax << " u_max=" << u[0]->max() << " ulm_max=" << ulmmax << " ulm_min=" << ulmmin << " rylm_max=" << rylm->max() << " rylm_min=" << rylm->min() << endl << endl;
+//  cout << "impl_icosgaussSH: l_final=" << l-1 << " lmax=" << lmax << " u_max=" << u[0]->max() << " ulm_max=" << ulmmax << " ulm_min=" << ulmmin << " rylm_max=" << rylm->max() << " rylm_min=" << rylm->min() << endl << endl;
 
   } // end, lump loop
 
