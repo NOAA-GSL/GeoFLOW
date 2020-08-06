@@ -441,15 +441,13 @@ GBOOL impl_boxpergauss(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
     cs = initptree.getArray<GFTYPE>("adv_vel");
   }
 
-  GTVector<GString> bc(6);
-  bc[0] = boxptree.getValue<GString>("bdy_x_0");
-  bc[1] = boxptree.getValue<GString>("bdy_x_1");
-  bc[2] = boxptree.getValue<GString>("bdy_y_0");
-  bc[3] = boxptree.getValue<GString>("bdy_y_1");
-  bc[4] = boxptree.getValue<GString>("bdy_z_0");
-  bc[5] = boxptree.getValue<GString>("bdy_z_1");
-  assert(bc.multiplicity("GBDY_PERIODIC") >= 2*GDIM
-      && "Periodic boundaries must be set on all boundaries");
+  GTVector<GTVector<GBdyType>>
+                           *igbdyt_face= &grid.igbdyt_bdyface();
+  for ( auto j=0; j<igbdyt_face->size(); j++ ) { // for each face
+cout << "boxpergauss: igbdyt_face[" << j << "]=" << (*igbdyt_face)[j] << endl;
+    assert( (*igbdyt_face)[j].onlycontains(GBDY_PERIODIC) 
+        &&  "Periodic boundaries must be set on all boundaries");
+  }
 
   nxy = (*xnodes)[0].size(); // same size for x, y, z
 
