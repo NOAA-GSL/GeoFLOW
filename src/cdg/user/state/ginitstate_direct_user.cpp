@@ -444,7 +444,7 @@ GBOOL impl_boxpergauss(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
   GTVector<GTVector<GBdyType>>
                            *igbdyt_face= &grid.igbdyt_bdyface();
   for ( auto j=0; j<igbdyt_face->size(); j++ ) { // for each face
-cout << "boxpergauss: igbdyt_face[" << j << "]=" << (*igbdyt_face)[j] << endl;
+cout << "boxpergauss: num=" << (*igbdyt_face)[j].size() << " igbdyt_face[" << j << "]=" << (*igbdyt_face)[j] << endl;
     assert( (*igbdyt_face)[j].onlycontains(GBDY_PERIODIC) 
         &&  "Periodic boundaries must be set on all boundaries");
   }
