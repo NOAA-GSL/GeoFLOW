@@ -1092,7 +1092,7 @@ void GGridIcos::do_bdy_normals(GTMatrix<GTVector<GFTYPE>>    &dXdXi,
   for ( auto j=0; j<2; j++ ) {      // for each global bdy face
     nface = igbdy_face[j].size();   // # bdy nodes on this face
     idepComp.range(icurr,icurr+nface-1);
-    for ( auto j=0; j<normals.size(); j++ ) normals[j].range(icurr,icurr+nface-1);
+    for ( auto k=0; k<normals.size(); k++ ) normals[k].range(icurr,icurr+nface-1);
     do_bdy_normals3d(dXdXi, igbdy_face[j], j, normals, idepComp);
     icurr += nface;
   }
