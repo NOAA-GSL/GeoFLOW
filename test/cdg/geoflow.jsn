@@ -1,0 +1,161 @@
+{ 
+  "exp_order"         : [8, 8, 8],
+  "exp_order_type"    : "constant",
+  "grid_type"         : "grid_icos",
+  "pde_name"          : "pde_burgers",
+  "initstate_block"   : "initstate_icosgauss",
+  "initforce_block"   : "",
+  "use_forcing"       : false,
+  "initstate_type"    : "direct",
+  "initforce_type"    : "",
+  "restart_index"     : 0,
+  "benchmark"         : false,
+  "do_comparison"     : true,
+  "observer_list"     : ["gio_observer", "global_diag_basic"],
+  "IO_implementation" : "gio",
+  "terrain_type"      : "none",
+  "poly_test": {
+    "xpoly" : 2,
+    "ypoly" : 4,
+    "zpoly" : 0,
+    "excise_angle" : 0.01,
+    "u0"    : 1.0
+  },
+  "initstate_icosgauss": {
+    "latitude0"  : [0.0], 
+    "longitude0" : [-90.0],
+    "sigma"      : [0.2],
+    "u0"         : [1.0],
+    "alpha"      : 0.0,
+    "c0"         : 1.0,
+    "excl_angle" : 0.05
+  },
+  "initstate_boxnwave": {
+    "x0"        : [0.5],
+    "y0"        : [0.5],
+    "z0"        : [0.5],
+    "ULparam"   : [1.0],
+    "t0"        : [0.05],
+    "planar"    : [true],
+    "prop_dir_x": [1.0],
+    "prop_dir_y": [0.0],
+    "prop_dir_z": [0.0]
+  },
+  "initstate_boxpergauss": {
+    "x0"        : 0.5,
+    "y0"        : 0.5,
+    "z0"        : 0.5,
+    "sigma"     : 0.25,
+    "E0"        : 1.0,
+    "adv_vel"   : [1.0,0.0,0.0]
+  },
+  "initstate_icosnwave": {
+    "latitude0"  : [10,  40 ],
+    "longitude0" : [280, 330],
+    "Uparam"     : [1.0, 1.0],
+    "t0"         : [0.08, 0.16]
+  },
+  "pde_burgers": {
+    "doheat"      : false,
+    "bpureadv"    : true,
+    "bconserved"  : false,
+    "use_forcing" : false,
+    "forcing_comp": [0, 1, 2]
+  },
+  "grid_icos": {
+    "grid_name"   : "grid_icos",
+    "ilevel"      : 1,
+    "refine_type" : "GICOS_BISECTION",
+    "radius"      : 1.0,
+    "maxit"       : 128,
+    "tol"         : 1.0e-8,
+    "norm_type"   : "GCG_NORM_INF"
+  },
+  "grid_sphere" : {
+    "grid_name" : "grid_sphere",
+    "radiusi"   : 1.0,
+    "radiuso"   : 2.0,
+    "num_elems" : [10, 10, 10],
+    "bdy_inner": "GBDY_DIRICHLET",
+    "bdy_outer": "GBDY_SPONGE"
+  },
+  "my_inflow": {
+    "bdy_class"        : "uniform",
+    "base_type"        : ["GBDY_INFLOW"],
+    "istate"           : [[0, 1]],
+    "use_init"         : true,
+    "inflow_method"    : ""
+  },
+  "my_dirichlet": {
+    "bdy_class"        : "uniform",
+    "base_type"        : ["GBDY_DIRICHLET"],
+    "istate"           : [[0, 1, 2]]
+  },
+  "fully_periodic": {
+    "bdy_class"        : "uniform",
+    "base_type"        : ["GBDY_PERIODIC"],
+    "istate"           : [[0, 1, 2]]
+  },
+  "grid_box": {
+    "grid_name" : "grid_box",
+    "xyz0"      : [0.0, 0.0, 0.0],
+    "delxyz"    : [1.0, 1.0, 1.0],
+    "num_elems" : [8, 8, 1],
+    "bdy_x_0"   : "fully_periodic",
+    "bdy_x_1"   : "fully_periodic",
+    "bdy_y_0"   : "fully_periodic",
+    "bdy_y_1"   : "fully_periodic",
+    "bdy_z_0"   : "fully_periodic",
+    "bdy_z_1"   : "fully_periodic",
+    "maxit"     : 128,
+    "tol"       : 1.0e-8,
+    "norm_type" : "GCG_NORM_INF"
+  },
+  "stepper_props": {
+    "stepping_method"  : "GSTEPPER_EXRK",
+    "time_deriv_order" : 4,
+    "extrap_order"     : 2,
+    "variable_dt"      : false,
+    "courant"          : 0.04 
+  },
+  "dissipation_traits": {
+    "nu"      : 0.001,
+    "nu_type" : "constant"
+  },
+  "gio": {
+    "ivers"   : 0,
+    "multivar" : false,
+    "io_type"  : "collective",
+    "wtime"    : 6,
+    "wtask"    : 5,
+    "wfile"    : 2048
+  },
+  "gio_observer": {
+    "observer_name"      : "gio_observer",
+    "idir"               : "outs",
+    "odir"               : "outs",
+    "cadence_type"       : "cycle",
+    "cycle_interval"     : 100,
+    "time_interval"      : 0.01,
+    "state_index"        : [0],
+    "state_names"        : ["u1", "u2", "u3"],
+    "grid_names"         : ["xgrid", "ygrid", "zgrid"],
+    "agg_state_name"     : "u",
+    "agg_grid_name "     : "grid",
+    "derived_quantities" : []
+  },
+  "global_diag_basic": {
+    "observer_name"      : "global_diag_basic",
+    "idir"               : ".",
+    "odir"               : ".",
+    "interval_freq_fact" : 10.0,
+    "treat_as_1d"        : false
+  },
+  "time_integration": {
+    "integ_type" : "cycle",
+    "time_end"   : 1.0e-1,
+    "cycle_end"  : 100,
+    "dt"         : 1.0e-4
+  }
+
+}
