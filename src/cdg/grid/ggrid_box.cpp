@@ -753,20 +753,21 @@ void GGridBox::periodize()
   for( auto k=0; k<x.size(); k++ ) x[k] = P0_[k];
 
   GUINT  bit;
-  GSIZET id, n=0, num=0;
+  GSIZET id, n, num=0;
   for ( auto k=0; k<igbdy_binned_.size(); k++ ) {
     num += igbdy_binned_[k][GBDY_PERIODIC].size();
   }
   periodicids_ .resize(num);
   periodicdirs_.resize(num);
 
+  n = 0;
   for( auto k=0; k<igbdy_binned_.size(); k++ ) { // for each global face
-    for( auto j=0; j<igbdy_binned_[k][GBDY_PERIODIC].size(); j++ ) { // for each global bdy node
-      id = igbdy_binned_[k][GBDY_PERIODIC][k];
+    for( auto j=0; j<igbdy_binned_[k][GBDY_PERIODIC].size(); j++, n++ ) { // for each global bdy node
+      id = igbdy_binned_[k][GBDY_PERIODIC][j];
       periodicids_ [n] = id;       
       periodicdirs_[n] = 0;
       for( auto i=0; i<xNodes_.size(); i++ ) { // for x, y, z dirs
-        if ( FUZZYEQ(P1_[i],xNodes_[i][id],eps_) ) { // right/top-most coord will change
+        if ( FUZZYEQ(P1_[i],xNodes_[i][id],eps_) ) { // right/top-mosstblock.tbdy[k];i coord will change
           periodicdirs_[n] |= 1U << i;  // position right-most direction bit  
         }
       }
@@ -975,6 +976,7 @@ cout << "config_bdy: extracting data from bdy tree: " << sbdy << endl;
       if ( stblock.tbdy.contains(GBDY_PERIODIC) ) {
         assert(stblock.tbdy.onlycontains(GBDY_PERIODIC) && "All variables must be GBDY_PERIODIC");
         bdytype  [j] = GBDY_PERIODIC;
+        igbdyt   [j] = GBDY_PERIODIC;
         bperiodic    = bperiodic || bdytype[j] == GBDY_PERIODIC;
       
       }

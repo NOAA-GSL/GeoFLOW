@@ -1127,12 +1127,11 @@ void GGrid::init_local_face_info()
 void GGrid::init_bc_info()
 {
   GBdyType                     btype;
-  GTVector<GTVector<GBdyType>> igbdyt_bdyface;
 
 
   // Find boundary indices & types from config file 
   // specification, for _each_ natural/canonical domain face:
-  config_bdy(ptree_, igbdy_bdyface_, igbdyt_bdyface);
+  config_bdy(ptree_, igbdy_bdyface_, igbdyt_bdyface_);
 
   // Flatten bdy index indirection array:
   GSIZET      nind=0, nw=0;
@@ -1164,13 +1163,13 @@ void GGrid::init_bc_info()
   igbdy_binned_.resize(igbdy_bdyface_.size());
 //ilbdy_binned_.resize(igbdy_bdyface_.size());
   for ( auto k=0; k<igbdy_bdyface_.size(); k++ ) { // cycle over canonical bdy face
-    nbdy = igbdyt_bdyface[k].size();
+    nbdy = igbdyt_bdyface_[k].size();
     igbdy_binned_ [k].resize(GBDY_MAX);
 //  ilbdy_binned_ [k].resize(GBDY_MAX); // index into bdy arrays for each bdy type
     for ( auto j=0; j<GBDY_MAX; j++ ) { // cycle over each bc type
       itype = static_cast<GBdyType>(j);
-//    val  = igbdyt_bdyface[k][itype];
-      nbdy = igbdyt_bdyface[k].multiplicity(itype, ind, nind);
+//    val  = igbdyt_bdyface_[k][itype];
+      nbdy = igbdyt_bdyface_[k].multiplicity(itype, ind, nind);
       igbdy_binned_[k][j].resize(nbdy);
 //    ilbdy_binned_[k][j].resize(nbdy);
       for ( auto i=0; i<nbdy; i++ ) { // assign comp. volume index

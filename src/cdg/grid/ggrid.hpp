@@ -178,6 +178,10 @@ virtual void                 print(const GString &filename){}          // print 
 #endif
         GTVector<GSIZET>
                             &igbdy() { return igbdy_;}                 // global dom bdy indices into u
+        GTVector<GTVector<GSIZET>>  
+                            &igbdy_bdyface() { return igbdy_bdyface_;} // bdy ind for each face node
+        GTVector<GTVector<GBdyType>>  
+                            &igbdyt_bdyface() { return igbdyt_bdyface_;}// bdy types for each face node
         GTVector<GTVector<GFTYPE>>
                             &bdyNormals() { return bdyNormals_; }      // bdy normals
         GTVector<GINT>      &idepComp  () { return idepComp_; }        // dependent vector components on bdy 
