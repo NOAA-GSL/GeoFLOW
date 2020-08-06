@@ -532,8 +532,8 @@ GBOOL impl_icosgauss(const PropertyTree &ptree, GString &sconfig, GGrid &grid, S
   GFTYPE              alpha, lat, latc, lon, lonc;
   GFTYPE              x, y, z, r;
   GFTYPE              irad, nu, rad, rexcl;
-  GFTYPE              cexcl, eps, num, den;
-  GFTYPE              c0, cosk, s0c, s0p, sadv, spc, tiny;
+  GFTYPE              cexcl, num, den;
+  GFTYPE              c0, cosk, spc;
   GTVector<GFTYPE>    isig;
   GTVector<GTVector<GFTYPE>*>
                       c(3);
@@ -553,7 +553,6 @@ GBOOL impl_icosgauss(const PropertyTree &ptree, GString &sconfig, GGrid &grid, S
   GTVector<GTVector<GFTYPE>> *xnodes = &grid.xNodes();
   assert(grid.gtype() == GE_2DEMBEDDED && "Invalid element types");
 
-  tiny = 1e4*std::numeric_limits<GFTYPE>::epsilon();
 
   // Need 3 arrays for utmp below, and 4 for other variables;
   // use utmp[0-2] as tmp in calls to Ylm methods:
@@ -571,7 +570,6 @@ GBOOL impl_icosgauss(const PropertyTree &ptree, GString &sconfig, GGrid &grid, S
   alpha = lumpptree.getValue<GFTYPE>("alpha");           // initial concentrations for each lump
   cexcl = lumpptree.getValue<GFTYPE>("excl_angle");      // exclusion angle (degrees)
   rad   = icosptree.getValue<GFTYPE>("radius");
-  eps   = lumpptree.getValue<GFTYPE>("path_eps");        // deviation tol from adv path
   irad  = 1.0/rad;
 
   nlumps = lat0.size();
@@ -626,18 +624,6 @@ GBOOL impl_icosgauss(const PropertyTree &ptree, GString &sconfig, GGrid &grid, S
           latc  = lat0[k] - c0 * irad * sin(lon0[k]) * sin(alpha) * time;
           lonc  = lon0[k] + c0 * irad * ( cos(alpha) + tan(lat0[k]) * sin(lon0[k]) * sin(alpha) ) * time;
           spc   = r*acos( sin(lat)*sin(latc) + cos(lat)*cos(latc)*cos(lonc-lon) );
-#if 0
-          s0c   = r*acos( sin(lat0[k])*sin(latc) + cos(lat0[k])*cos(latc)*cos(lonc-lon0[k]) );
-          // Compute cos of 'launch angle' between arb point, and path 
-          // peak should take:
-          num   = cos(spc*irad) + cos(s0c*irad)*cos(s0p*irad);
-          den   = sin(s0c*irad)*sin(s0p*irad);
-          if ( abs(den) < tiny ) cosk = 0.0;
-          else                   cosk = num/den;
-          sadv = 0.0;
-          if ( FUZZYEQ(fabs(cosk),1.0,eps) ) sadv = spc;
-//        sadv = s0p*cosk;
-#endif
 
           // Compute solution along trajectory:
           (*u[0])[j] += u0[k]*pow(sig0[k]*isig[k],GDIM) 
