@@ -1448,7 +1448,7 @@ void GGridBox::do_bdy_normals(GTMatrix<GTVector<GFTYPE>>    &dXdXi,
   for ( auto j=0; j<2*GDIM; j++ ) { // for each global bdy face 
     nface = igbdy_face[j].size();   // # bdy nodes on this face
     idepComp.range(icurr,icurr+nface-1);
-    for ( auto i=0; i<normals.size(); i++ ) normals[i].range(icurr,icurr+nface-1();
+    for ( auto i=0; i<normals.size(); i++ ) normals[i].range(icurr,icurr+nface-1);
     do_bdy_normals3d(dXdXi, igbdy_face[j], j, normals, idepComp);
     icurr += nface;
   }
