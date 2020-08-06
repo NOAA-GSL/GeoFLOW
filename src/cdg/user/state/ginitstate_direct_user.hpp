@@ -36,7 +36,7 @@ GBOOL impl_boxnwaveburgers      (const PropertyTree& ptree, GString &sconfig, GG
 GBOOL impl_icosnwaveburgers     (const PropertyTree& ptree, GString &sconfig, GGrid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &u);
 GBOOL impl_boxdirgauss          (const PropertyTree& ptree, GString &sconfig, GGrid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &u);
 GBOOL impl_boxpergauss          (const PropertyTree& ptree, GString &sconfig, GGrid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &u);
-GBOOL impl_icosgaussSH          (const PropertyTree& ptree, GString &sconfig, GGrid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &u);
+GBOOL impl_icosgauss            (const PropertyTree& ptree, GString &sconfig, GGrid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &u);
 };
 
 
