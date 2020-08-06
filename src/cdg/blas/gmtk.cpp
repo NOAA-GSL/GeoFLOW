@@ -2790,7 +2790,7 @@ void vsphere2cart(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &vsph, GVectorT
                        -  (*vsph[1])[j]*             sin(phi);
         (*vcart[1])[j] = -(*vsph[0])[j]*  sin(theta)*sin(phi) 
                        +  (*vsph[1])[j]*             cos(phi);
-        (*vcart[2])[j] =  (*vsph[0])[j]*  sin(theta);
+        (*vcart[2])[j] =  (*vsph[0])[j]*  cos(theta);
       }
     }
     else if ( vtype == GVECTYPE_COVAR ) { // vsph are covar. components

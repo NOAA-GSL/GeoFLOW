@@ -110,14 +110,14 @@ void Plm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GTVector<T> &plm)
 //          Computed as:
 //              Ylm  =  (-1)^m sqrt{ (2l+1)(l-m)! / [4pi (l+m)!] } X
 //                      P_lm exp(i m phi)
-//          If iri = 0, return Ylm; else returns dYlm^*. If |m| > l, set dYlm=0
+//          If iri = 0, return Ylm; else returns Ylm^*. If |m| > l, set Ylm=0
 //          
 //   
 // ARGS   : l,m,  : orbital ang mom. quantum number, and azimuthal quantum number
 //          xnodes: Cartesian coordinate arrays
-//          iri   : if 0, return dYlm, else, return complex conjugate, Ylm^*
-//          ylm_r: real comp. of dY^l_m for each grid point
-//          ylm_i: imag. comp. of dY^l_m for each grid point
+//          iri   : if 0, return Ylm, else, return complex conjugate, Ylm^*
+//          ylm_r: real comp. of Y^l_m for each grid point
+//          ylm_i: imag. comp. of Y^l_m for each grid point
 // RETURNS: none
 //**********************************************************************************
 template<typename T>
@@ -223,11 +223,16 @@ void dYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir,  GINT i
     } // end, coord loop
 #else
     // Compute: 
-    // dYlm/dtheta = exp(-i theta) sqrt((l-m)(l+m+1)) Y^l_m+1
-    //             - exp (i theta) sqrt*(l+m)(l-m+1)) Y^l_m-1
+    // dYlm/dtheta = exp(-i phi) sqrt((l-m)(l+m+1)) Y^l_m+1
+    //             - exp (i phi) sqrt*(l+m)(l-m+1)) Y^l_m-1
     assert( tmp.size() >= 2 );
+#if 0
+    rfact1 = 0.5*sqrt( fabs((xl-xm)*(xl+xm+1.0)) );
+    rfact2 = 0.5*sqrt( fabs((xl+xm)*(xl-xm+1.0)) );
+#else
     rfact1 = sqrt( fabs((xl-xm)*(xl+xm+1.0)) );
     rfact2 = sqrt( fabs((xl+xm)*(xl-xm+1.0)) );
+#endif
     Ylm_cart<T>(l, m+1, xnodes, 0, *tmp[0], *tmp[1]); // Y^l_m+1
     for ( auto j=0; j<xnodes[0].size(); j++ ) {
       x     = xnodes[0][j]; y = xnodes[1][j]; z = xnodes[2][j];
@@ -251,7 +256,7 @@ void dYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir,  GINT i
   else if ( idir == 2 ) {
     // Compute:
     // dYlm/dphi   = i m Ylm 
-    Ylm_cart<T>(l, m+1, xnodes, 0, *tmp[0], *tmp[1]);   // Ylm
+    Ylm_cart<T>(l, m, xnodes, 0, *tmp[0], *tmp[1]);   // Ylm
     for ( auto j=0; j<xnodes[0].size(); j++ ) {
       dylm_r[j] = -xm * (*tmp[1])[j];
       dylm_i[j] =  xm * (*tmp[0])[j];
@@ -337,7 +342,7 @@ void ddYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, GINT i
   }
   else if ( idir == 2 ) {
 
-    Ylm_cart<T>(l, m+1, xnodes, 0, *tmp[0], *tmp[1]);   // Ylm
+    Ylm_cart<T>(l, m, xnodes, 0, *tmp[0], *tmp[1]);   // Ylm
     for ( auto j=0; j<xnodes[0].size(); j++ ) {
       dylm_r[j] = -xm*xm * (*tmp[0])[j];
       dylm_i[j] = -xm*xm * (*tmp[1])[j];
