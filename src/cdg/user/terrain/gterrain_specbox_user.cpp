@@ -37,19 +37,21 @@ GBOOL impl_gauss_range(const PropertyTree &ptree, GString sblk, GGrid &grid, Sta
   GTVector<GSIZET> *igbdy = &grid.igbdy();
   GTVector<GTVector<GFTYPE>> *xnodes = &grid.xNodes();
   GTPoint<GFTYPE>  P0(3);
+  std::vector<GFTYPE> x0, y0, xsig, ysig, h0;
+  std::vector<GFTYPE> xyz0, dxyz;
   
   nxy = (*xnodes)[0].size();
 
-  std::vector<GFTYPE> x0   = ttree.getArray<GFTYPE>("x0");
+  x0   = ttree.getArray<GFTYPE>("x0");
   if ( GDIM == 3 ) 
-  std::vector<GFTYPE> y0   = ttree.getArray<GFTYPE>("y0");
-  std::vector<GFTYPE> xsig = ttree.getArray<GFTYPE>("xsigma");
+  y0   = ttree.getArray<GFTYPE>("y0");
+  xsig = ttree.getArray<GFTYPE>("xsigma");
   if ( GDIM == 3 ) 
-  std::vector<GFTYPE> ysig = ttree.getArray<GFTYPE>("ysigma");
-  std::vector<GFTYPE> h0   = ttree.getArray<GFTYPE>("h0");
+  ysig = ttree.getArray<GFTYPE>("ysigma");
+  h0   = ttree.getArray<GFTYPE>("h0");
 
-  std::vector<GFTYPE> xyz0 = boxptree.getArray<GFTYPE>("xyz0");
-//std::vector<GFTYPE> dxyz = boxptree.getArray<GFTYPE>("delxyz");
+  xyz0 = boxptree.getArray<GFTYPE>("xyz0");
+//dxyz = boxptree.getArray<GFTYPE>("delxyz");
   P0 = xyz0; 
   
   // Set initial bdy vector to be current coordinates:
@@ -124,20 +126,22 @@ GBOOL impl_poly_range(const PropertyTree &ptree, GString sblk, GGrid &grid, Stat
   GTVector<GSIZET> *igbdy = &grid.igbdy();
   GTVector<GTVector<GFTYPE>> *xnodes = &grid.xNodes();
   GTPoint<GFTYPE>  P0(3);
+  std::vector<GFTYPE> pexp, x0, y0, xsig, ysig, h0;
+  std::vector<GFTYPE> xyz0, dxyz;
   
   nxy = (*xnodes)[0].size();
 
-  std::vector<GFTYPE> pexp = ttree.getArray<GFTYPE>("exponent");
-  std::vector<GFTYPE> x0   = ttree.getArray<GFTYPE>("x0");
+  pexp = ttree.getArray<GFTYPE>("exponent");
+  x0   = ttree.getArray<GFTYPE>("x0");
   if ( GDIM == 3 ) 
-  std::vector<GFTYPE> y0   = ttree.getArray<GFTYPE>("y0");
-  std::vector<GFTYPE> xsig = ttree.getArray<GFTYPE>("xsigma");
+  y0   = ttree.getArray<GFTYPE>("y0");
+  xsig = ttree.getArray<GFTYPE>("xsigma");
   if ( GDIM == 3 ) 
-  std::vector<GFTYPE> ysig = ttree.getArray<GFTYPE>("ysigma");
-  std::vector<GFTYPE> h0   = ttree.getArray<GFTYPE>("h0");
+  ysig = ttree.getArray<GFTYPE>("ysigma");
+  h0   = ttree.getArray<GFTYPE>("h0");
 
-  std::vector<GFTYPE> xyz0 = boxptree.getArray<GFTYPE>("xyz0");
-//std::vector<GFTYPE> dxyz = boxptree.getArray<GFTYPE>("delxyz");
+  xyz0 = boxptree.getArray<GFTYPE>("xyz0");
+//dxyz = boxptree.getArray<GFTYPE>("delxyz");
   P0 = xyz0; 
 
   // Set initial bdy vector to be current coordinates:
