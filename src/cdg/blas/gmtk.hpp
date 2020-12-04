@@ -20,7 +20,7 @@
 #include "ggrid.hpp"
 #include "ggrid_box.hpp"
 #include "ggrid_icos.hpp"
-#include "gcuda.h"
+#include "gcblas.hpp"
 
 //template<typename T> class GTVector;
 //template<typename T> class GTMatrix;
@@ -87,7 +87,7 @@ namespace GMTK
   void I2_X_D1(GTMatrix<T> &D1, GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET Ne, GTVector<T> &y);
 
   template<typename T>
-  void I2_X_D1(GTMatrix<T> &D1, GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET Ne, cuMatBlockDat &cudat, GTVector<T> &y);
+  void I2_X_D1(GTMatrix<T> &D1, GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET Ne, GCBLAS::cuMatBlockDat &cudat, GTVector<T> &y);
 
   template<typename T>     
   void D2_X_I1(GTMatrix<T> &D2T, GTVector<T> &u, GSIZET N1, GSIZET N2, GTVector<T> &y);
@@ -96,7 +96,7 @@ namespace GMTK
   void D2_X_I1(GTMatrix<T> &D2T, GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET Ne, GTVector<T> &y);
 
   template<typename T>     
-  void D2_X_I1(GTMatrix<T> &D2T, GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET Ne, cuMatBlockDat &cudat, GTVector<T> &y);
+  void D2_X_I1(GTMatrix<T> &D2T, GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET Ne, GCBLAS::cuMatBlockDat &cudat, GTVector<T> &y);
 
   template<typename T>     
   void I3_X_I2_X_D1(GTMatrix<T> &D1, GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET N3, GTVector<T> &y);

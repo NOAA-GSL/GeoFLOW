@@ -1496,10 +1496,11 @@ void I2_X_D1(GTMatrix<T> &D1,
 //**********************************************************************************
 template<typename T>
 void I2_X_D1(GTMatrix<T> &D1,
-             GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET Ne, cuMatBlockDat &cudat, GTVector<T> &y)
+             GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET Ne, GCBLAS::cuMatBlockDat &cudat, GTVector<T> &y)
 {
 	GEOFLOW_TRACE();
   GSIZET ND1, ND2, Nu;
+  GINT   M, N, K, lda, ldb, ldc;
 
   ND1 = D1.size(1);
   ND2 = D1.size(2);
@@ -1513,8 +1514,8 @@ void I2_X_D1(GTMatrix<T> &D1,
 
   Nu = N2 * Ne;
 
-#if !defined(_G_USE_CUDA)
   // Compute y = I2_X_D1 u:
+#if defined(_G_USE_GBLAS)
   if      ( std::is_same<T,GFLOAT>::value ) {
     fmxm((GFLOAT*)y.data(), (GFLOAT*)(D1.data().data()), &ND1, &ND2, (GFLOAT*)u.data(), &N1, &Nu, &szMatCache_);
   }
@@ -1527,17 +1528,25 @@ void I2_X_D1(GTMatrix<T> &D1,
   else {
     assert(FALSE);
   }
-#else
+#else // use system BLAS _or_ cuBLAS
+  M   = ND1;
+  N   = N2*Ne;
+  K   = ND2;
+  lda = M;
+  ldb = K; 
+  ldc = M;
   if      ( std::is_same<T,GFLOAT>::value ) {
+     GCBLAS::gemm<GFLOAT>(GCBLAS::CblasRowMajor, GCBLAS::CblasNoTrans, GCBLAS::CblasNoTrans,
+                           M, N, K, 0.0, , A, lda, B, ldb, beta, C, ldc);
   }
   else if ( std::is_same<T,GDOUBLE>::value ) {
-  }
-  else if ( std::is_same<T,GQUAD>::value ) {
+     GCBLAS::gemm<GDOUBLE>(GCBLAS::CblasRowMajor, GCBLAS::CblasNoTrans, GCBLAS::CblasNoTrans,
+                           M, N, K, 0.0, , A, lda, B, ldb, beta, C, ldc);
   }
   else {
     assert(FALSE);
   }
-  
+
 #endif
 
 } // end of method I2_X_D1 (3)
@@ -1809,7 +1818,7 @@ void D2_X_I1(GTMatrix<T> &D2T,
 //**********************************************************************************
 template<typename T>
 void D2_X_I1(GTMatrix<T> &D2T, 
-              GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET Ne, cuMatBlockDat &cudat, GTVector<T> &y)
+              GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET Ne, GCBLAS::cuMatBlockDat &cudat, GTVector<T> &y)
 {
 	GEOFLOW_TRACE();
   GSIZET N21, N22, Nu;
