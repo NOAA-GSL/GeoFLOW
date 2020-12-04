@@ -1536,11 +1536,11 @@ void I2_X_D1(GTMatrix<T> &D1,
   ldb = K; 
   ldc = M;
   if      ( std::is_same<T,GFLOAT>::value ) {
-     GCBLAS::gemm<GFLOAT>(GCBLAS::CblasRowMajor, GCBLAS::CblasNoTrans, GCBLAS::CblasNoTrans,
+     GCBLAS::gemm<GFLOAT>(cudat.hcublas, GCBLAS::CblasRowMajor, GCBLAS::CblasNoTrans, GCBLAS::CblasNoTrans,
                            M, N, K, 0.0, , A, lda, B, ldb, beta, C, ldc);
   }
   else if ( std::is_same<T,GDOUBLE>::value ) {
-     GCBLAS::gemm<GDOUBLE>(GCBLAS::CblasRowMajor, GCBLAS::CblasNoTrans, GCBLAS::CblasNoTrans,
+     GCBLAS::gemm<GDOUBLE>(cudat.hcublas, GCBLAS::CblasRowMajor, GCBLAS::CblasNoTrans, GCBLAS::CblasNoTrans,
                            M, N, K, 0.0, , A, lda, B, ldb, beta, C, ldc);
   }
   else {
