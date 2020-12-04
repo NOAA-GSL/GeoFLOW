@@ -1537,7 +1537,7 @@ void I2_X_D1(GTMatrix<T> &D1,
   ldc = M;
    GCBLAS::gemm<T>(cudat.hcublas, GCBLAS::CblasRowMajor, GCBLAS::CblasNoTrans, GCBLAS::CblasNoTrans,
                     M, N, K, 0.0, , A, lda, B, ldb, beta, C, ldc);
-
+#endif
 
 } // end of method I2_X_D1 (3)
 
