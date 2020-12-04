@@ -101,9 +101,8 @@ c*******************************************************************************
       else if ( nbi .eq. 24 ) then
         call qmxm24(A, nai, B, nbj, C, nbj)
       else
-#if !defined(_GLAPACK)
         call qmxmcf(C, A, nai, naj, B, nbi, nbj, isz )
-#else
+#if 0
         alpha = 1.0
         beta  = 0.0
         call dgemm("N","N", nai, nbj, alpha, A, nai, 
@@ -927,9 +926,8 @@ c*******************************************************************************
       else if ( nbi .eq. 24 ) then
         call dmxm24(A, nai, B, nbj, C, nbj)
       else
-#if !defined(_GLAPACK)
         call dmxmcf(C, A, nai, naj, B, nbi, nbj, isz )
-#else
+#if 0
         alpha = 1.0
         beta  = 0.0
         call dgemm("N","N", nai, nbj, alpha, A, nai, 
@@ -1791,9 +1789,8 @@ c*******************************************************************************
       else if ( nbi .eq. 24 ) then
         call fmxm24(A, nai, B, nbj, C, nbj)
       else
-#if !defined(_GLAPACK)
         call fmxmcf(C, A, nai, naj, B, nbi, nbj, isz )
-#else
+#if 0
         alpha = 1.0
         beta  = 0.0
         call dgemm("N","N", nai, nbj, alpha, A, nai, 
