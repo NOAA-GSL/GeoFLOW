@@ -19,8 +19,10 @@ namespace GCBLAS
 //**********************************************************************************
 void handle_create(GBlasHandle &h)
 {
+  GBlasStatus stat;
   #if defined(_G_USE_CUDA)
-    cublasCreate(h);
+    stat = cublasCreate(h);
+    assert(stat == CUBLAS_STATUS_SUCCESS);
   #else
     h = -1;
   #endif
