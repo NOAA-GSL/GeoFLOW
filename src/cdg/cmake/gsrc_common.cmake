@@ -6,11 +6,11 @@
 
 
  set(CDG_BLAS_SRC   ${GHOME}/blas/cff_blas.F
-                    ${GHOME}/blas/cublas_init.cpp
                     ${GHOME}/blas/qmxmp.F
                     ${GHOME}/blas/dmxmp.F
                     ${GHOME}/blas/fmxmp.F
                     ${GHOME}/blas/gmtk.cpp
+                    ${GHOME}/blas/gcblas.cpp
     )
 
  set(CDG_COMM_SRC   ${GHOME}/comm/gcomm.cpp 
