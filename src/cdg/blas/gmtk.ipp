@@ -1535,18 +1535,8 @@ void I2_X_D1(GTMatrix<T> &D1,
   lda = M;
   ldb = K; 
   ldc = M;
-  if      ( std::is_same<T,GFLOAT>::value ) {
-     GCBLAS::gemm<GFLOAT>(GCBLAS::CblasRowMajor, GCBLAS::CblasNoTrans, GCBLAS::CblasNoTrans,
-                           M, N, K, 0.0, , A, lda, B, ldb, beta, C, ldc);
-  }
-  else if ( std::is_same<T,GDOUBLE>::value ) {
-     GCBLAS::gemm<GDOUBLE>(GCBLAS::CblasRowMajor, GCBLAS::CblasNoTrans, GCBLAS::CblasNoTrans,
-                           M, N, K, 0.0, , A, lda, B, ldb, beta, C, ldc);
-  }
-  else {
-    assert(FALSE);
-  }
-
+   GCBLAS::gemm<T>(cudat.hcublas, GCBLAS::CblasRowMajor, GCBLAS::CblasNoTrans, GCBLAS::CblasNoTrans,
+                    M, N, K, 0.0, , A, lda, B, ldb, beta, C, ldc);
 #endif
 
 } // end of method I2_X_D1 (3)
@@ -1822,6 +1812,8 @@ void D2_X_I1(GTMatrix<T> &D2T,
 {
 	GEOFLOW_TRACE();
   GSIZET N21, N22, Nu;
+  GINT   M, N, K, lda, ldb, ldc;
+
 
   N21 = D2T.size(1);
   N22 = D2T.size(2);
@@ -1855,15 +1847,14 @@ void D2_X_I1(GTMatrix<T> &D2T,
     assert(FALSE);
   }
 #else
-  if      ( std::is_same<T,GFLOAT>::value ) {
-  }
-  else if ( std::is_same<T,GDOUBLE>::value ) {
-  }
-  else if ( std::is_same<T,GQUAD>::value ) {
-  }
-  else {
-    assert(FALSE);
-  }
+  M   = ND1;
+  N   = N2;
+  K   = ND2;
+  lda = M;
+  ldb = K; 
+  ldc = M;
+  GCBLAS::batched_gemm<T>(cudat, GCBLAS::CblasRowMajor, GCBLAS::CblasNoTrans, GCBLAS::CblasNoTrans,
+                           M, N, K, 0.0, , A, lda, B, ldb, beta, C, ldc);
 #endif
 
 } // end of method D2_X_I1 (3)
