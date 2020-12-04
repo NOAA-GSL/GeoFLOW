@@ -22,7 +22,7 @@
 #include "ggfx.hpp"
 #include "glinop.hpp"
 #include "ghelmholtz.hpp"
-#include "gcuda.h"
+#include "gcblas.hpp"
 #include "pdeint/update_bdy_base.hpp"
 #include "pdeint/lin_solver_base.hpp"
 #include "tbox/property_tree.hpp"
@@ -259,6 +259,7 @@ virtual void                 do_bdy_normals(GTMatrix<GTVector<GFTYPE>> &dXdXi,
         GBOOL                       bapplybc_;      // bc apply callback set
         GBOOL                       do_face_normals_; // compute elem face normals for fluxes?
         GBOOL                       bpconst_;       // is p const among elems?
+        GINT                        nstreams_;      // no. CUDA streams
         GDerivType                  gderivtype_;    // ref. deriv method type
         GElemType                   gtype_;         // element types comprising grid
         GINT                        irank_;         // MPI task id
@@ -301,7 +302,7 @@ virtual void                 do_bdy_normals(GTMatrix<GTVector<GFTYPE>> &dXdXi,
         std::function<void(const Time &t, State &u, State &ub)>
                                     bdy_apply_callback_;            
                                                     // bdy apply callback
-        cuMatBlockDat               cudat_;         // CUDA data structure
+        GCBLAS::cuMatBlockDat       cudat_;         // CUDA data structure
 };
 
 #endif
