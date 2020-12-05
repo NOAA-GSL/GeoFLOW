@@ -27,7 +27,6 @@
 // _G_AUTO_UPDATE_DEV : Auto-update data on device after computation
 // _G_BOUNDS_CHK      : Do bounds checking
 // _GLAPACK           : Set if using external Lapack API
-// _G_USE_GBLAS       : Use GBLAS where implemented
 // _G_VEC_CACHE_SIZE  : Sets vector (BLAS II) op cache blocking factor
 // _G_MAT_CACHE_SIZE  : Sets vector op (BLAS III) cache blocking factor
 // _G_USE_OPENACC     : Set when using OpenACC

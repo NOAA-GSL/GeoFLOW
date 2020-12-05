@@ -1514,8 +1514,19 @@ void I2_X_D1(GTMatrix<T> &D1,
 
   Nu = N2 * Ne;
 
-  // Compute y = I2_X_D1 u:
-#if defined(_G_USE_GBLAS)
+#if defined(USE_CBLAS) || defined(USE_CUBLAS)
+
+  M   = ND1;
+  N   = N2*Ne;
+  K   = ND2;
+  lda = M;
+  ldb = K;
+  ldc = M;
+   GCBLAS::gemm<T>(cudat.hcublas, GCBLAS::CblasRowMajor, GCBLAS::CblasNoTrans, GCBLAS::CblasNoTrans,
+                    M, N, K, 0.0, A, lda, B, ldb, beta, C, ldc);
+
+#else
+
   if      ( std::is_same<T,GFLOAT>::value ) {
     fmxm((GFLOAT*)y.data(), (GFLOAT*)(D1.data().data()), &ND1, &ND2, (GFLOAT*)u.data(), &N1, &Nu, &szMatCache_);
   }
@@ -1528,15 +1539,7 @@ void I2_X_D1(GTMatrix<T> &D1,
   else {
     assert(FALSE);
   }
-#else // use system BLAS _or_ cuBLAS
-  M   = ND1;
-  N   = N2*Ne;
-  K   = ND2;
-  lda = M;
-  ldb = K; 
-  ldc = M;
-   GCBLAS::gemm<T>(cudat.hcublas, GCBLAS::CblasRowMajor, GCBLAS::CblasNoTrans, GCBLAS::CblasNoTrans,
-                    M, N, K, 0.0, , A, lda, B, ldb, beta, C, ldc);
+
 #endif
 
 } // end of method I2_X_D1 (3)
@@ -1826,8 +1829,19 @@ void D2_X_I1(GTMatrix<T> &D2T,
 
   Nu = N1 * N2;
 
-  // Compute y = I2_X_D1 u = u * D2T:
-#if !defined(_G_USE_CUDA)
+// Compute y = I2_X_D1 u = u * D2T:
+#if defined(USE_CBLAS) || defined(USE_CUBLAS)
+  M   = ND1;
+  N   = N2;
+  K   = ND2;
+  lda = M;
+  ldb = K;
+  ldc = M;
+  GCBLAS::batched_gemm<T>(cudat, GCBLAS::CblasRowMajor, GCBLAS::CblasNoTrans, GCBLAS::CblasNoTrans,
+                           M, N, K, 0.0, A, lda, B, ldb, beta, C, ldc);
+
+#else
+
   if      ( std::is_same<T,GFLOAT>::value ) {
     for ( auto i=0; i<Ne; i++ ) {
       fmxm((GFLOAT*)y.data()+i*Nu, (GFLOAT*)u.data()+i*Nu, &N1, &Nu, (GFLOAT*)D2T.data().data(), &N21, &N22, &szMatCache_);
@@ -1846,15 +1860,7 @@ void D2_X_I1(GTMatrix<T> &D2T,
   else {
     assert(FALSE);
   }
-#else
-  M   = ND1;
-  N   = N2;
-  K   = ND2;
-  lda = M;
-  ldb = K; 
-  ldc = M;
-  GCBLAS::batched_gemm<T>(cudat, GCBLAS::CblasRowMajor, GCBLAS::CblasNoTrans, GCBLAS::CblasNoTrans,
-                           M, N, K, 0.0, , A, lda, B, ldb, beta, C, ldc);
+
 #endif
 
 } // end of method D2_X_I1 (3)
@@ -2621,11 +2627,14 @@ while(1){};
   }
   #endif
 
-  #if !defined(_G_USE_GBLAS)
+#if defined(USE_CBLAS) || defined(USE_CUBLAS)
+
   for ( auto j=vret.getIndex().beg(); j<=vret.getIndex().end(); j+=vret.getIndex().stride() ) {
     vret[j] = a*va[j] + b*vb[j];
   }
-  #else
+
+#else
+
   GSIZET nn = vret.getIndex().end() - vret.getIndex().beg() + 1;
   if      ( std::is_same<T,GFLOAT>::value ) {
    fzaxpby(vret.data(), (GFLOAT*)(va.data()), &a, 
@@ -2643,7 +2652,7 @@ while(1){};
     assert(FALSE);
   }
 
-  #endif
+#endif
 
 } // end, add 
 
@@ -2667,14 +2676,17 @@ void matvec_prod(GTVector<T> &vret, const GTMatrix<T> &A, const GTVector<T> &b)
   }
   #endif
 
-  #if !defined(_G_USE_GBLAS)
-   for ( auto i=0; i<n1_; i++ ) {
+#if defined(USE_CBLAS) || defined(USE_CUBLAS)
+
+  for ( auto i=0; i<n1_; i++ ) {
      vret[i] = 0;
      for ( auto j=0; j<n2_; j++ ) {
        vret[i] += A(i,j) * b(j);
      }
    }
-  #else
+
+#else
+
   GSIZET n1 = A.size(1);
   GSIZET n2 = A.size(2);
   if      ( std::is_same<T,GFLOAT>::value ) {
@@ -2696,7 +2708,7 @@ void matvec_prod(GTVector<T> &vret, const GTMatrix<T> &A, const GTVector<T> &b)
     assert(FALSE);
   }
 
-  #endif
+#endif
 
 
 } // end of operator * mat-vec
@@ -2721,8 +2733,8 @@ void matmat_prod(GTMatrix<T> &C, const GTMatrix<T> &A, const GTMatrix<T> &B)
   }
   #endif
 
+#if defined(USE_CBLAS) || defined(USE_CUBLAS)
 
-  #if !defined(_G_USE_GBLAS)
   for ( auto i=0; i<C.size(1); i++ ) {
     for ( auto j=0; j<C.size(2); j++ ) {
       C(i,j) = 0.0;
@@ -2731,7 +2743,9 @@ void matmat_prod(GTMatrix<T> &C, const GTMatrix<T> &A, const GTMatrix<T> &B)
       }
     }
   }
-  #else
+
+#else
+
   GSIZET a1=A.size(1), a2 = A.size(2);
   GSIZET b1=B.size(1), b2 = B.size(2);
   if      ( std::is_same<T,GFLOAT>::value ) {
@@ -2759,7 +2773,7 @@ void matmat_prod(GTMatrix<T> &C, const GTMatrix<T> &A, const GTMatrix<T> &B)
     assert(FALSE);
   }
 
-  #endif
+#endif
 
 } // end of operator * mat-mat
 

@@ -16,13 +16,21 @@
 //
 #define GDIM ${GDIM}
 #cmakedefine DO_DEBUG
-#cmakedefine USE_GBLAS
 #cmakedefine USE_OPENMP
-#cmakedefine USE_OPENACC
 #cmakedefine USE_MPI
 #cmakedefine USE_GPTL
 #cmakedefine USE_PAPI
 #cmakedefine USE_CUDA
+
+#cmakedefine USE_CBLAS
+#cmakedefine USE_CUBLAS
+//#cmakedefine USE_GBLAS
+#cmakedefine USE_OPENACC
+
+
+#if defined(USE_CBLAS) && defined(USE_CUBLAS)
+#warning "Both CBLAS and cuBLAS Selected (Defaulted to CBLAS)"
+#endif
 
 //
 // Code Configure/Compilation Records
@@ -41,17 +49,6 @@
 #if defined(DO_DEBUG) && !defined(USE_OPENACC)
 	#define _G_BOUNDS_CHK
 	#define _G_DEBUG
-#endif
-
-#if defined(USE_CBLAS) && defined(USE_CUBLAS)
-	#warning "Both CBLAS and cuBLAS Selected Will Use CBLAS"
-#endif
-#if defined(USE_CBLAS) && defined(BLAS_FOUND)
-	#define _G_USE_CBLAS
-#elif defined(USE_CUBLAS) && defined(CUDA_FOUND)
-	#define _G_USE_CUDA
-#else
-	#define _G_USE_GBLAS
 #endif
 
 #if defined(USE_GPTL)

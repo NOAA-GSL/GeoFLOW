@@ -30,7 +30,7 @@ project("GeoFLOW" VERSION 0.0.0.1 LANGUAGES C CXX Fortran)
 #---------------------------------------------------------------------
 # User Configure Build Process
 #---------------------------------------------------------------------
-set(CMAKE_VERBOSE_MAKEFILE ${VERBOSE_MAKE})
+set(CMAKE_VERBOSE_MAKEFILE ON) #${VERBOSE_MAKE})
 set(CMAKE_COLOR_MAKEFILE TRUE)
 set(DEFAULT_BUILD_TYPE "Release")
 
@@ -147,7 +147,7 @@ if(USE_CBLAS)
 	find_package(BLAS REQUIRED) 
 endif()
 
-if(USE_CUDA_BLAS OR GEOFLOW_TRACER_USE_NVTX)
+if(USE_CUBLAS OR GEOFLOW_TRACER_USE_NVTX)
 	find_package(CUDA REQUIRED) 
 endif()
 

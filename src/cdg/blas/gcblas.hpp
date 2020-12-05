@@ -10,38 +10,33 @@
 #define _GCBLAS_HPP
 
 #include "gtvector.hpp"
-#if defined(_G_USE_CUDA)
-  #include "cublas_v2.h"
-#else
-  #if !defined(_G_USE_GBLAS)
-    #include "cblas.h"
-  #endif
+
+#if defined(USE_CBLAS)
+#include "cblas.h"
 #endif
+#if defined(USE_CUBLAS)
+  #include "cublas.h"
+#endif
+
+namespace GCBLAS
+{
 
 enum GBLAS_ORDER     {CblasRowMajor=101, CblasColMajor=102};
 enum GBLAS_TRANSPOSE {CblasNoTrans=111, CblasTrans=112, CblasConjTrans=113};
 
-
-namespace GCBLAS 
-{
-
 // Types, defs:
-#if defined(_G_USE_CUDA)
-
+#if defined(USE_CUBLAS)
   typedef cudaStream_t      GCuStream;
   typedef cublasHandle_t    GBlasHandle;
   typedef cublasStatus_t    GBlasStatus;
   typedef cublasOperation_t GBlasOp;
   typedef cudaError_t       GBlasError;
-
 #else
-
   typedef int               GCuStream;
   typedef int               GBlasHandle;
   typedef int               GBlasStatus;
   typedef int               GBlasOp;
   typedef int               GBlasError;
-
 #endif
 
 struct cuMatBlockDat {

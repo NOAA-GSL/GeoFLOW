@@ -27,8 +27,26 @@ void gemm(GBlasHandle h,
           const T *B, const int ldb, const T beta,
           T *C, const int ldc)
 {
-#if defined(_G_USE_CUDA)
-  if      ( std::is_same<T,GFLOAT>::value ) {
+
+#if defined(USE_CBLAS)
+	  if ( std::is_same<T,GFLOAT>::value ) {
+	    cblas_fgemm( Order, TransA, TransB, M, N, K,
+	                 M, N, K,
+	                 alpha, A, lda,
+	                 B, ldb, beta,
+	                 C, ldc);
+	  }
+	  else if ( std::is_same<T,GDOUBLE>::value ) {
+	    cblas_dgemm( Order, TransA, TransB, M, N, K,
+	                 M, N, K,
+	                 alpha, A, lda,
+	                 B, ldb, beta,
+	                 C, ldc);
+	  }
+
+#elif defined(USE_CUBLAS)
+
+  if ( std::is_same<T,GFLOAT>::value ) {
     cublasSgemm( h, Order, TransA, TransB, M, N, K,
                  M, N, K, 
                  alpha, A, lda,
@@ -42,27 +60,9 @@ void gemm(GBlasHandle h,
                  B, ldb, beta,
                  C, ldc);
   }
-  else {
-    assert(FALSE);
-  }
+
 #else
-  if      ( std::is_same<T,GFLOAT>::value ) {
-    cblas_fgemm( Order, TransA, TransB, M, N, K,
-                 M, N, K, 
-                 alpha, A, lda,
-                 B, ldb, beta,
-                 C, ldc);
-  }
-  else if ( std::is_same<T,GDOUBLE>::value ) {
-    cblas_dgemm( Order, TransA, TransB, M, N, K,
-                 M, N, K, 
-                 alpha, A, lda,
-                 B, ldb, beta,
-                 C, ldc);
-  }
-  else {
-    assert(FALSE);
-  }
+  static_assert("Unrecognized BLAS Type");
 #endif
 
 } // end, gemm
@@ -90,7 +90,19 @@ void batched_gemm(cuMatBlockDat &cudat,
   GINT   nstreams=cudat.pStream.size();
   GSIZET iastart, iastride, ibstride, szblk;
  
-#if defined(_G_USE_CUDA)
+#if defined(USE_CBLAS)
+
+  szblk= M*K;
+  for ( auto j=0; j<cudat.nbatch; j++ ) {
+    GCBLAS::gemm<T>( cudat.hcublas, Order, TransA, TransB, M, N, K,
+                     M, N, K,
+                     alpha, A+j*szblk, lda,
+                     B, ldb, beta,
+                     C+j*szblk, ldc);
+  }
+
+#elif defined(USE_CUBLAS)
+
   for ( auto j=0; j<nstreams; j++ ) {
     cublasSetStream(cudat.hbatch_cublas, cudat.pStream[j]);
   }
@@ -124,15 +136,9 @@ void batched_gemm(cuMatBlockDat &cudat,
   else {
     assert(FALSE);
   }
+
 #else
-  szblk= M*K;
-  for ( auto j=0; j<cudat.nbatch; j++ ) {
-    GCBLAS::gemm<T>( cudat.hcublas, Order, TransA, TransB, M, N, K,
-                     M, N, K, 
-                     alpha, A+j*szblk, lda,
-                     B, ldb, beta,
-                     C+j*szblk, ldc);
-  }
+  static_assert("Unrecognized Batched BLAS Type");
 #endif
 
 } // end, bacthed_gemm

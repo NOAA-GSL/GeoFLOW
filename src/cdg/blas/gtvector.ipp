@@ -20,6 +20,9 @@
   # define _G_VEC_CACHE_SIZE 16
 #endif
 
+#if defined(USE_CUBLAS)
+#include "cublas.h"
+#endif
 
 
 //**********************************************************************************
@@ -59,7 +62,7 @@ n_                    (n),
 icsz_ (_G_VEC_CACHE_SIZE),
 bdatalocal_        (TRUE)
 {
-#if defined(_G_USE_CUDA)
+#if defined(USE_CUBLAS)
   cudaMallocManaged(&data_, n_);
 #else
   data_ = new T [n_];
@@ -91,7 +94,7 @@ bdatalocal_        (TRUE)
   gindex_keep_ = gindex_;
   n_=gindex_.end()+1+gindex_.pad();
 
-#if defined(_G_USE_CUDA)
+#if defined(USE_CUBLAS)
   cudaMallocManaged(&data_, n_);
 #else
   data_ = new T [n_];
@@ -118,7 +121,7 @@ n_           (obj.size()),
 icsz_ (_G_VEC_CACHE_SIZE),
 bdatalocal_        (TRUE)
 {
-#if defined(_G_USE_CUDA)
+#if defined(USE_CUBLAS)
   cudaMallocManaged(&data_, n_);
 #else
   data_ = new T [n_];
@@ -154,7 +157,7 @@ n_            (n/istride),
 icsz_ (_G_VEC_CACHE_SIZE),
 bdatalocal_        (TRUE)
 {
-#if defined(_G_USE_CUDA)
+#if defined(USE_CUBLAS)
   cudaMallocManaged(&data_, n_);
 #else
   data_ = new T [n_];
@@ -194,7 +197,7 @@ icsz_ (_G_VEC_CACHE_SIZE),
 bdatalocal_        (TRUE)
 {
   if ( bdatalocal_ ) {
-#if defined(_G_USE_CUDA)
+#if defined(USE_CUBLAS)
     cudaMallocManaged(&data_, n_);
 #else
     data_ = new T [n_];
@@ -233,7 +236,7 @@ n_           (obj.size()),
 icsz_ (_G_VEC_CACHE_SIZE),
 bdatalocal_        (TRUE)
 {
-#if defined(_G_USE_CUDA)
+#if defined(USE_CUBLAS)
   cudaMallocManaged(&data_, n_);
 #else
   data_ = new T [n_];
@@ -263,7 +266,7 @@ GTVector<T>::~GTVector()
 {
   #pragma acc exit data delete( data_[0:n_-1], this[0:1] )
 
-#if defined(_G_USE_CUDA)
+#if defined(USE_CUBLAS)
     cudaFree(data_);
 #else
   if ( data_  != NULLPTR  && bdatalocal_ ) delete [] data_;
@@ -340,7 +343,7 @@ void GTVector<T>::resize(GSIZET nnew)
 
   if ( (iend-ibeg+1+ipad) > n_ ) {      // must reallocate; change capacity
     if ( this->data_ != NULLPTR ) { 
-#if defined(_G_USE_CUDA)
+#if defined(USE_CUBLAS)
       cudaFree(this->data_);
 #else
       delete [] this->data_;
@@ -348,7 +351,7 @@ void GTVector<T>::resize(GSIZET nnew)
       this->data_ = NULLPTR; 
     }
     this->n_ = iend-ibeg+1+ipad;
-#if defined(_G_USE_CUDA)
+#if defined(USE_CUBLAS)
   cudaMallocManaged(&data_, n_);
 #else
     this->data_ = new T [this->n_];
@@ -391,7 +394,7 @@ void GTVector<T>::resize(GIndex &gi)
 
   if ( (iend-ibeg+1+ipad) > n_ ) {      // must reallocate; change capacity
     if ( this->data_ != NULLPTR ) { 
-#if defined(_G_USE_CUDA)
+#if defined(USE_CUBLAS)
       cudaFree(this->data_);
 #else
       delete [] this->data_; 
@@ -399,7 +402,7 @@ void GTVector<T>::resize(GIndex &gi)
       this->data_ = NULLPTR; 
     }
     this->n_ = iend-ibeg+1+ipad;
-#if defined(_G_USE_CUDA)
+#if defined(USE_CUBLAS)
   cudaMallocManaged(&data_, n_);
 #else
     this->data_ = new T [this->n_];
@@ -434,7 +437,7 @@ void GTVector<T>::resizem(GSIZET nnew)
       #pragma acc exit data delete( data_[0:n_-1], this[0:1] )
     #endif
 
-#if defined(_G_USE_CUDA)
+#if defined(USE_CUBLAS)
   cudaMallocManaged(&data_, n_);
 #else
     resize(nnew);
@@ -475,7 +478,7 @@ void GTVector<T>::reserve(GSIZET nnew)
   GLLONG ipad    = gindex_.pad();
 
   // Check: is following exception-safe? No....
-#if defined(_G_USE_CUDA)
+#if defined(USE_CUBLAS)
   cudaMallocManaged(&data_, n_);
 #else
   ttmp  = new T [ibeg+nnew+ipad];
@@ -486,14 +489,14 @@ void GTVector<T>::reserve(GSIZET nnew)
   if ( nnew > n_ ) { // growing
     for ( auto j=0; j<n_; j++ ) ttmp[j] = this->data_[j];
     if ( this->data_ != NULLPTR ){
-#if defined(_G_USE_CUDA)
+#if defined(USE_CUBLAS)
       cudaFree(this->data_);
 #else
       delete [] this->data_;
 #endif
       this->data_ = NULLPTR; 
     }
-#if defined(_G_USE_CUDA)
+#if defined(USE_CUBLAS)
   cudaMallocManaged(&data_, n_);
 #else
     this->data_ = new T [ibeg+nnew+ipad];
@@ -509,14 +512,14 @@ void GTVector<T>::reserve(GSIZET nnew)
   else if ( nnew < n_ ) { // shrinking
     for ( auto j=0; j<nnew; j++ ) ttmp[j] = this->data_[j];
     if ( this->data_ != NULLPTR ) {
-#if defined(_G_USE_CUDA)
+#if defined(USE_CUBLAS)
       cudaFree(this->data_);
 #else
       delete [] this->data_;
 #endif
       this->data_ = NULLPTR; 
     }
-#if defined(_G_USE_CUDA)
+#if defined(USE_CUBLAS)
     cudaMallocManaged(&data_, n_);
 #else
     this->data_ = new T [ibeg+nnew+ipad];
@@ -555,7 +558,7 @@ void GTVector<T>::clear()
     #pragma acc exit data delete( data_[0:n_-1], this[0:1] )
   #endif
   if ( data_ != NULLPTR ) {
-#if defined(_G_USE_CUDA)
+#if defined(USE_CUBLAS)
       cudaFree(this->data_);
 #else
     delete [] data_;
@@ -708,7 +711,7 @@ GTVector<T> &GTVector<T>::operator=(const GTVector<T> &obj)
 
   if ( data_ == NULLPTR ) {
     n_ = obj.capacity();
-#if defined(_G_USE_CUDA)
+#if defined(USE_CUBLAS)
     cudaMallocManaged(&data_, n_);
 #else
     data_ = new T [n_];
@@ -754,7 +757,7 @@ GTVector<T> &GTVector<T>::operator=(const std::vector<T> &obj)
 
   if ( data_ == NULLPTR ) {
     n_ = obj.capacity();
-#if defined(_G_USE_CUDA)
+#if defined(USE_CUBLAS)
     cudaMallocManaged(&data_, n_);
 #else
     data_ = new T [n_];

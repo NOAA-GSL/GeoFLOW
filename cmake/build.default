@@ -10,14 +10,14 @@ option(DO_DEBUG       "DO_DEBUG"      OFF)   # Compile for DEBUG
 option(USE_OPENMP     "USE_OPENMP"    OFF)   # Compile for OpenMP
 option(USE_MPI        "USE_MPI"       ON)   # Build with MPI?
 
-option(USE_CUDA       "USE_CUBLAS"    OFF)  # Build with cuBLAS
-option(USE_GBLAS      "USE_CBLAS"     OFF)  # Use System CBLAS
+option(USE_CUBLAS     "USE_CUBLAS"    OFF)  # Build with cuBLAS
+option(USE_CBLAS      "USE_CBLAS"     OFF)  # Use System CBLAS
 option(USE_OPENACC    "USE_OPENACC"   OFF)  # Compile for OpenACC
 
 option(USE_GPTL       "USE_GPTL"      OFF)  # Build with GPTL?
 option(USE_PAPI       "USE_PAPI"      OFF)  # Is GPTL built with PAPI support?
 option(DO_AUTO_PROF   "DO_AUTO_PROF"  OFF)  # Do auto-profing with GPTL?
-option(VERBOSE_MAKE   "VERBOSE_MAKE"  OFF)   # Verbose MakeFile Ouput
+option(VERBOSE_MAKE   "VERBOSE_MAKE"  ON)   # Verbose MakeFile Ouput
 option(ENABLE_TESTS   "ENABLE_TESTS"  ON)   # Enable Testing
 
 #
