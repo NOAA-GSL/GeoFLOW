@@ -15,7 +15,8 @@
 #include "cblas.h"
 #endif
 #if defined(USE_CUBLAS)
-  #include "cublas.h"
+  #include "cuda_runtime_api.h"
+  #include "cublas_v2.h"
 #endif
 
 namespace GCBLAS
@@ -76,6 +77,8 @@ void batched_gemm( cuMatBlockDat &cudat,
 
 
 } // end, namespace GCBLAS
+
+#include "gcblas.ipp"
 
 #endif // !defined(_GCBLAS_HPP)
 
