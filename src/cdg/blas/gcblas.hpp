@@ -45,6 +45,7 @@ namespace GCBLAS
 #endif
 
 struct cuMatBlockDat {
+  GSIZET               nbatch;  // total batched ('num elements')
   GTVector      <int>   ibblk;  // for each stream, starting blk index
   GTVector      <int>   ieblk;  // for each stream, ending blk index
   GBlasHandle         hcublas;  // handle for cuBLAS (1-deriv)
@@ -53,13 +54,14 @@ struct cuMatBlockDat {
 };
 
 // Methods:
-void handle_create(GBlasHandle &);
+void handle_create (GBlasHandle &);
 void handle_destroy(GBlasHandle &);
-void stream_create(GCuStream &);
+void stream_create (GCuStream &);
 void stream_destroy(GCuStream &);
 
 template<typename T>
-void gemm(const enum GBLAS_ORDER Order,
+void gemm(GBlasHandle h, 
+          const enum GBLAS_ORDER Order,
           const enum GBLAS_TRANSPOSE TransA,
           const enum GBLAS_TRANSPOSE TransB,
           const int M, const int N, const int K,
@@ -68,7 +70,7 @@ void gemm(const enum GBLAS_ORDER Order,
           T *C, const int ldc);
 
 template<typename T>
-void batched_gemm(
+void batched_gemm( cuMatBlockDat &cudat,
           const enum GBLAS_ORDER Order,
           const enum GBLAS_TRANSPOSE TransA,
           const enum GBLAS_TRANSPOSE TransB,

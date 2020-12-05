@@ -511,9 +511,9 @@ void GGrid::grid_init()
   // Fill cuMatBlockDat structure:
   GCBLAS::handle_create(cudat_.hcublas );
   GCBLAS::handle_create(cudat_.hbatch_cublas);
-  GCBLAS::handle_create(cudat_.hbatch_cublas);
   cudat_.ibblk.resize(nstreams_);
   cudat_.ieblk.resize(nstreams_);
+  cudat_.nbatch = nelems;
   GSIZET idel = nelems/nstreams_;
   for ( auto j=0; j<nstreams_; j++ ) {
     GCBLAS::stream_create(cudat_.pStream[j]);
