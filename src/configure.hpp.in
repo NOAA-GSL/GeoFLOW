@@ -43,7 +43,14 @@
 	#define _G_DEBUG
 #endif
 
-#if defined(USE_GBLAS)
+#if defined(USE_CBLAS) && defined(USE_CUDA_BLAS)
+	#warning "Both CBLAS and CUDA_BLAS Selected Will Use CBLAS"
+#endif
+#if defined(USE_CBLAS) && defined(BLAS_FOUND)
+	#define _G_USE_CBLAS
+#elif defined(USE_CUDA_BLAS) && defined(CUDA_FOUND)
+	#define _G_USE_CUDA
+#else
 	#define _G_USE_GBLAS
 #endif
 
@@ -53,10 +60,6 @@
 
 #if defined(USE_PAPI)
 	#define _G_USE_PAPI
-#endif
-
-#if defined(USE_CUDA)
-	#define _G_USE_CUDA
 #endif
 
 #if defined(USE_MPI)
