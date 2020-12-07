@@ -2163,7 +2163,7 @@ void GGrid::grefderiv_constp(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
   switch (idir) {
   case 1:
     Di = (*gelems)[0]->gbasis(0)->getDerivMatrix (dotrans);
-    GMTK::I2_X_D1(*Di, u, N[0], N[1], Ne, cudat_, du); 
+    GMTK::I2_X_D1(*Di, u, N[0], N[1], Ne, cudat_, du);
     break;
   case 2:
     Di = (*gelems)[0]->gbasis(1)->getDerivMatrix(!dotrans);

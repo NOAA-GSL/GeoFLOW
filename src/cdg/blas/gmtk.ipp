@@ -1394,7 +1394,7 @@ template<typename T>
 void I2_X_D1(GTMatrix<T> &D1,
              GTVector<T> &u, GSIZET N1, GSIZET N2, GTVector<T> &y)
 {
-	GEOFLOW_TRACE();
+  GEOFLOW_TRACE_MSG("I2_X_D1(5 args)");
   GSIZET ND1, ND2;
 
   ND1 = D1.size(1);
@@ -1445,7 +1445,7 @@ template<typename T>
 void I2_X_D1(GTMatrix<T> &D1,
              GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET Ne, GTVector<T> &y)
 {
-	GEOFLOW_TRACE();
+  GEOFLOW_TRACE_MSG("I2_X_D1(6 args)");
   GSIZET ND1, ND2, Nu;
 
   ND1 = D1.size(1);
@@ -1499,7 +1499,7 @@ template<typename T>
 void I2_X_D1(GTMatrix<T> &D1,
              GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET Ne, GCBLAS::cuMatBlockDat &cudat, GTVector<T> &y)
 {
-	GEOFLOW_TRACE();
+  GEOFLOW_TRACE_MSG("I2_X_D1(7 args)");
   GSIZET ND1, ND2, Nu;
   GINT   M, N, K, lda, ldb, ldc;
 

@@ -6,6 +6,8 @@
 // Derived From : none.
 //==================================================================================
 
+#include "tbox/tracer.hpp"
+
 namespace GCBLAS
 {
 
@@ -26,9 +28,11 @@ void gemm(GBlasHandle h,
           const T *B, const int ldb, const T beta,
           T *C, const int ldc)
 {
+	GEOFLOW_TRACE();
 
 #if defined(USE_CBLAS)
 	  if constexpr ( std::is_same<T,float>::value ) {
+		GEOFLOW_TRACE_MSG("cblas_sgemm(...)");
 	    cblas_sgemm( (CBLAS_ORDER)Order, (CBLAS_TRANSPOSE)TransA, (CBLAS_TRANSPOSE)TransB,
 	                 M, N, K,
 	                 alpha, A, lda,
@@ -36,6 +40,7 @@ void gemm(GBlasHandle h,
 	                 C, ldc);
 	  }
 	  else if constexpr ( std::is_same<T,double>::value ) {
+		GEOFLOW_TRACE_MSG("cblas_dgemm(...)");
 	    cblas_dgemm( (CBLAS_ORDER)Order, (CBLAS_TRANSPOSE)TransA, (CBLAS_TRANSPOSE)TransB,
 	                 M, N, K,
 	                 alpha, A, lda,
@@ -48,6 +53,7 @@ void gemm(GBlasHandle h,
   static const GBlasOp cuBlasOps[] = { CUBLAS_OP_N, CUBLAS_OP_T, CUBLAS_OP_C };
 
   if constexpr ( std::is_same<T,GFLOAT>::value ) {
+	GEOFLOW_TRACE_MSG("cublasSgemm(...)");
     cublasSgemm( h, cuBlasOps[TransA-CblasNoTrans], cuBlasOps[TransB-CblasNoTrans],
                  M, N, K, 
                  (const float*)(&alpha), (const float*)A, lda,
@@ -55,6 +61,7 @@ void gemm(GBlasHandle h,
                  (float*)C, ldc);
   }
   else if constexpr ( std::is_same<T,GDOUBLE>::value ) {
+	GEOFLOW_TRACE_MSG("cublasDgemm(...)");
     cublasDgemm( h, cuBlasOps[TransA-CblasNoTrans], cuBlasOps[TransB-CblasNoTrans],
                  M, N, K, 
                  (const double*)(&alpha), (const double*)A, lda,
@@ -88,6 +95,7 @@ void batched_gemm(cuMatBlockDat &cudat,
                   const T *B, const int ldb, const T beta,
                   T *C, const int ldc)
 {
+  GEOFLOW_TRACE();
   GINT   nstreams=cudat.pStream.size();
   GSIZET iastart, iastride, ibstride, szblk;
  

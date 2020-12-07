@@ -28,7 +28,7 @@ target_sources(tbox
 # Compiler standard required
 #
 option(CMAKE_CXX_STANDARD_REQUIRED TRUE)
-set_property(TARGET tbox PROPERTY CXX_STANDARD 11)
+set_property(TARGET tbox PROPERTY CXX_STANDARD 17)
 
 #
 # Specific Compiler features required for library
