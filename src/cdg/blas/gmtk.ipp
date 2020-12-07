@@ -1523,7 +1523,7 @@ void I2_X_D1(GTMatrix<T> &D1,
   ldb = K;
   ldc = M;
   GCBLAS::gemm<T>(cudat.hcublas, GCBLAS::CblasRowMajor, GCBLAS::CblasNoTrans, GCBLAS::CblasNoTrans,
-                    M, N, K, 1.0, (T*)y.data(), lda, (T*)(D1.data().data()), ldb, 0.0, (T*)u.data(), ldc);
+                    M, N, K, 1.0, (T*)(D1.data().data()), lda, (T*)(u.data()), ldb, 0.0, (T*)y.data(), ldc);
 
 #else
 
