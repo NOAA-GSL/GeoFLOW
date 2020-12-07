@@ -1,13 +1,5 @@
 ###
 #
-# @copyright (c) 2009-2014 The University of Tennessee and The University
-#                          of Tennessee Research Foundation.
-#                          All rights reserved.
-# @copyright (c) 2012-2016 Inria. All rights reserved.
-# @copyright (c) 2012-2014 Bordeaux INP, CNRS (LaBRI UMR 5800), Inria, Univ. Bordeaux. All rights reserved.
-#
-###
-#
 # - Find CBLAS include dirs and libraries
 # Use this module by invoking find_package with the form:
 #  find_package(CBLAS
@@ -57,24 +49,6 @@
 #       - CMAKE_PLATFORM_IMPLICIT_INCLUDE_DIRECTORIES, CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES
 #       - CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES, CMAKE_C_IMPLICIT_LINK_DIRECTORIES
 #
-
-#=============================================================================
-# Copyright 2012-2013 Inria
-# Copyright 2012-2013 Emmanuel Agullo
-# Copyright 2012-2013 Mathieu Faverge
-# Copyright 2012      Cedric Castagnede
-# Copyright 2013-2016 Florent Pruvost
-#
-# Distributed under the OSI-approved BSD License (the "License");
-# see accompanying file MORSE-Copyright.txt for details.
-#
-# This software is distributed WITHOUT ANY WARRANTY; without even the
-# implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-# See the License for more information.
-#=============================================================================
-# (To distribute this file outside of Morse, substitute the full
-#  License text for the above reference.)
-
 
 if (NOT CBLAS_FOUND)
   set(CBLAS_DIR "" CACHE PATH "Installation directory of CBLAS library")
@@ -389,3 +363,4 @@ include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(CBLAS DEFAULT_MSG
   CBLAS_LIBRARIES
   CBLAS_WORKS)
+
