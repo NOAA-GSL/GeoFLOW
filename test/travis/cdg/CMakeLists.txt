@@ -61,6 +61,8 @@ FOREACH(test_src ${test_cdg_files})
 			${compiler_options} 
 #			$<$<COMPILE_LANGUAGE:CXX>:-Wno-unknown-pragmas>
 	)
+	option(CMAKE_CXX_STANDARD_REQUIRED TRUE)
+	set_property(TARGET ${test_name} PROPERTY CXX_STANDARD 17)
 	target_include_directories(${test_name} PRIVATE ${include_headers})
 	target_link_libraries(${test_name} ${linked_libraries})
 	add_test(NAME ${test_name} 
