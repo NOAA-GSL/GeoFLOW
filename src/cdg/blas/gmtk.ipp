@@ -1499,6 +1499,10 @@ template<typename T>
 void I2_X_D1(GTMatrix<T> &D1,
              GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET Ne, GCBLAS::cuMatBlockDat &cudat, GTVector<T> &y)
 {
+
+//	GMTK::I2_X_D1(*Di, u, N[0], N[1], Ne, cudat_, du);
+//	fmxm((GFLOAT*)y.data(), (GFLOAT*)(D1.data().data()), &ND1, &ND2, (GFLOAT*)(u.data()), &N1, &N2, &szMatCache_);
+
   GEOFLOW_TRACE_MSG("I2_X_D1(7 args)");
   GSIZET ND1, ND2, Nu;
   GINT   M, N, K, lda, ldb, ldc;
