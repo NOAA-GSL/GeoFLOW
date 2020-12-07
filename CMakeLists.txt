@@ -144,7 +144,7 @@ if(USE_PAPI)
 endif()
 
 if(USE_CBLAS)
-	find_package(_CBLAS REQUIRED) 
+	find_package(CBLAS REQUIRED) 
 endif()
 
 if(USE_CUBLAS OR GEOFLOW_TRACER_USE_NVTX)
