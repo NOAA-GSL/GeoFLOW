@@ -11,7 +11,7 @@ option(USE_OPENMP     "USE_OPENMP"    OFF)   # Compile for OpenMP
 option(USE_MPI        "USE_MPI"       ON)   # Build with MPI?
 
 option(USE_CUBLAS     "USE_CUBLAS"    OFF)  # Build with cuBLAS
-option(USE_CBLAS      "USE_CBLAS"     ON)  # Use System CBLAS
+option(USE_CBLAS      "USE_CBLAS"     OFF)  # Use System CBLAS
 option(USE_OPENACC    "USE_OPENACC"   OFF)  # Compile for OpenACC
 
 option(USE_GPTL       "USE_GPTL"      OFF)  # Build with GPTL?

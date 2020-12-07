@@ -513,6 +513,7 @@ void GGrid::grid_init()
   GCBLAS::handle_create(cudat_.hbatch_cublas);
   cudat_.ibblk.resize(nstreams_);
   cudat_.ieblk.resize(nstreams_);
+  cudat_.pStream.resize(nstreams_);
   cudat_.nbatch = nelems;
   GSIZET idel = nelems/nstreams_;
   for ( auto j=0; j<nstreams_; j++ ) {
