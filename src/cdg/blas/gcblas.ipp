@@ -18,9 +18,9 @@ namespace GCBLAS
 //**********************************************************************************
 template<typename T>
 void gemm(GBlasHandle h,  
-          const enum GBLAS_ORDER Order,
-          const enum GBLAS_TRANSPOSE TransA,
-          const enum GBLAS_TRANSPOSE TransB,
+          const GBLAS_ORDER Order,
+          const GBLAS_TRANSPOSE TransA,
+          const GBLAS_TRANSPOSE TransB,
           const int M, const int N, const int K,
           const T alpha, const T  *A, const int lda,
           const T *B, const int ldb, const T beta,
@@ -28,15 +28,15 @@ void gemm(GBlasHandle h,
 {
 
 #if defined(USE_CBLAS)
-	  if ( std::is_same<T,GFLOAT>::value ) {
-	    cblas_fgemm( Order, TransA, TransB,
+	  if constexpr ( std::is_same<T,float>::value ) {
+	    cblas_sgemm( (CBLAS_ORDER)Order, (CBLAS_TRANSPOSE)TransA, (CBLAS_TRANSPOSE)TransB,
 	                 M, N, K,
 	                 alpha, A, lda,
 	                 B, ldb, beta,
 	                 C, ldc);
 	  }
-	  else if ( std::is_same<T,GDOUBLE>::value ) {
-	    cblas_dgemm( Order, TransA, TransB,
+	  else if constexpr ( std::is_same<T,double>::value ) {
+	    cblas_dgemm( (CBLAS_ORDER)Order, (CBLAS_TRANSPOSE)TransA, (CBLAS_TRANSPOSE)TransB,
 	                 M, N, K,
 	                 alpha, A, lda,
 	                 B, ldb, beta,
@@ -47,14 +47,14 @@ void gemm(GBlasHandle h,
 
   static const GBlasOp cuBlasOps[] = { CUBLAS_OP_N, CUBLAS_OP_T, CUBLAS_OP_C };
 
-  if ( std::is_same<T,GFLOAT>::value ) {
+  if constexpr ( std::is_same<T,GFLOAT>::value ) {
     cublasSgemm( h, cuBlasOps[TransA-CblasNoTrans], cuBlasOps[TransB-CblasNoTrans],
                  M, N, K, 
                  (const float*)(&alpha), (const float*)A, lda,
                  (const float*)B, ldb, (const float*)(&beta),
                  (float*)C, ldc);
   }
-  else if ( std::is_same<T,GDOUBLE>::value ) {
+  else if constexpr ( std::is_same<T,GDOUBLE>::value ) {
     cublasDgemm( h, cuBlasOps[TransA-CblasNoTrans], cuBlasOps[TransB-CblasNoTrans],
                  M, N, K, 
                  (const double*)(&alpha), (const double*)A, lda,
@@ -80,9 +80,9 @@ void gemm(GBlasHandle h,
 //**********************************************************************************
 template<typename T>
 void batched_gemm(cuMatBlockDat &cudat,
-                  const enum GBLAS_ORDER Order,
-                  const enum GBLAS_TRANSPOSE TransA,
-                  const enum GBLAS_TRANSPOSE TransB,
+                  const GBLAS_ORDER Order,
+                  const GBLAS_TRANSPOSE TransA,
+                  const GBLAS_TRANSPOSE TransB,
                   const int M, const int N, const int K,
                   const T alpha, const T  *A, const int lda,
                   const T *B, const int ldb, const T beta,
@@ -95,11 +95,12 @@ void batched_gemm(cuMatBlockDat &cudat,
 
   szblk= M*K;
   for ( auto j=0; j<cudat.nbatch; j++ ) {
-    GCBLAS::gemm<T>( cudat.hcublas, Order, TransA, TransB, M, N, K,
+    GCBLAS::gemm<T>( cudat.hcublas, Order, TransA, TransB,
                      M, N, K,
                      alpha, A+j*szblk, lda,
                      B, ldb, beta,
                      C+j*szblk, ldc);
+
   }
 
 #elif defined(USE_CUBLAS)

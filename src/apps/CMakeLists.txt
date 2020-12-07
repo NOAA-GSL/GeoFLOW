@@ -26,7 +26,7 @@ install(
 set(apps_files
        hackathon_driver.cpp
 	)
-
+	
 #		       	
 # Include headers unique to main applications
 # Note:
@@ -74,6 +74,8 @@ FOREACH(app_src ${apps_files})
 							)
 	target_include_directories(${app_name} PRIVATE ${apps_include_headers})
 	target_link_libraries(${app_name} ${apps_linked_libraries})
+	option(CMAKE_CXX_STANDARD_REQUIRED TRUE)
+	set_property(TARGET ${app_name} PROPERTY CXX_STANDARD 17)
 	install(TARGETS ${app_name} DESTINATION "${MY_INSTALL_BINDIR}")
 ENDFOREACH(app_src)
 
