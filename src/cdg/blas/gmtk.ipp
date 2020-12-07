@@ -1522,9 +1522,8 @@ void I2_X_D1(GTMatrix<T> &D1,
   lda = M;
   ldb = K;
   ldc = M;
-   GCBLAS::gemm<T>(cudat.hcublas, GCBLAS::CblasRowMajor, GCBLAS::CblasNoTrans, GCBLAS::CblasNoTrans,
-                    M, N, K, 0.0, A, lda, B, ldb, beta, C, ldc);
-
+  GCBLAS::gemm<T>(cudat.hcublas, GCBLAS::CblasRowMajor, GCBLAS::CblasNoTrans, GCBLAS::CblasNoTrans,
+                    M, N, K, 0.0, (T*)y.data(), lda, (T*)(D1.data().data()), ldb, 1.0, (T*)u.data(), ldc);
 #else
 
   if      ( std::is_same<T,GFLOAT>::value ) {
@@ -1831,14 +1830,14 @@ void D2_X_I1(GTMatrix<T> &D2T,
 
 // Compute y = I2_X_D1 u = u * D2T:
 #if defined(USE_CBLAS) || defined(USE_CUBLAS)
-  M   = ND1;
+  M   = N21;
   N   = N2;
-  K   = ND2;
+  K   = N22;
   lda = M;
   ldb = K;
   ldc = M;
   GCBLAS::batched_gemm<T>(cudat, GCBLAS::CblasRowMajor, GCBLAS::CblasNoTrans, GCBLAS::CblasNoTrans,
-                           M, N, K, 0.0, A, lda, B, ldb, beta, C, ldc);
+                           M, N, K, 0.0, (T*)y.data(), lda, (T*)u.data(), ldb, 1.0, (T*)D2T.data().data(), ldc);
 
 #else
 
@@ -2678,9 +2677,11 @@ void matvec_prod(GTVector<T> &vret, const GTMatrix<T> &A, const GTVector<T> &b)
 
 #if defined(USE_CBLAS) || defined(USE_CUBLAS)
 
-  for ( auto i=0; i<n1_; i++ ) {
+  GSIZET n1 = A.size(1);
+  GSIZET n2 = A.size(2);
+  for ( auto i=0; i<n1; i++ ) {
      vret[i] = 0;
-     for ( auto j=0; j<n2_; j++ ) {
+     for ( auto j=0; j<n2; j++ ) {
        vret[i] += A(i,j) * b(j);
      }
    }

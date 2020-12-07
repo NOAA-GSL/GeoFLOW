@@ -5,7 +5,6 @@
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
-#include "gcblas.hpp"
 
 namespace GCBLAS
 {
@@ -19,9 +18,9 @@ namespace GCBLAS
 //**********************************************************************************
 template<typename T>
 void gemm(GBlasHandle h,  
-          const enum CBLAS_ORDER Order,
-          const enum CBLAS_TRANSPOSE TransA,
-          const enum CBLAS_TRANSPOSE TransB,
+          const enum GBLAS_ORDER Order,
+          const enum GBLAS_TRANSPOSE TransA,
+          const enum GBLAS_TRANSPOSE TransB,
           const int M, const int N, const int K,
           const T alpha, const T  *A, const int lda,
           const T *B, const int ldb, const T beta,
@@ -30,14 +29,14 @@ void gemm(GBlasHandle h,
 
 #if defined(USE_CBLAS)
 	  if ( std::is_same<T,GFLOAT>::value ) {
-	    cblas_fgemm( Order, TransA, TransB, M, N, K,
+	    cblas_fgemm( Order, TransA, TransB,
 	                 M, N, K,
 	                 alpha, A, lda,
 	                 B, ldb, beta,
 	                 C, ldc);
 	  }
 	  else if ( std::is_same<T,GDOUBLE>::value ) {
-	    cblas_dgemm( Order, TransA, TransB, M, N, K,
+	    cblas_dgemm( Order, TransA, TransB,
 	                 M, N, K,
 	                 alpha, A, lda,
 	                 B, ldb, beta,
@@ -46,19 +45,21 @@ void gemm(GBlasHandle h,
 
 #elif defined(USE_CUBLAS)
 
+  static const GBlasOp cuBlasOps[] = { CUBLAS_OP_N, CUBLAS_OP_T, CUBLAS_OP_C };
+
   if ( std::is_same<T,GFLOAT>::value ) {
-    cublasSgemm( h, Order, TransA, TransB, M, N, K,
+    cublasSgemm( h, cuBlasOps[TransA-CblasNoTrans], cuBlasOps[TransB-CblasNoTrans],
                  M, N, K, 
-                 alpha, A, lda,
-                 B, ldb, beta,
-                 C, ldc);
+                 (const float*)(&alpha), (const float*)A, lda,
+                 (const float*)B, ldb, (const float*)(&beta),
+                 (float*)C, ldc);
   }
   else if ( std::is_same<T,GDOUBLE>::value ) {
-    cublasDgemm( h, Order, TransA, TransB, M, N, K,
+    cublasDgemm( h, cuBlasOps[TransA-CblasNoTrans], cuBlasOps[TransB-CblasNoTrans],
                  M, N, K, 
-                 alpha, A, lda,
-                 B, ldb, beta,
-                 C, ldc);
+                 (const double*)(&alpha), (const double*)A, lda,
+                 (const double*)B, ldb, (const double*)(&beta),
+                 (double*)C, ldc);
   }
 
 #else
@@ -79,9 +80,9 @@ void gemm(GBlasHandle h,
 //**********************************************************************************
 template<typename T>
 void batched_gemm(cuMatBlockDat &cudat,
-                  const enum CBLAS_ORDER Order,
-                  const enum CBLAS_TRANSPOSE TransA,
-                  const enum CBLAS_TRANSPOSE TransB,
+                  const enum GBLAS_ORDER Order,
+                  const enum GBLAS_TRANSPOSE TransA,
+                  const enum GBLAS_TRANSPOSE TransB,
                   const int M, const int N, const int K,
                   const T alpha, const T  *A, const int lda,
                   const T *B, const int ldb, const T beta,
@@ -102,6 +103,7 @@ void batched_gemm(cuMatBlockDat &cudat,
   }
 
 #elif defined(USE_CUBLAS)
+  static const GBlasOp cuBlasOps[] = { CUBLAS_OP_N, CUBLAS_OP_T, CUBLAS_OP_C };
 
   for ( auto j=0; j<nstreams; j++ ) {
     cublasSetStream(cudat.hbatch_cublas, cudat.pStream[j]);
@@ -109,28 +111,28 @@ void batched_gemm(cuMatBlockDat &cudat,
   ibstride = 0;
   if      ( std::is_same<T,GFLOAT>::value ) {
     for ( auto j=0; j<nstreams; j++ ) {
-      iastart  = ibblk[j]*M*K*sizeof(T);
-      iastride = (ieblk[j] - ibblk[j] + 1)*M*K*sizeof(T);
+      iastart  = cudat.ibblk[j]*M*K*sizeof(T);
+      iastride = (cudat.ieblk[j] - cudat.ibblk[j] + 1)*M*K*sizeof(T);
       cublasSgemmStridedBatched( 
                    cudat.hbatch_cublas, 
-                   Order, TransA, TransB, M, N, K,
+                   cuBlasOps[TransA-CblasNoTrans], cuBlasOps[TransB-CblasNoTrans],
                    M, N, K, 
-                   alpha, A+iastart, lda, iastride,
-                   B, ldb, ibstride, beta,
-                   C+iastart, ldc, iastride);
+                   (const float*)&alpha, (const float*)(A+iastart), lda, iastride,
+                   (const float*)B, ldb, ibstride, (const float*)&beta,
+                   (float*)(C+iastart), ldc, iastride, nstreams);
     }
   }
   else if ( std::is_same<T,GDOUBLE>::value ) {
     for ( auto j=0; j<nstreams; j++ ) {
-      iastart  = ibblk[j]*M*K*sizeof(T);
-      iastride = (ieblk[j] - ibblk[j] + 1)*M*K*sizeof(T);
+      iastart  = cudat.ibblk[j]*M*K*sizeof(T);
+      iastride = (cudat.ieblk[j] - cudat.ibblk[j] + 1)*M*K*sizeof(T);
       cublasDgemmStridedBatched( 
                    cudat.hbatch_cublas, 
-                   Order, TransA, TransB, M, N, K,
+                   cuBlasOps[TransA-CblasNoTrans], cuBlasOps[TransB-CblasNoTrans],
                    M, N, K, 
-                   alpha, A+iastart, lda, iastride,
-                   B, ldb, ibstride, beta,
-                   C+iastart, ldc, iastride);
+                   (const double*)&alpha, (const double*)(A+iastart), lda, iastride,
+                   (const double*)B, ldb, ibstride, (const double*)&beta,
+                   (double*)(C+iastart), ldc, iastride, nstreams);
     }
   }
   else {

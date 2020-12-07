@@ -21,7 +21,7 @@ void handle_create(GBlasHandle &h)
 {
   GBlasStatus stat;
   #if defined(USE_CUBLAS)
-    stat = cublasCreate(h);
+    stat = cublasCreate(&h);
     assert(stat == CUBLAS_STATUS_SUCCESS);
   #else
     h = -1;
