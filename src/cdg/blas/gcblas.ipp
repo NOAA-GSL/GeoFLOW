@@ -42,7 +42,8 @@ void gemm(GBlasHandle h,
 	  }
 	  else if constexpr ( std::is_same<T,double>::value ) {
 		GEOFLOW_TRACE_MSG("cblas_dgemm(...)");
-
+   
+    /*
 		geoflow::tbox::pio::pout << "alpha = " << alpha << std::endl;
 		geoflow::tbox::pio::pout << "beta  = " << beta  << std::endl;
 		geoflow::tbox::pio::pout << "M     = " << M << std::endl;
@@ -57,6 +58,7 @@ void gemm(GBlasHandle h,
 		geoflow::tbox::pio::pout << "A[0]  = " << A[0] << std::endl;
 		geoflow::tbox::pio::pout << "B[0]  = " << B[0] << std::endl;
 		geoflow::tbox::pio::pout << "C[0]  = " << C[0] << std::endl;
+    */
 
 	    cblas_dgemm( (CBLAS_ORDER)Order, (CBLAS_TRANSPOSE)TransA, (CBLAS_TRANSPOSE)TransB,
 	                 M, N, K,
