@@ -324,6 +324,16 @@ find_package_handle_standard_args(CBLAS DEFAULT_MSG
 	CBLAS_WORKS
 )
 
+if(CBLAS_FOUND)
+	if(NOT CBLAS_FIND_QUIETLY)
+	       message(STATUS "CBLAS_LIBRARIES_DEP    = ${CBLAS_LIBRARIES_DEP}")
+	       message(STATUS "CBLAS_LIBRARY_DIRS_DEP = ${CBLAS_LIBRARY_DIRS_DEP}")
+	       message(STATUS "CBLAS_INCLUDE_DIRS_DEP = ${CBLAS_INCLUDE_DIRS_DEP}")
+	       message(STATUS "CBLAS_LINKER_FLAGS     = ${CBLAS_LINKER_FLAGS}")
+	endif()
+endif()
+
+
 # Export Modern Library
 if(CBLAS_FOUND AND NOT TARGET CBLAS::CBLAS)
   add_library(CBLAS::CBLAS UNKNOWN IMPORTED)

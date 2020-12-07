@@ -48,6 +48,12 @@ set(apps_compiler_options
 # Note:
 # - These are only things not previously linked by a GeoFLOW library
 #
+
+message(STATUS "===========  Setting APS Link Line  ==========")
+message(STATUS "CBLAS_FOUND:             ${CBLAS_FOUND}")
+message(STATUS "CBLAS_LIBRARY_DIRS_DEP:  ${CBLAS_LIBRARY_DIRS_DEP}")
+message(STATUS "CBLAS_LIBRARIES_DEP:     ${CBLAS_LIBRARIES_DEP}")
+
 set(apps_linked_libraries 
 	PUBLIC
 		tbox
@@ -68,10 +74,10 @@ FOREACH(app_src ${apps_files})
 	string(REPLACE ".cpp" "" app_name ${app_src})
 	add_executable(${app_name} ${app_src})
 	target_compile_options(${app_name} 
-								PRIVATE 
-								${apps_compiler_options}
-#								$<$<COMPILE_LANGUAGE:CXX>:-Wno-unknown-pragmas>
-							)
+		PRIVATE 
+				${apps_compiler_options}
+#				 $<$<COMPILE_LANGUAGE:CXX>:-Wno-unknown-pragmas>
+	)
 	target_include_directories(${app_name} PRIVATE ${apps_include_headers})
 	target_link_libraries(${app_name} ${apps_linked_libraries})
 	option(CMAKE_CXX_STANDARD_REQUIRED TRUE)

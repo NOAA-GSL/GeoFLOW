@@ -13,6 +13,7 @@
 
 #if defined(USE_CBLAS)
 #include "cblas.h"
+//#include "mkl.h" 
 #endif
 #if defined(USE_CUBLAS)
   #include "cuda_runtime_api.h"

@@ -74,7 +74,7 @@ target_link_libraries(cdg
 		"$<$<BOOL:${Boost_MPI_FOUND}>:Boost::mpi>"
 		"$<$<BOOL:${PAPI_FOUND}>:PAPI::PAPI>"
 		"$<$<BOOL:${GPTL_FOUND}>:GPTL::GPTL>"
-		"$<$<BOOL:${CBLAS_FOUND}>:CBLAS::CBLAS>"
+		"$<$<BOOL:${CBLAS_FOUND}>:${CBLAS_LIBRARIES_DEP}>"
 		"$<$<BOOL:${CUDA_FOUND}>:${CUDA_LIBRARIES}>"
 		"$<$<BOOL:${CUDA_FOUND}>:${CUDA_CUBLAS_LIBRARIES}>"
 	)

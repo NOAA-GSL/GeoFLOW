@@ -13,7 +13,7 @@
     "istate"           : [[0, 1, 2]]
   },
   "grid_box": {
-    "grid_name" : "grid_box",
+  "grid_name" : "grid_box",
     "xyz0"      : [0.0, 0.0, 0.0],
     "delxyz"    : [1.0, 1.0, 1.0],
     "num_elems" : [100, 100, 1],
