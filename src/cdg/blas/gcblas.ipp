@@ -42,11 +42,11 @@ void gemm(GBlasHandle h,
 	  }
 	  else if constexpr ( std::is_same<T,double>::value ) {
 		GEOFLOW_TRACE_MSG("cblas_dgemm(...)");
-	    cblas_dgemm( (CBLAS_ORDER)Order, (CBLAS_TRANSPOSE)TransA, (CBLAS_TRANSPOSE)TransB,
-	    		(int)M, (int)N, (int)K,
-	                 alpha, (const double*)A, (int)lda,
-					 (const double*)B, (int)ldb, beta,
-					 (double*)C, (int)ldc);
+    cblas_dgemm( (CBLAS_ORDER)Order, (CBLAS_TRANSPOSE)TransA, (CBLAS_TRANSPOSE)TransB,
+	               M, N, K,
+	               alpha, A, lda,
+					       B, ldb, beta,
+					       C, ldc);
 	  }
 
 #elif defined(USE_CUBLAS)
