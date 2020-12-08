@@ -59,6 +59,7 @@ void gemm(GBlasHandle h,
                  (const float*)(&alpha), (const float*)A, lda,
                  (const float*)B, ldb, (const float*)(&beta),
                  (float*)C, ldc);
+    cudaDeviceSynchronize();
   }
   else if constexpr ( std::is_same<T,GDOUBLE>::value ) {
 	GEOFLOW_TRACE_MSG("cublasDgemm(...)");
@@ -67,6 +68,7 @@ void gemm(GBlasHandle h,
                  (const double*)(&alpha), (const double*)A, lda,
                  (const double*)B, ldb, (const double*)(&beta),
                  (double*)C, ldc);
+    cudaDeviceSynchronize();
   }
 
 #else
@@ -132,10 +134,9 @@ void batched_gemm(cuMatBlockDat &cudat,
                    (const float*)&alpha, (const float*)A+iastart, lda, iastride,
                    (const float*)B, ldb, ibstride, (const float*)&beta,
                    (float*)C+iastart, ldc, iastride, bcount);
-      cudaDeviceSynchronize(); 
       assert(stat == CUBLAS_STATUS_SUCCESS);
-
     }
+    cudaDeviceSynchronize(); 
   }
   else if ( std::is_same<T,GDOUBLE>::value ) {
     for ( auto j=0; j<nstreams; j++ ) {
@@ -149,9 +150,9 @@ void batched_gemm(cuMatBlockDat &cudat,
                    (const double*)&alpha, (const double*)A+iastart,  lda, iastride,
                    (const double*)B, ldb, ibstride, (const double*)&beta,
                    (double*)C+iastart, ldc, iastride, bcount);
-      cudaDeviceSynchronize(); 
       assert(stat == CUBLAS_STATUS_SUCCESS);
     }
+    cudaDeviceSynchronize(); 
   }
   else {
     assert(FALSE);
