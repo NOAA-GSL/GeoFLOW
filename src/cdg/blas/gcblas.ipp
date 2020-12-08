@@ -6,7 +6,6 @@
 // Derived From : none.
 //==================================================================================
 
-#include "tbox/pio.hpp"
 #include "tbox/tracer.hpp"
 
 namespace GCBLAS

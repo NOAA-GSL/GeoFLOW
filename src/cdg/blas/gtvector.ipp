@@ -63,7 +63,12 @@ icsz_ (_G_VEC_CACHE_SIZE),
 bdatalocal_        (TRUE)
 {
 #if defined(USE_CUBLAS)
-  cudaMallocManaged(&data_, n_);
+  if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
+    cudaMallocManaged(&data_, n_*sizeof(T), cudaMemAttachGlobal);
+  }
+  else {
+    data_ = new T [n_];
+  }
 #else
   data_ = new T [n_];
 #endif
@@ -95,7 +100,12 @@ bdatalocal_        (TRUE)
   n_=gindex_.end()+1+gindex_.pad();
 
 #if defined(USE_CUBLAS)
-  cudaMallocManaged(&data_, n_);
+  if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
+    cudaMallocManaged(&data_, n_*sizeof(T), cudaMemAttachGlobal);
+  }
+  else {
+    data_ = new T [n_];
+  }
 #else
   data_ = new T [n_];
 #endif
@@ -122,7 +132,12 @@ icsz_ (_G_VEC_CACHE_SIZE),
 bdatalocal_        (TRUE)
 {
 #if defined(USE_CUBLAS)
-  cudaMallocManaged(&data_, n_);
+  if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
+    cudaMallocManaged(&data_, n_*sizeof(T), cudaMemAttachGlobal);
+  }
+  else {
+    data_ = new T [n_];
+  }
 #else
   data_ = new T [n_];
 #endif
@@ -158,7 +173,12 @@ icsz_ (_G_VEC_CACHE_SIZE),
 bdatalocal_        (TRUE)
 {
 #if defined(USE_CUBLAS)
-  cudaMallocManaged(&data_, n_);
+  if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
+    cudaMallocManaged(&data_, n_*sizeof(T), cudaMemAttachGlobal);
+  }
+  else {
+    data_ = new T [n_];
+  }
 #else
   data_ = new T [n_];
 #endif
@@ -194,11 +214,16 @@ GTVector<T>::GTVector(T *indata, GSIZET n, GSIZET istride, GBOOL blocmgd):
 data_           (NULLPTR),
 n_            (n/istride),
 icsz_ (_G_VEC_CACHE_SIZE),
-bdatalocal_        (TRUE)
+bdatalocal_     (blocmgd)
 {
   if ( bdatalocal_ ) {
 #if defined(USE_CUBLAS)
-    cudaMallocManaged(&data_, n_);
+    if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
+      cudaMallocManaged(&data_, n_*sizeof(T), cudaMemAttachGlobal);
+    }
+    else {
+      data_ = new T [n_];
+    }
 #else
     data_ = new T [n_];
 #endif
@@ -237,7 +262,12 @@ icsz_ (_G_VEC_CACHE_SIZE),
 bdatalocal_        (TRUE)
 {
 #if defined(USE_CUBLAS)
-  cudaMallocManaged(&data_, n_);
+  if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
+    cudaMallocManaged(&data_, n_*sizeof(T), cudaMemAttachGlobal);
+  }
+  else {
+    data_ = new T [n_];
+  }
 #else
   data_ = new T [n_];
 #endif
@@ -352,7 +382,12 @@ void GTVector<T>::resize(GSIZET nnew)
     }
     this->n_ = iend-ibeg+1+ipad;
 #if defined(USE_CUBLAS)
-  cudaMallocManaged(&data_, n_);
+  if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
+    cudaMallocManaged(&data_, n_*sizeof(T), cudaMemAttachGlobal);
+  }
+  else {
+    data_ = new T [n_];
+  }
 #else
     this->data_ = new T [this->n_];
 #endif
@@ -403,7 +438,12 @@ void GTVector<T>::resize(GIndex &gi)
     }
     this->n_ = iend-ibeg+1+ipad;
 #if defined(USE_CUBLAS)
-  cudaMallocManaged(&data_, n_);
+  if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
+    cudaMallocManaged(&data_, n_*sizeof(T), cudaMemAttachGlobal);
+  }
+  else {
+    data_ = new T [n_];
+  }
 #else
     this->data_ = new T [this->n_];
 #endif
@@ -438,7 +478,12 @@ void GTVector<T>::resizem(GSIZET nnew)
     #endif
 
 #if defined(USE_CUBLAS)
-  cudaMallocManaged(&data_, n_);
+  if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
+    cudaMallocManaged(&data_, n_*sizeof(T), cudaMemAttachGlobal);
+  }
+  else {
+    data_ = new T [n_];
+  }
 #else
     resize(nnew);
 #endif
@@ -479,7 +524,12 @@ void GTVector<T>::reserve(GSIZET nnew)
 
   // Check: is following exception-safe? No....
 #if defined(USE_CUBLAS)
-  cudaMallocManaged(&data_, n_);
+  if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
+    cudaMallocManaged(&ttmp, (ibeg+nnew+ipad)*sizeof(T), cudaMemAttachGlobal);
+  }
+  else {
+    ttmp = new T [ibeg+nnew+ipad];
+  }
 #else
   ttmp  = new T [ibeg+nnew+ipad];
 #endif
@@ -497,7 +547,12 @@ void GTVector<T>::reserve(GSIZET nnew)
       this->data_ = NULLPTR; 
     }
 #if defined(USE_CUBLAS)
-  cudaMallocManaged(&data_, n_);
+  if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
+    cudaMallocManaged(&data_, (ibeg+nnew+ipad)*sizeof(T), cudaMemAttachGlobal);
+  }
+  else {
+    data_ = new T [ibeg+nnew+ipad];
+  }
 #else
     this->data_ = new T [ibeg+nnew+ipad];
 #endif
@@ -520,7 +575,12 @@ void GTVector<T>::reserve(GSIZET nnew)
       this->data_ = NULLPTR; 
     }
 #if defined(USE_CUBLAS)
-    cudaMallocManaged(&data_, n_);
+  if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
+    cudaMallocManaged(&data_, (ibeg+nnew+ipad)*sizeof(T), cudaMemAttachGlobal);
+  }
+  else {
+    data_ = new T [ibeg+nnew+ipad];
+  }
 #else
     this->data_ = new T [ibeg+nnew+ipad];
 #endif
@@ -712,7 +772,12 @@ GTVector<T> &GTVector<T>::operator=(const GTVector<T> &obj)
   if ( data_ == NULLPTR ) {
     n_ = obj.capacity();
 #if defined(USE_CUBLAS)
-    cudaMallocManaged(&data_, n_);
+    if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
+      cudaMallocManaged(&data_, n_*sizeof(T), cudaMemAttachGlobal);
+    }
+    else {
+      data_ = new T [n_];
+    }
 #else
     data_ = new T [n_];
 #endif
@@ -758,7 +823,12 @@ GTVector<T> &GTVector<T>::operator=(const std::vector<T> &obj)
   if ( data_ == NULLPTR ) {
     n_ = obj.capacity();
 #if defined(USE_CUBLAS)
-    cudaMallocManaged(&data_, n_);
+    if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
+      cudaMallocManaged(&data_, n_*sizeof(T), cudaMemAttachGlobal);
+    }
+    else {
+      data_ = new T [n_];
+    }
 #else
     data_ = new T [n_];
 #endif

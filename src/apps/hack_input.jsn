@@ -2,6 +2,7 @@
   "exp_order"            : [4, 4, 4],
   "grid_type"            : "grid_box",
   "IO_implementation"    : "gio",
+  "nstreams"             : 1,
   "poly_test": {
     "poly"     : [2, 2, 1],
     "ncycles"  : 10,

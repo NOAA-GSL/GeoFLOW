@@ -43,7 +43,6 @@ bInitialized_                   (FALSE),
 bapplybc_                       (FALSE),
 do_face_normals_                 (TRUE),
 bpconst_                         (TRUE),
-nstreams_                           (1),
 gderivtype_                  (GDV_VARP),
 nprocs_        (GComm::WorldSize(comm)),
 ngelems_                            (0),
@@ -60,7 +59,8 @@ bdy_apply_callback_           (NULLPTR)
 {
 	GEOFLOW_TRACE();
 
-  nstreams_ = ptree.getValue<GINT>("nstreams",1);
+  cudat_.nstreams = ptree.getValue<GINT>("nstreams",1);
+  cudat_.nstreams = MAX(cudat_.nstreams,1);
 
 } // end of constructor method (1)
 
@@ -440,7 +440,9 @@ GFTYPE GGrid::avglength()
 //**********************************************************************************
 void GGrid::grid_init()
 {
+
 	GEOFLOW_TRACE();
+
 
   GTimerStart("GGrid::grid_init: do_elems");
   do_elems(); // generate element list from derived class
@@ -511,15 +513,15 @@ void GGrid::grid_init()
   // Fill cuMatBlockDat structure:
   GCBLAS::handle_create(cudat_.hcublas );
   GCBLAS::handle_create(cudat_.hbatch_cublas);
-  cudat_.ibblk.resize(nstreams_);
-  cudat_.ieblk.resize(nstreams_);
-  cudat_.pStream.resize(nstreams_);
+  cudat_.ibblk.resize(cudat_.nstreams);
+  cudat_.ieblk.resize(cudat_.nstreams);
+  cudat_.pStream.resize(cudat_.nstreams);
   cudat_.nbatch = nelems;
-  GSIZET idel = nelems/nstreams_;
-  for ( auto j=0; j<nstreams_; j++ ) {
+  GSIZET idel = nelems/cudat_.nstreams;
+  for ( auto j=0; j<cudat_.nstreams; j++ ) {
     GCBLAS::stream_create(cudat_.pStream[j]);
     cudat_.ibblk[j] = j*idel;
-    cudat_.ieblk[j] = j<nstreams_-1 ? cudat_.ibblk[j] + idel
+    cudat_.ieblk[j] = j<cudat_.nstreams-1 ? cudat_.ibblk[j] + idel
                     : nelems-1;
   }
   
@@ -2164,7 +2166,7 @@ void GGrid::grefderiv_constp(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
   switch (idir) {
   case 1:
     Di = (*gelems)[0]->gbasis(0)->getDerivMatrix (dotrans);
-    GMTK::I2_X_D1(*Di, u, N[0], N[1], Ne, cudat_, du);
+    GMTK::I2_X_D1(*Di, u, N[0], N[1], Ne, cudat_, du); 
     break;
   case 2:
     Di = (*gelems)[0]->gbasis(1)->getDerivMatrix(!dotrans);

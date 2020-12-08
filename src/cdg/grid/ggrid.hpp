@@ -116,6 +116,8 @@ virtual void                 print(const GString &filename){}          // print 
                                GTVector<GTVector<GFTYPE>> &xnodes);   // initialize class for restart
         void                 add_terrain(const State &xb, State &tmp);// add terrain 
         void                 do_typing(); // classify into types
+	GCBLAS::cuMatBlockDat 
+		            &get_cudat() { return cudat_; }           // get CUDA data
         GElemList           &elems() { return gelems_; }              // get elem list
         GSIZET               nelems() { return gelems_.size(); }      // local num elems
         GSIZET               ngelems() { return ngelems_; }           // global num elems

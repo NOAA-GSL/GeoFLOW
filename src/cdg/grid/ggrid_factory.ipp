@@ -50,6 +50,7 @@ GGrid *GGridFactory<TypePack>::build(const geoflow::tbox::PropertyTree& ptree, G
     else if ( "grid_box"    ==  gname ) { // 2d or 3d Cart grid
       grid = new GGridBox(ptree, gbasis, comm);
       grid->grid_init();
+
     }
     else {
       assert(FALSE && "Invalid PropertyTree grid specification");
