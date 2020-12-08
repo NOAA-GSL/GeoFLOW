@@ -101,8 +101,10 @@ void batched_gemm(cuMatBlockDat &cudat,
  
 #if defined(USE_CBLAS)
 
-  szblk= M*K;
-  for ( auto j=0; j<cudat.nbatch; j++ ) {
+  szblk = M * K;
+
+#pragma omp parallel for
+  for ( auto j=0; j < cudat.nbatch; j++ ) {
     GCBLAS::gemm<T>( cudat.hcublas, Order, TransA, TransB,
                      M, N, K,
                      alpha, A+j*szblk, lda,
