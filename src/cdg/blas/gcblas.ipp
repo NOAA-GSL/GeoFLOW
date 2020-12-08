@@ -42,6 +42,27 @@ void gemm(GBlasHandle h,
 	  }
 	  else if constexpr ( std::is_same<T,double>::value ) {
 		GEOFLOW_TRACE_MSG("cblas_dgemm(...)");
+<<<<<<< HEAD
+=======
+   
+    /*
+		geoflow::tbox::pio::pout << "alpha = " << alpha << std::endl;
+		geoflow::tbox::pio::pout << "beta  = " << beta  << std::endl;
+		geoflow::tbox::pio::pout << "M     = " << M << std::endl;
+		geoflow::tbox::pio::pout << "N     = " << N << std::endl;
+		geoflow::tbox::pio::pout << "K     = " << K << std::endl;
+		geoflow::tbox::pio::pout << "lda   = " << lda << std::endl;
+		geoflow::tbox::pio::pout << "ldb   = " << ldb << std::endl;
+		geoflow::tbox::pio::pout << "ldc   = " << ldc << std::endl;
+		geoflow::tbox::pio::pout << "A     = " << bool(A) << std::endl;
+		geoflow::tbox::pio::pout << "B     = " << bool(B) << std::endl;
+		geoflow::tbox::pio::pout << "C     = " << bool(C) << std::endl;
+		geoflow::tbox::pio::pout << "A[0]  = " << A[0] << std::endl;
+		geoflow::tbox::pio::pout << "B[0]  = " << B[0] << std::endl;
+		geoflow::tbox::pio::pout << "C[0]  = " << C[0] << std::endl;
+    */
+
+>>>>>>> branch 'hackathon/blas' of https://github.com/NOAA-GSD/GeoFLOW.git
 	    cblas_dgemm( (CBLAS_ORDER)Order, (CBLAS_TRANSPOSE)TransA, (CBLAS_TRANSPOSE)TransB,
 	    		(int)M, (int)N, (int)K,
 	                 alpha, (const double*)A, (int)lda,

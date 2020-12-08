@@ -48,6 +48,12 @@ set(apps_compiler_options
 # Note:
 # - These are only things not previously linked by a GeoFLOW library
 #
+
+message(STATUS "===========  Setting APS Link Line  ==========")
+message(STATUS "CBLAS_FOUND:             ${CBLAS_FOUND}")
+message(STATUS "CBLAS_LIBRARY_DIRS_DEP:  ${CBLAS_LIBRARY_DIRS_DEP}")
+message(STATUS "CBLAS_LIBRARIES_DEP:     ${CBLAS_LIBRARIES_DEP}")
+
 set(apps_linked_libraries 
 	PUBLIC
 		tbox
