@@ -52,23 +52,21 @@ void gemm(GBlasHandle h,
 
   static const GBlasOp cuBlasOps[] = { CUBLAS_OP_N, CUBLAS_OP_T, CUBLAS_OP_C };
 
-  if constexpr ( std::is_same<T,GFLOAT>::value ) {
-	GEOFLOW_TRACE_MSG("cublasSgemm(...)");
+  if ( std::is_same<T,GFLOAT>::value ) {
     cublasSgemm( h, cuBlasOps[TransA-CblasNoTrans], cuBlasOps[TransB-CblasNoTrans],
                  M, N, K, 
                  (const float*)(&alpha), (const float*)A, lda,
                  (const float*)B, ldb, (const float*)(&beta),
                  (float*)C, ldc);
-    cudaDeviceSynchronize();
+    cudaDeviceSynchronize(); 
   }
-  else if constexpr ( std::is_same<T,GDOUBLE>::value ) {
-	GEOFLOW_TRACE_MSG("cublasDgemm(...)");
+  else if ( std::is_same<T,GDOUBLE>::value ) {
     cublasDgemm( h, cuBlasOps[TransA-CblasNoTrans], cuBlasOps[TransB-CblasNoTrans],
                  M, N, K, 
                  (const double*)(&alpha), (const double*)A, lda,
                  (const double*)B, ldb, (const double*)(&beta),
                  (double*)C, ldc);
-    cudaDeviceSynchronize();
+    cudaDeviceSynchronize(); 
   }
 
 #else
