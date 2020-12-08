@@ -1836,7 +1836,7 @@ void D2_X_I1(GTMatrix<T> &D2T,
   lda = M;
   ldb = K;
   ldc = M;
-  GCBLAS::batched_gemm<T>(cudat, GCBLAS::CblasRowMajor, GCBLAS::CblasNoTrans, GCBLAS::CblasNoTrans,
+  GCBLAS::batched_gemm<T>(cudat, GCBLAS::CblasColMajor, GCBLAS::CblasNoTrans, GCBLAS::CblasNoTrans,
                            M, N, K, 1.0, (T*)(D2T.data().data()), lda, (T*)u.data(), ldb, 0.0, (T*)y.data(), ldc);
 
 #else
