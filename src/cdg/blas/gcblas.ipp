@@ -112,6 +112,8 @@ void batched_gemm(cuMatBlockDat &cudat,
   }
 
 #elif defined(USE_CUBLAS)
+  GINT        bcount;
+  GBlasStatus stat;
   static const GBlasOp cuBlasOps[] = { CUBLAS_OP_N, CUBLAS_OP_T, CUBLAS_OP_C };
 
   for ( auto j=0; j<nstreams; j++ ) {
@@ -120,28 +122,35 @@ void batched_gemm(cuMatBlockDat &cudat,
   ibstride = 0;
   if      ( std::is_same<T,GFLOAT>::value ) {
     for ( auto j=0; j<nstreams; j++ ) {
-      iastart  = cudat.ibblk[j]*M*K*sizeof(T);
-      iastride = (cudat.ieblk[j] - cudat.ibblk[j] + 1)*M*K*sizeof(T);
-      cublasSgemmStridedBatched( 
+      iastart  = cudat.ibblk[j]*M*K; //*sizeof(T);
+      bcount   = cudat.ieblk[j] - cudat.ibblk[j] + 1;
+      iastride = M*K; //*sizeof(T);
+      stat     = cublasSgemmStridedBatched( 
                    cudat.hbatch_cublas, 
                    cuBlasOps[TransA-CblasNoTrans], cuBlasOps[TransB-CblasNoTrans],
                    M, N, K, 
-                   (const float*)&alpha, (const float*)(A+iastart), lda, iastride,
+                   (const float*)&alpha, (const float*)A+iastart, lda, iastride,
                    (const float*)B, ldb, ibstride, (const float*)&beta,
-                   (float*)(C+iastart), ldc, iastride, nstreams);
+                   (float*)C+iastart, ldc, iastride, bcount);
+      cudaDeviceSynchronize(); 
+      assert(stat == CUBLAS_STATUS_SUCCESS);
+
     }
   }
   else if ( std::is_same<T,GDOUBLE>::value ) {
     for ( auto j=0; j<nstreams; j++ ) {
-      iastart  = cudat.ibblk[j]*M*K*sizeof(T);
-      iastride = (cudat.ieblk[j] - cudat.ibblk[j] + 1)*M*K*sizeof(T);
-      cublasDgemmStridedBatched( 
+      iastart  = cudat.ibblk[j]*M*K; //*sizeof(T);
+      bcount   = cudat.ieblk[j] - cudat.ibblk[j] + 1;
+      iastride = M*K; //*sizeof(T);
+      stat     = cublasDgemmStridedBatched( 
                    cudat.hbatch_cublas, 
                    cuBlasOps[TransA-CblasNoTrans], cuBlasOps[TransB-CblasNoTrans],
                    M, N, K, 
-                   (const double*)&alpha, (const double*)(A+iastart), lda, iastride,
+                   (const double*)&alpha, (const double*)A+iastart,  lda, iastride,
                    (const double*)B, ldb, ibstride, (const double*)&beta,
-                   (double*)(C+iastart), ldc, iastride, nstreams);
+                   (double*)C+iastart, ldc, iastride, bcount);
+      cudaDeviceSynchronize(); 
+      assert(stat == CUBLAS_STATUS_SUCCESS);
     }
   }
   else {
