@@ -41,6 +41,7 @@ enum GBLAS_TRANSPOSE {CblasNoTrans=111, CblasTrans=112, CblasConjTrans=113};
 #endif
 
 struct cuMatBlockDat {
+  GINT             nstreams=1;  // number of streams set
   GSIZET               nbatch;  // total batched ('num elements')
   GTVector      <int>   ibblk;  // for each stream, starting blk index
   GTVector      <int>   ieblk;  // for each stream, ending blk index
