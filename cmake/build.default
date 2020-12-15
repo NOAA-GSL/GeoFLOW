@@ -14,7 +14,7 @@ set(OpenACC_ACCEL_TARGET  "tesla"   CACHE STRING "Target for OpenACC")
 #
 # ------------------------ Options (ON/OFF) ---------------------------
 #
-option(GEOFLOW_BUILD_TESTS        "Build testing targets"     OFF)
+option(GEOFLOW_BUILD_TESTS        "Build testing targets"      ON)
 option(GEOFLOW_BUILD_GEOFLOW      "Build GeoFLOW target"       ON)
 
 option(GEOFLOW_USE_MPI            "Build with MPI"             ON)   
