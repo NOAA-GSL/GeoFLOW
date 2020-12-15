@@ -41,7 +41,7 @@ set(linked_libraries
 # MPI launch commands
 # CTest does not like them to be all within one command
 # 
-if(${USE_MPI})
+if(${GEOFLOW_USE_MPI})
 	set(LAUNCH_COMMAND "mpirun")  
 	set(LAUNCH_ARGS    "-np")
 	set(LAUNCH_PROCS   "4")
