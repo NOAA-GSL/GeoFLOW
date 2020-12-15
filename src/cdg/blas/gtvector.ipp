@@ -860,7 +860,7 @@ void GTVector<T>::set(T a)
 template<class T> 
 void GTVector<T>::set(T *a, GSIZET n)
 { 
-  #if defined(_G_BOUNDS_CHK) && !defined(_G_USE_OPENACC)
+  #if defined(_G_BOUNDS_CHK) && !defined(GEOFLOW_USE_OPENACC)
   if ( gindex_.beg()+n > gindex_.end()+1  ) {
     std::cout <<  "GTVector<T>::set: " << "assignment size mismatch: " << std::endl;
 while(1){};

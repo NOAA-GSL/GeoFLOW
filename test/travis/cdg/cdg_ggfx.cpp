@@ -10,7 +10,7 @@
 #include <unistd.h>
 #include <iostream>
 #include <vector>
-#if defined(_G_USE_GPTL)
+#if defined(GEOFLOW_USE_GPTL)
 #include "gptl.h"
 #endif
 #include "gexec.h"
@@ -70,7 +70,7 @@ int main(int argc, char **argv)
     GPP(comm,serr << ": no. elems per task: " << ne << " np: " << np << " nprocs: " << nprocs );
     GPP(comm, "*********************************************************" << std::endl );
 
-#if defined(_G_USE_GPTL)
+#if defined(GEOFLOW_USE_GPTL)
     // Set GTPL options:
     GPTLsetoption (GPTLcpu, 1);
 
@@ -180,7 +180,7 @@ NOTE: global ids are labeled starting from left on bottom-most
 
     GPP(comm, serr << " doing GGFX::Init...");
     u = 1;
-#if defined(_G_USE_GPTL)
+#if defined(GEOFLOW_USE_GPTL)
     GPTLstart("ggfx_init");
 #endif
     for ( GSIZET k=0; k<nrpt && errcode==0; k++ ) { 
@@ -189,19 +189,19 @@ NOTE: global ids are labeled starting from left on bottom-most
     }
     GComm::Synch();
     GPP(comm, serr << " GGFX::Init done.");
-#if defined(_G_USE_GPTL)
+#if defined(GEOFLOW_USE_GPTL)
     GPTLstop("ggfx_init");
 #endif
 
     GPP(comm,serr << " doing GGFX::doOp...");
-#if defined(_G_USE_GPTL)
+#if defined(GEOFLOW_USE_GPTL)
     GPTLstart("ggfx_doop");
 #endif
     for ( GSIZET k=0; k<nrpt && errcode==0; k++ ) { 
       bret = ggfx.doOp(u, GGFX_OP_SUM);
       if ( !bret ) errcode = 3;
     }
-#if defined(_G_USE_GPTL)
+#if defined(GEOFLOW_USE_GPTL)
     GPTLstop("ggfx_doop");
 #endif
     if ( errcode == 0 ) GPP(comm,serr << " GGFX::doOp done.");
@@ -229,7 +229,7 @@ NOTE: global ids are labeled starting from left on bottom-most
       }
     }
 
-#if defined(_G_USE_GPTL)
+#if defined(GEOFLOW_USE_GPTL)
     GPTLpr_file("timing.txt");
     GPTLfinalize();
 #endif

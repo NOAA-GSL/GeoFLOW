@@ -17,7 +17,7 @@
 
 #include "configure.hpp"
 
-#if defined(_G_USE_GPTL)
+#if defined(GEOFLOW_USE_GPTL)
   #include "gptl.h"
 #endif
 
@@ -29,8 +29,8 @@
 // _GLAPACK           : Set if using external Lapack API
 // _G_VEC_CACHE_SIZE  : Sets vector (BLAS II) op cache blocking factor
 // _G_MAT_CACHE_SIZE  : Sets vector op (BLAS III) cache blocking factor
-// _G_USE_OPENACC     : Set when using OpenACC
-// _G_USE_GPTL        : Set when using GPTL 
+// GEOFLOW_USE_OPENACC     : Set when using OpenACC
+// GEOFLOW_USE_GPTL        : Set when using GPTL 
 
 #if !defined(_G_TYPES_DEF)
 #define _G_TYPES_DEF
@@ -229,7 +229,7 @@ const char * const sGStateCompType [] ={"GSC_KINETIC","GSC_MAGNETIC","GSC_DENSIT
 
 #if !defined(GTIMER_DEFINED)
   #define GTIMER_DEFINED 
-  #if defined(_G_USE_GPTL)
+  #if defined(GEOFLOW_USE_GPTL)
     #define GTimerInit(a)   GPTLinitialize()
     #define GTimerFinal(a)  GPTLfinalize()
     #define GTimerStart(a)  GComm::Synch();GPTLstart(a)

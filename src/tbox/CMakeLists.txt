@@ -58,7 +58,6 @@ target_include_directories(tbox
 		"$<INSTALL_INTERFACE:${MY_INSTALL_INCDIR}>"
 		"$<BUILD_INTERFACE:${MY_PROJECT_INCDIR}>"
 		"$<BUILD_INTERFACE:${MY_INSTALL_SRCDIR}>"
-		"$<$<BOOL:${CUDA_FOUND}>:${CUDA_INCLUDE_DIRS}>"
 )
 
 
@@ -66,14 +65,13 @@ target_include_directories(tbox
 # Links required by library
 # 
 target_link_libraries(tbox 
+	PUBLIC
+		"$<$<BOOL:${CUDAToolkit_FOUND}>:CUDA::nvToolsExt>"
 	PRIVATE
 		"$<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX>"
 		"$<$<BOOL:${MPI_CXX_FOUND}>:MPI::MPI_CXX>"
 		"$<$<BOOL:${Boost_SERIALIZATION_FOUND}>:Boost::serialization>"
 		"$<$<BOOL:${Boost_MPI_FOUND}>:Boost::mpi>"
-		"$<$<BOOL:${PAPI_FOUND}>:PAPI::PAPI>"
-		"$<$<BOOL:${GPTL_FOUND}>:GPTL::GPTL>"
-		"$<$<BOOL:${CUDA_FOUND}>:${CUDA_nvToolsExt_LIBRARY}>"
 )
 
 #target_link_options(tbox 

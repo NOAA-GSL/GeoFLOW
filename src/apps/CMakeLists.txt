@@ -52,14 +52,6 @@ set(apps_linked_libraries
 	PUBLIC
 		tbox
 		cdg
-	PRIVATE
-		"$<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX>"
-		"$<$<BOOL:${MPI_CXX_FOUND}>:MPI::MPI_CXX>"
-		"$<$<BOOL:${Boost_SERIALIZATION_FOUND}>:Boost::serialization>"
-		"$<$<BOOL:${Boost_MPI_FOUND}>:Boost::mpi>"
-		"$<$<BOOL:${PAPI_FOUND}>:PAPI::PAPI>"
-		"$<$<BOOL:${GPTL_FOUND}>:GPTL::GPTL>"
-		"$<$<BOOL:${OpenACC_CXX_FOUND}>:OpenACC::OpenACC_CXX>"
 )		
 				             
 #

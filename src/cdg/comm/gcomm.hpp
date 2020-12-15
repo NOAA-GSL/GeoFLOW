@@ -15,12 +15,12 @@
 #include <iostream>
 #include <string>
 
-#if defined(_G_USE_MPI)
+#if defined(GEOFLOW_USE_MPI)
 #  include "mpi.h"
 #endif
 
 
-#if defined(_G_USE_MPI)
+#if defined(GEOFLOW_USE_MPI)
 extern   GINT ngrstatus_;
 extern   GINT ngsstatus_;
 extern   MPI_Op G2MPI_OPTYPE[]  ;

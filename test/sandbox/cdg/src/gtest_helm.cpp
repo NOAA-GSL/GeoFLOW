@@ -11,7 +11,7 @@
 #include <cstdio>
 #include <unistd.h>
 #include <iostream>
-#if defined(_G_USE_GPTL)
+#if defined(GEOFLOW_USE_GPTL)
   #include "gptl.h"
 #endif
 #include <memory>
@@ -124,7 +124,7 @@ int main(int argc, char **argv)
       }
     }
 
-#if defined(_G_USE_GPTL)
+#if defined(GEOFLOW_USE_GPTL)
     // Set GTPL options:
     GPTLsetoption (GPTLcpu, 1);
 
@@ -140,18 +140,18 @@ int main(int argc, char **argv)
     }
     
 
-#if defined(_G_USE_GPTL)
+#if defined(GEOFLOW_USE_GPTL)
     GPTLstart("gen_grid");
 #endif
     // Create grid:
     grid_ = GGridFactory::build(gridptree, gbasis, comm);
 
-#if defined(_G_USE_GPTL)
+#if defined(GEOFLOW_USE_GPTL)
     GPTLstop("gen_grid");
 #endif
 
 
-#if defined(_G_USE_GPTL)
+#if defined(GEOFLOW_USE_GPTL)
     GPTLstart("do_gather_op");
 #endif
 
@@ -159,7 +159,7 @@ int main(int argc, char **argv)
     GGFX ggfx;
     init_ggfx(ptree, *grid_, ggfx);
 
-#if defined(_G_USE_GPTL)
+#if defined(GEOFLOW_USE_GPTL)
     GPTLstop("do_gather_op");
 #endif
 
@@ -262,7 +262,7 @@ int main(int argc, char **argv)
     ios.close();
 
  
-#if defined(_G_USE_GPTL)
+#if defined(GEOFLOW_USE_GPTL)
     GPTLpr_file("timing.txt");
     GPTLfinalize();
 #endif

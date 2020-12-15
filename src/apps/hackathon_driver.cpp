@@ -10,7 +10,7 @@
 
 #include "gexec.h"
 #include "gtypes.h"
-#if defined(_G_USE_GPTL)
+#if defined(GEOFLOW_USE_GPTL)
   #include "gptl.h"
 #endif
 #include "gcomm.hpp"
@@ -128,7 +128,7 @@ int main(int argc, char **argv)
     
     
     // Set GTPL options:
-#if defined(_G_USE_GPTL)
+#if defined(GEOFLOW_USE_GPTL)
     // Set GTPL options:
     GPTLsetoption (GPTLcpu, 1);
     GPTLsetoption (GPTLsync_mpi, 1);
@@ -222,7 +222,7 @@ int main(int argc, char **argv)
     StateComp        lnorm(2), gnorm(2);
     std::string      smethod[NMETH] = {"old", "new"};
 
-#if defined(_G_USE_GPTL)
+#if defined(GEOFLOW_USE_GPTL)
     GPTLget_wallclock("old_deriv"     , 0,  &told); told /= ncyc;
     GPTLget_wallclock("new_deriv"     , 0,  &tnew); tnew /= ncyc;
 #endif
@@ -276,7 +276,7 @@ int main(int argc, char **argv)
         << std::endl;
     ios.close();
  
-#if defined(_G_USE_GPTL)
+#if defined(GEOFLOW_USE_GPTL)
     GPTLpr_file("timings.txt");
 //  GPTLpr(GComm::WorldRank(comm_));
 //  GPTLpr(0);

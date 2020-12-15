@@ -23,7 +23,7 @@ comm_                       (comm),
 cfname_                  (NULLPTR),
 nfname_                        (0)
 { 
-#if !defined(_G_USE_MPI)
+#if !defined(GEOFLOW_USE_MPI)
   assert(this->traits_->io_type == IOBase<IOType>::GIO_COLL && "Collective IO only allowed if MPI is used");
 #endif
   init();
@@ -40,7 +40,7 @@ nfname_                        (0)
 template<typename IOType>
 GIO<IOType>::~GIO()
 { 
-#if defined(_G_USE_MPI)
+#if defined(GEOFLOW_USE_MPI)
   MPI_Type_free(&mpi_state_type_);
 #endif
 } // end of destructor method
@@ -112,7 +112,7 @@ void GIO<IOType>::init()
   nbgdof_ = extent.sum()*sizeof(Value); // no. bytes of single state comp
 
 
-#if defined(_G_USE_MPI)
+#if defined(GEOFLOW_USE_MPI)
   MPI_Type_free(&mpi_state_type_);
 
 
@@ -485,7 +485,7 @@ GSIZET GIO<IOType>::write_header_posix(GString filename, StateInfo &info, Traits
 } // end, write_header_posix
 
 
-#if defined(_G_USE_MPI)
+#if defined(GEOFLOW_USE_MPI)
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : write_header_coll
@@ -594,7 +594,7 @@ GSIZET GIO<IOType>::read_header(GString filename, StateInfo &info, Traits &trait
 //  }
 /*
     else {
-#if defined(_G_USE_MPI)
+#if defined(GEOFLOW_USE_MPI)
       MPI_File        fh;
       MPI_Status      status;
       MPI_File_open(comm_, filename.c_str(), MPI::MODE_RDWR, MPI::INFO_NULL, &fh);
@@ -691,11 +691,11 @@ void GIO<IOType>::resize(GINT n)
 template<typename IOType>
 GSIZET GIO<IOType>::write_coll(GString filename, StateInfo &info, const State &u)
 {
-#if !defined(_G_USE_MPI)
+#if !defined(GEOFLOW_USE_MPI)
   #error "Illegal entry into GIO<IOType>::write_coll: MPI not defined"
 #endif
 
-#if defined(_G_USE_MPI)
+#if defined(GEOFLOW_USE_MPI)
 
     GString        serr = "write_coll: ";
     GINT           iret, nbheader, nc, nh;
@@ -764,7 +764,7 @@ GSIZET GIO<IOType>::write_coll(GString filename, StateInfo &info, const State &u
 template<typename IOType>
 GSIZET GIO<IOType>::read_coll(GString filename, StateInfo &info, State &u, bool bstate)
 {
-#if defined(_G_USE_MPI)
+#if defined(GEOFLOW_USE_MPI)
 
     GString        serr = "read_coll: ";
     GINT           iret;
