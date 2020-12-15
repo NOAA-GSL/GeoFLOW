@@ -66,12 +66,11 @@ target_include_directories(tbox
 # 
 target_link_libraries(tbox 
 	PUBLIC
-		"$<$<BOOL:${CUDAToolkit_FOUND}>:CUDA::nvToolsExt>"
-	PRIVATE
-		"$<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX>"
-		"$<$<BOOL:${MPI_CXX_FOUND}>:MPI::MPI_CXX>"
 		"$<$<BOOL:${Boost_SERIALIZATION_FOUND}>:Boost::serialization>"
 		"$<$<BOOL:${Boost_MPI_FOUND}>:Boost::mpi>"
+		"$<$<BOOL:${CUDAToolkit_FOUND}>:CUDA::nvToolsExt>"
+		"$<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX>"
+		"$<$<BOOL:${MPI_CXX_FOUND}>:MPI::MPI_CXX>"
 )
 
 #target_link_options(tbox 
