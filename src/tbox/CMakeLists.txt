@@ -25,21 +25,6 @@ target_sources(tbox
 )
 
 #
-# Compiler standard required
-#
-option(CMAKE_CXX_STANDARD_REQUIRED TRUE)
-set_property(TARGET tbox PROPERTY CXX_STANDARD 17)
-
-#
-# Specific Compiler features required for library
-# 
-target_compile_features(tbox
-	PUBLIC
-		cxx_constexpr
-		cxx_static_assert
-)
-
-#
 # Compile line options
 # 
 target_compile_options(tbox 

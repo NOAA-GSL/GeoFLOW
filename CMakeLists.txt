@@ -194,6 +194,9 @@ endforeach()
 # ONLY those options which impact level of compiler errors
 # add_compile_options("-Werror")         # Change all Warnings to Errors
 # add_compile_options("-Wfatal-errors")  # Stop at 1st Error Encountered
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 #---------------------------------------------------------------------
 # Check Platform Support
