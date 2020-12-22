@@ -94,7 +94,7 @@ void GShapeFcn_linear<T>::Ni(GTVector<GINT> &ishape,
       Ni_1d(ishape, xi, N);
       break;
     case 2: 
-      Ni_1d(ishape, xi, N);
+      Ni_2d(ishape, xi, N);
       break;
     case 3: 
       Ni_3d(ishape, xi, N);
