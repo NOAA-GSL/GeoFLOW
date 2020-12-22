@@ -15,9 +15,9 @@
   "IO_implementation" : "gio",
   "terrain_type"      : "none",
   "initstate_boxdrybubble": {
-    "T_pert"     : -15.0,
-    "x_center"   : [0, 3000.0, 1000.0],
-    "x_width"    : [4000.0, 2000.0, 2000.0]
+    "T_pert"     : 1.0,
+    "x_center"   : [10000.0, 2000.0, 1000.0],
+    "x_width"    : [2000.0, 2000.0, 2000.0]
   },
   "grid_icos": {
     "grid_name"   : "grid_icos",
@@ -32,6 +32,7 @@
     "grid_name" : "grid_sphere",
     "radiusi"   : 1.0,
     "radiuso"   : 2.0,
+    "num_elems" : [10, 10, 10],
     "bdy_inner": "GBDY_DIRICHLET",
     "bdy_outer": "GBDY_SPONGE"
   },
@@ -47,8 +48,9 @@
     "dofallout"       : false,
     "dogravity"       : true,
     "bconserved"      : false,
+    "usedivop"        : true,
     "divopcolloc"     : true,
-    "Stokeshyp"       : false,
+    "Stokeshyp"       : true,
     "bindepdiss"      : false,
     "nliq"            : 0,
     "nice"            : 0,
@@ -60,15 +62,15 @@
     "my_filter" : {
       "filter_type" : "boyd_filter",
       "ifilter"     : 4,
-      "mufilter"    : 0.05,
+      "mufilter"    : 0.0125,
       "state_index" : [0, 1]
     }
   },
   "grid_box": {
     "grid_name" : "grid_box",
-    "xyz0"      : [-25600, 0, 0],
-    "delxyz"    : [51200.0, 6400.0, 1.0],
-    "num_elems" : [512, 64, 1],
+    "xyz0"      : [0.0, 0.0, 0.0],
+    "delxyz"    : [20000.0, 10000.0, 1.0],
+    "num_elems" : [50, 25, 1],
     "bdy_x_0"   : "0-flux",
     "bdy_x_1"   : "0-flux",
     "bdy_y_0"   : "0-flux",
@@ -81,18 +83,18 @@
   },
   "stepper_props": {
     "stepping_method"  : "GSTEPPER_EXRK",
-    "time_deriv_order" : 3,
-    "nstage"           : 3,
-    "stab_preserving"  : true,
+    "time_deriv_order" : 2,
+    "nstage"           : 2,
+    "stab_preserving"  : false,
     "extrap_order"     : 2,
     "variable_dt"      : true,
     "courant"          : 0.1
   },
   "dissipation_traits": {
-    "nu"      : 500.0,
-    "kappa"   : 500.0,
-    "zeta"    : 500.0,
-    "lambda"  : 500.0,
+    "nu"      : 4000.0,
+    "kappa"   : 4000.0, 
+    "zeta"    : 4000.0, 
+    "lambda"  : 4000.0, 
     "nu_type" : "constant"
   },
   "gio": {
@@ -132,8 +134,8 @@
     "idir"               : "outs",
     "odir"               : "outs",
     "cadence_type"       : "time",
-    "cycle_interval"     : 100,
-    "time_interval"      : 10.0,
+    "cycle_interval"     : 1,
+    "time_interval"      : 5.0,
     "state_names"        : ["s1", "s2", "e", "d"],
     "grid_names"         : ["xgrid", "ygrid", "zgrid"],
     "agg_state_name"     : "u",
@@ -150,9 +152,9 @@
   },
   "time_integration": {
     "integ_type" : "time",
-    "time_end"   : 1500.0,
-    "cycle_end"  : 1000,
-    "dt"         : 1.0e-2
+    "time_end"   : 1101.0,
+    "cycle_end"  : 10,
+    "dt"         : 0.005
   }
 
 }
