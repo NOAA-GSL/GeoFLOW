@@ -668,6 +668,7 @@ void init_ggfx(PropertyTree &ptree, GGrid &grid, GGFX<GFTYPE> *&ggfx)
 #endif
   }
   if ( sgrid == "grid_sphere" ) {
+    ldelta.resize(GDIM);
     rad   = gtree.getValue<GFTYPE>("radiusi");
     P0.x1 = 0.0; // lat starting point
     P0.x2 = 0.0; // long starting point

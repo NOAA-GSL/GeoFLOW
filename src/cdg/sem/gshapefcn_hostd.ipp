@@ -4,7 +4,8 @@
 // Description  : Forms class for iso-parametric shape functions, N_i, of 
 //                high order type, to be used in cases where a 2d surface
 //                is not embedded in a 3d space. This is the shape function
-//                use in the 'standard' way.
+//                use in the 'standard' way. Note: 'hostd' stands for 'high
+//                order standard'.
 //
 //                Shape functions define element locations in terms of
 //                the (1d, 2d, 3d) reference interval, s.t.:
@@ -21,7 +22,7 @@
 //
 //                where I = I(i,j,k) is the tensor product index computed
 //                from the coordinate indices, i, j, k.
-// Copyright    : Copyright 2018. Colorado State University. All rights reserved
+// Copyright    : Copyright 2018. Colorado State University. All rights reserved.
 // Derived From : none
 //==================================================================================
 #include <cstdlib>
@@ -38,10 +39,9 @@
 // RETURNS: none
 //**********************************************************************************
 template<typename T>
-GShapeFcn_hostd<T>::GShapeFcn_hostd()
+GShapeFcn_hostd<T>::GShapeFcn_hostd(GINT dim):
+GShapeFcn_base<T>(dim)
 {
-  this->gbasis_.resize(GDIM);
-  this->gbasis_ = NULLPTR;
 } // end of constructor method (1)
 
 
@@ -53,10 +53,9 @@ GShapeFcn_hostd<T>::GShapeFcn_hostd()
 // RETURNS: none
 //**********************************************************************************
 template<typename T>
-GShapeFcn_hostd<T>::GShapeFcn_hostd(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b)
+GShapeFcn_hostd<T>::GShapeFcn_hostd(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GINT dim):
+GShapeFcn_base<T>(b, dim)
 {
-  this->gbasis_.resize(GDIM);
-  this->gbasis_ = b;
 } // end of constructor method (2)
 
 
@@ -104,14 +103,19 @@ void GShapeFcn_hostd<T>::Ni(GTVector<GINT> &ishape,
                           GTVector<GTVector<T>*> &xi, GTVector<T> &N)
 {
 
-#if defined(_G_IS1D)
-  Ni_1d(ishape, xi, N);
-#elif defined(_G_IS2D)
-  Ni_2d(ishape, xi, N);
-#elif defined(_G_IS3D)
-  Ni_3d(ishape, xi, N);
-#endif
-
+  switch ( this->dim_ ) {
+    case 1:
+      Ni_1d(ishape, xi, N);
+      break;
+    case 2:
+      Ni_2d(ishape, xi, N);
+      break;
+    case 3:
+      Ni_3d(ishape, xi, N);
+      break;
+    default:
+      assert(FALSE);
+  }
 
 } // end of method Ni
 
@@ -259,13 +263,19 @@ void GShapeFcn_hostd<T>::dNdXi(GTVector<GINT> &ishape, GINT jder,
                             GTVector<T> &dNdxi)
 {
 
-#if defined(_G_IS1D)
-  dNdXi_1d(ishape, jder, xi, dNdxi);
-#elif defined(_G_IS2D)
-  dNdXi_2d(ishape, jder, xi, dNdxi);
-#elif defined(_G_IS3D)
-  dNdXi_3d(ishape, jder, xi, dNdxi);
-#endif
+  switch ( this->dim_ ) {
+    case 1:
+      dNdXi_1d(ishape, jder, xi, dNdxi);
+      break;
+    case 2:
+      dNdXi_2d(ishape, jder, xi, dNdxi);
+      break;
+    case 3:
+      dNdXi_3d(ishape, jder, xi, dNdxi);
+      break;
+    default:
+      assert(FALSE);
+  } 
 
 } // end of method dNdXi
 
@@ -324,7 +334,7 @@ void GShapeFcn_hostd<T>::dNdXi_2d(GTVector<GINT> &ishape, GINT jder,
                                GTVector<GTVector<T>*> &xi, 
                                GTVector<T> &dNdxi)
 {
-  assert(jder>0 && jder<=(GDIM+1) && "Invalid matrix element");
+  assert(jder>0 && jder<=2 && "Invalid matrix element");
 
   d_.resizem(xi.size());
 
@@ -371,7 +381,7 @@ void GShapeFcn_hostd<T>::dNdXi_3d(GTVector<GINT> &ishape, GINT jder,
                                GTVector<GTVector<T>*> &xi, 
                                GTVector<T> &dNdxi)
 {
-  assert(jder>0 && jder>xi.size() && "Invalid matrix element");
+  assert(jder>0 && jder<=3 && "Invalid matrix element");
 
   d_.resizem(xi.size());
 

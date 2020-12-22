@@ -45,11 +45,12 @@ using namespace std;
 //**********************************************************************************
 // METHOD : Constructor method (1)
 // DESC   : Default constructor
-// ARGS   : none
+// ARGS   : dim: element dimension
 // RETURNS: none
 //**********************************************************************************
-GElem_base::GElem_base()
+GElem_base::GElem_base(GINT dim)
 :
+dim_             (dim),
 Ntot_            (0),
 Nftot_           (0),
 bInitialized_    (FALSE),
@@ -57,14 +58,14 @@ bbasis_          (FALSE),
 elemtype_        (GE_REGULAR),
 elemid_          (0),
 rootid_          (0),
-nVertices_       ((GINT )pow(2.0,GDIM)),
-nEdges_          (2*(GDIM-1)*GDIM),
-nFaces_          (2*GDIM),
+nVertices_       ((GINT )pow(2.0,dim)),
+nEdges_          (2*(dim-1)*dim),
+nFaces_          (2*dim),
 volume_          (0.0),
 gshapefcn_       (NULLPTR)
 {
-  N_.resize(GDIM);
-  gbasis_.resize(GDIM);
+  N_.resize(dim);
+  gbasis_.resize(dim);
   gbasis_ = NULLPTR;
 } // end of constructor method (1)
 
@@ -72,30 +73,32 @@ gshapefcn_       (NULLPTR)
 //**********************************************************************************
 // METHOD : Constructor method (2)
 // DESC   : Instantiate with basis pointers specified explicitly
-// ARGS   : etype: elemet type
+// ARGS   : dim: element dimension
+//          etype: elemet type
 //          GNBasis objects for each direction
 // RETURNS: none
 //**********************************************************************************
-GElem_base::GElem_base(GElemType etype, GNBasis<GCTYPE,GFTYPE> *b1, GNBasis<GCTYPE,GFTYPE> *b2, GNBasis<GCTYPE,GFTYPE> *b3)
+GElem_base::GElem_base(GINT dim, GElemType etype, GNBasis<GCTYPE,GFTYPE> *b1, GNBasis<GCTYPE,GFTYPE> *b2, GNBasis<GCTYPE,GFTYPE> *b3)
 :
+dim_             (dim),
 Ntot_            (0),
 Nftot_           (0),
 bInitialized_    (FALSE),
 elemtype_        (etype),
 elemid_          (0),
 rootid_          (0),
-nVertices_       ((GINT )pow(2.0,GDIM)),
-nEdges_          (2*(GDIM-1)*GDIM),
-nFaces_          (2*GDIM),
+nVertices_       ((GINT )pow(2.0,dim)),
+nEdges_          (2*(dim-1)*dim),
+nFaces_          (2*dim),
 volume_          (0.0), 
 gshapefcn_       (NULLPTR)
 {
 
-  N_.resize(GDIM);
-  gbasis_.resize(GDIM);
+  N_.resize(dim_);
+  gbasis_.resize(dim_);
   gbasis_ = NULLPTR;
 
-  GTVector<GNBasis<GCTYPE,GFTYPE> *> b(GDIM);
+  GTVector<GNBasis<GCTYPE,GFTYPE> *> b(dim_);
 
   b = NULLPTR;
   if ( b1 != NULLPTR ) b[0] = b1;
@@ -103,10 +106,10 @@ gshapefcn_       (NULLPTR)
   if ( b3 != NULLPTR ) b[2] = b3;
 
   if ( elemtype_ == GE_REGULAR || elemtype_ == GE_DEFORMED ) {
-    gshapefcn_ = new GShapeFcn_hostd<GFTYPE>();
+    gshapefcn_ = new GShapeFcn_hostd<GFTYPE>(dim_);
   }
   else if ( elemtype_ == GE_2DEMBEDDED ) { 
-    gshapefcn_ = new GShapeFcn_embed<GFTYPE>();
+    gshapefcn_ = new GShapeFcn_embed<GFTYPE>(dim_+1);
   }
 
   set_basis(b);
@@ -118,33 +121,35 @@ gshapefcn_       (NULLPTR)
 //**********************************************************************************
 // METHOD : Constructor method (3)
 // DESC   : Instantiate with basis pointers specified
-// ARGS   : etype: elemet type
+// ARGS   : dim: element dimension
+//          etype: elemet type
 //          GNBasis object array for each direction
 // RETURNS: none
 //**********************************************************************************
-GElem_base::GElem_base(GElemType etype, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b)
+GElem_base::GElem_base(GINT dim, GElemType etype, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b)
 :
+dim_             (dim),
 Ntot_            (0),
 Nftot_           (0),
 bInitialized_    (FALSE),
 elemtype_        (etype),
 elemid_          (0),
 rootid_          (0),
-nVertices_       ((GINT )pow(2.0,GDIM)),
-nEdges_          (2*(GDIM-1)*GDIM),
-nFaces_          (2*GDIM),
+nVertices_       ((GINT )pow(2.0,dim)),
+nEdges_          (2*(dim-1)*dim),
+nFaces_          (2*dim),
 volume_          (0.0), 
 gshapefcn_       (NULLPTR)
 {
-  N_.resize(GDIM);
-  gbasis_.resize(GDIM);
+  N_.resize(dim_);
+  gbasis_.resize(dim_);
   gbasis_ = NULLPTR;
 
   if ( elemtype_ == GE_REGULAR || elemtype_ == GE_DEFORMED ) {
-    gshapefcn_ = new GShapeFcn_hostd<GFTYPE>();
+    gshapefcn_ = new GShapeFcn_hostd<GFTYPE>(dim_);
   }
   else if ( elemtype_ == GE_2DEMBEDDED ) { 
-    gshapefcn_ = new GShapeFcn_embed<GFTYPE>();
+    gshapefcn_ = new GShapeFcn_embed<GFTYPE>(dim_+1);
   }
   set_basis(b);
  
@@ -177,10 +182,10 @@ void GElem_base::resize(GTVector<GINT> &newOrder)
   GINT  i, isame ;
   GString serr = "GElem_base::resize: ";
 
-  assert(newOrder.size() >= GDIM && "Bad dimensionality");
+  assert(newOrder.size() >= dim_ && "Bad dimensionality");
 
   //  resize bases:
-  for ( i=0, Ntot_=1; i<GDIM; i++ ) {
+  for ( i=0, Ntot_=1; i<dim_; i++ ) {
     gbasis_[i]->resize(newOrder[i]);
     N_     [i] = newOrder[i]+1;
     Ntot_     *= N_[i]; 
@@ -236,10 +241,10 @@ void GElem_base::set_elemtype(GElemType etype)
   if ( gshapefcn_ != NULLPTR ) delete gshapefcn_; gshapefcn_ = NULLPTR;
 
   if ( elemtype_ == GE_REGULAR || elemtype_ == GE_DEFORMED ) {
-    gshapefcn_ = new GShapeFcn_hostd<GFTYPE>();
+    gshapefcn_ = new GShapeFcn_hostd<GFTYPE>(dim_);
   }
   else if ( elemtype_ == GE_2DEMBEDDED ) {
-    gshapefcn_ = new GShapeFcn_embed<GFTYPE>();
+    gshapefcn_ = new GShapeFcn_embed<GFTYPE>(dim_+1);
   }
 
 } // end of method set_elemtype
@@ -257,7 +262,7 @@ void GElem_base::set_basis(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b)
   GString serr = "GElem_base::set_basis: ";
 
   GTVector<GINT> iorder(b.size());
-  for ( GINT i=0; i<GDIM; i++ ) {
+  for ( GINT i=0; i<dim_; i++ ) {
     if ( b[i] == NULLPTR ) {
       std::cout << serr << "NULLPTR basis object, j=" << i << std::endl;
       exit(1);
@@ -278,7 +283,7 @@ void GElem_base::set_basis(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b)
 //***********************************************************************************
 //***********************************************************************************
 // METHOD : set_size
-// DESC   : Sizes and initializes data based on basis and GDIM of problem.
+// DESC   : Sizes and initializes data based on basis and dim_ of problem.
 //          
 // ARGS   : none.
 // RETURNS: none.
@@ -287,13 +292,19 @@ void GElem_base::set_size()
 {
   GString serr = "GElem_base::set_size: ";
 
-  #if defined(_G_IS1D)
-    set_size1d();
-  #elif defined(_G_IS2D)
-    set_size2d();
-  #elif defined(_G_IS3D)
-    set_size3d();
-  #endif
+  switch ( dim_ ) {
+    case 1:
+      set_size1d();
+      break;
+    case 2:
+      set_size2d();
+      break;
+    case 3:
+      set_size3d();
+      break;
+    default:
+      assert(FALSE);
+  }
   
 } // end of method set_size
 
@@ -308,7 +319,7 @@ void GElem_base::set_size()
 void GElem_base::set_size1d()
 {
   GString serr = "GElem_base::set_size1d: ";
-  assert(GDIM == 1 && "GElem_base::set_size1d: Incorrect dimensionality");
+  assert(dim_ == 1 && "GElem_base::set_size1d: Incorrect dimensionality");
 
   nVertices_ = 2;
   nEdges_    = 2;
@@ -335,11 +346,11 @@ void GElem_base::set_size1d()
   ivface_.resize(0);
 
   // Allocate coordinate array and vertex coordinates:
-  xNodes_.resize(GDIM);
-  for ( auto j=0; j<GDIM; j++ ) xNodes_[j].resize(Ntot_);
+  xNodes_.resize(dim_);
+  for ( auto j=0; j<dim_; j++ ) xNodes_[j].resize(Ntot_);
 
-  xiNodes_.resize(GDIM);
-  for ( auto i=0; i<GDIM; i++ )  xiNodes_[i] = gbasis_[i]->getXiNodes();;
+  xiNodes_.resize(dim_);
+  for ( auto i=0; i<dim_; i++ )  xiNodes_[i] = gbasis_[i]->getXiNodes();;
 
   xVertices_.resize(nVertices_);
   
@@ -351,9 +362,9 @@ void GElem_base::set_size1d()
   // Metric matrix is symmetric, so we
   // use pointers so that repeated elements
   // aren't duplicated:
-  dXidX_ .resize(GDIM,GDIM);
-  for ( auto j=0; j<GDIM; j++ ) {
-    for ( auto i=0; i<GDIM; i++ ) {
+  dXidX_ .resize(dim_,dim_);
+  for ( auto j=0; j<dim_; j++ ) {
+    for ( auto i=0; i<dim_; i++ ) {
       dXidX_ (i,j).resize(Ntot_);
     }
   }
@@ -384,7 +395,7 @@ void GElem_base::set_size1d()
 void GElem_base::set_size2d()
 {
   GString serr = "GElem_base::set_size2d: ";
-  assert(GDIM == 2 && "GElem_base::set_size2d: Incorrect dimensionality");
+  assert(dim_ == 2 && "GElem_base::set_size2d: Incorrect dimensionality");
 
   nVertices_ = 4;
   nEdges_    = 4;
@@ -428,18 +439,18 @@ void GElem_base::set_size2d()
   ivface_[3][0] = 0; ivface_[3][1] = 3; 
 
   // Allocate coordinate array and vertex coordinates:
-  GSIZET nxy = elemtype_ == GE_2DEMBEDDED ? GDIM+1: GDIM;
+  GSIZET nxy = elemtype_ == GE_2DEMBEDDED ? dim_+1: dim_;
   xNodes_.resize(nxy);
   for ( auto j=0; j<nxy; j++ ) xNodes_[j].resize(Ntot_);
 
-  xiNodes_.resize(GDIM);
-  for ( auto i=0; i<GDIM; i++ )  xiNodes_[i] = gbasis_[i]->getXiNodes();;
+  xiNodes_.resize(dim_);
+  for ( auto i=0; i<dim_; i++ )  xiNodes_[i] = gbasis_[i]->getXiNodes();;
 
 #if 0
   xiNodes_.resize(Ntot_);
   GSIZET n;
-  GTVector<GFTYPE> *xinodes1d[GDIM];
-  for ( auto i=0; i<GDIM; i++ )  xinodes1d = gbasis_[i];
+  GTVector<GFTYPE> *xinodes1d[dim_];
+  for ( auto i=0; i<dim_; i++ )  xinodes1d = gbasis_[i];
   for ( auto j=0, n=0; j<N_[0]; j++ ) {
     for ( auto i=0; i<N_[0]; i++, n++ ) {
       xiNodes_[n] = (*xinodes1d[0])[i] * (*xinodes1d[1])[j];
@@ -452,7 +463,7 @@ void GElem_base::set_size2d()
   // Allocate geometry data:
   edgeCentroid_.resize(nEdges_);
   faceCentroid_.resize(nEdges_);
-  nxy = elemtype_ == GE_2DEMBEDDED ? GDIM+1: GDIM;
+  nxy = elemtype_ == GE_2DEMBEDDED ? dim_+1: dim_;
 
 #if 0
   // Metric matrix is symmetric, so we
@@ -506,7 +517,7 @@ void GElem_base::set_size2d()
 void GElem_base::set_size3d()
 {
   GString serr = "GElem_base::set_size3d: ";
-  assert(GDIM == 3 && "GElem_base::set_size3d: Incorrect dimensionality");
+  assert(dim_ == 3 && "GElem_base::set_size3d: Incorrect dimensionality");
 
   GINT   i, j;
 
@@ -569,17 +580,17 @@ void GElem_base::set_size3d()
 
 
   // Allocate coordinate array and vertex coordinates:
-  xNodes_.resize(GDIM);
-  for ( auto j=0; j<GDIM; j++ ) xNodes_[j].resize(Ntot_);
+  xNodes_.resize(dim_);
+  for ( auto j=0; j<dim_; j++ ) xNodes_[j].resize(Ntot_);
 
-  xiNodes_.resize(GDIM);
-  for ( auto i=0; i<GDIM; i++ )  xiNodes_[i] = gbasis_[i]->getXiNodes();;
+  xiNodes_.resize(dim_);
+  for ( auto i=0; i<dim_; i++ )  xiNodes_[i] = gbasis_[i]->getXiNodes();;
 
 #if 0
   xiNodes_.resize(Ntot_);
   GSIZET n;
-  GTVector<GFTYPE> *xinodes1d[GDIM];
-  for ( auto i=0; i<GDIM; i++ )  xinodes1d = gbasis_[i];
+  GTVector<GFTYPE> *xinodes1d[dim_];
+  for ( auto i=0; i<dim_; i++ )  xinodes1d = gbasis_[i];
    for ( auto k=0, n=0; n<N_[2]; k++ ) {
     for ( auto j=0; j<N_[0]; j++ ) {
       for ( auto i=0; i<N_[0]; i++, n++ ) {
@@ -598,9 +609,9 @@ void GElem_base::set_size3d()
   // Metric matrix is symmetric, so we
   // use pointers so that repeated elements
   // aren't duplicated:
-  dXidX_ .resize(GDIM,GDIM);
-  for ( auto j=0; j<GDIM; j++ ) {
-    for ( auto i=0; i<GDIM; i++ ) {
+  dXidX_ .resize(dim_,dim_);
+  for ( auto j=0; j<dim_; j++ ) {
+    for ( auto i=0; i<dim_; i++ ) {
       dXidX_ (i,j).resize(Ntot_);
     }
   }
@@ -646,13 +657,19 @@ void GElem_base::build_elem()
 {
   GString serr = "GElem_base::build_elem: ";
 
-#if defined(_G_IS1D )
-  build_elem1d();
-#elif defined (_G_IS2D )
-  build_elem2d();
-#elif defined (_G_IS3D )
-  build_elem3d();
-#endif
+  switch ( dim_ ) {
+    case 1:
+      build_elem1d();
+      break;
+    case 2:
+      build_elem2d();
+      break;
+    case 3:
+      build_elem3d();
+      break;
+    default:
+      assert(FALSE);
+  }
 
 } // end of method build_elem
 
@@ -669,7 +686,7 @@ void GElem_base::build_elem()
 void GElem_base::build_elem1d()
 {
   GString serr = "GElem_base::build_elem1d: ";
-  assert(GDIM == 1 && "GElem_base::build_elem1d: Incorrect dimensionality");
+  assert(dim_ == 1 && "GElem_base::build_elem1d: Incorrect dimensionality");
 
   GSIZET i, j, k;
   GFTYPE xi1p, xi1m;
@@ -705,7 +722,7 @@ void GElem_base::build_elem1d()
 void GElem_base::build_elem2d()
 {
   GString serr = "GElem_base::build_elem2d: ";
-  assert(GDIM == 2 && "GElem_base::build_elem2d: Incorrect dimensionality");
+  assert(dim_ == 2 && "GElem_base::build_elem2d: Incorrect dimensionality");
 
   GSIZET i, j, k, n;
 
@@ -744,7 +761,7 @@ void GElem_base::build_elem2d()
 void GElem_base::build_elem3d()
 {
   GString serr = "GElem_base::build_elem3d: ";
-  assert(GDIM == 3 && "GElem_base::build_elem3d: Incorrect dimensionality");
+  assert(dim_== 3 && "GElem_base::build_elem3d: Incorrect dimensionality");
 
   GSIZET i, j, k, n;
 
@@ -821,9 +838,9 @@ void GElem_base::dogeom1d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
   GTVector<GFTYPE> dNi(Ntot_);// shape function derivative
   GTVector<GINT>   I(1);      // tensor product 'index'
 
-  rij .resizem(GDIM,GDIM);
-  for ( m=0; m<GDIM; m++ ) {
-    for ( l=0; l<GDIM; l++ ) {
+  rij .resizem(dim_,dim_);
+  for ( m=0; m<dim_; m++ ) {
+    for ( l=0; l<dim_; l++ ) {
       rij(l,m) = 0.0;
       for ( i=0; i<N_[0]; i++ ) {
         I[0] = i;
@@ -891,10 +908,10 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
   GTVector<GINT>   I(2);       // tensor product index
 
 
-  // Can have 'embedded' coords, so # Cartesian coordinates may be > GDIM;
+  // Can have 'embedded' coords, so # Cartesian coordinates may be > dim_
   // but the total number of node points in each metrix element will 
   // still be (h1-order+1) X (h2-order+1):
-  GSIZET nxy = elemtype_ == GE_2DEMBEDDED ? GDIM+1: GDIM;
+  GSIZET nxy = elemtype_ == GE_2DEMBEDDED ? dim_+1: dim_;
   if ( elemtype_ == GE_2DEMBEDDED || elemtype_ == GE_DEFORMED ) {
     for ( m=0; m<nxy; m++ ) { // rij col index: deriv wrt xi^m
       for ( k=0; k<nxy; k++ ) { // rij row index: Cart coord: x, y, z
@@ -1004,12 +1021,12 @@ void GElem_base::dogeom3d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
   // just need the derivative of N_I, wrt each xi-coordinate:
   GBOOL   pChk;        // check for positive-difiniteness
   GTVector<GFTYPE> dNi(nnodes);// shape function derivative
-  GTVector<GINT>   I(2);      // tensor produc index
+  GTVector<GINT>   I(dim_);      // tensor product index
 
-  // Can have 'embedded' coords, so # Cartesian coordinates may not be GDIM;
+  // Can have 'embedded' coords, so # Cartesian coordinates may not be dim_;
   // but the total number of node points in each metrix element will 
   // still be (h1-order+1) X (h2-order+1):
-  GSIZET nxy = GDIM;
+  GSIZET nxy = dim_;
   if ( elemtype_ == GE_DEFORMED ) {
     for ( m=0; m<nxy; m++ ) { // matrix element col
       for ( l=0; l<nxy; l++ ) { // matrix element row
@@ -1351,14 +1368,19 @@ void GElem_base::get_indirect(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GVVInt &vert
 {
   GString serr = "GElem_base::get_indirect: ";
 
-  #if defined(_G_IS1D)
-    get_indirect1d(b, vert_ind, edge_ind, face_ind, face_mass, face_desc);
-  #elif defined(_G_IS2D)
-    get_indirect2d(b, vert_ind, edge_ind, face_ind, face_mass, face_desc);
-  #elif defined(_G_IS3D)
-    get_indirect3d(b, vert_ind, edge_ind, face_ind, face_mass, face_desc);
-  #endif
-  
+  switch ( dim_ ) {
+    case 1:
+      get_indirect1d(b, vert_ind, edge_ind, face_ind, face_mass, face_desc);
+      break;
+    case 2:
+      get_indirect2d(b, vert_ind, edge_ind, face_ind, face_mass, face_desc);
+      break;
+    case 3:
+      get_indirect3d(b, vert_ind, edge_ind, face_ind, face_mass, face_desc);
+      break;
+    default:
+      assert(FALSE);
+    }
 } // end of method get_indirect
 
 
@@ -1380,9 +1402,9 @@ void GElem_base::get_indirect1d(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GVVInt &ve
 {
   GString serr = "GElem_base::get_indirect1d: ";
 
-  GTVector<GINT> N(GDIM);
-  GTVector<GFTYPE> *W[GDIM];
-  for ( auto j=0; j<GDIM; j++ ) {
+  GTVector<GINT> N(dim_);
+  GTVector<GFTYPE> *W[dim_];
+  for ( auto j=0; j<dim_; j++ ) {
      N[j] = b[j]->getOrder() + 1;
      W[j] = b[j]->getWeights();
   }
@@ -1441,9 +1463,9 @@ void GElem_base::get_indirect2d(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GVVInt &ve
   GString serr = "GElem_base::get_indirect2d: ";
 
   GINT           j;
-  GTVector<GINT> N(GDIM);
-  GTVector<GFTYPE> *W[GDIM];
-  for ( auto j=0; j<GDIM; j++ ) {
+  GTVector<GINT> N(dim_);
+  GTVector<GFTYPE> *W[dim_];
+  for ( auto j=0; j<dim_; j++ ) {
      N[j] = b[j]->getOrder() + 1;
      W[j] = b[j]->getWeights();
   }
@@ -1548,9 +1570,9 @@ void GElem_base::get_indirect3d(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GVVInt &ve
 {
   GString serr = "GElem_base::get_indirect3d: ";
 
-  GTVector<GINT> N(GDIM);
-  GTVector<GFTYPE> *W[GDIM];
-  for ( auto j=0; j<GDIM; j++ ) {
+  GTVector<GINT> N(dim_);
+  GTVector<GFTYPE> *W[dim_];
+  for ( auto j=0; j<dim_; j++ ) {
      N[j] = b[j]->getOrder() + 1;
      W[j] = b[j]->getWeights();
   }
@@ -1595,17 +1617,20 @@ void GElem_base::get_indirect3d(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GVVInt &ve
 
   // Indirection indices for faces ...
   face_ind.resize(nFaces_);
+  face_desc.resize(nFaces_);
   face_mass.resize(N[0]*N[1]*N[2]);
   face_mass = 0.0;
+
 
   GSIZET i, j, k, m;
 
   // ... Face 0 (front):
   face_ind[0].resize(N[0]*N[2]);
+  face_desc[0].resize(N[0]*N[2]);
   for ( k=0, m=0; k<N[2]; k++ ) {
     for ( i=0; i<N[0]; i++, m++ ) {
       face_ind[0][i+k*N[0]] = k*N[0]*N[1] + i;
-      face_mass[face_ind[0][m]] = (*W[0])[j] * (*W[2])[k];
+      face_mass[face_ind[0][m]] = (*W[0])[i] * (*W[2])[k];
       SET_LOWORD(face_desc[0][m], FACE);
       SET_HIWORD(face_desc[0][m], 0   );
       if ( k==0 ) {
@@ -1645,6 +1670,7 @@ void GElem_base::get_indirect3d(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GVVInt &ve
 
   // ... Face 1 (right side):
   face_ind[1].resize(N[1]*N[2]);
+  face_desc[1].resize(N[1]*N[2]);
   for ( k=0, m=0; k<N[2]; k++ ) {
     for ( j=0; j<N[1]; j++, m++ ) {
       face_ind[1][j+k*N[1]] = k*N[0]*N[1] + (j+1)*N[0] - 1;
@@ -1688,10 +1714,11 @@ void GElem_base::get_indirect3d(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GVVInt &ve
 
   // ... Face 2 (back):
   face_ind[2].resize(N[0]*N[2]);
+  face_desc[2].resize(N[0]*N[2]);
   for ( k=0, m=0; k<N[2]; k++ ) {
     for ( i=0; i<N[0]; i++, m++ ) {
       face_ind[2][i+k*N[0]] = (k+1)*N[0]*N[1] + i - N[0];
-      face_mass[face_ind[2][m]] = (*W[0])[j] * (*W[2])[k];
+      face_mass[face_ind[2][m]] = (*W[0])[i] * (*W[2])[k];
       SET_LOWORD(face_desc[2][m], FACE);
       SET_HIWORD(face_desc[2][m], 2   );
       if ( k==0 ) {
@@ -1731,6 +1758,7 @@ void GElem_base::get_indirect3d(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GVVInt &ve
 
   // ... Face 3 (left side):
   face_ind[3].resize(N[1]*N[2]);
+  face_desc[3].resize(N[1]*N[2]);
   for ( k=0, m=0; k<N[2]; k++ ) {
     for ( j=0; j<N[1]; j++, m++ ) {
       face_ind[3][j+k*N[1]] = k*N[0]*N[1] + j*N[0];
@@ -1774,10 +1802,11 @@ void GElem_base::get_indirect3d(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GVVInt &ve
 
   // ... Face 4 (bottom):
   face_ind[4].resize(N[0]*N[1]);
+  face_desc[4].resize(N[0]*N[1]);
   for ( j=0, m=0; j<N[1]; j++ ) {
     for ( i=0; i<N[0]; i++, m++ ) {
       face_ind[4][i+j*N[0]] = i + j*N[0];
-      face_mass[face_ind[4][m]] = (*W[0])[j] * (*W[1])[k];
+      face_mass[face_ind[4][m]] = (*W[0])[i] * (*W[1])[j];
       SET_LOWORD(face_desc[4][m], FACE);
       SET_HIWORD(face_desc[4][m], 4   );
       if ( j==0 ) {
@@ -1817,10 +1846,11 @@ void GElem_base::get_indirect3d(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GVVInt &ve
 
   // ... Face 5 (top):
   face_ind[5].resize(N[0]*N[1]);
+  face_desc[5].resize(N[0]*N[1]);
   for ( j=0, m=0; j<N[1]; j++ ) {
     for ( i=0; i<N[0]; i++, m++ ) {
       face_ind[5][i+j*N[0]] = N[0]*N[1]*(N[2]-1) + i + j*N[1];
-      face_mass[face_ind[5][m]] = (*W[0])[j] * (*W[1])[k];
+      face_mass[face_ind[5][m]] = (*W[0])[i] * (*W[1])[j];
       SET_LOWORD(face_desc[5][m], FACE);
       SET_HIWORD(face_desc[5][m], 5   );
       if ( j==0 ) {
@@ -1883,7 +1913,7 @@ void GElem_base::interp(GTVector<GFTYPE> &ufrom, GTVector<GTVector<GFTYPE>*> &xi
 {
   GString serr = "GElem_base::interp(1): ";
 
-  GTVector<GINT> N(GDIM);
+  GTVector<GINT> N(dim_);
   GSIZET i, j, k, n, nnodes;
 
   for ( j=0,nnodes=1; j<xito.size(); j++ ) nnodes *= xito[j]->size();
@@ -1893,7 +1923,7 @@ void GElem_base::interp(GTVector<GFTYPE> &ufrom, GTVector<GTVector<GFTYPE>*> &xi
   gshapefcn_->set_basis(gbasis_);
 
   Ni_.resize(nnodes);  // shape function resize 
-  GTVector<GINT>   I(GDIM);   // tensor produc index
+  GTVector<GINT>   I(dim_);   // tensor produc index
 
   // NOTE: In general it would be best to compute interpolation
   // using tensor product computations. But this requires tmp arrays
@@ -1906,36 +1936,36 @@ void GElem_base::interp(GTVector<GFTYPE> &ufrom, GTVector<GTVector<GFTYPE>*> &xi
   //    uto_J = Sum_I ufrom^I N_I(xi_J)
   // where N_I(xi_J) is the I-th tensor product shape function 
   // evaluated at xi_J
-#if defined(_G_IS1D)
-  uto = 0.0;
-  for ( i=0, n=0; i<N[0]; i++ ) {
-      I[0] = i; 
-      gshapefcn_->Ni(I, xito, Ni_); // I-th shape fcn
-      uto += Ni_*ufrom[n]; // multiply by old field
-  } // i-loop
-#endif
-#if defined(_G_IS2D)
-  uto = 0.0;
-  for ( j=0, n=0; j<N[1]; j++ ) {
-    for ( i=0; i<N[0]; i++, n++ ) {
-      I[0] = i; I[1] = j;
-      gshapefcn_->Ni(I, xito, Ni_); // I-th shape fcn
-      uto += Ni_*ufrom[n]; // multiply by old field
+  if ( dim_ == 1 ) {
+    uto = 0.0;
+    for ( i=0, n=0; i<N[0]; i++ ) {
+        I[0] = i; 
+        gshapefcn_->Ni(I, xito, Ni_); // I-th shape fcn
+        uto += Ni_*ufrom[n]; // multiply by old field
     } // i-loop
-  } // j-loop
-#endif
-#if defined(_G_IS3D)
-  uto = 0.0;
-  for ( k=0, n=0; k<N[2]; k++ ) {
-    for ( j=0; j<N[1]; j++ ) {
+  }
+  else if ( dim_ == 2 ) {
+    uto = 0.0;
+    for ( j=0, n=0; j<N[1]; j++ ) {
       for ( i=0; i<N[0]; i++, n++ ) {
-        I[0] = i; I[1] = j; I[2] = k;
+        I[0] = i; I[1] = j;
         gshapefcn_->Ni(I, xito, Ni_); // I-th shape fcn
         uto += Ni_*ufrom[n]; // multiply by old field
       } // i-loop
     } // j-loop
-  } // k-loop
-#endif
+  }
+  else if ( dim_ == 3 ) {
+    uto = 0.0;
+    for ( k=0, n=0; k<N[2]; k++ ) {
+      for ( j=0; j<N[1]; j++ ) {
+        for ( i=0; i<N[0]; i++, n++ ) {
+          I[0] = i; I[1] = j; I[2] = k;
+          gshapefcn_->Ni(I, xito, Ni_); // I-th shape fcn
+          uto += Ni_*ufrom[n]; // multiply by old field
+        } // i-loop
+      } // j-loop
+    } // k-loop
+  }
 
   
 } // end of method interp(1)
@@ -1962,9 +1992,9 @@ void GElem_base::interp(GTVector<GFTYPE> &ufrom, GTVector<GTVector<GFTYPE>*> &xi
 //                 If this is a 'global' array, then the indices gibeg_ and giend_ 
 //                 govern the starting/ending locations and must be set prior to the call, 
 //                 as for ufrom.
-//          matv : vector of matrices element of length GDIM. This is temp space, and
+//          matv : vector of matrices element of length dim_. This is temp space, and
 //                 the elements will be allocated only when needed
-//          matu : vector of matrices element of length GDIM. This is temp space, and
+//          matu : vector of matrices element of length dim_. This is temp space, and
 //                 the elements will be allocated only when needed
 //          tmp  : temp vector; will be allocated when needed
 //          
@@ -1975,43 +2005,40 @@ GTVector<GTMatrix<GFTYPE>> &matv, GTVector<GTMatrix<GFTYPE>> &matu, GTVector<GFT
 {
   GString serr = "GElem_base::interp(2): ";
 
-  GTVector<GINT>   N(GDIM);   // dimensions
-  GTVector<GINT>   I(GDIM);   // tensor produc index
+  GTVector<GINT>   N(dim_);   // dimensions
+  GTVector<GINT>   I(dim_);   // tensor produc index
   GSIZET j, nnodes;
 
   for ( j=0,nnodes=1; j<xito.size(); j++ ) nnodes *= xito[j]->size();
   for ( j=0         ; j<xito.size(); j++ ) N[j] = gbasis_[j]->getOrder()+1;
 
   assert(ufrom.size() < Ntot_ && uto.size() < nnodes && "Inadequate array size(s)");
-  assert(matv.size() < GDIM && "Inadequate number of tmp matrices");
+  assert(matv.size() < dim_ && "Inadequate number of tmp matrices");
 
-#if defined(_G_IS1D)
-  matv[0].resize(xito[0]->size(),gbasis_[0]->getOrder()+1);
-  gbasis_[0]->evalBasis(*xito[0], matv[0]);
-  uto = matv[0]*ufrom;
-#endif
-
-#if defined(_G_IS2D)
-  for ( j=0; j<GDIM; j++ ) {
-    matv[j].resizem(xito[j]->size(),gbasis_[j]->getOrder()+1);
-    gbasis_[j]->evalBasis(*xito[j], matv[j]);
+  if ( dim_ == 1 )  {
+    matv[0].resize(xito[0]->size(),gbasis_[0]->getOrder()+1);
+    gbasis_[0]->evalBasis(*xito[0], matv[0]);
+    uto = matv[0]*ufrom;
   }
-  matu[0].resizem(matv[1].size(2),matv[1].size(1));
-  matv[1].transpose(matu[0]);
-  GMTK::D2_X_D1<GFTYPE>(matv[0], matu[0], ufrom, tmp, uto);
-#endif
-  
-#if defined(_G_IS3D)
-  for ( j=0; j<GDIM; j++ ) {
-    matv[j].resizem(xito[j]->size(),gbasis_[j]->getOrder()+1);
-    gbasis_[j]->evalBasis(*xito[j], matv[j]);
+  else if ( dim_ == 2 ) {
+    for ( j=0; j<dim_; j++ ) {
+      matv[j].resizem(xito[j]->size(),gbasis_[j]->getOrder()+1);
+      gbasis_[j]->evalBasis(*xito[j], matv[j]);
+    }
+    matu[0].resizem(matv[1].size(2),matv[1].size(1));
+    matv[1].transpose(matu[0]);
+    GMTK::D2_X_D1<GFTYPE>(matv[0], matu[0], ufrom, tmp, uto);
+  } 
+  else if ( dim_ == 3 ) {
+    for ( j=0; j<dim_; j++ ) {
+      matv[j].resizem(xito[j]->size(),gbasis_[j]->getOrder()+1);
+      gbasis_[j]->evalBasis(*xito[j], matv[j]);
+    }
+    matu[0].resizem(matv[1].size(2),matv[1].size(1));
+    matu[1].resizem(matv[2].size(2),matv[2].size(1));
+    matv[1].transpose(matu[0]); matv[2].transpose(matu[1]);
+    GMTK::D3_X_D2_X_D1<GFTYPE>(matv[0], matu[0], matu[1], ufrom, tmp, uto);
   }
-  matu[0].resizem(matv[1].size(2),matv[1].size(1));
-  matu[1].resizem(matv[2].size(2),matv[2].size(1));
-  matv[1].transpose(matu[0]); matv[2].transpose(matu[1]);
-  GMTK::D3_X_D2_X_D1<GFTYPE>(matv[0], matu[0], matu[1], ufrom, tmp, uto);
-#endif
-
   
 } // end of method interp(2)
 
@@ -2046,7 +2073,7 @@ void GElem_base::set_bdyNormal2d(GTMatrix<GTVector<GFTYPE>> &rij, GTVector<GINT>
   //   Normal = d_x_/deta X _x_, sides 1, 3
   // if embedded (and normalize; _x_ is vector Cartesian coord)
 
-  GSIZET nxy = elemtype_ == GE_2DEMBEDDED ? GDIM+1 : GDIM;
+  GSIZET nxy = elemtype_ == GE_2DEMBEDDED ? dim_+1 : dim_;
   GSIZET n;
 
   GFTYPE xn;            // vector magnitude

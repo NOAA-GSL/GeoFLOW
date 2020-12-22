@@ -118,7 +118,7 @@ void GStressEnOp<TypePack>::apply(State &u, GINT idir, State &utmp, StateComp &s
   GINT       nxy = grid_->gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
   GINT                       isgn;
   GSIZET                     k;
-  Ftype                      fsgn;
+  Ftype                      del, fsgn;
   GTVector<GSIZET>          *igbdy   = &grid_->igbdy() ;
   GTVector<GTVector<Ftype>> *normals = &grid_->bdyNormals();
   StateComp                 *mass    =  grid_->massop().data();
@@ -147,7 +147,9 @@ void GStressEnOp<TypePack>::apply(State &u, GINT idir, State &utmp, StateComp &s
     // Compute bdy terms for this component, j:
     for ( auto b=0; b<igbdy->size(); b++ ) {
       k = (*igbdy)[b];
-      so[k] += (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
+      del = (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
+      del =  fabs(del) < std::numeric_limits<Ftype>::epsilon() ? 0.0 : del;
+      so[k] += del;
     }
 #endif
   }
@@ -164,7 +166,10 @@ void GStressEnOp<TypePack>::apply(State &u, GINT idir, State &utmp, StateComp &s
     // Compute surface terms for this component, j:
     for ( auto b=0; b<igbdy->size(); b++ ) {
       k = (*igbdy)[b];
-      so[k] += (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
+//    so[k] += (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
+      del = (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
+      del =  fabs(del) < std::numeric_limits<Ftype>::epsilon() ? 0.0 : del;
+      so[k] += del;
     }
 #endif
   }
@@ -200,10 +205,14 @@ void GStressEnOp<TypePack>::apply(State &u, GINT idir, State &utmp, StateComp &s
   for ( auto b=0; b<igbdy->size(); b++ ) {
     k = (*igbdy)[b];
   #if defined(DO_COMPRESS_MODES_ONLY)
-    so[k] += (*utmp[1])[k]*tfact_[k] * (*normals)[idir-1][b] * (*bmass)[b];
+//  so[k] += (*utmp[1])[k]*tfact_[k] * (*normals)[idir-1][b] * (*bmass)[b];
+    del    = (*utmp[1])[k]*tfact_[k] * (*normals)[idir-1][b] * (*bmass)[b];
   #else
-    so[k] += (*utmp[1])[k] * (*normals)[idir-1][b] * (*bmass)[b];
+//  so[k] += (*utmp[1])[k] * (*normals)[idir-1][b] * (*bmass)[b];
+    del    = (*utmp[1])[k] * (*normals)[idir-1][b] * (*bmass)[b];
   #endif
+   del =  fabs(del) < std::numeric_limits<Ftype>::epsilon() ? 0.0 : del;
+   so[k] += del;
   }
 #endif 
 
