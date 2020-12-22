@@ -118,7 +118,7 @@ void GStressEnOp<TypePack>::apply(State &u, GINT idir, State &utmp, StateComp &s
   GINT       nxy = grid_->gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
   GINT                       isgn;
   GSIZET                     k;
-  Ftype                      del, fsgn;
+  Ftype                      fsgn;
   GTVector<GSIZET>          *igbdy   = &grid_->igbdy() ;
   GTVector<GTVector<Ftype>> *normals = &grid_->bdyNormals();
   StateComp                 *mass    =  grid_->massop().data();
@@ -140,16 +140,14 @@ void GStressEnOp<TypePack>::apply(State &u, GINT idir, State &utmp, StateComp &s
     grid_->deriv(*u[j], idir, *utmp[0], *utmp[1]);
     // Point-multiply by mu before taking 'divergence':
     utmp[1]->pointProd(*mu_);
-    grid_->wderiv(*utmp[1]  , j+1, TRUE , *utmp[0], *utmp[2]);
+    grid_->wderiv(*utmp[1]  , j+1, FALSE, *utmp[0], *utmp[2]);
     so -= *utmp[2];
 
 #if defined(DO_BDY)
     // Compute bdy terms for this component, j:
     for ( auto b=0; b<igbdy->size(); b++ ) {
       k = (*igbdy)[b];
-      del = (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
-      del =  fabs(del) < std::numeric_limits<Ftype>() : 0.0 : del;
-      so[k] += del;
+      so[k] += (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
     }
 #endif
   }
@@ -159,17 +157,14 @@ void GStressEnOp<TypePack>::apply(State &u, GINT idir, State &utmp, StateComp &s
     grid_->deriv(*u[idir-1], j+1, *utmp[0], *utmp[1]);
     // Point-multiply by mu before taking 'divergence':
     utmp[1]->pointProd(*mu_);
-    grid_->wderiv(*utmp[1]  , j+1, TRUE , *utmp[0], *utmp[2]);
+    grid_->wderiv(*utmp[1]  , j+1, FALSE, *utmp[0], *utmp[2]);
     so -= *utmp[2];
 
 #if defined(DO_BDY)
     // Compute surface terms for this component, j:
     for ( auto b=0; b<igbdy->size(); b++ ) {
       k = (*igbdy)[b];
-//    so[k] += (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
-      del = (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
-      del =  fabs(del) < std::numeric_limits<Ftype>() : 0.0 : del;
-      so[k] += del;
+      so[k] += (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
     }
 #endif
   }
@@ -192,7 +187,7 @@ void GStressEnOp<TypePack>::apply(State &u, GINT idir, State &utmp, StateComp &s
   }
 #endif
 
-  grid_->wderiv(*utmp[1], idir, TRUE, *utmp[0], *utmp[2]);
+  grid_->wderiv(*utmp[1], idir, FALSE, *utmp[0], *utmp[2]);
 #if defined(DO_COMPRESS_MODES_ONLY)
   utmp[2]->pointProd(tfact_);
 #endif
@@ -205,14 +200,10 @@ void GStressEnOp<TypePack>::apply(State &u, GINT idir, State &utmp, StateComp &s
   for ( auto b=0; b<igbdy->size(); b++ ) {
     k = (*igbdy)[b];
   #if defined(DO_COMPRESS_MODES_ONLY)
-//  so[k] += (*utmp[1])[k]*tfact_[k] * (*normals)[idir-1][b] * (*bmass)[b];
-    del    = (*utmp[1])[k]*tfact_[k] * (*normals)[idir-1][b] * (*bmass)[b];
+    so[k] += (*utmp[1])[k]*tfact_[k] * (*normals)[idir-1][b] * (*bmass)[b];
   #else
-//  so[k] += (*utmp[1])[k] * (*normals)[idir-1][b] * (*bmass)[b];
-    del    = (*utmp[1])[k] * (*normals)[idir-1][b] * (*bmass)[b];
+    so[k] += (*utmp[1])[k] * (*normals)[idir-1][b] * (*bmass)[b];
   #endif
-   del =  fabs(del) < std::numeric_limits<Ftype>() : 0.0 : del;
-   so[k] += del;
   }
 #endif 
 
@@ -268,7 +259,7 @@ void GStressEnOp<TypePack>::apply(State &u, State &utmp, StateComp &eo)
     }
     // Point-multiply by kappa before taking 'divergence':
     utmp[1]->pointProd(*kappa_);
-    grid_->wderiv(*utmp[1], j+1, TRUE , *utmp[0], *utmp[2]);
+    grid_->wderiv(*utmp[1], j+1, FALSE, *utmp[0], *utmp[2]);
     eo -= *utmp[2];
 
 #if defined(DO_BDY)
@@ -290,7 +281,7 @@ void GStressEnOp<TypePack>::apply(State &u, State &utmp, StateComp &eo)
     }
     // Point-multiply by kappa before taking 'divergence':
     utmp[1]->pointProd(*kappa_);
-    grid_->wderiv(*utmp[1], j+1, TRUE , *utmp[0], *utmp[2]);
+    grid_->wderiv(*utmp[1], j+1, FALSE, *utmp[0], *utmp[2]);
     eo -= *utmp[2];
 
 #if defined(DO_BDY)
@@ -330,7 +321,7 @@ void GStressEnOp<TypePack>::apply(State &u, State &utmp, StateComp &eo)
   //  -= D^{T,j} [lambda u^i (Div u) delta_ij]:
   for ( auto j=0; j<nxy; j++ ) { 
     u[j]->pointProd(*utmp[1],*utmp[2]); 
-    grid_->wderiv(*utmp[2], j+1, TRUE, *utmp[0], *utmp[3]); 
+    grid_->wderiv(*utmp[2], j+1, FALSE, *utmp[0], *utmp[3]); 
 #if defined(DO_COMPRESS_MODES_ONLY)
     utmp[3]->pointProd(tfact_);
 #endif
