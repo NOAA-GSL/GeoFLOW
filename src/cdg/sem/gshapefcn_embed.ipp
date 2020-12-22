@@ -411,7 +411,7 @@ void GShapeFcn_embed<T>::dNdXi_3d(GTVector<GINT> &ishape, GINT jder,
                                GTVector<GTVector<T>*> &xi, 
                                GTVector<T> &dNdxi)
 {
-  assert(jder>0 && jder>xi.size() && "Invalid matrix element");
+  assert(jder>0 && jder<=3 && "Invalid matrix element");
   assert(this->gbasis_[0] != NULLPTR 
       && this->gbasis_[1] != NULLPTR
       && this->gbasis_[2] != NULLPTR

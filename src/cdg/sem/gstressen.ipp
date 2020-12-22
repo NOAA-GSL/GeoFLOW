@@ -148,7 +148,7 @@ void GStressEnOp<TypePack>::apply(State &u, GINT idir, State &utmp, StateComp &s
     for ( auto b=0; b<igbdy->size(); b++ ) {
       k = (*igbdy)[b];
       del = (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
-      del =  fabs(del) < std::numeric_limits<Ftype>::epsilon() ? 0.0 : del;
+      del =  fabs(del) < std::numeric_limits<Ftype>() : 0.0 : del;
       so[k] += del;
     }
 #endif
@@ -168,7 +168,7 @@ void GStressEnOp<TypePack>::apply(State &u, GINT idir, State &utmp, StateComp &s
       k = (*igbdy)[b];
 //    so[k] += (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
       del = (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
-      del =  fabs(del) < std::numeric_limits<Ftype>::epsilon() ? 0.0 : del;
+      del =  fabs(del) < std::numeric_limits<Ftype>() : 0.0 : del;
       so[k] += del;
     }
 #endif
@@ -211,7 +211,7 @@ void GStressEnOp<TypePack>::apply(State &u, GINT idir, State &utmp, StateComp &s
 //  so[k] += (*utmp[1])[k] * (*normals)[idir-1][b] * (*bmass)[b];
     del    = (*utmp[1])[k] * (*normals)[idir-1][b] * (*bmass)[b];
   #endif
-   del =  fabs(del) < std::numeric_limits<Ftype>::epsilon() ? 0.0 : del;
+   del =  fabs(del) < std::numeric_limits<Ftype>() : 0.0 : del;
    so[k] += del;
   }
 #endif 
