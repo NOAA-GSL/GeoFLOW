@@ -764,7 +764,7 @@ GBOOL impl_icosabcconv(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
 
   GTVector<GTVector<GFTYPE>> *xnodes = &grid.xNodes();
 
-  assert(u.size() == GDIM+4);
+  assert(u.size() >= GDIM+1);
 
   e     = u  [GDIM];// int. energy density
   d     = u[GDIM+1];// total density 

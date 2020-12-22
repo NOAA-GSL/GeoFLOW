@@ -55,7 +55,7 @@ lshapefcn_                    (NULLPTR)
 
   gbasis_.resize(b.size());
   gbasis_ = b;
-  lshapefcn_ = new GShapeFcn_linear<GTICOS>();
+  lshapefcn_ = new GShapeFcn_linear<GTICOS>(2);
   ilevel_  = gridptree.getValue<GINT>("ilevel");
   sreftype_= gridptree.getValue<GString>("refine_type","GICOS_LAGRANGIAN");
   this->cgtraits_.maxit = gridptree.getValue<GDOUBLE>("maxit");
@@ -435,7 +435,7 @@ void GGridIcos::do_elems2d(GINT irank)
     // NOTE: Is this ordering compatible with shape functions 
     // (placement of +/-1 with physical point)?
     for ( auto j=0; j<3; j++ ) { // 3 new elements for each triangle
-      pelem = new GElem_base(GE_2DEMBEDDED, gbasis_);
+      pelem = new GElem_base(2, GE_2DEMBEDDED, gbasis_);
       cverts[0] = v1; cverts[1] = (v1+v2)*0.5; cverts[2] = ct; cverts[3] = (v1+v3)*0.5;
 #if 0
       order_latlong2d<GTICOS>(cverts);
@@ -591,7 +591,7 @@ void GGridIcos::do_elems3d(GINT irank)
     // NOTE: Is this ordering compatible with shape functions 
     // (placement of +/-1 with physical point)?
     for ( auto j=0; j<3; j++ ) { // 3 new elements for each triangle
-      pelem2d = new GElem_base(GE_2DEMBEDDED, gbasis_);
+      pelem2d = new GElem_base(2, GE_2DEMBEDDED, gbasis_);
       cverts[0] = v1; cverts[1] = (v1+v2)*0.5; cverts[2] = ct; cverts[3] = (v1+v3)*0.5;
       if ( iup_[i] == 1 ) {
       switch (j) {
@@ -623,7 +623,7 @@ void GGridIcos::do_elems3d(GINT irank)
       xd2d .resize(xNodes2d.size());
       xid2d.resize(xiNodes2d.size());
       pxid .resize(xiNodes2d.size());
-      for ( auto l=0; l<xid.size(); l++ ) pxid[l] = &xid2d[l];
+      for ( auto l=0; l<xid2d.size(); l++ ) pxid[l] = &xid2d[l];
       copycast<GFTYPE,GTICOS>(xiNodes2d, pxid);
 
       project2sphere<GTICOS>(cverts, 1.0); // project verts to unit sphere     
@@ -645,7 +645,7 @@ void GGridIcos::do_elems3d(GINT irank)
       // Loop over radial elements and build all elements 
       // based on this patch (we're still in sph coords here):
       for ( auto e=0; e<nradelem_; e++ ) {
-        pelem = new GElem_base(GE_DEFORMED, gbasis_);
+        pelem = new GElem_base(GDIM, GE_DEFORMED, gbasis_);
         xiNodesr = &pelem->xiNodes(2); // get radial reference nodes
         xNodes   = &pelem->xNodes();  // node spatial data
         r0       = radiusi_ + e*rdelta;
@@ -719,7 +719,7 @@ void GGridIcos::do_elems2d(GTMatrix<GINT> &p,
       gb[j] = gbasis_[iwhere];
       nvnodes *= (p(i,j) + 1);
     }
-    pelem = new GElem_base(GE_2DEMBEDDED, gb);
+    pelem = new GElem_base(GDIM, GE_2DEMBEDDED, gb);
     xNodes  = &pelem->xNodes();  // node spatial data
 
     // Set internal node positions from input data.
@@ -788,7 +788,7 @@ void GGridIcos::do_elems3d(GTMatrix<GINT> &p,
       gb[j] = gbasis_[iwhere];
       nvnodes *= (p(i,j) + 1);
     }
-    pelem = new GElem_base(GE_DEFORMED, gb);
+    pelem = new GElem_base(GDIM, GE_DEFORMED, gb);
     xNodes  = &pelem->xNodes();  // node spatial data
 
     // Set internal node positions from input data.
@@ -910,7 +910,7 @@ void GGridIcos::config_bdy(const geoflow::tbox::PropertyTree &ptree,
   bdynames[0] = "bdy_inner";
   bdynames[1] = "bdy_outer";
 
-  if ( !ptree.isValue<GString>(gname) ) {
+  if ( !ptree.isValue<GString>("grid_type") ) {
     cout << "GGridIcos::config_bdy: grid_type not set" << endl;
     assert(FALSE);
   }
@@ -928,7 +928,7 @@ void GGridIcos::config_bdy(const geoflow::tbox::PropertyTree &ptree,
   igbdyf.resize(2); // 2 canonical bdys
   igbdyft.resize(2); // 2 canonical bdys
 
-  bdy_update_list_.resize(2*GDIM);
+  bdy_update_list_.resize(2);
  
 
   // Get properties from the main prop tree. 

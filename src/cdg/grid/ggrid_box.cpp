@@ -110,7 +110,7 @@ lshapefcn_             (NULLPTR)
     ne_  [j] = sne[j];
   }
 
-  lshapefcn_ = new GShapeFcn_linear<GFTYPE>();
+  lshapefcn_ = new GShapeFcn_linear<GFTYPE>(GDIM);
   if ( GDIM == 2 ) {
     init2d();
   }
@@ -284,7 +284,7 @@ void GGridBox::do_elems2d()
   GLONG  bcurr = 0; // current global bdy index
 
   for ( auto i=0; i<qmesh_.size(); i++ ) { // for each quad in irank's mesh
-    pelem = new GElem_base(this->gtype_, gbasis_);
+    pelem = new GElem_base(GDIM, this->gtype_, gbasis_);
     xNodes  = &pelem->xNodes();  // node spatial data
     xiNodes = &pelem->xiNodes(); // node ref interval data
     Ni.resize(pelem->nnodes()); // tensor product shape function
@@ -394,7 +394,7 @@ void GGridBox::do_elems3d()
   GLONG  bcurr = 0; // current global bdy index
   for ( auto i=0; i<hmesh_.size(); i++ ) { // for each hex in irank's mesh
 
-    pelem = new GElem_base(this->gtype_, gbasis_);
+    pelem = new GElem_base(GDIM, this->gtype_, gbasis_);
     xNodes  = &pelem->xNodes();  // node spatial data
     xiNodes = &pelem->xiNodes(); // node ref interval data
     Ni.resize(pelem->nnodes()); // tensor product shape function
@@ -508,7 +508,7 @@ void GGridBox::do_elems2d(GTMatrix<GINT> &p,
       gb[j] = gbasis_[iwhere];
       nvnodes *= (p(i,j) + 1);
     }
-    pelem = new GElem_base(this->gtype_, gb);
+    pelem = new GElem_base(GDIM, this->gtype_, gb);
     xNodes  = &pelem->xNodes();  // node spatial data
     xiNodes = &pelem->xiNodes(); // node ref interval data
     bdy_ind = &pelem->bdy_indices(); // get bdy indices data member
@@ -622,7 +622,7 @@ void GGridBox::do_elems3d(GTMatrix<GINT> &p,
       nvnodes *= (p(i,j) + 1);
     }    
 
-    pelem = new GElem_base(this->gtype_, gbasis_);
+    pelem = new GElem_base(GDIM, this->gtype_, gbasis_);
     xNodes  = &pelem->xNodes();  // node spatial data
     xiNodes = &pelem->xiNodes(); // node ref interval data
     bdy_ind = &pelem->bdy_indices(); // get bdy indices data member

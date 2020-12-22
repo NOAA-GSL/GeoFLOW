@@ -53,10 +53,10 @@ class GElem_base
 {
 public:
                             enum ElemNodeType {VERTEX=0, EDGE, FACE, VOL};
-                            GElem_base();
-                            GElem_base(GElemType etype, GNBasis<GCTYPE,GFTYPE> *b1, GNBasis<GCTYPE,GFTYPE> *b2, GNBasis<GCTYPE,GFTYPE> *b3=NULLPTR);
-                            GElem_base(GElemType etypa, GNBasis<GCTYPE,GFTYPE> *b[], GINT nb);
-                            GElem_base(GElemType etype, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b);
+                            GElem_base(GINT dim);
+                            GElem_base(GINT dim, GElemType etype, GNBasis<GCTYPE,GFTYPE> *b1, GNBasis<GCTYPE,GFTYPE> *b2, GNBasis<GCTYPE,GFTYPE> *b3=NULLPTR);
+                            GElem_base(GINT dim, GElemType etypa, GNBasis<GCTYPE,GFTYPE> *b[], GINT nb);
+                            GElem_base(GINT dim, GElemType etype, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b);
                             GElem_base(const GElem_base &) = default;
                            ~GElem_base();
 
@@ -196,6 +196,7 @@ virtual void                Jac_embed(GMVFType &G, GTVector<GFTYPE> &jac, GBOOL 
 */
                                         
 
+GINT                    dim_;           // elem dimension 1, 2, 3)
 GINT                    Ntot_;          // total no. node points in element
 GINT                    Nftot_;         // total no. face node points in element
 GTVector<GINT>          N_;             // no. _nodes_ in each direction

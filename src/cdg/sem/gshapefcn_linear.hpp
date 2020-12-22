@@ -14,7 +14,7 @@
 //                should be provided in the order that the bounding vertices
 //                of the element take (see gelement_base.hpp) so that this 
 //                sum can be computed efficiently.
-// Copyright    : Copyright 2018. Colorado State University. All rights reserved
+// Copyright    : Copyright 2018. Colorado State University. All rights reserved.
 // Derived From : none
 //==================================================================================
 
@@ -30,8 +30,8 @@ class GShapeFcn_linear: public GShapeFcn_base<T>
 
 public:
 
-                          GShapeFcn_linear();
-                          GShapeFcn_linear(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b) {this->gbasis_ = b;}
+                          GShapeFcn_linear(GINT dim);
+                          GShapeFcn_linear(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GINT dim);
                           GShapeFcn_linear(const GShapeFcn_linear &);
                          ~GShapeFcn_linear();
 

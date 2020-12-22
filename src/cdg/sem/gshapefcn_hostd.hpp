@@ -4,7 +4,8 @@
 // Description  : Forms class for iso-parametric shape functions, N_i, of 
 //                high order type, to be used in cases where a 2d surface
 //                is not embedded in a 3d space. This is the shape function
-//                use in the 'standard' way.
+//                use in the 'standard' way. Note: 'hostd' stands for 'high
+//                order standard'.
 //
 //                Shape functions define element locations in terms of
 //                the (1d, 2d, 3d) reference interval, s.t.:
@@ -21,7 +22,7 @@
 //
 //                where I = I(i,j,k) is the tensor product index computed
 //                from the coordinate indices, i, j, k.
-// Copyright    : Copyright 2018. Colorado State University. All rights reserved
+// Copyright    : Copyright 2018. Colorado State University. All rights reserved.
 // Derived From : none
 //==================================================================================
 
@@ -36,8 +37,8 @@ class GShapeFcn_hostd: public GShapeFcn_base<T>
 
 public:
 
-                          GShapeFcn_hostd();
-                          GShapeFcn_hostd(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b);
+                          GShapeFcn_hostd(GINT dim);
+                          GShapeFcn_hostd(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GINT din);
                           GShapeFcn_hostd(const GShapeFcn_hostd &);
                          ~GShapeFcn_hostd();
 
