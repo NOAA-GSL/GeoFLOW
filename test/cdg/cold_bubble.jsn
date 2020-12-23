@@ -68,7 +68,7 @@
     "grid_name" : "grid_box",
     "xyz0"      : [-25600, 0, 0],
     "delxyz"    : [51200.0, 10000.0, 1.0],
-    "num_elems" : [50, 25, 1],
+    "num_elems" : [128, 25, 1],
     "bdy_x_0"   : "0-flux",
     "bdy_x_1"   : "0-flux",
     "bdy_y_0"   : "0-flux",
@@ -150,7 +150,7 @@
   },
   "time_integration": {
     "integ_type" : "time",
-    "time_end"   : 1500.0,
+    "time_end"   : 900.0,
     "cycle_end"  : 1000,
     "dt"         : 1.0e-2
   }
