@@ -6,6 +6,8 @@
 // Derived From : none.
 //==================================================================================
 
+#include "tbox/tracer.hpp"
+
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : build
@@ -20,6 +22,7 @@
 template<typename TypePack>
 GGrid *GGridFactory<TypePack>::build(const geoflow::tbox::PropertyTree& ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis, IOBasePtr pIO, ObsTraits &obstraits, GC_COMM &comm)
 {
+	GEOFLOW_TRACE();
   GSIZET  itindex = ptree.getValue<GSIZET>   ("restart_index", 0);
   GString sdef    = "grid_box";
   GString gname   = ptree.getValue<GString>("grid_type", sdef);
@@ -101,6 +104,7 @@ template<typename TypePack>
 void GGridFactory<TypePack>::read_grid(const geoflow::tbox::PropertyTree& ptree, GTMatrix<GINT> &p, 
                          GTVector<GTVector<GFTYPE>> &xnodes, IOBasePtr pIO, ObsTraits &obstraits, GC_COMM &comm)
 {
+	GEOFLOW_TRACE();
   GINT                        nc=GDIM;
   GElemType                   igtype;
   GString                     sgtype;

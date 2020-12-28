@@ -9,6 +9,7 @@
 #include <string>
 #include <limits>
 #include "gmorton_keygen.hpp"
+#include "tbox/tracer.hpp"
 
 //**********************************************************************************
 //**********************************************************************************
@@ -29,6 +30,7 @@ idel_        (1.0),
 ttiny_       (100.0*std::numeric_limits<TF>::min()),
 bb_          (NULLPTR)
 {
+	GEOFLOW_TRACE();
   idX_.x1  = idX_.x2 = idX_.x3 = ttiny_;
   logFact_ = log10(1.0/ttiny_);
   bb_       = new GBitBlock(BITSPERBYTE*sizeof(TK));
@@ -88,6 +90,7 @@ void GMorton_KeyGen<TK,TF>::setOrigin(GTPoint<TF> &inP0)
 template<typename TK, typename TF>
 void GMorton_KeyGen<TK,TF>::setBox(GTPoint<TF> &inP0, GTPoint<TF> &inP1)
 {
+	GEOFLOW_TRACE();
   GINT i;
 
   P0_ = inP0;
@@ -134,6 +137,7 @@ void GMorton_KeyGen<TK,TF>::setDoLog(GBOOL bDoLog)
 template<typename TK, typename TF>
 void GMorton_KeyGen<TK,TF>::setIntegralLen(GTPoint<TF> &inP0, GTPoint<TF> &indX)
 {
+	GEOFLOW_TRACE();
   TF dmin=std::numeric_limits<TF>::max();
 
   delmax_ = std::numeric_limits<TF>::min();
@@ -186,6 +190,7 @@ void GMorton_KeyGen<TK,TF>::setIntegralLen(GTPoint<TF> &inP0, GTPoint<TF> &indX)
 template<typename TK, typename TF>
 void GMorton_KeyGen<TK,TF>::key(TK id[], GTPoint<TF> point[], GINT  n)
 {
+	GEOFLOW_TRACE();
   GString   serr = " GMorton_KeyGen<TK,TF>::key(1): ";
   GINT      i, idsz, j, k, ib, ishft, nbits, nbpc, tbits;
   GINT      gdim = point[0].dim();
@@ -289,6 +294,7 @@ void GMorton_KeyGen<TK,TF>::key(TK id[], GTPoint<TF> point[], GINT  n)
 template<typename TK, typename TF>
 void GMorton_KeyGen<TK,TF>::key(GTVector<TK> &id, GTVector<GTPoint<TF>> &point)
 {
+	GEOFLOW_TRACE();
   GINT        idsz=sizeof(TK);
   GTPoint<TF> p;
 
@@ -325,6 +331,7 @@ void GMorton_KeyGen<TK,TF>::key(GTVector<TK> &id, GTVector<GTPoint<TF>> &point)
 template<typename TK, typename TF>
 void GMorton_KeyGen<TK,TF>::key(GTVector<TK> &id, GTVector<GTVector<TF>> &x)
 {
+	GEOFLOW_TRACE();
   assert(id.size() == x[0].size() && "GMorton_KeyGen::key(3): incompatible dimensions ");
   GTPoint<TF> p(x.size());
 
@@ -360,6 +367,7 @@ void GMorton_KeyGen<TK,TF>::key(GTVector<TK> &id, GTVector<GTVector<TF>> &x)
 template<typename TK, typename TF>
 void GMorton_KeyGen<TK,TF>::key(GTVector<TK> &id, GTVector<GTVector<TF>*> &x)
 {
+	GEOFLOW_TRACE();
   assert(id.size() == x[0]->size() && "GMorton_KeyGen::key(4): incompatible dimensions");
   GTPoint<TF> p(x.size());
 
@@ -398,6 +406,7 @@ template<typename TK, typename TF>
 void GMorton_KeyGen<TK,TF>::key(GTVector<TK> &id, GTVector<GTVector<TF>> &x, 
                                 GTVector<GINT> &ix)
 {
+	GEOFLOW_TRACE();
   assert(id.size() == ix.size() && "GMorton_KeyGen::key(5): incompatible dimensions ");
   GTPoint<TF> p(x.size());
 

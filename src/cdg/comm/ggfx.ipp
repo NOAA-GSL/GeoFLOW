@@ -13,6 +13,7 @@
 #include "ggfx.hpp"
 #include "gcomm.hpp"
 #include "tbox/error_handler.hpp"
+#include "tbox/tracer.hpp"
 
 using namespace std;
 
@@ -99,6 +100,7 @@ GGFX<T>  &GGFX<T>::operator=(const GGFX<T> &a)
 template<typename T>
 GBOOL GGFX<T>::init(GNIDBuffer &glob_index)
 {
+	GEOFLOW_TRACE();
   GBOOL      bret;
   GString   serr = "GGFX<T>::init: ";
 
@@ -173,6 +175,7 @@ GBOOL GGFX<T>::init(GNIDBuffer &glob_index)
 template<typename T>
 GBOOL GGFX<T>::initSort(GNIDBuffer  &glob_index)
 {
+	GEOFLOW_TRACE();
   GString serr = "GGFX<T>::initSort: ";
   GBOOL   bret;
 
@@ -312,6 +315,7 @@ GBOOL GGFX<T>::binSort(GNIDBuffer &nodelist, GIMatrix &gBinMat,
                     GINT &numlocfilledbins, GINT &max_numfilledbins, GINT &max_numlocbinmem, 
                     GNIDMatrix &gBinBdy, GNIDBuffer &locWork)
 {
+	GEOFLOW_TRACE();
   GString  serr = "GGFX<T>::binSort: ";
   GSIZET   i, j, n;
 
@@ -439,6 +443,7 @@ template<typename T>
 GBOOL GGFX<T>::createWorkBuffs(GIMatrix &gBinMat, GINT max_numlocbinmem, GIBuffer &iRecvWorkTaskID, 
                             GNIDMatrix &irWork, GIBuffer &iSendWorkTaskID, GNIDMatrix &isWork)
 {
+	GEOFLOW_TRACE();
   GString  serr = "GGFX<T>::createWorkBuffs: ";
   GSIZET   i, j;
 
@@ -539,6 +544,7 @@ GBOOL GGFX<T>::createWorkBuffs(GIMatrix &gBinMat, GINT max_numlocbinmem, GIBuffe
 template<typename T>
 GBOOL GGFX<T>::binWorkFill(GNIDBuffer &nodelist, GNIDMatrix &gBinBdy, GNIDMatrix  &sWork, GIBuffer &iSendWorkTaskID)
 {
+	GEOFLOW_TRACE();
   GString serr = "GGFX<T>::binWorkFill: ";
   GSIZET  i, iwhere, j, n;
 
@@ -594,6 +600,7 @@ GBOOL GGFX<T>::doSendRecvWork( GNIDBuffer &glob_index      , GNIDMatrix &gBinBdy
                             GIBuffer   &iRecvWorkTaskID , GNIDMatrix &irWork, 
                             GIBuffer   &iSendWorkTaskID , GNIDMatrix &isWork)
 {
+	GEOFLOW_TRACE();
   GString serr = "GGFX<T>::doSendRecvWork: ";
   GINT    i, j, m;
   GBOOL   bret=TRUE;
@@ -722,6 +729,7 @@ GBOOL GGFX<T>::doCommonNodeSort(GNIDBuffer &glob_index, GNIDMatrix &irWork,
                              GIBuffer &iRecvWorkTaskID, GIBuffer &iSendWorkTaskID,
                              GNIDMatrix &mySharedData)
 {
+	GEOFLOW_TRACE();
   GString    serr = "GGFX<T>::doCommonNodeSort: ";
   GSIZET     i, j, k, nr, ns;
   GBOOL      bret=TRUE;
@@ -774,7 +782,8 @@ GBOOL GGFX<T>::doCommonNodeSort(GNIDBuffer &glob_index, GNIDMatrix &irWork,
   EH_MESSAGE("GGFX::doCommonNodeSort: Compute sizes...");
 #endif
   GTimerStart("ggfx_cNS_sizes");
-
+  {
+	  GEOFLOW_TRACE_MSG("ggfx_cNS_sizes");
   // First, get sizes required for 'shared node matrix':
   itmp  .resize(irWork.size(1)*irWork.size(2));
   nidtmp.resize(irWork.size(1)*irWork.size(2));
@@ -790,6 +799,7 @@ GBOOL GGFX<T>::doCommonNodeSort(GNIDBuffer &glob_index, GNIDMatrix &irWork,
   ikeep.resize(nd);
   itasks.resize(nd);
   EH_MESSAGE("GGFX::doCommonNodeSort: irWork.distinct_floor done.");
+
   for ( j=0, nkeep=npos=0; j<nd; j++ ) { // compute multiplicity of distinct node ids
     nid = (*niddata)[ivals[j]];
     mult = niddata->multiplicity(nid, iivals, nivals); // find linear indices for nid
@@ -809,7 +819,7 @@ GBOOL GGFX<T>::doCommonNodeSort(GNIDBuffer &glob_index, GNIDMatrix &irWork,
     }
   }
   EH_MESSAGE("GGFX::doCommonNodeSort: get sizes done.");
-
+  }
   GTimerStop("ggfx_cNS_sizes");
 
 #if defined(GGFX_TRACE_OUTPUT)
@@ -820,7 +830,8 @@ GBOOL GGFX<T>::doCommonNodeSort(GNIDBuffer &glob_index, GNIDMatrix &irWork,
   lsz[1] = iSendWorkTaskID.size();
 
   GTimerStart("ggfx_cNS_sizes_reduction");
-
+  {
+	  GEOFLOW_TRACE_MSG("ggfx_cNS_sizes_reduction");
 #if 1
   GComm::Allreduce(lsz, gsz, 2, T2GCDatatype<GLONGLONG>() , GC_OP_MAX, comm_);
 #else
@@ -833,6 +844,7 @@ GBOOL GGFX<T>::doCommonNodeSort(GNIDBuffer &glob_index, GNIDMatrix &irWork,
   gsz[1] = gszt.max();
 #endif
 
+  }
   GTimerStop("ggfx_cNS_sizes_reduction");
 
 #if defined(GGFX_TRACE_OUTPUT)
@@ -858,8 +870,8 @@ itasks.range_reset();
   EH_MESSAGE("GGFX::doCommonNodeSort: Fill send_buff...");
 #endif
   GTimerStart("ggfx_cNS_fill_send_buff");
-
-
+  {
+	  GEOFLOW_TRACE_MSG("ggfx_cNS_fill_send_buff");
   // Last, fill send buffer with sorted work data:
   sendShNodeWrk.set(-1);
   for ( j=0, npos=0; j<nkeep; j++ ) { // cycle over each node with mult>1
@@ -876,6 +888,7 @@ itasks.range_reset();
     npos  += itmp[j] + 2; // required size of each entry
   }
 
+  }
   GTimerStop("ggfx_cNS_fill_send_buff");
 
 #if defined(GGFX_TRACE_OUTPUT_LEV2)
@@ -895,6 +908,8 @@ itasks.range_reset();
   GIBuffer nttmp(MAX(iSendWorkTaskID.size(),iRecvWorkTaskID.size()));
 
   GTimerStart("ggfx_cNS_find_send_back");
+  {
+	  GEOFLOW_TRACE_MSG("ggfx_cNS_find_send_back");
   // Find tasks to send back to (not including rank_):
   for ( j=0, ns=0; j<iRecvWorkTaskID.size(); j++ ) {
      itask = iRecvWorkTaskID[j];
@@ -902,6 +917,7 @@ itasks.range_reset();
        nttmp[ns] = iRecvWorkTaskID[j]; // task to send to
        ns++;
      } 
+  }
   }
   GTimerStop("ggfx_cNS_find_send_back");
 
@@ -914,6 +930,8 @@ itasks.range_reset();
   EH_MESSAGE("GGFX::doCommonNodeSort: Find tasks to receive from...");
 #endif
   GTimerStart("ggfx_cNS_find_recv_from");
+  {
+	  GEOFLOW_TRACE_MSG("ggfx_cNS_find_recv_from");
   // Find tasks to recv from (not including rank_):
   for ( j=0, nr=0; j<iSendWorkTaskID.size(); j++ ) {
      itask = iSendWorkTaskID[j];
@@ -921,6 +939,7 @@ itasks.range_reset();
        nttmp[nr] = iSendWorkTaskID[j]; // task to send to
        nr++;
      } 
+  }
   }
   GTimerStop("ggfx_cNS_find_recv_from");
 
@@ -932,6 +951,8 @@ itasks.range_reset();
   EH_MESSAGE("GGFX::doCommonNodeSort: Find indirection array for recv buffers...");
 #endif
   GTimerStart("ggfx_cNS_find_indirection");
+  {
+	  GEOFLOW_TRACE_MSG("ggfx_cNS_find_indirection");
   // Find indirection array for recv buffers:
   for ( j=0, nr=0; j<(nl=iSendWorkTaskID.size()); j++ ) {
      if ( iSendWorkTaskID[j] != rank_ ) {
@@ -943,6 +964,7 @@ itasks.range_reset();
       for ( i=0; i<sendShNodeWrk.size(1); i++ ) 
         mySharedData(i,nl-1) = sendShNodeWrk(i,0);
      }
+  }
   }
   GTimerStop("ggfx_cNS_find_indirection");
 
@@ -1039,6 +1061,7 @@ itasks.range_reset();
 template<typename T>
 GBOOL GGFX<T>::extractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedData)
 {
+	GEOFLOW_TRACE();
   GString serr = "GGFX<T>::extractOpData: ";
   GBOOL   bind, bret;
   GSIZET  i, j, k, m;
@@ -1271,6 +1294,7 @@ GBOOL GGFX<T>::extractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedData)
 template<typename T>  
 GBOOL GGFX<T>::doOp(GTVector<T> &u, GGFX_OP op) 
 {
+	GEOFLOW_TRACE();
 #if 0
   GSIZET   nu = u.size();
   T       *uu = u.data();
@@ -1366,6 +1390,7 @@ GBOOL GGFX<T>::doOp(GTVector<T> &u, GGFX_OP op)
 //************************************************************************************
 template<typename T> GBOOL GGFX<T>::doOp(GTVector<T> &u, GTVector<GSIZET> &iind, GGFX_OP op)
 {
+	GEOFLOW_TRACE();
   assert( std::is_arithmetic<T>::value && "Illegal template type");
 
   GINT      i, j;
@@ -1465,7 +1490,7 @@ template<typename T> GBOOL GGFX<T>::doOp(GTVector<T> &u, GTVector<GSIZET> &iind,
 template<typename T> 
 GBOOL GGFX<T>::localGS(GTVector<T> &qu, GLLMatrix &ilocal, GSZBuffer &nlocal, GGFX_OP op, GTMatrix<T> *qop)
 {
-
+	GEOFLOW_TRACE();
   assert( std::is_arithmetic<T>::value && "Illegal template type");
 
   GString serr = "GGFX<T>::localGS (1): ";
@@ -1620,7 +1645,7 @@ template<typename T>
 GBOOL GGFX<T>::localGS(GTVector<T> &qu, GTVector<GSIZET> &iind, 
                     GLLMatrix &ilocal, GSZBuffer &nlocal,  GGFX_OP op, GTMatrix<T> *qop)
 {
-
+	GEOFLOW_TRACE();
   assert( std::is_arithmetic<T>::value && "Illegal template type");
 
 
@@ -1765,6 +1790,7 @@ GBOOL GGFX<T>::localGS(GTVector<T> &qu, GTVector<GSIZET> &iind,
 template<typename T> 
 GBOOL GGFX<T>::dataExchange(GTVector<T> &u)
 {
+	GEOFLOW_TRACE();
   assert( std::is_arithmetic<T>::value && "Illegal template type");
 
   GString       serr = "GGFX<T>::dataExchange(1): ";
@@ -1814,6 +1840,7 @@ GBOOL GGFX<T>::dataExchange(GTVector<T> &u)
 template<typename T> 
 GBOOL GGFX<T>::dataExchange(GTVector<T> &u, GTVector<GSIZET> &iind)
 {
+	GEOFLOW_TRACE();
   assert( std::is_arithmetic<T>::value && "Illegal template type");
 
   GString       serr = "GGFX<T>::dataExchange(2): ";
@@ -1849,6 +1876,7 @@ recvBuff_.set(-1);
 template<typename T> 
 void GGFX<T>::initMult()
 {
+	GEOFLOW_TRACE();
   GString serr = "GGFX<T>::initMult: ";
 
   assert(bInit_ && "Operator not initialized");

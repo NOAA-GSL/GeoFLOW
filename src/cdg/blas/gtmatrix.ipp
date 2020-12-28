@@ -2134,6 +2134,7 @@ void GTMatrix<T>::createIdentity()
 template<class T>
 GSIZET GTMatrix<T>::multiplicity(T val)
 {
+	GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value || std::is_pointer<T>::value,
     "Invalid template type: GTMatrix<T>::multiplicity(T)");
  
@@ -2158,6 +2159,7 @@ GSIZET GTMatrix<T>::multiplicity(T val)
 template<class T>
 GSIZET GTMatrix<T>::multiplicity(T val, GSIZET *&irow, GSIZET *&icol, GSIZET &n)
 {
+	GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value || std::is_pointer<T>::value,
     "Invalid template type: GTMatrix<T>::multiplicity(T,GSIZET*,GZSIZET*,GSIZET&)");
 
@@ -2201,6 +2203,7 @@ GSIZET GTMatrix<T>::multiplicity(T val, GSIZET *&irow, GSIZET *&icol, GSIZET &n)
 template<class T>
 GSIZET GTMatrix<T>::multiplicity(T val, GSZBuffer &irow, GSZBuffer &icol)
 {
+	GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value || std::is_pointer<T>::value,
     "Invalid template type: GTMatrix<T>::multiplicity(T,GSIZEBuffer&,GSZBuffer&)");
  

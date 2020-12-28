@@ -24,6 +24,7 @@
 #include "cublas.h"
 #endif
 
+#include "tbox/tracer.hpp"
 
 //**********************************************************************************
 //**********************************************************************************
@@ -1893,6 +1894,7 @@ template<class T>
 GSIZET
 GTVector<T>::multiplicity(T val)
 {
+	GEOFLOW_TRACE();
 //assert(std::is_arithmetic<T>::value || std::is_arithmetic<T>::value || std::is_pointer<T>::value &&
 //  "Invalid template type: multiplicity(T)");
 
@@ -1926,6 +1928,7 @@ template<class T>
 GSIZET
 GTVector<T>::multiplicity_s(T val, GSIZET istart, GSIZET &ifound)
 {
+	GEOFLOW_TRACE();
 //assert(std::is_arithmetic<T>::value || std::is_arithmetic<T>::value || std::is_pointer<T>::value &&
 //  "Invalid template type: multiplicity(T)");
 
@@ -1965,6 +1968,7 @@ template<class T>
 GSIZET
 GTVector<T>::multiplicity(T val, GSIZET *&index, GSIZET &n)
 {
+	GEOFLOW_TRACE();
 //assert(std::is_arithmetic<T>::value || std::is_arithmetic<T>::value || std::is_pointer<T>::value &&
 //  "Invalid template type: multiplicity(T,GSIZET*,GSIZET&)");
 
@@ -2006,6 +2010,7 @@ template<class T>
 GSIZET
 GTVector<T>::multiplicity_floor(T val, T floor)
 {
+	GEOFLOW_TRACE();
 //assert(std::is_arithmetic<T>::value || std::is_arithmetic<T>::value &&
 //  "Invalid template type: multiplicity_floor(T,T)");
 
@@ -2038,6 +2043,7 @@ template<class T>
 GSIZET
 GTVector<T>::multiplicity_floor(T val, GSIZET *&index, GSIZET &n, T floor)
 {
+	GEOFLOW_TRACE();
 //assert(std::is_arithmetic<T>::value || std::is_arithmetic<T>::value &&
 //  "Invalid template type: multiplicity_floor(T,GSIZET *,GSIZE&,T)");
 
@@ -2079,6 +2085,7 @@ template<class T>
 GSIZET
 GTVector<T>::multiplicity_ceil(T val, T ceil)
 {
+	GEOFLOW_TRACE();
 //assert(std::is_arithmetic<T>::value || std::is_arithmetic<T>::value &&
 //  "Invalid template type: multiplicity_ceil(T,T)");
 

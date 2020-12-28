@@ -146,11 +146,6 @@ int main(int argc, char **argv)
     ObsTraitsType binobstraits;
     grid_ = GGridFactory<MyTypes>::build(ptree, gbasis, pIO_, binobstraits, comm);
 
-    GGFX<GFTYPE>    *ggfx_=nullptr;// DSS operator
-
-    init_ggfx(ptree, *grid_, ggfx_);
-    grid_->set_ggfx(*ggfx_);
-
     /////////////////////////////////////////////////////////////////
     ////////////////////// Allocate arrays //////////////////////////
     /////////////////////////////////////////////////////////////////
