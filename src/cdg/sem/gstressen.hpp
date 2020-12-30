@@ -79,9 +79,9 @@ public:
                           GStressEnOp(const GStressEnOp &);
                          ~GStressEnOp();
 
-        void              apply(State &u, GINT idir, State  &utmp, 
+        void              apply(StateComp &d, State &u, GINT idir, State  &utmp, 
                                 StateComp &si);                              // stress op evaluation in idir
-        void              apply(State &u, State  &utmp,  
+        void              apply(StateComp &d, State &u, State  &utmp,  
                                 StateComp &e);                               // stress-energy op evaluation
 
 

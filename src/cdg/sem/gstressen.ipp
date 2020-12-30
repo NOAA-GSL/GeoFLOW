@@ -101,7 +101,8 @@ GStressEnOp<TypePack>::~GStressEnOp()
 // METHOD : apply (1)
 // DESC   : Compute application of this operator to input momentum vector:
 //            so_i = [ mu (u_j,i + u_i,j) ] + zeta Div u delta_ij],j
-// ARGS   : u   : input vector field
+// ARGS   : d   : density
+//          u   : input vector field
 //          idir: which momentum component we're computing for
 //          utmp: array of tmp arrays
 //          so  : output (result) vector component, idir
@@ -109,7 +110,7 @@ GStressEnOp<TypePack>::~GStressEnOp()
 // RETURNS:  none
 //**********************************************************************************
 template<typename TypePack>
-void GStressEnOp<TypePack>::apply(State &u, GINT idir, State &utmp, StateComp &so) 
+void GStressEnOp<TypePack>::apply(StateComp &d, State &u, GINT idir, State &utmp, StateComp &so) 
 {
 
   assert( utmp.size() >= 4
@@ -139,6 +140,7 @@ void GStressEnOp<TypePack>::apply(State &u, GINT idir, State &utmp, StateComp &s
   for ( auto j=0; j<nxy; j++ ) { 
     grid_->deriv(*u[j], idir, *utmp[0], *utmp[1]);
     // Point-multiply by mu before taking 'divergence':
+    utmp[1]->pointProd(d);
     utmp[1]->pointProd(*mu_);
     grid_->wderiv(*utmp[1]  , j+1, TRUE, *utmp[0], *utmp[2]);
     so -= *utmp[2];
@@ -156,6 +158,7 @@ void GStressEnOp<TypePack>::apply(State &u, GINT idir, State &utmp, StateComp &s
   for ( auto j=0; j<nxy; j++ ) { 
     grid_->deriv(*u[idir-1], j+1, *utmp[0], *utmp[1]);
     // Point-multiply by mu before taking 'divergence':
+    utmp[1]->pointProd(d);
     utmp[1]->pointProd(*mu_);
     grid_->wderiv(*utmp[1]  , j+1, TRUE, *utmp[0], *utmp[2]);
     so -= *utmp[2];
@@ -177,6 +180,7 @@ void GStressEnOp<TypePack>::apply(State &u, GINT idir, State &utmp, StateComp &s
     *utmp[1] += *utmp[2];
   }
 
+  utmp[1]->pointProd(d);
   utmp[1]->pointProd(*zeta_);  // zeta Div u
 
 #if defined(DO_COMPRESS_MODES_ONLY)
@@ -218,14 +222,15 @@ void GStressEnOp<TypePack>::apply(State &u, GINT idir, State &utmp, StateComp &s
 // DESC   : Compute application of this operator to input energy:
 //            eo = [ kappa  u_i (Del_i u_j + Del_j u_i)],j 
 //               + [ lambda u_i (Div u delta_ij) ],j 
-// ARGS   : u   : input vector field
+// ARGS   : d   : density
+//          u   : input vector field
 //          utmp: array of tmp arrays
 //          eo  : output (result) vector component, idir
 //             
 // RETURNS:  none
 //**********************************************************************************
 template<typename TypePack>
-void GStressEnOp<TypePack>::apply(State &u, State &utmp, StateComp &eo) 
+void GStressEnOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp &eo) 
 {
 
   assert( utmp.size() >= 4
@@ -258,6 +263,7 @@ void GStressEnOp<TypePack>::apply(State &u, State &utmp, StateComp &eo)
       *utmp[1] += *utmp[2];
     }
     // Point-multiply by kappa before taking 'divergence':
+    utmp[1]->pointProd(d);
     utmp[1]->pointProd(*kappa_);
     grid_->wderiv(*utmp[1], j+1, TRUE, *utmp[0], *utmp[2]);
     eo -= *utmp[2];
@@ -280,6 +286,7 @@ void GStressEnOp<TypePack>::apply(State &u, State &utmp, StateComp &eo)
        *utmp[1] += *utmp[2];
     }
     // Point-multiply by kappa before taking 'divergence':
+    utmp[1]->pointProd(d);
     utmp[1]->pointProd(*kappa_);
     grid_->wderiv(*utmp[1], j+1, TRUE, *utmp[0], *utmp[2]);
     eo -= *utmp[2];
@@ -307,6 +314,7 @@ void GStressEnOp<TypePack>::apply(State &u, State &utmp, StateComp &eo)
     *utmp[1] += *utmp[2];
   }
 
+  utmp[1]->pointProd(d);
   utmp[1]->pointProd(*lambda_);
 
 #if defined(DO_COMPRESS_MODES_ONLY)
