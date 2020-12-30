@@ -297,7 +297,7 @@ void GMConv<TypePack>::dudt_impl(const Time &t, const State &u, const State &uf,
 
   gdiv_->apply(*tmp1, v_, urhstmp_, *dudt[ENERGY]); 
 
-  gstressen_->apply(v_, urhstmp_, *tmp1);          // [mu u_i s^{ij}],j
+  gstressen_->apply(*rhoT, v_, urhstmp_, *tmp1);          // [mu u_i s^{ij}],j
  *dudt[ENERGY] -= *tmp1;                           // -= [mu u^i s^{ij}],j
 
   if ( traits_.dofallout || !traits_.dodry ) {
@@ -357,7 +357,7 @@ void GMConv<TypePack>::dudt_impl(const Time &t, const State &u, const State &uf,
    *dudt[j] += *tmp1;                                 // += Grad p'
 #endif
 
-    gstressen_->apply(v_, j+1, urhstmp_, *tmp1);      // [mu s^{ij}],j
+    gstressen_->apply(*rhoT, v_, j+1, urhstmp_, *tmp1);      // [mu s^{ij}],j
    *dudt[j] -= *tmp1;                                 // -= [mu s^{ij}],j
 
     if ( traits_.docoriolis ) {
