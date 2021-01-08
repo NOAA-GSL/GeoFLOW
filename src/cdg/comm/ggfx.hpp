@@ -1,6 +1,6 @@
 //==================================================================================
 // Module       : ggfx.hpp
-// Date         : 5/9/18 (DLR)
+// Date         : 1/6/21 (BTF)
 // Description  : Encapsulates the methods and data associated with
 //                a geometry--free global exchange (GeoFLOW Geometry-Free eXchange)
 //                operator
@@ -11,13 +11,23 @@
 #if !defined(GGFX_HPP)
 #define GGFX_HPP
 
-#include <sstream>
 #include "gtvector.hpp"
 #include "gtmatrix.hpp"
 #include "gcomm.hpp"
 
-#undef GGFX_TRACE_OUTPUT
-#define _KEEP_INDICES
+
+#include "boost/mpi.hpp"
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/utility.hpp>
+
+#include "tbox/spatial.hpp"
+#include "tbox/pio.hpp"
+
+#include <array>
+#include <limits>
+#include <map>
+#include <vector>
+
 
 // GGFX reduction operation defs:
 #if !defined(GGFX_OP_DEF)
@@ -26,86 +36,248 @@ enum GGFX_OP {GGFX_OP_SUM=0, GGFX_OP_PROD, GGFX_OP_MAX, GGFX_OP_MIN, GGFX_OP_SMO
 #endif
 
 
-template<typename T> 
-class GGFX
-{
+template<typename ValueType>
+class GGFX {
+
 public:
-                      GGFX(GC_COMM icomm=GC_COMM_WORLD);
-                     ~GGFX();
-                      GGFX(const GGFX &a);
-                      GGFX  &operator=(const GGFX &);
-                   
+	GGFX()                             = default;
+	GGFX(const GGFX& other)            = default;
+	GGFX(GGFX&& other)                 = default;
+	~GGFX()                            = default;
+	GGFX& operator=(const GGFX& other) = default;
+	GGFX& operator=(GGFX&& other)      = default;
 
-                      GBOOL    init(GNIDBuffer &glob_index);
-                      GBOOL    doOp(GTVector<T> &u,  GGFX_OP op);
-                      GBOOL    doOp(GTVector<T> &u,  GSZBuffer &ind, GGFX_OP op);
-                      GC_COMM  getComm() { return comm_; }
-#if defined(_G_DEBUG) || defined(_KEEP_INDICES)
-                      GTVector<T>         
-                              &get_mult() { return mult_; }
-#endif
-                      GTVector<T>         
-                              &get_imult() { return imult_; }
+	template<typename Coordinates>
+	GBOOL init(const ValueType tolerance, Coordinates& xyz);
 
-                      void     resetTimes();
+	template<typename ValueArray>
+	GBOOL doOp(ValueArray& u,  GGFX_OP op);
 
-#if defined(_G_DEBUG) || defined(_KEEP_INDICES)
-                      GNIDBuffer glob_index_;
-#endif
+	GC_COMM  getComm() const;
+
+	template<typename CountArray>
+	void get_imult(CountArray& imult) const;
+
 private:
-// Private methods:
- 
-// Init-specific methods:
-                      GBOOL initSort(GNIDBuffer  &glob_index);
-                      GBOOL binSort(GNIDBuffer &glob_index   , GIMatrix    &gBinMat, 
-                                    GINT       &nlocfilledbins,
-                                    GINT       &maxfilledbins, GINT       &maxbinmem,
-                                    GNIDMatrix &gBinBdy      , GNIDBuffer &locwork);
-                      GBOOL doSendRecvWork(GNIDBuffer &, GNIDMatrix &, GIBuffer &, GNIDMatrix &, GIBuffer &, GNIDMatrix &);
-                      GBOOL binWorkFill(GNIDBuffer &, GNIDMatrix &, GNIDMatrix &, GIBuffer &);
-                      GBOOL createWorkBuffs(GIMatrix &, GINT, GIBuffer &, GNIDMatrix &, GIBuffer &, GNIDMatrix &);
-                      GBOOL doCommonNodeSort(GNIDBuffer &, GNIDMatrix &, GIBuffer &, GIBuffer &, GNIDMatrix &);
-                      GBOOL extractOpData(GNIDBuffer &glob_index, GNIDMatrix &mySharedNodes);
- 
+	using rank_type  = int;
+	using size_type  = std::size_t;
+	using value_type = ValueType;
 
-                     // doOp-specific methods:
-                     GBOOL localGS(GTVector<T> &u, GLLMatrix  &ilocal, GSZBuffer &nlocal, GGFX_OP op, GTMatrix<T> *qop=NULLPTR);
-                     GBOOL localGS(GTVector<T> &u, GTVector<GSIZET> &iind, GLLMatrix  &ilocal, GSZBuffer &nlocal, GGFX_OP op, GTMatrix<T> *qop=NULLPTR);
-                     GBOOL dataExchange(GTVector<T> &u );
-                     GBOOL dataExchange(GTVector<T> &u, GTVector<GSIZET> &iind );
-
-                     // misc. methods:
-                     void initMult(); // initialize multiplicity for smoothing
-
-// Private data:
-GBOOL              bBinSorted_   ;  // have local nodes been bin-sorted?      
-GBOOL              bInit_        ;  // has operator initialization occurred?
-GBOOL              bMultReq_     ;  // is (inverse) multiplicity required (e.g. for smoothing)?
-GC_COMM            comm_         ;  // communicator
-GINT               nprocs_       ;  // number of tasks/ranks
-GINT               rank_         ;  // this rank
-GSIZET             nglob_index_  ;  // number of indices in call to Init
-GNODEID            maxNodeVal_   ;  // Node value dynamical range max
-GNODEID            minNodeVal_   ;  // Node value dynamical range min
-GNODEID            maxNodes_     ;  // total number of nodes distributed among all procs
-GNIDMatrix         gBinBdy_      ;  // global bin bdy ranges for each task [0,nporocs_-1]
-GIBuffer           iOpL2RTasks_  ;  // task ids to send op data to, and recv from
-GLLMatrix          iOpL2RIndices_;  // matrix with send/recv data for each off-task shared node
-GSZBuffer          nOpL2RIndices_;  // number shared nodes to snd/rcv for each task
-GIBuffer           iOpR2LTasks_  ;  // task ids in order of receive
-GTMatrix<GTVector<GSIZET>>
-                   iOpR2LIndices_;  // matrix with send/recv data for each off-task shared node
-GTMatrix<GSIZET>   nOpR2LMult_   ;  // number shared nodes to snd/rcv for each task, and each shared node
-GLLMatrix          iOpL2LIndices_;  // matrix with local indices pointing to shared nodes
-GSZBuffer          nOpL2LIndices_;  // number valid columns in each row of iOpLoIndices_
-GTMatrix<T>        sendBuff_     ;  // send buffer
-GTMatrix<T>        recvBuff_     ;  // recv buffer
-GTVector<T>        mult_         ;  // multiplicity matrix (for H1-smoothing)
-GTVector<T>        imult_        ;  // inverse of multiplicity matrix (for H1-smoothing)
-
+	std::map<rank_type, std::vector<size_type>>              send_map_;         // [Rank][1:Nsend] = Local Index
+	std::map<rank_type, std::vector<std::vector<size_type>>> recv_map_;         // [Rank][1:Nrecv][1:Nshare] = Local Index
+	std::map<rank_type, std::vector<value_type>>             send_buffer_;      // [Rank][1:Nsend] = Value sending
+	std::map<rank_type, std::vector<value_type>>             recv_buffer_;      // [Rank][1:Nrecv] = Value received
+	std::vector<std::vector<size_type>>                      reduction_buffer_; // [1:Nlocal][1:Nreduce] = Value to reduce
 };
 
-#include "ggfx.ipp"
+
+
+namespace detail_extractor {
+template<typename PairType>
+struct pair_extractor {
+	using bound_type = typename PairType::first_type;
+	using key_type   = typename PairType::second_type;
+
+	const bound_type& operator()(PairType const& pair) const {
+		return pair.first;
+	}
+};
+}
+
+
+template<typename T>
+template<typename Coordinates>
+GBOOL
+GGFX<T>::init(const T tolerance, Coordinates& xyz){
+	using namespace geoflow::tbox;
+
+	// Types
+	using index_bound_type     = tbox::spatial::bound::Box<value_type,GDIM>;
+	using index_key_type       = std::size_t; // local array index
+	using index_value_type     = std::pair<index_bound_type,index_key_type>;   // (bound, key)
+	using index_extractor_type = detail_extractor::pair_extractor<index_value_type>;
+	using shared_index_type    = tbox::spatial::shared::index::RTree<index_value_type, index_extractor_type>;
+
+	// Get MPI communicator, etc.
+	namespace mpi = boost::mpi;
+	mpi::communicator world;
+	auto my_rank   = world.rank();
+	auto num_ranks = world.size();
+
+	// Build "index_value_type" for each local coordinate and place into a spatial index
+	shared_index_type coordinate_indexer;
+	for(auto i = 0; i < xyz.size(); ++i){
+
+		// Build a slightly larger bounding box
+		auto min_xyz = xyz[i];
+		auto max_xyz = xyz[i];
+		for(auto d = 0; d < min_xyz.size(); ++d){
+			min_xyz[d] -= tolerance;
+			max_xyz[d] += tolerance;
+		}
+
+		// Place into coordinate index tree
+		auto index_value = index_value_type(index_bound_type(min_xyz,max_xyz), index_key_type(i));
+		coordinate_indexer.insert(index_value);
+	}
+
+	// Get Bounding Box for this Ranks Coordinates
+	// Perform MPI_Allgather so everyone gets a bound region for each processor
+	std::vector<index_bound_type> bounds_by_rank;
+	auto local_bounded_region = coordinate_indexer.bounds();
+	mpi::all_gather(world, local_bounded_region, bounds_by_rank);
+
+	// For each Ranks Bounding Region
+	// - Build list of local indexed values to send to each overlapping rank
+	// - Submit a receive request to get indexed values from the rank
+	// - Submit a send request to send indexed values from this rank
+	std::map<rank_type, mpi::request> send_requests;
+	std::map<rank_type, mpi::request> recv_requests;
+	std::map<rank_type, std::vector<index_value_type>> send_to_ranks;
+	std::map<rank_type, std::vector<index_value_type>> recv_from_ranks;
+	for(auto rank = 0; rank < num_ranks; ++rank){
+		if( rank != my_rank ){ // Don't search myself (we know the answer is everything)
+
+			std::vector<index_value_type> search_results;
+			coordinate_indexer.query( tbox::spatial::shared::predicate::Intersects(bounds_by_rank[rank]), std::back_inserter(search_results) );
+
+			// If found any bounds within the ranks bounding region
+			// - Move into buffer map (i.e. no copy)
+			// - Submit a receive request
+			// - Submit a send request
+			if( search_results.size() > 0 ){
+				send_to_ranks.emplace(rank, search_results);
+
+				// Tag = 2 * rank of receiver
+				recv_requests[rank] = world.irecv(rank, 0, recv_from_ranks[rank]);
+				send_requests[rank] = world.isend(rank, 0, send_to_ranks[rank]);
+			}
+		}
+	}
+
+	//
+	// Build "global_value_type" for each global coordinate and place into a spatial index
+	//
+	// Some things to note:
+	// - Values within recv_from_ranks => std::pair< bound, id_on_rank >
+	// - Our local Indexer of global values needs to keep pair(bound,pair(rank,id_on_rank))
+	//
+	using global_bound_type     = tbox::spatial::bound::Box<value_type,GDIM>;
+	using global_key_type       = std::pair<rank_type,size_type>;                // (rank,pid)
+	using global_value_type     = std::pair<global_bound_type,global_key_type>;  // (bound, (rank,pid))
+	using global_extractor_type = detail_extractor::pair_extractor<global_value_type>;
+	using global_index_type     = tbox::spatial::shared::index::RTree<global_value_type, global_extractor_type>;
+
+	global_index_type global_indexer;
+	for(auto& [rank, pairs_from_rank]: recv_from_ranks){
+		recv_requests[rank].wait(); // Wait to receive data
+
+		for(auto& remote_pair: pairs_from_rank){
+			auto key   = global_key_type(rank,remote_pair.second);
+			auto value = global_value_type(remote_pair.first,key);
+			global_indexer.insert(value);
+		}
+	}
+	for(auto& [rank, req]: send_requests){
+		req.wait(); // Clear out the send requests
+	}
+
+	// Clean Memory Buffers & Requests ???
+	send_requests.clear();
+	recv_requests.clear();
+	send_to_ranks.clear();
+	recv_from_ranks.clear();
+
+	//
+	// For each of our local Sink values we need to find the
+	// matching global Sources from the global_source_indexer
+	//
+	// local_sink_global_matches[sink id] = vector(pair(rank,id))
+	//
+//	std::vector<std::vector<global_source_key_type>> local_sink_global_matches(sink_bounds.size());
+//	for(std::size_t i = 0; i < sink_bounds.size(); ++i){
+//		std::vector<global_source_value_type> sink_results;
+//		global_source_indexer.query(spatial::shared::predicate::Contains(sink_bounds[i]), std::back_inserter(sink_results));
+//		for(auto& result : sink_results){
+//			local_sink_global_matches[i].push_back(result.second);
+//		}
+//	}
+
+
+
+
+
+
+	for(auto& [rank, req] : recv_requests){
+		pio::perr << "Recv to " << rank << " is active = " << req.active() << std::endl;
+		req.wait();
+	}
+	// Don't exit before all sends complete
+	for(auto& [rank, req] : send_requests){
+		pio::perr << "Send to " << rank << " is active = " << req.active() << std::endl;
+		req.wait();
+	}
+
+
+	pio::perr << "Report:" << std::endl;
+	pio::perr << "Tolerance = " << tolerance << std::endl;
+	for(auto d = 0; d < GDIM; ++d){
+		pio::perr << "Range " << d << "  " << local_bounded_region.min(d) << " - " << local_bounded_region.max(d) << std::endl;
+	}
+	for(auto& [rank, vec] : send_to_ranks){
+		pio::perr << "Sending " << vec.size() << " bounds to rank " << rank << std::endl;
+	}
+	for(auto& [rank, vec] : recv_from_ranks){
+		pio::perr << "Received " << vec.size() << " bounds from rank " << rank << std::endl;
+	}
+	pio::perr << std::endl;
+
+	world.barrier();
+	exit(0);
+
+	return true;
+}
+
+
+
+template<typename T>
+template<typename ValueArray>
+GBOOL
+GGFX<T>::doOp(ValueArray& u,  GGFX_OP op){
+
+
+
+	return true;
+}
+
+template<typename T>
+GC_COMM
+GGFX<T>::getComm() const {
+	return boost::mpi::communicator();
+}
+
+template<typename T>
+template<typename CountArray>
+void
+GGFX<T>::get_imult(CountArray& imult) const {
+
+	// Set whole array to 1
+	for(size_type i = 0; i < imult.size(); ++i){
+		imult[i] = 1;
+	}
+
+	// Accumulate the counts in each index
+	// - Loop over buffers received from each rank
+	// - Loop over each value within the buffer
+	// - Loop over each local index that value contributes to
+	for (auto& [rank, matrix_map] : recv_map_) {
+		for(auto& local_id_map : matrix_map) {
+			for(auto& id : local_id_map) {
+				++(imult[id]);
+			}
+		}
+	}
+}
 
 #endif
 

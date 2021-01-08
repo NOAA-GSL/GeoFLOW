@@ -42,6 +42,7 @@ void GlobalManager::initialize(int argc, char* argv[]){
 	// Start of PIO
 	pio::initialize(mpixx::communicator().rank());
 	//pio::logOnlyNodeZero("log");
+	//pio::logAllNodes("log");
 
 	// Read Input File
 	InputManager::initialize(argc,argv);

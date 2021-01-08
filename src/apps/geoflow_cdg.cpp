@@ -587,143 +587,143 @@ void init_force(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &
 //         grid    : GGrid object pointer, instantiated here
 //         ggfx    : gather/scatter op, GGFX
 //**********************************************************************************
-void init_ggfx(PropertyTree &ptree, GGrid &grid, GGFX<GFTYPE> *&ggfx)
-{
-	GEOFLOW_TRACE();
-  GString                        serr = "init_ggfx: ";
-  GBOOL                          bret;
-  GINT                           pmax;
-  GFTYPE                         rad;
-  GFTYPE                         tiny = 100.0*std::numeric_limits<GFTYPE>::epsilon();
-  GMorton_KeyGen<GNODEID,GFTYPE> gmorton;
-  GTPoint<GFTYPE>                dX, porigin, P0;
-  GTVector<GNODEID>              glob_indices;
-  GTVector<GFTYPE>               delta, ldelta;
-  GTVector<GTVector<GFTYPE>>    *xnodes;
-  State                          cart;
-  State                          xkey;
-  GString                        sgrid;
-  std::vector<GFTYPE>            pstd;
-  PropertyTree                   gtree;
-  State                          tmp;
-
-
-  sgrid = ptree.getValue<GString>("grid_type");
-  gtree = ptree.getPropertyTree(sgrid);
-
-  pmax = 0;
-  for ( auto j=0; j<gbasis_.size(); j++ ) pmax = MAX(pmax, gbasis_[j]->getOrder());
-
-  P0.resize(GDIM);
-  dX.resize(GDIM);
-  delta.resize(GDIM);
-  xnodes = &grid.xNodes();
-  glob_indices.resize(grid_->ndof());
-
-  // Cannot use utmp_ here because it
-  // may not have been allocated yet, so
-  // use local variable:
-  tmp.resize(GDIM);
-  for ( auto j=0; j<GDIM; j++ ) tmp[j] = new GTVector<GFTYPE>(grid_->ndof());
-
-  // If (x, y, z) < epsilon, set to 0:
-  GMTK::zero(*xnodes);
-
-  if ( sgrid == "grid_box" ) {
-    pstd   = gtree.getArray<GFTYPE>("xyz0");
-    P0     = pstd;
-    xkey.resize(GDIM);   
-    for ( auto j=0; j<GDIM; j++ ) xkey[j] = &(*xnodes)[j];
-    dX     = 0.05*grid.minnodedist();
-//  gmorton.setDoLog(TRUE);
-    gmorton.setType(GMORTON_STACKED);
-  }
-  if ( sgrid == "grid_icos" ) {
-#if 1
-    // Set indices from lat/lon coords:
-    P0.resize(GDIM);
-    dX.resize(GDIM);
-    cart.resize(xnodes->size());   
-    xkey.resize(GDIM);   
-    P0.x1 = 0.0 ; // lat starting point
-    P0.x2 = 0.0 ; // lon starting point
-    for ( auto j=0; j<xnodes->size(); j++ ) cart[j] = &(*xnodes)[j];
-    for ( auto j=0; j<GDIM; j++ ) xkey[j] = tmp[j];
-    GMTK::cart2latlon(cart, xkey);
-    for ( auto j=0; j<xkey[0]->size(); j++ ) (*xkey[0])[j] = 0.5*PI - (*xkey[0])[j]; 
-    for ( auto j=0; j<xkey[1]->size(); j++ ) (*xkey[1])[j] += (*xkey[1])[j] < 0.0 ? 2.0*PI : 0.0;
-    rad   = gtree.getValue<GFTYPE>("radius");
-    delta[0] = 0.5*grid.minlength()/(rad*pmax*pmax);
-    delta[1] = grid.minlength()/(rad*pmax*pmax);
-    for ( auto j=0; j<dX.size(); j++ ) dX[j] = 0.025 *delta[j];
+//void init_ggfx(PropertyTree &ptree, GGrid &grid, GGFX<GFTYPE> *&ggfx)
+//{
+//	GEOFLOW_TRACE();
+//  GString                        serr = "init_ggfx: ";
+//  GBOOL                          bret;
+//  GINT                           pmax;
+//  GFTYPE                         rad;
+//  GFTYPE                         tiny = 100.0*std::numeric_limits<GFTYPE>::epsilon();
+//  GMorton_KeyGen<GNODEID,GFTYPE> gmorton;
+//  GTPoint<GFTYPE>                dX, porigin, P0;
+//  GTVector<GNODEID>              glob_indices;
+//  GTVector<GFTYPE>               delta, ldelta;
+//  GTVector<GTVector<GFTYPE>>    *xnodes;
+//  State                          cart;
+//  State                          xkey;
+//  GString                        sgrid;
+//  std::vector<GFTYPE>            pstd;
+//  PropertyTree                   gtree;
+//  State                          tmp;
+//
+//
+//  sgrid = ptree.getValue<GString>("grid_type");
+//  gtree = ptree.getPropertyTree(sgrid);
+//
+//  pmax = 0;
+//  for ( auto j=0; j<gbasis_.size(); j++ ) pmax = MAX(pmax, gbasis_[j]->getOrder());
+//
+//  P0.resize(GDIM);
+//  dX.resize(GDIM);
+//  delta.resize(GDIM);
+//  xnodes = &grid.xNodes();
+//  glob_indices.resize(grid_->ndof());
+//
+//  // Cannot use utmp_ here because it
+//  // may not have been allocated yet, so
+//  // use local variable:
+//  tmp.resize(GDIM);
+//  for ( auto j=0; j<GDIM; j++ ) tmp[j] = new GTVector<GFTYPE>(grid_->ndof());
+//
+//  // If (x, y, z) < epsilon, set to 0:
+//  GMTK::zero(*xnodes);
+//
+//  if ( sgrid == "grid_box" ) {
+//    pstd   = gtree.getArray<GFTYPE>("xyz0");
+//    P0     = pstd;
+//    xkey.resize(GDIM);
+//    for ( auto j=0; j<GDIM; j++ ) xkey[j] = &(*xnodes)[j];
+//    dX     = 0.05*grid.minnodedist();
+////  gmorton.setDoLog(TRUE);
+//    gmorton.setType(GMORTON_STACKED);
+//  }
+//  if ( sgrid == "grid_icos" ) {
+//#if 1
+//    // Set indices from lat/lon coords:
+//    P0.resize(GDIM);
+//    dX.resize(GDIM);
+//    cart.resize(xnodes->size());
+//    xkey.resize(GDIM);
+//    P0.x1 = 0.0 ; // lat starting point
+//    P0.x2 = 0.0 ; // lon starting point
+//    for ( auto j=0; j<xnodes->size(); j++ ) cart[j] = &(*xnodes)[j];
+//    for ( auto j=0; j<GDIM; j++ ) xkey[j] = tmp[j];
+//    GMTK::cart2latlon(cart, xkey);
+//    for ( auto j=0; j<xkey[0]->size(); j++ ) (*xkey[0])[j] = 0.5*PI - (*xkey[0])[j];
+//    for ( auto j=0; j<xkey[1]->size(); j++ ) (*xkey[1])[j] += (*xkey[1])[j] < 0.0 ? 2.0*PI : 0.0;
+//    rad   = gtree.getValue<GFTYPE>("radius");
+//    delta[0] = 0.5*grid.minlength()/(rad*pmax*pmax);
+//    delta[1] = grid.minlength()/(rad*pmax*pmax);
+//    for ( auto j=0; j<dX.size(); j++ ) dX[j] = 0.025 *delta[j];
+////  gmorton.setType(GMORTON_STACKED);
+////  gmorton.setType(GMORTON_INTERLEAVE);
+//#else
+//    P0.resize(GDIM+1);
+//    dX.resize(GDIM+1);
+//    xkey.resize(GDIM+1);
+//    rad   = gtree.getValue<GFTYPE>("radius");
+//    P0.x1 = -rad-tiny; P0.x2 = -rad-tiny; P0.x3 = -rad-tiny;
+//    for ( auto j=0; j<xkey.size(); j++ ) xkey[j] = tmp[j];
+//    delta[0] = grid.minlength()/(pmax*pmax);
+//    delta[1] = grid.minlength()/(pmax*pmax);
+//    delta[2] = grid.minlength()/(pmax*pmax);
+//    for ( auto j=0; j<dX.size(); j++ ) dX[j] = 0.01 *delta[j];
+////  dX     = 0.1*grid.minnodedist();
+////  gmorton.setDoLog(TRUE);
+//    gmorton.setType(GMORTON_INTERLEAVE);
+////  gmorton.setType(GMORTON_STACKED);
+//#endif
+//  }
+//  if ( sgrid == "grid_sphere" ) {
+//    rad   = gtree.getValue<GFTYPE>("radiusi");
+//    P0.x1 = 0.0; // lat starting point
+//    P0.x2 = 0.0; // long starting point
+//    P0.x3 = rad; // radius starting point
+//    cart.resize(xnodes->size());
+//    xkey.resize(GDIM);
+//    for ( auto j=0; j<xnodes->size(); j++ ) cart[j] = &(*xnodes)[j];
+//    for ( auto j=0; j<GDIM; j++ ) xkey[j] = tmp[j];
+//    GMTK::rcart2sphere(cart, xkey);
+//    for ( auto j=0; j<GDIM; j++ ) ldelta[j] = xkey[j]->amindiff(tiny);
+//    GComm::Allreduce(ldelta.data(), delta.data(), GDIM, T2GCDatatype<GFTYPE>(), GC_OP_MIN, comm_);
+//    for ( auto j=0; j<GDIM; j++ ) dX[j] = 0.025*delta[j];
+////  gmorton.setDoLog(TRUE);
+//    gmorton.setType(GMORTON_STACKED);
+//  }
+//
+//  // First, periodize coords if required to,
+//  // before labeling nodes:
+//  if ( typeid(grid) == typeid(GGridBox) ) {
+//    static_cast<GGridBox*>(&grid)->periodize();
+//  }
+//
+//  xnodes = &grid.xNodes();
+//  glob_indices.resize(grid.ndof());
+//
+//  // Integralize *all* internal nodes
+//  // using Morton indices:
+////gmorton.setDoLog(TRUE);
 //  gmorton.setType(GMORTON_STACKED);
-//  gmorton.setType(GMORTON_INTERLEAVE);
-#else
-    P0.resize(GDIM+1);
-    dX.resize(GDIM+1);
-    xkey.resize(GDIM+1);   
-    rad   = gtree.getValue<GFTYPE>("radius");
-    P0.x1 = -rad-tiny; P0.x2 = -rad-tiny; P0.x3 = -rad-tiny;
-    for ( auto j=0; j<xkey.size(); j++ ) xkey[j] = tmp[j];
-    delta[0] = grid.minlength()/(pmax*pmax);
-    delta[1] = grid.minlength()/(pmax*pmax);
-    delta[2] = grid.minlength()/(pmax*pmax);
-    for ( auto j=0; j<dX.size(); j++ ) dX[j] = 0.01 *delta[j];
-//  dX     = 0.1*grid.minnodedist();
-//  gmorton.setDoLog(TRUE);
-    gmorton.setType(GMORTON_INTERLEAVE);
-//  gmorton.setType(GMORTON_STACKED);
-#endif
-  }
-  if ( sgrid == "grid_sphere" ) {
-    rad   = gtree.getValue<GFTYPE>("radiusi");
-    P0.x1 = 0.0; // lat starting point
-    P0.x2 = 0.0; // long starting point
-    P0.x3 = rad; // radius starting point
-    cart.resize(xnodes->size());   
-    xkey.resize(GDIM);   
-    for ( auto j=0; j<xnodes->size(); j++ ) cart[j] = &(*xnodes)[j];
-    for ( auto j=0; j<GDIM; j++ ) xkey[j] = tmp[j];
-    GMTK::rcart2sphere(cart, xkey);
-    for ( auto j=0; j<GDIM; j++ ) ldelta[j] = xkey[j]->amindiff(tiny);
-    GComm::Allreduce(ldelta.data(), delta.data(), GDIM, T2GCDatatype<GFTYPE>(), GC_OP_MIN, comm_);
-    for ( auto j=0; j<GDIM; j++ ) dX[j] = 0.025*delta[j];
-//  gmorton.setDoLog(TRUE);
-    gmorton.setType(GMORTON_STACKED);
-  }
-
-  // First, periodize coords if required to, 
-  // before labeling nodes:
-  if ( typeid(grid) == typeid(GGridBox) ) { 
-    static_cast<GGridBox*>(&grid)->periodize();
-  }
-
-  xnodes = &grid.xNodes();
-  glob_indices.resize(grid.ndof());
-
-  // Integralize *all* internal nodes
-  // using Morton indices:
-//gmorton.setDoLog(TRUE);
-  gmorton.setType(GMORTON_STACKED);
-//gmorton.setType(GMORTON_INTERLEAVE);
-  gmorton.setIntegralLen(P0,dX);
-  gmorton.key(glob_indices, xkey);
-
-  // Initialize gather/scatter operator:
-  ggfx = new GGFX<GFTYPE>();
-  assert(ggfx != NULLPTR && "Cannot instantiate GGFX operator");
-  bret = ggfx->init(glob_indices);
-  assert(bret && "Initialization of GGFX operator failed");
-
-  // Unperiodize nodes now that connectivity map is
-  // generated, so that coordinates mean what they should:
-  if ( typeid(grid) == typeid(GGridBox) ) { // periodize coords
-    static_cast<GGridBox*>(&grid)->unperiodize();
-  }
-
-  for ( auto j=0; j<GDIM; j++ ) delete tmp[j];
-
-} // end method init_ggfx
+////gmorton.setType(GMORTON_INTERLEAVE);
+//  gmorton.setIntegralLen(P0,dX);
+//  gmorton.key(glob_indices, xkey);
+//
+//  // Initialize gather/scatter operator:
+//  ggfx = new GGFX<GFTYPE>();
+//  assert(ggfx != NULLPTR && "Cannot instantiate GGFX operator");
+//  bret = ggfx->init(glob_indices);
+//  assert(bret && "Initialization of GGFX operator failed");
+//
+//  // Unperiodize nodes now that connectivity map is
+//  // generated, so that coordinates mean what they should:
+//  if ( typeid(grid) == typeid(GGridBox) ) { // periodize coords
+//    static_cast<GGridBox*>(&grid)->unperiodize();
+//  }
+//
+//  for ( auto j=0; j<GDIM; j++ ) delete tmp[j];
+//
+//} // end method init_ggfx
 
 
 //**********************************************************************************
@@ -999,5 +999,42 @@ void do_restart(const PropertyTree &ptree, GGrid &, State &u,
 
   
 } // end of method do_restart
+
+
+
+
+
+
+void init_ggfx(PropertyTree& ptree, GGrid& grid, GGFX<GFTYPE>* ggfx)
+{
+  GEOFLOW_TRACE();
+
+  // Get all nodes from Grid into a packed form
+  pio::pout << "Packing Arrays" << std::endl;
+  pio::pout << "NDoF = " << grid_->ndof() << std::endl;
+  pio::pout << "NDim = " << GDIM          << std::endl;
+
+  std::vector<std::array<GFTYPE,GDIM>> xyz(grid_->ndof());
+  for(std::size_t i = 0; i < grid_->ndof(); i++){
+	  for(std::size_t d = 0; d < GDIM; d++){
+		  xyz[i][d] = grid.xNodes()[d][i];
+	  }
+  }
+
+  // Create GGFX
+  ASSERT(ggfx == nullptr);
+  ggfx = new GGFX<GFTYPE>();
+  ASSERT(ggfx != nullptr);
+  pio::pout << "Calling ggfx->init(xyz)" << std::endl;
+  ggfx->init(0.25*grid.minnodedist(), xyz);
+
+} // end method init_ggfx_2
+
+
+
+
+
+
+
 
 

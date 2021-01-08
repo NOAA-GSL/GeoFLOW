@@ -7,10 +7,10 @@
 #
 set(test_cdg_files 
 		  cdg_blas.cpp 
-		  cdg_cg.cpp    
-		  cdg_ggfx.cpp
+#		  cdg_cg.cpp    
+#		  cdg_ggfx.cpp
 		  cdg_gmtk.cpp
-		  cdg_mass.cpp
+#		  cdg_mass.cpp
 )
 
 #

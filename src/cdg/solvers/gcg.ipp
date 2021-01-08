@@ -127,7 +127,11 @@ GINT GCG<Types>::solve_impl(Operator& A, const StateComp& b, StateComp& x)
   StateComp *q, *r, *w, *z;
   State      tmp(this->tmp_->size()-4);
   StateComp *mask  = &this->grid_->get_mask();
-  StateComp *imult = &this->ggfx_->get_imult();
+
+  StateComp imult_actual(this->grid_->ndof());
+  this->ggfx_->get_imult(imult_actual);
+  StateComp* imult = &imult_actual;
+
 
   assert(this->tmp_->size() > 5);
   init();
@@ -241,7 +245,10 @@ GINT GCG<Types>::solve_impl(Operator& A, const StateComp& b, StateComp& x)
   StateComp *q, *r, *w, *z;
   State      tmp(this->tmp_->size()-4);
   StateComp *mask  = &this->grid_->get_mask();
-  StateComp *imult = &this->ggfx_->get_imult();
+
+  StateComp imult_actual(this->grid_->ndof());
+  this->ggfx_->get_imult(imult_actual);
+  StateComp* imult = &imult_actual;
 
   assert(this->tmp_->size() > 5);
   init();
