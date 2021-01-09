@@ -114,9 +114,9 @@ target_link_libraries(cdg
 		"$<$<BOOL:${PAPI_FOUND}>:PAPI::PAPI>"
 		"$<$<BOOL:${GPTL_FOUND}>:GPTL::GPTL>"
 		"$<$<BOOL:${CBLAS_FOUND}>:${CBLAS_LIBRARIES_DEP}>"
-		"$<$<BOOL:${CUDAToolkit_FOUND}>:CUDA::cudart>"
-		"$<$<BOOL:${CUDAToolkit_FOUND}>:CUDA::cublas>"		
-		"$<$<BOOL:${OpenACC_CXX_FOUND}>:OpenACC::OpenACC_CXX>"		
+		"$<$<BOOL:${OpenACC_CXX_FOUND}>:OpenACC::OpenACC_CXX>"	
+		"$<$<TARGET_EXISTS:CUDA::cudart>:CUDA::cudart>"
+        "$<$<TARGET_EXISTS:CUDA::cublas>:CUDA::cublas>"	
 	)
 
 #

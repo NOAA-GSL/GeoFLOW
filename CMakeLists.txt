@@ -160,6 +160,20 @@ endif()
 
 find_package(Doxygen)
 
+#---------------------------------------------------------------------
+# Detect Library Errors
+#---------------------------------------------------------------------
+# Protect against system which only install partial libraries
+#
+
+if(CUDAToolkit_FOUND)
+	if(NOT TARGET CUDA::cudart)
+		message( FATAL_ERROR "CUDA Runtime was Not Found within the CUDA Toolkit" )
+	endif()
+	if(GEOFLOW_USE_CUBLAS AND NOT TARGET CUDA::cublas)
+		message( FATAL_ERROR "cuBLAS was Not Found within the CUDA Toolkit" )
+	endif()
+endif(CUDAToolkit_FOUND)
 
 #
 #---------------------------------------------------------------------
