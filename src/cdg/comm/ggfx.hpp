@@ -105,7 +105,9 @@ GGFX<T>::init(const T tolerance, Coordinates& xyz){
 	auto num_ranks = world.size();
 
 	// Build "index_value_type" for each local coordinate and place into a spatial index
-	shared_index_type coordinate_indexer;
+	shared_index_type local_bound_indexer;
+	std::vector<index_bound_type> local_bounds_by_id;
+	local_bounds_by_id.reserve(xyz.size());
 	for(auto i = 0; i < xyz.size(); ++i){
 
 		// Build a slightly larger bounding box
@@ -117,15 +119,15 @@ GGFX<T>::init(const T tolerance, Coordinates& xyz){
 		}
 
 		// Place into coordinate index tree
-		auto index_value = index_value_type(index_bound_type(min_xyz,max_xyz), index_key_type(i));
-		coordinate_indexer.insert(index_value);
+		local_bounds_by_id.emplace_back(index_bound_type(min_xyz,max_xyz));
+		auto index_value = index_value_type(local_bounds_by_id.back(), index_key_type(i));
+		local_bound_indexer.insert(index_value);
 	}
 
 	// Get Bounding Box for this Ranks Coordinates
 	// Perform MPI_Allgather so everyone gets a bound region for each processor
 	std::vector<index_bound_type> bounds_by_rank;
-	auto local_bounded_region = coordinate_indexer.bounds();
-	mpi::all_gather(world, local_bounded_region, bounds_by_rank);
+	mpi::all_gather(world, local_bound_indexer.bounds(), bounds_by_rank);
 
 	// For each Ranks Bounding Region
 	// - Build list of local indexed values to send to each overlapping rank
@@ -139,7 +141,7 @@ GGFX<T>::init(const T tolerance, Coordinates& xyz){
 		if( rank != my_rank ){ // Don't search myself (we know the answer is everything)
 
 			std::vector<index_value_type> search_results;
-			coordinate_indexer.query( tbox::spatial::shared::predicate::Intersects(bounds_by_rank[rank]), std::back_inserter(search_results) );
+			local_bound_indexer.query( tbox::spatial::shared::predicate::Intersects(bounds_by_rank[rank]), std::back_inserter(search_results) );
 
 			// If found any bounds within the ranks bounding region
 			// - Move into buffer map (i.e. no copy)
@@ -168,14 +170,14 @@ GGFX<T>::init(const T tolerance, Coordinates& xyz){
 	using global_extractor_type = detail_extractor::pair_extractor<global_value_type>;
 	using global_index_type     = tbox::spatial::shared::index::RTree<global_value_type, global_extractor_type>;
 
-	global_index_type global_indexer;
+	global_index_type global_bound_indexer;
 	for(auto& [rank, pairs_from_rank]: recv_from_ranks){
 		recv_requests[rank].wait(); // Wait to receive data
 
 		for(auto& remote_pair: pairs_from_rank){
 			auto key   = global_key_type(rank,remote_pair.second);
 			auto value = global_value_type(remote_pair.first,key);
-			global_indexer.insert(value);
+			global_bound_indexer.insert(value);
 		}
 	}
 	for(auto& [rank, req]: send_requests){
@@ -189,11 +191,28 @@ GGFX<T>::init(const T tolerance, Coordinates& xyz){
 	recv_from_ranks.clear();
 
 	//
-	// For each of our local Sink values we need to find the
-	// matching global Sources from the global_source_indexer
+	// For each of our local bounds we need to find the
+	// - Matching local bounds
+	// - Matching global bounds
 	//
-	// local_sink_global_matches[sink id] = vector(pair(rank,id))
-	//
+	std::vector<bool> local_already_mapped(local_bounds_by_id.size(),false);
+	for(size_type id = 0; id < local_bounds_by_id.size(); ++id){
+
+		// Only search for local mapping if not already found
+		if(not local_already_mapped[id]){
+			std::vector<index_value_type> search_results;
+			local_bound_indexer.query( tbox::spatial::shared::predicate::Intersects(local_bounds_by_id[id]), std::back_inserter(search_results) );
+
+			for(auto& [bnd, match_id]: search_results){
+				recv_map_[my_rank][id].push_back(match_id);
+				recv_map_[my_rank][match_id].push_back(id);
+				local_already_mapped[id] = true;
+				local_already_mapped[match_id] = true;
+			}
+		}
+	}
+
+
 //	std::vector<std::vector<global_source_key_type>> local_sink_global_matches(sink_bounds.size());
 //	for(std::size_t i = 0; i < sink_bounds.size(); ++i){
 //		std::vector<global_source_value_type> sink_results;
