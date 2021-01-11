@@ -208,6 +208,7 @@ GGFX<T>::init(const T tolerance, Coordinates& xyz){
 				recv_map_[my_rank][match_id].push_back(id);
 				local_already_mapped[id] = true;
 				local_already_mapped[match_id] = true;
+				// TODO This isn't correct yet
 			}
 		}
 	}
