@@ -1504,18 +1504,17 @@ void GGrid::add_terrain(const State &xb, State &utmp)
 //          DSS is the application of Q Q^T, or the direct stiffness operator.
 // ARGS   :
 //          tmp  : tmp space
-//          op   : GGFX_OP operation
 //          u    : Locally expressed field to smooth
 // RETURNS: none.
 //************************************************************************************
-void GGrid::smooth(GGFX_OP op, GTVector<GFTYPE> &tmp, GTVector<GFTYPE> &u)
+void GGrid::smooth(GTVector<GFTYPE> &tmp, GTVector<GFTYPE> &u)
 {
-	GEOFLOW_TRACE();
+  GEOFLOW_TRACE();
   tmp = u;
 
   u.pointProd(*(this->massop().data()));
   tmp = *(this->imassop().data());
-  this->ggfx_->doOp(tmp, op);  // DSS(mass_local)
+  this->ggfx_->doOp(tmp, GGFX<GFTYPE>::Smooth());  // DSS(mass_local)
 
   u.pointProd(tmp);      // M_assembled u M_L
 

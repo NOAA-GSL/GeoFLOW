@@ -20,25 +20,66 @@
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/utility.hpp>
 
+#include "tbox/assert.hpp"
 #include "tbox/spatial.hpp"
 #include "tbox/pio.hpp"
 
 #include <array>
 #include <limits>
 #include <map>
+#include <numeric>
 #include <set>
 #include <vector>
 
 
-// GGFX reduction operation defs:
-#if !defined(GGFX_OP_DEF)
-#define GGFX_OP_DEF
-enum GGFX_OP {GGFX_OP_SUM=0, GGFX_OP_PROD, GGFX_OP_MAX, GGFX_OP_MIN, GGFX_OP_SMOOTH};
-#endif
-
 
 template<typename ValueType>
 class GGFX {
+
+public:
+
+	struct Max{
+		template<typename VectorType>
+		typename VectorType::value_type
+		operator()(const VectorType& vec) const {
+			using value_type = typename VectorType::value_type;
+			constexpr auto small = std::numeric_limits<value_type>::lowest();
+			return std::reduce(vec.begin(),vec.end(),small,[](auto& a, auto& b){
+				return std::max(a,b);
+			});
+		}
+	};
+
+	struct Min{
+		template<typename VectorType>
+		typename VectorType::value_type
+		operator()(const VectorType& vec) const {
+			using value_type = typename VectorType::value_type;
+			constexpr auto large = std::numeric_limits<value_type>::max();
+			return std::reduce(vec.begin(),vec.end(),large,[](auto& a, auto& b){
+				return std::min(a,b);
+			});
+		}
+	};
+
+	struct Smooth{
+		template<typename VectorType>
+		typename VectorType::value_type
+		operator()(const VectorType& vec) const {
+			return std::accumulate(vec.begin(),vec.end(),0) / vec.size();
+		}
+	};
+
+	struct Sum{
+		template<typename VectorType>
+		typename VectorType::value_type
+		operator()(const VectorType& vec) const {
+			return std::accumulate(vec.begin(),vec.end(),0);
+		}
+	};
+
+
+
 
 public:
 	GGFX()                             = default;
@@ -51,13 +92,14 @@ public:
 	template<typename Coordinates>
 	GBOOL init(const ValueType tolerance, Coordinates& xyz);
 
-	template<typename ValueArray>
-	GBOOL doOp(ValueArray& u,  GGFX_OP op);
+	template<typename ValueArray, typename ReductionOp>
+	GBOOL doOp(ValueArray& u,  ReductionOp op);
 
 	GC_COMM  getComm() const;
 
 	template<typename CountArray>
 	void get_imult(CountArray& imult) const;
+
 
 private:
 	using rank_type  = int;
@@ -292,7 +334,7 @@ GGFX<T>::init(const T tolerance, Coordinates& xyz){
 
 
 	world.barrier();
-	exit(0);
+//	exit(0);
 
 	return true;
 }
@@ -300,11 +342,85 @@ GGFX<T>::init(const T tolerance, Coordinates& xyz){
 
 
 template<typename T>
-template<typename ValueArray>
+template<typename ValueArray, typename ReductionOp>
 GBOOL
-GGFX<T>::doOp(ValueArray& u,  GGFX_OP op){
+GGFX<T>::doOp(ValueArray& u,  ReductionOp oper){
 
+	// Get size of data being used
+	const auto N = u.size();
+	const size_type MAX_DUPLICATES = std::pow(2,GDIM);
 
+	// Get MPI communicator, etc.
+	namespace mpi = boost::mpi;
+	mpi::communicator world;
+	auto my_rank   = world.rank();
+	auto num_ranks = world.size();
+
+	// Submit the Non-Blocking receive requests
+	std::vector<mpi::request> recv_requests;
+	for (auto& [rank, recv_buffer_for_rank] : recv_buffer_) {
+		auto tag = rank + my_rank;
+		auto req = world.irecv(rank, tag, recv_buffer_for_rank);
+		recv_requests.emplace_back(req);
+	}
+
+	// Copy values into Send Buffers & Non-Block Send
+	std::vector<mpi::request> send_requests;
+	for (auto& [rank, local_ids_to_send] : send_map_) {
+
+		// Pack into sending buffer
+		size_type i = 0;
+		auto& buffer_to_send = send_buffer_[rank];
+		buffer_to_send.resize(local_ids_to_send.size());
+		for (auto& id : local_ids_to_send){
+			ASSERT(id < N);
+			buffer_to_send[i++] = u[id];
+		}
+
+		// Send buffer to receiving processor
+		auto tag = rank + my_rank;
+		auto req = world.isend(rank, tag, buffer_to_send);
+		send_requests.emplace_back(req);
+	}
+
+	// Prepare the buffer used for the reduction
+	// - This should only resize after first call
+	reduction_buffer_.resize(N);
+	for(auto& buf : reduction_buffer_){
+		buf.resize(0);
+		buf.reserve(MAX_DUPLICATES);
+	}
+
+	// Loop over receiving data
+	size_type i = 0;
+	for (auto& [rank, matrix_map] : recv_map_) {
+		recv_requests[i++].wait(); // wait for data to appear
+		auto& buffer_for_rank = recv_buffer_[rank];
+
+		// Loop over each value received from rank
+		size_type n = 0;
+		for(auto& [remote_id, local_id_set] : matrix_map){
+
+			// Loop over each local ID the value is used in
+			for(auto& id : local_id_set) {
+				ASSERT(reduction_buffer_.size() > id);
+				ASSERT(reduction_buffer_[id].size() < (MAX_DUPLICATES-1));
+				reduction_buffer_[id].push_back( buffer_for_rank[n] );
+			}
+			++n;
+		}
+	}
+
+	// Call the Reduction Operation on each
+	i = 0;
+	for(auto& dup_values : reduction_buffer_) {
+		u[i++] = oper(dup_values);
+	}
+
+	// Clear all send requests
+	for(auto& req : send_requests){
+		req.wait();
+	}
 
 	return true;
 }
