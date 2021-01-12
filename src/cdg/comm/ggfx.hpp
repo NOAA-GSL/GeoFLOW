@@ -26,6 +26,7 @@
 #include <array>
 #include <limits>
 #include <map>
+#include <set>
 #include <vector>
 
 
@@ -63,8 +64,9 @@ private:
 	using size_type  = std::size_t;
 	using value_type = ValueType;
 
-	std::map<rank_type, std::vector<size_type>>              send_map_;         // [Rank][1:Nsend] = Local Index
-	std::map<rank_type, std::vector<std::vector<size_type>>> recv_map_;         // [Rank][1:Nrecv][1:Nshare] = Local Index
+	std::map<rank_type, std::set<size_type>>                      send_map_; // [Rank][1:Nsend] = Local Index
+	std::map<rank_type, std::map<size_type, std::set<size_type>>> recv_map_; // [Rank][1:Nrecv][1:Nshare] = Local Index
+
 	std::map<rank_type, std::vector<value_type>>             send_buffer_;      // [Rank][1:Nsend] = Value sending
 	std::map<rank_type, std::vector<value_type>>             recv_buffer_;      // [Rank][1:Nrecv] = Value received
 	std::vector<std::vector<size_type>>                      reduction_buffer_; // [1:Nlocal][1:Nreduce] = Value to reduce
@@ -104,6 +106,12 @@ GGFX<T>::init(const T tolerance, Coordinates& xyz){
 	auto my_rank   = world.rank();
 	auto num_ranks = world.size();
 
+	// ----------------------------------------------------------
+	//      Build Indexer for each Local Coordinate Location
+	// ----------------------------------------------------------
+	pio::perr << "Tolerance = " << tolerance << std::endl;
+	pio::perr << "Build Indexer for each Local Coordinate Location" << std::endl;
+
 	// Build "index_value_type" for each local coordinate and place into a spatial index
 	shared_index_type local_bound_indexer;
 	std::vector<index_bound_type> local_bounds_by_id;
@@ -123,6 +131,44 @@ GGFX<T>::init(const T tolerance, Coordinates& xyz){
 		auto index_value = index_value_type(local_bounds_by_id.back(), index_key_type(i));
 		local_bound_indexer.insert(index_value);
 	}
+
+	// ----------------------------------------------------------
+	//          Search Indexer for each Local Matches
+	// ----------------------------------------------------------
+	pio::perr << "Search Indexer for each Local Matches" << std::endl;
+
+	//
+	// For each of our local bounds we need to find the
+	// - Matching local bounds
+	//
+	auto& my_rank_recv_map = recv_map_[my_rank];
+	//my_rank_recv_map.resize(local_bounds_by_id.size());
+	std::vector<bool> local_already_mapped(local_bounds_by_id.size(),false);
+	for(size_type id = 0; id < local_bounds_by_id.size(); ++id){
+
+		// Search for local mapping if not already found
+		if(not local_already_mapped[id]){
+			std::vector<index_value_type> search_results;
+			local_bound_indexer.query( tbox::spatial::shared::predicate::Intersects(local_bounds_by_id[id]), std::back_inserter(search_results) );
+
+			// Build list of just the Local ID's
+			std::set<size_type> search_ids;
+			for(auto& found_pair: search_results){
+				search_ids.insert(found_pair.second);
+			}
+
+			// The result "should" be the same for every location within results
+			for(auto& match_id: search_ids){
+				my_rank_recv_map[match_id] = search_ids;
+				local_already_mapped[match_id] = true;
+			}
+		}
+	}
+
+	// ----------------------------------------------------------
+	//  Gather/Scatter my Local Coordinate Others who Overlap
+	// ----------------------------------------------------------
+	pio::perr << "Gather/Scatter my Local Coordinate Others who Overlap" << std::endl;
 
 	// Get Bounding Box for this Ranks Coordinates
 	// Perform MPI_Allgather so everyone gets a bound region for each processor
@@ -150,95 +196,48 @@ GGFX<T>::init(const T tolerance, Coordinates& xyz){
 			if( search_results.size() > 0 ){
 				send_to_ranks.emplace(rank, search_results);
 
-				// Tag = 2 * rank of receiver
+				// Tag = 0
 				recv_requests[rank] = world.irecv(rank, 0, recv_from_ranks[rank]);
 				send_requests[rank] = world.isend(rank, 0, send_to_ranks[rank]);
 			}
 		}
 	}
 
-	//
-	// Build "global_value_type" for each global coordinate and place into a spatial index
-	//
-	// Some things to note:
-	// - Values within recv_from_ranks => std::pair< bound, id_on_rank >
-	// - Our local Indexer of global values needs to keep pair(bound,pair(rank,id_on_rank))
-	//
-	using global_bound_type     = tbox::spatial::bound::Box<value_type,GDIM>;
-	using global_key_type       = std::pair<rank_type,size_type>;                // (rank,pid)
-	using global_value_type     = std::pair<global_bound_type,global_key_type>;  // (bound, (rank,pid))
-	using global_extractor_type = detail_extractor::pair_extractor<global_value_type>;
-	using global_index_type     = tbox::spatial::shared::index::RTree<global_value_type, global_extractor_type>;
+	// ----------------------------------------------------------
+	//     Search Local Indexer for each Global Match
+	// ----------------------------------------------------------
+	pio::perr << "Search Local Indexer for each Global Match" << std::endl;
 
-	global_index_type global_bound_indexer;
+	//
+	// For each of our global bound we received we need to find the
+	// - Matching local bounds
+	//
+	// We already required a Local Coordinate Indexer for local matches
+	// so we'll re-use that Indexer for searching against each global
+	// coordinate location we received.
+	//
 	for(auto& [rank, pairs_from_rank]: recv_from_ranks){
 		recv_requests[rank].wait(); // Wait to receive data
 
-		for(auto& remote_pair: pairs_from_rank){
-			auto key   = global_key_type(rank,remote_pair.second);
-			auto value = global_value_type(remote_pair.first,key);
-			global_bound_indexer.insert(value);
+		// Loop over each remote pair<bound, id>
+		for(auto& [remote_bnd, remote_id]: pairs_from_rank){
+			std::vector<index_value_type> search_results;
+			local_bound_indexer.query( tbox::spatial::shared::predicate::Intersects(remote_bnd), std::back_inserter(search_results));
+
+			for(auto& [local_bnd, local_id]: search_results){
+				send_map_[rank].insert(local_id);
+				recv_map_[rank][remote_id].insert(local_id);
+			}
+
 		}
 	}
 	for(auto& [rank, req]: send_requests){
 		req.wait(); // Clear out the send requests
 	}
 
-	// Clean Memory Buffers & Requests ???
-	send_requests.clear();
-	recv_requests.clear();
-	send_to_ranks.clear();
-	recv_from_ranks.clear();
-
-	//
-	// For each of our local bounds we need to find the
-	// - Matching local bounds
-	// - Matching global bounds
-	//
-	std::vector<bool> local_already_mapped(local_bounds_by_id.size(),false);
-	for(size_type id = 0; id < local_bounds_by_id.size(); ++id){
-
-		// Only search for local mapping if not already found
-		if(not local_already_mapped[id]){
-			std::vector<index_value_type> search_results;
-			local_bound_indexer.query( tbox::spatial::shared::predicate::Intersects(local_bounds_by_id[id]), std::back_inserter(search_results) );
-
-			for(auto& [bnd, match_id]: search_results){
-				recv_map_[my_rank][id].push_back(match_id);
-				recv_map_[my_rank][match_id].push_back(id);
-				local_already_mapped[id] = true;
-				local_already_mapped[match_id] = true;
-				// TODO This isn't correct yet
-			}
-		}
-	}
 
 
-//	std::vector<std::vector<global_source_key_type>> local_sink_global_matches(sink_bounds.size());
-//	for(std::size_t i = 0; i < sink_bounds.size(); ++i){
-//		std::vector<global_source_value_type> sink_results;
-//		global_source_indexer.query(spatial::shared::predicate::Contains(sink_bounds[i]), std::back_inserter(sink_results));
-//		for(auto& result : sink_results){
-//			local_sink_global_matches[i].push_back(result.second);
-//		}
-//	}
-
-
-
-
-
-
-	for(auto& [rank, req] : recv_requests){
-		pio::perr << "Recv to " << rank << " is active = " << req.active() << std::endl;
-		req.wait();
-	}
-	// Don't exit before all sends complete
-	for(auto& [rank, req] : send_requests){
-		pio::perr << "Send to " << rank << " is active = " << req.active() << std::endl;
-		req.wait();
-	}
-
-
+	auto local_bounded_region = local_bound_indexer.bounds();
 	pio::perr << "Report:" << std::endl;
 	pio::perr << "Tolerance = " << tolerance << std::endl;
 	for(auto d = 0; d < GDIM; ++d){
@@ -250,7 +249,47 @@ GGFX<T>::init(const T tolerance, Coordinates& xyz){
 	for(auto& [rank, vec] : recv_from_ranks){
 		pio::perr << "Received " << vec.size() << " bounds from rank " << rank << std::endl;
 	}
+	world.barrier();
 	pio::perr << std::endl;
+
+	for(auto rank = 0 ; rank < num_ranks; ++rank){
+		if(my_rank == rank){
+
+			for(auto& [srank, vec] : send_map_){
+				pio::perr << "  Sending to rank " << srank << " nodes " << vec.size() << std::endl;;
+			}
+			for(auto& [rrank, vec] : recv_map_){
+				pio::perr << "  Recving to rank " << rrank << " nodes " << vec.size() << std::endl;;
+			}
+
+			pio::perr << std::flush;
+		}
+		world.barrier();
+	}
+	world.barrier();
+	pio::perr << std::endl;
+
+
+	std::map<size_type,size_type> count;
+	std::vector<size_type> imult(xyz.size());
+	this->get_imult(imult);
+	for(auto& im : imult){
+		if(count.count(im) == 0){
+			count[im] = 1;
+		}
+		else {
+			count[im]++;
+		}
+	}
+	for(auto rank = 0 ; rank < num_ranks; ++rank){
+		if(my_rank == rank){
+			for(auto& [mult, sz] : count){
+				pio::perr << "imult " << mult << "  size = " << sz << std::endl;
+			}
+		}
+		world.barrier();
+	}
+
 
 	world.barrier();
 	exit(0);
@@ -281,9 +320,9 @@ template<typename CountArray>
 void
 GGFX<T>::get_imult(CountArray& imult) const {
 
-	// Set whole array to 1
+	// Zero whole array
 	for(size_type i = 0; i < imult.size(); ++i){
-		imult[i] = 1;
+		imult[i] = 0;
 	}
 
 	// Accumulate the counts in each index
@@ -291,8 +330,8 @@ GGFX<T>::get_imult(CountArray& imult) const {
 	// - Loop over each value within the buffer
 	// - Loop over each local index that value contributes to
 	for (auto& [rank, matrix_map] : recv_map_) {
-		for(auto& local_id_map : matrix_map) {
-			for(auto& id : local_id_map) {
+		for(auto& [remote_id, local_id_set] : matrix_map) {
+			for(auto& id : local_id_set) {
 				++(imult[id]);
 			}
 		}
