@@ -23,6 +23,7 @@
 #include "tbox/assert.hpp"
 #include "tbox/spatial.hpp"
 #include "tbox/pio.hpp"
+#include "tbox/tracer.hpp"
 
 #include <array>
 #include <limits>
@@ -100,11 +101,13 @@ public:
 	template<typename CountArray>
 	void get_imult(CountArray& imult) const;
 
+	void display() const;
 
 private:
 	using rank_type  = int;
 	using size_type  = std::size_t;
 	using value_type = ValueType;
+	static constexpr size_type MAX_DUPLICATES = std::pow(2,GDIM);
 
 	std::map<rank_type, std::set<size_type>>                      send_map_; // [Rank][1:Nsend] = Local Index
 	std::map<rank_type, std::map<size_type, std::set<size_type>>> recv_map_; // [Rank][1:Nrecv][1:Nshare] = Local Index
@@ -115,6 +118,29 @@ private:
 };
 
 
+
+template<typename T>
+void GGFX<T>::display() const {
+	using namespace geoflow::tbox;
+	namespace mpi = boost::mpi;
+	mpi::communicator world;
+	auto my_rank   = world.rank();
+	auto num_ranks = world.size();
+	for(auto rank = 0 ; rank < num_ranks; ++rank){
+		if(my_rank == rank){
+			pio::perr << "send_map_.size() = " << send_map_.size() <<std::endl;
+			for(auto& [srank, vec] : send_map_){
+				pio::perr << "  Sending to rank " << srank << " nodes " << vec.size() << std::endl;;
+			}
+			pio::perr << "recv_map_.size() = " << recv_map_.size() <<std::endl;
+			for(auto& [rrank, vec] : recv_map_){
+				pio::perr << "  Recving to rank " << rrank << " nodes " << vec.size() << std::endl;;
+			}
+			pio::perr << std::flush;
+		}
+		world.barrier();
+	}
+}
 
 namespace detail_extractor {
 template<typename PairType>
@@ -133,6 +159,7 @@ template<typename T>
 template<typename Coordinates>
 GBOOL
 GGFX<T>::init(const T tolerance, Coordinates& xyz){
+	GEOFLOW_TRACE();
 	using namespace geoflow::tbox;
 
 	// Types
@@ -151,13 +178,14 @@ GGFX<T>::init(const T tolerance, Coordinates& xyz){
 	// ----------------------------------------------------------
 	//      Build Indexer for each Local Coordinate Location
 	// ----------------------------------------------------------
-	pio::perr << "Tolerance = " << tolerance << std::endl;
-	pio::perr << "Build Indexer for each Local Coordinate Location" << std::endl;
+//	pio::perr << "Tolerance = " << tolerance << std::endl;
+//	pio::perr << "Build Indexer for each Local Coordinate Location" << std::endl;
 
 	// Build "index_value_type" for each local coordinate and place into a spatial index
 	shared_index_type local_bound_indexer;
 	std::vector<index_bound_type> local_bounds_by_id;
 	local_bounds_by_id.reserve(xyz.size());
+	{GEOFLOW_TRACE_MSG("Build Local Index");
 	for(auto i = 0; i < xyz.size(); ++i){
 
 		// Build a slightly larger bounding box
@@ -173,19 +201,20 @@ GGFX<T>::init(const T tolerance, Coordinates& xyz){
 		auto index_value = index_value_type(local_bounds_by_id.back(), index_key_type(i));
 		local_bound_indexer.insert(index_value);
 	}
+	}
 
 	// ----------------------------------------------------------
 	//          Search Indexer for each Local Matches
 	// ----------------------------------------------------------
-	pio::perr << "Search Indexer for each Local Matches" << std::endl;
+//	pio::perr << "Search Indexer for each Local Matches" << std::endl;
 
 	//
 	// For each of our local bounds we need to find the
 	// - Matching local bounds
 	//
 	auto& my_rank_recv_map = recv_map_[my_rank];
-	//my_rank_recv_map.resize(local_bounds_by_id.size());
 	std::vector<bool> local_already_mapped(local_bounds_by_id.size(),false);
+	{GEOFLOW_TRACE_MSG("Index Local Nodes");
 	for(size_type id = 0; id < local_bounds_by_id.size(); ++id){
 
 		// Search for local mapping if not already found
@@ -206,16 +235,20 @@ GGFX<T>::init(const T tolerance, Coordinates& xyz){
 			}
 		}
 	}
+	}
 
 	// ----------------------------------------------------------
 	//  Gather/Scatter my Local Coordinate Others who Overlap
 	// ----------------------------------------------------------
-	pio::perr << "Gather/Scatter my Local Coordinate Others who Overlap" << std::endl;
+//    pio::perr << "Gather/Scatter my Local Coordinate Others who Overlap" << std::endl;
 
 	// Get Bounding Box for this Ranks Coordinates
 	// Perform MPI_Allgather so everyone gets a bound region for each processor
 	std::vector<index_bound_type> bounds_by_rank;
-	mpi::all_gather(world, local_bound_indexer.bounds(), bounds_by_rank);
+	{GEOFLOW_TRACE_MSG("AllGather");
+	const index_bound_type bnd = local_bound_indexer.bounds();
+	mpi::all_gather(world, bnd, bounds_by_rank);
+	}
 
 	// For each Ranks Bounding Region
 	// - Build list of local indexed values to send to each overlapping rank
@@ -225,7 +258,8 @@ GGFX<T>::init(const T tolerance, Coordinates& xyz){
 	std::map<rank_type, mpi::request> recv_requests;
 	std::map<rank_type, std::vector<index_value_type>> send_to_ranks;
 	std::map<rank_type, std::vector<index_value_type>> recv_from_ranks;
-	for(auto rank = 0; rank < num_ranks; ++rank){
+	{GEOFLOW_TRACE_MSG("Gather/Scatter Coordinates");
+	for(rank_type rank = 0; rank < num_ranks; ++rank){
 		if( rank != my_rank ){ // Don't search myself (we know the answer is everything)
 
 			std::vector<index_value_type> search_results;
@@ -244,11 +278,12 @@ GGFX<T>::init(const T tolerance, Coordinates& xyz){
 			}
 		}
 	}
+	}
 
 	// ----------------------------------------------------------
 	//     Search Local Indexer for each Global Match
 	// ----------------------------------------------------------
-	pio::perr << "Search Local Indexer for each Global Match" << std::endl;
+//	pio::perr << "Search Local Indexer for each Global Match" << std::endl;
 
 	//
 	// For each of our global bound we received we need to find the
@@ -258,8 +293,10 @@ GGFX<T>::init(const T tolerance, Coordinates& xyz){
 	// so we'll re-use that Indexer for searching against each global
 	// coordinate location we received.
 	//
-	for(auto& [rank, pairs_from_rank]: recv_from_ranks){
-		recv_requests[rank].wait(); // Wait to receive data
+	{GEOFLOW_TRACE_MSG("Build Global Maps");
+	for(auto& [rank, req]: recv_requests){
+		req.wait(); // Wait to receive data
+		auto& pairs_from_rank = recv_from_ranks[rank];
 
 		// Loop over each remote pair<bound, id>
 		for(auto& [remote_bnd, remote_id]: pairs_from_rank){
@@ -276,65 +313,23 @@ GGFX<T>::init(const T tolerance, Coordinates& xyz){
 	for(auto& [rank, req]: send_requests){
 		req.wait(); // Clear out the send requests
 	}
-
-
-
-	auto local_bounded_region = local_bound_indexer.bounds();
-	pio::perr << "Report:" << std::endl;
-	pio::perr << "Tolerance = " << tolerance << std::endl;
-	for(auto d = 0; d < GDIM; ++d){
-		pio::perr << "Range " << d << "  " << local_bounded_region.min(d) << " - " << local_bounded_region.max(d) << std::endl;
-	}
-	for(auto& [rank, vec] : send_to_ranks){
-		pio::perr << "Sending " << vec.size() << " bounds to rank " << rank << std::endl;
-	}
-	for(auto& [rank, vec] : recv_from_ranks){
-		pio::perr << "Received " << vec.size() << " bounds from rank " << rank << std::endl;
-	}
-	world.barrier();
-	pio::perr << std::endl;
-
-	for(auto rank = 0 ; rank < num_ranks; ++rank){
-		if(my_rank == rank){
-
-			for(auto& [srank, vec] : send_map_){
-				pio::perr << "  Sending to rank " << srank << " nodes " << vec.size() << std::endl;;
-			}
-			for(auto& [rrank, vec] : recv_map_){
-				pio::perr << "  Recving to rank " << rrank << " nodes " << vec.size() << std::endl;;
-			}
-
-			pio::perr << std::flush;
-		}
-		world.barrier();
-	}
-	world.barrier();
-	pio::perr << std::endl;
-
-
-	std::map<size_type,size_type> count;
-	std::vector<size_type> imult(xyz.size());
-	this->get_imult(imult);
-	for(auto& im : imult){
-		if(count.count(im) == 0){
-			count[im] = 1;
-		}
-		else {
-			count[im]++;
-		}
-	}
-	for(auto rank = 0 ; rank < num_ranks; ++rank){
-		if(my_rank == rank){
-			for(auto& [mult, sz] : count){
-				pio::perr << "imult " << mult << "  size = " << sz << std::endl;
-			}
-		}
-		world.barrier();
 	}
 
+	{GEOFLOW_TRACE_MSG("Allocate Buffers");
+	// Allocate Buffers for Send/Receive in the future
+	for(auto& [rank, send_ids]: send_map_){
+		send_buffer_[rank].resize(send_ids.size());
+	}
+	for(auto& [rank, recv_id_pairs]: recv_map_){
+		recv_buffer_[rank].resize(recv_id_pairs.size());
+	}
+	reduction_buffer_.resize(xyz.size());
+	for(auto& buf : reduction_buffer_){
+		buf.reserve(MAX_DUPLICATES);
+	}
+	}
 
-	world.barrier();
-//	exit(0);
+	world.barrier(); // TODO: Remove
 
 	return true;
 }
@@ -345,10 +340,11 @@ template<typename T>
 template<typename ValueArray, typename ReductionOp>
 GBOOL
 GGFX<T>::doOp(ValueArray& u,  ReductionOp oper){
+	GEOFLOW_TRACE();
+	using namespace geoflow::tbox;
 
 	// Get size of data being used
 	const auto N = u.size();
-	const size_type MAX_DUPLICATES = std::pow(2,GDIM);
 
 	// Get MPI communicator, etc.
 	namespace mpi = boost::mpi;
@@ -356,13 +352,18 @@ GGFX<T>::doOp(ValueArray& u,  ReductionOp oper){
 	auto my_rank   = world.rank();
 	auto num_ranks = world.size();
 
+	pio::perr << "Submit the Non-Blocking receive requests" << std::endl;
+
 	// Submit the Non-Blocking receive requests
 	std::vector<mpi::request> recv_requests;
-	for (auto& [rank, recv_buffer_for_rank] : recv_buffer_) {
+	for(auto& [rank, mapping]: recv_map_){
 		auto tag = rank + my_rank;
-		auto req = world.irecv(rank, tag, recv_buffer_for_rank);
+		auto req = world.irecv(rank, tag, recv_buffer_[rank]);
 		recv_requests.emplace_back(req);
 	}
+
+	world.barrier();
+	pio::perr << "Copy values into Send Buffers & Non-Block Send" << std::endl;
 
 	// Copy values into Send Buffers & Non-Block Send
 	std::vector<mpi::request> send_requests;
@@ -383,13 +384,17 @@ GGFX<T>::doOp(ValueArray& u,  ReductionOp oper){
 		send_requests.emplace_back(req);
 	}
 
-	// Prepare the buffer used for the reduction
-	// - This should only resize after first call
+	pio::perr << "Prepare the buffer used for the reduction" << std::endl;
+
+//	// Prepare the buffer used for the reduction
+//	// - This should only resize after first call
 	reduction_buffer_.resize(N);
 	for(auto& buf : reduction_buffer_){
 		buf.resize(0);
 		buf.reserve(MAX_DUPLICATES);
 	}
+
+	pio::perr << "Loop over receiving data" << std::endl;
 
 	// Loop over receiving data
 	size_type i = 0;
@@ -411,11 +416,15 @@ GGFX<T>::doOp(ValueArray& u,  ReductionOp oper){
 		}
 	}
 
+	pio::perr << "Call the Reduction Operation on each" << std::endl;
+
 	// Call the Reduction Operation on each
 	i = 0;
 	for(auto& dup_values : reduction_buffer_) {
 		u[i++] = oper(dup_values);
 	}
+
+	pio::perr << "Clear all send requests" << std::endl;
 
 	// Clear all send requests
 	for(auto& req : send_requests){
@@ -435,6 +444,7 @@ template<typename T>
 template<typename CountArray>
 void
 GGFX<T>::get_imult(CountArray& imult) const {
+	GEOFLOW_TRACE();
 
 	// Zero whole array
 	for(size_type i = 0; i < imult.size(); ++i){

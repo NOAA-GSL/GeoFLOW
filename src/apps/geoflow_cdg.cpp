@@ -1005,20 +1005,18 @@ void do_restart(const PropertyTree &ptree, GGrid &, State &u,
 
 
 
-void init_ggfx(PropertyTree& ptree, GGrid& grid, GGFX<GFTYPE>* ggfx)
+void init_ggfx(PropertyTree& ptree, GGrid& grid, GGFX<GFTYPE>*& ggfx)
 {
   GEOFLOW_TRACE();
 
-  // Get all nodes from Grid into a packed form
-  pio::pout << "Packing Arrays" << std::endl;
-  pio::pout << "NDoF = " << grid_->ndof() << std::endl;
-  pio::pout << "NDim = " << GDIM          << std::endl;
-
   std::vector<std::array<GFTYPE,GDIM>> xyz(grid_->ndof());
-  for(std::size_t i = 0; i < grid_->ndof(); i++){
+  {GEOFLOW_TRACE_MSG("ReOrder XYZ Arrays");
+  const auto ndof = grid_->ndof();
+  for(std::size_t i = 0; i < ndof; i++){
 	  for(std::size_t d = 0; d < GDIM; d++){
 		  xyz[i][d] = grid.xNodes()[d][i];
 	  }
+  }
   }
 
   // Create GGFX

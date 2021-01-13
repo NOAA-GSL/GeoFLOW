@@ -8,7 +8,7 @@
 # ---------------------------- Variables ------------------------------
 #
 set(GDIM                  2         CACHE STRING "Problem Dimension")
-set(GEOFLOW_BUILD_TYPE    "Release" CACHE STRING "Build Type")
+set(GEOFLOW_BUILD_TYPE    "Debug" CACHE STRING "Build Type")
 set(OpenACC_ACCEL_TARGET  "tesla"   CACHE STRING "Target for OpenACC")
 
 #
