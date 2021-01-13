@@ -245,10 +245,8 @@ GGFX<T>::init(const T tolerance, Coordinates& xyz){
 	// Get Bounding Box for this Ranks Coordinates
 	// Perform MPI_Allgather so everyone gets a bound region for each processor
 	std::vector<index_bound_type> bounds_by_rank;
-	{GEOFLOW_TRACE_MSG("AllGather");
 	const index_bound_type bnd = local_bound_indexer.bounds();
 	mpi::all_gather(world, bnd, bounds_by_rank);
-	}
 
 	// For each Ranks Bounding Region
 	// - Build list of local indexed values to send to each overlapping rank
@@ -352,21 +350,21 @@ GGFX<T>::doOp(ValueArray& u,  ReductionOp oper){
 	auto my_rank   = world.rank();
 	auto num_ranks = world.size();
 
-	pio::perr << "Submit the Non-Blocking receive requests" << std::endl;
-
 	// Submit the Non-Blocking receive requests
 	std::vector<mpi::request> recv_requests;
+	{GEOFLOW_TRACE_MSG("Submit Receive Requests");
 	for(auto& [rank, mapping]: recv_map_){
-		auto tag = rank + my_rank;
-		auto req = world.irecv(rank, tag, recv_buffer_[rank]);
-		recv_requests.emplace_back(req);
+		if( rank != my_rank ){
+			auto tag = rank + my_rank;
+			auto req = world.irecv(rank, tag, recv_buffer_[rank]);
+			recv_requests.emplace_back(req);
+		}
 	}
-
-	world.barrier();
-	pio::perr << "Copy values into Send Buffers & Non-Block Send" << std::endl;
+	}
 
 	// Copy values into Send Buffers & Non-Block Send
 	std::vector<mpi::request> send_requests;
+	{GEOFLOW_TRACE_MSG("Pack Send Buffers");
 	for (auto& [rank, local_ids_to_send] : send_map_) {
 
 		// Pack into sending buffer
@@ -383,53 +381,59 @@ GGFX<T>::doOp(ValueArray& u,  ReductionOp oper){
 		auto req = world.isend(rank, tag, buffer_to_send);
 		send_requests.emplace_back(req);
 	}
-
-	pio::perr << "Prepare the buffer used for the reduction" << std::endl;
+	}
 
 //	// Prepare the buffer used for the reduction
-//	// - This should only resize after first call
+//	// - This should only resize during first call
 	reduction_buffer_.resize(N);
 	for(auto& buf : reduction_buffer_){
 		buf.resize(0);
 		buf.reserve(MAX_DUPLICATES);
 	}
 
-	pio::perr << "Loop over receiving data" << std::endl;
-
-	// Loop over receiving data
-	size_type i = 0;
-	for (auto& [rank, matrix_map] : recv_map_) {
-		recv_requests[i++].wait(); // wait for data to appear
-		auto& buffer_for_rank = recv_buffer_[rank];
-
-		// Loop over each value received from rank
-		size_type n = 0;
-		for(auto& [remote_id, local_id_set] : matrix_map){
-
-			// Loop over each local ID the value is used in
-			for(auto& id : local_id_set) {
-				ASSERT(reduction_buffer_.size() > id);
-				ASSERT(reduction_buffer_[id].size() < (MAX_DUPLICATES-1));
-				reduction_buffer_[id].push_back( buffer_for_rank[n] );
-			}
-			++n;
+	// Insert local data into the reduction buffer
+	{GEOFLOW_TRACE_MSG("Pack Local Data");
+	for(auto& [local_id, local_id_set]: recv_map_[my_rank]){
+		for(auto& id: local_id_set){
+			reduction_buffer_[id].push_back( u[local_id] );
 		}
 	}
+	}
 
-	pio::perr << "Call the Reduction Operation on each" << std::endl;
+	// Insert global data into the reduction buffer
+	{GEOFLOW_TRACE_MSG("Pack Global Data");
+	size_type recv_count = 0;
+	for (auto& [rank, remote_local_map] : recv_map_) {
+		if( rank != my_rank ){
+			recv_requests[recv_count++].wait();
+			auto& buffer_for_rank = recv_buffer_[rank];
+
+			// Loop over each value received from rank
+			size_type n = 0;
+			for(auto& [remote_id, local_id_set] : remote_local_map){
+
+				// Loop over each local ID the value is used in
+				for(auto& id : local_id_set) {
+					ASSERT(reduction_buffer_.size() > id);
+					ASSERT(reduction_buffer_[id].size() < MAX_DUPLICATES);
+					reduction_buffer_[id].push_back( buffer_for_rank[n] );
+				}
+				++n;
+			}
+		}
+	}
+	}
 
 	// Call the Reduction Operation on each
-	i = 0;
+	{GEOFLOW_TRACE_MSG("Reduce");
+	size_type i = 0;
 	for(auto& dup_values : reduction_buffer_) {
 		u[i++] = oper(dup_values);
 	}
-
-	pio::perr << "Clear all send requests" << std::endl;
+	}
 
 	// Clear all send requests
-	for(auto& req : send_requests){
-		req.wait();
-	}
+	mpi::wait_all(send_requests.begin(), send_requests.end());
 
 	return true;
 }

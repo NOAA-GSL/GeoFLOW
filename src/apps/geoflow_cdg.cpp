@@ -110,6 +110,16 @@ int main(int argc, char **argv)
     EH_MESSAGE("geoflow: initialize PDE...");
     pEqn_->init(u_, utmp_);
 
+
+    // BTF Early Shutdown
+    deallocate();
+    EH_MESSAGE("geoflow: do shutdown...");
+    GlobalManager::shutdown();
+    GlobalManager::finalize();
+    GComm::TermComm();
+    // BTF Early Shutdown
+
+
     //***************************************************
     // Create the mixer (to update forcing)
     //***************************************************
