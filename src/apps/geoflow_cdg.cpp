@@ -10,6 +10,15 @@
 
 int main(int argc, char **argv)
 {
+	GEOFLOW_TRACE_INITIALIZE(); // Must be before MPI_Init (thanks GPTL)
+
+    // Initialize comm & global environment:
+    mpixx::environment  env(argc,argv); // init GeoFLOW comm
+    mpixx::communicator world;
+    GlobalManager::initialize(argc,argv);
+    GlobalManager::startup();
+    GEOFLOW_TRACE();  // Must be after MPI_Init
+
     GString serr ="geoflow: ";
     GINT    iopt;
     GSIZET  itindex=0;      // restart flag/index
@@ -21,14 +30,6 @@ int main(int argc, char **argv)
 
     typename MyTypes::Time  t  = 0;
     typename MyTypes::Time  dt = 0.1;
-
-    // Initialize comm & global environment:
-    mpixx::environment  env(argc,argv); // init GeoFLOW comm
-    mpixx::communicator world;
-    GlobalManager::initialize(argc,argv); 
-    GlobalManager::startup();
-    comm_  = world; // need this for solver(s) & grid
-    GEOFLOW_TRACE();
 
     // Read main prop tree; may ovewrite with
     // certain command line args:
@@ -59,6 +60,7 @@ int main(int argc, char **argv)
     GEOFLOW_TRACE_START("gen_grid");
 
     ObserverFactory<MyTypes>::get_traits(ptree_, "gio_observer", binobstraits); 
+    comm_ = world;
     grid_ = GGridFactory<MyTypes>::build(ptree_, gbasis_, pIO_, binobstraits, comm_);
     GEOFLOW_TRACE_STOP();
 
@@ -109,8 +111,12 @@ int main(int argc, char **argv)
     EH_MESSAGE("geoflow: do shutdown...");
     GlobalManager::shutdown();
     GlobalManager::finalize();
+    GEOFLOW_TRACE_STOP();
     GComm::TermComm();
+    GEOFLOW_TRACE_FINALIZE();
+    return(0);
     // BTF Early Shutdown
+
 
 
     //***************************************************
@@ -178,8 +184,9 @@ int main(int argc, char **argv)
     EH_MESSAGE("geoflow: do shutdown...");
     GlobalManager::shutdown();
     GlobalManager::finalize();
+    GEOFLOW_TRACE_STOP();  // GPTL requires popping main() off the stack
     GComm::TermComm();
-
+    GEOFLOW_TRACE_FINALIZE();  // Must be after MPI_Finalize (thanks GPTL)
 
     return(0);
 
@@ -386,7 +393,7 @@ void create_basis_pool(PropertyTree &ptree, BasisBase &gbasis)
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD: do_bench
+// METHOD:
 // DESC  : Do benchmark from timers
 // ARGS  : fname     : filename
 //         ncyc      : number time cycles to average over

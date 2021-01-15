@@ -81,6 +81,7 @@ IOBasePtr  pIO_  = NULLPTR; // ptr to IOBase operator
 
 int main(int argc, char **argv)
 {
+	GEOFLOW_TRACE_INITIALIZE();
 
     GINT    errcode=0 ;
     GINT    nc=GDIM; // no. coords
@@ -208,11 +209,6 @@ int main(int argc, char **argv)
     StateComp        lnorm(2), gnorm(2);
     std::string      smethod[NMETH] = {"old", "new"};
 
-#if defined(GEOFLOW_USE_GPTL)
-    GPTLget_wallclock("old_deriv"     , 0,  &told); told /= ncyc;
-    GPTLget_wallclock("new_deriv"     , 0,  &tnew); tnew /= ncyc;
-#endif
-
     /////////////////////////////////////////////////////////////////
     //////////////////////// Compute Errors /////////////////////////
     /////////////////////////////////////////////////////////////////
@@ -263,7 +259,9 @@ int main(int argc, char **argv)
     ios.close();
  
     pio::finalize();
+    GEOFLOW_TRACE_STOP();
     GComm::TermComm();
+    GEOFLOW_TRACE_FINALIZE();
 
     return( errcode );
 

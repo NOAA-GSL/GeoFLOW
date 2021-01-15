@@ -117,6 +117,13 @@ private:
 };
 
 
+
+struct TracerOps {
+	static void initialize();
+	static void finalize();
+};
+
+
 } // namespace tbox
 } // namespace geoflow
 
@@ -145,6 +152,8 @@ private:
  * \param	msg	Message to insert after prefix.
  */
 //#define GEOFLOW_TRACE() ::geoflow::tbox::StackTracer UNIQUE_NAME(trace)(__FUNCTION__);
+#define GEOFLOW_TRACE_INITIALIZE() ::geoflow::tbox::TracerOps::initialize();
+#define GEOFLOW_TRACE_FINALIZE() ::geoflow::tbox::TracerOps::finalize();
 #define GEOFLOW_TRACE() ::geoflow::tbox::StackTracer macro_inserted_tracer(__FUNCTION__);
 #define GEOFLOW_TRACE_RENAME(name) ::geoflow::tbox::StackTracer macro_inserted_tracer(name);
 #define GEOFLOW_TRACE_START(msg) macro_inserted_tracer.start(msg);

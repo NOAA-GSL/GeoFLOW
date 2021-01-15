@@ -21,32 +21,10 @@
 #include "tbox/pio.hpp"
 #endif
 
+#include "boost/mpi.hpp"
+
 namespace geoflow {
 namespace tbox {
-
-// GPTL Singleton Class which initializes & finalizes
-#if defined( GEOFLOW_TRACER_USE_GPTL )
-class GPTL final {
-public:
-	static GPTL& instance(){
-		static GPTL instance_;
-		return instance_;
-	}
-	~GPTL(){
-		GPTLpr_file("gptl.txt");
-	    GPTLpr_summary();
-	    GPTLfinalize();
-	}
-private:
-	GPTL(){
-		GPTLsetoption (GPTLcpu, 1);
-		GPTLsetoption (GPTLsync_mpi, 1);
-		GPTLinitialize();
-	}
-};
-#endif
-
-
 
 // Initialize the number of times the Tracer has been called
 std::size_t Tracer::m_count = 0;
@@ -73,7 +51,6 @@ Tracer::Tracer(const std::string message) : name_(message){
 //	 nvtxRangePushA(message.c_str());
 #endif
 #if defined( GEOFLOW_TRACER_USE_GPTL )
-	 auto tmp = GPTL::instance();
 	 GPTLstart(name_.c_str());
 #endif
 }
@@ -94,6 +71,24 @@ Tracer::~Tracer(){
 std::size_t& Tracer::indent(){
 	static std::size_t m_current_indent{0};
 	return m_current_indent;
+}
+
+
+
+
+void TracerOps::initialize(){
+#if defined( GEOFLOW_TRACER_USE_GPTL )
+	GPTLsetoption(GPTLcpu, 1);
+	GPTLsetoption(GPTLsync_mpi, 1);
+	GPTLinitialize();
+#endif
+}
+void TracerOps::finalize(){
+#if defined( GEOFLOW_TRACER_USE_GPTL )
+	GPTLpr_file("timing.txt");
+    GPTLpr_summary();
+    GPTLfinalize();
+#endif
 }
 
 } // namespace tbox
