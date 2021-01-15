@@ -20,6 +20,7 @@
 #cmakedefine GEOFLOW_USE_GPTL
 #cmakedefine GEOFLOW_TRACER_USE_NVTX
 #cmakedefine GEOFLOW_TRACER_USE_PIO
+#cmakedefine GEOFLOW_TRACER_USE_GPTL
 
 #if defined(GEOFLOW_USE_CBLAS) && defined(GEOFLOW_USE_CUBLAS)
 #warning "Both CBLAS and cuBLAS Selected (Defaulted to CBLAS)"
@@ -71,7 +72,7 @@
 
 /** Turn on Tracer if its needed by another tool
  */
-#if defined(GEOFLOW_TRACER_USE_NVTX) || defined(GEOFLOW_TRACER_USE_PIO)
+#if defined(GEOFLOW_TRACER_USE_NVTX) || defined(GEOFLOW_TRACER_USE_PIO) || defined(GEOFLOW_TRACER_USE_GPTL)
 #define GEOFLOW_USE_TRACER
 #endif
 

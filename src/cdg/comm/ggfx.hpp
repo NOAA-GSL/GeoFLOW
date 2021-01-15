@@ -182,10 +182,10 @@ GGFX<T>::init(const T tolerance, Coordinates& xyz){
 //	pio::perr << "Build Indexer for each Local Coordinate Location" << std::endl;
 
 	// Build "index_value_type" for each local coordinate and place into a spatial index
+	GEOFLOW_TRACE_START("Build Local Index");
 	shared_index_type local_bound_indexer;
 	std::vector<index_bound_type> local_bounds_by_id;
 	local_bounds_by_id.reserve(xyz.size());
-	{GEOFLOW_TRACE_MSG("Build Local Index");
 	for(auto i = 0; i < xyz.size(); ++i){
 
 		// Build a slightly larger bounding box
@@ -201,7 +201,7 @@ GGFX<T>::init(const T tolerance, Coordinates& xyz){
 		auto index_value = index_value_type(local_bounds_by_id.back(), index_key_type(i));
 		local_bound_indexer.insert(index_value);
 	}
-	}
+	GEOFLOW_TRACE_STOP();
 
 	// ----------------------------------------------------------
 	//          Search Indexer for each Local Matches
@@ -212,9 +212,9 @@ GGFX<T>::init(const T tolerance, Coordinates& xyz){
 	// For each of our local bounds we need to find the
 	// - Matching local bounds
 	//
+	GEOFLOW_TRACE_START("Index Local Nodes");
 	auto& my_rank_recv_map = recv_map_[my_rank];
 	std::vector<bool> local_already_mapped(local_bounds_by_id.size(),false);
-	{GEOFLOW_TRACE_MSG("Index Local Nodes");
 	for(size_type id = 0; id < local_bounds_by_id.size(); ++id){
 
 		// Search for local mapping if not already found
@@ -235,7 +235,7 @@ GGFX<T>::init(const T tolerance, Coordinates& xyz){
 			}
 		}
 	}
-	}
+	GEOFLOW_TRACE_STOP();
 
 	// ----------------------------------------------------------
 	//  Gather/Scatter my Local Coordinate Others who Overlap
@@ -244,19 +244,21 @@ GGFX<T>::init(const T tolerance, Coordinates& xyz){
 
 	// Get Bounding Box for this Ranks Coordinates
 	// Perform MPI_Allgather so everyone gets a bound region for each processor
+	GEOFLOW_TRACE_START("AllGather Bounds");
 	std::vector<index_bound_type> bounds_by_rank;
 	const index_bound_type bnd = local_bound_indexer.bounds();
 	mpi::all_gather(world, bnd, bounds_by_rank);
+	GEOFLOW_TRACE_STOP();
 
 	// For each Ranks Bounding Region
 	// - Build list of local indexed values to send to each overlapping rank
 	// - Submit a receive request to get indexed values from the rank
 	// - Submit a send request to send indexed values from this rank
+	GEOFLOW_TRACE_START("Gather/Scatter Coordinates");
 	std::map<rank_type, mpi::request> send_requests;
 	std::map<rank_type, mpi::request> recv_requests;
 	std::map<rank_type, std::vector<index_value_type>> send_to_ranks;
 	std::map<rank_type, std::vector<index_value_type>> recv_from_ranks;
-	{GEOFLOW_TRACE_MSG("Gather/Scatter Coordinates");
 	for(rank_type rank = 0; rank < num_ranks; ++rank){
 		if( rank != my_rank ){ // Don't search myself (we know the answer is everything)
 
@@ -276,7 +278,7 @@ GGFX<T>::init(const T tolerance, Coordinates& xyz){
 			}
 		}
 	}
-	}
+	GEOFLOW_TRACE_STOP();
 
 	// ----------------------------------------------------------
 	//     Search Local Indexer for each Global Match
@@ -291,7 +293,7 @@ GGFX<T>::init(const T tolerance, Coordinates& xyz){
 	// so we'll re-use that Indexer for searching against each global
 	// coordinate location we received.
 	//
-	{GEOFLOW_TRACE_MSG("Build Global Maps");
+	GEOFLOW_TRACE_START("Build Global Maps");
 	for(auto& [rank, req]: recv_requests){
 		req.wait(); // Wait to receive data
 		auto& pairs_from_rank = recv_from_ranks[rank];
@@ -311,9 +313,9 @@ GGFX<T>::init(const T tolerance, Coordinates& xyz){
 	for(auto& [rank, req]: send_requests){
 		req.wait(); // Clear out the send requests
 	}
-	}
+	GEOFLOW_TRACE_STOP();
 
-	{GEOFLOW_TRACE_MSG("Allocate Buffers");
+	GEOFLOW_TRACE_START("Allocate Buffers");
 	// Allocate Buffers for Send/Receive in the future
 	for(auto& [rank, send_ids]: send_map_){
 		send_buffer_[rank].resize(send_ids.size());
@@ -325,7 +327,7 @@ GGFX<T>::init(const T tolerance, Coordinates& xyz){
 	for(auto& buf : reduction_buffer_){
 		buf.reserve(MAX_DUPLICATES);
 	}
-	}
+	GEOFLOW_TRACE_STOP();
 
 	world.barrier(); // TODO: Remove
 
@@ -351,8 +353,8 @@ GGFX<T>::doOp(ValueArray& u,  ReductionOp oper){
 	auto num_ranks = world.size();
 
 	// Submit the Non-Blocking receive requests
+	GEOFLOW_TRACE_START("Submit Receive Requests");
 	std::vector<mpi::request> recv_requests;
-	{GEOFLOW_TRACE_MSG("Submit Receive Requests");
 	for(auto& [rank, mapping]: recv_map_){
 		if( rank != my_rank ){
 			auto tag = rank + my_rank;
@@ -360,11 +362,11 @@ GGFX<T>::doOp(ValueArray& u,  ReductionOp oper){
 			recv_requests.emplace_back(req);
 		}
 	}
-	}
+	GEOFLOW_TRACE_STOP();
 
 	// Copy values into Send Buffers & Non-Block Send
 	std::vector<mpi::request> send_requests;
-	{GEOFLOW_TRACE_MSG("Pack Send Buffers");
+	GEOFLOW_TRACE_START("Pack Send Buffers");
 	for (auto& [rank, local_ids_to_send] : send_map_) {
 
 		// Pack into sending buffer
@@ -381,7 +383,7 @@ GGFX<T>::doOp(ValueArray& u,  ReductionOp oper){
 		auto req = world.isend(rank, tag, buffer_to_send);
 		send_requests.emplace_back(req);
 	}
-	}
+	GEOFLOW_TRACE_STOP();
 
 //	// Prepare the buffer used for the reduction
 //	// - This should only resize during first call
@@ -392,16 +394,16 @@ GGFX<T>::doOp(ValueArray& u,  ReductionOp oper){
 	}
 
 	// Insert local data into the reduction buffer
-	{GEOFLOW_TRACE_MSG("Pack Local Data");
+	GEOFLOW_TRACE_START("Pack Local Data");
 	for(auto& [local_id, local_id_set]: recv_map_[my_rank]){
 		for(auto& id: local_id_set){
 			reduction_buffer_[id].push_back( u[local_id] );
 		}
 	}
-	}
+	GEOFLOW_TRACE_STOP();
 
 	// Insert global data into the reduction buffer
-	{GEOFLOW_TRACE_MSG("Pack Global Data");
+	GEOFLOW_TRACE_START("Pack Global Data");
 	size_type recv_count = 0;
 	for (auto& [rank, remote_local_map] : recv_map_) {
 		if( rank != my_rank ){
@@ -422,15 +424,15 @@ GGFX<T>::doOp(ValueArray& u,  ReductionOp oper){
 			}
 		}
 	}
-	}
+	GEOFLOW_TRACE_STOP();
 
 	// Call the Reduction Operation on each
-	{GEOFLOW_TRACE_MSG("Reduce");
+	GEOFLOW_TRACE_START("Reduce");
 	size_type i = 0;
 	for(auto& dup_values : reduction_buffer_) {
 		u[i++] = oper(dup_values);
 	}
-	}
+	GEOFLOW_TRACE_STOP();
 
 	// Clear all send requests
 	mpi::wait_all(send_requests.begin(), send_requests.end());

@@ -21,6 +21,7 @@
  */
 #if defined( GEOFLOW_USE_TRACER )
 
+#include <stack>
 #include <string>
 
 
@@ -48,21 +49,17 @@ class Tracer {
 
 public:
 
-	Tracer() = delete;
-	Tracer(const Tracer& T) = delete;
-	Tracer& operator=(const Tracer& T) = delete;
+	Tracer()                                     = delete;
+	Tracer(const Tracer& T)                      = delete;
+	Tracer(Tracer&& T)                           = delete;
+	Tracer& operator=(const Tracer& T)           = delete;
+	Tracer& operator=(Tracer&& T)                = delete;
 
 	/**
 	 * \brief
 	 * Construct with a message and no prefix.
 	 */
-	Tracer(const std::string message);
-
-	/**
-	 * \brief
-	 * Construct with a prefix and message.
-	 */
-	Tracer(const std::string prefix, const std::string message);
+	Tracer(const std::string name);
 
 	/**
 	 * \brief
@@ -88,8 +85,37 @@ private:
 	static constexpr std::size_t m_nest_indent = 3;
 	static std::size_t m_current_indent;
 	static std::size_t m_count;
-
+	std::string name_;
 };
+
+
+
+
+class StackTracer {
+public:
+	StackTracer()                                    = delete;
+	StackTracer(const StackTracer& other)            = delete;
+	StackTracer(StackTracer&& other)                 = delete;
+	StackTracer& operator=(const StackTracer& other) = delete;
+	StackTracer& operator=(StackTracer&& other)      = delete;
+	~StackTracer()                                   = default;
+
+	StackTracer(const std::string message) {
+		tracers_.emplace(message);
+	}
+
+	void start(const std::string message) {
+		tracers_.emplace(message);
+	}
+
+	void stop() {
+		tracers_.pop();
+	}
+
+private:
+	std::stack<Tracer> tracers_;
+};
+
 
 } // namespace tbox
 } // namespace geoflow
@@ -118,8 +144,12 @@ private:
  * \param	pre	Prefix to insert before message.
  * \param	msg	Message to insert after prefix.
  */
-#define GEOFLOW_TRACE() ::geoflow::tbox::Tracer UNIQUE_NAME(trace)(__FUNCTION__);
-#define GEOFLOW_TRACE_MSG(msg) ::geoflow::tbox::Tracer UNIQUE_NAME(trace)(msg);
+//#define GEOFLOW_TRACE() ::geoflow::tbox::StackTracer UNIQUE_NAME(trace)(__FUNCTION__);
+#define GEOFLOW_TRACE() ::geoflow::tbox::StackTracer macro_inserted_tracer(__FUNCTION__);
+#define GEOFLOW_TRACE_RENAME(name) ::geoflow::tbox::StackTracer macro_inserted_tracer(name);
+#define GEOFLOW_TRACE_START(msg) macro_inserted_tracer.start(msg);
+#define GEOFLOW_TRACE_STOP() macro_inserted_tracer.stop();
+
 #endif  // #ifndef GEOFLOW_TRACE
 
 #else // #ifdef GEOFLOW_USE_TRACER
@@ -128,8 +158,10 @@ private:
  * Macro to ignore Tracer construction
  */
 #ifndef GEOFLOW_TRACE
-	#define GEOFLOW_TRACE()
-	#define GEOFLOW_TRACE_MSG(msg)
+#define GEOFLOW_TRACE()
+#define GEOFLOW_TRACE_RENAME(name)
+#define GEOFLOW_TRACE_START(msg)
+#define GEOFLOW_TRACE_STOP()
 #endif
 
 #endif //  GEOFLOW_USE_TRACER

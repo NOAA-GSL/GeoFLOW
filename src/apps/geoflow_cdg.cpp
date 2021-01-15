@@ -45,13 +45,6 @@ int main(int argc, char **argv)
     cline_ = InputManager::getInputCommandLine();
     bench_ = bench_ || cline_.exists("b","bench");
 
-#if defined(_G_USE_GPTL)
-    // Set GTPL options:
-    GPTLsetoption (GPTLcpu, 1);
-    GPTLsetoption (GPTLsync_mpi, 1);
-#endif
-    // Initialize timer:
-    GTimerInit();
 
     //***************************************************
     // Create basis pool:
@@ -63,33 +56,33 @@ int main(int argc, char **argv)
     // Create grid:
     //***************************************************
     EH_MESSAGE("geoflow: build grid...");
-    GTimerStart("gen_grid");
+    GEOFLOW_TRACE_START("gen_grid");
 
     ObserverFactory<MyTypes>::get_traits(ptree_, "gio_observer", binobstraits); 
     grid_ = GGridFactory<MyTypes>::build(ptree_, gbasis_, pIO_, binobstraits, comm_);
-    GTimerStop("gen_grid");
+    GEOFLOW_TRACE_STOP();
 
     //***************************************************
     // Initialize gather/scatter operator:
     //***************************************************
     EH_MESSAGE("geoflow: initialize gather/scatter...");
-    GTimerStart("init_ggfx_op");
+    GEOFLOW_TRACE_START("init_ggfx_op");
 
     init_ggfx(ptree_, *grid_, ggfx_);
     grid_->set_ggfx(*ggfx_);
 
-    GTimerStop("init_ggfx_op");
+    GEOFLOW_TRACE_STOP();
     EH_MESSAGE("geoflow: gather/scatter initialized.");
 
     //***************************************************
     // Set grid terrain:
     //***************************************************
     EH_MESSAGE("geoflow: set grid terrain...");
-    GTimerStart("do_terrain");
+    GEOFLOW_TRACE_START("do_terrain");
 
     do_terrain(ptree_, *grid_);
 
-    GTimerStop("do_terrain");
+    GEOFLOW_TRACE_STOP();
     EH_MESSAGE("geoflow: terrain added.");
 
     //***************************************************
@@ -159,33 +152,25 @@ int main(int argc, char **argv)
     //***************************************************
     GComm::Synch();
     EH_MESSAGE("geoflow: do time stepping...");
-    GTimerStart("time_loop");
+    GEOFLOW_TRACE_START("time_loop");
 
     pIntegrator_->time_integrate(t, uf_, ub_, u_);
 
-    GTimerStop("time_loop");
+    GEOFLOW_TRACE_STOP();
     EH_MESSAGE("geoflow: time stepping done.");
 
     //***************************************************
     // Do benchmarking if required:
     //***************************************************
-    GTimerStart("benchmark_timer");
+    GEOFLOW_TRACE_START("benchmark_timer");
     do_bench("benchmark.txt", pIntegrator_->get_numsteps());
-    GTimerStop("benchmark_timer");
+    GEOFLOW_TRACE_STOP();
 
     //***************************************************
     // Compare solution if required:
     //***************************************************
     compare(ptree_, *grid_, pEqn_, t, utmp_, ub_, u_);
  
-#if defined(_G_USE_GPTL)
-    GPTLpr_file("timings.txt");
-//  GPTLpr(GComm::WorldRank(comm_));
-//  GPTLpr(0);
-    GPTLpr_summary();
-#endif
-    GTimerFinal();
-
     //***************************************************
     // Do shutdown, cleaning:
     //***************************************************
@@ -1020,14 +1005,14 @@ void init_ggfx(PropertyTree& ptree, GGrid& grid, GGFX<GFTYPE>*& ggfx)
   GEOFLOW_TRACE();
 
   std::vector<std::array<GFTYPE,GDIM>> xyz(grid_->ndof());
-  {GEOFLOW_TRACE_MSG("ReOrder XYZ Arrays");
+  GEOFLOW_TRACE_START("ReOrder XYZ Arrays");
   const auto ndof = grid_->ndof();
   for(std::size_t i = 0; i < ndof; i++){
 	  for(std::size_t d = 0; d < GDIM; d++){
 		  xyz[i][d] = grid.xNodes()[d][i];
 	  }
   }
-  }
+  GEOFLOW_TRACE_STOP();
 
   // Create GGFX
   ASSERT(ggfx == nullptr);
