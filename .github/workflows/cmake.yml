@@ -15,11 +15,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-#    - uses: actions/checkout@v2
+    - uses: actions/checkout@v2
 
-      # Suspend and get ssh terminal
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
+      # Suspend and get ssh terminal 
+      # (comment name above and uncomment 2 lines below)
+#    - name: Setup tmate session
+#      uses: mxschmitt/action-tmate@v3
       
     - name: Install Required Apps
       # Many components require a newer compiler C++17 or even C++20
@@ -53,6 +54,8 @@ jobs:
         CC:   mpicc
         CXX:  mpicxx
         FC:   mpif90
+        BOOST_INCLUDEDIR: /usr/include
+        BOOST_LIBRARYDIR: /usr/lib/x86_64-linux-gnu
 
     - name: Build
       working-directory: ${{runner.workspace}}/build
