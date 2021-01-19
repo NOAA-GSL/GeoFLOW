@@ -32,20 +32,22 @@ void gemm(GBlasHandle h,
 
 #if defined(USE_CBLAS)
 	  if constexpr ( std::is_same<T,float>::value ) {
-		GEOFLOW_TRACE_MSG("cblas_sgemm(...)");
+		GEOFLOW_TRACE_START("cblas_sgemm(...)");
 	    cblas_sgemm( (CBLAS_ORDER)Order, (CBLAS_TRANSPOSE)TransA, (CBLAS_TRANSPOSE)TransB,
 	                 M, N, K,
 	                 alpha, A, lda,
 	                 B, ldb, beta,
 	                 C, ldc);
+	    GEOFLOW_TRACE_STOP();
 	  }
 	  else if constexpr ( std::is_same<T,double>::value ) {
-		GEOFLOW_TRACE_MSG("cblas_dgemm(...)");
+		GEOFLOW_TRACE_START("cblas_dgemm(...)");
         cblas_dgemm( (CBLAS_ORDER)Order, (CBLAS_TRANSPOSE)TransA, (CBLAS_TRANSPOSE)TransB,
         		     M, N, K,
 					 alpha, A, lda,
 					 B, ldb, beta,
 					 C, ldc);
+        GEOFLOW_TRACE_STOP();
 	  }
 
 #elif defined(USE_CUBLAS)
@@ -53,22 +55,24 @@ void gemm(GBlasHandle h,
   static const GBlasOp cuBlasOps[] = { CUBLAS_OP_N, CUBLAS_OP_T, CUBLAS_OP_C };
 
   if ( std::is_same<T,GFLOAT>::value ) {
-		  GEOFLOW_TRACE_MSG("cublasSgemm(...)");
+		  GEOFLOW_TRACE_START("cublasSgemm(...)");
 		  cublasSgemm( h, cuBlasOps[TransA-CblasNoTrans], cuBlasOps[TransB-CblasNoTrans],
                        M, N, K,
 					   (const float*)(&alpha), (const float*)A, lda,
 					   (const float*)B, ldb, (const float*)(&beta),
 					   (float*)C, ldc);
 		  cudaDeviceSynchronize();
+		  GEOFLOW_TRACE_STOP();
   }
   else if ( std::is_same<T,GDOUBLE>::value ) {
-		GEOFLOW_TRACE_MSG("cublasDgemm(...)");
+		GEOFLOW_TRACE_START("cublasDgemm(...)");
 		cublasDgemm( h, cuBlasOps[TransA-CblasNoTrans], cuBlasOps[TransB-CblasNoTrans],
 				     M, N, K,
 					 (const double*)(&alpha), (const double*)A, lda,
 					 (const double*)B, ldb, (const double*)(&beta),
 					 (double*)C, ldc);
     	cudaDeviceSynchronize();
+		GEOFLOW_TRACE_STOP();
   }
 
 #else

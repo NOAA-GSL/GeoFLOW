@@ -9,14 +9,19 @@
 
 #if defined( GEOFLOW_USE_TRACER )
 
+#if defined( GEOFLOW_TRACER_USE_GPTL )
+#include "gptl.h"
+#endif
 
 #if defined( GEOFLOW_TRACER_USE_NVTX )
 #include "nvToolsExt.h"
-#endif // defined( GEOFLOW_USE_NVTX )
+#endif
 
 #if defined( GEOFLOW_TRACER_USE_PIO )
 #include "tbox/pio.hpp"
 #endif
+
+#include "boost/mpi.hpp"
 
 namespace geoflow {
 namespace tbox {
@@ -24,10 +29,9 @@ namespace tbox {
 // Initialize the number of times the Tracer has been called
 std::size_t Tracer::m_count = 0;
 
-
-Tracer::Tracer(const std::string message){
+Tracer::Tracer(const std::string message) : name_(message){
 #if defined( GEOFLOW_TRACER_USE_PIO )
-	std::string full_text = std::string(indent(),' ') + message + " -->";
+	std::string full_text = std::string(indent(),' ') + name_ + " -->";
 	pio::pout << full_text << std::endl;
 	indent() = indent() + m_nest_indent;
 #endif
@@ -42,30 +46,25 @@ Tracer::Tracer(const std::string message){
      eventAttrib.colorType     = NVTX_COLOR_ARGB;
 	 eventAttrib.color         = colors[color_id];
 	 eventAttrib.messageType   = NVTX_MESSAGE_TYPE_ASCII;
-	 eventAttrib.message.ascii = message.c_str();
+	 eventAttrib.message.ascii = name_.c_str();
 	 nvtxRangePushEx(&eventAttrib);
 //	 nvtxRangePushA(message.c_str());
 #endif
-}
-
-Tracer::Tracer(const std::string prefix, const std::string message){
-#if defined( GEOFLOW_TRACER_USE_PIO )
-	std::string full_text = std::string(indent(),' ') + prefix + ": " + message;
-	pio::pout << full_text << std::endl;
-	indent() = indent() + m_nest_indent;
-#endif
-#if defined( GEOFLOW_TRACER_USE_NVTX )
-	nvtxRangePushA(message.c_str());
+#if defined( GEOFLOW_TRACER_USE_GPTL )
+	 GPTLstart(name_.c_str());
 #endif
 }
 
 Tracer::~Tracer(){
-#if defined( GEOFLOW_TRACER_USE_NVTX )
-	nvtxRangePop();
-#endif
 #if defined( GEOFLOW_TRACER_USE_PIO )
 	indent() = indent() - m_nest_indent;
 	pio::pout << std::string(indent(),' ') << "<--" << std::endl;
+#endif
+#if defined( GEOFLOW_TRACER_USE_NVTX )
+	nvtxRangePop();
+#endif
+#if defined( GEOFLOW_TRACER_USE_GPTL )
+	 GPTLstop(name_.c_str());
 #endif
 }
 
@@ -74,7 +73,27 @@ std::size_t& Tracer::indent(){
 	return m_current_indent;
 }
 
+
+
+
+void TracerOps::initialize(){
+#if defined( GEOFLOW_TRACER_USE_GPTL )
+	GPTLsetoption(GPTLcpu, 1);
+	GPTLsetoption(GPTLsync_mpi, 1);
+	GPTLinitialize();
+#endif
+}
+void TracerOps::finalize(){
+#if defined( GEOFLOW_TRACER_USE_GPTL )
+	GPTLpr_file("timing.txt");
+    GPTLpr_summary();
+    GPTLfinalize();
+#endif
+}
+
 } // namespace tbox
 } // namespace geoflow
+
+
 
 #endif // defined( GEOFLOW_USE_TRACER )

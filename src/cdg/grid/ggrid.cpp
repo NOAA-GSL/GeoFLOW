@@ -443,19 +443,13 @@ void GGrid::grid_init()
 
 	GEOFLOW_TRACE();
 
-
-  GTimerStart("GGrid::grid_init: do_elems");
   do_elems(); // generate element list from derived class
-  GTimerStop("GGrid::grid_init: do_elems");
 
   bpconst_ = ispconst();
 
   GComm::Synch(comm_);
 
-  GTimerStart("GGrid::grid_init: do_typing");
   do_typing(); // do element-typing check
-  GTimerStop("GGrid::grid_init: do_typing");
-
 
   // Have elements been set yet?
   assert(gelems_.size() > 0 && "Elements not set");
@@ -471,26 +465,17 @@ void GGrid::grid_init()
   globalize_coords    (); // set glob vec of node coords
   init_local_face_info(); // find glob vec of face indices
 
-
-  GTimerStart("GGrid::grid_init: init_bc_info");
   // All element bdy/face data should have been set by now:
-
-
   init_bc_info();
-  GTimerStop("GGrid::grid_init: init_bc_info");
 
 
-  GTimerStart("GGrid::grid_init: def_geom_init");
   if ( gtype_ == GE_2DEMBEDDED || gtype_  == GE_DEFORMED ) {
     def_geom_init();
   }
-  GTimerStop("GGrid::grid_init: def_geom_init");
 
-  GTimerStart("GGrid::grid_init: reg_geom_init");
   if ( gtype_ == GE_REGULAR ) {
     reg_geom_init();
   }
-  GTimerStop("GGrid::grid_init: reg_geom_init");
 
   // Get global number of elements:
   GSIZET nelems = gelems_.size();
@@ -500,9 +485,7 @@ void GGrid::grid_init()
 
   mass_ = new GMass(*this);
   
-  GTimerStart("GGrid::grid_init: find_min_dist");
   minnodedist_ = find_min_dist();
-  GTimerStop("GGrid::grid_init: find_min_dist");
 
   // Compute (global) grid volume:
   GTVector<GFTYPE> tmp0(ndof()), tmp1(ndof());
@@ -542,17 +525,14 @@ void GGrid::grid_init(GTMatrix<GINT> &p,
 {
 	GEOFLOW_TRACE();
 
-  GTimerStart("GGrid::grid_init: do_elems");
   do_elems(p, xnodes); // generate element list from derived class
-  GTimerStop("GGrid::grid_init: do_elems");
 
   bpconst_ = ispconst();
 
   GComm::Synch(comm_);
 
-  GTimerStart("GGrid::grid_init: do_typing");
+
   do_typing(); // do element-typing check
-  GTimerStop("GGrid::grid_init: do_typing");
 
   // Have elements been set yet?
   assert(gelems_.size() > 0 && "Elements not set");
@@ -570,28 +550,21 @@ void GGrid::grid_init(GTMatrix<GINT> &p,
   globalize_coords    (); // set glob vec of node coords
   init_local_face_info(); // find glob vec of face indices
 
-  GTimerStart("GGrid::grid_init: init_bc_info");
+
   // All element bdy/face data should have been set by now:
   init_bc_info();
-  GTimerStop("GGrid::grid_init: init_bc_info");
 
-  GTimerStart("GGrid::grid_init: def_geom_init");
+
   if ( itype_[GE_2DEMBEDDED].size() > 0
     || itype_  [GE_DEFORMED].size() > 0 ) {
     def_geom_init();
   }
-  GTimerStop("GGrid::grid_init: def_geom_init");
 
-  GTimerStart("GGrid::grid_init: reg_geom_init");
   if ( itype_[GE_REGULAR].size() > 0 ) {
     reg_geom_init();
   }
-  GTimerStop("GGrid::grid_init: reg_geom_init");
 
-
-  GTimerStart("GGrid::grid_init: find_min_dist");
   minnodedist_ = find_min_dist();
-  GTimerStop("GGrid::grid_init: find_min_dist");
 
   bInitialized_ = TRUE;
 
@@ -1450,7 +1423,7 @@ void GGrid::add_terrain(const State &xb, State &utmp)
   // Solve Nabla^2 (Xnew + Xb - XNodes) = 0 
   // for new (homgogeneous) grid solution, Xnew, 
   // given terrain, Xb, and // 'base' grid, XNodes:
-  GTimerStart("GGrid::add_terrain: Solve");
+  GEOFLOW_TRACE_START("GGrid::add_terrain: Solve");
   for ( auto j=0; j<xNodes_.size(); j++ ) {
    *b  = 0.0;
    *x0 = 0.0; // first guess
@@ -1459,7 +1432,7 @@ void GGrid::add_terrain(const State &xb, State &utmp)
     xNodes_[j] = *x0;             // Reset XNodes = x0
 //GPP(comm_,"GGrid::add_terrain: new_xNodes[" << j << "]=" << xNodes_[j]);
   }
-  GTimerStop("GGrid::add_terrain: Solve");
+  GEOFLOW_TRACE_STOP();
  
   // Before computing new metric, Jacobian, etc, must set
   // new coordinates in elements that have already been initialized:
@@ -1474,14 +1447,10 @@ void GGrid::add_terrain(const State &xb, State &utmp)
 
   // Now, with new coordinates, recompute metric terms, 
   // Jacobian, normals:
-  GTimerStart("GGrid::add_terrain: def_geom_init");
   def_geom_init();
-  GTimerStop("GGrid::add_terrain: def_geom_init");
 
   // Compute new minimum node distance:
-  GTimerStart("GGrid::grid_init: find_min_dist");
   minnodedist_ = find_min_dist();
-  GTimerStop("GGrid::grid_init: find_min_dist");
 
   // Compute new (global) grid volume:
   *utmp[0] = 1.0;
@@ -1504,18 +1473,17 @@ void GGrid::add_terrain(const State &xb, State &utmp)
 //          DSS is the application of Q Q^T, or the direct stiffness operator.
 // ARGS   :
 //          tmp  : tmp space
-//          op   : GGFX_OP operation
 //          u    : Locally expressed field to smooth
 // RETURNS: none.
 //************************************************************************************
-void GGrid::smooth(GGFX_OP op, GTVector<GFTYPE> &tmp, GTVector<GFTYPE> &u)
+void GGrid::smooth(GTVector<GFTYPE> &tmp, GTVector<GFTYPE> &u)
 {
-	GEOFLOW_TRACE();
+  GEOFLOW_TRACE();
   tmp = u;
 
   u.pointProd(*(this->massop().data()));
   tmp = *(this->imassop().data());
-  this->ggfx_->doOp(tmp, op);  // DSS(mass_local)
+  this->ggfx_->doOp(tmp, GGFX<GFTYPE>::Smooth());  // DSS(mass_local)
 
   u.pointProd(tmp);      // M_assembled u M_L
 

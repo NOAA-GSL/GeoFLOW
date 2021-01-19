@@ -10,9 +10,6 @@
 
 #include "gexec.h"
 #include "gtypes.h"
-#if defined(GEOFLOW_USE_GPTL)
-  #include "gptl.h"
-#endif
 #include "gcomm.hpp"
 #include "ggfx.hpp"
 #include "gllbasis.hpp"
@@ -28,7 +25,6 @@
 #include "tbox/global_manager.hpp"
 #include "tbox/input_manager.hpp"
 #include "tbox/tracer.hpp"
-//#include "gtools.h"
 
 #include <cassert>
 //#include <cstdio>
@@ -85,6 +81,7 @@ IOBasePtr  pIO_  = NULLPTR; // ptr to IOBase operator
 
 int main(int argc, char **argv)
 {
+	GEOFLOW_TRACE_INITIALIZE();
 
     GINT    errcode=0 ;
     GINT    nc=GDIM; // no. coords
@@ -125,16 +122,6 @@ int main(int argc, char **argv)
     assert(pstd.size() >= GDIM); 
 
     pvec.resize(pstd.size()); pvec = pstd; pvec.range(0,GDIM-1);
-    
-    
-    // Set GTPL options:
-#if defined(GEOFLOW_USE_GPTL)
-    // Set GTPL options:
-    GPTLsetoption (GPTLcpu, 1);
-    GPTLsetoption (GPTLsync_mpi, 1);
-#endif
-    // Initialize timer:
-    GTimerInit();
 
     // Create basis:
     GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis(GDIM);
@@ -201,18 +188,18 @@ int main(int argc, char **argv)
     // Compute numerical derivs of u in each direction, using
     // different methods:
     grid_->set_derivtype(GGrid::GDV_VARP); // variable order
-    GTimerStart("old_deriv");
+    GEOFLOW_TRACE_START("old_deriv");
     for ( auto n=0; n<ncyc; n++ ) {
        grid_->deriv(u, idir, *utmp[0], duold);
     }
-    GTimerStop("old_deriv");
+    GEOFLOW_TRACE_STOP();
 
     grid_->set_derivtype(GGrid::GDV_CONSTP); // const order
-    GTimerStart("new_deriv");
+    GEOFLOW_TRACE_START("new_deriv");
     for ( auto n=0; n<ncyc; n++ ) {
        grid_->deriv(u, idir, *utmp[0], dunew);
     }
-    GTimerStop("new_deriv");
+    GEOFLOW_TRACE_STOP();
 
 //cout << "da_y  =" << *da   [idir-1] << endl;
 //cout << "dnew_y=" <<  dunew << endl;
@@ -221,11 +208,6 @@ int main(int argc, char **argv)
     GTMatrix<GFTYPE> errs(NMETH,2); // for each method, Linf and L2 errs
     StateComp        lnorm(2), gnorm(2);
     std::string      smethod[NMETH] = {"old", "new"};
-
-#if defined(GEOFLOW_USE_GPTL)
-    GPTLget_wallclock("old_deriv"     , 0,  &told); told /= ncyc;
-    GPTLget_wallclock("new_deriv"     , 0,  &tnew); tnew /= ncyc;
-#endif
 
     /////////////////////////////////////////////////////////////////
     //////////////////////// Compute Errors /////////////////////////
@@ -276,16 +258,10 @@ int main(int argc, char **argv)
         << std::endl;
     ios.close();
  
-#if defined(GEOFLOW_USE_GPTL)
-    GPTLpr_file("timings.txt");
-//  GPTLpr(GComm::WorldRank(comm_));
-//  GPTLpr(0);
-//  GPTLpr_summary();
-#endif
-    GTimerFinal();
-
     pio::finalize();
+    GEOFLOW_TRACE_STOP();
     GComm::TermComm();
+    GEOFLOW_TRACE_FINALIZE();
 
     return( errcode );
 

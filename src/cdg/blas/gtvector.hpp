@@ -37,7 +37,6 @@
 template <class T> class GTVector
 {
   public:
-
     GTVector<T>();
     GTVector<T>(GSIZET n);
     GTVector<T>(GIndex &gin);
