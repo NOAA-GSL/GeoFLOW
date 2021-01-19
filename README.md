@@ -1,6 +1,9 @@
 # GeoFLOW
 Geo FLuid Object Workbench
 
+## Build Status
+![Master](https://github.com/NOAA-GSL/GeoFLOW/workflows/CI%20Testing/badge.svg)
+
 ## Go To [Hackathon Instructions](docs/doxy/hackathon_20201201/index.md) for 2020 NOAA GPU Hackathon 
 
 ## Compilation from Source on UNIX
