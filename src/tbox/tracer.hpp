@@ -167,6 +167,8 @@ struct TracerOps {
  * Macro to ignore Tracer construction
  */
 #ifndef GEOFLOW_TRACE
+#define GEOFLOW_TRACE_INITIALIZE()
+#define GEOFLOW_TRACE_FINALIZE()
 #define GEOFLOW_TRACE()
 #define GEOFLOW_TRACE_RENAME(name)
 #define GEOFLOW_TRACE_START(msg)
