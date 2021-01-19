@@ -2,7 +2,7 @@
 Geo FLuid Object Workbench
 
 ## Build Status
-[Master](https://github.com/NOAA-GSL/GeoFLOW/workflows/cmake/badge.svg)
+![Master](https://github.com/NOAA-GSL/GeoFLOW/workflows/cmake/badge.svg)
 
 ## Go To [Hackathon Instructions](docs/doxy/hackathon_20201201/index.md) for 2020 NOAA GPU Hackathon 
 
