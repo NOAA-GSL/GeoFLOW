@@ -20,7 +20,7 @@ jobs:
 #    - name: Setup tmate session
 #      # This will suspend the build process and provide an SSH
 #      # commend to ssh into the worker node executing the script
-#      uses: mxschmitt/action-tmate@v3
+      uses: mxschmitt/action-tmate@v3
       
     - name: Install Required Apps
       # Many components require a newer compiler C++17 or even C++20
