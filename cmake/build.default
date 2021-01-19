@@ -8,7 +8,7 @@
 # ---------------------------- Variables ------------------------------
 #
 set(GDIM                  2         CACHE STRING "Problem Dimension")
-set(GEOFLOW_BUILD_TYPE    "Debug"   CACHE STRING "Build Type")
+set(GEOFLOW_BUILD_TYPE    "Release" CACHE STRING "Build Type")
 set(OpenACC_ACCEL_TARGET  "tesla"   CACHE STRING "Target for OpenACC")
 
 #
@@ -25,10 +25,11 @@ option(GEOFLOW_USE_OPENACC        "Using OpenACC"             OFF)
 
 option(GEOFLOW_USE_GPTL           "Build with GPTL"           OFF)
 option(GEOFLOW_GPTL_AUTO_PROF     "Do auto-profing with GPTL" OFF)
-option(GEOFLOW_VERBOSE_CMAKE      "Verbose MakeFile Ouput"    OFF)
+option(GEOFLOW_VERBOSE_CMAKE      "Verbose MakeFile Ouput"    ON)
 
-option(GEOFLOW_TRACER_USE_NVTX    "Use NVTX Profiling"        OFF)
 option(GEOFLOW_TRACER_USE_PIO     "Use PIO Traced Ouput"      OFF)
+option(GEOFLOW_TRACER_USE_NVTX    "Use NVTX Profiling"        OFF)
+option(GEOFLOW_TRACER_USE_GPTL    "Use GPTL Profiling"        OFF)
 
 
 

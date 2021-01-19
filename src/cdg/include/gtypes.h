@@ -17,9 +17,6 @@
 
 #include "configure.hpp"
 
-#if defined(GEOFLOW_USE_GPTL)
-  #include "gptl.h"
-#endif
 
 
 // Following is a list of preprocessor variables that may be set:
@@ -226,24 +223,6 @@ const char * const sGStateCompType [] ={"GSC_KINETIC","GSC_MAGNETIC","GSC_DENSIT
 #if !defined FUZZYEQ
   #define FUZZYEQ(x,y,eps) ( (y <= (x+eps)) && (y >= (x-eps)) ) 
 #endif
-
-#if !defined(GTIMER_DEFINED)
-  #define GTIMER_DEFINED 
-  #if defined(GEOFLOW_USE_GPTL)
-    #define GTimerInit(a)   GPTLinitialize()
-    #define GTimerFinal(a)  GPTLfinalize()
-    #define GTimerStart(a)  GComm::Synch();GPTLstart(a)
-    #define GTimerStop(a)   GComm::Synch();GPTLstop(a)
-    #define GTimerReset(a)  GPTLreset()
-  #else
-    #define GTimerInit(a) 
-    #define GTimerFinal(a) 
-    #define GTimerStart(a)
-    #define GTimerStop(a) 
-    #define GTimerReset(a) 
-  #endif
-#endif
-
 
 // Misc. defs
 #define GMAX_ERROR_STRING 1024

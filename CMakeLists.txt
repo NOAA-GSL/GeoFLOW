@@ -136,7 +136,7 @@ endif()
 
 find_package(_Boost REQUIRED)
 
-if(GEOFLOW_USE_GPTL)
+if(GEOFLOW_TRACER_USE_GPTL)
 	find_package(GPTL REQUIRED)
 endif()
 

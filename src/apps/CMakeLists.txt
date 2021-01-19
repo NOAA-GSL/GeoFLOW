@@ -25,6 +25,7 @@ install(
 #
 set(apps_files
        hackathon_driver.cpp
+       geoflow_cdg.cpp
 	)
 	
 #		       	

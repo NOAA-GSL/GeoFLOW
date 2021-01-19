@@ -1,0 +1,90 @@
+{ 
+  "exp_order"         : [4, 4, 4],
+  "exp_order_type"    : "constant",
+  "grid_type"         : "grid_icos",
+  "pde_name"          : "pde_burgers",
+  "initstate_block"   : "initstate_icosnwave",
+  "use_forcing"       : false,
+  "bdy_conditions"    : "DIRICHLET",
+  "restart_index"     : 0,
+  "benchmark"         : false,
+  "observer_list"     : ["gio_observer"],
+  "IO_implementation" : "gio",
+  "do_comparison"     : true,
+
+  "initstate_icosnwave": {
+    "latitude0"  : [ 10 ],
+    "longitude0" : [ 280 ],
+    "Uparam"     : [ 1.0 ],
+    "t0"         : [ 0.08 ]
+  },
+  
+  "pde_burgers": {
+    "doheat"      : false,
+    "bpureadv"    : false,
+    "bconserved"  : false,
+    "use_forcing" : false,
+    "forcing_comp": [0, 1, 2]
+  },
+  
+  "grid_icos": {
+    "grid_name"   : "grid_icos",
+    "ilevel"      : 5,
+    "refine_type" : "GICOS_BISECTION",
+    "radius"      : 1.0,
+    "maxit"       : 128,
+    "tol"         : 1.0e-8,
+    "norm_type"   : "GCG_NORM_INF"
+  },
+  
+  "stepper_props": {
+    "stepping_method"  : "GSTEPPER_EXRK",
+    "time_deriv_order" : 1,
+    "extrap_order"     : 2,
+    "variable_dt"      : false,
+    "courant"          : 0.04 
+  },
+  
+  "dissipation_traits": {
+    "nu"      : 0.05,
+    "nu_type" : "constant"
+  },
+  
+  "gio": {
+    "ivers"   : 0,
+    "multivar" : false,
+    "io_type"  : "POSIX",
+    "wtime"    : 6,
+    "wtask"    : 5,
+    "wfile"    : 2048
+  },
+
+  "gio_observer": {
+    "observer_name"      : "gio_observer",
+    "idir"               : "outs",
+    "odir"               : "outs",
+    "cadence_type"       : "cycle",
+    "cycle_interval"     : 999999,
+    "time_interval"      : 0.01,
+    "state_index"        : [0],
+    "state_names"        : ["u1", "u2", "u3"],
+    "grid_names"         : ["xgrid", "ygrid", "zgrid"],
+    "agg_state_name"     : "u",
+    "agg_grid_name "     : "grid",
+    "derived_quantities" : ["gradv"]
+  },
+  
+  "gradv": {
+    "state_index" : [0],
+    "names"       : ["gradx", "grady", "gradz"],
+    "mathop"      : "grad"
+  },
+
+  "time_integration": {
+    "integ_type" : "cycle",
+    "time_end"   : 1.001,
+    "cycle_end"  : 1000,
+    "dt"         : 1.0e-6
+  }
+
+}
