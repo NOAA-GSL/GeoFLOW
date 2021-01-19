@@ -45,7 +45,7 @@ public:
 		operator()(const VectorType& vec) const {
 			using value_type = typename VectorType::value_type;
 			constexpr auto small = std::numeric_limits<value_type>::lowest();
-			return std::reduce(vec.begin(),vec.end(),small,[](auto& a, auto& b){
+			return std::accumulate(vec.begin(),vec.end(),small,[](auto& a, auto& b){
 				return std::max(a,b);
 			});
 		}
@@ -57,7 +57,7 @@ public:
 		operator()(const VectorType& vec) const {
 			using value_type = typename VectorType::value_type;
 			constexpr auto large = std::numeric_limits<value_type>::max();
-			return std::reduce(vec.begin(),vec.end(),large,[](auto& a, auto& b){
+			return std::accumulate(vec.begin(),vec.end(),large,[](auto& a, auto& b){
 				return std::min(a,b);
 			});
 		}
