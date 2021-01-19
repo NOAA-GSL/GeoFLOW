@@ -93,7 +93,7 @@ cout << "gauss_range: igbdy.size=" << igbdy->size() << " yb_final=" << *xb[1] <<
 #if 0
   // Do smoothing:
   for ( auto j=0; j<xb.size(); j++ ) {
-    grid.smooth(GGFX_OP_SMOOTH, *utmp[0], *xb[j]);
+    grid.smooth(*utmp[0], *xb[j]);
   }
 #endif
 
@@ -178,7 +178,7 @@ GBOOL impl_poly_range(const PropertyTree &ptree, GString sblk, GGrid &grid, Stat
 
   // Do smoothing:
   for ( auto j=0; j<xb.size(); j++ ) {
-    grid.smooth(GGFX_OP_SMOOTH, *utmp[0], *xb[j]);
+    grid.smooth(*utmp[0], *xb[j]);
   }
 
 
@@ -266,7 +266,7 @@ GBOOL impl_schar_range(const PropertyTree &ptree, GString sblk, GGrid &grid, Sta
  
   // Do smoothing:
   for ( auto j=0; j<xb.size(); j++ ) {
-    grid.smooth(GGFX_OP_SMOOTH, *utmp[0], *xb[j]);
+    grid.smooth(*utmp[0], *xb[j]);
   }
 
   return TRUE;

@@ -1,7 +1,0 @@
-README for exec directory. This directory contains all the highest-level 'driver' code.
-
-NOTES:
-
-(1) If .jsn file sets "do_comparison" : true, then code will attempt to compare the integrated solution with a known solution at the final time. Currenlty, the only comparison that can be made is to whatever user specifies as the initial condition with "initstate_block" key in .jsn file. 
-
-  If we want to make comparisons with other methods, we will probably not want to write a new factory for this becuase it will be too similar to GInitStateFactory. Instead, we may modify GInitStateFactory to tell it which "initstate_block"-like key to actually read from. This is much more straightforward.

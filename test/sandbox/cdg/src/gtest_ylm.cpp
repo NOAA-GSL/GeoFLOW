@@ -29,7 +29,7 @@
 #include "ggrid_factory.hpp"
 #include "gio_observer.hpp"
 #include "gio.hpp"
-#if defined(_G_USE_GPTL)
+#if defined(GEOFLOW_USE_GPTL)
   #include "gptl.h"
 #endif
 
@@ -128,7 +128,7 @@ int main(int argc, char **argv)
     GINT myrank  = GComm::WorldRank();
     GINT nprocs  = GComm::WorldSize();
 
-#if defined(_G_USE_GPTL)
+#if defined(GEOFLOW_USE_GPTL)
     // Set GTPL options:
     GPTLsetoption (GPTLcpu, 1);
 
@@ -165,14 +165,14 @@ int main(int argc, char **argv)
     EH_MESSAGE("main: Generate grid...");
 
     // Generate grid:
-#if defined(_G_USE_GPTL)
+#if defined(GEOFLOW_USE_GPTL)
     GPTLstart("gen_grid");
 #endif
 
     ObserverFactory<MyTypes>::get_traits(ptree, "gio_observer", binobstraits);
     grid_ = GGridFactory<MyTypes>::build(ptree, gbasis, pIO, binobstraits, comm_);
 
-#if defined(_G_USE_GPTL)
+#if defined(GEOFLOW_USE_GPTL)
     GPTLstop("gen_grid");
 #endif
 
@@ -346,7 +346,7 @@ prerr:
       cout << serr << " Success!" << endl;
     }
 
-#if defined(_G_USE_GPTL)
+#if defined(GEOFLOW_USE_GPTL)
     GPTLpr_file("timing.txt");
     GPTLfinalize();
 #endif

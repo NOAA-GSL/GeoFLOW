@@ -7,6 +7,10 @@
 // Derived From : none.
 //==================================================================================
 
+
+#include "tbox/tracer.hpp"
+
+
 namespace GMTK 
 {
 
@@ -23,6 +27,7 @@ namespace GMTK
 template<typename T>
 T fact(T n)
 {
+	GEOFLOW_TRACE();
    T Tzero = static_cast<T>(0);
    T Tone  = static_cast<T>(1);
    if ( n == Tzero || n == Tone ) {
@@ -50,6 +55,7 @@ T fact(T n)
 template<typename T>
 void Plm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GTVector<T> &plm)
 {
+	GEOFLOW_TRACE();
   T fact;
   T pmm, pmmp1, pll, somx2;
   T colat, r;
@@ -123,6 +129,7 @@ void Plm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GTVector<T> &plm)
 template<typename T>
 void Ylm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT iri, GTVector<T> &ylm_r, GTVector<T> &ylm_i)
 {
+	GEOFLOW_TRACE();
   T phi;
   T x, y, z;
   GDOUBLE rfact, xl, xm;
@@ -184,6 +191,7 @@ void Ylm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT iri, GTVector<
 template<typename T>
 void dYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir,  GINT iri, T cexcl,  GTVector<GTVector<T>*> &tmp, GTVector<T> &dylm_r, GTVector<T> &dylm_i)
 {
+	GEOFLOW_TRACE();
   T colat, phi, r, rexcl;
   T x, y, z;
   T xl, xm;
@@ -294,6 +302,7 @@ void dYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir,  GINT i
 template<typename T>
 void ddYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, GINT iri, T cexcl,  GTVector<GTVector<T>*> &tmp, GTVector<T> &dylm_r, GTVector<T> &dylm_i)
 {
+	GEOFLOW_TRACE();
   T colat, phi, r, rexcl;
   T x, y, z;
   T xl, xm;
@@ -380,6 +389,7 @@ void ddYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, GINT i
 template<typename T>
 void rYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GTVector<T> &tmp, GTVector<T> &rylm)
 {
+	GEOFLOW_TRACE();
   T rfact;
 
 
@@ -428,6 +438,7 @@ void rYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GTVector<T> &tmp, 
 template<typename T>
 void drYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, T cexcl, GTVector<GTVector<T>*>  &tmp, GTVector<T> &drylm)
 {
+	GEOFLOW_TRACE();
   T rfact;
   GTVector<T> *dr, *di;  // real and imaginary comps of derivative
   GTVector<GTVector<T>> mytmp(2);
@@ -483,6 +494,7 @@ void drYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, T cexc
 template<typename T>
 void ddrYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, T cexcl, GTVector<GTVector<T>*>  &tmp, GTVector<T> &drylm)
 {
+	GEOFLOW_TRACE();
   T rfact;
   GTVector<T> *dr, *di;  // real and imaginary comps of derivative
   GTVector<GTVector<T>> mytmp(2);
@@ -535,6 +547,7 @@ void ddrYlm_cart(GINT l, GINT m, GTVector<GTVector<T>> &xnodes, GINT idir, T cex
 template<typename T>
 void Rx3(T alpha, GTVector<T> &y, GTVector<T> &z)
 {
+	GEOFLOW_TRACE();
   assert( z.size() == y.size() &&  "Incompatible vectors");
 
   for ( auto j=0; j<y.size(); j++ ) { // cycle over all vector elems
@@ -565,6 +578,7 @@ void Rx3(T alpha, GTVector<T> &y, GTVector<T> &z)
 template<typename T>
 void Ry3(T alpha, GTVector<T> &x, GTVector<T> &z)
 {
+	GEOFLOW_TRACE();
   assert( z.size() == x.size() &&  "Incompatible vectors");
 
   for ( auto j=0; j<x.size(); j++ ) { // cycle over all vector elems
@@ -595,6 +609,7 @@ void Ry3(T alpha, GTVector<T> &x, GTVector<T> &z)
 template<typename T>
 void Rz3(T alpha, GTVector<T> &x, GTVector<T> &y)
 {
+	GEOFLOW_TRACE();
   assert( y.size() == x.size() &&  "Incompatible vectors");
 
   for ( auto j=0; j<x.size(); j++ ) { // cycle over all vector elems
@@ -627,6 +642,7 @@ void Rz3(T alpha, GTVector<T> &x, GTVector<T> &y)
 template<typename T>
 void cross_prod_k(GTVector<GTVector<T>*> &A, GINT *iind, GINT nind, GINT isgn, GTVector<GTVector<T>*> &C)
 {
+	GEOFLOW_TRACE();
   assert( A.size() >= 2 && C.size() >= 2 &&  "Incompatible dimensionality");
 
   GSIZET n;
@@ -671,7 +687,7 @@ void cross_prod_k(GTVector<T> &Ax, GTVector<T> &Ay,
                   GINT *iind, GINT nind, GINT isgn, 
                   GTVector<T> &Cx, GTVector<T> &Cy)
 {
-
+	GEOFLOW_TRACE();
   GSIZET n;
   T      fact = isgn < 0 ? -1.0 : 1.0;
   if ( iind != NULLPTR ) {
@@ -716,6 +732,7 @@ template<typename T>
 void cross_prod(GTVector<GTVector<T>*> &A, GTVector<GTVector<T>*> &B, 
                 GINT *iind, GINT nind, GTVector<GTVector<T>*> &C)
 {
+	GEOFLOW_TRACE();
   assert( A.size() >= 3 && B.size() && C.size() >= 3 && "Incompatible input vectors");
 
   GSIZET n;
@@ -768,7 +785,7 @@ void cross_prod(GTVector<T> &Ax, GTVector<T> &Ay, GTVector<T> &Az,
                 GINT *iind, GINT nind, 
                 GTVector<T> &Cx, GTVector<T> &Cy, GTVector<T> &Cz)
 {
-
+	GEOFLOW_TRACE();
   GSIZET n;
   T      x1, y1, z1;
   T      x2, y2, z2;
@@ -820,6 +837,7 @@ template<typename T>
 void cross_prod(GTVector<GTVector<T>*> &A, GTVector<GTVector<T>*> &B, 
                 GINT idir, GTVector<T> &C)
 {
+	GEOFLOW_TRACE();
   assert( (A.size() == 2 || A.size() == 3) && "Incompatible dimensionality");
   assert( A.size() == B.size() && "Incompatible input vectors");
 
@@ -966,6 +984,7 @@ template<typename T>
 void cross_prod_s(GTVector<T> &A, GTVector<GTVector<T>*> &B, 
                 GINT idir, GTVector<T> &C)
 {
+	GEOFLOW_TRACE();
   assert( A.size() == B.size() && "Incompatible input vectors");
   assert(idir > 0 && idir < A.size());
 
@@ -1033,6 +1052,7 @@ void cross_prod_s(GTVector<T> &A, GTVector<GTVector<T>*> &B,
 template<typename T>
 void normalize_euclidean(GTVector<GTVector<T>*> &x, GINT *iind, GINT nind, T x0)
 {
+	GEOFLOW_TRACE();
   GSIZET n;
   T      xn;
 
@@ -1078,6 +1098,7 @@ void normalize_euclidean(GTVector<GTVector<T>*> &x, GINT *iind, GINT nind, T x0)
 template<typename T>
 void paxy(GTVector<T> &z, const GTVector<T> &x, T a, const GTVector<T> &y) 
 {
+	GEOFLOW_TRACE();
   if ( y.size() > 1 ) {
     for ( auto j=0; j<x.size(); j++ ) { 
       z[j] = a*x[j]*y[j];
@@ -1107,6 +1128,7 @@ void paxy(GTVector<T> &z, const GTVector<T> &x, T a, const GTVector<T> &y)
 template<typename T>
 void paxy(GTVector<T> &x, T a, const GTVector<T> &y) 
 {
+	GEOFLOW_TRACE();
   if ( y.size() > 1 ) {
     for ( auto j=0; j<x.size(); j++ ) { 
       x[j] = a*x[j]*y[j];
@@ -1136,6 +1158,7 @@ void paxy(GTVector<T> &x, T a, const GTVector<T> &y)
 template<typename T>
 void saxpy(GTVector<T> &x, T a, GTVector<T> &y, T b) 
 {
+	GEOFLOW_TRACE();
   if ( y.size() > 1 ) {
     for ( auto j=0; j<x.size(); j++ ) { 
       x[j] = a*x[j] + b*y[j];
@@ -1166,6 +1189,7 @@ void saxpy(GTVector<T> &x, T a, GTVector<T> &y, T b)
 template<typename T>
 void saxpy(GTVector<T> &z, GTVector<T> &x, T a, GTVector<T> &y, T b) 
 {
+	GEOFLOW_TRACE();
   if ( y.size() > 1 ) {
     for ( auto j=0; j<x.size(); j++ ) { 
       z[j] = a*x[j] + b*y[j];
@@ -1199,6 +1223,7 @@ void saxpy(GTVector<T> &z, GTVector<T> &x, T a, GTVector<T> &y, T b)
 template<typename T>
 void normalizeL2(GGrid &grid, GTVector<GTVector<T>*> &u, GTVector<GTVector<T>*> &tmp, T E0)
 {
+	GEOFLOW_TRACE();
   GSIZET  n;
   GDOUBLE xn, xint;
 
@@ -1227,6 +1252,7 @@ void normalizeL2(GGrid &grid, GTVector<GTVector<T>*> &u, GTVector<GTVector<T>*> 
 template<typename T>
 void zero(GTVector<T> &u)
 {
+	GEOFLOW_TRACE();
   T tiny=std::numeric_limits<T>::epsilon();
 
   for ( auto j=0; j<u.size(); j++ ) {
@@ -1251,6 +1277,7 @@ void zero(GTVector<T> &u)
 template<typename T>
 void zero(GTVector<GTVector<T>*> &u)
 {
+	GEOFLOW_TRACE();
   T tiny=std::numeric_limits<T>::epsilon();
 
   for ( auto i=0; i<u.size(); i++ ) {
@@ -1277,6 +1304,7 @@ void zero(GTVector<GTVector<T>*> &u)
 template<typename T>
 void zero(GTVector<GTVector<T>> &u)
 {
+	GEOFLOW_TRACE();
   T tiny=std::numeric_limits<T>::epsilon();
 
   for ( auto i=0; i<u.size(); i++ ) {
@@ -1302,6 +1330,7 @@ void zero(GTVector<GTVector<T>> &u)
 template<typename T>
 void maxbyelem(GGrid &grid, GTVector<T> &q, GTVector<T> &max)
 {
+	GEOFLOW_TRACE();
   GSIZET     ibeg, iend;
   GElemList *elems = &grid.elems();
 
@@ -1330,6 +1359,7 @@ void maxbyelem(GGrid &grid, GTVector<T> &q, GTVector<T> &max)
 template<typename T>
 void minbyelem(GGrid &grid, GTVector<T> &q, GTVector<T> &min)
 {
+	GEOFLOW_TRACE();
   GSIZET ibeg, iend;
   GElemList *elems = &grid.elems();
 
@@ -1347,13 +1377,14 @@ void minbyelem(GGrid &grid, GTVector<T> &q, GTVector<T> &min)
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : I2_X_D1 
+// METHOD : I2_X_D1 (1)
 // DESC   : Apply tensor product operator to vector:
 //            y = I2 X D1 u
 //          where I2 is the 2-direction's identity, and D1 is
 //          the deriv matrix in the 1-direction
 // ARGS   : D1  : 1-direction (dense) operator
 //          u   : operand vector; of size N1 X N2
+//          N1-2: dimensions of u if interpreted as a matrix
 //          y   : return vector result; must be at least of size
 //                N1 X N2
 // RETURNS: none
@@ -1362,6 +1393,7 @@ template<typename T>
 void I2_X_D1(GTMatrix<T> &D1,
              GTVector<T> &u, GSIZET N1, GSIZET N2, GTVector<T> &y)
 {
+  GEOFLOW_TRACE_RENAME("I2_X_D1(5 args)");
   GSIZET ND1, ND2;
 
   ND1 = D1.size(1);
@@ -1369,7 +1401,7 @@ void I2_X_D1(GTMatrix<T> &D1,
 
   #if defined(_G_BOUNDS_CHK)
   if ( !(u.size() >= N1*N2 && y.size() >= N1*N2) ) {
-    cout << "GMTK::I2_X_D1" << "incompatible size" << endl;
+    cout << "GMTK::I2_X_D1 (1)" << "incompatible size" << endl;
     exit(1);
   }
   #endif
@@ -1388,7 +1420,128 @@ void I2_X_D1(GTMatrix<T> &D1,
     assert(FALSE);
   }
 
-} // end of method I2_X_D1
+} // end of method I2_X_D1 (1)
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : I2_X_D1  (2)
+// DESC   : Apply tensor product operator to vector:
+//            y = I2 X D1 u
+//          where I2 is the 2-direction's identity, and D1 is
+//          the deriv matrix in the 1-direction, and u is the
+//          the full state component
+// ARGS   : D1  : 1-direction (dense) operator
+//          u   : operand vector consisting of Ne 'elements' 
+//                each of size ize N1 X N2
+//          N1-2: dimensions of u elemewnts if interpreted as matrices
+//          Ne  : number of 'elements' in u
+//          y   : return vector result; must be at least of size
+//                N1 X N2
+// RETURNS: none
+//**********************************************************************************
+template<typename T>
+void I2_X_D1(GTMatrix<T> &D1,
+             GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET Ne, GTVector<T> &y)
+{
+  GEOFLOW_TRACE_RENAME("I2_X_D1(6 args)");
+  GSIZET ND1, ND2, Nu;
+
+  ND1 = D1.size(1);
+  ND2 = D1.size(2);
+
+  #if defined(_G_BOUNDS_CHK)
+  if ( !(u.size() >= N1*N2 && y.size() >= N1*N2) ) {
+    cout << "GMTK::I2_X_D1 (2)" << "incompatible size" << endl;
+    exit(1);
+  }
+  #endif
+
+  Nu = N2 * Ne;
+
+  // Compute y = I2_X_D1 u:
+  if      ( std::is_same<T,GFLOAT>::value ) {
+    fmxm((GFLOAT*)y.data(), (GFLOAT*)(D1.data().data()), &ND1, &ND2, (GFLOAT*)u.data(), &N1, &Nu, &szMatCache_);
+  }
+  else if ( std::is_same<T,GDOUBLE>::value ) {
+    dmxm((GDOUBLE*)y.data(), (GDOUBLE*)(D1.data().data()), &ND1, &ND2, (GDOUBLE*)u.data(), &N1, &Nu, &szMatCache_);
+  }
+  else if ( std::is_same<T,GQUAD>::value ) {
+    qmxm((GQUAD*)y.data(), (GQUAD*)(D1.data().data()), &ND1, &ND2, (GQUAD*)u.data(), &N1, &Nu, &szMatCache_);
+  }
+  else {
+    assert(FALSE);
+  }
+
+} // end of method I2_X_D1 (2)
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : I2_X_D1  (3)
+// DESC   : Apply tensor product operator to vector:
+//            y = I2 X D1 u
+//          where I2 is the 2-direction's identity, and D1 is
+//          the deriv matrix in the 1-direction, and u is the
+//          the full state component
+// ARGS   : D1   : 1-direction (dense) operator
+//          u    : operand vector consisting of Ne 'elements' 
+//                 each of size ize N1 X N2
+//          N1-2 : dimensions of u elemewnts if interpreted as matrices
+//          Ne   : number of 'elements' in u
+//          cudat: cuMatBlockDat structure data
+//          y    : return vector result; must be at least of size
+//                 N1 X N2
+// RETURNS: none
+//**********************************************************************************
+template<typename T>
+void I2_X_D1(GTMatrix<T> &D1,
+             GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET Ne, GCBLAS::cuMatBlockDat &cudat, GTVector<T> &y)
+{
+  GEOFLOW_TRACE_RENAME("I2_X_D1(7 args)");
+  GSIZET ND1, ND2, Nu;
+  GINT   M, N, K, lda, ldb, ldc;
+
+  ND1 = D1.size(1);
+  ND2 = D1.size(2);
+
+  #if defined(_G_BOUNDS_CHK)
+  if ( !(u.size() >= N1*N2 && y.size() >= N1*N2) ) {
+    cout << "GMTK::I2_X_D1 (2)" << "incompatible size" << endl;
+    exit(1);
+  }
+  #endif
+
+  Nu = N2 * Ne;
+
+#if defined(USE_CBLAS) || defined(USE_CUBLAS)
+
+  M   = ND1;
+  N   = N2*Ne;
+  K   = ND2;
+  lda = M;
+  ldb = K;
+  ldc = M;
+  GCBLAS::gemm<T>(cudat.hcublas, GCBLAS::CblasColMajor, GCBLAS::CblasNoTrans, GCBLAS::CblasNoTrans,
+                    M, N, K, 1.0, (T*)(D1.data().data()), lda, (T*)(u.data()), ldb, 0.0, (T*)y.data(), ldc);
+#else
+
+  if      ( std::is_same<T,GFLOAT>::value ) {
+    fmxm((GFLOAT*)y.data(), (GFLOAT*)(D1.data().data()), &ND1, &ND2, (GFLOAT*)u.data(), &N1, &Nu, &szMatCache_);
+  }
+  else if ( std::is_same<T,GDOUBLE>::value ) {
+    dmxm((GDOUBLE*)y.data(), (GDOUBLE*)(D1.data().data()), &ND1, &ND2, (GDOUBLE*)u.data(), &N1, &Nu, &szMatCache_);
+  }
+  else if ( std::is_same<T,GQUAD>::value ) {
+    qmxm((GQUAD*)y.data(), (GQUAD*)(D1.data().data()), &ND1, &ND2, (GQUAD*)u.data(), &N1, &Nu, &szMatCache_);
+  }
+  else {
+    assert(FALSE);
+  }
+
+#endif
+
+} // end of method I2_X_D1 (3)
 
 
 //**********************************************************************************
@@ -1412,6 +1565,7 @@ template <typename T>
 void D2_X_D1(GTMatrix<T> &D1, GTMatrix<T>  &D2T, 
              GTVector<T> &u, GTVector<T> &tmp, GTVector<T> &y)
 {
+	GEOFLOW_TRACE();
   GSIZET   N11, N12, N21, N22;
 
   N11 = D1 .size(1);
@@ -1485,6 +1639,7 @@ template<typename T>
 void Dg2_X_D1(GTMatrix<T> &D1, GTVector<T> &Dg2, GTVector<T> &u, 
               GTVector<T> &tmp, GTVector<T> &y)
 {
+	GEOFLOW_TRACE();
   GSIZET   N11, N12, N2;
 
   N11 = D1.size(1);
@@ -1533,7 +1688,7 @@ void Dg2_X_D1(GTMatrix<T> &D1, GTVector<T> &Dg2, GTVector<T> &u,
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : D2_X_I1 
+// METHOD : D2_X_I1  (1)
 // DESC   : Apply tensor product operator to vector:
 //            y = D2 X I1 u
 //          where I1 is the 1-direction's identity, and D2
@@ -1541,6 +1696,7 @@ void Dg2_X_D1(GTMatrix<T> &D1, GTVector<T> &Dg2, GTVector<T> &u,
 // ARGS   : D2T : 2-direction (dense) operator transpose 
 //          u   : operand vector; must be at least of size
 //                D1.size(2) x D2.size(2) = D1.size(2) x D2T.size(1)
+//          N1-2: dimensions of u if interpreted as matrix
 //          y   : return vector result; must be at least of size
 //                D1.size(1) x D2.size(1) = D1.size(1) x D2T.size(2)
 // RETURNS: none
@@ -1549,13 +1705,14 @@ template<typename T>
 void D2_X_I1(GTMatrix<T> &D2T, 
               GTVector<T> &u, GSIZET N1, GSIZET N2, GTVector<T> &y)
 {
+	GEOFLOW_TRACE();
   GSIZET N21, N22;
 
   N21 = D2T.size(1);
   N22 = D2T.size(2);
   #if defined(_G_BOUNDS_CHK)
   if ( !(u.size() >= N1*N2 && y.size() >= N1*N2) ) {
-    cout << "GMTK::D2_X_I1" << "incompatible size" << endl;
+    cout << "GMTK::D2_X_I1 (1)" << "incompatible size" << endl;
     exit(1);
   }
   #endif
@@ -1574,9 +1731,138 @@ void D2_X_I1(GTMatrix<T> &D2T,
     assert(FALSE);
   }
 
+} // end of method D2_X_I1 (1)
 
 
-} // end of method D2_X_I1
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : D2_X_I1 (2)
+// DESC   : Apply tensor product operator to vector:
+//            y = D2 X I1 u
+//          where I1 is the 1-direction's identity, and D2
+//          the deriv matrix in the 2-direction
+// ARGS   : D2T : 2-direction (dense) operator transpose 
+//          u   : operand vector consisting of Ne 'elements' 
+//                each of size ize N1 X N2
+//          N1-2: dimensions of u elemewnts if interpreted as matrices
+//          Ne  : number of 'elements' in u
+//          y   : return vector result; must be at least of size
+//                D1.size(1) x D2.size(1) = D1.size(1) x D2T.size(2)
+// RETURNS: none
+//**********************************************************************************
+template<typename T>
+void D2_X_I1(GTMatrix<T> &D2T, 
+              GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET Ne, GTVector<T> &y)
+{
+	GEOFLOW_TRACE();
+  GSIZET N21, N22, Nu;
+
+  N21 = D2T.size(1);
+  N22 = D2T.size(2);
+  #if defined(_G_BOUNDS_CHK)
+  if ( !(u.size() >= N1*N2*Ne && y.size() >= N1*N2*Ne) ) {
+    cout << "GMTK::D2_X_I1 (2)" << "incompatible size" << endl;
+    exit(1);
+  }
+  #endif
+
+  Nu = N1 * N2;
+
+  // Compute y = I2_X_D1 u = u * D2T:
+  if      ( std::is_same<T,GFLOAT>::value ) {
+    for ( auto i=0; i<Ne; i++ ) {
+      fmxm((GFLOAT*)y.data()+i*Nu, (GFLOAT*)u.data()+i*Nu, &N1, &Nu, (GFLOAT*)D2T.data().data(), &N21, &N22, &szMatCache_);
+    }
+  }
+  else if ( std::is_same<T,GDOUBLE>::value ) {
+    for ( auto i=0; i<Ne; i++ ) {
+      dmxm((GDOUBLE*)y.data()+i*Nu, (GDOUBLE*)u.data()+i*Nu, &N1, &Nu, (GDOUBLE*)D2T.data().data(), &N21, &N22, &szMatCache_);
+    }
+  }
+  else if ( std::is_same<T,GQUAD>::value ) {
+    for ( auto i=0; i<Ne; i++ ) {
+      qmxm((GQUAD*)y.data()+i*Nu, (GQUAD*)u.data()+i*Nu, &N1, &Nu, (GQUAD*)D2T.data().data(), &N21, &N22, &szMatCache_);
+    }
+  }
+  else {
+    assert(FALSE);
+  }
+
+} // end of method D2_X_I1 (2)
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : D2_X_I1 (3)
+// DESC   : Apply tensor product operator to vector:
+//            y = D2 X I1 u
+//          where I1 is the 1-direction's identity, and D2
+//          the deriv matrix in the 2-direction
+// ARGS   : D2T  : 2-direction (dense) operator transpose 
+//          u    : operand vector consisting of Ne 'elements' 
+//                 each of size ize N1 X N2
+//          N1-2 : dimensions of u elemewnts if interpreted as matrices
+//          Ne   : number of 'elements' in u
+//          cudat: cuMatBlockDat structure data
+//          y    : return vector result; must be at least of size
+//                  D1.size(1) x D2.size(1) = D1.size(1) x D2T.size(2)
+// RETURNS: none
+//**********************************************************************************
+template<typename T>
+void D2_X_I1(GTMatrix<T> &D2T, 
+              GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET Ne, GCBLAS::cuMatBlockDat &cudat, GTVector<T> &y)
+{
+	GEOFLOW_TRACE();
+  GSIZET N21, N22, Nu;
+  GINT   M, N, K, lda, ldb, ldc;
+
+
+  N21 = D2T.size(1);
+  N22 = D2T.size(2);
+  #if defined(_G_BOUNDS_CHK)
+  if ( !(u.size() >= N1*N2*Ne && y.size() >= N1*N2*Ne) ) {
+    cout << "GMTK::D2_X_I1 (2)" << "incompatible size" << endl;
+    exit(1);
+  }
+  #endif
+
+  Nu = N1 * N2;
+
+// Compute y = I2_X_D1 u = u * D2T:
+#if defined(USE_CBLAS) || defined(USE_CUBLAS)
+  M   = N21;
+  N   = N2;
+  K   = N22;
+  lda = M;
+  ldb = K;
+  ldc = M;
+  
+  GCBLAS::batched_gemm<T>(cudat, GCBLAS::CblasColMajor, GCBLAS::CblasNoTrans, GCBLAS::CblasNoTrans,
+                           M, N, K, 1.0, (T*)(u.data()), lda, (T*)(D2T.data().data()), ldb, 0.0, (T*)y.data(), ldc);
+#else
+
+  if      ( std::is_same<T,GFLOAT>::value ) {
+    for ( auto i=0; i<Ne; i++ ) {
+      fmxm((GFLOAT*)y.data()+i*Nu, (GFLOAT*)u.data()+i*Nu, &N1, &Nu, (GFLOAT*)D2T.data().data(), &N21, &N22, &szMatCache_);
+    }
+  }
+  else if ( std::is_same<T,GDOUBLE>::value ) {
+    for ( auto i=0; i<Ne; i++ ) {
+      dmxm((GDOUBLE*)y.data()+i*Nu, (GDOUBLE*)u.data()+i*Nu, &N1, &Nu, (GDOUBLE*)D2T.data().data(), &N21, &N22, &szMatCache_);
+    }
+  }
+  else if ( std::is_same<T,GQUAD>::value ) {
+    for ( auto i=0; i<Ne; i++ ) {
+      qmxm((GQUAD*)y.data()+i*Nu, (GQUAD*)u.data()+i*Nu, &N1, &Nu, (GQUAD*)D2T.data().data(), &N21, &N22, &szMatCache_);
+    }
+  }
+  else {
+    assert(FALSE);
+  }
+
+#endif
+
+} // end of method D2_X_I1 (3)
 
 
 //**********************************************************************************
@@ -1602,6 +1888,7 @@ template<typename T>
 void D2_X_Dg1(GTVector<T> &Dg1, GTMatrix<T> &D2T, GTVector<T> &u, 
               GTVector<T> &tmp, GTVector<T> &y)
 {
+	GEOFLOW_TRACE();
   GSIZET   N1, N21, N22;
 
   N1  = Dg1.size();
@@ -1669,6 +1956,7 @@ template<typename T>
 void D3_X_D2_X_D1(GTMatrix<T> &D1, GTMatrix<T>  &D2T, GTMatrix<T> &D3T,
                   GTVector<T> &u, GTVector<T> &tmp, GTVector<T> &y)
 {
+	GEOFLOW_TRACE();
   GSIZET   N11, N12, N21, N22, N31, N32;
 
   N11 = D1 .size(1);
@@ -1696,7 +1984,7 @@ void D3_X_D2_X_D1(GTMatrix<T> &D1, GTMatrix<T>  &D2T, GTMatrix<T> &D3T,
     fmxm((GFLOAT*)y.data(), (GFLOAT*)D1.data().data(), &N11, &N12, (GFLOAT*)u.data(), &N12, &nxy, &szMatCache_);
 
   // tmp = I3_X_D2_X_I1 y:
-    for ( GSIZET k=0; k<N32; k++ ) { // do mxm op for each 'plane':
+    for ( auto k=0; k<N32; k++ ) { // do mxm op for each 'plane':
       fmxm((GFLOAT*)(tmp.data()+k*N11*N22), (GFLOAT*)(y.data()+k*N11*N22), &N11, &N22, (GFLOAT*)D2T.data().data(), &N21, &N22, &szMatCache_);
     }
 
@@ -1708,7 +1996,7 @@ void D3_X_D2_X_D1(GTMatrix<T> &D1, GTMatrix<T>  &D2T, GTMatrix<T> &D3T,
     dmxm((GDOUBLE*)y.data(), (GDOUBLE*)D1.data().data(), &N11, &N12, u.data(), &N12, &nxy, &szMatCache_);
 
   // tmp = I3_X_D2_X_I1 y:
-    for ( GSIZET k=0; k<N32; k++ ) { // do mxm op for each 'plane':
+    for ( auto k=0; k<N32; k++ ) { // do mxm op for each 'plane':
       dmxm((GDOUBLE*)(tmp.data()+k*N11*N22), (GDOUBLE*)(y.data()+k*N11*N22), &N11, &N22, (GDOUBLE*)D2T.data().data(), &N21, &N22, &szMatCache_);
     }
 
@@ -1720,7 +2008,7 @@ void D3_X_D2_X_D1(GTMatrix<T> &D1, GTMatrix<T>  &D2T, GTMatrix<T> &D3T,
     qmxm((GQUAD*)y.data(), (GQUAD*)D1.data().data(), &N11, &N12, (GQUAD*)u.data(), &N12, &nxy, &szMatCache_);
 
   // tmp = I3_X_D2_X_I1 y:
-    for ( GSIZET k=0; k<N32; k++ ) { // do mxm op for each 'plane':
+    for ( auto k=0; k<N32; k++ ) { // do mxm op for each 'plane':
       qmxm((GQUAD*)(tmp.data()+k*N11*N22), (GQUAD*)(y.data()+k*N11*N22), &N11, &N22, (GQUAD*)D2T.data().data(), &N21, &N22, &szMatCache_);
     }
 
@@ -1739,13 +2027,13 @@ void D3_X_D2_X_D1(GTMatrix<T> &D1, GTMatrix<T>  &D2T, GTMatrix<T> &D3T,
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : I3_X_I2_X_D1 
+// METHOD : I3_X_I2_X_D1 (1)
 // DESC   : Apply tensor product operator to vector:
 //            y = I3 X I2 X D1 u
 // ARGS   : D1      : 1-direction (dense) operator 
 //          u       : operand vector; must be at least of size
 //                    N1*N2*N3, with 1 changing most rapidly, then, 2, then 3
-//          N1,N2,N3: coord dimentions of u, y
+//          N1,N2,N3: coord dimensions of u, y
 //          y   : return vector result of size >= N1 * N2 * N3
 // RETURNS: none
 //**********************************************************************************
@@ -1754,45 +2042,103 @@ void I3_X_I2_X_D1(GTMatrix<T> &D1, GTVector<T> &u,
                   GSIZET N1, GSIZET N2, GSIZET N3,
                   GTVector<T> &y)
 {
-  GSIZET  N11, N12, NYZ, NN;
+	GEOFLOW_TRACE();
+  GSIZET  ND1, ND2, NYZ, NN;
 
-  N11 = D1.size(1);
-  N12 = D1.size(2);
+  ND1 = D1.size(1);
+  ND2 = D1.size(2);
   NYZ = N2*N3;
   NN  = N1*N2*N3;
 
 #if defined(GARRAY_BOUNDS)
   if ( u.size() < NN || y.size() < NN ) {
-    cout << "GMTK::I3_X_I2_X_D1: incompatible dimensions" << endl;
+    cout << "GMTK::I3_X_I2_X_D1 (1): incompatible dimensions" << endl;
     exit(1);
   }
 #endif
 
   if      ( std::is_same<T,GFLOAT>::value ) {
-    fmxm((GFLOAT*)y.data(), (GFLOAT*)D1.data().data(), &N11, &N12, (GFLOAT*)u.data(), &N1, &NYZ, &szMatCache_);
+    fmxm((GFLOAT*)y.data(), (GFLOAT*)D1.data().data(), &ND1, &ND2, (GFLOAT*)u.data(), &N1, &NYZ, &szMatCache_);
   }
   else if ( std::is_same<T,GDOUBLE>::value ) {
-    dmxm((GDOUBLE*)y.data(), (GDOUBLE*)D1.data().data(), &N11, &N12, (GDOUBLE*)u.data(), &N1, &NYZ, &szMatCache_);
+    dmxm((GDOUBLE*)y.data(), (GDOUBLE*)D1.data().data(), &ND1, &ND2, (GDOUBLE*)u.data(), &N1, &NYZ, &szMatCache_);
   }
   else if ( std::is_same<T,GQUAD>::value ) {
-    qmxm((GQUAD*)y.data(), (GQUAD*)D1.data().data(), &N11, &N12, (GQUAD*)u.data(), &N1, &NYZ, &szMatCache_);
+    qmxm((GQUAD*)y.data(), (GQUAD*)D1.data().data(), &ND1, &ND2, (GQUAD*)u.data(), &N1, &NYZ, &szMatCache_);
   }
   else {
     assert(FALSE);
   }
 
-} // end of method I3_X_I2_X_D1
+} // end of method I3_X_I2_X_D1 (1)
 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : I3_X_D2_X_I1 
+// METHOD : I3_X_I2_X_D1 (2)
+// DESC   : Apply tensor product operator to vector:
+//            y = I3 X I2 X D1 u
+// ARGS   : D1      : 1-direction (dense) operator 
+//          u       : operand vector; must be at least of size
+//                    N1*N2*N3*Ne, with 1 changing most rapidly, then, 2, then 3,
+//                    with Ne 'elements' each of size N1*X2*N3
+//          N1-N3   : coord dimensions of u, y 'elements', if interpreted 
+//                    as matrix dimensions
+//          Ne      : number of 'elements' in u, y
+//          y   : return vector result of size >= N1 * N2 * N3
+// RETURNS: none
+//**********************************************************************************
+template<typename T>
+void I3_X_I2_X_D1(GTMatrix<T> &D1, GTVector<T> &u,
+                  GSIZET N1, GSIZET N2, GSIZET N3, GSIZET Ne,
+                  GTVector<T> &y)
+{
+	GEOFLOW_TRACE();
+  GSIZET  ND1, ND2, NYZ, NN, Nu;
+
+  ND1 = D1.size(1);
+  ND2 = D1.size(2);
+  NYZ = N2*N3;
+  NN  = N1*N2*N3*Ne;
+
+#if defined(GARRAY_BOUNDS)
+  if ( u.size() < NN || y.size() < NN ) {
+    cout << "GMTK::I3_X_I2_X_D1 (2): u or y of incorrect size" << endl;
+    exit(1);
+  }
+  if ( N1 != ND2 ) {
+    cout << "GMTK::I3_X_I2_X_D1 (2): incompatible dimensions" << endl;
+    exit(1);
+  }
+#endif
+
+  Nu = NYZ * Ne;
+
+  if      ( std::is_same<T,GFLOAT>::value ) {
+    fmxm((GFLOAT*)y.data(), (GFLOAT*)D1.data().data(), &ND1, &ND2, (GFLOAT*)u.data(), &N1, &Nu, &szMatCache_);
+  }
+  else if ( std::is_same<T,GDOUBLE>::value ) {
+    dmxm((GDOUBLE*)y.data(), (GDOUBLE*)D1.data().data(), &ND1, &ND2, (GDOUBLE*)u.data(), &N1, &Nu, &szMatCache_);
+  }
+  else if ( std::is_same<T,GQUAD>::value ) {
+    qmxm((GQUAD*)y.data(), (GQUAD*)D1.data().data(), &ND1, &ND2, (GQUAD*)u.data(), &N1, &Nu, &szMatCache_);
+  }
+  else {
+    assert(FALSE);
+  }
+
+} // end of method I3_X_I2_X_D1 (2)
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : I3_X_D2_X_I1 (1)
 // DESC   : Apply tensor product operator to vector:
 //            y = I3 X D2 X I1 u
 // ARGS   : D2T     : 2-direction (dense) operator transpose
 //          u       : operand vector; must be at least of size
 //                    N1*N2*N3, with 1 changing most rapidly, then, 2, then 3
-//          N1,N2,N3: coord dimentions of u, y
+//          N1,N2,N3: coord dimensions of u, y
 //          y   : return vector result of size >= N1 * N2 * N3
 // RETURNS: none
 //**********************************************************************************
@@ -1801,36 +2147,37 @@ void I3_X_D2_X_I1(GTMatrix<T> &D2T, GTVector<T> &u,
                   GSIZET N1, GSIZET N2, GSIZET N3,
                   GTVector<T> &y)
 {
-  GSIZET  N21, N22, NXY, NN;
+	GEOFLOW_TRACE();
+  GSIZET  ND1, ND2, NXY, NN;
 
-  N21 = D2T.size(1);
-  N22 = D2T.size(2);
+  ND1 = D2T.size(1);
+  ND2 = D2T.size(2);
   NXY = N1*N2;
   NN  = N1*N2*N3;
 
 #if defined(GARRAY_BOUNDS)
   if ( u.size() < NN || y.size() < NN ) {
-    cout << "GMTK::I3_X_D2_X_I1: incompatible dimensions" << endl;
+    cout << "GMTK::I3_X_D2_X_I1 (1): incompatible dimensions" << endl;
     exit(1);
   }
 #endif
 
   if      ( std::is_same<T,GFLOAT>::value ) {
-    for ( GSIZET k=0; k<N3; k++ ) {
+    for ( auto k=0; k<N3; k++ ) {
       fmxm((GFLOAT*)(y.data()+k*NXY), (GFLOAT*)(u.data()+k*NXY), &N1, &N2, (GFLOAT*)D2T.data().data(), 
-           &N21, &N22, &szMatCache_);
+           &ND1, &ND2, &szMatCache_);
     }
   }
   else if ( std::is_same<T,GDOUBLE>::value ) {
-    for ( GSIZET k=0; k<N3; k++ ) {
+    for ( auto k=0; k<N3; k++ ) {
       dmxm((GDOUBLE*)(y.data()+k*NXY), (GDOUBLE*)(u.data()+k*NXY), &N1, &N2, (GDOUBLE*)D2T.data().data(), 
-           &N21, &N22, &szMatCache_);
+           &ND1, &ND2, &szMatCache_);
     }
   }
   else if ( std::is_same<T,GQUAD>::value ) {
-    for ( GSIZET k=0; k<N3; k++ ) {
+    for ( auto k=0; k<N3; k++ ) {
       qmxm((GQUAD*)(y.data()+k*NXY), (GQUAD*)(u.data()+k*NXY), &N1, &N2, (GQUAD*)D2T.data().data(), 
-           &N21, &N22, &szMatCache_);
+           &ND1, &ND2, &szMatCache_);
     }
   }
   else {
@@ -1838,18 +2185,84 @@ void I3_X_D2_X_I1(GTMatrix<T> &D2T, GTVector<T> &u,
   }
 
 
-} // end of method I3_X_D2_X_I1
+} // end of method I3_X_D2_X_I1 (1)
 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : D3_X_I2_X_I1 
+// METHOD : I3_X_D2_X_I1 (2)
+// DESC   : Apply tensor product operator to vector:
+//            y = I3 X D2 X I1 u
+// ARGS   : D2T     : 2-direction (dense) operator transpose
+//          u       : operand vector; must be at least of size
+//                    N1*N2*N3*Ne, with 1 changing most rapidly, then, 2, then 3,
+//                    with Ne 'elements' each of size N1*X2*N3
+//          N1-N3   : coord dimensions of u, y 'elements', if interpreted 
+//                    as matrix dimensions
+//          Ne      : number of 'elements' in u, y
+//          y   : return vector result of size >= N1 * N2 * N3 * Ne
+// RETURNS: none
+//**********************************************************************************
+template<typename T>
+void I3_X_D2_X_I1(GTMatrix<T> &D2T, GTVector<T> &u, 
+                  GSIZET N1, GSIZET N2, GSIZET N3, GSIZET Ne,
+                  GTVector<T> &y)
+{
+	GEOFLOW_TRACE();
+  GSIZET  ND1, ND2, NXY, NN, Nu;
+
+  ND1 = D2T.size(1);
+  ND2 = D2T.size(2);
+  NXY = N1*N2;
+  NN  = N1*N2*N3*Ne;
+
+#if defined(GARRAY_BOUNDS)
+  if ( u.size() < NN || y.size() < NN ) {
+    cout << "GMTK::I3_X_D2_X_I1 (2): incompatible dimensions" << endl;
+    exit(1);
+  }
+#endif
+
+  Nu  = N1*N2*N3;
+
+  if      ( std::is_same<T,GFLOAT>::value ) {
+    for ( auto j=0; j<Ne; j++ ) {
+      for ( auto k=0; k<N3; k++ ) {
+        fmxm((GFLOAT*)(y.data()+k*NXY)+j*Nu, (GFLOAT*)(u.data()+k*NXY)+j*Nu, &N1, &N2, (GFLOAT*)D2T.data().data(), &ND1, &ND2, &szMatCache_);
+      }
+    }
+  }
+  else if ( std::is_same<T,GDOUBLE>::value ) {
+    for ( auto j=0; j<Ne; j++ ) {
+      for ( auto k=0; k<N3; k++ ) {
+        dmxm((GDOUBLE*)y.data()+k*NXY+j*Nu, (GDOUBLE*)u.data()+k*NXY+j*Nu, &N1, &N2, (GDOUBLE*)D2T.data().data(), &ND1, &ND2, &szMatCache_);
+      }
+    }
+  }
+  else if ( std::is_same<T,GQUAD>::value ) {
+    for ( auto j=0; j<Ne; j++ ) {
+      for ( auto k=0; k<N3; k++ ) {
+        qmxm((GQUAD*)(y.data()+k*NXY)+j*Nu, (GQUAD*)(u.data()+k*NXY)+j*Nu, &N1, &N2, (GQUAD*)D2T.data().data(), &ND1, &ND2, &szMatCache_);
+      }
+    }
+  }
+  else {
+    assert(FALSE);
+  }
+
+
+} // end of method I3_X_D2_X_I1 (2)
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : D3_X_I2_X_I1 (1)
 // DESC   : Apply tensor product operator to vector:
 //            y = D3 X I2 X I1 u
 // ARGS   : D3T     : 3-direction (dense) operator transpose
 //          u       : operand vector; must be at least of size
 //                    N1*N2*N3, with 1 changing most rapidly, then, 2, then 3
-//          N1,N2,N3: coord dimentions of u, y
+//          N1,N2,N3: coord dimensions of u, y
 //          y   : return vector result of size >= N1 * N2 * N3
 // RETURNS: none
 //**********************************************************************************
@@ -1858,37 +2271,98 @@ void D3_X_I2_X_I1(GTMatrix<T> &D3T, GTVector<T> &u,
                   GSIZET N1, GSIZET N2, GSIZET N3, 
                   GTVector<T> &y)
 {
-  GSIZET  N31, N32, NXY, NN;
+	GEOFLOW_TRACE();
+  GSIZET  ND1, ND2, NXY, NN;
 
-  N31 = D3T.size(1);
-  N32 = D3T.size(2);
+  ND1 = D3T.size(1);
+  ND2 = D3T.size(2);
   NXY = N1*N2;
   NN  = N1*N2*N3;
 
 #if defined(GARRAY_BOUNDS)
   if ( u.size() < NN || y.size() < NN ) {
-    cout << "GMTK::D3_X_I2_X_I1: incompatible dimensions" << endl;
+    cout << "GMTK::D3_X_I2_X_I1 (1): incompatible dimensions" << endl;
     exit(1);
   }
 #endif
 
   if      ( std::is_same<T,GFLOAT>::value ) {
     fmxm((GFLOAT*)y.data(), (GFLOAT*)u.data(), &NXY, &N3, (GFLOAT*)D3T.data().data(), 
-         &N31, &N32, &szMatCache_);
+         &ND1, &ND2, &szMatCache_);
   }
   else if ( std::is_same<T,GDOUBLE>::value ) {
     dmxm((GDOUBLE*)y.data(), (GDOUBLE*)u.data(), &NXY, &N3, (GDOUBLE*)D3T.data().data(), 
-         &N31, &N32, &szMatCache_);
+         &ND1, &ND2, &szMatCache_);
   }
   else if ( std::is_same<T,GQUAD>::value ) {
     qmxm((GQUAD*)y.data(), (GQUAD*)u.data(), &NXY, &N3, (GQUAD*)D3T.data().data(), 
-         &N31, &N32, &szMatCache_);
+         &ND1, &ND2, &szMatCache_);
   }
   else {
     assert(FALSE);
   }
 
-} // end of method D3_X_I2_X_I1
+} // end of method D3_X_I2_X_I1 (1)
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : D3_X_I2_X_I1 (2)
+// DESC   : Apply tensor product operator to vector:
+//            y = D3 X I2 X I1 u
+// ARGS   : D3T     : 3-direction (dense) operator transpose
+//          u       : operand vector; must be at least of size
+//                    N1*N2*N3*Ne, with 1 changing most rapidly, then, 2, then 3,
+//                    with Ne 'elements' each of size N1*X2*N3
+//          N1-N3   : coord dimensions of u, y 'elements', if interpreted 
+//                    as matrix dimensions
+//          Ne      : number of 'elements' in u, y
+//          y   : return vector result of size >= N1 * N2 * N3
+// RETURNS: none
+//**********************************************************************************
+template<typename T>
+void D3_X_I2_X_I1(GTMatrix<T> &D3T, GTVector<T> &u,
+                  GSIZET N1, GSIZET N2, GSIZET N3, GSIZET Ne,
+                  GTVector<T> &y)
+{
+	GEOFLOW_TRACE();
+  GSIZET  ND1, ND2, NXY, NN, Nu;
+
+  ND1 = D3T.size(1);
+  ND2 = D3T.size(2);
+  NXY = N1*N2;
+  NN  = N1*N2*N3;
+
+#if defined(GARRAY_BOUNDS)
+  if ( u.size() < NN || y.size() < NN ) {
+    cout << "GMTK::D3_X_I2_X_I1 (2): incompatible dimensions" << endl;
+    exit(1);
+  }
+#endif
+
+  Nu = N1*N2*N3;
+
+  if      ( std::is_same<T,GFLOAT>::value ) {
+    for ( auto i=0; i<Ne; i++ ) {
+      fmxm((GFLOAT*)y.data()+i*Nu, (GFLOAT*)u.data()+i*Nu, &NXY, &N3, (GFLOAT*)D3T.data().data(), &ND1, &ND2, &szMatCache_);
+    }
+  }
+  else if ( std::is_same<T,GDOUBLE>::value ) {
+    for ( auto i=0; i<Ne; i++ ) {
+      dmxm((GDOUBLE*)y.data()+i*Nu, (GDOUBLE*)u.data()+i*Nu, &NXY, &N3, (GDOUBLE*)D3T.data().data(), &ND1, &ND2, &szMatCache_);
+    }
+  }
+  else if ( std::is_same<T,GQUAD>::value ) {
+    for ( auto i=0; i<Ne; i++ ) {
+      qmxm((GQUAD*)y.data()+i*Nu, (GQUAD*)u.data()+i*Nu, &NXY, &N3, (GQUAD*)D3T.data().data(), 
+           &ND1, &ND2, &szMatCache_);
+    }
+  }
+  else {
+    assert(FALSE);
+  }
+
+} // end of method D3_X_I2_X_I1 (2)
 
 
 //**********************************************************************************
@@ -1908,6 +2382,7 @@ template<typename T>
 void Dg3_X_Dg2_X_D1(GTMatrix<T> &D1, GTVector<T> &Dg2, GTVector<T> &Dg3,
                     GTVector<T> &u, GTVector<T> &tmp, GTVector<T> &y)
 {
+	GEOFLOW_TRACE();
   GSIZET N11, N12, N2, N3, NN, NXY, NYZ;
 
   N11 = D1.size(1);
@@ -1931,7 +2406,7 @@ void Dg3_X_Dg2_X_D1(GTMatrix<T> &D1, GTVector<T> &Dg2, GTVector<T> &Dg3,
     fmxm((GFLOAT*)y.data(), (GFLOAT*)D1.data().data(), &N11, &N12, (GFLOAT*)u.data(), &N11, &NYZ, &szMatCache_);
 
     // tmp1 = I X Diag(D2) X I tmp:
-    for ( GSIZET k=0; k<N3; k++ ) {
+    for ( auto k=0; k<N3; k++ ) {
       fmxDm((GFLOAT*)(tmp.data()+k*NXY),  (GFLOAT*)(y.data()+k*NXY), &N11, &N12, (GFLOAT*)Dg2.data(), &N2, &szMatCache_);
     }
 
@@ -1943,7 +2418,7 @@ void Dg3_X_Dg2_X_D1(GTMatrix<T> &D1, GTVector<T> &Dg2, GTVector<T> &Dg3,
     dmxm((GDOUBLE*)y.data(), (GDOUBLE*)D1.data().data(), &N11, &N12, (GDOUBLE*)u.data(), &N11, &NYZ, &szMatCache_);
 
     // tmp1 = I X Diag(D2) X I tmp:
-    for ( GSIZET k=0; k<N3; k++ ) {
+    for ( auto k=0; k<N3; k++ ) {
       dmxDm((GDOUBLE*)(tmp.data()+k*NXY),  (GDOUBLE*)(y.data()+k*NXY), &N11, &N12, (GDOUBLE*)Dg2.data(), &N2, &szMatCache_);
     }
 
@@ -1955,7 +2430,7 @@ void Dg3_X_Dg2_X_D1(GTMatrix<T> &D1, GTVector<T> &Dg2, GTVector<T> &Dg3,
     qmxm((GQUAD*)y.data(), (GQUAD*)D1.data().data(), &N11, &N12, (GQUAD*)u.data(), &N11, &NYZ, &szMatCache_);
 
     // tmp1 = I X Diag(D2) X I tmp:
-    for ( GSIZET k=0; k<N3; k++ ) {
+    for ( auto k=0; k<N3; k++ ) {
       qmxDm((GQUAD*)(tmp.data()+k*NXY),  (GQUAD*)(y.data()+k*NXY), &N11, &N12, (GQUAD*)Dg2.data(), &N2, &szMatCache_);
     }
 
@@ -1986,6 +2461,7 @@ template<typename T>
 void Dg3_X_D2_X_Dg1(GTVector<T> &Dg1, GTMatrix<T> &D2T, GTVector<T> &Dg3,
                     GTVector<T> &u, GTVector<T> &tmp, GTVector<T> &y)
 {
+	GEOFLOW_TRACE();
   GSIZET N1, N21, N22, N3, NN, NXY, NYZ;
 
   N1  = Dg1.size();
@@ -2009,7 +2485,7 @@ void Dg3_X_D2_X_Dg1(GTVector<T> &Dg1, GTMatrix<T> &D2T, GTVector<T> &Dg3,
     fDmxm((GFLOAT*)y.data(), (GFLOAT*)Dg1.data(), &N1, (GFLOAT*)u.data(), &N1, &NYZ, &szMatCache_);
 
     // tmp1 = I X D2 X I tmp:
-    for ( GSIZET k=0; k<N3; k++ ) {
+    for ( auto k=0; k<N3; k++ ) {
       fmxm((GFLOAT*)(tmp.data()+k*NXY), (GFLOAT*)(y.data()+k*NXY), &N1, &N21, (GFLOAT*)D2T.data().data(), &N21, &N22, &szMatCache_);
     }
 
@@ -2021,7 +2497,7 @@ void Dg3_X_D2_X_Dg1(GTVector<T> &Dg1, GTMatrix<T> &D2T, GTVector<T> &Dg3,
     dDmxm((GDOUBLE*)y.data(), (GDOUBLE*)Dg1.data(), &N1, (GDOUBLE*)u.data(), &N1, &NYZ, &szMatCache_);
 
     // tmp1 = I X D2 X I tmp:
-    for ( GSIZET k=0; k<N3; k++ ) {
+    for ( auto k=0; k<N3; k++ ) {
       dmxm((GDOUBLE*)(tmp.data()+k*NXY), (GDOUBLE*)(y.data()+k*NXY), &N1, &N21, (GDOUBLE*)D2T.data().data(), &N21, &N22, &szMatCache_);
     }
 
@@ -2033,7 +2509,7 @@ void Dg3_X_D2_X_Dg1(GTVector<T> &Dg1, GTMatrix<T> &D2T, GTVector<T> &Dg3,
     qDmxm((GQUAD*)y.data(), (GQUAD*)Dg1.data(), &N1, (GQUAD*)u.data(), &N1, &NYZ, &szMatCache_);
 
     // tmp1 = I X D2 X I tmp:
-    for ( GSIZET k=0; k<N3; k++ ) {
+    for ( auto k=0; k<N3; k++ ) {
       qmxm((GQUAD*)(tmp.data()+k*NXY), (GQUAD*)(y.data()+k*NXY), &N1, &N21, (GQUAD*)D2T.data().data(), &N21, &N22, &szMatCache_);
     }
 
@@ -2064,6 +2540,7 @@ template<typename T>
 void D3_X_Dg2_X_Dg1(GTVector<T> &Dg1, GTVector<T> &Dg2, GTMatrix<T> &D3T,
                     GTVector<T> &u, GTVector<T> &tmp, GTVector<T> &y)
 {
+	GEOFLOW_TRACE();
   GSIZET N1, N2, N31, N32, NN, NXY, NYZ;
 
   N1  = Dg1.size();
@@ -2087,7 +2564,7 @@ void D3_X_Dg2_X_Dg1(GTVector<T> &Dg1, GTVector<T> &Dg2, GTMatrix<T> &D3T,
     fDmxm((GFLOAT*)y.data(), (GFLOAT*)Dg1.data(), &N1, (GFLOAT*)u.data(), &N1, &NYZ, &szMatCache_);
 
     // tmp1 = I X D2 X I tmp:
-    for ( GSIZET k=0; k<N31; k++ ) {
+    for ( auto k=0; k<N31; k++ ) {
       fmxDm((GFLOAT*)(tmp.data()+k*NXY), (GFLOAT*)(y.data()+k*NXY), &N1, &N2, (GFLOAT*)Dg2.data(), &N2, &szMatCache_);
     }
 
@@ -2099,7 +2576,7 @@ void D3_X_Dg2_X_Dg1(GTVector<T> &Dg1, GTVector<T> &Dg2, GTMatrix<T> &D3T,
     dDmxm((GDOUBLE*)y.data(), Dg1.data(), &N1, (GDOUBLE*)u.data(), &N1, &NYZ, &szMatCache_);
 
     // tmp1 = I X D2 X I tmp:
-    for ( GSIZET k=0; k<N31; k++ ) {
+    for ( auto k=0; k<N31; k++ ) {
       dmxDm((GDOUBLE*)(tmp.data()+k*NXY), (GDOUBLE*)(y.data()+k*NXY), &N1, &N2, (GDOUBLE*)Dg2.data(), &N2, &szMatCache_);
     }
 
@@ -2111,7 +2588,7 @@ void D3_X_Dg2_X_Dg1(GTVector<T> &Dg1, GTVector<T> &Dg2, GTMatrix<T> &D3T,
     qDmxm((GQUAD*)y.data(), (GQUAD*)Dg1.data(), &N1, (GQUAD*)u.data(), &N1, &NYZ, &szMatCache_);
 
     // tmp1 = I X D2 X I tmp:
-    for ( GSIZET k=0; k<N31; k++ ) {
+    for ( auto k=0; k<N31; k++ ) {
       qmxDm(tmp.data()+k*NXY, (GQUAD*)(y.data()+k*NXY), &N1, &N2, (GQUAD*)Dg2.data(), &N2, &szMatCache_);
     }
 
@@ -2140,6 +2617,7 @@ void D3_X_Dg2_X_Dg1(GTVector<T> &Dg1, GTVector<T> &Dg2, GTMatrix<T> &D3T,
 template<typename T>
 void add(GTVector<T> &vret, const GTVector<T> &va, const GTVector<T> &vb, T a, T b) 
 {
+	GEOFLOW_TRACE();
   #if defined(_G_BOUNDS_CHK)
   if ( va.size() < vret.size() || vb.size() < vret.size() ) {
     cout << "GTVector<T>::add: " << "incompatible size" << endl;
@@ -2148,11 +2626,14 @@ while(1){};
   }
   #endif
 
-  #if !defined(_G_USE_GBLAS)
+#if defined(USE_CBLAS) || defined(USE_CUBLAS)
+
   for ( auto j=vret.getIndex().beg(); j<=vret.getIndex().end(); j+=vret.getIndex().stride() ) {
     vret[j] = a*va[j] + b*vb[j];
   }
-  #else
+
+#else
+
   GSIZET nn = vret.getIndex().end() - vret.getIndex().beg() + 1;
   if      ( std::is_same<T,GFLOAT>::value ) {
    fzaxpby(vret.data(), (GFLOAT*)(va.data()), &a, 
@@ -2170,7 +2651,7 @@ while(1){};
     assert(FALSE);
   }
 
-  #endif
+#endif
 
 } // end, add 
 
@@ -2186,6 +2667,7 @@ while(1){};
 template<typename T>
 void matvec_prod(GTVector<T> &vret, const GTMatrix<T> &A, const GTVector<T> &b) 
 {
+	GEOFLOW_TRACE();
   #if defined(_G_BOUNDS_CHK)
   if ( b.size() < A.size(2) ) {
     cout << "GMTK::matvec_prod: " << "incompatible size" << endl;
@@ -2193,14 +2675,19 @@ void matvec_prod(GTVector<T> &vret, const GTMatrix<T> &A, const GTVector<T> &b)
   }
   #endif
 
-  #if !defined(_G_USE_GBLAS)
-   for ( GSIZET i=0; i<n1_; i++ ) {
+#if defined(USE_CBLAS) || defined(USE_CUBLAS)
+
+  GSIZET n1 = A.size(1);
+  GSIZET n2 = A.size(2);
+  for ( auto i=0; i<n1; i++ ) {
      vret[i] = 0;
-     for ( GSIZET j=0; j<n2_; j++ ) {
+     for ( auto j=0; j<n2; j++ ) {
        vret[i] += A(i,j) * b(j);
      }
    }
-  #else
+
+#else
+
   GSIZET n1 = A.size(1);
   GSIZET n2 = A.size(2);
   if      ( std::is_same<T,GFLOAT>::value ) {
@@ -2222,7 +2709,7 @@ void matvec_prod(GTVector<T> &vret, const GTMatrix<T> &A, const GTVector<T> &b)
     assert(FALSE);
   }
 
-  #endif
+#endif
 
 
 } // end of operator * mat-vec
@@ -2239,6 +2726,7 @@ void matvec_prod(GTVector<T> &vret, const GTMatrix<T> &A, const GTVector<T> &b)
 template<typename T>
 void matmat_prod(GTMatrix<T> &C, const GTMatrix<T> &A, const GTMatrix<T> &B) 
 {
+	GEOFLOW_TRACE();
   #if defined(_G_BOUNDS_CHK)
   if ( A.size(2) != B.size(1) ) {
     cout << "GMTK::matmat_prod:incompatible matrix"<< endl;
@@ -2246,17 +2734,19 @@ void matmat_prod(GTMatrix<T> &C, const GTMatrix<T> &A, const GTMatrix<T> &B)
   }
   #endif
 
+#if defined(USE_CBLAS) || defined(USE_CUBLAS)
 
-  #if !defined(_G_USE_GBLAS)
-  for ( GSIZET i=0; i<C.size(1); i++ ) {
-    for ( GSIZET j=0; j<C.size(2); j++ ) {
+  for ( auto i=0; i<C.size(1); i++ ) {
+    for ( auto j=0; j<C.size(2); j++ ) {
       C(i,j) = 0.0;
-      for ( GSIZET k=0; k<A.size(2); k++ ) {
+      for ( auto k=0; k<A.size(2); k++ ) {
         C(i,j) += A(i,k) * B(k,j);
       }
     }
   }
-  #else
+
+#else
+
   GSIZET a1=A.size(1), a2 = A.size(2);
   GSIZET b1=B.size(1), b2 = B.size(2);
   if      ( std::is_same<T,GFLOAT>::value ) {
@@ -2284,7 +2774,7 @@ void matmat_prod(GTMatrix<T> &C, const GTMatrix<T> &A, const GTMatrix<T> &B)
     assert(FALSE);
   }
 
-  #endif
+#endif
 
 } // end of operator * mat-mat
 
@@ -2308,6 +2798,7 @@ void matmat_prod(GTMatrix<T> &C, const GTMatrix<T> &A, const GTMatrix<T> &B)
 template<typename T>
 void dot(GTVector<GTVector<T>*> &x, GTVector<GTVector<T>*> &y, GTVector<T> &tmp, GTVector<T> &r)
 {
+	GEOFLOW_TRACE();
    assert(x.size() == y.size());
 
    r = 0.0;

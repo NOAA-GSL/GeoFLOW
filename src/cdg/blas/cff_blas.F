@@ -101,9 +101,8 @@ c*******************************************************************************
       else if ( nbi .eq. 24 ) then
         call qmxm24(A, nai, B, nbj, C, nbj)
       else
-#if !defined(_GLAPACK)
         call qmxmcf(C, A, nai, naj, B, nbi, nbj, isz )
-#else
+#if 0
         alpha = 1.0
         beta  = 0.0
         call dgemm("N","N", nai, nbj, alpha, A, nai, 
@@ -129,8 +128,8 @@ c RETURNS    :
 c************************************************************************************
       subroutine qmxmcf(C,A,nai,naj,B,nbi,nbj,isz)
       use, intrinsic :: ISO_C_BINDING
-!$acc routine vector
       implicit none
+!$acc routine vector
       integer  (C_SIZE_T), intent   (in) :: nai, naj, nbi, nbj
       integer     (C_INT), intent   (in) :: isz
       real(C_LONG_DOUBLE), intent   (in) :: A(nai,naj), B(nbi,nbj)
@@ -191,9 +190,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine qmxv(y, A, x, nx, ny, isz)  bind(C,name="qmxv")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer     (C_INT), intent  (in)     :: isz
       integer  (C_SIZE_T), intent  (in)     :: ny, nx
       real(C_LONG_DOUBLE), intent  (in)     :: A(ny,*), x(*)
@@ -235,9 +234,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine qmxDm(C,A,nai,naj,b,nb,isz) bind(C,name="qmxDm")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer     (C_INT), intent (in)  ::  isz
       integer  (C_SIZE_T), intent (in)  ::  nai, naj, nb
       real(C_LONG_DOUBLE), intent (in)  ::  A(nai,naj), b(*)
@@ -274,9 +273,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine qDmxm(C, a, na, B, nbi, nbj, isz) bind(C,name="qDmxm")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer     (C_INT), intent (in) ::  isz
       integer  (C_SIZE_T), intent (in) ::  nbi, nbj, na
       real(C_LONG_DOUBLE), intent (in) ::  B(nbi,nbj), a(na)
@@ -312,9 +311,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine qaApbB(C,A,B,n,m,ca,cb,isz) bind(C,name="qaApbB")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer     (C_INT), intent (in) :: isz
       integer  (C_SIZE_T), intent (in) :: n, m
       real(C_LONG_DOUBLE), intent (in) :: A(n,m), B(n,m), ca, cb
@@ -349,9 +348,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine qzaxpby(z,x,a,y,b,nxy,isz) bind(C,name="qzaxpby")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer     (C_INT), intent (in) ::  isz
       integer  (C_SIZE_T), intent (in) ::  nxy
       real(C_LONG_DOUBLE), intent (in) :: x(nxy), y(nxy), a, b
@@ -388,9 +387,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine qxaxpby(x,a,y,b,nxy,isz) bind(C,name="qxaxpby")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer     (C_INT), intent   (in) :: isz
       integer  (C_SIZE_T), intent   (in) :: nxy
       real(C_LONG_DOUBLE), intent   (in) :: y(*), a, b
@@ -426,9 +425,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine qzvxvpt(z,x,y,nxy,isz) bind(C,name="qzvxvpt")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer     (C_INT), intent (in) :: isz
       integer  (C_SIZE_T), intent (in) :: nxy
       real(C_LONG_DOUBLE), intent (in) :: x(*), y(*)
@@ -463,9 +462,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine qvvxvpt(x,y,nxy,isz) bind(C,name="qvvxvpt")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer     (C_INT), intent   (in) :: isz
       integer  (C_SIZE_T), intent   (in) :: nxy
       real(C_LONG_DOUBLE), intent   (in) :: y(*)
@@ -502,9 +501,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine qvvxvptpv(x,y,z,cz,nxy,isz) bind(C,name="qvvxvptpv")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer     (C_INT), intent   (in) :: isz
       integer  (C_SIZE_T), intent   (in) :: nxy
       real(C_LONG_DOUBLE), intent   (in) :: y(*), z(*), cz
@@ -535,9 +534,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine qvpvxvpt(x,y,z,cz,nxy,isz) bind(C,name="qvpvxvpt")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer     (C_INT), intent   (in) :: isz
       integer  (C_SIZE_T), intent   (in) :: nxy
       real(C_LONG_DOUBLE), intent   (in) :: y(*), x(*), cz
@@ -573,9 +572,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine qdotg(rdot,x,y,nxy,isz) bind(C,name="qdotg")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer     (C_INT), intent (in) :: isz
       integer  (C_SIZE_T), intent (in) :: nxy
       real(C_LONG_DOUBLE), intent (in) :: x(*), y(*)
@@ -610,9 +609,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine qcopy(x, y, nxy, isz) bind(C,name="qcopy")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer     (C_INT), intent (in) :: isz
       integer  (C_SIZE_T), intent (in) :: nxy
       real(C_LONG_DOUBLE), intent (in) :: y(*)
@@ -641,9 +640,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine qoop(u,g,ig,nm,nop) bind(C,name="qoop")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer  (C_SIZE_T), intent (in) :: ig(nop*nm), nm, nop
       real(C_LONG_DOUBLE), intent (in) :: g (*)
       real(C_LONG_DOUBLE), intent(out) :: u (*)
@@ -682,9 +681,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine qisassign(u,g,ig,nm,nd) bind(C,name="qisassign")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer  (C_SIZE_T), intent (in) :: nd, nm, ig(*)
       real(C_LONG_DOUBLE), intent (in) :: g (*)
       real(C_LONG_DOUBLE), intent(out) :: u (*)
@@ -718,9 +717,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine qisum(res, u, ig, ne) bind(C,name="qisum")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer  (C_SIZE_T), intent (in) :: ne, ig(*)
       real(C_LONG_DOUBLE), intent (in) :: u (*)
       real(C_LONG_DOUBLE), intent(out) :: res(*)
@@ -750,9 +749,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine qiprod(res, u, ig, ne) bind(C,name="qiprod")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer  (C_SIZE_T), intent (in) :: ne, ig(*)
       real(C_LONG_DOUBLE), intent (in) :: u (*)
       real(C_LONG_DOUBLE), intent(out) :: res
@@ -780,9 +779,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine qimax(res, u, ig, ne) bind(C,name="qimax")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer  (C_SIZE_T), intent (in) :: ne, ig(*)
       real(C_LONG_DOUBLE), intent (in) :: u (*)
       real(C_LONG_DOUBLE), intent(out) :: res
@@ -810,9 +809,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine qimin(res, u, ig, ne) bind(C,name="qimin")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer  (C_SIZE_T), intent (in) :: ne, ig(*)
       real(C_LONG_DOUBLE), intent (in) :: u (*)
       real(C_LONG_DOUBLE), intent(out) :: res
@@ -927,9 +926,8 @@ c*******************************************************************************
       else if ( nbi .eq. 24 ) then
         call dmxm24(A, nai, B, nbj, C, nbj)
       else
-#if !defined(_GLAPACK)
         call dmxmcf(C, A, nai, naj, B, nbi, nbj, isz )
-#else
+#if 0
         alpha = 1.0
         beta  = 0.0
         call dgemm("N","N", nai, nbj, alpha, A, nai, 
@@ -955,8 +953,8 @@ c RETURNS    :
 c************************************************************************************
       subroutine dmxmcf(C,A,nai,naj,B,nbi,nbj,isz)
       use, intrinsic :: ISO_C_BINDING
-!$acc routine vector
       implicit none
+!$acc routine vector
       integer(C_SIZE_T), intent   (in) :: nai, naj, nbi, nbj
       integer   (C_INT), intent   (in) :: isz
       real   (C_DOUBLE), intent   (in) :: A(nai,naj), B(nbi,nbj)
@@ -1022,9 +1020,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine dmxv(y, A, x, nx, ny, isz)  bind(C,name="dmxv")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer   (C_INT), intent  (in)     :: isz
       integer(C_SIZE_T), intent  (in)     :: ny, nx
       real   (C_DOUBLE), intent  (in)     :: A(ny,*), x(*)
@@ -1066,9 +1064,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine dmxDm(C,A,nai,naj,b,nb,isz) bind(C,name="dmxDm")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer   (C_INT), intent (in)  ::  isz
       integer(C_SIZE_T), intent (in)  ::  nai, naj, nb
       real   (C_DOUBLE), intent (in)  ::  A(nai,naj), b(*)
@@ -1105,9 +1103,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine dDmxm(C, a, na, B, nbi, nbj, isz) bind(C,name="dDmxm")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer   (C_INT), intent (in) ::  isz
       integer(C_SIZE_T), intent (in) ::  nbi, nbj, na
       real   (C_DOUBLE), intent (in) ::  B(nbi,nbj), a(na)
@@ -1143,9 +1141,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine daApbB(C,A,B,n,m,ca,cb,isz) bind(C,name="daApbB")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer   (C_INT), intent (in) :: isz
       integer(C_SIZE_T), intent (in) :: n, m
       real   (C_DOUBLE), intent (in) :: A(n,m), B(n,m), ca, cb
@@ -1180,9 +1178,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine dzaxpby(z,x,a,y,b,nxy,isz) bind(C,name="dzaxpby")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer   (C_INT), intent (in) ::  isz
       integer(C_SIZE_T), intent (in) ::  nxy
       real   (C_DOUBLE), intent (in) :: x(nxy), y(nxy), a, b
@@ -1219,9 +1217,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine dxaxpby(x,a,y,b,nxy,isz) bind(C,name="dxaxpby")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer   (C_INT), intent   (in) :: isz
       integer(C_SIZE_T), intent   (in) :: nxy
       real   (C_DOUBLE), intent   (in) :: y(*), a, b
@@ -1257,9 +1255,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine dzvxvpt(z,x,y,nxy,isz) bind(C,name="dzvxvpt")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer   (C_INT), intent (in) :: isz
       integer(C_SIZE_T), intent (in) :: nxy
       real   (C_DOUBLE), intent (in) :: x(*), y(*)
@@ -1294,9 +1292,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine dvvxvpt(x,y,nxy,isz) bind(C,name="dvvxvpt")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer   (C_INT), intent   (in) :: isz
       integer(C_SIZE_T), intent   (in) :: nxy
       real   (C_DOUBLE), intent   (in) :: y(*)
@@ -1333,9 +1331,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine dvvxvptpv(x,y,z,cz,nxy,isz) bind(C,name="dvvxvptpv")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer   (C_INT), intent   (in) :: isz
       integer(C_SIZE_T), intent   (in) :: nxy
       real   (C_DOUBLE), intent   (in) :: y(*), z(*), cz
@@ -1366,9 +1364,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine dvpvxvpt(x,y,z,cz,nxy,isz) bind(C,name="dvpvxvpt")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer   (C_INT), intent   (in) :: isz
       integer(C_SIZE_T), intent   (in) :: nxy
       real   (C_DOUBLE), intent   (in) :: y(*), x(*), cz
@@ -1404,9 +1402,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine ddotg(rdot,x,y,nxy,isz) bind(C,name="ddotg")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer   (C_INT), intent (in) :: isz
       integer(C_SIZE_T), intent (in) :: nxy
       real   (C_DOUBLE), intent (in) :: x(*), y(*)
@@ -1441,9 +1439,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine dcopy(x, y, nxy, isz) bind(C,name="dcopy")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer   (C_INT), intent (in) :: isz
       integer(C_SIZE_T), intent (in) :: nxy
       real   (C_DOUBLE), intent (in) :: y(*)
@@ -1471,8 +1469,8 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine matset(C,nci,ncj,val,isz) 
-!$acc routine vector
       implicit none
+!$acc routine vector
       integer , intent (in) :: nci, ncj, isz
       real    , intent (in) :: val
       real    , intent(out) :: C(nci,ncj)
@@ -1504,9 +1502,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine doop(u,g,ig,nm,nop) bind(C,name="doop")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer(C_SIZE_T), intent (in) :: ig(nop*nm), nm, nop
       real   (C_DOUBLE), intent (in) :: g (*)
       real   (C_DOUBLE), intent(out) :: u (*)
@@ -1545,9 +1543,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine disassign(u,g,ig,nm,nd) bind(C,name="disassign")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer(C_SIZE_T), intent (in) :: nd, nm, ig(*)
       real   (C_DOUBLE), intent (in) :: g (*)
       real   (C_DOUBLE), intent(out) :: u (*)
@@ -1581,9 +1579,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine disum(res, u, ig, ne) bind(C,name="disum")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer(C_SIZE_T), intent (in) :: ne, ig(*)
       real   (C_DOUBLE), intent (in) :: u (*)
       real   (C_DOUBLE), intent(out) :: res(*)
@@ -1613,9 +1611,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine diprod(res, u, ig, ne) bind(C,name="diprod")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer(C_SIZE_T), intent (in) :: ne, ig(*)
       real   (C_DOUBLE), intent (in) :: u (*)
       real   (C_DOUBLE), intent(out) :: res
@@ -1643,9 +1641,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine dimax(res, u, ig, ne) bind(C,name="imax")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer(C_SIZE_T), intent (in) :: ne, ig(*)
       real   (C_DOUBLE), intent (in) :: u (*)
       real   (C_DOUBLE), intent(out) :: res
@@ -1673,9 +1671,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine dimin(res, u, ig, ne) bind(C,name="dimin")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer(C_SIZE_T), intent (in) :: ne, ig(*)
       real   (C_DOUBLE), intent (in) :: u (*)
       real   (C_DOUBLE), intent(out) :: res
@@ -1791,9 +1789,8 @@ c*******************************************************************************
       else if ( nbi .eq. 24 ) then
         call fmxm24(A, nai, B, nbj, C, nbj)
       else
-#if !defined(_GLAPACK)
         call fmxmcf(C, A, nai, naj, B, nbi, nbj, isz )
-#else
+#if 0
         alpha = 1.0
         beta  = 0.0
         call dgemm("N","N", nai, nbj, alpha, A, nai, 
@@ -1819,8 +1816,8 @@ c RETURNS    :
 c************************************************************************************
       subroutine fmxmcf(C,A,nai,naj,B,nbi,nbj,isz) 
       use, intrinsic :: ISO_C_BINDING
-!$acc routine vector
       implicit none
+!$acc routine vector
       integer(C_SIZE_T), intent   (in) :: nai, naj, nbi, nbj
       integer   (C_INT), intent   (in) :: isz
       real    (C_FLOAT), intent   (in) :: A(nai,naj), B(nbi,nbj)
@@ -1886,9 +1883,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine fmxv(y, A, x, nx, ny, isz)  bind(C,name="fmxv")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer   (C_INT), intent  (in)     :: isz
       integer(C_SIZE_T), intent  (in)     :: ny, nx
       real    (C_FLOAT), intent  (in)     :: A(ny,*), x(*)
@@ -1930,9 +1927,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine fmxDm(C,A,nai,naj,b,nb,isz) bind(C,name="fmxDm")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer   (C_INT), intent (in)  ::  isz
       integer(C_SIZE_T), intent (in)  ::  nai, naj, nb
       real    (C_FLOAT), intent (in)  ::  A(nai,naj), b(*)
@@ -1969,9 +1966,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine fDmxm(C, a, na, B, nbi, nbj, isz) bind(C,name="fDmxm")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer   (C_INT), intent (in) ::  isz
       integer(C_SIZE_T), intent (in) ::  nbi, nbj, na
       real    (C_FLOAT), intent (in) ::  B(nbi,nbj), a(na)
@@ -2007,9 +2004,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine faApbB(C,A,B,n,m,ca,cb,isz) bind(C,name="faApbB")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer   (C_INT), intent (in) :: isz
       integer(C_SIZE_T), intent (in) :: n, m
       real    (C_FLOAT), intent (in) :: A(n,m), B(n,m), ca, cb
@@ -2044,9 +2041,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine fzaxpby(z,x,a,y,b,nxy,isz) bind(C,name="fzaxpby")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer   (C_INT), intent (in) ::  isz
       integer(C_SIZE_T), intent (in) ::  nxy
       real    (C_FLOAT), intent (in) :: x(nxy), y(nxy), a, b
@@ -2083,9 +2080,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine fxaxpby(x,a,y,b,nxy,isz) bind(C,name="fxaxpby")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer   (C_INT), intent   (in) :: isz
       integer(C_SIZE_T), intent   (in) :: nxy
       real    (C_FLOAT), intent   (in) :: y(*), a, b
@@ -2121,9 +2118,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine fzvxvpt(z,x,y,nxy,isz) bind(C,name="fzvxvpt")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer   (C_INT), intent (in) :: isz
       integer(C_SIZE_T), intent (in) :: nxy
       real    (C_FLOAT), intent (in) :: x(*), y(*)
@@ -2158,9 +2155,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine fvvxvpt(x,y,nxy,isz) bind(C,name="fvvxvpt")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer   (C_INT), intent   (in) :: isz
       integer(C_SIZE_T), intent   (in) :: nxy
       real    (C_FLOAT), intent   (in) :: y(*)
@@ -2197,9 +2194,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine fvvxvptpv(x,y,z,cz,nxy,isz) bind(C,name="fvvxvptpv")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer   (C_INT), intent   (in) :: isz
       integer(C_SIZE_T), intent   (in) :: nxy
       real    (C_FLOAT), intent   (in) :: y(*), z(*), cz
@@ -2230,9 +2227,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine fvpvxvpt(x,y,z,cz,nxy,isz) bind(C,name="fvpvxvpt")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer   (C_INT), intent   (in) :: isz
       integer(C_SIZE_T), intent   (in) :: nxy
       real    (C_FLOAT), intent   (in) :: y(*), x(*), cz
@@ -2268,9 +2265,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine fdotg(rdot,x,y,nxy,isz) bind(C,name="fdotg")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer   (C_INT), intent (in) :: isz
       integer(C_SIZE_T), intent (in) :: nxy
       real    (C_FLOAT), intent (in) :: x(*), y(*)
@@ -2305,9 +2302,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine fcopy(x, y, nxy, isz) bind(C,name="fcopy")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer   (C_INT), intent (in) :: isz
       integer(C_SIZE_T), intent (in) :: nxy
       real    (C_FLOAT), intent (in) :: y(*)
@@ -2336,9 +2333,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine foop(u,g,ig,nm,nop) bind(C,name="foop")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer(C_SIZE_T), intent (in) :: ig(nop*nm), nm, nop
       real    (C_FLOAT), intent (in) :: g (*)
       real    (C_FLOAT), intent(out) :: u (*)
@@ -2377,9 +2374,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine fisassign(u,g,ig,nm,nd) bind(C,name="fisassign")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer(C_SIZE_T), intent (in) :: nd, nm, ig(*)
       real    (C_FLOAT), intent (in) :: g (*)
       real    (C_FLOAT), intent(out) :: u (*)
@@ -2413,9 +2410,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine fisum(res, u, ig, ne) bind(C,name="fisum")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer(C_SIZE_T), intent (in) :: ne, ig(*)
       real    (C_FLOAT), intent (in) :: u (*)
       real    (C_FLOAT), intent(out) :: res(*)
@@ -2445,9 +2442,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine fiprod(res, u, ig, ne) bind(C,name="fiprod")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer(C_SIZE_T), intent (in) :: ne, ig(*)
       real    (C_FLOAT), intent (in) :: u (*)
       real    (C_FLOAT), intent(out) :: res
@@ -2475,9 +2472,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine fimax(res, u, ig, ne) bind(C,name="fimax")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer(C_SIZE_T), intent (in) :: ne, ig(*)
       real    (C_FLOAT), intent (in) :: u (*)
       real    (C_FLOAT), intent(out) :: res
@@ -2505,9 +2502,9 @@ c ARGUMENTS  :
 c RETURNS    : 
 c************************************************************************************
       subroutine fimin(res, u, ig, ne) bind(C,name="fimin")
-!$acc routine vector
       use, intrinsic :: ISO_C_BINDING
       implicit none
+!$acc routine vector
       integer(C_SIZE_T), intent (in) :: ne, ig(*)
       real    (C_FLOAT), intent (in) :: u (*)
       real    (C_FLOAT), intent(out) :: res

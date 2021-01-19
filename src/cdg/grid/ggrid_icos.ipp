@@ -11,6 +11,7 @@
 // Derived From : GGrid.
 //==================================================================================
 
+#include "tbox/tracer.hpp"
 
 //**********************************************************************************
 //**********************************************************************************
@@ -24,6 +25,7 @@
 template<typename T>
 void GGridIcos::project2sphere(GTVector<GTriangle<T>> &tmesh, T rad)
 {
+	GEOFLOW_TRACE();
   GString serr = "GridIcos::project2sphere (1): ";
 
   T          r, xlat, xlong;
@@ -58,6 +60,7 @@ void GGridIcos::project2sphere(GTVector<GTriangle<T>> &tmesh, T rad)
 template<typename T>
 void GGridIcos::project2sphere(GTVector<GTPoint<T>> &plist, T rad)
 {
+	GEOFLOW_TRACE();
   GString serr = "GridIcos::project2sphere (2): ";
 
   T          r, xlat, xlong;
@@ -90,6 +93,7 @@ void GGridIcos::project2sphere(GTVector<GTPoint<T>> &plist, T rad)
 template<typename T>
 void GGridIcos::project2sphere(GTVector<GTVector<T>> &plist, T rad)
 {
+	GEOFLOW_TRACE();
   GString serr = "GridIcos::project2sphere (3): ";
 
   T r, xlat, xlong, x, y, z;
@@ -119,6 +123,7 @@ void GGridIcos::project2sphere(GTVector<GTVector<T>> &plist, T rad)
 template<typename T>
 void GGridIcos::spherical2xyz(GTVector<GTPoint<T>*> &plist)
 {
+	GEOFLOW_TRACE();
   GString serr = "GridIcos::spherical2xyz(1): ";
 
   T r, xlat, xlong;
@@ -144,6 +149,7 @@ void GGridIcos::spherical2xyz(GTVector<GTPoint<T>*> &plist)
 template<typename T>
 void GGridIcos::spherical2xyz(GTVector<GTPoint<T>> &plist)
 {
+	GEOFLOW_TRACE();
   GString serr = "GridIcos::spherical2xyz(2): ";
 
   T r, xlat, xlong;
@@ -169,6 +175,7 @@ void GGridIcos::spherical2xyz(GTVector<GTPoint<T>> &plist)
 template<typename T>
 void GGridIcos::spherical2xyz(GTVector<GTVector<T>> &plist)
 {
+	GEOFLOW_TRACE();
   GString serr = "GridIcos::spherical2xyz(3): ";
   assert(plist.size() >= 3 && "Invalid dimensionality on input array");
 
@@ -195,6 +202,7 @@ void GGridIcos::spherical2xyz(GTVector<GTVector<T>> &plist)
 template<typename T>
 void GGridIcos::xyz2spherical(GTVector<GTPoint<T>*> &plist)
 {
+	GEOFLOW_TRACE();
   GString serr = "GridIcos::xyz2spherica(1): ";
 
   T r, x, y, z;
@@ -222,6 +230,7 @@ void GGridIcos::xyz2spherical(GTVector<GTPoint<T>*> &plist)
 template<typename T>
 void GGridIcos::xyz2spherical(GTVector<GTVector<T>> &plist)
 {
+	GEOFLOW_TRACE();
   GString serr = "GridIcos::xyz2spherica(2): ";
 
   T r, x, y, z;
@@ -249,6 +258,7 @@ void GGridIcos::xyz2spherical(GTVector<GTVector<T>> &plist)
 template<typename T>
 void GGridIcos::xyz2spherical(GTVector<GTPoint<T>> &plist)
 {
+	GEOFLOW_TRACE();
   GString serr = "GridIcos::xyz2spherica(3): ";
 
   T r, x, y, z;
@@ -280,6 +290,7 @@ void GGridIcos::xyz2spherical(GTVector<GTPoint<T>> &plist)
 template<typename T>
 void GGridIcos::cart2gnomonic(GTVector<GTPoint<T>> &clist, T rad, T xlatc, T xlongc, GTVector<GTPoint<T>> &glist)
 {
+	GEOFLOW_TRACE();
   GString serr = "GridIcos::cart2gnomonic: ";
 
 
@@ -338,6 +349,7 @@ void GGridIcos::cart2gnomonic(GTVector<GTPoint<T>> &clist, T rad, T xlatc, T xlo
 template<typename T>
 void GGridIcos::gnomonic2cart(GTVector<GTVector<T>> &glist, T rad, T xlatc, T xlongc, GTVector<GTVector<T>> &clist)
 {
+	GEOFLOW_TRACE();
   GString serr = "GridIcos::gnomonic2cart (1): ";
   assert(glist.size() >= 2 && clist.size() >= 3 && "Incompaible coordinate dimensions");
 
@@ -405,6 +417,7 @@ void GGridIcos::gnomonic2cart(GTVector<GTVector<T>> &glist, T rad, T xlatc, T xl
 template<typename T>
 void GGridIcos::gnomonic2cart(GTVector<GTPoint<T>> &glist, T rad, T xlatc, T xlongc, GTVector<GTPoint<T>> &clist)
 {
+	GEOFLOW_TRACE();
   GString serr = "GridIcos::gnomonic2cart(2): ";
 
 
@@ -467,6 +480,7 @@ template<typename T>
 void GGridIcos::reorderverts2d(GTVector<GTPoint<T>> &uverts, GTVector<GTPoint<T>> &tverts, GTVector<GSIZET> &isort, 
                                GTVector<GTPoint<T>> &overts)
 {
+	GEOFLOW_TRACE();
   GString serr = "GridIcos::reorderverts2d: ";
 
   assert(uverts.size() == 4 
@@ -533,7 +547,7 @@ void GGridIcos::reorderverts2d(GTVector<GTPoint<T>> &uverts, GTVector<GTPoint<T>
 template<typename TF, typename TT>
 void GGridIcos::copycast(GTVector<GTVector<TF>> &from, GTVector<GTVector<TT>> &to)
 {
-
+	GEOFLOW_TRACE();
   assert(to.size() == from.size() && "Incompatible dimensions");
   for ( auto j=0; j<to.size(); j++ ) {
     to[j].resize(from[j].size()); 
@@ -558,7 +572,7 @@ void GGridIcos::copycast(GTVector<GTVector<TF>> &from, GTVector<GTVector<TT>> &t
 template<typename TF, typename TT>
 void GGridIcos::copycast(GTVector<GTVector<TF>*> &from, GTVector<GTVector<TT>*> &to)
 {
-
+	GEOFLOW_TRACE();
   assert(to.size() == from.size() && "Incompatible dimensions");
   for ( auto j=0; j<to.size(); j++ ) {
     to[j]->resize(from[j]->size()); 
@@ -582,7 +596,7 @@ void GGridIcos::copycast(GTVector<GTVector<TF>*> &from, GTVector<GTVector<TT>*> 
 template<typename TF, typename TT>
 void GGridIcos::copycast(GTPoint<TF> &from, GTPoint<TT> &to)
 {
-
+	GEOFLOW_TRACE();
   for ( auto j=0; j<to.size(); j++ ) {
     to[j] = static_cast<TT>(from[j]);
   }
@@ -607,6 +621,7 @@ template<typename T>
 void GGridIcos::interleave(GTVector<GTPoint<T>> &R0, GTVector<GTPoint<T>> &R1,
                    GINT I, GTVector<GTPoint<T>> &Rz)
 {
+	GEOFLOW_TRACE();
   GString serr = "GridIcos::interleave: ";
 
   // Interlaeave R0 and R1:
@@ -633,6 +648,7 @@ template<typename T>
 void GGridIcos::lagvert(GTPoint<T>&a, GTPoint<T> &b, GTPoint<T> &c,
                    GINT I, GTVector<GTPoint<T>> &R)
 {
+	GEOFLOW_TRACE();
   GString serr = "GridIcos::lagvert: ";
 
   T   xI, xJ;
@@ -670,7 +686,7 @@ void GGridIcos::lagvert(GTPoint<T>&a, GTPoint<T> &b, GTPoint<T> &c,
 template<typename T>
 void GGridIcos::order_latlong2d(GTVector<GTPoint<T>> &verts)
 {
-
+	GEOFLOW_TRACE();
   assert(verts.size() == 4 && "4 vertices must be provided");
 
   GString              serr = "GGridIcos::order_latlong2d: ";
@@ -741,7 +757,7 @@ void GGridIcos::order_latlong2d(GTVector<GTPoint<T>> &verts)
 template<typename T>
 void GGridIcos::order_triangles(GTVector<GTriangle<T>> &tmesh)
 {
-
+	GEOFLOW_TRACE();
   GString              serr = "GGridIcos::order_triangles: ";
   GTVector<GSIZET>     isortlon(3);
   GTVector<T>          lon(3), lat(3);

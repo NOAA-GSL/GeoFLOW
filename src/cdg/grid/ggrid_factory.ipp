@@ -6,6 +6,8 @@
 // Derived From : none.
 //==================================================================================
 
+#include "tbox/tracer.hpp"
+
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : build
@@ -20,6 +22,7 @@
 template<typename TypePack>
 GGrid *GGridFactory<TypePack>::build(const geoflow::tbox::PropertyTree& ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis, IOBasePtr pIO, ObsTraits &obstraits, GC_COMM &comm)
 {
+	GEOFLOW_TRACE();
   GSIZET  itindex = ptree.getValue<GSIZET>   ("restart_index", 0);
   GString sdef    = "grid_box";
   GString gname   = ptree.getValue<GString>("grid_type", sdef);
@@ -47,9 +50,10 @@ GGrid *GGridFactory<TypePack>::build(const geoflow::tbox::PropertyTree& ptree, G
       grid = new GGridIcos(ptree, gbasis, comm);
       grid->grid_init();
     }
-    else if ( "grid_box"    ==  gname) { // 2d or 3d Cart grid
+    else if ( "grid_box"    ==  gname ) { // 2d or 3d Cart grid
       grid = new GGridBox(ptree, gbasis, comm);
       grid->grid_init();
+
     }
     else {
       assert(FALSE && "Invalid PropertyTree grid specification");
@@ -100,6 +104,7 @@ template<typename TypePack>
 void GGridFactory<TypePack>::read_grid(const geoflow::tbox::PropertyTree& ptree, GTMatrix<GINT> &p, 
                          GTVector<GTVector<GFTYPE>> &xnodes, IOBasePtr pIO, ObsTraits &obstraits, GC_COMM &comm)
 {
+	GEOFLOW_TRACE();
   GINT                        nc=GDIM;
   GElemType                   igtype;
   GString                     sgtype;

@@ -414,7 +414,7 @@ GINT main(int argc, char *argv[]){
 			}
                         GPTLstop("ElemD");
                 }
-#if !defined(_G_USE_OPENACC)
+#if !defined(GEOFLOW_USE_OPENACC)
                 else if( random_path == 4 ) {
                         GPTLstart("ElemE");
                         std::list<ElementC>::iterator ie=Elist.begin();
@@ -439,7 +439,7 @@ GINT main(int argc, char *argv[]){
         GPTLget_wallclock("ElemC",-1,&time [2]);
         GPTLget_count    ("ElemD",-1,&count[3]);
         GPTLget_wallclock("ElemD",-1,&time [3]);
-        #if !defined(_G_USE_OPENACC)
+        #if !defined(GEOFLOW_USE_OPENACC)
         GPTLget_count    ("ElemE",-1,&count[4]);
         GPTLget_wallclock("ElemE",-1,&time [4]);
         #endif
@@ -484,7 +484,7 @@ std::cout << "main: USE_PAPI..." << std::endl;
         GPTLget_eventvalue("ElemD"  ,"PAPI_TOT_CYC",-1,&cyc[3]);
         GPTLget_eventvalue("ElemD"  ,"PAPI_TOT_INS",-1,&ins[3]);
         GPTLget_eventvalue("ElemD"  ,"PAPI_REF_CYC",-1,&ref[3]);
-  #if !defined(_G_USE_OPENACC)
+  #if !defined(GEOFLOW_USE_OPENACC)
         GPTLget_eventvalue("ElemE"  ,"PAPI_L1_DCM" ,-1,&l1m[4]);
         GPTLget_eventvalue("ElemE"  ,"PAPI_L2_DCM" ,-1,&l2m[4]);
         GPTLget_eventvalue("ElemE"  ,"PAPI_L2_DCA" ,-1,&l2a[4]);
@@ -521,7 +521,7 @@ std::cout << "main: USE_PAPI..." << std::endl;
         os[3] << nelem << " " << PORDER << " " << icsz << " " << nrpt << " " << time[3]/count[3] << " " << l1m[3] << " " << l2m[3] << " " << l2a[3] << " " << cyc[3] << " " << ins[3] << " " << ref[3]  << " " << lst[3] << std::endl;
         os[3].close();
 
-        #if !defined(_G_USE_OPENACC)
+        #if !defined(GEOFLOW_USE_OPENACC)
         fn.str("");
         fn << "elemE_p1p2p3" << swork << ".txt";
         os[4].open(fn.str().c_str(),ios::out|ios::app);

@@ -84,7 +84,7 @@ public:
     */
    virtual int sync();
 
-#if !defined(__INTEL_COMPILER) && (defined(__GNUG__))
+#if !defined(__PGI) && !defined(__INTEL_COMPILER) && (defined(__GNUG__))
    /**
     * Write the specified number of characters into the output stream (called
     * from streambuf).

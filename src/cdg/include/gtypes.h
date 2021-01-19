@@ -2,7 +2,7 @@
 // Module       : gtypes.hpp
 // Date         : 1/1/18 (DLR)
 // Description  : Basic types, defs
-// Copyright    : Copyright 2018. Colorado State University. All rights reserved
+// Copyright    : Copyright 2018. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
 #if !defined(_GTYPES_HPP)
@@ -17,20 +17,17 @@
 
 #include "configure.hpp"
 
-#if defined(_G_USE_GPTL)
-  #include "gptl.h"
-#endif
+
 
 // Following is a list of preprocessor variables that may be set:
 // _G_AUTO_CREATE_DEV : Auto-copy/create classes on device
 // _G_AUTO_UPDATE_DEV : Auto-update data on device after computation
 // _G_BOUNDS_CHK      : Do bounds checking
 // _GLAPACK           : Set if using external Lapack API
-// _G_USE_GBLAS       : Use GBLAS where implemented
 // _G_VEC_CACHE_SIZE  : Sets vector (BLAS II) op cache blocking factor
 // _G_MAT_CACHE_SIZE  : Sets vector op (BLAS III) cache blocking factor
-// _G_USE_OPENACC     : Set when using OpenACC
-// _G_USE_GPTL        : Set when using GPTL 
+// GEOFLOW_USE_OPENACC     : Set when using OpenACC
+// GEOFLOW_USE_GPTL        : Set when using GPTL 
 
 #if !defined(_G_TYPES_DEF)
 #define _G_TYPES_DEF
@@ -226,24 +223,6 @@ const char * const sGStateCompType [] ={"GSC_KINETIC","GSC_MAGNETIC","GSC_DENSIT
 #if !defined FUZZYEQ
   #define FUZZYEQ(x,y,eps) ( (y <= (x+eps)) && (y >= (x-eps)) ) 
 #endif
-
-#if !defined(GTIMER_DEFINED)
-  #define GTIMER_DEFINED 
-  #if defined(_G_USE_GPTL)
-    #define GTimerInit(a)   GPTLinitialize()
-    #define GTimerFinal(a)  GPTLfinalize()
-    #define GTimerStart(a)  GComm::Synch();GPTLstart(a)
-    #define GTimerStop(a)   GComm::Synch();GPTLstop(a)
-    #define GTimerReset(a)  GPTLreset()
-  #else
-    #define GTimerInit(a) 
-    #define GTimerFinal(a) 
-    #define GTimerStart(a)
-    #define GTimerStop(a) 
-    #define GTimerReset(a) 
-  #endif
-#endif
-
 
 // Misc. defs
 #define GMAX_ERROR_STRING 1024

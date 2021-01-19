@@ -36,7 +36,7 @@
 #include "gtools.h"
 //#include "gio.h"
 
-#if defined(_G_USE_GPTL)
+#if defined(GEOFLOW_USE_GPTL)
     #include "gptl.h"
 #endif
 
@@ -227,7 +227,7 @@ int main(int argc, char **argv)
     nu_.resize(1); 
     nu_ = nu_scalar; 
     
-#if defined(_G_USE_GPTL)
+#if defined(GEOFLOW_USE_GPTL)
     // Set GTPL options:
     GPTLsetoption (GPTLcpu, 1);
 #endif
@@ -457,7 +457,7 @@ int main(int argc, char **argv)
 
     do_bench("benchmark.txt", pIntegrator->get_numsteps());
  
-#if defined(_G_USE_GPTL)
+#if defined(GEOFLOW_USE_GPTL)
 //  GPTLpr(myrank);
     GPTLpr_file("timings.txt");
     GPTLpr_summary();
@@ -1363,7 +1363,7 @@ void do_bench(GString fname, GSIZET ncyc)
 {
     if ( !bench_ ) return;
 
-#if defined(_G_USE_GPTL)
+#if defined(GEOFLOW_USE_GPTL)
 
     GINT   myrank   = GComm::WorldRank(comm_);
     GINT   ntasks   = GComm::WorldSize(comm_);

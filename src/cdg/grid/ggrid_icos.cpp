@@ -22,6 +22,7 @@
 #include "ggrid_icos.hpp"
 #include "gtpoint.hpp"
 #include "gutils.hpp"
+#include "tbox/tracer.hpp"
 
 using namespace geoflow::tbox;
 using namespace std;
@@ -47,6 +48,7 @@ gdd_                          (NULLPTR),
 lshapefcn_                    (NULLPTR)
 {
   assert(b.size() == GDIM && "Basis has incorrect dimensionality");
+  GEOFLOW_TRACE();
   
   GString snorm;
   GString gname   = ptree.getValue<GString>("grid_type");
@@ -58,9 +60,9 @@ lshapefcn_                    (NULLPTR)
   lshapefcn_ = new GShapeFcn_linear<GTICOS>();
   ilevel_  = gridptree.getValue<GINT>("ilevel");
   sreftype_= gridptree.getValue<GString>("refine_type","GICOS_LAGRANGIAN");
-  this->cgtraits_.maxit = gridptree.getValue<GDOUBLE>("maxit");
-  this->cgtraits_.tol   = gridptree.getValue<GDOUBLE>("tol");
-  snorm                 = gridptree.getValue<GString>("norm_type");
+  this->cgtraits_.maxit = gridptree.getValue<GDOUBLE>("maxit", 128);
+  this->cgtraits_.tol   = gridptree.getValue<GDOUBLE>("tol", 1.0e-8);
+  snorm                 = gridptree.getValue<GString>("norm_type", "GCG_NORM_INF");
   this->cgtraits_.normtype = LinSolverBase<CGTypePack>::str2normtype(snorm);
 
   
@@ -94,6 +96,7 @@ lshapefcn_                    (NULLPTR)
 //**********************************************************************************
 GGridIcos::~GGridIcos()
 {
+	GEOFLOW_TRACE();
   if ( lshapefcn_ != NULLPTR ) delete lshapefcn_;
   if ( gdd_       != NULLPTR ) delete gdd_;
 } // end, destructor
@@ -108,7 +111,6 @@ GGridIcos::~GGridIcos()
 //**********************************************************************************
 std::ostream &operator<<(std::ostream &str, GGridIcos &e)
 {
-  
   str << " radiusi: " << e.radiusi_;
   str << " radiusi: " << e.radiuso_;
   str << " level  : " << e.ilevel_;
@@ -146,6 +148,7 @@ void GGridIcos::set_partitioner(GDD_base<GTICOS> *gdd)
 //**********************************************************************************
 void GGridIcos::init2d()
 {
+	GEOFLOW_TRACE();
   GString serr = "GridIcos::init2d: ";
 
   GFTYPE phi = (1.0+sqrt(5.0))/2.0;  // Golden ratio
@@ -237,6 +240,7 @@ fv0_(11,0) = -0.276393202250021; fv0_(11,1) = -0.850650808352040; fv0_(11,2) = -
 //**********************************************************************************
 void GGridIcos::init3d()
 {
+	GEOFLOW_TRACE();
   GString serr = "GridIcos::init3d: ";
 
   init2d();
@@ -256,6 +260,7 @@ void GGridIcos::init3d()
 //**********************************************************************************
 void GGridIcos::lagrefine()
 {
+	GEOFLOW_TRACE();
   GString serr = "GridIcos::lagrefine: ";
    
   GLLONG ibeg, j, l, m, n, t;
@@ -375,6 +380,7 @@ void GGridIcos::do_elems(GTMatrix<GINT> &p,
 //**********************************************************************************
 void GGridIcos::do_elems2d(GINT irank)
 {
+	GEOFLOW_TRACE();
   GString           serr = "GridIcos::do_elems2d (1): ";
   GFTYPE            fact;
   GTVector<GTPoint<GTICOS>> cverts(4), gverts(4), tverts(4);
@@ -518,6 +524,7 @@ void GGridIcos::do_elems2d(GINT irank)
 //**********************************************************************************
 void GGridIcos::do_elems3d(GINT irank)
 {
+	GEOFLOW_TRACE();
   GString           serr = "GridIcos::do_elems3d (1): ";
   GSIZET            nxy;
   GTICOS            fact, r0, rdelta, xlatc, xlongc;
@@ -693,6 +700,7 @@ void GGridIcos::do_elems3d(GINT irank)
 void GGridIcos::do_elems2d(GTMatrix<GINT> &p,
                            GTVector<GTVector<GFTYPE>> &gxnodes)
 {
+	GEOFLOW_TRACE();
   GString                     serr = "GridIcos::do_elems2d (2): ";
   GElem_base                  *pelem;
   GTVector<GTVector<GFTYPE>>  *xNodes;
@@ -761,6 +769,7 @@ void GGridIcos::do_elems2d(GTMatrix<GINT> &p,
 void GGridIcos::do_elems3d(GTMatrix<GINT> &p,
                            GTVector<GTVector<GFTYPE>> &gxnodes)
 {
+	GEOFLOW_TRACE();
   GString                      serr = "GridIcos::do_elems3d (2): ";
   GElem_base                  *pelem;
   GTVector<GTVector<GFTYPE>>  *xNodes;
@@ -882,6 +891,7 @@ void GGridIcos::config_bdy(const geoflow::tbox::PropertyTree &ptree,
                            GTVector<GTVector<GSIZET>> &igbdyf, 
                            GTVector<GTVector<GBdyType>> &igbdyft)
 {
+	GEOFLOW_TRACE();
   // Cycle over all geometric boundaries, and configure:
 
   GBOOL              bret;
@@ -995,7 +1005,7 @@ void GGridIcos::config_bdy(const geoflow::tbox::PropertyTree &ptree,
 //**********************************************************************************
 void GGridIcos::find_bdy_ind3d(GFTYPE radius, GTVector<GSIZET> &ibdy)
 {
-
+	GEOFLOW_TRACE();
   GFTYPE          eps, r;
   GTPoint<GFTYPE> pt(ndim_);
 
@@ -1031,7 +1041,7 @@ void GGridIcos::do_face_normals(GTMatrix<GTVector<GFTYPE>> &dXdXi,
                                 GTVector<GFTYPE> &face_mass,
                                 GTVector<GTVector<GFTYPE>> &normals)
 {
-
+	GEOFLOW_TRACE();
   #if defined(_G_IS2D)
 
     do_face_normals2d(dXdXi, gieface, gdeface, face_mass, normals);
@@ -1066,7 +1076,7 @@ void GGridIcos::do_face_normals2d(GTMatrix<GTVector<GFTYPE>> &dXdXi,
                                   GTVector<GFTYPE> &face_mass,
                                   GTVector<GTVector<GFTYPE>> &normals)
 {
-
+	GEOFLOW_TRACE();
    GINT              ib, ic, id,  ip;
    GFTYPE            tiny;
    GFTYPE            xm;
@@ -1124,6 +1134,7 @@ void GGridIcos::do_face_normals3d(GTMatrix<GTVector<GFTYPE>> &dXdXi,
                                   GTVector<GFTYPE> &face_mass,
                                   GTVector<GTVector<GFTYPE>> &normals)
 {
+	GEOFLOW_TRACE();
    GINT            ib, ic, id;
    GINT            ixi[6][2] = { {0,2}, {1,2}, {2,0},
                                  {2,1}, {1,0}, {0,1} };
@@ -1171,6 +1182,7 @@ void GGridIcos::do_bdy_normals(GTMatrix<GTVector<GFTYPE>>    &dXdXi,
                                GTVector<GTVector<GFTYPE>>    &normals,
                                GTVector<GINT>                &idepComp)
 {
+	GEOFLOW_TRACE();
   GSIZET icurr, nbdy, nface;
 
   nbdy = 0;
@@ -1233,6 +1245,7 @@ void GGridIcos::do_bdy_normals3d(GTMatrix<GTVector<GFTYPE>>    &dXdXi,
                                  GTVector<GTVector<GFTYPE>>  &normals,
                                  GTVector<GINT>             &idepComp)
 {
+	GEOFLOW_TRACE();
    GSIZET          ib, ic, ip; 
    GFTYPE          tiny;
    GFTYPE          xm;

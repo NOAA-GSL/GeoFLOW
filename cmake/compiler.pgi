@@ -9,8 +9,8 @@
 set(ACC_FLAGS "" )
 set(ACC_LINK_FLAGS "" )
 if(USE_OPENACC)
-	set( ACC_FLAGS "-acc -ta=tesla:cuda8.0" )
-    set( ACC_LINK_FLAGS "-ta=tesla:cuda8.0" )
+    set( ACC_FLAGS "-acc -Minfo=accel -ta=tesla,cc70" )
+    set( ACC_LINK_FLAGS "-ta=tesla,cc70" )
 endif(USE_OPENACC)
 
 set(INSTR_FLAGS "" )

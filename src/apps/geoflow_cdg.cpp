@@ -10,6 +10,15 @@
 
 int main(int argc, char **argv)
 {
+	GEOFLOW_TRACE_INITIALIZE(); // Must be before MPI_Init (thanks GPTL)
+
+    // Initialize comm & global environment:
+    mpixx::environment  env(argc,argv); // init GeoFLOW comm
+    mpixx::communicator world;
+    GlobalManager::initialize(argc,argv);
+    GlobalManager::startup();
+    GEOFLOW_TRACE();  // Must be after MPI_Init
+
     GString serr ="geoflow: ";
     GINT    iopt;
     GSIZET  itindex=0;      // restart flag/index
@@ -21,13 +30,6 @@ int main(int argc, char **argv)
 
     typename MyTypes::Time  t  = 0;
     typename MyTypes::Time  dt = 0.1;
-
-    // Initialize comm & global environment:
-    mpixx::environment  env(argc,argv); // init GeoFLOW comm
-    mpixx::communicator world;
-    GlobalManager::initialize(argc,argv); 
-    GlobalManager::startup();
-    comm_  = world; // need this for solver(s) & grid
 
     // Read main prop tree; may ovewrite with
     // certain command line args:
@@ -44,13 +46,6 @@ int main(int argc, char **argv)
     cline_ = InputManager::getInputCommandLine();
     bench_ = bench_ || cline_.exists("b","bench");
 
-#if defined(_G_USE_GPTL)
-    // Set GTPL options:
-    GPTLsetoption (GPTLcpu, 1);
-    GPTLsetoption (GPTLsync_mpi, 1);
-#endif
-    // Initialize timer:
-    GTimerInit();
 
     //***************************************************
     // Create basis pool:
@@ -62,33 +57,34 @@ int main(int argc, char **argv)
     // Create grid:
     //***************************************************
     EH_MESSAGE("geoflow: build grid...");
-    GTimerStart("gen_grid");
+    GEOFLOW_TRACE_START("gen_grid");
 
     ObserverFactory<MyTypes>::get_traits(ptree_, "gio_observer", binobstraits); 
+    comm_ = world;
     grid_ = GGridFactory<MyTypes>::build(ptree_, gbasis_, pIO_, binobstraits, comm_);
-    GTimerStop("gen_grid");
+    GEOFLOW_TRACE_STOP();
 
     //***************************************************
     // Initialize gather/scatter operator:
     //***************************************************
     EH_MESSAGE("geoflow: initialize gather/scatter...");
-    GTimerStart("init_ggfx_op");
+    GEOFLOW_TRACE_START("init_ggfx_op");
 
     init_ggfx(ptree_, *grid_, ggfx_);
     grid_->set_ggfx(*ggfx_);
 
-    GTimerStop("init_ggfx_op");
+    GEOFLOW_TRACE_STOP();
     EH_MESSAGE("geoflow: gather/scatter initialized.");
 
     //***************************************************
     // Set grid terrain:
     //***************************************************
     EH_MESSAGE("geoflow: set grid terrain...");
-    GTimerStart("do_terrain");
+    GEOFLOW_TRACE_START("do_terrain");
 
     do_terrain(ptree_, *grid_);
 
-    GTimerStop("do_terrain");
+    GEOFLOW_TRACE_STOP();
     EH_MESSAGE("geoflow: terrain added.");
 
     //***************************************************
@@ -108,6 +104,20 @@ int main(int argc, char **argv)
     //***************************************************
     EH_MESSAGE("geoflow: initialize PDE...");
     pEqn_->init(u_, utmp_);
+
+
+    // BTF Early Shutdown
+    deallocate();
+    EH_MESSAGE("geoflow: do shutdown...");
+    GlobalManager::shutdown();
+    GlobalManager::finalize();
+    GEOFLOW_TRACE_STOP();
+    GComm::TermComm();
+    GEOFLOW_TRACE_FINALIZE();
+    return(0);
+    // BTF Early Shutdown
+
+
 
     //***************************************************
     // Create the mixer (to update forcing)
@@ -148,33 +158,25 @@ int main(int argc, char **argv)
     //***************************************************
     GComm::Synch();
     EH_MESSAGE("geoflow: do time stepping...");
-    GTimerStart("time_loop");
+    GEOFLOW_TRACE_START("time_loop");
 
     pIntegrator_->time_integrate(t, uf_, ub_, u_);
 
-    GTimerStop("time_loop");
+    GEOFLOW_TRACE_STOP();
     EH_MESSAGE("geoflow: time stepping done.");
 
     //***************************************************
     // Do benchmarking if required:
     //***************************************************
-    GTimerStart("benchmark_timer");
+    GEOFLOW_TRACE_START("benchmark_timer");
     do_bench("benchmark.txt", pIntegrator_->get_numsteps());
-    GTimerStop("benchmark_timer");
+    GEOFLOW_TRACE_STOP();
 
     //***************************************************
     // Compare solution if required:
     //***************************************************
     compare(ptree_, *grid_, pEqn_, t, utmp_, ub_, u_);
  
-#if defined(_G_USE_GPTL)
-    GPTLpr_file("timings.txt");
-//  GPTLpr(GComm::WorldRank(comm_));
-//  GPTLpr(0);
-    GPTLpr_summary();
-#endif
-    GTimerFinal();
-
     //***************************************************
     // Do shutdown, cleaning:
     //***************************************************
@@ -182,8 +184,9 @@ int main(int argc, char **argv)
     EH_MESSAGE("geoflow: do shutdown...");
     GlobalManager::shutdown();
     GlobalManager::finalize();
+    GEOFLOW_TRACE_STOP();  // GPTL requires popping main() off the stack
     GComm::TermComm();
-
+    GEOFLOW_TRACE_FINALIZE();  // Must be after MPI_Finalize (thanks GPTL)
 
     return(0);
 
@@ -218,6 +221,7 @@ void steptop_callback(const Time &t, State &u, const Time &dt)
 //**********************************************************************************
 void create_equation(const PropertyTree &ptree, EqnBasePtr &pEqn)
 {
+  GEOFLOW_TRACE();
   pEqn = EquationFactory<MyTypes>::build(ptree, *grid_);
 
 #if 0
@@ -239,7 +243,7 @@ void create_equation(const PropertyTree &ptree, EqnBasePtr &pEqn)
 //**********************************************************************************
 void create_mixer(PropertyTree &ptree, MixBasePtr &pMixer)
 {
-
+  GEOFLOW_TRACE();
   pMixer = MixerFactory<MyTypes>::build(ptree, *grid_);
 
 #if 0
@@ -264,6 +268,7 @@ void create_mixer(PropertyTree &ptree, MixBasePtr &pMixer)
 void create_observers(EqnBasePtr &pEqn, PropertyTree &ptree, GSIZET icycle, Time time,
 std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers)
 {
+	GEOFLOW_TRACE();
     GINT    ivers;
     GSIZET  rest_ocycle;       // restart output cycle
     GSIZET  deltac, cyc_ref;   // cycle interval
@@ -372,6 +377,7 @@ std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers
 //**********************************************************************************
 void create_basis_pool(PropertyTree &ptree, BasisBase &gbasis)
 {
+  GEOFLOW_TRACE();
   std::vector<GINT> pstd(GDIM);  // order in each direction
 
   pstd = ptree.getArray<GINT>("exp_order");
@@ -387,13 +393,14 @@ void create_basis_pool(PropertyTree &ptree, BasisBase &gbasis)
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD: do_bench
+// METHOD:
 // DESC  : Do benchmark from timers
 // ARGS  : fname     : filename
 //         ncyc      : number time cycles to average over
 //**********************************************************************************
 void do_bench(GString fname, GSIZET ncyc)
 {
+	GEOFLOW_TRACE();
     if ( !bench_ ) return;
 
 #if defined(_G_USE_GPTL)
@@ -479,7 +486,7 @@ void do_bench(GString fname, GSIZET ncyc)
 //**********************************************************************************
 void allocate(const PropertyTree &ptree)
 {
-
+  GEOFLOW_TRACE();
   std::vector<GINT> *iforced;
 
   nsolve_ =  pEqn_->solve_size();
@@ -514,7 +521,7 @@ void allocate(const PropertyTree &ptree)
 //**********************************************************************************
 void deallocate()
 {
-
+  GEOFLOW_TRACE();
   if ( grid_ != NULLPTR )                 delete grid_;
   if ( ggfx_ != NULLPTR )                 delete ggfx_;
   for ( auto j=0; j<gbasis_.size(); j++ ) delete gbasis_[j];
@@ -540,6 +547,7 @@ void deallocate()
 //**********************************************************************************
 void init_state(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &t, State &utmp, State &u, State &ub)
 {
+  GEOFLOW_TRACE();
   GBOOL bret;
 
   bret = GInitStateFactory<MyTypes>::init(ptree, grid, peqn->stateinfo(), t, utmp, ub, u);
@@ -563,6 +571,7 @@ void init_state(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &
 //**********************************************************************************
 void init_force(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &t, State &utmp, State &u, State &uf)
 {
+	GEOFLOW_TRACE();
   GBOOL bret;
 
   bret = GInitForceFactory<MyTypes>::init(ptree, grid, peqn->stateinfo(), t, utmp, u, uf);
@@ -580,142 +589,143 @@ void init_force(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &
 //         grid    : GGrid object pointer, instantiated here
 //         ggfx    : gather/scatter op, GGFX
 //**********************************************************************************
-void init_ggfx(PropertyTree &ptree, GGrid &grid, GGFX<GFTYPE> *&ggfx)
-{
-  GString                        serr = "init_ggfx: ";
-  GBOOL                          bret;
-  GINT                           pmax;
-  GFTYPE                         rad;
-  GFTYPE                         tiny = 100.0*std::numeric_limits<GFTYPE>::epsilon();
-  GMorton_KeyGen<GNODEID,GFTYPE> gmorton;
-  GTPoint<GFTYPE>                dX, porigin, P0;
-  GTVector<GNODEID>              glob_indices;
-  GTVector<GFTYPE>               delta, ldelta;
-  GTVector<GTVector<GFTYPE>>    *xnodes;
-  State                          cart;
-  State                          xkey;
-  GString                        sgrid;
-  std::vector<GFTYPE>            pstd;
-  PropertyTree                   gtree;
-  State                          tmp;
-
-
-  sgrid = ptree.getValue<GString>("grid_type");
-  gtree = ptree.getPropertyTree(sgrid);
-
-  pmax = 0;
-  for ( auto j=0; j<gbasis_.size(); j++ ) pmax = MAX(pmax, gbasis_[j]->getOrder());
-
-  P0.resize(GDIM);
-  dX.resize(GDIM);
-  delta.resize(GDIM);
-  xnodes = &grid.xNodes();
-  glob_indices.resize(grid_->ndof());
-
-  // Cannot use utmp_ here because it
-  // may not have been allocated yet, so
-  // use local variable:
-  tmp.resize(GDIM);
-  for ( auto j=0; j<GDIM; j++ ) tmp[j] = new GTVector<GFTYPE>(grid_->ndof());
-
-  // If (x, y, z) < epsilon, set to 0:
-  GMTK::zero(*xnodes);
-
-  if ( sgrid == "grid_box" ) {
-    pstd   = gtree.getArray<GFTYPE>("xyz0");
-    P0     = pstd;
-    xkey.resize(GDIM);   
-    for ( auto j=0; j<GDIM; j++ ) xkey[j] = &(*xnodes)[j];
-    dX     = 0.05*grid.minnodedist();
-//  gmorton.setDoLog(TRUE);
-    gmorton.setType(GMORTON_STACKED);
-  }
-  if ( sgrid == "grid_icos" ) {
-#if 1
-    // Set indices from lat/lon coords:
-    P0.resize(GDIM);
-    dX.resize(GDIM);
-    cart.resize(xnodes->size());   
-    xkey.resize(GDIM);   
-    P0.x1 = 0.0 ; // lat starting point
-    P0.x2 = 0.0 ; // lon starting point
-    for ( auto j=0; j<xnodes->size(); j++ ) cart[j] = &(*xnodes)[j];
-    for ( auto j=0; j<GDIM; j++ ) xkey[j] = tmp[j];
-    GMTK::cart2latlon(cart, xkey);
-    for ( auto j=0; j<xkey[0]->size(); j++ ) (*xkey[0])[j] = 0.5*PI - (*xkey[0])[j]; 
-    for ( auto j=0; j<xkey[1]->size(); j++ ) (*xkey[1])[j] += (*xkey[1])[j] < 0.0 ? 2.0*PI : 0.0;
-    rad   = gtree.getValue<GFTYPE>("radius");
-    delta[0] = 0.5*grid.minlength()/(rad*pmax*pmax);
-    delta[1] = grid.minlength()/(rad*pmax*pmax);
-    for ( auto j=0; j<dX.size(); j++ ) dX[j] = 0.025 *delta[j];
+//void init_ggfx(PropertyTree &ptree, GGrid &grid, GGFX<GFTYPE> *&ggfx)
+//{
+//	GEOFLOW_TRACE();
+//  GString                        serr = "init_ggfx: ";
+//  GBOOL                          bret;
+//  GINT                           pmax;
+//  GFTYPE                         rad;
+//  GFTYPE                         tiny = 100.0*std::numeric_limits<GFTYPE>::epsilon();
+//  GMorton_KeyGen<GNODEID,GFTYPE> gmorton;
+//  GTPoint<GFTYPE>                dX, porigin, P0;
+//  GTVector<GNODEID>              glob_indices;
+//  GTVector<GFTYPE>               delta, ldelta;
+//  GTVector<GTVector<GFTYPE>>    *xnodes;
+//  State                          cart;
+//  State                          xkey;
+//  GString                        sgrid;
+//  std::vector<GFTYPE>            pstd;
+//  PropertyTree                   gtree;
+//  State                          tmp;
+//
+//
+//  sgrid = ptree.getValue<GString>("grid_type");
+//  gtree = ptree.getPropertyTree(sgrid);
+//
+//  pmax = 0;
+//  for ( auto j=0; j<gbasis_.size(); j++ ) pmax = MAX(pmax, gbasis_[j]->getOrder());
+//
+//  P0.resize(GDIM);
+//  dX.resize(GDIM);
+//  delta.resize(GDIM);
+//  xnodes = &grid.xNodes();
+//  glob_indices.resize(grid_->ndof());
+//
+//  // Cannot use utmp_ here because it
+//  // may not have been allocated yet, so
+//  // use local variable:
+//  tmp.resize(GDIM);
+//  for ( auto j=0; j<GDIM; j++ ) tmp[j] = new GTVector<GFTYPE>(grid_->ndof());
+//
+//  // If (x, y, z) < epsilon, set to 0:
+//  GMTK::zero(*xnodes);
+//
+//  if ( sgrid == "grid_box" ) {
+//    pstd   = gtree.getArray<GFTYPE>("xyz0");
+//    P0     = pstd;
+//    xkey.resize(GDIM);
+//    for ( auto j=0; j<GDIM; j++ ) xkey[j] = &(*xnodes)[j];
+//    dX     = 0.05*grid.minnodedist();
+////  gmorton.setDoLog(TRUE);
+//    gmorton.setType(GMORTON_STACKED);
+//  }
+//  if ( sgrid == "grid_icos" ) {
+//#if 1
+//    // Set indices from lat/lon coords:
+//    P0.resize(GDIM);
+//    dX.resize(GDIM);
+//    cart.resize(xnodes->size());
+//    xkey.resize(GDIM);
+//    P0.x1 = 0.0 ; // lat starting point
+//    P0.x2 = 0.0 ; // lon starting point
+//    for ( auto j=0; j<xnodes->size(); j++ ) cart[j] = &(*xnodes)[j];
+//    for ( auto j=0; j<GDIM; j++ ) xkey[j] = tmp[j];
+//    GMTK::cart2latlon(cart, xkey);
+//    for ( auto j=0; j<xkey[0]->size(); j++ ) (*xkey[0])[j] = 0.5*PI - (*xkey[0])[j];
+//    for ( auto j=0; j<xkey[1]->size(); j++ ) (*xkey[1])[j] += (*xkey[1])[j] < 0.0 ? 2.0*PI : 0.0;
+//    rad   = gtree.getValue<GFTYPE>("radius");
+//    delta[0] = 0.5*grid.minlength()/(rad*pmax*pmax);
+//    delta[1] = grid.minlength()/(rad*pmax*pmax);
+//    for ( auto j=0; j<dX.size(); j++ ) dX[j] = 0.025 *delta[j];
+////  gmorton.setType(GMORTON_STACKED);
+////  gmorton.setType(GMORTON_INTERLEAVE);
+//#else
+//    P0.resize(GDIM+1);
+//    dX.resize(GDIM+1);
+//    xkey.resize(GDIM+1);
+//    rad   = gtree.getValue<GFTYPE>("radius");
+//    P0.x1 = -rad-tiny; P0.x2 = -rad-tiny; P0.x3 = -rad-tiny;
+//    for ( auto j=0; j<xkey.size(); j++ ) xkey[j] = tmp[j];
+//    delta[0] = grid.minlength()/(pmax*pmax);
+//    delta[1] = grid.minlength()/(pmax*pmax);
+//    delta[2] = grid.minlength()/(pmax*pmax);
+//    for ( auto j=0; j<dX.size(); j++ ) dX[j] = 0.01 *delta[j];
+////  dX     = 0.1*grid.minnodedist();
+////  gmorton.setDoLog(TRUE);
+//    gmorton.setType(GMORTON_INTERLEAVE);
+////  gmorton.setType(GMORTON_STACKED);
+//#endif
+//  }
+//  if ( sgrid == "grid_sphere" ) {
+//    rad   = gtree.getValue<GFTYPE>("radiusi");
+//    P0.x1 = 0.0; // lat starting point
+//    P0.x2 = 0.0; // long starting point
+//    P0.x3 = rad; // radius starting point
+//    cart.resize(xnodes->size());
+//    xkey.resize(GDIM);
+//    for ( auto j=0; j<xnodes->size(); j++ ) cart[j] = &(*xnodes)[j];
+//    for ( auto j=0; j<GDIM; j++ ) xkey[j] = tmp[j];
+//    GMTK::rcart2sphere(cart, xkey);
+//    for ( auto j=0; j<GDIM; j++ ) ldelta[j] = xkey[j]->amindiff(tiny);
+//    GComm::Allreduce(ldelta.data(), delta.data(), GDIM, T2GCDatatype<GFTYPE>(), GC_OP_MIN, comm_);
+//    for ( auto j=0; j<GDIM; j++ ) dX[j] = 0.025*delta[j];
+////  gmorton.setDoLog(TRUE);
+//    gmorton.setType(GMORTON_STACKED);
+//  }
+//
+//  // First, periodize coords if required to,
+//  // before labeling nodes:
+//  if ( typeid(grid) == typeid(GGridBox) ) {
+//    static_cast<GGridBox*>(&grid)->periodize();
+//  }
+//
+//  xnodes = &grid.xNodes();
+//  glob_indices.resize(grid.ndof());
+//
+//  // Integralize *all* internal nodes
+//  // using Morton indices:
+////gmorton.setDoLog(TRUE);
 //  gmorton.setType(GMORTON_STACKED);
-//  gmorton.setType(GMORTON_INTERLEAVE);
-#else
-    P0.resize(GDIM+1);
-    dX.resize(GDIM+1);
-    xkey.resize(GDIM+1);   
-    rad   = gtree.getValue<GFTYPE>("radius");
-    P0.x1 = -rad-tiny; P0.x2 = -rad-tiny; P0.x3 = -rad-tiny;
-    for ( auto j=0; j<xkey.size(); j++ ) xkey[j] = tmp[j];
-    delta[0] = grid.minlength()/(pmax*pmax);
-    delta[1] = grid.minlength()/(pmax*pmax);
-    delta[2] = grid.minlength()/(pmax*pmax);
-    for ( auto j=0; j<dX.size(); j++ ) dX[j] = 0.01 *delta[j];
-//  dX     = 0.1*grid.minnodedist();
-//  gmorton.setDoLog(TRUE);
-    gmorton.setType(GMORTON_INTERLEAVE);
-//  gmorton.setType(GMORTON_STACKED);
-#endif
-  }
-  if ( sgrid == "grid_sphere" ) {
-    rad   = gtree.getValue<GFTYPE>("radiusi");
-    P0.x1 = 0.0; // lat starting point
-    P0.x2 = 0.0; // long starting point
-    P0.x3 = rad; // radius starting point
-    cart.resize(xnodes->size());   
-    xkey.resize(GDIM);   
-    for ( auto j=0; j<xnodes->size(); j++ ) cart[j] = &(*xnodes)[j];
-    for ( auto j=0; j<GDIM; j++ ) xkey[j] = tmp[j];
-    GMTK::rcart2sphere(cart, xkey);
-    for ( auto j=0; j<GDIM; j++ ) ldelta[j] = xkey[j]->amindiff(tiny);
-    GComm::Allreduce(ldelta.data(), delta.data(), GDIM, T2GCDatatype<GFTYPE>(), GC_OP_MIN, comm_);
-    for ( auto j=0; j<GDIM; j++ ) dX[j] = 0.025*delta[j];
-//  gmorton.setDoLog(TRUE);
-    gmorton.setType(GMORTON_STACKED);
-  }
-
-  // First, periodize coords if required to, 
-  // before labeling nodes:
-  if ( typeid(grid) == typeid(GGridBox) ) { 
-    static_cast<GGridBox*>(&grid)->periodize();
-  }
-
-  xnodes = &grid.xNodes();
-  glob_indices.resize(grid.ndof());
-
-  // Integralize *all* internal nodes
-  // using Morton indices:
-//gmorton.setDoLog(TRUE);
-  gmorton.setType(GMORTON_STACKED);
-//gmorton.setType(GMORTON_INTERLEAVE);
-  gmorton.setIntegralLen(P0,dX);
-  gmorton.key(glob_indices, xkey);
-
-  // Initialize gather/scatter operator:
-  ggfx = new GGFX<GFTYPE>();
-  assert(ggfx != NULLPTR && "Cannot instantiate GGFX operator");
-  bret = ggfx->init(glob_indices);
-  assert(bret && "Initialization of GGFX operator failed");
-
-  // Unperiodize nodes now that connectivity map is
-  // generated, so that coordinates mean what they should:
-  if ( typeid(grid) == typeid(GGridBox) ) { // periodize coords
-    static_cast<GGridBox*>(&grid)->unperiodize();
-  }
-
-  for ( auto j=0; j<GDIM; j++ ) delete tmp[j];
-
-} // end method init_ggfx
+////gmorton.setType(GMORTON_INTERLEAVE);
+//  gmorton.setIntegralLen(P0,dX);
+//  gmorton.key(glob_indices, xkey);
+//
+//  // Initialize gather/scatter operator:
+//  ggfx = new GGFX<GFTYPE>();
+//  assert(ggfx != NULLPTR && "Cannot instantiate GGFX operator");
+//  bret = ggfx->init(glob_indices);
+//  assert(bret && "Initialization of GGFX operator failed");
+//
+//  // Unperiodize nodes now that connectivity map is
+//  // generated, so that coordinates mean what they should:
+//  if ( typeid(grid) == typeid(GGridBox) ) { // periodize coords
+//    static_cast<GGridBox*>(&grid)->unperiodize();
+//  }
+//
+//  for ( auto j=0; j<GDIM; j++ ) delete tmp[j];
+//
+//} // end method init_ggfx
 
 
 //**********************************************************************************
@@ -733,6 +743,7 @@ void init_ggfx(PropertyTree &ptree, GGrid &grid, GGFX<GFTYPE> *&ggfx)
 //**********************************************************************************
 void compare(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &t, State &utmp, State &ub, State &u)
 {
+	GEOFLOW_TRACE();
   GBOOL             bret, bvardt;
   GINT              myrank, ntasks;
   GFTYPE            dxmin, lmin, tt;
@@ -915,6 +926,7 @@ void compare(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &t, 
 //**********************************************************************************
 void do_terrain(const PropertyTree &ptree, GGrid &grid)
 {
+	GEOFLOW_TRACE();
   GBOOL bret, bterr;
   GINT  iret, nc;
   State xb, tmp, utmp;
@@ -958,7 +970,7 @@ void do_terrain(const PropertyTree &ptree, GGrid &grid)
 void do_restart(const PropertyTree &ptree, GGrid &, State &u, 
                 GTMatrix<GINT>&p,  GSIZET &cycle, Time &t)
 {
-
+	GEOFLOW_TRACE();
   assert(pIO_ != NULLPTR && "IO operator not set!");
 
   GBOOL              bret;
@@ -989,5 +1001,40 @@ void do_restart(const PropertyTree &ptree, GGrid &, State &u,
 
   
 } // end of method do_restart
+
+
+
+
+
+
+void init_ggfx(PropertyTree& ptree, GGrid& grid, GGFX<GFTYPE>*& ggfx)
+{
+  GEOFLOW_TRACE();
+
+  std::vector<std::array<GFTYPE,GDIM>> xyz(grid_->ndof());
+  GEOFLOW_TRACE_START("ReOrder XYZ Arrays");
+  const auto ndof = grid_->ndof();
+  for(std::size_t i = 0; i < ndof; i++){
+	  for(std::size_t d = 0; d < GDIM; d++){
+		  xyz[i][d] = grid.xNodes()[d][i];
+	  }
+  }
+  GEOFLOW_TRACE_STOP();
+
+  // Create GGFX
+  ASSERT(ggfx == nullptr);
+  ggfx = new GGFX<GFTYPE>();
+  ASSERT(ggfx != nullptr);
+  pio::pout << "Calling ggfx->init(xyz)" << std::endl;
+  ggfx->init(0.25*grid.minnodedist(), xyz);
+
+} // end method init_ggfx_2
+
+
+
+
+
+
+
 
 

@@ -63,7 +63,7 @@ private:
         GSIZET             read_coll  (GString filename, StateInfo &info,       State           &u, bool bstate);
         GSIZET             read_header(GString filename, StateInfo &info, Traits &traits);
         GSIZET             write_header_posix(GString fn, StateInfo &info, Traits &traits);
-        #if defined(_G_USE_MPI)
+        #if defined(GEOFLOW_USE_MPI)
         GSIZET             write_header_coll(GString fn, StateInfo &info, Traits &traits);
         #endif
         GSIZET             sz_header(const StateInfo &info, const Traits &traits);
@@ -75,7 +75,7 @@ private:
         GINT               myrank_;     // task's rank
         GINT               nfname_;
         GSIZET             nbgdof_;     // total # global dof bytes
-        #if defined(_G_USE_MPI)
+        #if defined(GEOFLOW_USE_MPI)
           MPI_Datatype     mpi_state_type_;
         #endif
         GC_COMM            comm_;

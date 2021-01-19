@@ -18,7 +18,7 @@
 //--------------------------------------------------------------------------------
 // Comm Datatypes
 //--------------------------------------------------------------------------------
-#if defined(_G_USE_MPI)
+#if defined(GEOFLOW_USE_MPI)
 #include <stdint.h>
 #include <limits.h>
 #include "mpi.h"
@@ -216,7 +216,7 @@ GINT   nposts_; // Number posts = size of mhandle_ array
 void  *mhandle_;
 GCMHandle() { nposts_ = 0; mhandle_ = NULLPTR; bowned_ = 1; }
 ~GCMHandle() { 
-#if defined(_G_USE_MPI)
+#if defined(GEOFLOW_USE_MPI)
 if ( bowned_ && mhandle_!=NULLPTR ) delete [] (MPI_Request*)mhandle_; 
 #endif
 }

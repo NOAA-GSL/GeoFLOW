@@ -23,13 +23,13 @@ cleanall:
 docs:
 	/bin/rm -rf ../../build/* ; \
 	cd ../../build            ; \
-	cmake -D GCONF=duane        \
+	cmake -D GCONF=default      \
               ../                 ; \
 	make docs
 dist: 
 	/bin/rm -rf ../../build/* ; \
 	cd ../../build            ; \
-	cmake -D GCONF=duane        \
+	cmake -D GCONF=default      \
               ../                 ; \
 	make                      ; \
 	make install              ; \

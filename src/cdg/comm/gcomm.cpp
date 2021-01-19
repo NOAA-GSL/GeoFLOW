@@ -9,7 +9,7 @@
 
 #if !defined(GCOMM_GLOBAL_DATA)
 #define GCOMM_GLOBAL_DATA
-#if defined(_G_USE_MPI)
+#if defined(GEOFLOW_USE_MPI)
 GINT         ngrstatus_ = 0;
 GINT         ngsstatus_ = 0;
 MPI_Request *mpi_recv_req_=NULLPTR;
@@ -36,7 +36,7 @@ using namespace std;
 //**********************************************************************************
 void GComm::InitComm(int *argc, char **argv[])
 {
-#if defined(_G_USE_MPI)
+#if defined(GEOFLOW_USE_MPI)
   int          ierrMPI, iMPILen;
   char         sMPIErr[GMAX_ERROR_STRING];
 
@@ -70,7 +70,7 @@ GINT GComm::WorldRank(GC_COMM comm)
 {
   GINT  rank=0;
 
-#if defined(_G_USE_MPI)
+#if defined(GEOFLOW_USE_MPI)
   MPI_Comm_rank(comm, &rank);
 #endif
 
@@ -90,7 +90,7 @@ GINT  GComm::WorldSize(GC_COMM comm)
 {
   GINT  ntasks=1;
 
-#if defined(_G_USE_MPI)
+#if defined(GEOFLOW_USE_MPI)
   MPI_Comm_size(comm,&ntasks);
 #endif
 
@@ -108,7 +108,7 @@ GINT  GComm::WorldSize(GC_COMM comm)
 void GComm::TermComm()
 {
 
-#if defined(_G_USE_MPI)
+#if defined(GEOFLOW_USE_MPI)
   MPI_Finalize();
   if ( mpi_recv_req_ != NULLPTR ) delete [] mpi_recv_req_; 
   if ( mpi_send_req_ != NULLPTR ) delete [] mpi_send_req_; 
@@ -162,7 +162,7 @@ GBOOL GComm::ASendRecv(void *RecvBuff, GINT  nRecvBuff, GINT  *irecv, GINT maxRe
   GD_DATATYPE istype = GCommData2Index(stype);
 
 
-#if defined(_G_USE_MPI)
+#if defined(GEOFLOW_USE_MPI)
 
 #if 0
   if ( RecvBuff == NULLPTR || nRecvBuff == 0 || maxRecvLen == 0 
@@ -308,7 +308,7 @@ GBOOL GComm::ASendRecv(void *RecvBuff, GINT  nRecvBuff, GINT  *irecv, GINT maxRe
 GBOOL GComm::BRecv(void *rbuff, GINT count, GCommDatatype rtype, GINT src, GC_COMM comm)
 {   
   
-#if !defined(_G_USE_MPI)
+#if !defined(GEOFLOW_USE_MPI)
   return FALSE;
 #else
   GINT iret;
@@ -334,7 +334,7 @@ GBOOL GComm::BRecv(void *rbuff, GINT count, GCommDatatype rtype, GINT src, GC_CO
 GBOOL GComm::IRecv(void *rbuff, GINT count, GCommDatatype rtype, GINT src, void *hreq, GC_COMM comm )
 {   
   
-#if !defined(_G_USE_MPI)
+#if !defined(GEOFLOW_USE_MPI)
   return FALSE;
 #else
   GINT iret;
@@ -359,7 +359,7 @@ GBOOL GComm::IRecv(void *rbuff, GINT count, GCommDatatype rtype, GINT src, void 
 GBOOL GComm::BSend(void *sendbuff, GINT  count, GCommDatatype stype, GINT dest, GC_COMM comm )
 {   
 
-#if !defined(_G_USE_MPI)
+#if !defined(GEOFLOW_USE_MPI)
   return FALSE;
 #else
   GINT iret; 
@@ -385,7 +385,7 @@ GBOOL GComm::BSend(void *sendbuff, GINT  count, GCommDatatype stype, GINT dest, 
 GBOOL GComm::ISend(void  *sendbuff, GINT count, GCommDatatype stype, GINT dest, void *hreq, GC_COMM comm )
 {   
 
-#if !defined(_G_USE_MPI)
+#if !defined(GEOFLOW_USE_MPI)
   return FALSE;
 #else
   GINT iret;
@@ -411,7 +411,7 @@ GBOOL GComm::ISend(void  *sendbuff, GINT count, GCommDatatype stype, GINT dest, 
 GBOOL GComm::BWaitAll(GCMHandle &ch)
 {   
 
-#if !defined(_G_USE_MPI)
+#if !defined(GEOFLOW_USE_MPI)
   return FALSE;
 #else
 
@@ -449,8 +449,8 @@ GBOOL GComm::BWaitAll(GCMHandle &ch)
 GBOOL GComm::BWaitAll(void *mreq, GINT nreq)
 {   
   GINT iret;
-#if !defined(_G_USE_MPI)
-  std::cout << "GComm::BWaitAll: _G_USE_MPI undefined" << std::endl;
+#if !defined(GEOFLOW_USE_MPI)
+  std::cout << "GComm::BWaitAll: GEOFLOW_USE_MPI undefined" << std::endl;
   return FALSE;
 #else
 
@@ -491,7 +491,7 @@ GINT  GComm::Allreduce(void  *operand, void *result, const GINT  count, GCommDat
 {
 
   GINT   ircount=count;
-#if defined(_G_USE_MPI)
+#if defined(GEOFLOW_USE_MPI)
 
   ircount = MPI_Allreduce(operand, result, count, itype, GC_Optype[iop], comm);
 #else
@@ -518,7 +518,7 @@ GINT GComm::Allgather(void *operand, GINT  sendcount, GCommDatatype stype,
   GINT    iret=sendcount, rank=GComm::WorldRank(comm);
   GString serr = "GComm::Allgather: ";
 
-#if defined(_G_USE_MPI)
+#if defined(GEOFLOW_USE_MPI)
   if ( operand == NULLPTR ) {
     std::cout << serr << "MPI_IN_PLACE requested, but not allowed" << std::endl;
     exit(1);
@@ -566,7 +566,7 @@ GINT GComm::Allgather(void *operand, GINT  sendcount, GCommDatatype stype,
 GBOOL GComm::DataTypeFromStruct(AGINT  offset[], GCommDatatype blk_types[], GINT  n_types[], 
                                 const GINT n_blk, GCommDatatype *return_type)
 {
-#if defined(_G_USE_MPI)
+#if defined(GEOFLOW_USE_MPI)
   GBOOL        bret=TRUE;
   GINT         i, ierrMPI, n  ;
   int          iMPILen;
@@ -618,7 +618,7 @@ GBOOL GComm::DataTypeFromStruct(AGINT  offset[], GCommDatatype blk_types[], GINT
 //**********************************************************************************
 GBOOL GComm::DataTypeCommit(GCommDatatype *type)
 {
-#if defined(_G_USE_MPI)
+#if defined(GEOFLOW_USE_MPI)
   GINT         i, ierrMPI, n  ;
   int          iMPILen;
   char         sMPIErr[GMAX_ERROR_STRING];
@@ -646,7 +646,7 @@ GBOOL GComm::DataTypeCommit(GCommDatatype *type)
 //**********************************************************************************
 GBOOL GComm::DataTypeResized(GCommDatatype *ntype, GCommDatatype otype, GINT lb, GINT ub)
 {
-#if defined(_G_USE_MPI) && !defined(G_MPI1)
+#if defined(GEOFLOW_USE_MPI) && !defined(G_MPI1)
   GINT         ierrMPI  ;
   int          iMPILen;
   char         sMPIErr[GMAX_ERROR_STRING];
@@ -672,7 +672,7 @@ GBOOL GComm::DataTypeResized(GCommDatatype *ntype, GCommDatatype otype, GINT lb,
 //**********************************************************************************
 void GComm::DataTypeFree(GCommDatatype *type)
 {
-#if defined(_G_USE_MPI)
+#if defined(GEOFLOW_USE_MPI)
 
   // Free MPI datatype:
   MPI_Type_free(type);
@@ -691,7 +691,7 @@ void GComm::DataTypeFree(GCommDatatype *type)
 //**********************************************************************************
 void GComm::Address(void *location, AGINT  *address)
 {   
-#if defined(_G_USE_MPI)
+#if defined(GEOFLOW_USE_MPI)
 //std::cout << " GComm::Address: location=" << location << " address=" << *address << std::endl;
 #  if defined(G_MPI1)
   MPI_Address(location, address);
@@ -714,7 +714,7 @@ void GComm::Address(void *location, AGINT  *address)
 //**********************************************************************************
 void GComm::Synch(GC_COMM comm)
 {
-#if defined(_G_USE_MPI)
+#if defined(GEOFLOW_USE_MPI)
   MPI_Barrier(comm);
 #endif
 }// end of Sync(1)
@@ -730,7 +730,7 @@ void GComm::Synch(GC_COMM comm)
 GD_DATATYPE GComm::GCommData2Index(GCommDatatype ctype)
 {
   GINT j=0;
-#if defined(_G_USE_MPI)
+#if defined(GEOFLOW_USE_MPI)
   while ( j<=GTYPE_NUM && ctype != GC_DATATYPE[j] ) j++;
   if ( j >= GTYPE_NUM ) assert(FALSE);
   return (GD_DATATYPE)j;
@@ -753,7 +753,7 @@ void GComm::cout(GC_COMM comm, const char *pstr)
 {
   GString xstr(pstr);
 
-#if defined(_G_USE_MPI)
+#if defined(GEOFLOW_USE_MPI)
   GString buff;
   GINT    myrank = GComm::WorldRank(comm);
   GINT    nprocs = GComm::WorldSize(comm);

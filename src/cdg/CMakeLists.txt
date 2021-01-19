@@ -5,36 +5,76 @@
 add_library(cdg STATIC "")
 
 #
-# Load in the list of header files
+# Get Name of Current Directory
 #
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/ginc_common.cmake)
+set(GHOME          ${CMAKE_CURRENT_SOURCE_DIR})
 
 #
-# Load in the list of source files
+# Define list of directories to include for "cdg"
 #
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/gsrc_common.cmake)
-
+target_include_directories(cdg
+	PUBLIC  
+	      ${GHOME}/include
+          ${GHOME}/blas
+          ${GHOME}/comm
+          ${GHOME}/grid
+          ${GHOME}/config
+          ${GHOME}/io
+          ${GHOME}/pdes
+          ${GHOME}/sem
+          ${GHOME}/solvers
+          ${GHOME}/user/bdy
+          ${GHOME}/user/force
+          ${GHOME}/user/state
+          ${GHOME}/user/terrain
+          ${GHOME}/utils
+	)
+	
+	
 #
 # Source files to compile into library
 #
 target_sources(cdg
 	PRIVATE
-		${CDG_SRC}
-)
-
-#
-# Compiler standard required
-#
-option(CMAKE_CXX_STANDARD_REQUIRED TRUE)
-set_property(TARGET tbox PROPERTY CXX_STANDARD 11)
-
-#
-# Specific Compiler features required for library
-# 
-target_compile_features(cdg
-	PUBLIC
-		cxx_constexpr
-		cxx_static_assert
+		${GHOME}/blas/cff_blas.F
+        ${GHOME}/blas/qmxmp.F
+        ${GHOME}/blas/dmxmp.F
+        ${GHOME}/blas/fmxmp.F
+        ${GHOME}/blas/gmtk.cpp
+        ${GHOME}/blas/gcblas.cpp
+        
+        ${GHOME}/comm/gcomm.cpp 
+        
+        ${GHOME}/grid/ggrid.cpp
+        ${GHOME}/grid/ggrid_icos.cpp
+        ${GHOME}/grid/ggrid_box.cpp
+        
+        ${GHOME}/config/gspecbdy_factory.cpp 
+        
+#        ${GHOME}/io/gio.cpp
+        
+        ${GHOME}/sem/gelem_base.cpp
+        ${GHOME}/sem/gmass.cpp
+        ${GHOME}/sem/ghelmholtz.cpp
+        
+        ${GHOME}/user/bdy/gspecbdy_user.cpp
+        ${GHOME}/user/bdy/gns_inflow_user.cpp
+        ${GHOME}/user/force/ginitfb.cpp 
+        ${GHOME}/user/force/ginitforce_direct_user.cpp 
+        ${GHOME}/user/force/ginitfps.cpp 
+        ${GHOME}/user/force/ginitfs.cpp 
+        ${GHOME}/user/force/ginitfv.cpp 
+        ${GHOME}/user/state/ginitb.cpp 
+        ${GHOME}/user/state/ginitc.cpp 
+        ${GHOME}/user/state/ginitps.cpp 
+        ${GHOME}/user/state/ginits.cpp 
+        ${GHOME}/user/state/ginitstate_direct_user.cpp 
+        ${GHOME}/user/state/ginitv.cpp 
+        ${GHOME}/user/terrain/gterrain_specbox_user.cpp 
+        ${GHOME}/user/terrain/gterrain_specsph_user.cpp 
+        
+        ${GHOME}/utils/gbitblock.cpp 
+        ${GHOME}/utils/gutils.cpp
 )
 
 #
@@ -42,7 +82,8 @@ target_compile_features(cdg
 # 
 target_compile_options(cdg 
 	PRIVATE
-#		"$<$<CXX_COMPILER_ID:AppleClang>:-Wno-comment>"
+		"$<$<BOOL:${OpenACC_CXX_FOUND}>:${OpenACC_CXX_OPTIONS}>"
+#		$<$<COMPILE_LANGUAGE:CXX>:-Wno-unknown-pragmas>
 	)
 
 #
@@ -52,11 +93,11 @@ target_compile_options(cdg
 #   until it gets installed to ${MY_INSTALL_INCDIR} at the end.
 #
 target_include_directories(cdg
-	PUBLIC  
-		"${CDG_INC}"
+	PUBLIC
 		"$<INSTALL_INTERFACE:${MY_INSTALL_INCDIR}>"
 		"$<BUILD_INTERFACE:${MY_PROJECT_INCDIR}>"
 		"$<BUILD_INTERFACE:${MY_INSTALL_SRCDIR}>"
+		"$<$<BOOL:${CBLAS_FOUND}>:${CBLAS_INCLUDE_DIRS_DEP}>"
 	)
 
 #
@@ -72,6 +113,10 @@ target_link_libraries(cdg
 		"$<$<BOOL:${Boost_MPI_FOUND}>:Boost::mpi>"
 		"$<$<BOOL:${PAPI_FOUND}>:PAPI::PAPI>"
 		"$<$<BOOL:${GPTL_FOUND}>:GPTL::GPTL>"
+		"$<$<BOOL:${CBLAS_FOUND}>:${CBLAS_LIBRARIES_DEP}>"
+		"$<$<BOOL:${OpenACC_CXX_FOUND}>:OpenACC::OpenACC_CXX>"	
+		"$<$<TARGET_EXISTS:CUDA::cudart>:CUDA::cudart>"
+        "$<$<TARGET_EXISTS:CUDA::cublas>:CUDA::cublas>"	
 	)
 
 #

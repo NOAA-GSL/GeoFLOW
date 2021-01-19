@@ -736,9 +736,10 @@ GBOOL GLLBasis<T,TE>::init()
 
   bInit_ = TRUE;
 
+#if 0
   // Note: following call must have bInit_ = TRUE
   if ( !computeLegTransform(2) ) return FALSE; // Legendre transform matrix
-
+#endif
 
   return TRUE;
 

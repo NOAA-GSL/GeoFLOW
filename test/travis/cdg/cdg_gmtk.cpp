@@ -18,7 +18,7 @@
 #include "gmtk.hpp"
 #include "gllbasis.hpp"
 
-#if defined(_G_USE_GPTL)
+#if defined(GEOFLOW_USE_GPTL)
     #include "gptl.h"
 #endif
 
@@ -76,7 +76,7 @@ int main(int argc, char **argv)
 
 
 
-#if defined(_G_USE_GPTL)
+#if defined(GEOFLOW_USE_GPTL)
     // Set GTPL options:
     GPTLsetoption (GPTLcpu, 1);
 
@@ -306,7 +306,7 @@ std::cout << "y3a  = " << u3da << std::endl;
 
   gerrcode = errcode;
   
-#if defined(_G_USE_GPTL)
+#if defined(GEOFLOW_USE_GPTL)
   GPTLpr_file("timing.txt");
   GPTLfinalize();
 #endif

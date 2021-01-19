@@ -14,7 +14,7 @@
 #include "gtvector.hpp"
 #include "gtmatrix.hpp"
 
-#if defined(_G_USE_GPTL)
+#if defined(GEOFLOW_USE_GPTL)
     #include "gptl.h"
 #endif
 using namespace std;
@@ -25,7 +25,7 @@ int main(int argc, char **argv)
     GBOOL   bret;
     GINT    errcode=0;
 
-#if defined(_G_USE_GPTL)
+#if defined(GEOFLOW_USE_GPTL)
     // Set GTPL options:
     GPTLsetoption (GPTLcpu, 1);
 
@@ -88,7 +88,7 @@ int main(int argc, char **argv)
 
     v  [0] = 3 ; v  [1] = 5 ; v  [2] = 7 ; v  [3] = 9 ;
 
-#if defined(_G_USE_GPTL)
+#if defined(GEOFLOW_USE_GPTL)
     GPTLstart("blas_stuff");
 #endif
 
@@ -325,7 +325,7 @@ std::cout << "Transpose(A)=" << C << std::endl;
     }
 
 
-#if defined(_G_USE_GPTL)
+#if defined(GEOFLOW_USE_GPTL)
     GPTLstop("blas_stuff");
 
     GPTLpr_file("timing.txt");

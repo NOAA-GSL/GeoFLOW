@@ -156,7 +156,8 @@ bool
 PropertyTree::value_is_type_(const std::string& key) const {
 	ASSERT( key_exists_(key) );
 	ASSERT( not key_has_children_(key) );
-	return node_.get_optional<T>(key).has_value();
+	return node_.get_optional<T>(key).is_initialized(); // Boost 1.65 only has this call
+	//return node_.get_optional<T>(key).has_value();    // Boost 1.68 added this call
 }
 
 template<typename T>

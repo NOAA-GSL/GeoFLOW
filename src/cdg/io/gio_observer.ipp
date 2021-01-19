@@ -170,7 +170,7 @@ void GIOObserver<EquationType>::print_derived(const Time &t, const State &u)
       GMTK::domathop(*(this->grid_), u, sop, tmp, uout, iuout);
       assert(this->traits_.derived_quantities[j].snames.size() >= iuout.size());
       for ( auto i=0; i<iuout.size(); i++ ) {
-        this->grid_->get_ggfx().doOp(*uout[i], GGFX_OP_SMOOTH);
+        this->grid_->get_ggfx().doOp(*uout[i], typename GGFX<decltype(u[0])>::Smooth());
       }
       // Rest of stateinfo_ should have been set before call:
       stateinfo_.svars.resize(this->traits_.derived_quantities[j].snames.size());

@@ -1,5 +1,5 @@
 # Check CMake Version 
-cmake_minimum_required(VERSION 3.1.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.17.0 FATAL_ERROR)
 
 #
 #---------------------------------------------------------------------
@@ -30,15 +30,16 @@ project("GeoFLOW" VERSION 0.0.0.1 LANGUAGES C CXX Fortran)
 #---------------------------------------------------------------------
 # User Configure Build Process
 #---------------------------------------------------------------------
-set(CMAKE_VERBOSE_MAKEFILE ${VERBOSE_MAKE})
+set(CMAKE_VERBOSE_MAKEFILE ${GEOFLOW_VERBOSE_CMAKE})
+set(CMAKE_BUILD_TYPE ${GEOFLOW_BUILD_TYPE})
 set(CMAKE_COLOR_MAKEFILE TRUE)
-set(DEFAULT_BUILD_TYPE "Release")
 
 # Control message level of CMake
 # Should be set on command line as follow by user
 # --log-level=<ERROR|WARNING|NOTICE|STATUS|VERBOSE|DEBUG|TRACE>
 # --loglevel=  Older versions of CMake
-set(CMAKE_MESSAGE_LOG_LEVEL STATUS)
+#set(CMAKE_MESSAGE_LOG_LEVEL STATUS)
+#set(CMAKE_MESSAGE_LOG_LEVEL VERBOSE)
 
 #---------------------------------------------------------------------
 # Set location of *.cmake modules
@@ -125,26 +126,54 @@ if(${CMAKE_VERSION} VERSION_GREATER "3.11.999")
 	cmake_policy(SET CMP0074 NEW) # find_package search <name>_ROOT
 endif()
 
-if(USE_OPENMP) 
-	find_package(_OpenMP) 
+if(GEOFLOW_USE_OPENMP) 
+	find_package(_OpenMP REQUIRED) 
 endif()
 
-if(USE_MPI)
-	find_package(_MPI)
+if(GEOFLOW_USE_MPI)
+	find_package(_MPI REQUIRED)
 endif()
 
-find_package(_Boost)
+find_package(_Boost REQUIRED)
 
-if(USE_GPTL)
+if(GEOFLOW_TRACER_USE_GPTL)
 	find_package(GPTL REQUIRED)
 endif()
 
-if(USE_PAPI)
+if(GEOFLOW_USE_PAPI)
 	find_package(PAPI REQUIRED)
+endif()
+
+if(GEOFLOW_USE_CBLAS)
+	find_package(CBLAS REQUIRED) 
+endif()
+
+if(GEOFLOW_USE_CUBLAS      OR 
+   GEOFLOW_USE_OPENACC     OR
+   GEOFLOW_TRACER_USE_NVTX)
+	find_package(CUDAToolkit REQUIRED)
+endif()
+
+if(GEOFLOW_USE_OPENACC)
+	find_package(OpenACC REQUIRED)
 endif()
 
 find_package(Doxygen)
 
+#---------------------------------------------------------------------
+# Detect Library Errors
+#---------------------------------------------------------------------
+# Protect against system which only install partial libraries
+#
+
+if(CUDAToolkit_FOUND)
+	if(NOT TARGET CUDA::cudart)
+		message( FATAL_ERROR "CUDA Runtime was Not Found within the CUDA Toolkit" )
+	endif()
+	if(GEOFLOW_USE_CUBLAS AND NOT TARGET CUDA::cublas)
+		message( FATAL_ERROR "cuBLAS was Not Found within the CUDA Toolkit" )
+	endif()
+endif(CUDAToolkit_FOUND)
 
 #
 #---------------------------------------------------------------------
@@ -179,8 +208,11 @@ endforeach()
 # Set Project Level Compiler Options
 #---------------------------------------------------------------------
 # ONLY those options which impact level of compiler errors
-add_compile_options("-Werror")
-add_compile_options("-Wfatal-errors")
+# add_compile_options("-Werror")         # Change all Warnings to Errors
+# add_compile_options("-Wfatal-errors")  # Stop at 1st Error Encountered
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 #---------------------------------------------------------------------
 # Check Platform Support
@@ -206,10 +238,12 @@ add_subdirectory(src)
 add_subdirectory(analysis/src)
 
 # Build Testing
-include(CTest)
-if(BUILD_TESTING)
-  add_subdirectory(test)
-endif()
+if(GEOFLOW_BUILD_TESTS)
+	include(CTest)
+	if(BUILD_TESTING)
+  		add_subdirectory(test)
+	endif()
+endif(GEOFLOW_BUILD_TESTS)
 
 # Build Documentation (DOxygen)
 if(DOXYGEN_FOUND)

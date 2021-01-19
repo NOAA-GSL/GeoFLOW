@@ -127,7 +127,11 @@ GINT GCG<Types>::solve_impl(Operator& A, const StateComp& b, StateComp& x)
   StateComp *q, *r, *w, *z;
   State      tmp(this->tmp_->size()-4);
   StateComp *mask  = &this->grid_->get_mask();
-  StateComp *imult = &this->ggfx_->get_imult();
+
+  StateComp imult_actual(this->grid_->ndof());
+  this->ggfx_->get_imult(imult_actual);
+  StateComp* imult = &imult_actual;
+
 
   assert(this->tmp_->size() > 5);
   init();
@@ -150,7 +154,7 @@ GINT GCG<Types>::solve_impl(Operator& A, const StateComp& b, StateComp& x)
 
  *r -= (*w);                            // r = b - Ax, initial residual
 
-  this->ggfx_->doOp(*r, GGFX_OP_SUM);// DSS r
+  this->ggfx_->doOp(*r, typename GGFX<decltype(r[0])>::Sum());// DSS r
 
 
   // Create effective initial residual
@@ -187,7 +191,7 @@ GINT GCG<Types>::solve_impl(Operator& A, const StateComp& b, StateComp& x)
 
     A.opVec_prod(*w, tmp, *q);          // q = A w
 
-    this->ggfx_->doOp(*q, GGFX_OP_SUM); // q <- DSS q
+    this->ggfx_->doOp(*q, typename GGFX<decltype(q[0])>::Sum()); // q <- DSS q
 
     if ( bbv_ ) q->pointProd(*mask);    // Mask(q)
 
@@ -241,7 +245,10 @@ GINT GCG<Types>::solve_impl(Operator& A, const StateComp& b, StateComp& x)
   StateComp *q, *r, *w, *z;
   State      tmp(this->tmp_->size()-4);
   StateComp *mask  = &this->grid_->get_mask();
-  StateComp *imult = &this->ggfx_->get_imult();
+
+  StateComp imult_actual(this->grid_->ndof());
+  this->ggfx_->get_imult(imult_actual);
+  StateComp* imult = &imult_actual;
 
   assert(this->tmp_->size() > 5);
   init();
@@ -264,7 +271,7 @@ GINT GCG<Types>::solve_impl(Operator& A, const StateComp& b, StateComp& x)
 
  *r -= (*w);                            // r = b - Ax, initial residual
 
-  this->ggfx_->doOp(*r, GGFX_OP_SUM);   // DSS r
+ this->ggfx_->doOp(*r, typename GGFX<decltype(r[0])>::Sum());   // DSS r
 
   if ( bbv_ ) r->pointProd(*mask);      // Mask DSS r
   if ( precond_ != NULLPTR ) {          // solve P z = r for z
@@ -293,7 +300,7 @@ GINT GCG<Types>::solve_impl(Operator& A, const StateComp& b, StateComp& x)
 
     A.opVec_prod(*w, tmp, *q);          // q = A w
 
-    this->ggfx_->doOp(*q, GGFX_OP_SUM); // q <- DSS q
+    this->ggfx_->doOp(*q, typename GGFX<decltype(q[0])>::Sum()); // q <- DSS q
 
     if ( bbv_ ) q->pointProd(*mask);    // Mask(q)
 

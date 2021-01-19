@@ -159,7 +159,7 @@ int IOBuffer::sync(){
 // Note that this routine is not required; it only
 // offers some efficiency over overflow().
 //
-#if !defined(__INTEL_COMPILER) && (defined(__GNUG__))
+#if !defined(__PGI) && !defined(__INTEL_COMPILER) && (defined(__GNUG__))
 std::streamsize IOBuffer::xsputn(const std::string& text,
                                  std::streamsize n){
   sync();

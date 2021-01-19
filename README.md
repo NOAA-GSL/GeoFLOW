@@ -1,6 +1,8 @@
 # GeoFLOW
 Geo FLuid Object Workbench
 
+## Go To [Hackathon Instructions](docs/doxy/hackathon_20201201/index.md) for 2020 NOAA GPU Hackathon 
+
 ## Compilation from Source on UNIX
 
 To compile the source distribution, you need at least the following to build the executables:

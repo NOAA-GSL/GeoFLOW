@@ -1,87 +1,35 @@
 #
-# ========================== Build Options ===========================
-#
-set   (GDIM 2)                           # Dimensionality
-
-option(DO_TESTS       "DO_TESTS"      OFF)  # Build testing targets
-option(DO_GEOFLOW     "DO_GEOFLOW"    ON)   # Build GeoFLOW target
-
-option(DO_DEBUG       "DO_DEBUG"      ON)   # Compile for DEBUG
-option(USE_OPENMP     "USE_OPENMP"    OFF)   # Compile for OpenMP
-option(USE_MPI        "USE_MPI"       ON)   # Build with MPI?
-option(USE_OPENACC    "USE_OPENACC"   OFF)  # Compile for OpenACC
-option(USE_GBLAS      "USE_GBLAS"     ON)   # Use GBlas instead of C
-option(USE_GPTL       "USE_GPTL"      OFF)  # Build with GPTL?
-option(USE_PAPI       "USE_PAPI"      OFF)  # Is GPTL built with PAPI support?
-option(DO_AUTO_PROF   "DO_AUTO_PROF"  OFF)  # Do auto-profing with GPTL?
-option(VERBOSE_MAKE   "VERBOSE_MAKE"  OFF)   # Verbose MakeFile Ouput
-option(ENABLE_TESTS   "ENABLE_TESTS"  ON)   # Enable Testing
-
-#
-# ============================== Build Type ============================
-# Default: 
-# > cmake -D CMAKE_BUILD_TYPE=Debug
-#
-#set(CMAKE_BUILD_TYPE debug)
-
-#
-# ========================== Compiler (Serial) ==========================
-# Default: 
-# Use environment variables CC, CXX, FC, F77, F90, etc.
-# > CC=gcc-4.2 CXX=/usr/bin/g++-4.2 cmake ..
-#
-# Alternate:
-# Use CMake variables CMAKE_C_COMPILER, CMAKE_CXX_COMPILER, etc.
-# > cmake -D CMAKE_C_COMPILER=gcc-4.2 -D CMAKE_CXX_COMPILER=g++-4.2 ..
+# =====================================================================
+#                           Build Options
+# =====================================================================
 #
 
+#
+# ---------------------------- Variables ------------------------------
+#
+set(GDIM                  2         CACHE STRING "Problem Dimension")
+set(GEOFLOW_BUILD_TYPE    "Release" CACHE STRING "Build Type")
+set(OpenACC_ACCEL_TARGET  "tesla"   CACHE STRING "Target for OpenACC")
 
 #
-# ======================== Compiler (MPI Parallel) ========================
-# Default:
-# Set the serial compiler to the MPI wrapper
+# ------------------------ Options (ON/OFF) ---------------------------
 #
-# Alternate: 
-# Use environment variables.
-#   - MPI_C_COMPILER
-#   - MPI_CXX_COMPILER 
-#   - MPI_Fortran_COMPILER
-# > cmake -D MPI_CXX_COMPILER=/opt/openmpi/bin/mpiicc 
-# 
-# Alternate: 
-# Let CMake determine a MPI wrapper using your path variables
-#
+option(GEOFLOW_BUILD_TESTS        "Build testing targets"      ON)
+option(GEOFLOW_BUILD_GEOFLOW      "Build GeoFLOW target"       ON)
 
+option(GEOFLOW_USE_MPI            "Build with MPI"             ON)   
+option(GEOFLOW_USE_OPENMP         "Compile for OpenMP"        OFF)
+option(GEOFLOW_USE_CUBLAS         "Build with cuBLAS"         OFF)  
+option(GEOFLOW_USE_CBLAS          "Use System CBLAS"          OFF)  
+option(GEOFLOW_USE_OPENACC        "Using OpenACC"             OFF)
 
-#
-# ========================== Boost Library ==========================
-# Default: 
-# Use environment variables BOOST_ROOT
-# > cmake -D BOOST_ROOT=/opt/boost/boost_1_69_0/gcc/8.2.1 
-#
-set(BOOST_ROOT 
-	"" 
-CACHE STRING "Location of Boost Library")
+option(GEOFLOW_USE_GPTL           "Build with GPTL"           OFF)
+option(GEOFLOW_GPTL_AUTO_PROF     "Do auto-profing with GPTL" OFF)
+option(GEOFLOW_VERBOSE_CMAKE      "Verbose MakeFile Ouput"    ON)
 
-#
-# ========================== GPTL Library ===========================
-# Default: 
-# Use environment variables GPTL_ROOT
-# > cmake -D GPTL_ROOT=/opt/gptl/gcc/8.2.1
-#
-set(GPTL_ROOT 
-	"" 
-CACHE STRING "Location of GPTL Library")
-
-#
-# ========================== PAPI Library ===========================
-# Default: 
-# Use environment variables PAPI_ROOT
-# > cmake -D PAPI_ROOT=/opt/papi/gcc/8.2.1
-#
-set(PAPI_ROOT 
-	"" 
-CACHE STRING "Location of PAPI Library")
+option(GEOFLOW_TRACER_USE_PIO     "Use PIO Traced Ouput"      OFF)
+option(GEOFLOW_TRACER_USE_NVTX    "Use NVTX Profiling"        OFF)
+option(GEOFLOW_TRACER_USE_GPTL    "Use GPTL Profiling"        OFF)
 
 
 
