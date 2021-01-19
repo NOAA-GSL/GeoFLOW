@@ -1,251 +1,254 @@
 //==================================================================================
-// Module       : gtest_ggfx.cpp
-// Date         : 5/30/18 (DLR)
-// Description  : GeoFLOW test of GGFX operator
+// Module       : cdg_ggfx.cpp
+// Date         : 1/19/21 (BTF)
+// Description  : GeoFLOW test of new GGFX operations
 // Copyright    : Copyright 2018. Colorado State University. All rights reserved
 // Derived From : none.
 //==================================================================================
 
-#include <cstdio>
-#include <unistd.h>
+#include <cstddef>
+#include <functional>
+#include <iomanip>
 #include <iostream>
+#include <numeric>
 #include <vector>
-#if defined(GEOFLOW_USE_GPTL)
-#include "gptl.h"
-#endif
-#include "gexec.h"
 #include "ggfx.hpp"
-
-int main(int argc, char **argv)
-{
-    // Initialize comm:
-    GComm::InitComm(&argc, &argv);
-
-    GString serr ="main: ";
-    GBOOL  bret;
-    GINT   nrpt=1;
-    GINT   iopt;
-    GINT   errcode=0, gerrcode;
-    GSIZET ne=16; // no. elements per task (# 'y' elems)
-    GSIZET np=4;    // elem 'order'
-    GFLOAT eps = std::numeric_limits<GFLOAT>::epsilon();
-    GC_COMM comm = GC_COMM_WORLD;
-    GGFX<GFLOAT>   ggfx;
+#include "tbox/pio.hpp"
+#include "boost/mpi.hpp"
 
 
-    // Parse command line. ':' after char
-    // option indicates that it takes an argument:
-    while ((iopt = getopt(argc, argv, "i:n:p:h")) != -1) {
-      switch (iopt) {
-      case 'i': // get iteration count
-          nrpt = atoi(optarg);
-          break;
-      case 'p': // get array/vector size 
-          np = atoi(optarg);
-          break;
-      case 'n': // # elems per task
-          ne = atoi(optarg);
-          break;
-      case 'h': // help
-          std::cout << "usage: " << std::endl <<
-          argv[0] << " [-h] [-n #Elems per task] [-p expansion order] [-i #Repeat] " << std::endl;
-          exit(1); 
-          break;
-      case ':': // missing option argument
-          std::cout << argv[0] << ": option " << optopt << " requires an argument" << std::endl;
-          exit(1); 
-          break;
-      case '?':
-      default: // invalid option
-          std::cout << argv[0] << ": option " << optopt << " invalid" << std::endl;
-          exit(1);
-          break;
-      }
-    }
 
-    GINT myrank  = GComm::WorldRank();
-    GINT nprocs  = GComm::WorldSize();
+template<std::size_t N>
+class RowMajorIndex final {
+	static_assert(N > 0, "Cannot have 0 Rank Index");
 
-    GPP(comm, "*********************************************************");
-    GPP(comm,serr << ": no. elems per task: " << ne << " np: " << np << " nprocs: " << nprocs );
-    GPP(comm, "*********************************************************" << std::endl );
+public:
 
-#if defined(GEOFLOW_USE_GPTL)
-    // Set GTPL options:
-    GPTLsetoption (GPTLcpu, 1);
+	// ====================================================
+	// Types
+	// ====================================================
 
-    // Initialize GPTL:
-    GPTLinitialize();
-#endif
+	using size_type  = std::size_t;
+
+	// ====================================================
+	// Constructors
+	// ====================================================
+
+	RowMajorIndex()                             = delete;
+	RowMajorIndex(const RowMajorIndex& other)   = default;
+	RowMajorIndex(RowMajorIndex&& other)        = default;
+	~RowMajorIndex()                            = default;
+
+	RowMajorIndex(const std::array<size_type,N> shape) :
+		shapes_(shape),
+		linear_index_(0){
+		this->calc_stride_();
+		this->calc_index_();
+	}
+
+	// ====================================================
+	// Operators
+	// ====================================================
+
+	RowMajorIndex& operator=(const RowMajorIndex& other) = default;
+	RowMajorIndex& operator=(RowMajorIndex&& other)      = default;
 
 
-    // Build 'grid':
+	RowMajorIndex& operator=(const size_type& index){
+		ASSERT(index < size());
+		linear_index_ = index;
+		this->calc_index_();
+		return *this;
+	}
 
-/*
-   . ne
-   .
-   .               ...
-    |         |         |         |         |
- -- o -- o -- o -- o -- o -- o -- o -- o -- o
-    |    |    |    |    |    |    |    |    |
- -- o -- o -- o -- o -- o -- o -- o -- o -- o
-    |    |    |    |    |    |    |    |    |
- -- o -- o -- o -- o -- o -- o -- o -- o -- o
-    |   T0    |   T1    |  T2     |   T3    |
-   
-    0    1    2    3    4    5    6    7    8
+	RowMajorIndex& operator++(){
+		ASSERT(linear_index_ < (size()-1));
+		linear_index_++;
+		this->calc_index_();
+		return *this;
+	}
 
+	RowMajorIndex operator++(int){
+		ASSERT(linear_index_ < (size()-1));
+		auto tmp = *this;
+		linear_index_++;
+		this->calc_index_();
+		return tmp;
+	}
 
-NOTE: global ids are labeled starting from left on bottom-most
-      row, advancing along the row, continuing to the next 
-      row, etc. T0, T1, ... represent task ids.
-*/
-    GTVector<GNODEID>    glob_indices;
-    glob_indices.resize(ne*(np+1)*(np+1));
-    glob_indices = 0;
+	template<typename... Dims>
+	size_type operator()(const Dims... args) {
+		static_assert(sizeof...(args) == N);
+		indexes_ = {static_cast<size_type>(args)...};
+		linear_index_ = 0;
+		for(size_type i = 0; i < N; ++i) {
+			ASSERT(indexes_[i] < shapes_[i]);
+			linear_index_ += indexes_[i] * strides_[i];
+		}
+		return linear_index_;
+	}
 
-    GSIZET  n;
-    GSIZET  jstart;
+	size_type operator[](const size_type rank) const {
+		ASSERT(rank < N);
+		return indexes_[rank];
+	}
 
-    GSIZET rowlen = nprocs*np + 1; // # global dof in a row of nodes
-    GSIZET collen = ne    *np + 1; // # global dof in a col of nodes
-    GSIZET c, r, icol, irow;
-    
+	// ====================================================
+	// Conversion
+	// ====================================================
 
-    // Label each node point of local elements with
-    // their global index values:
-    n = 0;
-    for ( GSIZET k=0; k<ne; k++) {
-      for ( GSIZET i=0; i<np+1; i++) {
-        irow   = k*np + i; // global row id
-        jstart = irow*rowlen + myrank*np ; // global start of col index
-        for ( GSIZET j=0; j<np+1; j++) {
-          glob_indices[n] = jstart + j;
-          n++;
-        }
-      }
-    }
-
-    GPP(comm,serr << " glob_indices=" << glob_indices);
- 
-    // Set field, and analytic field buffers:
-    GTVector<GFLOAT>  u (glob_indices.size()); // trial field
-    GTVector<GFLOAT>  ua(glob_indices.size()); // analytic solution
-    GTVector<GFLOAT>  utmp(glob_indices.size()); // tmp buffer
+	/** Implicit conversion to single index
+	 */
+	operator size_type() const {
+		return linear_index_;
+	}
 
 
-    // Set analytic solution of GGFX_OP_SUM:
-    ua = 1; 
+	// ====================================================
+	// Query
+	// ====================================================
 
-    GPP(comm,serr << " ..........................start analytic loop:");
-    GBOOL isLeftTask = nprocs > 1 && myrank > 0 ? TRUE: FALSE;
-    GBOOL isRghtTask = nprocs > 1 && myrank < nprocs - 1 ? TRUE: FALSE;
-    GBOOL isTopElem, isBotElem;
-    for ( GSIZET k=0,n=0; k<ne; k++) { // loop over # elements on this task
-      isTopElem = ne > 1 && k < ne-1 ? TRUE : FALSE;
-      isBotElem = ne > 1 && k > 0 ? TRUE : FALSE;
-      for ( GSIZET i=0; i<np+1; i++) {
-        irow  = k*np + i;    // global row id
-        jstart = irow*rowlen + myrank*np ; // global start of col index
-        for ( GSIZET j=0; j<np+1; j++) {
-          icol = jstart + j; // global col id
-#if 1
-          if ( isTopElem  && i == np ) ua[n] = 2;
-          if ( isBotElem  && i ==  0 ) ua[n] = 2;
-          if ( isLeftTask && j ==  0 ) ua[n] = 2;
-          if ( isRghtTask && j == np ) ua[n] = 2;
-          if ( isLeftTask && isTopElem && i == np && j == 0  ) ua[n] = 4;
-          if ( isLeftTask && isBotElem && i ==  0 && j == 0  ) ua[n] = 4;
-          if ( isRghtTask && isTopElem && i == np && j == np ) ua[n] = 4;
-          if ( isRghtTask && isBotElem && i ==  0 && j == np ) ua[n] = 4;
-#else
-          ua[n] = irow+icol;
-          r = irow; c = icol;
-          if ( isTopElem  && i == np ) ua[n] = irow+icol + irow+icol+1;
-          if ( isBotElem  && i ==  0 ) ua[n] = irow+icol + irow+icol-1;
-          if ( isLeftTask && j ==  0 ) ua[n] = irow+icol + irow-1+icol;
-          if ( isRghtTask && j == np ) ua[n] = irow+icol + irow+1+icol;
-          if ( isLeftTask && isTopElem && i == np && j == 0  ) ua[n] = r+c + r+c+1 + r-1+c+1 + r-1+c;
-          if ( isLeftTask && isBotElem && i ==  0 && j == 0  ) ua[n] = r+c + r+1+c + r+1+c+1 + r+c+1;
-          if ( isRghtTask && isTopElem && i == np && j == np ) ua[n] = r+c + r-1+c + r-1+c-1 + r+c-1;
-          if ( isRghtTask && isBotElem && i ==  0 && j == np ) ua[n] = r+c + r+c-1 + r+1+c-1 + r+1+c;
-#endif
-          n++;
-        }
-      }
-    }
-    GPP(comm,serr << " ..........................end analytic loop:");
+	size_type size() const {
+		size_type sz = 1;
+		for(size_type i = 0; i < N; ++i) {
+			sz *= shapes_[i];
+		}
+		return sz;
+	}
 
-    // Print ua to task 0:
+	size_type shape(const size_type i) const {
+		ASSERT(i < N);
+		return shapes_[i];
+	}
 
-    GPP(comm, serr << " doing GGFX::Init...");
-    u = 1;
-#if defined(GEOFLOW_USE_GPTL)
-    GPTLstart("ggfx_init");
-#endif
-    for ( GSIZET k=0; k<nrpt && errcode==0; k++ ) { 
-      bret = ggfx.init(glob_indices);
-      if ( !bret ) errcode = 2;
-    }
-    GComm::Synch();
-    GPP(comm, serr << " GGFX::Init done.");
-#if defined(GEOFLOW_USE_GPTL)
-    GPTLstop("ggfx_init");
-#endif
+	size_type stride(const size_type i) const {
+		ASSERT(i < N);
+		return strides_[i];
+	}
 
-    GPP(comm,serr << " doing GGFX::doOp...");
-#if defined(GEOFLOW_USE_GPTL)
-    GPTLstart("ggfx_doop");
-#endif
-    for ( GSIZET k=0; k<nrpt && errcode==0; k++ ) { 
-      bret = ggfx.doOp(u, GGFX_OP_SUM);
-      if ( !bret ) errcode = 3;
-    }
-#if defined(GEOFLOW_USE_GPTL)
-    GPTLstop("ggfx_doop");
-#endif
-    if ( errcode == 0 ) GPP(comm,serr << " GGFX::doOp done.");
+	size_type index(const size_type i) const {
+		ASSERT(i < N);
+		return indexes_[i];
+	}
 
 
-    GComm::Allreduce(&errcode, &gerrcode, 1, T2GCDatatype<GINT>() , GC_OP_MAX, comm);
+	// ====================================================
+	// PRIVATE
+	// ====================================================
+
+private:
+	std::array<size_type,N> shapes_;
+	std::array<size_type,N> strides_;
+	std::array<size_type,N> indexes_;
+	size_type               linear_index_;
 
 
-    // Check against truth solution:
-    // Print error code to task 0
-    GFLOAT           ldel, gdel;
-    GTVector<GFLOAT> del(ua.size());
-    if ( gerrcode == 0 ) {
-      del = ua - u; 
-      ldel = del.max();
-      GComm::Allreduce(&ldel, &gdel, 1, T2GCDatatype<GFLOAT>() , GC_OP_MAX, comm);
-      if ( gdel > eps ) {
-        GPP(comm,serr << "  ua=" << ua);
-        GPP(comm,serr << "  ua=" << ua);
-        GPP(comm,serr << "  u =" << u );
-        GPP(comm,serr << " del=" << del);
-        GPP(comm,serr << "gdel=" << gdel);
-        GPP(comm,"main: Solution error in GGFX test");
-        errcode = 4;
-      }
-    }
+	void calc_stride_() {
+		strides_[N-1] = 1;
+		for(size_type i = (N-1); i--> 0;) {
+			strides_[i] = strides_[i+1] * shapes_[i+1];
+		}
+	}
 
-#if defined(GEOFLOW_USE_GPTL)
-    GPTLpr_file("timing.txt");
-    GPTLfinalize();
-#endif
+	void calc_index_() {
+		size_type fac = 1;
+		for(size_type i = N; i--> 1;) {
+			indexes_[i] = (linear_index_ / fac) % shapes_[i];
+			fac *= shapes_[i];
+		}
+		indexes_[0] = linear_index_ / fac;
+	}
 
-    GComm::Allreduce(&errcode, &gerrcode, 1, T2GCDatatype<GINT>() , GC_OP_MAX, comm);
+};
 
-term:
-    if ( myrank == 0 ) {
-      if ( gerrcode != 0 ) {
-        cout << serr << "  Error: code=" << gerrcode << endl;
-      }
-      else {
-        cout << serr << "     Success!" << endl;
-      }
-    }
 
-    GComm::TermComm();
-    return(gerrcode);
-} // end, main
+
+
+
+
+
+
+
+
+
+
+int main(int argc, char **argv){
+	namespace mpi  = boost::mpi;
+	using namespace geoflow::tbox;
+	constexpr int NDIM = GDIM;
+	using size_type  = std::size_t;
+	using value_type = double;
+	using point_type = std::array<value_type, NDIM>;
+
+	// Start Up MPI and find my place in it
+    mpi::environment  env(argc,argv);
+    mpi::communicator world;
+	auto my_rank   = world.rank();
+	auto num_ranks = world.size();
+//	pio::initialize(my_rank);
+//	pio::logAllNodes("log");
+
+	// Constants that control the region for each rank
+	std::array<size_type,NDIM>  grid_dimensions;
+	std::array<value_type,NDIM> grid_distance;
+	grid_dimensions.fill(5);
+	grid_distance.fill(1.0);
+
+	// Build our Ranks grid region & spacing
+	std::array<value_type,NDIM> sxyz; // grid start
+	std::array<value_type,NDIM> dxyz; // grid spacing
+	for(size_type i = 0; i < NDIM; ++i){
+		dxyz[i] = grid_distance[i] / (grid_dimensions[i]-1);
+		sxyz[i] = my_rank * dxyz[i] * (grid_dimensions[i]/2);
+	}
+
+	// Build our Cartesian Grid
+	auto index = RowMajorIndex<NDIM>(grid_dimensions);
+	auto num_points = index.size();
+	std::vector<point_type> xyz(num_points);
+	for(index = 0; index < num_points; ++index) {
+		for(size_type d = 0; d < NDIM; ++d){
+			xyz[index][d] = sxyz[d] + index[NDIM-1-d] * dxyz[d];
+		}
+	}
+
+	// Init GGFX for each ranks region
+	auto min_dist = std::accumulate(dxyz.begin(),dxyz.end(),9999.,[](auto a, auto b){
+		return std::min(a,b);
+	});
+	value_type tolerance = 0.25 * min_dist;
+	GGFX<value_type> ggfx;
+	ggfx.init(tolerance,xyz);
+
+	// Build Known Solution
+	std::vector<value_type> soln(num_points, 0.0);
+	for(size_type i = 0; i < num_points; ++i) {
+		for(size_type d = 0; d < NDIM; ++d){
+			soln[i] += d * xyz[i][d];
+		}
+	}
+	const std::vector<value_type> original(soln);
+
+	// Perform our Reduction
+	ggfx.doOp(soln,GGFX<value_type>::Smooth());
+
+
+	// Compare Solutions
+	for(size_type i = 0; i < num_points; ++i) {
+		if( original[i] != soln[i] ){
+//			pio::pout << "ERROR: At index = " << i << std::endl;
+			return 1;
+		}
+	}
+
+//	ggfx.display();
+//	std::vector<value_type> imult(num_points);
+//	ggfx.get_imult(imult);
+//	pio::plog << std::scientific;
+//	for(index = 0; index < num_points; ++index) {
+//		pio::plog << xyz[index][0] << " " << xyz[index][1] << " " << original[index] << "  " << soln[index] << "  " << imult[index] << std::endl;
+//	}
+
+	pio::finalize();
+	return 0;
+}

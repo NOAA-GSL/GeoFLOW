@@ -29,7 +29,7 @@ option(GEOFLOW_VERBOSE_CMAKE      "Verbose MakeFile Ouput"    ON)
 
 option(GEOFLOW_TRACER_USE_PIO     "Use PIO Traced Ouput"      OFF)
 option(GEOFLOW_TRACER_USE_NVTX    "Use NVTX Profiling"        OFF)
-option(GEOFLOW_TRACER_USE_GPTL    "Use GPTL Profiling"        ON)
+option(GEOFLOW_TRACER_USE_GPTL    "Use GPTL Profiling"        OFF)
 
 
 

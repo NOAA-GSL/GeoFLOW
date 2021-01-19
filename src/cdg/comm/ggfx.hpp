@@ -67,7 +67,8 @@ public:
 		template<typename VectorType>
 		typename VectorType::value_type
 		operator()(const VectorType& vec) const {
-			return std::accumulate(vec.begin(),vec.end(),0) / vec.size();
+			using value_type = typename VectorType::value_type;
+			return std::accumulate(vec.begin(),vec.end(),value_type(0)) / vec.size();
 		}
 	};
 
@@ -75,7 +76,8 @@ public:
 		template<typename VectorType>
 		typename VectorType::value_type
 		operator()(const VectorType& vec) const {
-			return std::accumulate(vec.begin(),vec.end(),0);
+			using value_type = typename VectorType::value_type;
+			return std::accumulate(vec.begin(),vec.end(),value_type(0));
 		}
 	};
 
@@ -112,9 +114,9 @@ private:
 	std::map<rank_type, std::set<size_type>>                      send_map_; // [Rank][1:Nsend] = Local Index
 	std::map<rank_type, std::map<size_type, std::set<size_type>>> recv_map_; // [Rank][1:Nrecv][1:Nshare] = Local Index
 
-	std::map<rank_type, std::vector<value_type>>             send_buffer_;      // [Rank][1:Nsend] = Value sending
-	std::map<rank_type, std::vector<value_type>>             recv_buffer_;      // [Rank][1:Nrecv] = Value received
-	std::vector<std::vector<size_type>>                      reduction_buffer_; // [1:Nlocal][1:Nreduce] = Value to reduce
+	std::map<rank_type, std::vector<value_type>>                  send_buffer_;      // [Rank][1:Nsend] = Value sending
+	std::map<rank_type, std::vector<value_type>>                  recv_buffer_;      // [Rank][1:Nrecv] = Value received
+	std::vector<std::vector<value_type>>                          reduction_buffer_; // [1:Nlocal][1:Nreduce] = Value to reduce
 };
 
 
@@ -128,15 +130,15 @@ void GGFX<T>::display() const {
 	auto num_ranks = world.size();
 	for(auto rank = 0 ; rank < num_ranks; ++rank){
 		if(my_rank == rank){
-			pio::perr << "send_map_.size() = " << send_map_.size() <<std::endl;
+			pio::plog << "send_map_.size() = " << send_map_.size() <<std::endl;
 			for(auto& [srank, vec] : send_map_){
-				pio::perr << "  Sending to rank " << srank << " nodes " << vec.size() << std::endl;;
+				pio::plog << "  Sending to rank " << srank << " nodes " << vec.size() << std::endl;;
 			}
-			pio::perr << "recv_map_.size() = " << recv_map_.size() <<std::endl;
+			pio::plog << "recv_map_.size() = " << recv_map_.size() <<std::endl;
 			for(auto& [rrank, vec] : recv_map_){
-				pio::perr << "  Recving to rank " << rrank << " nodes " << vec.size() << std::endl;;
+				pio::plog << "  Recving to rank " << rrank << " nodes " << vec.size() << std::endl;;
 			}
-			pio::perr << std::flush;
+			pio::plog << std::flush;
 		}
 		world.barrier();
 	}
