@@ -4,19 +4,17 @@
 set   (GDIM "2")                            # Dimensionality
 
 option(DO_TESTS       "DO_TESTS"      OFF)  # Build testing targets
-option(DO_GEOFLOW     "DO_GEOFLOW"    ON)   # Build GeoFLOW target
-option(DO_DEBUG       "DO_DEBUG"      OFF)   # Compile for DEBUG
-option(USE_OPENMP     "USE_OPENMP"    OFF)   # Compile for OpenMP
-option(USE_MPI        "USE_MPI"       ON)   # Build with MPI?
-option(USE_CUBLAS     "USE_CUBLAS"    OFF)  # Build with cuBLAS
-option(USE_CBLAS      "USE_CBLAS"     OFF)  # Use System CBLAS
+option(DO_GEOFLOW     "DO_GEOFLOW"    ON )  # Build GeoFLOW target
+
+option(DO_DEBUG       "DO_DEBUG"      OFF)  # Compile for DEBUG
+option(USE_OPENMP     "USE_OPENMP"    OFF)  # Compile for OpenMP
 option(USE_OPENACC    "USE_OPENACC"   OFF)  # Compile for OpenACC
+option(USE_GBLAS      "USE_GBLAS"     ON )  # Use GBlas instead of C 
+option(USE_MPI        "USE_MPI"       ON )  # Build with MPI?
 option(USE_GPTL       "USE_GPTL"      OFF)  # Build with GPTL?
 option(USE_PAPI       "USE_PAPI"      OFF)  # Is GPTL built with PAPI support?
 option(DO_AUTO_PROF   "DO_AUTO_PROF"  OFF)  # Do auto-profing with GPTL?
-option(VERBOSE_MAKE   "VERBOSE_MAKE"  ON)   # Verbose MakeFile Ouput
-option(ENABLE_TESTS   "ENABLE_TESTS"  ON)   # Enable Testing
-
+option(VERBOSE_CMAKE  "VERBOSE_CMAKE" ON )  # Verbose CMake Ouput
 
 #
 # ============================== Build Type ============================
@@ -31,7 +29,8 @@ CACHE STRING "Type of build to configure")
 #
 # Select compiler vendor to load
 #
-        include("${CMAKE_SOURCE_DIR}/cmake/compiler.clang")
+    include("${CMAKE_SOURCE_DIR}/cmake/compiler.gcc")
+#   include("${CMAKE_SOURCE_DIR}/cmake/compiler.clang")
 #	include("${CMAKE_SOURCE_DIR}/cmake/compiler.pgi")
 #	include("${CMAKE_SOURCE_DIR}/cmake/compiler.intel")
 
@@ -44,7 +43,8 @@ CACHE STRING "Type of build to configure")
 set(BOOST_ROOT 
 #		"/home/Duane.Rosenberg/lib/boost_1_69_0_intel_18.1"
 #		"/scratch/duane.rosenberg/lib/boost_1_69_0_gcc"
- 		"/Users/duane.rosenberg/lib/boost_1_69_0_gcc"
+#		"/Users/duane.rosenberg/lib/boost_1_69_0_gcc"
+        "/scratch2/BMC/gsd-hpcs/bass/opt/boost-mpi/1_72_0/gcc/10.1.0/mvapich2/2.3.4"
 CACHE STRING "Location of Boost Library")
 
 #
