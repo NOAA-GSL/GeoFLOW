@@ -1028,7 +1028,7 @@ void init_ggfx(PropertyTree& ptree, GGrid& grid, GGFX<GFTYPE>*& ggfx)
   pio::pout << "Calling ggfx->init(xyz)" << std::endl;
   ggfx->init(0.25*grid.minnodedist(), xyz);
 
-} // end method init_ggfx_2
+} // end method init_ggfx
 
 
 
