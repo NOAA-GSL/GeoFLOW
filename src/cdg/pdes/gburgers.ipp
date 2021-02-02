@@ -11,6 +11,8 @@
 // Derived From : EquationBase.
 //==================================================================================
 
+#include "tbox/tracer.hpp"
+
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : Constructor method  (1)
@@ -50,6 +52,7 @@ steptop_callback_      (NULLPTR)
   static_assert(std::is_same<State,GTVector<GTVector<GFTYPE>*>>::value,
                 "State is of incorrect type"); 
   assert(!(doheat_ && bpureadv_) && "Invalid PDE configuration");
+  GEOFLOW_TRACE();
 
   // Check if specified stepper type is valid:
   GBOOL  bfound;
@@ -102,6 +105,7 @@ steptop_callback_      (NULLPTR)
 template<typename TypePack>
 GBurgers<TypePack>::~GBurgers()
 {
+  GEOFLOW_TRACE();
   if ( gmass_   != NULLPTR ) delete gmass_;
   if ( gimass_  != NULLPTR ) delete gimass_;
 //if ( gflux_   != NULLPTR ) delete gflux_;
@@ -126,6 +130,7 @@ GBurgers<TypePack>::~GBurgers()
 template<typename TypePack>
 void GBurgers<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
 {
+	GEOFLOW_TRACE();
    GString    serr = "GBurgers<TypePack>::dt_impl: ";
    GINT       pmax;
    GSIZET     ibeg, iend;
@@ -198,6 +203,7 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const State &u
 {
   assert(!bconserved_ &&
          "conservation not yet supported"); 
+  GEOFLOW_TRACE();
 
   GString serr = "GBurgers<TypePack>::dudt_impl: ";
 
@@ -228,9 +234,9 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const State &u
   if ( bpureadv_ ) { // pure linear advection
     // Remember: adv. velocity, c_ should already be set in
     //           main entry point, step_impl() method:
-    GTimerStart("advection_time");
+    GEOFLOW_TRACE_START("advection_time");
     gadvect_->apply   (*u[0], c_ , uoptmp_, *dudt[0]); // apply advection
-    GTimerStop("advection_time");
+    GEOFLOW_TRACE_STOP();
 
     ghelm_->opVec_prod(*u[0], uoptmp_, *urhstmp_[0]);  // apply diffusion
     GMTK::saxpy<GFTYPE>(*urhstmp_[0], -1.0, *dudt[0], -1.0);
@@ -268,6 +274,7 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const State &u
 template<typename TypePack>
 void GBurgers<TypePack>::step_impl(const Time &t, State &uin, State &uf, State &ub, const Time &dt)
 {
+	GEOFLOW_TRACE();
   GBOOL bret;
 
   assert(bInit_);
@@ -343,6 +350,7 @@ void GBurgers<TypePack>::step_impl(const Time &t, State &uin, State &uf, State &
 template<typename TypePack>
 void GBurgers<TypePack>::step_impl(const Time &t, const State &uin, State &uf,  State &ub, const Time &dt, State &uout)
 {
+	GEOFLOW_TRACE();
   assert(FALSE && "step_impl(2) not available");
 
 } // end of method step_impl (2)
@@ -366,6 +374,7 @@ void GBurgers<TypePack>::step_impl(const Time &t, const State &uin, State &uf,  
 template<typename TypePack>
 void GBurgers<TypePack>::step_multistep(const Time &t, State &uin, State &uf, State &ub, const Time &dt)
 {
+	GEOFLOW_TRACE();
   assert(FALSE && "Multistep methods not yet available");
   
 } // end of method step_multistep
@@ -386,6 +395,7 @@ void GBurgers<TypePack>::step_multistep(const Time &t, State &uin, State &uf, St
 template<typename TypePack>
 void GBurgers<TypePack>::step_exrk(const Time &t, State &uin, State &uf, State &ub, const Time &dt, State &uout)
 {
+	GEOFLOW_TRACE();
   assert(gexrk_ != NULLPTR && "GExRK operator not instantiated");
 
   // If non-conservative, compute RHS from:
@@ -410,6 +420,7 @@ void GBurgers<TypePack>::step_exrk(const Time &t, State &uin, State &uf, State &
 template<typename TypePack>
 void GBurgers<TypePack>::init_impl(State &u, State &tmp)
 {
+	GEOFLOW_TRACE();
   GString serr = "GBurgers<TypePack>::init: ";
 
   GBOOL      bmultilevel = FALSE;
@@ -581,7 +592,7 @@ void GBurgers<TypePack>::init_impl(State &u, State &tmp)
 template<typename TypePack>
 void GBurgers<TypePack>::cycle_keep(State &u)
 {
-
+	GEOFLOW_TRACE();
   // Make sure following index map contains the 
   // correct time level information:
   //   ukeep[0] <--> time level n (most recent)
@@ -608,6 +619,7 @@ void GBurgers<TypePack>::cycle_keep(State &u)
 template<typename TypePack>
 void GBurgers<TypePack>::set_nu(GTVector<GFTYPE> &nu)
 {
+	GEOFLOW_TRACE();
   assert(ghelm_ != NULLPTR && "Init must be called first");
   nu_ = nu; // Not sure this class actually needs this. May be removed later
   ghelm_->set_Lap_scalar(nu_);
@@ -626,6 +638,7 @@ void GBurgers<TypePack>::set_nu(GTVector<GFTYPE> &nu)
 template<typename TypePack>
 void GBurgers<TypePack>::apply_bc_impl(const Time &t, State &u, State &ub)
 {
+	GEOFLOW_TRACE();
   Time ttime = t;
 
   BdyUpdateList *updatelist = &grid_->bdy_update_list();;
@@ -650,6 +663,7 @@ void GBurgers<TypePack>::apply_bc_impl(const Time &t, State &u, State &ub)
 template<typename TypePack>
 GINT GBurgers<TypePack>::tmp_size_impl()
 {
+	GEOFLOW_TRACE();
   GINT isize = 0;
  
   isize  = 2*GDIM + 3;
@@ -680,6 +694,7 @@ void GBurgers<TypePack>::compute_derived_impl(const State &uin, GString sop,
                                               State &utmp, State &uout, 
                                               std::vector<GINT> &iuout)
 {
+	GEOFLOW_TRACE();
   assert(FALSE); 
 } // end of method compute_derived_impl
 
