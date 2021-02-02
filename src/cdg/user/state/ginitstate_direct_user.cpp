@@ -660,7 +660,7 @@ GBOOL impl_boxdrybubble(const PropertyTree &ptree, GString &sconfig, GGrid &grid
   std::vector<GFTYPE> xc, xr;  
   GString             sblock;
 
-  PropertyTree inittree   = ptree.getPropertyTree(sconfig);
+  PropertyTree inittree    = ptree.getPropertyTree(sconfig);
   sblock                   = ptree.getValue<GString>("pde_name");
   PropertyTree convptree   = ptree.getPropertyTree(sblock);
 
