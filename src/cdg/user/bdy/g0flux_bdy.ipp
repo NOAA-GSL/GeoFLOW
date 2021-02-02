@@ -72,7 +72,8 @@ GBOOL G0FluxBdy<Types>::update_impl(
    GINT       idd, k;
    GSIZET     il, iloc, ind;
    Ftype      sum, xn;
-   GTVector<GTVector<Ftype>>  *bdyNormals, *xnodes;
+   GTVector<GTVector<Ftype>>  *bdyNormals;
+// GTVector<GTVector<Ftype>>  *xnodes;
    GTVector<GINT>             *idep;
    GTVector<GSIZET>           *igbdy;
 // GTVector<GTVector<GSIZET>> *ilbdy;
@@ -91,7 +92,7 @@ GBOOL G0FluxBdy<Types>::update_impl(
   //       following loops to have a better chance
   //       of vectorization. Unrolling likely
   //       won't occur:
-  xnodes     = &grid.xNodes();
+//xnodes     = &grid.xNodes();
   bdyNormals = &grid.bdyNormals(); // bdy normal vector
   idep       = &grid.idepComp();   // dependent components
   igbdy      = &traits_.ibdyvol;
