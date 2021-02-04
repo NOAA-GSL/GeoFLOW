@@ -22,6 +22,7 @@
 #include "ggrid_icos.hpp"
 #include "gtpoint.hpp"
 #include "gutils.hpp"
+#include "tbox/tracer.hpp"
 
 using namespace geoflow::tbox;
 using namespace std;
@@ -47,6 +48,7 @@ gdd_                          (NULLPTR),
 lshapefcn_                    (NULLPTR)
 {
   assert(b.size() == GDIM && "Basis has incorrect dimensionality");
+  GEOFLOW_TRACE();
   
   GString snorm;
   GString gname   = ptree.getValue<GString>("grid_type");
@@ -94,6 +96,7 @@ lshapefcn_                    (NULLPTR)
 //**********************************************************************************
 GGridIcos::~GGridIcos()
 {
+	GEOFLOW_TRACE();
   if ( lshapefcn_ != NULLPTR ) delete lshapefcn_;
   if ( gdd_       != NULLPTR ) delete gdd_;
 } // end, destructor
@@ -146,6 +149,7 @@ void GGridIcos::set_partitioner(GDD_base<GTICOS> *gdd)
 //**********************************************************************************
 void GGridIcos::init2d()
 {
+	GEOFLOW_TRACE();
   GString serr = "GridIcos::init2d: ";
 
   GFTYPE phi = (1.0+sqrt(5.0))/2.0;  // Golden ratio
@@ -237,6 +241,7 @@ fv0_(11,0) = -0.276393202250021; fv0_(11,1) = -0.850650808352040; fv0_(11,2) = -
 //**********************************************************************************
 void GGridIcos::init3d()
 {
+	GEOFLOW_TRACE();
   GString serr = "GridIcos::init3d: ";
 
   init2d();
@@ -256,6 +261,7 @@ void GGridIcos::init3d()
 //**********************************************************************************
 void GGridIcos::lagrefine()
 {
+	GEOFLOW_TRACE();
   GString serr = "GridIcos::lagrefine: ";
    
   GLLONG ibeg, j, l, m, n, t;
@@ -375,6 +381,7 @@ void GGridIcos::do_elems(GTMatrix<GINT> &p,
 //**********************************************************************************
 void GGridIcos::do_elems2d(GINT irank)
 {
+	GEOFLOW_TRACE();
   GString           serr = "GridIcos::do_elems2d (1): ";
   GFTYPE            fact;
   GTVector<GTPoint<GTICOS>> cverts(4), gverts(4), tverts(4);
@@ -518,6 +525,7 @@ void GGridIcos::do_elems2d(GINT irank)
 //**********************************************************************************
 void GGridIcos::do_elems3d(GINT irank)
 {
+	GEOFLOW_TRACE();
   GString           serr = "GridIcos::do_elems3d (1): ";
   GSIZET            nxy;
   GTICOS            fact, r0, rdelta, xlatc, xlongc;
@@ -693,6 +701,7 @@ void GGridIcos::do_elems3d(GINT irank)
 void GGridIcos::do_elems2d(GTMatrix<GINT> &p,
                            GTVector<GTVector<GFTYPE>> &gxnodes)
 {
+	GEOFLOW_TRACE();
   GString                     serr = "GridIcos::do_elems2d (2): ";
   GElem_base                  *pelem;
   GTVector<GTVector<GFTYPE>>  *xNodes;
@@ -761,6 +770,7 @@ void GGridIcos::do_elems2d(GTMatrix<GINT> &p,
 void GGridIcos::do_elems3d(GTMatrix<GINT> &p,
                            GTVector<GTVector<GFTYPE>> &gxnodes)
 {
+	GEOFLOW_TRACE();
   GString                      serr = "GridIcos::do_elems3d (2): ";
   GElem_base                  *pelem;
   GTVector<GTVector<GFTYPE>>  *xNodes;
@@ -888,6 +898,7 @@ void GGridIcos::config_bdy(const geoflow::tbox::PropertyTree &ptree,
                            GTVector<GUINT>              &debdy,
                            GTVector<GFTYPE>             &Mbdy)
 {
+	GEOFLOW_TRACE();
   // Cycle over all geometric boundaries, and configure:
 
   GBOOL              bret;
@@ -1001,7 +1012,7 @@ void GGridIcos::config_bdy(const geoflow::tbox::PropertyTree &ptree,
 //**********************************************************************************
 void GGridIcos::find_bdy_ind3d(GFTYPE radius, GTVector<GSIZET> &ibdy)
 {
-
+	GEOFLOW_TRACE();
   GFTYPE          eps, r;
   GTPoint<GFTYPE> pt(ndim_);
 
@@ -1028,8 +1039,9 @@ void GGridIcos::find_bdy_ind3d(GFTYPE radius, GTVector<GSIZET> &ibdy)
 //          gieface   : vector of face indices into global volume fields 
 //                      for all facase
 //          gdeface   : description for each face node
+//          face_mass : mass on eleme faces
 //          normals   : vector of normal components
-//          idepComp  : vector index dependent on the other indices (first 
+//          depComp   : vector index dependent on the other indices (first 
 //                      component index whose normal component is nonzero)
 // RETURNS: none
 //**********************************************************************************
@@ -1041,6 +1053,7 @@ void GGridIcos::do_face_normals(GTMatrix<GTVector<GFTYPE>> &dXdXi,
                                 GTVector<GINT>             &depComp)
 {
 
+	GEOFLOW_TRACE();
   #if defined(_G_IS2D)
 
     do_face_normals2d(dXdXi, gieface, gdeface, face_mass, normals, depComp);
@@ -1066,8 +1079,9 @@ void GGridIcos::do_face_normals(GTMatrix<GTVector<GFTYPE>> &dXdXi,
 //          gieface   : vector of face indices into global volume fields 
 //                      for all facase
 //          gdeface   : description for each face node
+//          face_mass : mass on eleme faces
 //          normals   : vector of normal components
-//          idepComp  : vector index dependent on the other indices (first 
+//          depComp   : vector index dependent on the other indices (first 
 //                      component index whose normal component is nonzero)
 // RETURNS: none
 //**********************************************************************************
@@ -1078,7 +1092,7 @@ void GGridIcos::do_face_normals2d(GTMatrix<GTVector<GFTYPE>> &dXdXi,
                                   GTVector<GTVector<GFTYPE>> &normals,
                                   GTVector<GINT>             &depComp)
 {
-
+	GEOFLOW_TRACE();
    GINT              ib, ic, id,  ip;
    GFTYPE            tiny;
    GFTYPE            xm;
@@ -1126,9 +1140,10 @@ void GGridIcos::do_face_normals2d(GTMatrix<GTVector<GFTYPE>> &dXdXi,
 //                      dXdX_i(i,j) = dx^j/dxi^i
 //          gieface   : vector of face indices into global volume fields 
 //                      for all facase
+//          face_mass : mass on eleme faces
 //          gdeface   : description for each face node
 //          normals   : vector of normal components
-//          idepComp  : vector index dependent on the other indices (first 
+//          depComp   : vector index dependent on the other indices (first 
 //                      component index whose normal component is nonzero)
 // RETURNS: none
 //**********************************************************************************
@@ -1139,6 +1154,7 @@ void GGridIcos::do_face_normals3d(GTMatrix<GTVector<GFTYPE>> &dXdXi,
                                   GTVector<GTVector<GFTYPE>> &normals,
                                   GTVector<GINT>             &depComp)
 {
+	GEOFLOW_TRACE();
    GINT            ib, ic, id;
    GINT            ixi[6][2] = { {0,2}, {1,2}, {2,0},
                                  {2,1}, {1,0}, {0,1} };
@@ -1188,6 +1204,7 @@ void GGridIcos::do_bdy_normals(GTMatrix<GTVector<GFTYPE>>    &dXdXi,
                                GTVector<GTVector<GFTYPE>>    &normals,
                                GTVector<GINT>                &idepComp)
 {
+	GEOFLOW_TRACE();
   GSIZET icurr, nbdy, nface;
 
 #if 0
@@ -1258,6 +1275,7 @@ void GGridIcos::do_bdy_normals3d(GTMatrix<GTVector<GFTYPE>>  &dXdXi,
                                  GTVector<GINT>              &idepComp)
 {
 #if 0
+	GEOFLOW_TRACE();
    GSIZET          ib, ic, ip; 
    GFTYPE          tiny;
    GFTYPE          xm;
