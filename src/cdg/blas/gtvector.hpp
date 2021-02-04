@@ -64,31 +64,31 @@ template <class T> class GTVector
     void range_reset();                     // Reset range of vector 
     GIndex &getIndex() ;                    // Return generalized index member
 
-    #pragma acc routine vector
+    
     GBOOL              operator==(const GTVector<T> &b);
-    #pragma acc routine vector
+    
     GTVector<T>       &operator=(const GTVector<T> &b);
-    #pragma acc routine vector
+    
     GTVector<T>       &operator=(const std::vector<T> &b);
-    #pragma acc routine vector
+    
     void               operator=(T b);
-    #pragma acc routine vector
+    
     void               pointProd(const GTVector<T> &fact, GTVector<T> &ret);
-    #pragma acc routine vector
+    
     void               pointProd(const T a, const GTVector<T> &fact, GTVector<T> &ret);
-    #pragma acc routine vector
+    
     void               apointProd(const T a, const GTVector<T> &fact);
-    #pragma acc routine vector
+    
     void               pointProd(const GTVector<T> &);
-    #pragma acc routine vector
+    
     void               constProd(const T a, GTVector<T> &ret);
-    #pragma acc routine vector
+    
     void transpose(GSIZET n);
 
   
-    #pragma acc routine vector
+    
     void               set(T b);
-    #pragma acc routine vector
+    
     void               set(T *b, GSIZET n);
     // Device//accelerator data methods:
     void updatehost();
@@ -116,140 +116,140 @@ template <class T> class GTVector
       return data_[i+gindex_.beg()];
     };
 
-    #pragma acc routine vector
+    
     GTVector       operator+(const T b);
-    #pragma acc routine vector
+    
     GTVector       operator-(const T b);
-    #pragma acc routine vector
+    
     GTVector       operator*(const T b);
 
-    #pragma acc routine vector 
+     
     GTVector       operator+(const GTVector &b);
-    #pragma acc routine vector
+    
     GTVector       operator-(const GTVector &b);
-    #pragma acc routine vector 
+     
     GTVector       operator*(const GTVector &b);
-    #pragma acc routine vector 
+     
     T              dot(const GTVector &b);
-    #pragma acc routine vector 
+     
     T              gdot(const GTVector &b, GC_COMM comm);
-    #pragma acc routine vector 
+     
     T              gdot(const GTVector &b, const GTVector &c, GC_COMM comm);
 
 
-    #pragma acc routine vector
+    
     void               operator+=(const T b);
-    #pragma acc routine vector
+    
     void               operator-=(const T b);
-    #pragma acc routine vector
+    
     void               operator*=(const T b);
-    #pragma acc routine vector
+    
     void               operator/=(const T b);
 
-    #pragma acc routine vector 
+     
     void               operator+=(const GTVector &b);
-    #pragma acc routine vector
+    
     void               operator-=(const GTVector &b);
-    #pragma acc routine vector
+    
     void               operator*=(const GTVector &b);
-    #pragma acc routine vector
+    
     void               operator/=(const GTVector &b);
 
 
-    #pragma acc routine vector
+    
         GBOOL isfinite();
 
-    #pragma acc routine vector
+    
         GBOOL isfinite(GSIZET &iwhere);
-    #pragma acc routine vector
+    
         T max();
-    #pragma acc routine vector
+    
         T amax();
-    #pragma acc routine vector
+    
         T amaxdiff(T tiny);
-    #pragma acc routine vector
+    
         T maxn(GSIZET n);
-    #pragma acc routine vector
+    
         GSIZET imax();
-    #pragma acc routine vector
+    
         T min();
-    #pragma acc routine vector
+    
         T amin();
-    #pragma acc routine vector
+    
         T amindiff(T tiny);
-    #pragma acc routine vector
+    
         T minn(GSIZET n);
-    #pragma acc routine vector
+    
         GSIZET imin();
-    #pragma acc routine vector
+    
         T sum();
-    #pragma acc routine vector
+    
         T sum(GSIZET ibeg, GSIZET iend);
-    #pragma acc routine vector
+    
         T infnorm();
-    #pragma acc routine vector
+    
         T Eucnorm();
-    #pragma acc routine vector
+    
         void rpow(GDOUBLE p);
-    #pragma acc routine vector
+    
         void abs();
-    #pragma acc routine vector
+    
 inline GLONG findfirst(T val);    // Find first occurrence of val, else -1
-    #pragma acc routine vector
+    
 inline GLONG findlast(T val);     // Find last occurrence of val, else -1
-    #pragma acc routine vector
+    
 inline GBOOL onlycontains(T val); // Buffer contains only val?
-    #pragma acc routine vector
+    
 inline GBOOL contains(T val);     // Buffer contains val?
-    #pragma acc routine vector
+    
 inline GSIZET contains(T val, GSIZET *&iwhere, GSIZET &nw);
-    #pragma acc routine vector
+    
 inline GBOOL containsn(T val, GSIZET n); // check n elements
-    #pragma acc routine vector
+    
 inline GBOOL  contains(T val, GSIZET  &index);
-    #pragma acc routine vector
+    
 inline GBOOL  containsn(T val, GSIZET n, GSIZET  &index);
-    #pragma acc routine vector
+    
 inline GBOOL  contains_floor(T val, GSIZET &index, T floor, GSIZET istart=0);
-    #pragma acc routine vector
+    
 inline GBOOL  contains_ceil(T val, GSIZET  &index, T ceil  , GSIZET istart=0);
-    #pragma acc routine vector
+    
 inline GSIZET distinctrng(GSIZET istart, GSIZET n, GSIZET is,  T *&vals, GSIZET *&index, GSIZET  &n_distinct, T * const &tunique, GSIZET * const &itmp);
-    #pragma acc routine vector
+    
 inline GSIZET distinctrng(GSIZET istart, GSIZET n, GSIZET is,  GSIZET *&index, GSIZET  &n_distinct, T * const &tunique, GSIZET * const &itmp);
-    #pragma acc routine vector
+    
 inline GSIZET distinctrng_floor(GSIZET istart, GSIZET n, GSIZET is, T *&vals, GSIZET *&index, GSIZET  &n_distinct, T floor, T * const &tunique, GSIZET * const &itmp);
-    #pragma acc routine vector
+    
 inline GSIZET distinctrng_floor(GSIZET istart, GSIZET n, GSIZET is, GSIZET *&index, GSIZET  &n_distinct, T floor, T * const &tunique, GSIZET * const &itmp);
-    #pragma acc routine vector
+    
 inline GSIZET distinct(GSIZET *&index, GSIZET  &n_distinct, T * const &tunique, GSIZET * const &itmp);
-    #pragma acc routine vector
+    
 inline GSIZET distinct_floor(GSIZET *&index, GSIZET  &n_distinct, T floor, T * const &tunique, GSIZET * const &itmp);
-    #pragma acc routine vector
+    
 inline GSIZET multiplicity(T val);
-    #pragma acc routine vector
+    
 inline GSIZET multiplicity_s(T val, GSIZET istart, GSIZET &ifound);
-    #pragma acc routine vector
+    
 inline GSIZET multiplicity(T val, GSIZET *&index, GSIZET &n);
-    #pragma acc routine vector
+    
 inline GSIZET multiplicity_s(T val, GSIZET istart, GSIZET *&index, GSIZET &n, GSIZET &ifound);
-    #pragma acc routine vector
+    
 inline GSIZET multiplicity_floor(T val, T floor);
-    #pragma acc routine vector
+    
 inline GSIZET multiplicity_ceil(T val, T ceil);
-    #pragma acc routine vector
+    
 inline GSIZET multiplicity_floor(T val, GSIZET *&index, GSIZET &n, T floor);
 
-    #pragma acc routine vector
+    
        void   sortincreasing();
-    #pragma acc routine vector
+    
        void   sortincreasing(GTVector<GSIZET> &);
-    #pragma acc routine vector
+    
        void   sortdecreasing();
-    #pragma acc routine vector
+    
        void   sortdecreasing(GTVector<GSIZET> &);
 
-    #pragma acc routine vector
+    
        void concat(T *array, GSIZET n);
 
   private:
@@ -263,41 +263,41 @@ inline GSIZET multiplicity_floor(T val, GSIZET *&index, GSIZET &n, T floor);
     GBOOL  bdatalocal_; // tells us that data_ is owned by caller
 
 
-  #pragma acc routine vector 
+   
 inline GLLONG partitions2l(T *a, GLLONG start, GLLONG end);
-  #pragma acc routine vector 
+   
 inline GLLONG partitions2l(T *a, GSIZET *isort, GLLONG start, GLLONG end);
-  #pragma acc routine vector 
+   
 inline GLLONG partitionl2s(T *a, GLLONG start, GLLONG end);
-  #pragma acc routine vector 
+   
 inline GLLONG partitionl2s(T *a, GSIZET *isort, GLLONG start, GLLONG end);
-  #pragma acc routine vector 
+   
 inline void   quicksortl2s(T *a, GLLONG start, GLLONG end);
-  #pragma acc routine vector 
+   
 inline void   quicksortl2s(T *a, GSIZET *isort, GLLONG start, GLLONG end);
-  #pragma acc routine vector 
+   
 inline void   quicksorts2l(T *a, GLLONG start, GLLONG end);
-  #pragma acc routine vector 
+   
 inline void   quicksorts2l(T *a, GSIZET *isort, GLLONG start, GLLONG end);
 
-  #pragma acc routine vector 
+   
    GTVector add_impl_(const GTVector &b, std::true_type);
-  #pragma acc routine vector 
+   
    GTVector add_impl_(const GTVector &b, std::false_type);
   
-  #pragma acc routine vector 
+   
    GTVector sub_impl_(const GTVector &b, std::true_type);
-  #pragma acc routine vector 
+   
    GTVector sub_impl_(const GTVector &b, std::false_type);
 
-  #pragma acc routine vector
+  
    GTVector mul_impl_(const GTVector &b, std::true_type);
-  #pragma acc routine vector
+  
    GTVector mul_impl_(const GTVector &b, std::false_type);
 
-  #pragma acc routine vector
+  
    GTVector dot_impl_(const GTVector &b, std::true_type);
-  #pragma acc routine vector
+  
    GTVector dot_impl_(const GTVector &b, std::false_type);
 };
 
