@@ -24,6 +24,7 @@
 #include "gcg.hpp"
 #include "gmtk.hpp"
 #include "tbox/error_handler.hpp"
+#include "tbox/tracer.hpp"
 
 using namespace std;
 
@@ -41,6 +42,8 @@ GGrid::GGrid(const geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,G
 bInitialized_                   (FALSE),
 bapplybc_                       (FALSE),
 do_face_normals_                (FALSE),
+bpconst_                         (TRUE),
+gderivtype_                  (GDV_VARP),
 nprocs_        (GComm::WorldSize(comm)),
 ngelems_                            (0),
 irank_         (GComm::WorldRank(comm)),
@@ -54,6 +57,11 @@ ggfx_                         (NULLPTR),
 ptree_                          (ptree),
 bdy_apply_callback_           (NULLPTR)
 {
+       GEOFLOW_TRACE();
+
+  cudat_.nstreams = ptree.getValue<GINT>("nstreams",1);
+  cudat_.nstreams = MAX(cudat_.nstreams,1);
+
 } // end of constructor method (1)
 
 
@@ -66,11 +74,20 @@ bdy_apply_callback_           (NULLPTR)
 //**********************************************************************************
 GGrid::~GGrid()
 {
+       GEOFLOW_TRACE();
+
   if ( mass_ != NULLPTR ) delete mass_;
   if ( imass_ != NULLPTR ) delete imass_;
   for ( auto j=0; j<gelems_.size(); j++ ) {
     if ( gelems_[j] != NULLPTR ) delete gelems_[j];
   }
+
+  GCBLAS::handle_destroy(cudat_.hcublas );
+  GCBLAS::handle_destroy(cudat_.hbatch_cublas);
+  for ( auto j=0; j<cudat_.pStream.size(); j++ ) {
+    GCBLAS::stream_destroy(cudat_.pStream[j]);
+  }
+
 } // end, destructor
 
 
@@ -87,6 +104,8 @@ GGrid::~GGrid()
 //**********************************************************************************
 void GGrid::do_typing()
 {
+       GEOFLOW_TRACE();
+
   GTVector<GElemType> itmp(gelems_.size());
 
   GSIZET *ind=NULLPTR;
@@ -119,6 +138,7 @@ void GGrid::do_typing()
 //**********************************************************************************
 void GGrid::print(GString filename, GBOOL bdof)
 {
+       GEOFLOW_TRACE();
   GString serr = "GridIcos::print: ";
   std::ofstream ios;
 
@@ -205,6 +225,7 @@ void GGrid::print(GString filename, GBOOL bdof)
 //**********************************************************************************
 std::ostream &operator<<(std::ostream &str, GGrid &e)
 {
+       GEOFLOW_TRACE();
   return str;
 } // end of operator <<
 
@@ -218,6 +239,7 @@ std::ostream &operator<<(std::ostream &str, GGrid &e)
 //**********************************************************************************
 GSIZET GGrid::ndof()
 {
+       GEOFLOW_TRACE();
    assert(gelems_.size() > 0 && "Elements not set");
 
    GSIZET Ntot=0;
@@ -236,6 +258,7 @@ GSIZET GGrid::ndof()
 //**********************************************************************************
 GSIZET GGrid::nfacedof()
 {
+       GEOFLOW_TRACE();
    return gieface_.size();
 } // end of method nfacedof
 
@@ -251,6 +274,7 @@ GSIZET GGrid::nfacedof()
 //**********************************************************************************
 GSIZET GGrid::nbdydof()
 {
+       GEOFLOW_TRACE();
    return igbdy_.size();;
 } // end of method nbdydof
 
@@ -265,6 +289,7 @@ GSIZET GGrid::nbdydof()
 //**********************************************************************************
 GFTYPE GGrid::minlength(GTVector<GFTYPE> *dx)
 {
+       GEOFLOW_TRACE();
    assert(gelems_.size() > 0 && "Elements not set");
 
    GFTYPE emin, lmin, gmin;
@@ -315,6 +340,7 @@ GFTYPE GGrid::minlength(GTVector<GFTYPE> *dx)
 //**********************************************************************************
 GFTYPE GGrid::maxlength(GTVector<GFTYPE> *dx)
 {
+       GEOFLOW_TRACE();
    assert(gelems_.size() > 0 && "Elements not set");
 
    GFTYPE emax, lmax, gmax;
@@ -362,6 +388,7 @@ GFTYPE GGrid::maxlength(GTVector<GFTYPE> *dx)
 //**********************************************************************************
 GFTYPE GGrid::avglength()
 {
+       GEOFLOW_TRACE();
    assert(gelems_.size() > 0 && "Elements not set");
 
    GFTYPE gavg, lavg, navg, lv[2], gv[2];;
@@ -417,15 +444,14 @@ GFTYPE GGrid::avglength()
 void GGrid::grid_init()
 {
 
-  GTimerStart("GGrid::grid_init: do_elems");
+       GEOFLOW_TRACE();
   do_elems(); // generate element list from derived class
-  GTimerStop("GGrid::grid_init: do_elems");
+
+  bpconst_ = ispconst();
 
   GComm::Synch(comm_);
 
-  GTimerStart("GGrid::grid_init: do_typing");
   do_typing(); // do element-typing check
-  GTimerStop("GGrid::grid_init: do_typing");
 
 
   // Have elements been set yet?
@@ -443,25 +469,19 @@ void GGrid::grid_init()
   init_local_face_info(); // find glob vec of face indices
 
 
-  GTimerStart("GGrid::grid_init: init_bc_info");
   // All element bdy/face data should have been set by now:
 
 
   init_bc_info();
-  GTimerStop("GGrid::grid_init: init_bc_info");
 
 
-  GTimerStart("GGrid::grid_init: def_geom_init");
   if ( gtype_ == GE_2DEMBEDDED || gtype_  == GE_DEFORMED ) {
     def_geom_init();
   }
-  GTimerStop("GGrid::grid_init: def_geom_init");
 
-  GTimerStart("GGrid::grid_init: reg_geom_init");
   if ( gtype_ == GE_REGULAR ) {
     reg_geom_init();
   }
-  GTimerStop("GGrid::grid_init: reg_geom_init");
 
   // Get global number of elements:
   GSIZET nelems = gelems_.size();
@@ -471,15 +491,29 @@ void GGrid::grid_init()
 
   mass_ = new GMass(*this);
   
-  GTimerStart("GGrid::grid_init: find_min_dist");
   minnodedist_ = find_min_dist();
-  GTimerStop("GGrid::grid_init: find_min_dist");
 
   // Compute (global) grid volume:
   GTVector<GFTYPE> tmp0(ndof()), tmp1(ndof());
   tmp0 = 1.0;
   volume_  = integrate(tmp0, tmp1);
   ivolume_ = 1.0 / volume_;
+
+  // Fill cuMatBlockDat structure:
+  GCBLAS::handle_create(cudat_.hcublas );
+  GCBLAS::handle_create(cudat_.hbatch_cublas);
+  cudat_.ibblk.resize(cudat_.nstreams);
+  cudat_.ieblk.resize(cudat_.nstreams);
+  cudat_.pStream.resize(cudat_.nstreams);
+  cudat_.nbatch = nelems;
+  GSIZET idel = nelems/cudat_.nstreams;
+  for ( auto j=0; j<cudat_.nstreams; j++ ) {
+    GCBLAS::stream_create(cudat_.pStream[j]);
+    cudat_.ibblk[j] = j*idel;
+    cudat_.ieblk[j] = j<cudat_.nstreams-1 ? cudat_.ibblk[j] + idel
+                    : nelems-1;
+  }
+  
 } // end of method grid_init (1)
 
 
@@ -494,16 +528,13 @@ void GGrid::grid_init()
 void GGrid::grid_init(GTMatrix<GINT> &p,
                       GTVector<GTVector<GFTYPE>> &xnodes)
 {
+       GEOFLOW_TRACE();
 
-  GTimerStart("GGrid::grid_init: do_elems");
   do_elems(p, xnodes); // generate element list from derived class
-  GTimerStop("GGrid::grid_init: do_elems");
 
   GComm::Synch(comm_);
 
-  GTimerStart("GGrid::grid_init: do_typing");
   do_typing(); // do element-typing check
-  GTimerStop("GGrid::grid_init: do_typing");
 
   // Have elements been set yet?
   assert(gelems_.size() > 0 && "Elements not set");
@@ -521,28 +552,20 @@ void GGrid::grid_init(GTMatrix<GINT> &p,
   globalize_coords    (); // set glob vec of node coords
   init_local_face_info(); // find glob vec of face indices
 
-  GTimerStart("GGrid::grid_init: init_bc_info");
   // All element bdy/face data should have been set by now:
   init_bc_info();
-  GTimerStop("GGrid::grid_init: init_bc_info");
 
-  GTimerStart("GGrid::grid_init: def_geom_init");
   if ( itype_[GE_2DEMBEDDED].size() > 0
     || itype_  [GE_DEFORMED].size() > 0 ) {
     def_geom_init();
   }
-  GTimerStop("GGrid::grid_init: def_geom_init");
 
-  GTimerStart("GGrid::grid_init: reg_geom_init");
   if ( itype_[GE_REGULAR].size() > 0 ) {
     reg_geom_init();
   }
-  GTimerStop("GGrid::grid_init: reg_geom_init");
 
 
-  GTimerStart("GGrid::grid_init: find_min_dist");
   minnodedist_ = find_min_dist();
-  GTimerStop("GGrid::grid_init: find_min_dist");
 
   bInitialized_ = TRUE;
 
@@ -566,6 +589,8 @@ void GGrid::grid_init(GTMatrix<GINT> &p,
 //**********************************************************************************
 void GGrid::def_geom_init()
 {
+       GEOFLOW_TRACE();
+
    assert(gelems_.size() > 0 && "Elements not set");
    assert(gtype_ == GE_2DEMBEDDED
        || gtype_ == GE_DEFORMED && "Invalid element type");
@@ -656,6 +681,7 @@ void GGrid::def_geom_init()
 //**********************************************************************************
 void GGrid::reg_geom_init()
 {
+       GEOFLOW_TRACE();
    assert(gelems_.size() > 0 && "Elements not set");
    assert( gtype_ == GE_REGULAR && "Invalid element type");
 
@@ -755,6 +781,8 @@ void GGrid::reg_geom_init()
 //**********************************************************************************
 void GGrid::do_normals()
 {
+       GEOFLOW_TRACE();
+
   assert(gelems_.size() > 0 && "Elements not set");
 
   GString         serr = "GridIcos::do_normals: ";
@@ -792,6 +820,7 @@ void GGrid::do_normals()
 //**********************************************************************************
 void GGrid::globalize_coords()
 {
+       GEOFLOW_TRACE();
    GString serr = "GridIcos::globalize_coords: ";
    GSIZET  nxy = gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
    GTVector<GTVector<GFTYPE>> *xe;
@@ -828,6 +857,7 @@ void GGrid::globalize_coords()
 //**********************************************************************************
 GTMatrix<GTVector<GFTYPE>> &GGrid::dXidX()
 {
+       GEOFLOW_TRACE();
    assert(bInitialized_ && "Object not inititaized");
    return dXidX_;
 
@@ -843,6 +873,7 @@ GTMatrix<GTVector<GFTYPE>> &GGrid::dXidX()
 //**********************************************************************************
 GTVector<GFTYPE> &GGrid::dXidX(GSIZET i, GSIZET j)
 {
+       GEOFLOW_TRACE();
    assert(bInitialized_ && "Object not inititaized");
    return dXidX_(i,j);
 
@@ -858,6 +889,7 @@ GTVector<GFTYPE> &GGrid::dXidX(GSIZET i, GSIZET j)
 //**********************************************************************************
 GMass &GGrid::massop()
 {
+       GEOFLOW_TRACE();
    assert(bInitialized_ && "Object not inititaized");
    return *mass_;
 
@@ -873,6 +905,7 @@ GMass &GGrid::massop()
 //**********************************************************************************
 GMass &GGrid::imassop()
 {
+       GEOFLOW_TRACE();
    assert(bInitialized_ && "Object not inititaized");
    if ( imass_ == NULLPTR ) imass_ = new GMass(*this, TRUE);
    return *imass_;
@@ -889,6 +922,7 @@ GMass &GGrid::imassop()
 //**********************************************************************************
 GTVector<GFTYPE> &GGrid::Jac()
 {
+       GEOFLOW_TRACE();
    assert(bInitialized_ && "Object not inititaized");
    return Jac_;
 
@@ -904,6 +938,7 @@ GTVector<GFTYPE> &GGrid::Jac()
 //**********************************************************************************
 GTVector<GFTYPE> &GGrid::faceJac()
 {
+       GEOFLOW_TRACE();
    assert(bInitialized_ && "Object not inititaized");
    return faceJac_;
 
@@ -921,6 +956,7 @@ GTVector<GFTYPE> &GGrid::faceJac()
 //**********************************************************************************
 GFTYPE GGrid::find_min_dist()
 {
+       GEOFLOW_TRACE();
   assert(gelems_.size() > 0 && "Elements not set");
 
  
@@ -969,6 +1005,7 @@ GFTYPE GGrid::find_min_dist()
 //**********************************************************************************
 GFTYPE GGrid::integrate(GTVector<GFTYPE> &u, GTVector<GFTYPE> &tmp, GBOOL bglobal)
 {
+       GEOFLOW_TRACE();
   assert(bInitialized_ && "Object not inititaized");
 
   GSIZET                       ibeg, iend; // beg, end indices for global array
@@ -1054,6 +1091,7 @@ GFTYPE GGrid::integrate(GTVector<GFTYPE> &u, GTVector<GFTYPE> &tmp, GBOOL bgloba
 void GGrid::deriv(GTVector<GFTYPE> &u, GINT idir, GTVector<GFTYPE> &utmp, 
                   GTVector<GFTYPE> &du)
 {
+       GEOFLOW_TRACE();
   assert(bInitialized_ && "Object not inititialized");
 
 
@@ -1299,6 +1337,7 @@ void GGrid::init_local_face_info()
 //**********************************************************************************
 void GGrid::init_bc_info()
 {
+       GEOFLOW_TRACE();
   GSIZET   nind;
   GBdyType btype;
 
@@ -1368,6 +1407,7 @@ void GGrid::init_bc_info()
 //**********************************************************************************
 void GGrid::add_terrain(const State &xb, State &utmp)
 {
+       GEOFLOW_TRACE();
    assert(gtype_ == GE_2DEMBEDDED
        || gtype_ == GE_DEFORMED && "Invalid element type");
 
@@ -1392,7 +1432,7 @@ void GGrid::add_terrain(const State &xb, State &utmp)
   // Solve Nabla^2 (Xnew + Xb - XNodes) = 0 
   // for new (homgogeneous) grid solution, Xnew, 
   // given terrain, Xb, and // 'base' grid, XNodes:
-  GTimerStart("GGrid::add_terrain: Solve");
+  GEOFLOW_TRACE_START("GGrid::add_terrain: Solve");
   for ( auto j=0; j<xNodes_.size(); j++ ) {
    *b  = 0.0;
    *x0 = 0.0; // first guess
@@ -1401,7 +1441,7 @@ void GGrid::add_terrain(const State &xb, State &utmp)
     xNodes_[j] = *x0;             // Reset XNodes = x0
 //GPP(comm_,"GGrid::add_terrain: new_xNodes[" << j << "]=" << xNodes_[j]);
   }
-  GTimerStop("GGrid::add_terrain: Solve");
+  GEOFLOW_TRACE_STOP();
  
   // Before computing new metric, Jacobian, etc, must set
   // new coordinates in elements that have already been initialized:
@@ -1416,14 +1456,10 @@ void GGrid::add_terrain(const State &xb, State &utmp)
 
   // Now, with new coordinates, recompute metric terms, 
   // Jacobian, normals:
-  GTimerStart("GGrid::add_terrain: def_geom_init");
   def_geom_init();
-  GTimerStop("GGrid::add_terrain: def_geom_init");
 
   // Compute new minimum node distance:
-  GTimerStart("GGrid::grid_init: find_min_dist");
   minnodedist_ = find_min_dist();
-  GTimerStop("GGrid::grid_init: find_min_dist");
 
   // Compute new (global) grid volume:
   *utmp[0] = 1.0;
@@ -1446,18 +1482,19 @@ void GGrid::add_terrain(const State &xb, State &utmp)
 //          DSS is the application of Q Q^T, or the direct stiffness operator.
 // ARGS   :
 //          tmp  : tmp space
-//          op   : GGFX_OP operation
 //          u    : Locally expressed field to smooth
 // RETURNS: none.
 //************************************************************************************
-void GGrid::smooth(GGFX_OP op, GTVector<GFTYPE> &tmp, GTVector<GFTYPE> &u)
+void GGrid::smooth(GTVector<GFTYPE> &tmp, GTVector<GFTYPE> &u)
 {
+
+  GEOFLOW_TRACE_STOP();
 
   tmp = u;
 
   u.pointProd(*(this->massop().data()));
   tmp = *(this->imassop().data());
-  this->ggfx_->doOp(tmp, op);  // DSS(mass_local)
+  this->ggfx_->doOp(tmp, GGFX<GFTYPE>::Smooth());  // DSS(mass_local)
 
   u.pointProd(tmp);      // M_assembled u M_L
 
@@ -1606,6 +1643,7 @@ void GGrid::compute_grefderiv(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
 void GGrid::compute_grefderivW(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
                                GINT idir, GBOOL dotrans, GTVector<GFTYPE> &du)
 {
+       GEOFLOW_TRACE();
   GSIZET               ibeg, iend; // beg, end indices for global array
   GBOOL                bembedded;
   GTVector<GSIZET>     N(GDIM);
@@ -1704,93 +1742,7 @@ void GGrid::compute_grefderivW(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
 } // end of method compute_grefderivW
 
 
-//**********************************************************************************
-//**********************************************************************************
-// METHOD : compute_grefderivs
-// DESC   : Compute tensor product derivs of specified field, u, in ref space
-//          for grid, using grid object to determine which to compute. Compute:
-//            du = [ I_X_I_X_Dx
-//                   I_X_Dy_X_I
-//                   Dz_X_I_X_I].
-//     
-//          where Dx, Dy, Dz are 1d derivative objects from basis functions     
-// ARGS   : 
-//          u      : input field whose derivative we want, allocated globally 
-//                   (e.g., for all elements).
-//          etmp   : tmp array (possibly resized here) for element-based ops.
-//                   Is not global.
-//          du     : vector of length 2 or 3 containing the derivatives.
-//                   If using GE_REGULAR in 2D, we only need to vector
-//                   elements; else we need 3. These should be allocated globally.
-//          dotrans: flag telling us to tak transpose of deriv operators (TRUE) or
-//                   not (FALSE).
-//             
-// RETURNS:  none
-//**********************************************************************************
-void GGrid::compute_grefderivs(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
-                               GBOOL dotrans, GTVector<GTVector<GFTYPE>*> &du)
-{
-  assert(du.size() >= GDIM
-       && "Insufficient number of derivatives specified");
-  
-
-
-  GBOOL                        bembedded;
-  GINT                         nxy;
-  GSIZET                       ibeg, iend; // beg, end indices for global array
-  GTVector<GSIZET>             N(GDIM);
-  GTVector<GTMatrix<GFTYPE>*>  Di(GDIM);   // element-based 1d derivative operators
-  GElemList                   *gelems = &this->elems();
-
-  bembedded = this->gtype() == GE_2DEMBEDDED;
-  assert(( (bembedded && du.size()>=3) 
-        || (!bembedded&& du.size()>=GDIM) )
-       && "Insufficient number of derviatves provided");
-
-  nxy = bembedded ? GDIM+1 : GDIM;
-
-#if defined(_G_IS2D)
-
-  for ( auto e=0; e<gelems->size(); e++ ) {
-    ibeg = (*gelems)[e]->igbeg(); iend = (*gelems)[e]->igend();
-    u.range(ibeg, iend); // restrict global vecs to local range
-    for ( auto k=0; k<nxy ; k++ ) du[k]->range(ibeg, iend);
-    for ( auto k=0; k<GDIM; k++ ) N[k]= (*gelems)[e]->size(k);
-    Di[0] = (*gelems)[e]->gbasis(0)->getDerivMatrix (dotrans);
-    Di[1] = (*gelems)[e]->gbasis(1)->getDerivMatrix(!dotrans);
-    GMTK::I2_X_D1(*Di[0], u, N[0], N[1], *du[0]); 
-    GMTK::D2_X_I1(*Di[1], u, N[0], N[1], *du[1]); 
 #if 0
-    if ( bembedded ) { // ref 3-deriv is just W u:
-      *du[2] = u;  
-    }
-#endif
-  }
-  u.range_reset(); // reset to global range
-  for ( auto k=0; k<nxy; k++ ) du[k]->range_reset();
-
-#elif defined(_G_IS3D)
-
-  for ( auto e=0; e<gelems->size(); e++ ) {
-    ibeg = (*gelems)[e]->igbeg(); iend = (*gelems)[e]->igend();
-    u.range(ibeg, iend); // restrict global vecs to local range
-    for ( auto k=0; k<GDIM; k++ ) du[k]->range(ibeg, iend);
-    for ( auto k=0; k<GDIM; k++ ) N[k]= (*gelems)[e]->size(k);
-    Di[0] = (*gelems)[e]->gbasis(0)->getDerivMatrix (dotrans); 
-    Di[1] = (*gelems)[e]->gbasis(1)->getDerivMatrix(!dotrans); 
-    Di[2] = (*gelems)[e]->gbasis(2)->getDerivMatrix(!dotrans); 
-    GMTK::I3_X_I2_X_D1(*Di[0], u, N[0], N[1], N[2], *du[0]); 
-    GMTK::I3_X_D2_X_I1(*Di[1], u, N[0], N[1], N[2], *du[1]); 
-    GMTK::D3_X_I2_X_I1(*Di[2], u, N[0], N[1], N[2], *du[2]); 
-  }
-  u.range_reset(); // reset global vec to globalrange
-  for ( auto k=0; k<nxy; k++ ) du[k]->range_reset();
-
-#endif
-
-} // end of method compute_grefderivs
-
-
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : compute_grefderivsW
@@ -1825,6 +1777,7 @@ void GGrid::compute_grefderivs(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
 void GGrid::compute_grefderivsW(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
                                 GBOOL dotrans, GTVector<GTVector<GFTYPE>*> &du)
 {
+       GEOFLOW_TRACE();
   assert(du.size() >= GDIM
   && "Insufficient number of derivatives specified");
 
@@ -1894,6 +1847,7 @@ void GGrid::compute_grefderivsW(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
 #endif
 
 } // end of method compute_grefderivsW
+#endif
 
 
 //**********************************************************************************
@@ -1927,7 +1881,7 @@ void GGrid::compute_grefderivsW(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
 void GGrid::compute_grefdiv(GTVector<GTVector<GFTYPE>*> &u, GTVector<GFTYPE> &etmp,
                             GBOOL dotrans, GTVector<GFTYPE> &divu)
 {
-
+       GEOFLOW_TRACE();
   GBOOL                        bembedded;
   GSIZET                       ibeg, iend; // beg, end indices for global array
   GTVector<GTVector<GFTYPE>*>  W(GDIM);    // element 1/weights
@@ -2005,6 +1959,389 @@ void GGrid::compute_grefdiv(GTVector<GTVector<GFTYPE>*> &u, GTVector<GFTYPE> &et
 
 
 } // end, method compute_grefdiv
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : compute_grefderivs
+// DESC   : Compute tensor product derivs of specified field, u, in ref space
+//          for grid, using grid object to determine which to compute. Compute:
+//            du = [ I_X_I_X_Dx
+//                   I_X_Dy_X_I
+//                   Dz_X_I_X_I].
+//     
+//          where Dx, Dy, Dz are 1d derivative objects from basis functions     
+// ARGS   : 
+//          u      : input field whose derivative we want, allocated globally 
+//                   (e.g., for all elements).
+//          etmp   : tmp array (possibly resized here) for element-based ops.
+//                   Is not global.
+//          du     : vector of length 2 or 3 containing the derivatives.
+//                   If using GE_REGULAR in 2D, we only need to vector
+//                   elements; else we need 3. These should be allocated globally.
+//          dotrans: flag telling us to tak transpose of deriv operators (TRUE) or
+//                   not (FALSE).
+//             
+// RETURNS:  none
+//**********************************************************************************
+void GGrid::compute_grefderivs(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
+                               GBOOL dotrans, GTVector<GTVector<GFTYPE>*> &du)
+{
+	GEOFLOW_TRACE();
+  assert(du.size() >= GDIM
+       && "Insufficient number of derivatives specified");
+  
+
+
+  GBOOL                        bembedded;
+  GINT                         nxy;
+  GSIZET                       ibeg, iend; // beg, end indices for global array
+  GTVector<GSIZET>             N(GDIM);
+  GTVector<GTMatrix<GFTYPE>*>  Di(GDIM);   // element-based 1d derivative operators
+  GElemList                   *gelems = &this->elems();
+
+  bembedded = this->gtype() == GE_2DEMBEDDED;
+  assert(( (bembedded && du.size()>=3) 
+        || (!bembedded&& du.size()>=GDIM) )
+       && "Insufficient number of derviatves provided");
+
+  nxy = bembedded ? GDIM+1 : GDIM;
+
+#if defined(_G_IS2D)
+
+  for ( auto e=0; e<gelems->size(); e++ ) {
+    ibeg = (*gelems)[e]->igbeg(); iend = (*gelems)[e]->igend();
+    u.range(ibeg, iend); // restrict global vecs to local range
+    for ( auto k=0; k<nxy ; k++ ) du[k]->range(ibeg, iend);
+    for ( auto k=0; k<GDIM; k++ ) N[k]= (*gelems)[e]->size(k);
+    Di[0] = (*gelems)[e]->gbasis(0)->getDerivMatrix (dotrans);
+    Di[1] = (*gelems)[e]->gbasis(1)->getDerivMatrix(!dotrans);
+    GMTK::I2_X_D1(*Di[0], u, N[0], N[1], *du[0]); 
+    GMTK::D2_X_I1(*Di[1], u, N[0], N[1], *du[1]); 
+#if 0
+    if ( bembedded ) { // ref 3-deriv is just W u:
+      *du[2] = u;  
+    }
+#endif
+  }
+  u.range_reset(); // reset to global range
+  for ( auto k=0; k<nxy; k++ ) du[k]->range_reset();
+
+#elif defined(_G_IS3D)
+
+  for ( auto e=0; e<gelems->size(); e++ ) {
+    ibeg = (*gelems)[e]->igbeg(); iend = (*gelems)[e]->igend();
+    u.range(ibeg, iend); // restrict global vecs to local range
+    for ( auto k=0; k<GDIM; k++ ) du[k]->range(ibeg, iend);
+    for ( auto k=0; k<GDIM; k++ ) N[k]= (*gelems)[e]->size(k);
+    Di[0] = (*gelems)[e]->gbasis(0)->getDerivMatrix (dotrans); 
+    Di[1] = (*gelems)[e]->gbasis(1)->getDerivMatrix(!dotrans); 
+    Di[2] = (*gelems)[e]->gbasis(2)->getDerivMatrix(!dotrans); 
+    GMTK::I3_X_I2_X_D1(*Di[0], u, N[0], N[1], N[2], *du[0]); 
+    GMTK::I3_X_D2_X_I1(*Di[1], u, N[0], N[1], N[2], *du[1]); 
+    GMTK::D3_X_I2_X_I1(*Di[2], u, N[0], N[1], N[2], *du[2]); 
+  }
+  u.range_reset(); // reset global vec to globalrange
+  for ( auto k=0; k<nxy; k++ ) du[k]->range_reset();
+
+#endif
+
+} // end of method compute_grefderivs
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : compute_grefderiv
+// DESC   : Compute tensor product derivative in specified direction
+//          of specified field, u, in ref space, using grid object.
+//          Compute
+//            du = [ I_X_I_X_Dx, or
+//                   I_X_Dy_X_I, or
+//                   Dz_X_I_X_I].
+//     
+//          depending on whether idir = 1, 2, or 3, respectively,
+//          where Dx, Dy, Dz are 1d derivative objects from basis functions     
+// ARGS   : 
+//          u      : input field whose derivative we want, allocated globally 
+//                   (e.g., for all elements).
+//          etmp   : tmp array (possibly resized here) for element-based ops.
+//                   Is not global.
+//          idir   : coordinate direction (1, 2,...,GDIM)
+//          dotrans: flag telling us to take transpose of deriv operators (TRUE) or
+//                   not (FALSE).
+//          du     : vector of length of u containing the derivative.
+//          
+//          Serves as main entry point to deriv computation
+//             
+// RETURNS:  none
+//**********************************************************************************
+void GGrid::compute_grefderiv(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
+                              GINT idir, GBOOL dotrans, GTVector<GFTYPE> &du)
+{
+	GEOFLOW_TRACE();
+  switch ( gderivtype_ ) {
+    case GDV_VARP:
+      grefderiv_varp(u, etmp, idir, dotrans, du);
+      break;
+    case GDV_CONSTP:
+      grefderiv_constp (u, etmp, idir, dotrans, du);
+      break;
+    default:
+      assert(false);
+  }
+
+
+} // end of method compute_grefderiv
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : grefderiv_varp
+// DESC   : Compute tensor product derivative in specified direction
+//          of specified field, u, in ref space, using grid object.
+//          Compute
+//            du = [ I_X_I_X_Dx, or
+//                   I_X_Dy_X_I, or
+//                   Dz_X_I_X_I].
+//     
+//          depending on whether idir = 1, 2, or 3, respectively,
+//          where Dx, Dy, Dz are 1d derivative objects from basis functions     
+// ARGS   : 
+//          u      : input field whose derivative we want, allocated globally 
+//                   (e.g., for all elements).
+//          etmp   : tmp array (possibly resized here) for element-based ops.
+//                   Is not global.
+//          idir   : coordinate direction (1, 2,...,GDIM)
+//          dotrans: flag telling us to take transpose of deriv operators (TRUE) or
+//                   not (FALSE).
+//          du     : vector of length of u containing the derivative.
+//
+//          Computes matrix by formaulating tensor products over individual
+//          elements elements. May be used for case when order varies
+//          amongh elements.
+//             
+// RETURNS:  none
+//**********************************************************************************
+void GGrid::grefderiv_varp(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
+                             GINT idir, GBOOL dotrans, GTVector<GFTYPE> &du)
+{
+	GEOFLOW_TRACE();
+  GSIZET               ibeg, iend; // beg, end indices for global array
+  GTVector<GSIZET>     N(GDIM);
+  GTMatrix<GFTYPE>    *Di;         // element-based 1d derivative operators
+  GElemList           *gelems = &this->elems();
+
+
+#if defined(_G_IS2D)
+  switch (idir) {
+  case 1:
+    for ( auto e=0; e<gelems->size(); e++ ) {
+      ibeg = (*gelems)[e]->igbeg(); iend = (*gelems)[e]->igend();
+      u.range(ibeg, iend); // restrict global vecs to local range
+      du.range(ibeg, iend);
+      for ( auto k=0; k<GDIM; k++ ) N[k]= (*gelems)[e]->size(k);
+      Di = (*gelems)[e]->gbasis(0)->getDerivMatrix (dotrans);
+      GMTK::I2_X_D1(*Di, u, N[0], N[1], du); 
+    }
+    break;
+  case 2:
+    for ( auto e=0; e<gelems->size(); e++ ) {
+      ibeg = (*gelems)[e]->igbeg(); iend = (*gelems)[e]->igend();
+      u.range(ibeg, iend); // restrict global vecs to local range
+      du.range(ibeg, iend);
+      for ( auto k=0; k<GDIM; k++ ) N[k]= (*gelems)[e]->size(k);
+      Di = (*gelems)[e]->gbasis(1)->getDerivMatrix(!dotrans);
+      GMTK::D2_X_I1(*Di, u, N[0], N[1], du); 
+    }
+    break;
+  case 3:
+    assert( GDIM == 3
+         && "Only GDIM reference derivatives");
+    du = 0.0; //u;
+    break;
+  default:
+    assert(FALSE && "Invalid coordinate direction");
+  }
+  u.range_reset(); // reset to global range
+  du.range_reset();
+
+#elif defined(_G_IS3D)
+
+  switch (idir) {
+  case 1:
+    for ( auto e=0; e<gelems->size(); e++ ) {
+      ibeg = (*gelems)[e]->igbeg(); iend = (*gelems)[e]->igend();
+      u.range(ibeg, iend); // restrict global vecs to local range
+      du.range(ibeg, iend);
+      for ( auto k=0; k<GDIM  ; k++ ) N[k]= (*gelems)[e]->size(k);
+      Di = (*gelems)[e]->gbasis(0)->getDerivMatrix (dotrans); 
+      GMTK::I3_X_I2_X_D1(*Di, u, N[0], N[1], N[2], du); 
+    }
+    break;
+
+  case 2:
+    for ( auto e=0; e<gelems->size(); e++ ) {
+      ibeg = (*gelems)[e]->igbeg(); iend = (*gelems)[e]->igend();
+      u.range(ibeg, iend); // restrict global vecs to local range
+      du.range(ibeg, iend);
+      for ( auto k=0; k<GDIM  ; k++ ) N[k]= (*gelems)[e]->size(k);
+      Di = (*gelems)[e]->gbasis(1)->getDerivMatrix(!dotrans); 
+      GMTK::I3_X_D2_X_I1(*Di, u, N[0], N[1], N[2], du); 
+    }
+    break;
+
+  case 3:
+    for ( auto e=0; e<gelems->size(); e++ ) {
+      ibeg = (*gelems)[e]->igbeg(); iend = (*gelems)[e]->igend();
+      u.range(ibeg, iend); // restrict global vecs to local range
+      du.range(ibeg, iend);
+      for ( auto k=0; k<GDIM  ; k++ ) N[k]= (*gelems)[e]->size(k);
+      Di = (*gelems)[e]->gbasis(2)->getDerivMatrix(!dotrans); 
+      GMTK::D3_X_I2_X_I1(*Di, u, N[0], N[1], N[2], du); 
+    }
+    break;
+
+  default:
+    assert(FALSE && "Invalid coordinate direction");
+  }
+  u.range_reset(); // reset global vec to globalrange
+  du.range_reset();
+
+#endif
+
+} // end of method grefderiv_varp
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : grefderiv_constp
+// DESC   : Compute tensor product derivative in specified direction
+//          of specified field, u, in ref space, using grid object.
+//          Compute
+//            du = [ I_X_I_X_Dx, or
+//                   I_X_Dy_X_I, or
+//                   Dz_X_I_X_I].
+//     
+//          depending on whether idir = 1, 2, or 3, respectively,
+//          where Dx, Dy, Dz are 1d derivative objects from basis functions     
+// ARGS   : 
+//          u      : input field whose derivative we want, allocated globally 
+//                   (e.g., for all elements).
+//          etmp   : tmp array (possibly resized here) for element-based ops.
+//                   Is not global.
+//          idir   : coordinate direction (1, 2,...,GDIM)
+//          dotrans: flag telling us to take transpose of deriv operators (TRUE) or
+//                   not (FALSE).
+//          du     : vector of length of u containing the derivative.
+//
+//          Computes matrix by formaulating tensor products over all
+//          elements elements. May be used for case when order doesn't vary
+//          amongh elements.
+//             
+// RETURNS:  none
+//**********************************************************************************
+void GGrid::grefderiv_constp(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
+                            GINT idir, GBOOL dotrans, GTVector<GFTYPE> &du)
+{
+	GEOFLOW_TRACE();
+  GSIZET               ibeg, iend, Ne,  NN; // beg, end indices for global array
+  GTVector<GSIZET>     N(GDIM);
+  GTMatrix<GFTYPE>    *Di;         // element-based 1d derivative operators
+  GElemList           *gelems = &this->elems();
+
+
+  for ( auto k=0; k<GDIM; k++ ) N[k]= (*gelems)[0]->size(k);
+  Ne = gelems->size();
+
+
+#if defined(_G_IS2D)
+  switch (idir) {
+  case 1:
+    Di = (*gelems)[0]->gbasis(0)->getDerivMatrix (dotrans);
+    GMTK::I2_X_D1(*Di, u, N[0], N[1], Ne, cudat_, du); 
+    break;
+  case 2:
+    Di = (*gelems)[0]->gbasis(1)->getDerivMatrix(!dotrans);
+    GMTK::D2_X_I1(*Di, u, N[0], N[1], Ne, cudat_, du); 
+    break;
+  default:
+    assert(FALSE && "Invalid coordinate direction");
+  }
+
+#elif defined(_G_IS3D)
+  switch (idir) {
+  case 1:
+    Di = (*gelems)[0]->gbasis(0)->getDerivMatrix (dotrans); 
+    NN = N[2]*N[1] * Ne;
+    GMTK::I3_X_I2_X_D1(*Di, u, N[0], N[1], N[2], Ne, cudat_, du); 
+    break;
+
+  case 2:
+    Di = (*gelems)[0]->gbasis(1)->getDerivMatrix(!dotrans); 
+    GMTK::I3_X_D2_X_I1(*Di, u, N[0], N[1], N[2], Ne, cudat_, du); 
+    break;
+
+  case 3:
+    Di = (*gelems)[0]->gbasis(2)->getDerivMatrix(!dotrans); 
+    GMTK::D3_X_I2_X_I1(*Di, u, N[0], N[1], N[2], Ne, cudat_, du); 
+    break;
+
+  default:
+    assert(FALSE && "Invalid coordinate direction");
+  }
+
+#endif
+
+} // end of method grefderiv_constp
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : ispconst
+// DESC   : Check if p is const over all elements
+// ARGS   : none. 
+// RETURNS: TRUE if p is const; else FALSE
+//**********************************************************************************
+GBOOL GGrid::ispconst()
+{
+	GEOFLOW_TRACE();
+  GBOOL       bconst;
+  GSIZET      Ne, N0[GDIM];
+  GElemList  *gelems = &this->elems();
+
+  Ne = gelems->size();
+  for ( auto k=0; k<GDIM; k++ ) N0[k]= (*gelems)[0]->size(k);
+
+  bconst = TRUE;
+  for ( auto i=1; i<Ne && bconst; i++ ) {
+    for ( auto k=0; k<GDIM; k++ ) {
+      bconst = bconst && N0[k] == (*gelems)[i]->size(k);
+    }
+  }
+
+  return bconst;
+
+} // end of method ispconst
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : set_derivtype
+// DESC   : Set derivative type. Does some checking to ensure
+//          that it's valid.
+// ARGS   : GDerivType flag
+// RETURNS: none.
+//**********************************************************************************
+void GGrid::set_derivtype(GDerivType gt)
+{
+	GEOFLOW_TRACE();
+  if ( !bpconst_ ) {
+    assert( gt == GDV_VARP );
+  }
+
+  gderivtype_ = gt;
+
+} // end of method set_derivtype
 
 
 
