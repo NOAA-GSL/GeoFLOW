@@ -217,7 +217,7 @@ virtual void                 config_bdy(const PropertyTree &ptree,
                                { ggfx_ = &ggfx; }                      // set GGFX op    
         GTVector<GFTYPE>    &get_mask() { return mask_; }              // get mask
 
-        void                 smooth(GGFX_OP op, GTVector<GFTYPE> &tmp, 
+        void                 smooth(GTVector<GFTYPE> &tmp, 
                                     GTVector<GFTYPE> &u);              // H1-smoothing operatrion     
         void                 compute_grefderiv(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
                                                GINT idir, GBOOL dotrans, GTVector<GFTYPE> &du);

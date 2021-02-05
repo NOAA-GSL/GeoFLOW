@@ -11,6 +11,7 @@
 #include "ggrid_box.hpp"
 #include "ggrid_icos.hpp"
 #include "gmtk.hpp"
+#include "tbox/tracer.hpp"
 
 
 using namespace std;
@@ -42,6 +43,7 @@ template<>
 void curl(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &u, const GINT idir, 
           GTVector<GTVector<GFTYPE>*> &tmp, GTVector<GFTYPE> &curlc)
 {
+  GEOFLOW_TRACE();
 
   assert(tmp.size() >= 2 && "Insufficient temp space");
 
@@ -157,6 +159,7 @@ void grad(GGrid &grid, GTVector<GFTYPE> &u, const GINT idir,
           GTVector<GTVector<GFTYPE>*> &tmp, GTVector<GFTYPE> &gradc)
 {
   assert ( idir >0 && idir <=3 && "Invalid compoment specified");
+  GEOFLOW_TRACE();
 
   grid.deriv(u, idir, *tmp[0], gradc);
 
@@ -185,7 +188,7 @@ void grad(GGrid &grid, GTVector<GFTYPE> &u, const GINT idir,
 template<>
 void constrain2sphere(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &v, GTVector<GTVector<GFTYPE>*> &Pv)
 {
-
+  GEOFLOW_TRACE();
   if ( grid.gtype() != GE_2DEMBEDDED || v.size() != 3 ) return;
 
   assert( v.size() >= 3 && "Incompatible dimensionality");
@@ -227,7 +230,7 @@ void constrain2sphere(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &v, GTVecto
 template<>
 void constrain2sphere(GGrid &grid, GTVector<GTVector<GFTYPE>*> &v)
 {
-
+  GEOFLOW_TRACE();
   if ( grid.gtype() != GE_2DEMBEDDED || v.size() < 3 ) return;
 
   GSIZET nxy = grid.ndof();
@@ -268,7 +271,7 @@ void constrain2sphere(GGrid &grid, GTVector<GTVector<GFTYPE>*> &v)
 template<>
 void vsphere2cart(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &vsph, GVectorType vtype, GTVector<GTVector<GFTYPE>*> &vcart)
 {
-
+  GEOFLOW_TRACE();
 if      ( GDIM == 2 && grid.gtype() == GE_2DEMBEDDED ) {
 assert( vsph.size() >= 2 && "GE_2DEMBEDDED grid requires 2 spherical components");
 }
@@ -425,7 +428,7 @@ vphicontra = (*vsph[1])[j];
 template<>
 void vcart2sphere(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &vcart, GVectorType vtype, GTVector<GTVector<GFTYPE>*> &vsph)
 {
-
+  GEOFLOW_TRACE();
 assert( vcart.size() >= 3 && "Transformation requires 3 Cartesian components");
 if      ( GDIM == 2 && grid.gtype() == GE_2DEMBEDDED ) {
 assert( vsph.size() >= 2 && "GE_2DEMBEDDED grid requires 2 spherical components");
@@ -579,7 +582,7 @@ vphicontra = (*vsph[1])[j];
 template<>
 void cart2latlon(const GTVector<GTVector<GFTYPE>*> &cart, GTVector<GTVector<GFTYPE>*> &latlon)
 {
-
+  GEOFLOW_TRACE();
 assert( cart.size() >= 3 && latlon.size() >= 2 && "Must have correct array sizes");
 
 
@@ -612,7 +615,7 @@ phi   = atan2(y,x);
 template<>
 void rcart2sphere(const GTVector<GTVector<GFTYPE>*> &cart, GTVector<GTVector<GFTYPE>*> &rlatlon)
 {
-
+  GEOFLOW_TRACE();
 assert( cart.size() >= 3 && rlatlon.size() >= 3 && "Must have correct array sizes");
 
 
@@ -653,6 +656,7 @@ phi   = atan2(y,x);
 template<>
 GFTYPE energy(GGrid &grid, const GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector<GFTYPE>*> &tmp, GBOOL isglobal, GBOOL ismax)
 {
+    GEOFLOW_TRACE();
 GDOUBLE                     ener, local;
 GC_COMM                     comm = grid.get_comm();
 
@@ -700,6 +704,7 @@ return static_cast<GFTYPE>(ener);
 template<>
 GFTYPE enstrophy(GGrid &grid, const GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector<GFTYPE>*> &tmp, GBOOL isglobal, GBOOL ismax)
 {
+    GEOFLOW_TRACE();
 assert(tmp.size() >= 4 && "Insufficient temp space");
 
 
@@ -765,6 +770,7 @@ return static_cast<GFTYPE>(enst);
 template<>
 GFTYPE helicity(GGrid &grid, const GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector<GFTYPE>*> &tmp, GBOOL isglobal, GBOOL ismax)
 {
+    GEOFLOW_TRACE();
 assert(tmp.size() >= 4 && "Insufficient temp space");
 
 
@@ -824,6 +830,7 @@ return static_cast<GFTYPE>(hel);
 template<>
 GFTYPE relhelicity(GGrid &grid, const GTVector<GTVector<GFTYPE>*> & u, GTVector<GTVector<GFTYPE>*> &tmp, GBOOL isglobal, GBOOL ismax)
 {
+    GEOFLOW_TRACE();
 assert(tmp.size() >= 5 && "Insufficient temp space");
 
 
@@ -929,7 +936,7 @@ return static_cast<GFTYPE>(rhel);
 template<>
 GFTYPE energyinj(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &u,  const GTVector<GTVector<GFTYPE>*> &uf, GTVector<GTVector<GFTYPE>*> &tmp, GBOOL isglobal, GBOOL ismax)
 {
-
+  GEOFLOW_TRACE();
 if ( uf.size() == 0 ) return 0.0;
 
 GBOOL bnull = FALSE;
@@ -995,7 +1002,7 @@ return static_cast<GFTYPE>(einj);
 template<>
 void domathop(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &uin,  const GString sop, GTVector<GTVector<GFTYPE>*> &utmp, GTVector<GTVector<GFTYPE>*> &uout, GTVector<GINT> &iuout)
 {
-
+  GEOFLOW_TRACE();
   GINT                        ib, nxy;
   GTVector<GTVector<GFTYPE>*> tmp(3);
 

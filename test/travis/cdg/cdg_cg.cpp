@@ -217,9 +217,7 @@ int main(int argc, char **argv)
     f = 0.0;
     for ( auto j=0; j<f.size(); j++ ) {
       f[j] = 1.0;
-//    ggfx.doOp(f, GGFX_OP_SUM);
       L.opVec_prod(f, utmp, u);
-//    ggfx.doOp(u, GGFX_OP_SUM);
       for ( auto i=0; i<f.size(); i++ ) Hmat(i,j) = u[i];
       f[j] = 0.0;
     }
