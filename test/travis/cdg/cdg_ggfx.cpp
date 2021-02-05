@@ -62,14 +62,14 @@ public:
 	}
 
 	RowMajorIndex& operator++(){
-		ASSERT(linear_index_ < (size()-1));
+		ASSERT(linear_index_ < size());
 		linear_index_++;
 		this->calc_index_();
 		return *this;
 	}
 
 	RowMajorIndex operator++(int){
-		ASSERT(linear_index_ < (size()-1));
+		ASSERT(linear_index_ < size());
 		auto tmp = *this;
 		linear_index_++;
 		this->calc_index_();
