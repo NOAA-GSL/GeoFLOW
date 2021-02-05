@@ -20,7 +20,7 @@
   # define _G_VEC_CACHE_SIZE 16
 #endif
 
-if defined(USE_CUBLAS)
+if defined(GEOFLOW_USE_CUBLAS)
 #include "cublas.h"
 #endif
  
@@ -64,7 +64,7 @@ n_                    (n),
 icsz_ (_G_VEC_CACHE_SIZE),
 bdatalocal_        (TRUE)
 {
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
   if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
     cudaMallocManaged(&data_, n_*sizeof(T), cudaMemAttachGlobal);
   }
@@ -98,7 +98,7 @@ bdatalocal_        (TRUE)
   gindex_keep_ = gindex_;
   n_=gindex_.end()+1+gindex_.pad();
 
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
   if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
     cudaMallocManaged(&data_, n_*sizeof(T), cudaMemAttachGlobal);
   }
@@ -128,7 +128,7 @@ n_           (obj.size()),
 icsz_ (_G_VEC_CACHE_SIZE),
 bdatalocal_        (TRUE)
 {
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
   if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
     cudaMallocManaged(&data_, n_*sizeof(T), cudaMemAttachGlobal);
   }
@@ -167,7 +167,7 @@ n_            (n/istride),
 icsz_ (_G_VEC_CACHE_SIZE),
 bdatalocal_        (TRUE)
 {
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
   if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
     cudaMallocManaged(&data_, n_*sizeof(T), cudaMemAttachGlobal);
   }
@@ -209,7 +209,7 @@ icsz_ (_G_VEC_CACHE_SIZE),
 bdatalocal_     (blocmgd)
 {
   if ( bdatalocal_ ) {
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
     if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
       cudaMallocManaged(&data_, n_*sizeof(T), cudaMemAttachGlobal);
     }
@@ -250,7 +250,7 @@ n_           (obj.size()),
 icsz_ (_G_VEC_CACHE_SIZE),
 bdatalocal_        (TRUE)
 {
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
   if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
     cudaMallocManaged(&data_, n_*sizeof(T), cudaMemAttachGlobal);
   }
@@ -282,7 +282,7 @@ bdatalocal_        (TRUE)
 template<class T>
 GTVector<T>::~GTVector()
 {
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
     cudaFree(data_);
 #else
    if ( data_  != NULLPTR  && bdatalocal_ ) delete [] data_;
@@ -355,7 +355,7 @@ void GTVector<T>::resize(GSIZET nnew)
 
   if ( (iend-ibeg+1+ipad) > n_ ) {      // must reallocate; change capacity
     if ( this->data_ != NULLPTR ) { 
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
       cudaFree(this->data_);
 #else
       delete [] this->data_;
@@ -364,7 +364,7 @@ void GTVector<T>::resize(GSIZET nnew)
       this->data_ = NULLPTR; 
     }
     this->n_ = iend-ibeg+1+ipad;
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
   if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
     cudaMallocManaged(&data_, n_*sizeof(T), cudaMemAttachGlobal);
   }
@@ -402,7 +402,7 @@ void GTVector<T>::resize(GIndex &gi)
 
   if ( (iend-ibeg+1+ipad) > n_ ) {      // must reallocate; change capacity
     if ( this->data_ != NULLPTR ) { 
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
       cudaFree(this->data_);
 #else
       delete [] this->data_;
@@ -410,7 +410,7 @@ void GTVector<T>::resize(GIndex &gi)
       this->data_ = NULLPTR; 
     }
     this->n_ = iend-ibeg+1+ipad;
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
     if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
     cudaMallocManaged(&data_, n_*sizeof(T), cudaMemAttachGlobal);
   }
@@ -440,7 +440,7 @@ void GTVector<T>::resizem(GSIZET nnew)
   if ( nnew > n_ ) {
 
     assert(bdatalocal_ && "Data not local; cannot resize");
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
     if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
     cudaMallocManaged(&data_, n_*sizeof(T), cudaMemAttachGlobal);
     }
@@ -477,7 +477,7 @@ void GTVector<T>::reserve(GSIZET nnew)
 
   // Check: is following exception-safe? No....
 
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
   if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
     cudaMallocManaged(&ttmp, (ibeg+nnew+ipad)*sizeof(T), cudaMemAttachGlobal);
   }
@@ -493,14 +493,14 @@ void GTVector<T>::reserve(GSIZET nnew)
   if ( nnew > n_ ) { // growing
     for ( auto j=0; j<n_; j++ ) ttmp[j] = this->data_[j];
     if ( this->data_ != NULLPTR ) {
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
       cudaFree(this->data_);
 #else
       delete [] this->data_;
 #endif
       this->data_ = NULLPTR; 
     }
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
     if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
       cudaMallocManaged(&data_, (ibeg+nnew+ipad)*sizeof(T), cudaMemAttachGlobal);
     }
@@ -521,14 +521,14 @@ void GTVector<T>::reserve(GSIZET nnew)
   else if ( nnew < n_ ) { // shrinking
     for ( auto j=0; j<nnew; j++ ) ttmp[j] = this->data_[j];
     if ( this->data_ != NULLPTR ) {
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
       cudaFree(this->data_);
 #else
       delete [] this->data_;
 #endif 
       this->data_ = NULLPTR; 
     }
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
     if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
       cudaMallocManaged(&data_, (ibeg+nnew+ipad)*sizeof(T), cudaMemAttachGlobal);
   }
@@ -562,7 +562,7 @@ template<class T>
 void GTVector<T>::clear()
 {
   if ( data_ != NULLPTR ) {
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
       cudaFree(this->data_);
 #else
     delete [] data_;
@@ -710,7 +710,7 @@ GTVector<T> &GTVector<T>::operator=(const GTVector<T> &obj)
 
   if ( data_ == NULLPTR ) {
     n_ = obj.capacity();
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
     if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
       cudaMallocManaged(&data_, n_*sizeof(T), cudaMemAttachGlobal);
     }
@@ -761,7 +761,7 @@ GTVector<T> &GTVector<T>::operator=(const std::vector<T> &obj)
 
   if ( data_ == NULLPTR ) {
     n_ = obj.capacity();
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
     if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
       cudaMallocManaged(&data_, n_*sizeof(T), cudaMemAttachGlobal);
     }

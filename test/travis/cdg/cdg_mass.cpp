@@ -179,9 +179,7 @@ int main(int argc, char **argv)
     GFTYPE gintegral;
 
 #if 0
-    GPTLstart("massop_prod");
     massop.opVec_prod(f,utmp,g);
-    GPTLstop("massop_prod");
     std::cout << "main: mass_prod_sum=" << g.sum() << std::endl;
   
     integral = g.sum();

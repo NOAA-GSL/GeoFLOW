@@ -1514,7 +1514,7 @@ void I2_X_D1(GTMatrix<T> &D1,
 
   Nu = N2 * Ne;
 
-#if defined(USE_CBLAS) || defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CBLAS) || defined(GEOFLOW_USE_CUBLAS)
 
   M   = ND1;
   N   = N2*Ne;
@@ -1829,7 +1829,7 @@ void D2_X_I1(GTMatrix<T> &D2T,
   Nu = N1 * N2;
 
 // Compute y = I2_X_D1 u = u * D2T:
-#if defined(USE_CBLAS) || defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CBLAS) || defined(GEOFLOW_USE_CUBLAS)
   M   = N21;
   N   = N2;
   K   = N22;
@@ -2626,7 +2626,7 @@ while(1){};
   }
   #endif
 
-#if defined(USE_CBLAS) || defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CBLAS) || defined(GEOFLOW_USE_CUBLAS)
 
   for ( auto j=vret.getIndex().beg(); j<=vret.getIndex().end(); j+=vret.getIndex().stride() ) {
     vret[j] = a*va[j] + b*vb[j];
@@ -2675,7 +2675,7 @@ void matvec_prod(GTVector<T> &vret, const GTMatrix<T> &A, const GTVector<T> &b)
   }
   #endif
 
-#if defined(USE_CBLAS) || defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CBLAS) || defined(GEOFLOW_USE_CUBLAS)
 
   GSIZET n1 = A.size(1);
   GSIZET n2 = A.size(2);
@@ -2734,7 +2734,7 @@ void matmat_prod(GTMatrix<T> &C, const GTMatrix<T> &A, const GTMatrix<T> &B)
   }
   #endif
 
-#if defined(USE_CBLAS) || defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CBLAS) || defined(GEOFLOW_USE_CUBLAS)
 
   for ( auto i=0; i<C.size(1); i++ ) {
     for ( auto j=0; j<C.size(2); j++ ) {
