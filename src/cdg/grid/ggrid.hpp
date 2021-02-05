@@ -241,7 +241,7 @@ protected:
                                               GINT idir, GBOOL dotrans, GTVector<GFTYPE> &du);
         void                 grefderiv_constp(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
                                               GINT idir, GBOOL dotrans, GTVector<GFTYPE> &du);
-
+        GBOOL                 ispconst();
 virtual void                        do_face_normals(GTMatrix<GTVector<GFTYPE>> &dXdXi, 
                                       GTVector<GSIZET>           &igface,
                                       GTVector<GUINT>            &dgface,

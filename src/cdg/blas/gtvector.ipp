@@ -20,7 +20,7 @@
   # define _G_VEC_CACHE_SIZE 16
 #endif
 
-if defined(GEOFLOW_USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
 #include "cublas.h"
 #endif
  
@@ -360,7 +360,6 @@ void GTVector<T>::resize(GSIZET nnew)
 #else
       delete [] this->data_;
 #endif
-      delete [] this->data_;
       this->data_ = NULLPTR; 
     }
     this->n_ = iend-ibeg+1+ipad;

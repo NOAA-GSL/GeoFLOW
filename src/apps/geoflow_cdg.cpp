@@ -10,7 +10,8 @@
 
 int main(int argc, char **argv)
 {
-	GEOFLOW_TRACE_INITIALIZE(); // Must be before MPI_Init (thanks GPTL)
+  GEOFLOW_TRACE_INITIALIZE(); // Must be before MPI_Init (thanks GPTL)
+  using namespace ::geoflow::tbox;
 
     // Initialize comm & global environment:
     mpixx::environment  env(argc,argv); // init GeoFLOW comm
@@ -33,11 +34,11 @@ int main(int argc, char **argv)
 
     // Read main prop tree; may ovewrite with
     // certain command line args:
-    tbox::pio << "geoflow::call load prop tree..." << std::endl;
+    pio::pout << "geoflow::call load prop tree..." << std::endl;
 
     ptree_ = InputManager::getInputPropertyTree();
 
-    tbox::pio << "geoflow: prop tree loaded." << std::endl;
+    pio::pout << "geoflow: prop tree loaded." << std::endl;
 
     // Create other prop trees for various objects:
     itindex     = ptree_.getValue <GSIZET>("restart_index");
@@ -52,75 +53,75 @@ int main(int argc, char **argv)
     //***************************************************
     // Create basis pool:
     //***************************************************
-    tbox::pio << "geoflow: create basis pool..." << std::endl;
+    pio::pout << "geoflow: create basis pool..." << std::endl;
 
     create_basis_pool(ptree_, gbasis_);
 
-    tbox::pio << "geoflow: basis pool created." << std::endl;
+    pio::pout << "geoflow: basis pool created." << std::endl;
 
 
     //***************************************************
     // Create grid:
     //***************************************************
-    tbox::pio << "geoflow: build grid..." << std::endl;
+    pio::pout << "geoflow: build grid..." << std::endl;
     ObserverFactory<MyTypes>::get_traits(ptree_, "gio_observer", binobstraits); 
     comm_ = world;
     grid_ = GGridFactory<MyTypes>::build(ptree_, gbasis_, pIO_, binobstraits, comm_);
-    tbox::pio << "geoflow: grid built." << std::endl;
+    pio::pout << "geoflow: grid built." << std::endl;
 
     //***************************************************
     // Initialize gather/scatter operator:
     //***************************************************
-    tbox::pio << "geoflow: initialize gather/scatter..." < std::endl;
+    pio::pout << "geoflow: initialize gather/scatter..." << std::endl;
 
     init_ggfx(ptree_, *grid_, ggfx_);
     grid_->set_ggfx(*ggfx_);
 
-    tbox::pio << "geoflow: gather/scatter initialized." < std::endl;
+    pio::pout << "geoflow: gather/scatter initialized." << std::endl;
 
     //***************************************************
     // Set grid terrain:
     //***************************************************
-    tbox::pio << "geoflow: set grid terrain..." < std::endl;
+    pio::pout << "geoflow: set grid terrain..." << std::endl;
 
     do_terrain(ptree_, *grid_);
 
-    tbox::pio << "geoflow: terrain added." < std::endl;
+    pio::pout << "geoflow: terrain added." << std::endl;
 
     //***************************************************
     // Create equation set:
     //***************************************************
-    tbox::pio << "geoflow: create equation..." < std::endl;
+    pio::pout << "geoflow: create equation..." << std::endl;
     create_equation(ptree_, pEqn_);
 
     //***************************************************
     // Create state and tmp space:
     //***************************************************
-    tbox::pio << "geoflow: allocate tmp space..." < std::endl;
+    pio::pout << "geoflow: allocate tmp space..." << std::endl;
     allocate(ptree_);
 
     //***************************************************
     // Initialize PDE:
     //***************************************************
-    tbox::pio << "geoflow: initialize PDE..." < std::endl;
+    pio::pout << "geoflow: initialize PDE..." << std::endl;
     pEqn_->init(u_, utmp_);
 
     //***************************************************
     // Create the mixer (to update forcing)
     //***************************************************
-    tbox::pio << "geoflow: create mixer..." < std::endl;
+    pio::pout << "geoflow: create mixer..." << std::endl;
     create_mixer(ptree_, pMixer_);
 
     //***************************************************
     // Create observers: 
     //***************************************************
-    tbox::pio << "geoflow: create observers..." < std::endl;
+    pio::pout << "geoflow: create observers..." << std::endl;
     create_observers(pEqn_, ptree_, icycle, t, pObservers_);
 
     //***************************************************
     // Create integrator:
     //***************************************************
-    tbox::pio << "geoflow: create integrator..." < std::endl;
+    pio::pout << "geoflow: create integrator..." << std::endl;
     pIntegrator_ = IntegratorFactory<MyTypes>::build(ptree_, pEqn_, pMixer_, pObservers_, *grid_);
     pIntegrator_->get_traits().cycle = icycle;
 
@@ -128,7 +129,7 @@ int main(int argc, char **argv)
     // Initialize state:
     //***************************************************
     GComm::Synch();
-    tbox::pio << "geoflow: Initializing state..." < std::endl;
+    pio::pout << "geoflow: Initializing state..." << std::endl;
     if ( itindex == 0 ) { // start new run
       icycle = 0; t = 0.0; 
       init_state(ptree_, *grid_, pEqn_, t, utmp_, u_, ub_);
@@ -143,11 +144,11 @@ int main(int argc, char **argv)
     // via observer(s)):
     //***************************************************
     GComm::Synch();
-    tbox::pio << "geoflow: do time stepping..." < std::endl;
+    pio::pout << "geoflow: do time stepping..." << std::endl;
 
     pIntegrator_->time_integrate(t, uf_, ub_, u_);
 
-    tbox::pio << "geoflow: time stepping done." < std::endl;
+    pio::pout << "geoflow: time stepping done." << std::endl;
 
     //***************************************************
     // Do benchmarking if required:
@@ -163,7 +164,7 @@ int main(int argc, char **argv)
     // Do shutdown, cleaning:
     //***************************************************
     deallocate();
-    tbox::pio << "geoflow: do shutdown..." < std::endl;
+    pio::pout << "geoflow: do shutdown..." << std::endl;
     GlobalManager::shutdown();
     GlobalManager::finalize();
     GEOFLOW_TRACE_STOP();      // GPTL requires popping main() off the stack

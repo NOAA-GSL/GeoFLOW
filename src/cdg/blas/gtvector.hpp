@@ -99,7 +99,7 @@ template <class T> class GTVector
       const char serr[] = "GTVector<T>::operator[]: ";
       if ( i+gindex_.beg() > gindex_.end() ) {
         std::cout << serr << "Access error: " << i << std::endl;
-        while(1){}; exit(1);
+        exit(1);
       }
     #endif
       return data_[i+gindex_.beg()];
@@ -110,7 +110,7 @@ template <class T> class GTVector
       const char serr[] = "GTVector<T>::operator[] const: ";
       if ( i+gindex_.beg() > gindex_.end() ) {
         std::cout << serr << "Access error: " << i << std::endl;
-        while(1){}; exit(1);
+        exit(1);
       }
     #endif
       return data_[i+gindex_.beg()];

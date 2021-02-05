@@ -185,7 +185,7 @@ int main(int argc, char **argv){
     mpi::communicator world;
 	auto my_rank   = world.rank();
 	auto num_ranks = world.size();
-//	pio::initialize(my_rank);
+	pio::initialize(my_rank);
 //	pio::logAllNodes("log");
 
 	// Constants that control the region for each rank

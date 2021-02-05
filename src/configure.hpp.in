@@ -24,6 +24,7 @@
 
 #if defined(GEOFLOW_USE_CBLAS) && defined(GEOFLOW_USE_CUBLAS)
 #warning "Both CBLAS and cuBLAS Selected (Defaulted to CBLAS)"
+#undef GEOFLOW_USE_CUBLAS
 #endif
 
 //
