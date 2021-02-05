@@ -6,7 +6,7 @@
 //                      Div(rho \vec{v})
 //                where rho is a scalar field, and  \vec{v} is
 //                a vector field. This isn't the strictly conservative
-//                form that uses Gauss' theorem to add surfaces fluxes; 
+//                form that uses Gauss' theorem to add bdy fluxes; 
 //                it is volume-integrated.
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none
@@ -21,7 +21,7 @@
 // RETURNS: none
 //**********************************************************************************
 template<typename TypePack>
-GDivOp<TypePack>::GDivOp(Grid &grid, Traits &traits)
+GDivOp<TypePack>::GDivOp(Traits &traits, Grid &grid)
 :
 traits_       (traits),
 grid_         (&grid),
@@ -69,40 +69,31 @@ void GDivOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp &div
 
   GINT       nxy = grid_->gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
   GSIZET                     k;
-  GTVector<GSIZET>          *gieface = &grid_->gieface() ;
-  GTVector<GTVector<Ftype>> *normals = &grid_->faceNormal(); 
+  GTVector<GSIZET>          *igbdy   = &grid_->igbdy();
+  GTVector<GTVector<Ftype>> *normals = &grid_->bdyNormals(); 
   StateComp                 *mass    =  grid_->massop().data();
-  StateComp                 *fmass   = &grid_->faceMass();
+  StateComp                 *bmass   = &grid_->bdyMass();
 
 
   if ( !traits_.docollocation ) {
     // div = -D^{T,j} ( d u_j MJ )
-    //     + surf terms:
+    //     + bdy terms:
     div  = 0.0;
     for ( auto j=0; j<nxy; j++ ) { 
        d.pointProd(*u[j], *utmp[1]);
        grid_->wderiv(*utmp[1], j+1, TRUE, *utmp[0], *utmp[2]);
        div -= *utmp[2];
 
-#if 1
-       // Elem surf terms:
-       for ( auto f=0; f<gieface->size(); f++ ) {
-         k = (*gieface)[f];
-         div[k] += (*utmp[1])[k] * (*normals)[j][f] * (*fmass)[f];
-       }
-#endif
-    }
-
-#if 0
-    // div_face += d u.n Mass |_face 
-    for ( auto f=0; f<gieface->size(); f++ ) {
-      k = (*gieface)[f];
-      for ( auto j=0; j<nxy; j++ ) { 
-        div[k] += d[k]*(*u[j])[k] * (*normals)[j][f] * (*fmass)[f];
+#if defined(DO_BDY)
+      // Global bdy terms:
+      //  Note: utmp[1] should contain effect of bdy conditions,
+      //        which are imposed on entry
+      for ( auto b=0; b<igbdy->size(); b++ ) {
+        k = (*igbdy)[b];
+        div[k] += (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
       }
-    }
 #endif
-
+    }
   }
   else {
 
@@ -146,29 +137,29 @@ void GDivOp<TypePack>::apply(State &u, State &utmp, StateComp &div)
 
   GINT       nxy = grid_->gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
   GSIZET     k;
-  GTVector<GSIZET>          *gieface = &grid_->gieface() ;
-  GTVector<GTVector<Ftype>> *normals = &grid_->faceNormal(); 
+  GTVector<GSIZET>          *igbdy   = &grid_->igbdy() ;
+  GTVector<GTVector<Ftype>> *normals = &grid_->bdyNormal(); 
   StateComp                 *mass    =  grid_->massop().data();
-  StateComp                 *fmass   = &grid_->faceMass();
+  StateComp                 *bmass   = &grid_->bdyMass();
 
 
 
   if ( !traits_.docollocation ) {
 
     // div = -D^{T,j} ( u_j ) 
-    //     + surf. terms:
+    //     + bdy. terms:
     div = 0.0;
     for ( auto j=0; j<nxy; j++ ) { 
        grid_->wderiv(*u[j], j+1, TRUE, *utmp[0], *utmp[1]);
        div -= *utmp[1];
-#if 1
-       for ( auto f=0; f<gieface->size(); f++ ) {
-         k = (*gieface)[f];
-         div[k] += (*u[j])[k] * (*normals)[j][f] * (*fmass)[f];
-       }
+
+#if defined(DO_BDY)
+      for ( auto b=0; b<igbdy->size(); b++ ) {
+        k = (*igbdy)[b];
+        div[k] += (*u[j])[k] * (*normals)[j][b] * (*bmass)[b];
+      }
 #endif
     }
-
   }
   else {
 

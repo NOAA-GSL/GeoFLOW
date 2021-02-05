@@ -26,7 +26,7 @@ typedef T  Time;
 public:
         // MConv solver traits:
         struct Traits {
-          GBOOL           bssp        = FALSE;   // do strong stability-pres?
+          GBOOL           bSSP        = FALSE;  // do strong stability-pres?
           GINT            norder      = 2;      // order
           GINT            nstage      = 2;      // no. stages
         };
@@ -74,32 +74,34 @@ private:
 // Private methods:
         void               resize(GINT nstate);              // resize member data 
         void               step_b(const Time &t, const State &uin,
-                                  State &uf,
-                                  State &ub,
+                                  State &uf, State &ub,
                                   const Time &dt, State &tmp,
                                   State &uout);
 
         void               step_b(const Time &t, State &uin, 
-                                  State &uf,
-                                  State &ub,
-                                  const Time &dt, State &tmp);
+                                  State &uf, State &ub,
+                                  const Time &dt, State &tmp);  // Butcher-form
 
-        void               step_s(const Time &t, const State &uin,
-                                  State &uf,
-                                  State &ub,
-                                  const Time &dt, State &tmp,
-                                  State &uout);
+        void               step_ssp(const Time &t, const State &uin,
+                                    State &uf, State &ub,
+                                    const Time &dt, State &tmp,
+                                    State &uout);                 // SSP-form
+        void               step_ssp33(const Time &t, const State &uin,
+                                    State &uf, State &ub,
+                                    const Time &dt, State &tmp,
+                                    State &uout);                 // SSP-form
+        void               step_ssp34(const Time &t, const State &uin,
+                                    State &uf, State &ub,
+                                    const Time &dt, State &tmp,
+                                    State &uout);                 // SSP-form
 
-        void               step_s(const Time &t, State &uin, 
-                                  State &uf,
-                                  State &ub,
-                                  const Time &dt, State &tmp);
+        void               step_ssp(const Time &t, State &uin, 
+                                    State &uf, State &ub,
+                                    const Time &dt, State &tmp);
 
         void               step_euler(const Time &t, const State &uin, 
-                                      State &uf,
-                                      State &ub,
-                                      const Time &dt, 
-                                      State &uout);
+                                      State &uf, State &ub,
+                                      const Time &dt, State &uout);
 
 // Private data:
         GBOOL              bRHS_;

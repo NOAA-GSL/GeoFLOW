@@ -69,10 +69,11 @@ GBOOL G0FluxBdy<Types>::update_impl(
 {
    GString    serr = "G0FluxBdy<Types>::update_impl: ";
    GBdyType   itype;
-   GINT       nid, k;
+   GINT       idd, k;
    GSIZET     il, iloc, ind;
    Ftype      sum, xn;
    GTVector<GTVector<Ftype>>  *bdyNormals;
+// GTVector<GTVector<Ftype>>  *xnodes;
    GTVector<GINT>             *idep;
    GTVector<GSIZET>           *igbdy;
 // GTVector<GTVector<GSIZET>> *ilbdy;
@@ -81,12 +82,6 @@ GBOOL G0FluxBdy<Types>::update_impl(
 
   if ( traits_.compute_once && bcomputed_ ) return TRUE;
 
-
-#if 0
-  for ( auto j=0; j<traits_.istate.size(); j++ ) {
-    assert(ub[istate[j]] != NULL && "Illegal bdy vector");
-  }
-#endif
 
   // Handle 0-Flux bdy conditions. This
   // is computed by solving
@@ -97,6 +92,7 @@ GBOOL G0FluxBdy<Types>::update_impl(
   //       following loops to have a better chance
   //       of vectorization. Unrolling likely
   //       won't occur:
+//xnodes     = &grid.xNodes();
   bdyNormals = &grid.bdyNormals(); // bdy normal vector
   idep       = &grid.idepComp();   // dependent components
   igbdy      = &traits_.ibdyvol;
@@ -105,20 +101,28 @@ GBOOL G0FluxBdy<Types>::update_impl(
   for ( auto j=0; j<igbdy->size(); j++ ) {
     iloc = traits_.ibdyloc[j];     // index into bdy arrays
     ind  = (*igbdy)[j];            // index into volume array
-    nid  = (*idep)[iloc];           // dependent vector component
-    xn   = (*bdyNormals)[nid][iloc];// n_id == normal component for dependent vector comp
-    sum  = 0.0;
-    for ( auto k=0; k<nstate_; k++ ) { // for each vector component
-      sum -= (*bdyNormals)[k][iloc] * (*u[traits_.istate[k]])[ind];
+    idd  = (*idep)[iloc];          // dependent vector component
 
-      // Set all comps here, then reset the dependent one:
-//    (*ub[k])[ind] = (*u[k])[ind]; 
+    if ( idd >= 0 ) {
+      xn   = (*bdyNormals)[idd][iloc];// n_idd == normal component for dependent vector comp
+      sum  = 0.0;
+      for ( auto k=0; k<nstate_; k++ ) { // for each indep vector component
+        sum += idd == traits_.istate[k] ? 0.0 
+                    : (*bdyNormals)[k][iloc] * (*u[traits_.istate[k]])[ind];
+      }
+    
+      // Ensure v.n = 0:
+//    (*u[idd])[ind] = ( sum + (*bdyNormals)[idd][iloc] * (*u[idd])[ind] ) / xn;
+      (*u[idd])[ind] = -sum / xn;
     }
-//  (*ub[nid])[ind] = ( sum + (*bdyNormals)[nid][iloc] * (*u[nid])[ind] ) / xn;
-    (*u[nid])[ind] = ( sum + (*bdyNormals)[nid][iloc] * (*u[nid])[ind] ) / xn;
+    else {
+        // Set v == 0, say, on a vertex:
+        for ( auto k=0; k<nstate_; k++ ) (*u[traits_.istate[k]])[ind] = 0.0;
+    }
   }
 
   bcomputed_ = TRUE;
+
 
   return TRUE;
 

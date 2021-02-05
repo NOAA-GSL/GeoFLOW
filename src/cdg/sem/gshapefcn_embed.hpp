@@ -25,7 +25,7 @@
 //
 //                where I = I(i,j,k) is the tensor product index computed
 //                from the coordinate indices, i, j, k.
-// Copyright    : Copyright 2018. Colorado State University. All rights reserved
+// Copyright    : Copyright 2018. Colorado State University. All rights reserved.
 // Derived From : none
 //==================================================================================
 
@@ -40,8 +40,8 @@ class GShapeFcn_embed: public GShapeFcn_base<T>
 
 public:
 
-                          GShapeFcn_embed();
-                          GShapeFcn_embed(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b);
+                          GShapeFcn_embed(GINT dim);
+                          GShapeFcn_embed(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GINT dim);
                           GShapeFcn_embed(const GShapeFcn_embed &);
                          ~GShapeFcn_embed();
 

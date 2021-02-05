@@ -17,13 +17,14 @@
 //          id      : canonical bdy id
 //          bdytype : bdy type
 //          istate  : state array the method applies to
+//          value   : vector of Dirichlet values
 //          ibdy    : bdy indirection indices into computational volume
 //                   
 // RETURNS: none.
 //**********************************************************************************
 template<typename Types>
 typename GUpdateBdyFactory<Types>::UpdateBdyBasePtr
-GUpdateBdyFactory<Types>::build(const PropertyTree& ptree, GString &supdate, Grid &grid, const GINT id, GBdyType bdytype, GTVector<GINT> &istate, GTVector<GSIZET> &ibdy)
+GUpdateBdyFactory<Types>::build(const PropertyTree& ptree, GString &supdate, Grid &grid, const GINT id, GBdyType bdytype, GTVector<GINT> &istate, GTVector<GFTYPE> &value, GTVector<GSIZET> &ibdy)
 {
   GBOOL              bret = FALSE;
   UpdateBdyBasePtr   base_ptr;
@@ -46,7 +47,7 @@ GUpdateBdyFactory<Types>::build(const PropertyTree& ptree, GString &supdate, Gri
     assert(FALSE);
   }
 
-  base_ptr = GUpdateBdyFactory<Types>::get_bdy_class(ptree, supdate, grid, id, bdytype, istate,  ibdy);
+  base_ptr = GUpdateBdyFactory<Types>::get_bdy_class(ptree, supdate, grid, id, bdytype, istate, value, ibdy);
 
   return base_ptr;
 
@@ -106,6 +107,7 @@ GUpdateBdyFactory<Types>::get_inflow_callback(const GString& sname, const GINT i
 //          id      : canonical bdy id
 //          bdytype : bdy type triggering construction of class
 //          istate  : vector of state ids
+//          value   : vector of Dirichlet values
 //          ibdy    : indirection indices into computational volume, 
 //                    representing the bdy nodes this method applies to
 //                   
@@ -113,12 +115,11 @@ GUpdateBdyFactory<Types>::get_inflow_callback(const GString& sname, const GINT i
 //**********************************************************************************
 template<typename Types>
 typename GUpdateBdyFactory<Types>::UpdateBdyBasePtr
-GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree& ptree, GString &supdate, Grid &grid, const GINT id, const GBdyType bdytype, GTVector<GINT> &istate, GTVector<GSIZET> &ibdy)
+GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree& ptree, GString &supdate, Grid &grid, const GINT id, const GBdyType bdytype, GTVector<GINT> &istate, GTVector<GFTYPE> &value, GTVector<GSIZET> &ibdy)
 {
   GINT               nstate;
   GLONG              iloc;
   GString            sblock ;
-  std::vector<Ftype> fvec;
   UpdateBdyBasePtr   base_ptr;
   GTVector<GSIZET>  *igbdy = &grid.igbdy();
   PropertyTree       sptree; // update block tree
@@ -133,8 +134,7 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree& ptree, GString &supd
     typename GDirichletBdy<Types>::Traits traits;
 
     traits.istate.resize(nstate); traits.istate = istate;
-    assert(sptree.isArray<Ftype>("value") && "value array missing");
-    traits.value .resize(nstate); traits.value = fvec;
+    traits.value .resize(nstate); traits.value  = value;
     traits.bdyid = id;
     traits.ibdyvol = ibdy;
     if ( sptree.isValue<GBOOL>("compute_once") ) {

@@ -93,7 +93,6 @@
 #include "gmtk.hpp"
 #include "pdeint/equation_base.hpp"
 
-#define USE_DIVOP
 
 using namespace geoflow::pdeint;
 using namespace std;
@@ -136,19 +135,26 @@ public:
           GBOOL           usebase     = TRUE;   // use hydrostatic base state?
           GBOOL           variabledt  = FALSE;  // use variable timestep?
           GBOOL           bvarvterm   = FALSE;  // time dep term velocities?
+          GBOOL           divopcolloc = TRUE;   // use collocation in GDivOp?
+          GBOOL           Stokeshyp   = FALSE;  // use Stokes hypothesis
+          GBOOL           bindepdiss  = FALSE;  // indep. mom & energy diss?
+          GBOOL           bSSP        = FALSE;  // use strong stab pres RK?
           GINT            nstate      = GDIM+2; // no. vars in state vec
           GINT            nsolve      = GDIM+2; // no. vars to solve for
           GINT            nlsector    = 0;      // no. vars in liq-sector
           GINT            nisector    = 0;      // no. vars in ice-sector
           GINT            nbase       = 2;      // no. vars in base state (p, d)
-          GINT            itorder     = 2;
-          GINT            inorder     = 2;
+          GINT            itorder     = 2;      // formal  time iorder
+          GINT            nstage      = 2;      // no. stages for time integ.
+          GINT            inorder     = 2;      // formal nonlin. extrap order
           GStepperType    isteptype   = GSTEPPER_EXRK;
           GFTYPE          Ts_base     = 300.0;  // base state surf temp (K)
           GFTYPE          P0_base     = 1000.0; // base state ref pressure (mb)
           GFTYPE          courant     = 0.5;    // Courant factor
-          GFTYPE          nu          = 0.0;    // viscosity constant
-          GFTYPE          kappa       = 0.0;    // viscosity constant
+          GFTYPE          nu          = 0.0;    // shear viscosity constant
+          GFTYPE          kappa       = 0.0;    // energy-shear visc constant
+          GFTYPE          zeta        = 0.0;    // mom bulk viscosity constant
+          GFTYPE          lambda      = 0.0;    // energy bulk shear visc const
           GTVector<GINT>  iforced;              // state comps to force
           GTVector<Ftype> omega;                // rotation rate vector
           GString         ssteptype;            // stepping method
@@ -206,7 +212,6 @@ inline  void                compute_cv   (const State &u, StateComp &utmp, State
 inline  void                compute_qd   (const State &u, StateComp &qd);
 inline  void                compute_falloutsrc
                                          (StateComp &g, State &qi, State &v, GINT jexcl, State &utmp, StateComp &r );
-inline  void                compute_div  (StateComp &q, State &v, State &utmp, StateComp &div );
 inline  void                compute_v    (const State &u, StateComp &id, State &v);
 inline  void                compute_vpref(StateComp &tv, State &W);
 inline  void                compute_vpref(StateComp &tv, GINT idir, StateComp &W);
@@ -224,6 +229,7 @@ inline  GINT                szrhstmp();
         GINT                nevolve_;       // num StateComp's evolved
         GINT                nhydro_;        // num hydrometeors
         GINT                nmoist_;        // number of moist components
+        GSIZET              icycle_;        // internal cycle number
         GStepperType        isteptype_;     // stepper type
         GTVector<GFTYPE>    tcoeffs_;       // coeffs for time deriv
         GTVector<GFTYPE>    acoeffs_;       // coeffs for NL adv term

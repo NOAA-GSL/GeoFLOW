@@ -20,10 +20,11 @@ using namespace std;
 
 
 struct stBdyBlock {
-  GTVector<GTVector<GINT>>  istate; // vector of staet index vectors
-  GTVector<GBdyType>        tbdy;   // vector of bdy types; one for each istate vector
-  GString                   config_method; // name of bdy node config method
-  GString                   inflow_method; // name of inflow method, if any
+  GTVector<GTVector<GINT>>   istate; // vectors of state index vectors
+  GTVector<GTVector<GFTYPE>> value ; // vectors of Dirichlet values
+  GTVector<GBdyType>         tbdy;   // vector of bdy types; one for each istate vector
+  GString                    config_method; // name of bdy node config method
+  GString                    inflow_method; // name of inflow method, if any
 };
 
 namespace geoflow
@@ -44,6 +45,11 @@ template<typename T>
 void compute_temp(const GTVector<T> &e, const GTVector<T> &d, const GTVector<T> &cv,  GTVector<T> &temp);
 template<typename T>
 void compute_p(const GTVector<T> &Temp, const GTVector<T> &d, const GTVector<T> &q, GFTYPE R, GTVector<T> &p);
+
+template<typename T>
+GSIZET in_seg(const GTVector<GTPoint<T>> &vertices, const GTVector<GTVector<T>> &x, GTVector<GSIZET> &ind);
+template<typename T>
+GSIZET in_poly(const GTVector<GTPoint<T>> &vertices, const GTVector<GTVector<T>> &x, T eps, GTVector<GSIZET> &ind);
 
 } // end, namespace geoflow
 

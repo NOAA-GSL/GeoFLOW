@@ -2,21 +2,26 @@
 // Module       : gstress.hpp
 // Date         : 09/05/20 (DLR)
 // Description  : Represents the SEM discretization of the full viscous
-//                stress-energy operator. The viscous stress in the 
+//                stress-energy operator. The effect of the viscous stress in the 
 //                momentum eqution is
-//                    F_i = [2  mu s_{ij}],j + (zeta Div u delta_ij),j,
+//                    F_i = [2  mu s_{ij}],j + (zeta Div u delta_{ij}),j,
 //                where
-//                    s_{ij} = (u_j,i + u_i,j)/2
-//                and the viscous stress-energy for the energy equation is
-//                    [2 kappa u_i F_i  + lambda Div u delta_i,j) ],j
-//                where u_i is the velocity, and mu, the viscosity. Repeated
-//                indices are summed here.  mu, zeta, kappa, lamnda,
-//                may vary in space or be constant. zeta defaults to
-//               -2/3 mu according to the Stokes hypothesis; similarly,
-//                lambda defaults to -2/3 kappa for the energy. 
+//                    s_{ij} = (u_j,i + u_i,j)/2 - 1/2d Div u delta_{ij}, and
+//                d is the problem dimension. The viscous stress-energy for the 
+//                energy equation is
+//                    [2 kappa u_i s_{ij}],j - [lambda u_i Div u delta_{ij}],j
+//                where u_i is the velocity, and mu, the (shear) viscosity, zeta is
+//                the 'bulk' viscosity. Strictly speaking, kappa=mu, and lambda=zeta,
+//                but we allow these to be set independently for now. Repeated
+//                indices are summed here.  mu, zeta, kappa, lambda, may vary
+//                in space or be constant. Currently, the so-called Stokes 
+//                approximation is used by default s.t.
+//                      (zeta -  mu/d) = -2/3 mu, and
+//                      (lambda -  kappa/d ) = -2/3 kappa.
+//               
 //                For the energy, this operator is nonlinear, 
-//                so it should not derive from GLinOp. Operator requires 
-//                that grid consist of elements of only one type.
+//                so it should not derive from GLinOp. 
+//                      
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none
 //==================================================================================
@@ -30,12 +35,9 @@
 // RETURNS: none
 //**********************************************************************************
 template<typename TypePack>
-GStressEnOp<TypePack>::GStressEnOp(Grid &grid)
+GStressEnOp<TypePack>::GStressEnOp(Traits &traits, Grid &grid)
 :
-bown_mu_                (TRUE),
-bown_zeta_              (TRUE),
-bown_kappa_             (TRUE),
-bown_lambda_            (TRUE),
+traits_               (traits),
 grid_                  (&grid),
 massop_       (&grid.massop()),
 mu_                  (NULLPTR),
@@ -45,14 +47,39 @@ lambda_              (NULLPTR)
 {
   assert(grid_->ntype().multiplicity(0) == GE_MAX-1 
         && "Only a single element type allowed on grid");
-  mu_      = new GTVector<Ftype>(1); // kinetic visc.
-  *mu_     = 1.0;
-  zeta_    = new GTVector<Ftype>(1); // Stokes visc.
- *zeta_    = -2.0/3.0;
-  kappa_   = new GTVector<Ftype>(1); // energy dissipation
- *kappa_   = 1.0;
-  lambda_  = new GTVector<Ftype>(1); // energy Stokes dissipation
- *lambda_  = -2.0/3.0;
+  
+  if ( traits_.indep_diss) {
+    assert(traits_.mu.size() > 0 && traits_.kappa.size()  > 0);
+    if  ( traits_.Stokes_hyp ) {
+      traits_.zeta.resize(traits_.mu.size());
+      traits_.lambda.resize(traits_.kappa.size());
+      traits_.zeta  = traits_.mu   ; traits_.zeta   *= -2.0/3.0;
+      traits_.lambda= traits_.kappa; traits_.lambda *= -2.0/3.0;
+    } else {
+      assert(traits_.zeta.size() > 0 && traits_.lambda.size()  > 0);
+      traits_.zeta   -= (traits_.mu * (1.0/GDIM));
+      traits_.lambda -= (traits_.kappa * (1.0/GDIM));
+    }
+    mu_     = &traits_.mu;
+    zeta_   = &traits_.zeta;
+    kappa_  = &traits_.kappa;
+    lambda_ = &traits_.lambda;
+  } else { // kappa, lambda depend only on mu, zeta:
+    assert(traits_.mu.size() > 0 );
+    if  ( traits_.Stokes_hyp ) {
+      traits_.zeta.resize(traits_.mu.size());
+      traits_.zeta = traits_.mu; traits_.zeta *= -2.0/3.0;
+    } else {
+      assert(traits_.zeta.size() > 0 );
+      traits_.zeta   -= (traits_.mu * (1.0/GDIM));
+    }
+    mu_     = &traits_.mu;
+    zeta_   = &traits_.zeta;
+    kappa_  = &traits_.mu;
+    lambda_ = &traits_.zeta;
+  }
+
+
 } // end of constructor method (1)
 
 
@@ -66,69 +93,7 @@ lambda_              (NULLPTR)
 template<typename TypePack>
 GStressEnOp<TypePack>::~GStressEnOp()
 {
-  if ( mu_    != NULLPTR && bown_mu_    ) delete mu_;
-  if ( kappa_ != NULLPTR && bown_kappa_ ) delete kappa_;
 } // end, destructor
-
-
-//**********************************************************************************
-//**********************************************************************************
-// METHOD : set_mu
-// DESC   : Set viscosity (for momentum). This may be a field if length>1, 
-//          or a constant if length == 1. Stokes viscosity parameter
-//          is also set here
-// ARGS   : 
-//          mu    : 'viscosity' parameter, global
-//             
-// RETURNS:  none
-//**********************************************************************************
-template<typename TypePack>
-void GStressEnOp<TypePack>::set_mu(StateComp &mu)
-{
-  assert(mu.size() == 1 || mu.size() >= grid_->ndof()
-       && "Viscosity parameter of invalid size");
-
-  if ( mu_     != NULLPTR && bown_mu_     ) delete mu_;
-  if ( zeta_   != NULLPTR && bown_zeta_   ) delete zeta_;
-
-  mu_ = &mu;
-  bown_mu_ = FALSE;
-
-  zeta_  = new GTVector<Ftype>(mu_->size());
- *zeta_  = *mu_;
- *zeta_ *= -2.0/3.0;
-
-
-} // end of method set_mu
-
-
-//**********************************************************************************
-//**********************************************************************************
-// METHOD : set_kappa
-// DESC   : Set kappa (for stress energy). This may be a field if length>1, 
-//          or a constant if length == 1.
-// ARGS   : 
-//          kappa : 'kappa' parameter, global
-//             
-// RETURNS:  none
-//**********************************************************************************
-template<typename TypePack>
-void GStressEnOp<TypePack>::set_kappa(StateComp &kappa)
-{
-  assert(kappa.size() == 1 || kappa.size() >= grid_->ndof()
-       && "Energy dissipation parameter of invalid size");
-
-  if ( kappa_  != NULLPTR && bown_kappa_  ) delete kappa_;
-  if ( lambda_ != NULLPTR && bown_lambda_ ) delete lambda_;
-
-  kappa_ = &kappa;
-  bown_kappa_ = FALSE;
-
-  lambda_  = new GTVector<Ftype>(kappa_->size());
- *lambda_  = *kappa_;
- *lambda_ *= -2.0/3.0; // Stokes hyp.
-
-} // end of method set_kappa
 
 
 //**********************************************************************************
@@ -136,7 +101,8 @@ void GStressEnOp<TypePack>::set_kappa(StateComp &kappa)
 // METHOD : apply (1)
 // DESC   : Compute application of this operator to input momentum vector:
 //            so_i = [ mu (u_j,i + u_i,j) ] + zeta Div u delta_ij],j
-// ARGS   : u   : input vector field
+// ARGS   : d   : density
+//          u   : input vector field
 //          idir: which momentum component we're computing for
 //          utmp: array of tmp arrays
 //          so  : output (result) vector component, idir
@@ -144,24 +110,29 @@ void GStressEnOp<TypePack>::set_kappa(StateComp &kappa)
 // RETURNS:  none
 //**********************************************************************************
 template<typename TypePack>
-void GStressEnOp<TypePack>::apply(State &u, GINT idir, State &utmp, StateComp &so) 
+void GStressEnOp<TypePack>::apply(StateComp &d, State &u, GINT idir, State &utmp, StateComp &so) 
 {
 
   assert( utmp.size() >= 4
        && "Insufficient temp space specified");
 
   GINT       nxy = grid_->gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
+  GINT                       isgn;
   GSIZET                     k;
-  GTVector<GSIZET>          *gieface = &grid_->gieface() ;
-  GTVector<GTVector<Ftype>> *normals = &grid_->faceNormal();
+  Ftype                      fsgn;
+  GTVector<GSIZET>          *igbdy   = &grid_->igbdy() ;
+  GTVector<GTVector<Ftype>> *normals = &grid_->bdyNormals();
   StateComp                 *mass    =  grid_->massop().data();
-  StateComp                 *fmass   = &grid_->faceMass();
+  StateComp                 *bmass   = &grid_->bdyMass();
 
   assert( idir > 0 && idir <= nxy );
 
+#if defined(DO_COMPRESS_MODES_ONLY)
+  tfact_.resizem(u[0]->size());
+#endif
 
   // so = -D^{T,j} [mu [D_i u_j + Dj u_i) + Dk zeta u_k delta_ij ]:
-  //    + surface terms:
+  //    + bdy surface terms:
   // Below, i = idir:
 
   // Do -D^{T,j} [mu (D_i u_j) ] terms:
@@ -169,14 +140,16 @@ void GStressEnOp<TypePack>::apply(State &u, GINT idir, State &utmp, StateComp &s
   for ( auto j=0; j<nxy; j++ ) { 
     grid_->deriv(*u[j], idir, *utmp[0], *utmp[1]);
     // Point-multiply by mu before taking 'divergence':
+    utmp[1]->pointProd(d);
     utmp[1]->pointProd(*mu_);
-    grid_->wderiv(*utmp[1]  , j+1, TRUE , *utmp[0], *utmp[2]);
+    grid_->wderiv(*utmp[1]  , j+1, TRUE, *utmp[0], *utmp[2]);
     so -= *utmp[2];
-#if defined(DO_FACE)
-    // Compute surface terms for this component, j:
-    for ( auto f=0; f<gieface->size(); f++ ) {
-      k = (*gieface)[f];
-      so[k] += (*utmp[1])[k] * (*normals)[j][f] * (*fmass)[f];
+
+#if defined(DO_BDY)
+    // Compute bdy terms for this component, j:
+    for ( auto b=0; b<igbdy->size(); b++ ) {
+      k = (*igbdy)[b];
+      so[k] += (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
     }
 #endif
   }
@@ -185,41 +158,59 @@ void GStressEnOp<TypePack>::apply(State &u, GINT idir, State &utmp, StateComp &s
   for ( auto j=0; j<nxy; j++ ) { 
     grid_->deriv(*u[idir-1], j+1, *utmp[0], *utmp[1]);
     // Point-multiply by mu before taking 'divergence':
+    utmp[1]->pointProd(d);
     utmp[1]->pointProd(*mu_);
-    grid_->wderiv(*utmp[1]  , j+1, TRUE , *utmp[0], *utmp[2]);
+    grid_->wderiv(*utmp[1]  , j+1, TRUE, *utmp[0], *utmp[2]);
     so -= *utmp[2];
 
-#if defined(DO_FACE)
+#if defined(DO_BDY)
     // Compute surface terms for this component, j:
-    for ( auto f=0; f<gieface->size(); f++ ) {
-      k = (*gieface)[f];
-      so[k] += (*utmp[1])[k] * (*normals)[j][f] * (*fmass)[f];
+    for ( auto b=0; b<igbdy->size(); b++ ) {
+      k = (*igbdy)[b];
+      so[k] += (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
     }
 #endif
   }
 
-#if defined(USE_STOKES)
-  // Compute Stokes hypothesis term:
+  // Compute dilitation term:
   //   -D^{T,j} (zeta (Div u) delta_ij):
   grid_->deriv(*u[0]  , 1, *utmp[0], *utmp[1]); // store Div in utmp[1]]
   for ( auto j=1; j<nxy; j++ ) { 
     grid_->deriv(*u[j]  , j+1, *utmp[0], *utmp[2]); 
     *utmp[1] += *utmp[2];
   }
-  utmp[1]->pointProd(*zeta_);
+
+  utmp[1]->pointProd(d);
+  utmp[1]->pointProd(*zeta_);  // zeta Div u
+
+#if defined(DO_COMPRESS_MODES_ONLY)
+  for ( auto i=0; i<utmp[1]->size(); i++ ) {
+    isgn      = sgn<Ftype>((*utmp[1])[i]);
+    fsgn      = static_cast<Ftype>(isgn);
+    tfact_[i] = isgn == 0 ? 0.0 : 0.5*(1.0-fsgn);
+  }
+#endif
+
   grid_->wderiv(*utmp[1], idir, TRUE, *utmp[0], *utmp[2]);
+#if defined(DO_COMPRESS_MODES_ONLY)
+  utmp[2]->pointProd(tfact_);
+#endif
   so -= *utmp[2];
  
-#if defined(DO_FACE)
+#if defined(DO_BDY)
   // Compute surface terms for
   //  Integral zeta (Div u) delta_ij.n^j dV:
   // Use kernel above, for i=idir:
-  for ( auto f=0; f<gieface->size(); f++ ) {
-    k = (*gieface)[f];
-    so[k] += (*utmp[1])[k] * (*normals)[idir-1][f] * (*fmass)[f];
+  for ( auto b=0; b<igbdy->size(); b++ ) {
+    k = (*igbdy)[b];
+  #if defined(DO_COMPRESS_MODES_ONLY)
+    so[k] += (*utmp[1])[k]*tfact_[k] * (*normals)[idir-1][b] * (*bmass)[b];
+  #else
+    so[k] += (*utmp[1])[k] * (*normals)[idir-1][b] * (*bmass)[b];
+  #endif
   }
 #endif 
-#endif 
+
 
 
 } // end of method apply (1)
@@ -231,26 +222,32 @@ void GStressEnOp<TypePack>::apply(State &u, GINT idir, State &utmp, StateComp &s
 // DESC   : Compute application of this operator to input energy:
 //            eo = [ kappa  u_i (Del_i u_j + Del_j u_i)],j 
 //               + [ lambda u_i (Div u delta_ij) ],j 
-// ARGS   : u   : input vector field
+// ARGS   : d   : density
+//          u   : input vector field
 //          utmp: array of tmp arrays
 //          eo  : output (result) vector component, idir
 //             
 // RETURNS:  none
 //**********************************************************************************
 template<typename TypePack>
-void GStressEnOp<TypePack>::apply(State &u, State &utmp, StateComp &eo) 
+void GStressEnOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp &eo) 
 {
 
   assert( utmp.size() >= 4
        && "Insufficient temp space specified");
 
   GINT       nxy = grid_->gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
+  Ftype                      isgn;
   GSIZET                     k;
-  GTVector<GSIZET>          *gieface = &grid_->gieface() ;
-  GTVector<GTVector<Ftype>> *normals = &grid_->faceNormal();
+  Ftype                      fsgn;
+  GTVector<GSIZET>          *igbdy   = &grid_->igbdy() ;
+  GTVector<GTVector<Ftype>> *normals = &grid_->bdyNormals();
   StateComp                 *mass    =  grid_->massop().data();
-  StateComp                 *fmass   = &grid_->faceMass();
+  StateComp                 *bmass   = &grid_->bdyMass();
 
+#if defined(DO_COMPRESS_MODES_ONLY)
+  tfact_.resizem(u[0]->size());
+#endif
 
   // eo -= D^{T,j} [ kappa u^i [D_i u_j + Dj u_i) 
   //    + lambda u^i (Dk u^k) delta_ij ]
@@ -266,15 +263,16 @@ void GStressEnOp<TypePack>::apply(State &u, State &utmp, StateComp &eo)
       *utmp[1] += *utmp[2];
     }
     // Point-multiply by kappa before taking 'divergence':
+    utmp[1]->pointProd(d);
     utmp[1]->pointProd(*kappa_);
-    grid_->wderiv(*utmp[1], j+1, TRUE , *utmp[0], *utmp[2]);
+    grid_->wderiv(*utmp[1], j+1, TRUE, *utmp[0], *utmp[2]);
     eo -= *utmp[2];
 
-#if defined(DO_FACE)
+#if defined(DO_BDY)
     // Do the surface terms for jth component of normal:
-    for ( auto f=0; f<nxy; f++ ) {
-      k = (*gieface)[f];
-      eo[k] += (*utmp[1])[k] * (*normals)[j][f] * (*fmass)[f];
+    for ( auto b=0; b<igbdy->size(); b++ ) {
+      k = (*igbdy)[b];
+      eo[k] += (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
     }
 #endif
   }
@@ -288,21 +286,21 @@ void GStressEnOp<TypePack>::apply(State &u, State &utmp, StateComp &eo)
        *utmp[1] += *utmp[2];
     }
     // Point-multiply by kappa before taking 'divergence':
+    utmp[1]->pointProd(d);
     utmp[1]->pointProd(*kappa_);
-    grid_->wderiv(*utmp[1], j+1, TRUE , *utmp[0], *utmp[2]);
+    grid_->wderiv(*utmp[1], j+1, TRUE, *utmp[0], *utmp[2]);
     eo -= *utmp[2];
 
-#if defined(DO_FACE)
+#if defined(DO_BDY)
     // Do the surface terms for jth component of normal:
-    for ( auto f=0; f<nxy; f++ ) {
-      k = (*gieface)[f];
-      eo[k] += (*utmp[1])[k] * (*normals)[j][f] * (*fmass)[f];
+    for ( auto b=0; b<igbdy->size(); b++ ) {
+      k = (*igbdy)[b];
+      eo[k] += (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
     }
 #endif
   }
 
-#if defined(USE_STOKES)
-  // Compute Stokes hypothesis term:
+  // Compute dilitation term:
   //   -= D^{T,j} (lambda (Div u) delta_ij):
   //   ... First, compute Div u:
   // (NOTE: we'll use MTK to compute Div u eventually):
@@ -315,25 +313,40 @@ void GStressEnOp<TypePack>::apply(State &u, State &utmp, StateComp &eo)
     grid_->deriv(*u[j], j+1, *utmp[0], *utmp[2]); 
     *utmp[1] += *utmp[2];
   }
+
+  utmp[1]->pointProd(d);
   utmp[1]->pointProd(*lambda_);
 
+#if defined(DO_COMPRESS_MODES_ONLY)
+  for ( auto i=0; i<utmp[1]->size(); i++ ) {
+    isgn      = sgn<Ftype>((*utmp[1])[i]);
+    fsgn      = static_cast<Ftype>(isgn);
+    tfact_[i] = isgn == 0 ? 1.0 : 0.5*(1.0-fsgn);
+  }
+#endif
+
   // Now compute
-  //   D^{T,j} [lambda u^i (Div u) delta_ij]:
+  //  -= D^{T,j} [lambda u^i (Div u) delta_ij]:
   for ( auto j=0; j<nxy; j++ ) { 
     u[j]->pointProd(*utmp[1],*utmp[2]); 
     grid_->wderiv(*utmp[2], j+1, TRUE, *utmp[0], *utmp[3]); 
+#if defined(DO_COMPRESS_MODES_ONLY)
+    utmp[3]->pointProd(tfact_);
+#endif
     eo -= *utmp[3];
 
-#if defined(DO_FACE)
+#if defined(DO_BDY)
     // Do the surface terms for jth component of normal:
-    for ( auto f=0; f<nxy; f++ ) {
-      k = (*gieface)[f];
-      eo[k] += (*utmp[2])[k] * (*normals)[j][f] * (*fmass)[f];
+    for ( auto b=0; b<igbdy->size(); b++ ) {
+      k = (*igbdy)[b];
+    #if defined(DO_COMPRESS_MODES_ONLY)
+      eo[k] += (*utmp[2])[k]*tfact_[k] * (*normals)[j][b] * (*bmass)[b];
+    #else
+      eo[k] += (*utmp[2])[k] * (*normals)[j][b] * (*bmass)[b];
+    #endif
     }
 #endif
   }
-#endif 
-
 
 } // end of method apply (2)
 

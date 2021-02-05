@@ -493,6 +493,9 @@ void allocate(const PropertyTree &ptree)
   nstate_ =  pEqn_->state_size();
   ntmp_   =  pEqn_->tmp_size();
   iforced = &pEqn_->iforced();
+  nstate_ =  pEqn_->state_size();
+  ntmp_   =  pEqn_->tmp_size();
+  iforced = &pEqn_->iforced();
   
   u_   .resize(nstate_);                // state
   ub_  .resize(nstate_); ub_ = NULLPTR; // bdy state array
@@ -726,6 +729,8 @@ void init_force(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &
 //  for ( auto j=0; j<GDIM; j++ ) delete tmp[j];
 //
 //} // end method init_ggfx
+  for ( auto j=0; j<GDIM; j++ ) delete tmp[j];
+
 
 
 //**********************************************************************************

@@ -2514,7 +2514,7 @@ void Dg3_X_D2_X_Dg1(GTVector<T> &Dg1, GTMatrix<T> &D2T, GTVector<T> &Dg3,
     }
 
     // y = Dg3 X I X I tmp1:
-    qmxDm(y.data(),  tmp.data(), &NXY, &N3, Dg3.data(), &N3, &szMatCache_);
+    qmxDm((GQUAD*)y.data(),  (GQUAD*)tmp.data(), &NXY, &N3, (GQUAD*)Dg3.data(), &N3, &szMatCache_);
   }
   else {
     assert(FALSE);
@@ -2589,7 +2589,7 @@ void D3_X_Dg2_X_Dg1(GTVector<T> &Dg1, GTVector<T> &Dg2, GTMatrix<T> &D3T,
 
     // tmp1 = I X D2 X I tmp:
     for ( auto k=0; k<N31; k++ ) {
-      qmxDm(tmp.data()+k*NXY, (GQUAD*)(y.data()+k*NXY), &N1, &N2, (GQUAD*)Dg2.data(), &N2, &szMatCache_);
+      qmxDm((GQUAD*)tmp.data()+k*NXY, (GQUAD*)y.data()+k*NXY, &N1, &N2, (GQUAD*)Dg2.data(), &N2, &szMatCache_);
     }
 
     // y = Dg3 X I X I tmp1:

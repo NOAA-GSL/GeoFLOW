@@ -20,7 +20,8 @@ gdim_     (3),
 x1        (0),
 x2        (0),
 x3        (0),
-x4        (0)
+x4        (0),
+eps_      (0)
 {
   if ( std::is_floating_point<T>::value ) {
     eps_ = 100*std::numeric_limits<T>::min();
@@ -46,7 +47,8 @@ gdim_     (dim),
 x1        (0),
 x2        (0),
 x3        (0),
-x4        (0)
+x4        (0),
+eps_      (0)
 {
   if ( std::is_floating_point<T>::value ) {
     eps_ = 100*std::numeric_limits<T>::min();

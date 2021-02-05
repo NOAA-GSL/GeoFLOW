@@ -56,15 +56,17 @@ public:
 
   template<typename U=T> typename std::enable_if<std::is_floating_point<U>::value, GBOOL>::type
   operator==(const GTPoint<T> &pp) // Add 'fuzziness' to equality check
-  { GBOOL b;     
-    for ( GINT i=0,b=TRUE;i<gdim_;i++) { 
-      b = b && FUZZYEQ(*px_[i], pp[i], eps_); }  // do check for 'equality'
+  { GBOOL b=TRUE, f;     
+    for ( auto i=0;i<gdim_;i++) { 
+      f = FUZZYEQ(*px_[i], pp[i], eps_);
+      b = b && f; 
+    }  // do check for 'equality'
     return b; }
 
   template<typename U=T> typename std::enable_if<!std::is_floating_point<U>::value, GBOOL>::type
   operator==(const GTPoint<T> &pp) // Add 'fuzziness' to equality check
-  { GBOOL b; GTPoint<T> pq = pp;
-    for ( GINT i=0,b=TRUE;i<gdim_;i++) b = b && ( pq[i] == *px_[i] );
+  { GBOOL b=TRUE; GTPoint<T> pq = pp;
+    for ( auto i=0;i<gdim_;i++) b = b && ( pq[i] == *px_[i] );
     return b; }
 
   template<typename U=T> typename std::enable_if<std::is_floating_point<U>::value, T>::type
@@ -72,7 +74,7 @@ public:
   { T xn=0; for ( auto i=0; i<gdim_; i++ ) xn += ((*px_[i])*(*px_[i])); return sqrt(xn); }
 
   inline void unit()  // Make into unit vector
-  { T xn=this->norm(); for ( auto i=0; i<gdim_; i++ ) (*px_[i]) /= sqrt(xn); }
+  { T xn=this->norm(); for ( auto i=0; i<gdim_; i++ ) (*px_[i]) /= xn; }
 
   inline GBOOL    operator!=(const GTPoint<T> &p) 
   { return !this->operator==(p); }
@@ -95,9 +97,10 @@ public:
   inline GTPoint<T> &operator=(T f)
   { x1 = f;  x2 = f;  x3 = f;  x4 = f; return *this;}
 
-  inline void assign(GTVector<GTVector<T>> &v, GSIZET i)
-  { for ( auto j=0; j<gdim_; j++ ) *px_[j] = v[j][i];
-    if ( gdim_>0) x1 = v[0][i]; if ( gdim_>1) x2 = v[1][i]; if (gdim_>2) x3 = v[2][i]; if ( gdim_>3) x4 = v[3][i];}
+  inline void assign(const GTVector<GTVector<T>> &v, GSIZET i)
+  { for ( auto j=0; j<gdim_; j++ ) *px_[j] = 0.0;
+    for ( auto j=0; j<v.size(); j++ ) *px_[j] = v[j][i];
+  }
 
   inline GTPoint<T> operator-(T f) {
       GTPoint ret(*this);
@@ -141,6 +144,13 @@ public:
   {
       GTPoint ret(*this);
       ret *= a;
+      return ret;
+  }
+
+  inline T dot(const GTPoint<T> &a)
+  {
+      T ret = (*px_[0]) * a[0];
+      for ( auto j=1; j<gdim_; j++ ) ret += (*px_[j]) * a[j];
       return ret;
   }
 
