@@ -77,12 +77,6 @@
 #define GEOFLOW_USE_TRACER
 #endif
 
-// Logic based on above values
-#if !defined(NDEBUG) && !defined(USE_OPENACC)
-	#define _G_BOUNDS_CHK
-	#define _G_DEBUG
-#endif
-
 // Constants to compare against
 #define CPP_INT_TWO 2
 #define CPP_INT_THREE 3

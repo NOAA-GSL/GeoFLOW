@@ -10,7 +10,6 @@
 #include <unistd.h>
 #include <iostream>
 #include <vector>
-#include "gexec.h"
 #include "gcomm.hpp"
 #include "gtvector.hpp"
 #include "gtmatrix.hpp"

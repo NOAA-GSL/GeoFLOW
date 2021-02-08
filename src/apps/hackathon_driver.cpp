@@ -8,7 +8,6 @@
 //==================================================================================
 
 
-#include "gexec.h"
 #include "gtypes.h"
 #include "gcomm.hpp"
 #include "ggfx.hpp"

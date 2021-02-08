@@ -1394,17 +1394,11 @@ void I2_X_D1(GTMatrix<T> &D1,
              GTVector<T> &u, GSIZET N1, GSIZET N2, GTVector<T> &y)
 {
   GEOFLOW_TRACE_RENAME("I2_X_D1(5 args)");
+  ASSERT_MSG((u.size() >= N1*N2 && y.size() >= N1*N2), "GMTK::I2_X_D1 (1) incompatible size");
+  
   GSIZET ND1, ND2;
-
   ND1 = D1.size(1);
   ND2 = D1.size(2);
-
-  #if defined(_G_BOUNDS_CHK)
-  if ( !(u.size() >= N1*N2 && y.size() >= N1*N2) ) {
-    cout << "GMTK::I2_X_D1 (1)" << "incompatible size" << endl;
-    exit(1);
-  }
-  #endif
 
   // Compute y = I2_X_D1 u:
   if      ( std::is_same<T,GFLOAT>::value ) {
@@ -1445,18 +1439,11 @@ void I2_X_D1(GTMatrix<T> &D1,
              GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET Ne, GTVector<T> &y)
 {
   GEOFLOW_TRACE_RENAME("I2_X_D1(6 args)");
+  ASSERT_MSG((u.size() >= N1*N2 && y.size() >= N1*N2), "GMTK::I2_X_D1 (2) incompatible size");
   GSIZET ND1, ND2, Nu;
 
   ND1 = D1.size(1);
   ND2 = D1.size(2);
-
-  #if defined(_G_BOUNDS_CHK)
-  if ( !(u.size() >= N1*N2 && y.size() >= N1*N2) ) {
-    cout << "GMTK::I2_X_D1 (2)" << "incompatible size" << endl;
-    exit(1);
-  }
-  #endif
-
   Nu = N2 * Ne;
 
   // Compute y = I2_X_D1 u:
@@ -1499,19 +1486,13 @@ void I2_X_D1(GTMatrix<T> &D1,
              GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET Ne, GCBLAS::cuMatBlockDat &cudat, GTVector<T> &y)
 {
   GEOFLOW_TRACE_RENAME("I2_X_D1(7 args)");
+  ASSERT_MSG((u.size() >= N1*N2 && y.size() >= N1*N2), "GMTK::I2_X_D1 (3) incompatible size");
+
   GSIZET ND1, ND2, Nu;
   GINT   M, N, K, lda, ldb, ldc;
 
   ND1 = D1.size(1);
   ND2 = D1.size(2);
-
-  #if defined(_G_BOUNDS_CHK)
-  if ( !(u.size() >= N1*N2 && y.size() >= N1*N2) ) {
-    cout << "GMTK::I2_X_D1 (2)" << "incompatible size" << endl;
-    exit(1);
-  }
-  #endif
-
   Nu = N2 * Ne;
 
 #if defined(GEOFLOW_USE_CBLAS) || defined(GEOFLOW_USE_CUBLAS)
@@ -1566,18 +1547,13 @@ void D2_X_D1(GTMatrix<T> &D1, GTMatrix<T>  &D2T,
              GTVector<T> &u, GTVector<T> &tmp, GTVector<T> &y)
 {
 	GEOFLOW_TRACE();
+  
   GSIZET   N11, N12, N21, N22;
-
   N11 = D1 .size(1);
   N12 = D1 .size(2);
   N21 = D2T.size(1);
   N22 = D2T.size(2);
-  #if defined(_G_BOUNDS_CHK)
-  if ( !(u.size() >= N12*N21 && y.size() >= N11*N22) ) {
-    cout << "GMTK::D2_X_D1" << "incompatible size" << endl;
-    exit(1);
-  }
-  #endif
+  ASSERT_MSG((u.size() >= N12*N21 && y.size() >= N11*N22), "GMTK::D2_X_D1 incompatible size");
 
   // Compute y = D2_X_D1 u as: y = D1 U D2T, where U is u 
   // considered in matrix form:
@@ -1640,17 +1616,13 @@ void Dg2_X_D1(GTMatrix<T> &D1, GTVector<T> &Dg2, GTVector<T> &u,
               GTVector<T> &tmp, GTVector<T> &y)
 {
 	GEOFLOW_TRACE();
+  
   GSIZET   N11, N12, N2;
-
   N11 = D1.size(1);
   N12 = D1.size(2);
   N2  = Dg2.size();
-  #if defined(_G_BOUNDS_CHK)
-  if ( !(u.size() >= N11*N2 && y.size() >= N11*N2) ) {
-    cout << "GMTK::Dg_X_D1" << "incompatible size" << endl;
-    exit(1);
-  }
-  #endif
+  ASSERT_MSG((u.size() >= N11*N2 && y.size() >= N11*N2), "GMTK::Dg_X_D1 incompatible size");
+ 
 
   // Resize tmp only if its current size is less than required:
   tmp.resizem(N11*N2);
@@ -1706,16 +1678,11 @@ void D2_X_I1(GTMatrix<T> &D2T,
               GTVector<T> &u, GSIZET N1, GSIZET N2, GTVector<T> &y)
 {
 	GEOFLOW_TRACE();
-  GSIZET N21, N22;
+  ASSERT_MSG((u.size() >= N1*N2 && y.size() >= N1*N2), "GMTK::D2_X_I1 (1) incompatible size");
 
+  GSIZET N21, N22;
   N21 = D2T.size(1);
   N22 = D2T.size(2);
-  #if defined(_G_BOUNDS_CHK)
-  if ( !(u.size() >= N1*N2 && y.size() >= N1*N2) ) {
-    cout << "GMTK::D2_X_I1 (1)" << "incompatible size" << endl;
-    exit(1);
-  }
-  #endif
 
   // Compute y = I2_X_D1 u = u * D2T:
   if      ( std::is_same<T,GFLOAT>::value ) {
@@ -1759,14 +1726,8 @@ void D2_X_I1(GTMatrix<T> &D2T,
 
   N21 = D2T.size(1);
   N22 = D2T.size(2);
-  #if defined(_G_BOUNDS_CHK)
-  if ( !(u.size() >= N1*N2*Ne && y.size() >= N1*N2*Ne) ) {
-    cout << "GMTK::D2_X_I1 (2)" << "incompatible size" << endl;
-    exit(1);
-  }
-  #endif
-
   Nu = N1 * N2;
+  ASSERT_MSG((u.size() >= N1*N2*Ne && y.size() >= N1*N2*Ne), "GMTK::D2_X_I1 (2) incompatible size");
 
   // Compute y = I2_X_D1 u = u * D2T:
   if      ( std::is_same<T,GFLOAT>::value ) {
@@ -1819,14 +1780,8 @@ void D2_X_I1(GTMatrix<T> &D2T,
 
   N21 = D2T.size(1);
   N22 = D2T.size(2);
-  #if defined(_G_BOUNDS_CHK)
-  if ( !(u.size() >= N1*N2*Ne && y.size() >= N1*N2*Ne) ) {
-    cout << "GMTK::D2_X_I1 (2)" << "incompatible size" << endl;
-    exit(1);
-  }
-  #endif
-
   Nu = N1 * N2;
+  ASSERT_MSG((u.size() >= N1*N2*Ne && y.size() >= N1*N2*Ne), "GMTK::D2_X_I1 (2) incompatible size");
 
 // Compute y = I2_X_D1 u = u * D2T:
 #if defined(GEOFLOW_USE_CBLAS) || defined(GEOFLOW_USE_CUBLAS)
@@ -1894,12 +1849,7 @@ void D2_X_Dg1(GTVector<T> &Dg1, GTMatrix<T> &D2T, GTVector<T> &u,
   N1  = Dg1.size();
   N21 = D2T.size(1);
   N22 = D2T.size(2);
-  #if defined(_G_BOUNDS_CHK)
-  if ( !(u.size() >= N1*N21 && y.size() >= N1*N21) ) {
-    cout << "GMTK::D2_X_Dg1" << "incompatible size" << endl;
-    exit(1);
-  }
-  #endif
+  ASSERT_MSG((u.size() >= N1*N21 && y.size() >= N1*N21), "GMTK::D2_X_Dg1 incompatible size");
 
   // Compute y = D2_X_Dg u as: y = (D2_X_I)(I_X_Dg) U,
   //  where U is u considered in matrix form:
@@ -1965,15 +1915,9 @@ void D3_X_D2_X_D1(GTMatrix<T> &D1, GTMatrix<T>  &D2T, GTMatrix<T> &D3T,
   N22 = D2T.size(2);
   N31 = D3T.size(1);
   N32 = D3T.size(2);
-  #if defined(_G_BOUNDS_CHK)
-  if ( !(u.size() >= N12*N21*N31 && y.size() >= N11*N22*N32) ) {
-    cout << "GMTK::D2_X_D1" << "incompatible size" << endl;
-    exit(1);
-  }
-  #endif
+  ASSERT_MSG((u.size() >= N12*N21*N31 && y.size() >= N11*N22*N32), "GMTK::D2_X_D1 incompatible size");
 
   // Compute y = D3_X_D2_X_D1 u as (D3 X I2 X I1)(I3 X D2 X I1)(I3 X I2 X D1) U: 
-
 
   GSIZET nxy = N21*N31;
 
@@ -2049,13 +1993,7 @@ void I3_X_I2_X_D1(GTMatrix<T> &D1, GTVector<T> &u,
   ND2 = D1.size(2);
   NYZ = N2*N3;
   NN  = N1*N2*N3;
-
-#if defined(GARRAY_BOUNDS)
-  if ( u.size() < NN || y.size() < NN ) {
-    cout << "GMTK::I3_X_I2_X_D1 (1): incompatible dimensions" << endl;
-    exit(1);
-  }
-#endif
+  ASSERT_MSG(!(u.size() < NN || y.size() < NN), "GMTK::I3_X_I2_X_D1 (1): incompatible dimensions");
 
   if      ( std::is_same<T,GFLOAT>::value ) {
     fmxm((GFLOAT*)y.data(), (GFLOAT*)D1.data().data(), &ND1, &ND2, (GFLOAT*)u.data(), &N1, &NYZ, &szMatCache_);
@@ -2100,19 +2038,9 @@ void I3_X_I2_X_D1(GTMatrix<T> &D1, GTVector<T> &u,
   ND2 = D1.size(2);
   NYZ = N2*N3;
   NN  = N1*N2*N3*Ne;
-
-#if defined(GARRAY_BOUNDS)
-  if ( u.size() < NN || y.size() < NN ) {
-    cout << "GMTK::I3_X_I2_X_D1 (2): u or y of incorrect size" << endl;
-    exit(1);
-  }
-  if ( N1 != ND2 ) {
-    cout << "GMTK::I3_X_I2_X_D1 (2): incompatible dimensions" << endl;
-    exit(1);
-  }
-#endif
-
   Nu = NYZ * Ne;
+  ASSERT_MSG(!(u.size() < NN || y.size() < NN), "GMTK::I3_X_I2_X_D1 (2): u or y of incorrect size");
+  ASSERT_MSG(!(N1 != ND2), "GMTK::I3_X_I2_X_D1 (2): incompatible dimensions");
 
   if      ( std::is_same<T,GFLOAT>::value ) {
     fmxm((GFLOAT*)y.data(), (GFLOAT*)D1.data().data(), &ND1, &ND2, (GFLOAT*)u.data(), &N1, &Nu, &szMatCache_);
@@ -2154,13 +2082,7 @@ void I3_X_D2_X_I1(GTMatrix<T> &D2T, GTVector<T> &u,
   ND2 = D2T.size(2);
   NXY = N1*N2;
   NN  = N1*N2*N3;
-
-#if defined(GARRAY_BOUNDS)
-  if ( u.size() < NN || y.size() < NN ) {
-    cout << "GMTK::I3_X_D2_X_I1 (1): incompatible dimensions" << endl;
-    exit(1);
-  }
-#endif
+  ASSERT_MSG(!( u.size() < NN || y.size() < NN ), "GMTK::I3_X_D2_X_I1 (1): incompatible dimensions");
 
   if      ( std::is_same<T,GFLOAT>::value ) {
     for ( auto k=0; k<N3; k++ ) {
@@ -2215,15 +2137,8 @@ void I3_X_D2_X_I1(GTMatrix<T> &D2T, GTVector<T> &u,
   ND2 = D2T.size(2);
   NXY = N1*N2;
   NN  = N1*N2*N3*Ne;
-
-#if defined(GARRAY_BOUNDS)
-  if ( u.size() < NN || y.size() < NN ) {
-    cout << "GMTK::I3_X_D2_X_I1 (2): incompatible dimensions" << endl;
-    exit(1);
-  }
-#endif
-
   Nu  = N1*N2*N3;
+  ASSERT_MSG(!( u.size() < NN || y.size() < NN ), "GMTK::I3_X_D2_X_I1 (2): incompatible dimensions");
 
   if      ( std::is_same<T,GFLOAT>::value ) {
     for ( auto j=0; j<Ne; j++ ) {
@@ -2278,13 +2193,7 @@ void D3_X_I2_X_I1(GTMatrix<T> &D3T, GTVector<T> &u,
   ND2 = D3T.size(2);
   NXY = N1*N2;
   NN  = N1*N2*N3;
-
-#if defined(GARRAY_BOUNDS)
-  if ( u.size() < NN || y.size() < NN ) {
-    cout << "GMTK::D3_X_I2_X_I1 (1): incompatible dimensions" << endl;
-    exit(1);
-  }
-#endif
+  ASSERT_MSG(!( u.size() < NN || y.size() < NN ), "GMTK::D3_X_I2_X_I1 (1): incompatible dimensions");
 
   if      ( std::is_same<T,GFLOAT>::value ) {
     fmxm((GFLOAT*)y.data(), (GFLOAT*)u.data(), &NXY, &N3, (GFLOAT*)D3T.data().data(), 
@@ -2332,15 +2241,8 @@ void D3_X_I2_X_I1(GTMatrix<T> &D3T, GTVector<T> &u,
   ND2 = D3T.size(2);
   NXY = N1*N2;
   NN  = N1*N2*N3;
-
-#if defined(GARRAY_BOUNDS)
-  if ( u.size() < NN || y.size() < NN ) {
-    cout << "GMTK::D3_X_I2_X_I1 (2): incompatible dimensions" << endl;
-    exit(1);
-  }
-#endif
-
   Nu = N1*N2*N3;
+  ASSERT_MSG(!( u.size() < NN || y.size() < NN ), "GMTK::D3_X_I2_X_I1 (2): incompatible dimensions");  
 
   if      ( std::is_same<T,GFLOAT>::value ) {
     for ( auto i=0; i<Ne; i++ ) {
@@ -2392,12 +2294,7 @@ void Dg3_X_Dg2_X_D1(GTMatrix<T> &D1, GTVector<T> &Dg2, GTVector<T> &Dg3,
   NXY = N11*N2;
   NYZ = N2*N3;
   NN  = N11*N2*N3;
-#if defined(GARRAY_BOUNDS)
-  if ( u.size() < NN  || y.size() < NN ) {
-    cout <<"Dg3_X_D2_X_Dg1: incompatible vectors" << endl;
-    exit(1);
-  }
-#endif
+  ASSERT_MSG(!( u.size() < NN  || y.size() < NN ),"Dg3_X_D2_X_Dg1: incompatible vectors");
 
   tmp.resizem(NXY*N3);
 
@@ -2471,12 +2368,7 @@ void Dg3_X_D2_X_Dg1(GTVector<T> &Dg1, GTMatrix<T> &D2T, GTVector<T> &Dg3,
   NXY = N1*N21;
   NYZ = N21*N3;
   NN  = N1*N21*N3;
-#if defined(GARRAY_BOUNDS)
-  if ( u.size() < NN  || y.size() < NN ) {
-    cout <<"Dg3_X_D2_X_Dg1: incompatible vectors" << endl;
-    exit(1);
-  }
-#endif
+  ASSERT_MSG(!( u.size() < NN  || y.size() < NN ), "Dg3_X_D2_X_Dg1: incompatible vectors");
 
   tmp.resizem(NXY*N3);
 
@@ -2550,12 +2442,7 @@ void D3_X_Dg2_X_Dg1(GTVector<T> &Dg1, GTVector<T> &Dg2, GTMatrix<T> &D3T,
   NXY = N1*N2;
   NYZ = N2*N31;
   NN  = N1*N2*N31;
-#if defined(GARRAY_BOUNDS)
-  if ( u.size() < NN  || y.size() < NN ) {
-    cout <<"D3_X_Dg2_X_Dg1: incompatible vectors" << endl;
-    exit(1);
-  }
-#endif
+  ASSERT_MSG(!( u.size() < NN  || y.size() < NN ), "D3_X_Dg2_X_Dg1: incompatible vectors");
 
   tmp.resizem(NXY*N31);
 
@@ -2618,13 +2505,7 @@ template<typename T>
 void add(GTVector<T> &vret, const GTVector<T> &va, const GTVector<T> &vb, T a, T b) 
 {
 	GEOFLOW_TRACE();
-  #if defined(_G_BOUNDS_CHK)
-  if ( va.size() < vret.size() || vb.size() < vret.size() ) {
-    cout << "GTVector<T>::add: " << "incompatible size" << endl;
-while(1){};
-    exit(1);
-  }
-  #endif
+  ASSERT_MSG(!( va.size() < vret.size() || vb.size() < vret.size() ), "GTVector<T>::add: incompatible size");
 
 #if defined(GEOFLOW_USE_CBLAS) || defined(GEOFLOW_USE_CUBLAS)
 
@@ -2668,12 +2549,7 @@ template<typename T>
 void matvec_prod(GTVector<T> &vret, const GTMatrix<T> &A, const GTVector<T> &b) 
 {
 	GEOFLOW_TRACE();
-  #if defined(_G_BOUNDS_CHK)
-  if ( b.size() < A.size(2) ) {
-    cout << "GMTK::matvec_prod: " << "incompatible size" << endl;
-    exit(1);
-  }
-  #endif
+  ASSERT_MSG(!( b.size() < A.size(2) ), "GMTK::matvec_prod: incompatible size");
 
 #if defined(GEOFLOW_USE_CBLAS) || defined(GEOFLOW_USE_CUBLAS)
 
@@ -2727,12 +2603,7 @@ template<typename T>
 void matmat_prod(GTMatrix<T> &C, const GTMatrix<T> &A, const GTMatrix<T> &B) 
 {
 	GEOFLOW_TRACE();
-  #if defined(_G_BOUNDS_CHK)
-  if ( A.size(2) != B.size(1) ) {
-    cout << "GMTK::matmat_prod:incompatible matrix"<< endl;
-    exit(1);
-  }
-  #endif
+  ASSERT_MSG(!( A.size(2) != B.size(1) ), "GMTK::matmat_prod:incompatible matrix");
 
 #if defined(GEOFLOW_USE_CBLAS) || defined(GEOFLOW_USE_CUBLAS)
 

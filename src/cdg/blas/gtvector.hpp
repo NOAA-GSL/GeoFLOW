@@ -29,6 +29,8 @@
 #include "cff_blas.h"
 #include "gcomm.hpp"
 
+#include "tbox/assert.hpp"
+
 #if !defined(_G_VEC_CACHE_SIZE)
   # define _G_VEC_CACHE_SIZE 16
 #endif
@@ -95,24 +97,12 @@ template <class T> class GTVector
     void updatedev();
 
     inline T& operator[](const GSIZET i) {
-    #if defined(_G_BOUNDS_CHK)
-      const char serr[] = "GTVector<T>::operator[]: ";
-      if ( i+gindex_.beg() > gindex_.end() ) {
-        std::cout << serr << "Access error: " << i << std::endl;
-        exit(1);
-      }
-    #endif
+      ASSERT_MSG(!( i+gindex_.beg() > gindex_.end() ), "i = " << i);
       return data_[i+gindex_.beg()];
     };
 
     inline const T& operator[](const GSIZET i) const {
-    #if defined(_G_BOUNDS_CHK)
-      const char serr[] = "GTVector<T>::operator[] const: ";
-      if ( i+gindex_.beg() > gindex_.end() ) {
-        std::cout << serr << "Access error: " << i << std::endl;
-        exit(1);
-      }
-    #endif
+      ASSERT_MSG(!( i+gindex_.beg() > gindex_.end() ), "i = " << i);
       return data_[i+gindex_.beg()];
     };
 

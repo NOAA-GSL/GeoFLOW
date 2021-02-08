@@ -347,14 +347,7 @@ void GTMatrix<T>::operator+=(const GTMatrix<T> &a)
 {
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::operator+=(GTMatrix<T> &)");
-
-  #if defined(_G_BOUNDS_CHK)
-  if ( this->n1_ != a.dim(1) || this->n2_ !=a.dim(2) ) {
-    std::cout << "GTMatrix<T>::+: incompatible matrices"<< std::endl;
-    exit(1);
-  }
-  #endif
-
+  ASSERT(!( this->n1_ != a.dim(1) || this->n2_ !=a.dim(2) ));
   data_ += a.data();
 
 }
@@ -371,14 +364,7 @@ void GTMatrix<T>::operator-=(const GTMatrix<T> &a)
 {
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::operator-=(GTMatrix<T> &)");
-
-  #if defined(_G_BOUNDS_CHK)
-  if ( this->n1_ != a.dim(1) || this->n2_ !=a.dim(2) ) {
-    std::cout << "GTMatrix<T>::+: incompatible matrices"<< std::endl;
-    exit(1);
-  }
-  #endif
-
+  ASSERT(!( this->n1_ != a.dim(1) || this->n2_ !=a.dim(2) ));
   data_ -= a.data();
 
 }

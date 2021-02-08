@@ -22,7 +22,6 @@
 // Following is a list of preprocessor variables that may be set:
 // _G_AUTO_CREATE_DEV : Auto-copy/create classes on device
 // _G_AUTO_UPDATE_DEV : Auto-update data on device after computation
-// _G_BOUNDS_CHK      : Do bounds checking
 // _GLAPACK           : Set if using external Lapack API
 // _G_VEC_CACHE_SIZE  : Sets vector (BLAS II) op cache blocking factor
 // _G_MAT_CACHE_SIZE  : Sets vector op (BLAS III) cache blocking factor
@@ -48,7 +47,6 @@ typedef std::string GString;
 
 // Globally-defined defs:
 // _G_AUTO_CREATE_DEV: Auto-create class data and class on device if ACC defined
-// _G_BOUNDS_CHK     : Do data bounds check
 
 // Basic data types:
 #define GBYTE      unsigned char

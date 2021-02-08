@@ -36,7 +36,7 @@ target_include_directories(cdg
 #
 target_sources(cdg
 	PRIVATE
-		${GHOME}/blas/cff_blas.F
+	${GHOME}/blas/cff_blas.F
         ${GHOME}/blas/qmxmp.F
         ${GHOME}/blas/dmxmp.F
         ${GHOME}/blas/fmxmp.F
@@ -50,8 +50,6 @@ target_sources(cdg
         ${GHOME}/grid/ggrid_box.cpp
         
         ${GHOME}/config/gspecbdy_factory.cpp 
-        
-#        ${GHOME}/io/gio.cpp
         
         ${GHOME}/sem/gelem_base.cpp
         ${GHOME}/sem/gmass.cpp

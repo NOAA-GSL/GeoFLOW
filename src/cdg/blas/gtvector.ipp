@@ -24,6 +24,7 @@
 #include "cublas.h"
 #endif
 
+#include "tbox/assert.hpp"
 #include "tbox/tracer.hpp"
 
 //**********************************************************************************
@@ -861,13 +862,9 @@ void GTVector<T>::set(T a)
 template<class T> 
 void GTVector<T>::set(T *a, GSIZET n)
 { 
-  #if defined(_G_BOUNDS_CHK) && !defined(GEOFLOW_USE_OPENACC)
-  if ( gindex_.beg()+n > gindex_.end()+1  ) {
-    std::cout <<  "GTVector<T>::set: " << "assignment size mismatch: " << std::endl;
-while(1){};
-    exit(1);
-  }
-  #endif
+#if !defined(GEOFLOW_USE_OPENACC)
+  ASSERT(!(gindex_.beg()+n > gindex_.end()+1));
+#endif
   
   GLLONG m=0;
   for ( auto j=gindex_.beg(); j<MIN(gindex_.beg()+n,gindex_.end()+1) && m < n; j+=gindex_.stride() ) {
@@ -1587,13 +1584,7 @@ template<class T>
 void
 GTVector<T>::pointProd(const GTVector<T> &obj, GTVector<T> &ret ) 
 {
-  #if defined(_G_BOUNDS_CHK)
-  if ( (obj.size() > 1 && obj.size() < this->size()) || ret.size() < this->size() ) {
-    std::cout << "pointProd(1): " << "incompatible size" << std::endl;
-while(1){};
-    exit(1);
-  }
-  #endif
+  ASSERT(!( (obj.size() > 1 && obj.size() < this->size()) || ret.size() < this->size() ));
 
   if ( obj.size() > 1 ) {
 #pragma acc parallel loop
@@ -1626,13 +1617,7 @@ template<class T>
 void
 GTVector<T>::pointProd(const T a, const GTVector<T> &obj, GTVector<T> &ret ) 
 {
-  #if defined(_G_BOUNDS_CHK)
-  if ( (obj.size() > 1 && obj.size() < this->size()) || ret.size() < this->size() ) {
-    std::cout << "pointProd(1): " << "incompatible size" << std::endl;
-while(1){};
-    exit(1);
-  }
-  #endif
+  ASSERT( (ret.size() >= this->size()) && (obj.size() >= this->size()) );
 
   if ( obj.size() > 1 ) {
 #pragma acc parallel loop
@@ -1663,13 +1648,7 @@ template<class T>
 void
 GTVector<T>::pointProd(const GTVector<T> &obj)
 {
-  #if defined(_G_BOUNDS_CHK)
-  if ( obj.size() > 1 && obj.size() < this->size() ) {
-    std::cout << "pointProd(2): " << "incompatible size" << std::endl;
-while(1){};
-    exit(1);
-  }
-  #endif
+  ASSERT(!( obj.size() > 1 && obj.size() < this->size() ));
 
   if ( obj.size() > 1 ) {
 
@@ -1702,13 +1681,7 @@ template<class T>
 void
 GTVector<T>::apointProd(const T a, const GTVector<T> &obj ) 
 {
-  #if defined(_G_BOUNDS_CHK)
-  if ( (obj.size() != this->size()) && obj.size() != 1 ) {
-    std::cout << "pointProd(1): " << "incompatible size" << std::endl;
-while(1){};
-    exit(1);
-  }
-  #endif
+  ASSERT(!( (obj.size() != this->size()) && obj.size() != 1 ));
 
   if ( obj.size() > 1 ) {
     for ( auto j=this->gindex_.beg(); j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
@@ -1736,13 +1709,7 @@ template<class T>
 void
 GTVector<T>::constProd(const T b, GTVector<T> &ret) 
 {
-  #if defined(_G_BOUNDS_CHK)
-  if ( ret.size() < this->size() ) {
-    std::cout << "constProd: " << "incompatible size" << std::endl;
-while(1){};
-    exit(1);
-  }
-  #endif
+  ASSERT(!(ret.size() < this->size()));
 
   T *dret=ret.data();
 

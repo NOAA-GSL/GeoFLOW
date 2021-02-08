@@ -13,7 +13,6 @@
    #include <omp.h>
 #endif
 
-#include "gexec.h"
 #include "gtypes.h"
 #include <stdio.h>
 #include <math.h>
