@@ -52,6 +52,8 @@ EquationFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid){
                                   + (btraits.bpureadv ? GDIM : 0);
                 btraits.courant   = stp_ptree.getValue<double>("courant",0.5);
                 btraits.itorder   = stp_ptree.getValue<int>   ("time_deriv_order",4);
+                btraits.nstage    = stp_ptree.getValue<int>   ("nstage",4);
+                btraits.bSSP      = stp_ptree.getValue<int>   ("stab_preserving",false);
                 btraits.inorder   = stp_ptree.getValue<int>   ("extrap_order",2);
                 btraits.ssteptype = stp_ptree.getValue<std::string>
                                                              ("stepping_method","GSTEPPER_EXRK");
@@ -70,48 +72,55 @@ EquationFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid){
 	else if( "pde_mconv" == equation_name ) {
 		using EqnImpl = GMConv<ET>;
 
-                ctraits.docoriolis= eqn_ptree.getValue<bool>  ("docoriolis");
-                ctraits.dodry     = eqn_ptree.getValue<bool>  ("dodry");
-                ctraits.dofallout = eqn_ptree.getValue<bool>  ("dofallout");
-                ctraits.dograv    = eqn_ptree.getValue<bool>  ("dogravity");
-                ctraits.usebase   = eqn_ptree.getValue<bool>  ("usebase_state");
-                ctraits.nbase     = ctraits.usebase ? 2 : 0;
-                ctraits.nlsector  = eqn_ptree.getValue<bool>  ("nliq",0);
-                ctraits.nisector  = eqn_ptree.getValue<bool>  ("nice",0);
-                ctraits.nsolve    = GDIM + 2                 // mom + denTot + energy_den
-                                  + (!ctraits.dodry ? 1 : 0) // vapor
-                                  + ( ctraits.dofallout ? ctraits.nlsector 
+                ctraits.docoriolis  = eqn_ptree.getValue<bool>  ("docoriolis");
+                ctraits.dodry       = eqn_ptree.getValue<bool>  ("dodry");
+                ctraits.dofallout   = eqn_ptree.getValue<bool>  ("dofallout");
+                ctraits.dograv      = eqn_ptree.getValue<bool>  ("dogravity");
+                ctraits.usebase     = eqn_ptree.getValue<bool>  ("usebase_state");
+                ctraits.divopcolloc = eqn_ptree.getValue<bool>  ("divopcolloc");
+                ctraits.Stokeshyp   = eqn_ptree.getValue<bool>  ("Stokeshyp");
+                ctraits.bindepdiss  = eqn_ptree.getValue<bool>  ("bindepdiss",false);
+                ctraits.nbase       = ctraits.usebase ? 2 : 0;
+                ctraits.nlsector    = eqn_ptree.getValue<bool>  ("nliq",0);
+                ctraits.nisector    = eqn_ptree.getValue<bool>  ("nice",0);
+                ctraits.nsolve      = GDIM + 2                 // mom + denTot + energy_den
+                                    + (!ctraits.dodry ? 1 : 0) // vapor
+                                    + ( ctraits.dofallout ? ctraits.nlsector 
                                                         + ctraits.nisector : 0); // q_i
-                ctraits.nstate    =  ctraits.nsolve
-                                  + (ctraits.dofallout ? ctraits.nlsector 
+                ctraits.nstate      =  ctraits.nsolve
+                                    + (ctraits.dofallout ? ctraits.nlsector 
                                                        + ctraits.nisector : 0)
-                                  + (ctraits.usebase ? 2 : 0);
-                ctraits.bconserved= eqn_ptree.getValue<bool>  ("bconserved",false);
-                ctraits.bforced   = eqn_ptree.getValue<bool>  ("use_forcing",false);
-                ctraits.Ts_base   = eqn_ptree.getValue<double>("T_surf"); // K
-                ctraits.P0_base   = eqn_ptree.getValue<double>("P0"); // millibar = hPa
-                ctraits.P0_base *= 100.0; // convert from mb to Pa
-                ctraits.variabledt= stp_ptree.getValue<bool>  ("variable_dt",false);
-                ctraits.bvarvterm = stp_ptree.getValue<bool>  ("variable_term_vel",false);
-                ctraits.itorder   = stp_ptree.getValue<int>   ("time_deriv_order",4);
-                ctraits.inorder   = stp_ptree.getValue<int>   ("extrap_order",2);
-                ctraits.courant   = stp_ptree.getValue<double>("courant",0.5);
-                ctraits.ssteptype = stp_ptree.getValue<std::string>
+                                    + (ctraits.usebase ? 2 : 0);
+                ctraits.bconserved  = eqn_ptree.getValue<bool>  ("bconserved",false);
+                ctraits.bforced     = eqn_ptree.getValue<bool>  ("use_forcing",false);
+                ctraits.Ts_base     = eqn_ptree.getValue<double>("T_surf"); // K
+                ctraits.P0_base     = eqn_ptree.getValue<double>("P0"); // millibar = hPa
+                ctraits.P0_base     *= 100.0; // convert from mb to Pa
+                ctraits.variabledt  = stp_ptree.getValue<bool>  ("variable_dt",false);
+                ctraits.bvarvterm   = stp_ptree.getValue<bool>  ("variable_term_vel",false);
+                ctraits.itorder     = stp_ptree.getValue<int>   ("time_deriv_order",4);
+                ctraits.nstage      = stp_ptree.getValue<int>   ("nstage",4);
+                ctraits.bSSP        = stp_ptree.getValue<int>   ("stab_preserving",false);
+                ctraits.inorder     = stp_ptree.getValue<int>   ("extrap_order",2);
+                ctraits.courant     = stp_ptree.getValue<double>("courant",0.5);
+                ctraits.ssteptype   = stp_ptree.getValue<std::string>
                                                              ("stepping_method","GSTEPPER_EXRK");
-                ctraits.nu        = dis_ptree.getValue<double>("nu");
-                ctraits.kappa     = dis_ptree.getValue<double>("kappa");
+                ctraits.nu          = dis_ptree.getValue<double>("nu");
+                ctraits.kappa       = dis_ptree.getValue<double>("kappa");
+                ctraits.zeta        = dis_ptree.getValue<double>("zeta");
+                ctraits.lambda      = dis_ptree.getValue<double>("lambda");
                 for ( auto i=0; i<GDIM; i++ ) default_comps.push_back(i);
-                comps            = eqn_ptree.getArray<int>   ("forcing_comp",default_comps);
+                comps               = eqn_ptree.getArray<int>   ("forcing_comp",default_comps);
                 ctraits.iforced.resize(comps.size());
-                ctraits.iforced   = comps; // traits.iforced may be a different d.structure
+                ctraits.iforced     = comps; // traits.iforced may be a different d.structure
                 if ( ctraits.docoriolis ) {
-                  dstd            = eqn_ptree.getArray<GFTYPE>("omega");
+                  dstd              = eqn_ptree.getArray<GFTYPE>("omega");
                 } 
                 else {
                   dstd.resize(0);
                 }
                 ctraits.omega.resize(dstd.size());
-                ctraits.omega     = dstd; 
+                ctraits.omega       = dstd; 
 
 		// Allocate equation Implementation
 		std::shared_ptr<EqnImpl> eqn_impl(new EqnImpl(grid, ctraits));

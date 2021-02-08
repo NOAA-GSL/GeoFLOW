@@ -14,7 +14,7 @@
 //                should be provided in the order that the bounding vertices
 //                of the element take (see gelement_base.hpp) so that this 
 //                sum can be computed efficiently.
-// Copyright    : Copyright 2018. Colorado State University. All rights reserved
+// Copyright    : Copyright 2018. Colorado State University. All rights reserved.
 // Derived From : none
 //==================================================================================
 #include <cstdlib>
@@ -31,9 +31,24 @@
 // RETURNS: none
 //**********************************************************************************
 template<typename T>
-GShapeFcn_linear<T>::GShapeFcn_linear()
+GShapeFcn_linear<T>::GShapeFcn_linear(GINT dim):
+GShapeFcn_base<T>(dim)
 {
 } // end of constructor method (1)
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : Constructor method (2)
+// DESC   : Default constructor
+// ARGS   : none
+// RETURNS: none
+//**********************************************************************************
+template<typename T>
+GShapeFcn_linear<T>::GShapeFcn_linear(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GINT dim):
+GShapeFcn_base<T>(b, dim)
+{
+} // end of constructor method (2)
 
 
 //**********************************************************************************
@@ -73,15 +88,20 @@ template<typename T>
 void GShapeFcn_linear<T>::Ni(GTVector<GINT> &ishape, 
                              GTVector<GTVector<T>*> &xi, GTVector<T> &N)
 {
-  GSIZET n=0;
 
-#if defined(_G_IS1D)
-  Ni_1d(ishape, xi, N);
-#elif defined(_G_IS2D)
-  Ni_2d(ishape, xi, N);
-#elif defined(_G_IS3D)
-  Ni_3d(ishape, xi, N);
-#endif
+  switch ( this->dim_ ) {
+    case 1: 
+      Ni_1d(ishape, xi, N);
+      break;
+    case 2: 
+      Ni_2d(ishape, xi, N);
+      break;
+    case 3: 
+      Ni_3d(ishape, xi, N);
+      break;
+    default:
+      assert(FALSE);
+ }
 
 } // end of method Ni
 
@@ -352,13 +372,19 @@ void GShapeFcn_linear<T>::dNdXi(GTVector<GINT> &ishape, GINT j,
                                 GTVector<T> &dxdxi)
 {
 
-#if defined(_G_IS1D)
-  dNdXi_1d(ishape, j, xi, dxdxi);
-#elif defined(_G_IS2D)
-  dNdXi_2d(ishape, j, xi, dxdxi);
-#elif defined(_G_IS3D)
-  dNdXi_3d(ishape, j, xi, dxdxi);
-#endif
+  switch ( this->dim_ ) {
+    case 1: 
+      dNdXi_1d(ishape, j, xi, dxdxi);
+      break;
+    case 2: 
+      dNdXi_2d(ishape, j, xi, dxdxi);
+      break;
+    case 3: 
+      dNdXi_3d(ishape, j, xi, dxdxi);
+      break;
+    default:
+      assert(FALSE);
+  }
 
 } // end of method dNdXi
 

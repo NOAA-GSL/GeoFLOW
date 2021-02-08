@@ -102,50 +102,23 @@ inline   GSIZET             multiplicity   (T val, GSZBuffer &irow, GSZBuffer &i
          void              updatedev(); 
 
          inline T  &operator()(const GSIZET i, const GSIZET j) {
-           #if defined(_G_BOUNDS_CHK)
-           const char serr[] = "GTMatrix<T>::&(): ";
-           if ( i >= n1_ || j >= n2_ || j < 0  ) {
-             std::cout << serr << "access error: i=" << i << "; j=" << j << std::endl;
-             while(1);
-             exit(1);
-           }
-           #endif
-      //   return data_[j+i*n2_]; 
+           ASSERT_MSG(!( i >= n1_ || j >= n2_ || j < 0  ), "i = " << i << " j = " << j);
            return data_[i+j*n1_]; 
          }; 
 
          inline T &operator()(const GSIZET i) {
-           #if defined(_G_BOUNDS_CHK)
-           const char serr[] = "GTMatrix<T>::&(): ";
-           if ( i >= n1_*n2_ ) {
-             std::cout << serr << "access error: i=" << i << std::endl;
-             while(1);
-             exit(1);
-           }
-           #endif
+           ASSERT_MSG(!(i >= n1_*n2_), "i = " << i); 
            return data_[i];
          }; 
 
          inline T operator()(const GSIZET i, const GSIZET j) const {
-           #if defined(_G_BOUNDS_CHK)
-           const char serr[] = "GTMatrix<T>::() const: ";
-           if ( i >= n1_ || j >= n2_ || j < 0  ) {
-             std::cout << serr << "access error: i=" << i << "; j=" << j << std::endl;
-             exit(1);
-           }
-           #endif
+           ASSERT_MSG(!( i >= n1_ || j >= n2_ || j < 0  ), "i = " << i << " j = " << j);
            T ret = data_[i+j*n1_];
            return ret;
          }; 
 
          inline T operator()(const GSIZET i) const {
-           #if defined(_G_BOUNDS_CHK)
-           const char serr[] = "GTMatrix<T>::() const: ";
-           if ( i >= n1_*n2_ ) {
-             std::cout << serr << "access error: i=" << i << std::endl;
-             exit(1);
-           }
-           #endif
+           ASSERT_MSG(!(i >= n1_*n2_), "i = " << i); 
            T ret = data_[i];
            return ret;
          }; 

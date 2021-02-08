@@ -7,12 +7,9 @@
 //==================================================================================
 
 
-#include "gexec.h"
 #include "gtypes.h"
 #include "gcomm.hpp"
 #include "gmass.hpp"
-#include "gmtk.hpp"
-#include "gmtk.hpp"
 #include "gcblas.hpp"
 #include "tbox/pio.hpp"
 #include "tbox/property_tree.hpp"

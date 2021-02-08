@@ -47,6 +47,7 @@ bb_          (NULLPTR)
 template<typename TK, typename TF> 
 GMorton_KeyGen<TK,TF>::~GMorton_KeyGen()
 {
+  GEOFLOW_TRACE();
   if ( bb_ != NULLPTR ) delete bb_;
 }
 
@@ -60,6 +61,7 @@ GMorton_KeyGen<TK,TF>::~GMorton_KeyGen()
 template<typename TK, typename TF>
 void GMorton_KeyGen<TK,TF>::setType(GMORTON_TYPE intype)
 {
+  GEOFLOW_TRACE();
   itype_ = intype;
 } // end of method setType
 
@@ -75,6 +77,7 @@ void GMorton_KeyGen<TK,TF>::setType(GMORTON_TYPE intype)
 template<typename TK, typename TF>
 void GMorton_KeyGen<TK,TF>::setOrigin(GTPoint<TF> &inP0)
 {
+  GEOFLOW_TRACE();
   P0_ = inP0;
 } // end of method setOrigin
 
@@ -119,6 +122,7 @@ void GMorton_KeyGen<TK,TF>::setBox(GTPoint<TF> &inP0, GTPoint<TF> &inP1)
 template<typename TK, typename TF>
 void GMorton_KeyGen<TK,TF>::setDoLog(GBOOL bDoLog)
 {
+  GEOFLOW_TRACE();
   btakelog_ = bDoLog;
 } // end of method setDoLog
 

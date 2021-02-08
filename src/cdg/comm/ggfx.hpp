@@ -101,6 +101,9 @@ public:
 	GC_COMM  getComm() const;
 
 	template<typename CountArray>
+	void get_mult(CountArray& imult) const;
+
+	template<typename CountArray>
 	void get_imult(CountArray& imult) const;
 
 	void display() const;
@@ -448,15 +451,16 @@ GGFX<T>::getComm() const {
 	return boost::mpi::communicator();
 }
 
+
 template<typename T>
 template<typename CountArray>
 void
-GGFX<T>::get_imult(CountArray& imult) const {
+GGFX<T>::get_mult(CountArray& mult) const {
 	GEOFLOW_TRACE();
 
 	// Zero whole array
-	for(size_type i = 0; i < imult.size(); ++i){
-		imult[i] = 0;
+	for(size_type i = 0; i < mult.size(); ++i){
+		mult[i] = 0;
 	}
 
 	// Accumulate the counts in each index
@@ -466,9 +470,25 @@ GGFX<T>::get_imult(CountArray& imult) const {
 	for (auto& [rank, matrix_map] : recv_map_) {
 		for(auto& [remote_id, local_id_set] : matrix_map) {
 			for(auto& id : local_id_set) {
-				++(imult[id]);
+				ASSERT(id < mult.size());
+				++(mult[id]);
 			}
 		}
+	}
+}
+
+template<typename T>
+template<typename CountArray>
+void
+GGFX<T>::get_imult(CountArray& imult) const {
+	GEOFLOW_TRACE();
+
+	// Get multiplicity
+	this->get_mult(imult);
+
+	// Invert whole array
+	for(size_type i = 0; i < imult.size(); ++i){
+		imult[i] = static_cast<T>(1.0) / imult[i];
 	}
 }
 

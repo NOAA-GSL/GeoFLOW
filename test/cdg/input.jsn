@@ -1,9 +1,9 @@
 { 
   "exp_order"         : [4, 4, 8],
   "exp_order_type"    : "constant",
-  "grid_type"         : "grid_box",
+  "grid_type"         : "grid_icos",
   "pde_name"          : "pde_mconv",
-  "initstate_block"   : "initstate_boxdrybubble",
+  "initstate_block"   : "initstate_icosabcconv",
   "initforce_block"   : "",
   "use_forcing"       : false,
   "initstate_type"    : "direct",
@@ -14,14 +14,19 @@
   "observer_list"     : ["gio_observer", "burgers_diag"],
   "IO_implementation" : "gio",
   "terrain_type"      : "none",
-  "initstate_boxdrybubble": {
-    "T_pert"     : -15.0,
-    "x_center"   : [0, 3000.0, 1000.0],
-    "x_width"    : [4000.0, 2000.0, 2000.0]
+  "initstate_icosabcconv": {
+    "T0"     : 300.0,
+    "P0"     : 1.0,
+    "A"      : 1.0,
+    "B"      : 0.9,
+    "C"      : 1.1,
+    "poly"   : 0.0,
+    "kdn"    : 1,
+    "kup"    : 50
   },
   "grid_icos": {
     "grid_name"   : "grid_icos",
-    "ilevel"      : 1,
+    "ilevel"      : 0,
     "refine_type" : "GICOS_BISECTION",
     "radius"      : 1.0,
     "maxit"       : 128,
@@ -29,11 +34,23 @@
     "norm_type"   : "GCG_NORM_INF"
   },
   "grid_sphere" : {
-    "grid_name" : "grid_sphere",
-    "radiusi"   : 1.0,
-    "radiuso"   : 2.0,
-    "bdy_inner": "GBDY_DIRICHLET",
-    "bdy_outer": "GBDY_SPONGE"
+    "grid_name"       : "grid_sphere",
+    "ilevel"          : 1,
+    "refine_type"     : "GICOS_BISECTION",
+    "radiusi"         : 6378,
+    "radiuso"         : 6395,
+    "num_radial_elems": 1,
+    "bdy_inner"       : "my_dirichlet",
+    "bdy_outer"       : "my_dirichlet",
+    "maxit"           : 128,
+    "tol"             : 1.0e-8,
+    "norm_type"       : "GCG_NORM_INF"
+  },
+  "my_diriclet": {
+    "bdy_class"       : "uniform",
+    "base_type"       : ["GBDY_DIRICHLET"],
+    "istate"          : [[0, 1, 2, 3]],
+    "value"           : [[0.0, 0.0, 0.0, 0.0]]
   },
   "0-flux": {
     "bdy_class"        : "uniform",
@@ -43,11 +60,11 @@
   "pde_mconv": {
     "docoriolis"      : false,
     "dodry"           : true,
-    "usebase_state"   : true,
+    "usebase_state"   : false,
     "dofallout"       : false,
     "dogravity"       : true,
     "bconserved"      : false,
-    "divopcolloc"     : true,
+    "divopcolloc"     : false,
     "Stokeshyp"       : false,
     "bindepdiss"      : false,
     "nliq"            : 0,
@@ -56,7 +73,7 @@
     "forcing_comp"    : [0, 1, 2],
     "T_surf"          : 300.0,
     "P0"              : 1000.0,
-    "filter_list"     : [],
+    "filter_list"     : ["my_filter"],
     "my_filter" : {
       "filter_type" : "boyd_filter",
       "ifilter"     : 4,
@@ -66,9 +83,9 @@
   },
   "grid_box": {
     "grid_name" : "grid_box",
-    "xyz0"      : [-25600, 0, 0],
-    "delxyz"    : [51200.0, 10000.0, 1.0],
-    "num_elems" : [256, 50, 1],
+    "xyz0"      : [0.0, 0.0, 0.0],
+    "delxyz"    : [1000.0, 1000.0, 1.0],
+    "num_elems" : [50, 50, 1],
     "bdy_x_0"   : "0-flux",
     "bdy_x_1"   : "0-flux",
     "bdy_y_0"   : "0-flux",
@@ -81,18 +98,16 @@
   },
   "stepper_props": {
     "stepping_method"  : "GSTEPPER_EXRK",
-    "time_deriv_order" : 2,
-    "nstage"           : 2,
-    "stab_preserving"  : false,
+    "time_deriv_order" : 4,
     "extrap_order"     : 2,
-    "variable_dt"      : true,
-    "courant"          : 0.1
+    "variable_dt"      : false,
+    "courant"          : 0.5 
   },
   "dissipation_traits": {
-    "nu"      : 100.0,
-    "kappa"   : 100.0,
-    "zeta"    : 100.0,
-    "lambda"  : 100.0,
+    "nu"      : 200.0,
+    "kappa"   : 200.0, 
+    "zeta"    : 200.0,
+    "lambda"  : 200.0,
     "nu_type" : "constant"
   },
   "gio": {
@@ -132,14 +147,14 @@
     "idir"               : "outs",
     "odir"               : "outs",
     "cadence_type"       : "time",
-    "cycle_interval"     : 100,
-    "time_interval"      : 10.0,
+    "cycle_interval"     : 1,
+    "time_interval"      : 0.5,
     "state_names"        : ["s1", "s2", "e", "d"],
     "grid_names"         : ["xgrid", "ygrid", "zgrid"],
     "agg_state_name"     : "u",
     "agg_grid_name "     : "grid",
     "derived_quantities"       : [],
-    "state_derived_quantities" : ["temp","press","vel","ptemp","dptemp","den"]
+    "state_derived_quantities" : ["temp","press","vel","dptemp","ptemp","den"]
   },
   "burgers_diag": {
     "observer_name"      : "burgers_diag",
@@ -149,10 +164,10 @@
     "treat_as_1d"        : false
   },
   "time_integration": {
-    "integ_type" : "time",
-    "time_end"   : 900.0,
-    "cycle_end"  : 1000,
-    "dt"         : 1.0e-2
+    "integ_type" : "cycle",
+    "time_end"   : 2001.0,
+    "cycle_end"  : 1,
+    "dt"         : 0.000000175
   }
 
 }

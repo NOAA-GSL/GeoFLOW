@@ -25,6 +25,7 @@ istage_                      (0),
 nevolve_                     (0),
 nhydro_                      (0),
 nmoist_                      (0),
+icycle_                      (0),
 gmass_                 (NULLPTR),
 gimass_                (NULLPTR),
 /*
@@ -169,7 +170,7 @@ void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
    GComm::Allreduce(&dtmin, &dt1, 1, T2GCDatatype<Ftype>() , GC_OP_MIN, comm_);
 
    // Limit any timestep-to-timestep increae to 10%:
-   dt = MIN(dt1*traits_.courant, 1.1*dt);
+   dt = MIN(dt1*traits_.courant, 1.01*dt);
 
 } // end of method dt_impl
 
@@ -235,11 +236,6 @@ void GMConv<TypePack>::dudt_impl(const Time &t, const State &u, const State &uf,
 
   // Compute velocity for timestep:
   compute_v(s_, *irhoT, v_); // stored in v_
-#if 0
-for ( auto j=0; j<v_.size(); j++ ) {
-cout << "dudt_impl: istage=" << istage_ << " v[" << j << "]max= " << v_[j]->amax()  << endl;
-}
-#endif
   
   // Compute all operators as though they are on the LHS, then
   // change the sign and add Mass at the end....
@@ -249,12 +245,8 @@ cout << "dudt_impl: istage=" << istage_ << " v[" << j << "]max= " << v_[j]->amax
   // Total density RHS:
   // *************************************************************
 
-#if defined(USE_DIVOP)
   gdiv_->apply(*rhoT, v_, urhstmp_, *dudt[DENSITY]); 
-// *dudt[DENSITY] *= -1.0;                                   // bring to LHS
-#else
-  compute_div(*rhoT, v_, urhstmp_, *dudt[DENSITY]); 
-#endif
+
   if ( traits_.dofallout ) {
     compute_falloutsrc(*rhoT, qi_, tvi_, -1, urhstmp_, *Ltot);
     GMTK::saxpy<Ftype>(*dudt[DENSITY], 1.0, *Ltot, 1.0);   // += Ltot
@@ -271,16 +263,10 @@ cout << "dudt_impl: istage=" << istage_ << " v[" << j << "]max= " << v_[j]->amax
   for ( auto j=0; j<nmoist_; j++ ) {
     gadvect_->apply(*qi_[j], v_, urhstmp_, *dudt[VAPOR+j]); // apply advection
     compute_vpref(*tvi_[j], W_);
-    *tmp1 = (*qi_[j]) * (*rhoT);                // q_i rhoT
-#if defined(USE_DIVOP)
+   *tmp1 = (*qi_[j]) * (*rhoT);                 // q_i rhoT
     gdiv_->apply(*tmp1, W_, urhstmp_, *tmp2); 
-    *tmp2 *= *irhoT;                            // Div(q_i rhoT W)/rhoT
-    *dudt[VAPOR+j] = *tmp2;                    // += Div(q_i rhoT W)/rhoT
-#else
-    compute_div(*tmp1, W_, urhstmp_, *tmp2);    // Div(q_i rhoT W)
-    *tmp2 *= *irhoT;                            // Div(q_i rhoT W)/rhoT
-    *dudt[VAPOR+j] = *tmp2;                     // += Div(q_i rhoT W)/rhoT
-#endif
+   *tmp2 *= *irhoT;                             // Div(q_i rhoT W)/rhoT
+   *dudt[VAPOR+j] = *tmp2;                      // += Div(q_i rhoT W)/rhoT
     *tmp1  = (*Ltot) * (*irhoT); *tmp1 *= (*qi_[j]);// q_i/rhoT Ltot
     *dudt[VAPOR+j] -= *tmp1;                    // += -q_i/rhoT Ltot
     if ( uf[VAPOR+j] != NULLPTR ) {             // add in sdot(s_i)/rhoT
@@ -306,24 +292,13 @@ cout << "dudt_impl: istage=" << istage_ << " v[" << j << "]max= " << v_[j]->amax
     geoflow::compute_p(*T, *rhoT, *u[VAPOR], RV, *tmp1); // partial pressure for vapor
    *p += *tmp1;
   }
-#if 0
-cout << "dudt_impl: istage=" << istage_ << " dmax = " << rhoT->amax()  << endl;
-cout << "dudt_impl: istage=" << istage_ << " pmax = " << p->amax()  << endl;
-cout << "dudt_impl: istage=" << istage_ << " emax = " << e->amax()  << endl;
-cout << "dudt_impl: istage=" << istage_ << " Tmax = " << T->amax()  << endl;
-#endif
-
 
   GMTK::saxpy<Ftype>(*tmp1, *e, 1.0, *p, 1.0);     // h = p+e, enthalpy density
-#if defined(USE_DIVOP)
-  gdiv_->apply(*tmp1, v_, urhstmp_, *dudt[ENERGY]); 
-// *dudt[ENERGY] *= -1.0;                            // bring to LHS
-#else
-  compute_div(*tmp1, v_, urhstmp_, *dudt[ENERGY]); // Div (h v);
-#endif
 
-  gstressen_->apply(v_, urhstmp_, *tmp1);          // mu u_i s^{ij},j
- *dudt[ENERGY] -= *tmp1;                           // -= mu u^i s^{ij},j
+  gdiv_->apply(*tmp1, v_, urhstmp_, *dudt[ENERGY]); 
+
+  gstressen_->apply(*rhoT, v_, urhstmp_, *tmp1);          // [mu u_i s^{ij}],j
+ *dudt[ENERGY] -= *tmp1;                           // -= [mu u^i s^{ij}],j
 
   if ( traits_.dofallout || !traits_.dodry ) {
     GMTK::paxy(*tmp1, *rhoT, CVL, *T);             // tmp1 = C_liq rhoT T
@@ -364,31 +339,26 @@ cout << "dudt_impl: istage=" << istage_ << " Tmax = " << T->amax()  << endl;
   }
   Mass = grid_->massop().data();
   for ( auto j=0; j<v_.size(); j++ ) { // for each component
-#if defined(USE_DIVOP)
+
     gdiv_->apply(*s_[j], v_, urhstmp_, *dudt[j]); 
-//   *dudt[j] *= -1.0;                                   // bring to LHS
-#else
-    compute_div(*s_[j], v_, urhstmp_, *dudt[j]); 
-#endif
+
     if ( traits_.dofallout || !traits_.dodry ) {
       compute_falloutsrc(*u[j], qliq_, tvi_,-1.0, urhstmp_, *Ltot);
                                                       // hydrometeor fallout src
      *dudt[j] += *Ltot;                               // += L_tot
     }
 
-#if 1
+#if 0
     grid_->wderiv(*p, j+1, TRUE, *tmp2, *tmp1);       // Grad p'
-   *dudt[j] -= *tmp1;                                 // += Grad p'
+   *dudt[j] -= *tmp1;                                 // -= Grad p'
 #else
     grid_->deriv(*p, j+1, *tmp2, *tmp1);              // Grad p'
    *tmp1 *= *Mass; 
    *dudt[j] += *tmp1;                                 // += Grad p'
 #endif
 
-//  ghelm_->opVec_prod(*v_[j], urhstmp_, *tmp1);      // rhoT nu Laplacian v_j
-// *tmp1 *= *rhoT;
-    gstressen_->apply(v_, j+1, urhstmp_, *tmp1);      // mu s^{ij},j
-   *dudt[j] -= *tmp1;                                 // -= mu s^{ij},j
+    gstressen_->apply(*rhoT, v_, j+1, urhstmp_, *tmp1);      // [mu s^{ij}],j
+   *dudt[j] -= *tmp1;                                 // -= [mu s^{ij}],j
 
     if ( traits_.docoriolis ) {
       GMTK::cross_prod_s(traits_.omega, s_, j+1, *tmp1);
@@ -448,10 +418,13 @@ void GMConv<TypePack>::step_impl(const Time &t, State &uin, State &uf, State &ub
     steptop_callback_(t, uin, dt);
   }
 
+  // Set bdy conditions:
+  apply_bc_impl(t, uin, ub);
 
   // Set evolved state vars from input state.
   // These are not deep copies:
   for ( auto j=0; j<traits_.nsolve; j++ ) uevolve_ [j] = uin[j];
+  
 
   switch ( traits_.isteptype ) {
     case GSTEPPER_EXRK:
@@ -475,13 +448,16 @@ void GMConv<TypePack>::step_impl(const Time &t, State &uin, State &uf, State &ub
     }
   }
 
+  apply_bc_impl(t, uin, ub);
 
   // Check solution for NaN and Inf:
   bret = TRUE;
-  for ( auto j=0; j<uevolve_.size(); j++ ) {
-     bret = bret && uevolve_ [j]->isfinite();
+  for ( auto j=0; j<uevolve_.size() && bret; j++ ) {
+//  bret = bret && uevolve_ [j]->isfinite();
   }
   assert(bret && "Solution not finite");
+
+  icycle_++;
 
 } // end of method step_impl (1)
 
@@ -693,11 +669,9 @@ void GMConv<TypePack>::init_impl(State &u, State &tmp)
   GExRKStepper<GFTYPE>::Traits rktraits;
   switch ( traits_.isteptype ) {
     case GSTEPPER_EXRK:
-#if 0
-      rktraits.bssp   = TRUE;
-      rktraits.norder = 3;
-      rktraits.nstage = 4;
-#endif
+      rktraits.bSSP   = traits_.bSSP;
+      rktraits.norder = traits_.itorder;
+      rktraits.nstage = traits_.nstage;
       gexrk_ = new GExRKStepper<Ftype>(rktraits, *grid_);
       gexrk_->setRHSfunction(rhs);
       gexrk_->set_apply_bdy_callback(applybc);
@@ -753,11 +727,15 @@ void GMConv<TypePack>::init_impl(State &u, State &tmp)
   // Instantiate spatial discretization operators:
   gmass_      = &grid_->massop();
 //ghelm_      = new GHelmholtz(*grid_);
-  gstressen_  = new GStressEnOp<TypePack>(*grid_);
-
-//ghelm_->set_Lap_scalar(nu_);
-  gstressen_->set_mu(nu_);
-  gstressen_->set_kappa(kappa_);
+  
+  typename GStressEnOp<TypePack>::Traits trstress;
+  trstress.Stokes_hyp = traits_.Stokeshyp;
+  trstress.indep_diss = traits_.bindepdiss;
+  trstress.mu    .resize(nu_   .size());  trstress.mu    = nu_;
+  trstress.zeta  .resize(nu_   .size());  trstress.zeta  = traits_.zeta; 
+  trstress.kappa .resize(kappa_.size());  trstress.kappa = kappa_;
+  trstress.lambda.resize(kappa_.size());  trstress.lambda= traits_.lambda;
+  gstressen_  = new GStressEnOp<TypePack>(trstress, *grid_);
 
   if ( traits_.isteptype ==  GSTEPPER_EXRK ) {
     gimass_ = &grid_->imassop();
@@ -770,26 +748,25 @@ void GMConv<TypePack>::init_impl(State &u, State &tmp)
   }
 
   typename GDivOp<TypePack>::Traits trgdiv;
-  trgdiv.docollocation = TRUE;
+  trgdiv.docollocation = traits_.divopcolloc;
   if ( traits_.bconserved ) {
     assert(FALSE && "Conservation not yet supported");
-    gpdv_  = new GpdV<TypePack>(*grid_);
-    gdiv_  = new GDivOp<TypePack>(*grid_,trgdiv);
-//  gflux_ = new GFlux(*grid_);
+//  gpdv_  = new GpdV<TypePack>(*grid_);
+    gdiv_  = new GDivOp<TypePack>(trgdiv, *grid_);
     assert( (gmass_     != NULLPTR
 //        && ghelm_     != NULLPTR
           && gstressen_ != NULLPTR
-          && gpdv_      != NULLPTR
+//        && gpdv_      != NULLPTR
           && gdiv_      != NULLPTR ) && "1 or more operators undefined");
   }
   else {
     gadvect_ = new GAdvect<TypePack>(*grid_);
-    gpdv_    = new GpdV<TypePack>(*grid_);
-    gdiv_    = new GDivOp<TypePack>(*grid_,trgdiv);
+//  gpdv_    = new GpdV<TypePack>(*grid_);
+    gdiv_    = new GDivOp<TypePack>(trgdiv, *grid_);
     assert( (gmass_     != NULLPTR
 //        && ghelm_     != NULLPTR
           && gstressen_ != NULLPTR
-          && gpdv_      != NULLPTR
+//        && gpdv_      != NULLPTR
           && gdiv_      != NULLPTR
           && gadvect_   != NULLPTR) && "1 or more operators undefined");
   }
@@ -910,7 +887,6 @@ void GMConv<TypePack>::apply_bc_impl(const Time &t, State &u, State &ub)
       (*updatelist)[k][j]->update(*grid_, this->stateinfo(), ttime, utmp_, u, ub);
     }
   }
-
 } // end of method apply_bc_impl
 
 
@@ -991,39 +967,6 @@ void GMConv<TypePack>::compute_qd(const State &u, StateComp &qd)
    }
 
 } // end of method compute_qd
-
-
-//**********************************************************************************
-//**********************************************************************************
-// METHOD : compute_div
-// DESC   : Compute flux divergence  of quantity q:
-//             Div ( q v)
-//          with the intent of handling this conservatively or not.  
-// ARGS   : q    : quantiy whose flux we compute divergence of
-//          v    : vector of velocity components
-//          utmp : tmp vectors; GDIM+1 required; only first GDIM+1 used
-//          div  : divergence result
-// RETURNS: none.
-//**********************************************************************************
-template<typename TypePack>
-void GMConv<TypePack>::compute_div(StateComp &q, State &v, State &utmp, StateComp &div)
-{
-  GString    serr = "GMConv<TypePack>::compute_div: ";
-  State      tmp(GDIM);
-
-  assert(utmp.size() >= GDIM+1);
-
-  assert( !traits_.bconserved ); // conserved form not available yet
-
-  for ( auto j=0; j<GDIM; j++ ) tmp[j] = utmp[j];
-
-
-  // Div (q v) = q Div v + v.Grad q 
-  gadvect_->apply(q, v, tmp, div); 
-  gpdv_   ->apply(q, v, tmp, *utmp[GDIM]); 
-  div += *utmp[GDIM];
-
-} // end of method compute_div
 
 
 //**********************************************************************************
@@ -1250,12 +1193,7 @@ void GMConv<TypePack>::compute_falloutsrc(StateComp &g, State &qi, State &tvi, G
      compute_vpref(*tvi[j], W_);
 
      // Compute i_th contribution to source term:
-#if defined(USE_DIVOP)
      gdiv_->apply(*qg, W_, utmp, *div); 
-//   *div *= -1.0; // required for discretization 
-#else
-     compute_div(*qg, W_, utmp, *div);
-#endif
      r += *div;
    }
 
@@ -1425,20 +1363,18 @@ void GMConv<TypePack>::assign_helpers(const State &u, const State &uf)
 template<typename TypePack>
 GINT GMConv<TypePack>::szrhstmp()
 {
-   GINT       sum = 0;
-// GGridIcos *icos = dynamic_cast<GGridIcos*>(grid_);
-   GGridBox  *box  = dynamic_cast <GGridBox*>(grid_);
+  GINT       sum = 0;
+  GGridBox  *box = dynamic_cast <GGridBox*>(grid_);
    
-   // Get tmp size for operators:
-   if ( box ) {
-     sum += box->gtype() == GE_DEFORMED ? 2*GDIM : GDIM;
-   }
-   else {
-     sum += 2*GDIM;
-   }
+  // Get tmp size for operators:
+  if ( box ) {
+    sum += box->gtype() == GE_DEFORMED ? 2*GDIM : GDIM;
+  }
+  else {
+    sum += 2*GDIM;
+  }
   sum += GDIM + 3; // size for compute_* methods
   sum += 6;        // size for misc tmp space in dudt_impl
-
 
   return sum;
 

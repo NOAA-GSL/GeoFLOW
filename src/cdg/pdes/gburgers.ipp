@@ -30,10 +30,12 @@ bpureadv_      (traits.bpureadv),
 bconserved_  (traits.bconserved),
 bforced_        (traits.bforced),
 bsteptop_                (FALSE),
+bSSP_              (traits.bSSP),
 bvariabledt_ (traits.variabledt),
 isteptype_       (GSTEPPER_EXRK),
 nsteps_                      (0),
 itorder_        (traits.itorder),
+nstage_          (traits.nstage),
 inorder_        (traits.inorder),
 courant_        (traits.courant),
 gmass_                 (NULLPTR),
@@ -481,7 +483,7 @@ void GBurgers<TypePack>::init_impl(State &u, State &tmp)
   GExRKStepper<GFTYPE>::Traits rktraits;
   switch ( isteptype_ ) {
     case GSTEPPER_EXRK:
-      rktraits.bssp   = FALSE;
+      rktraits.bSSP   = bSSP_;
       rktraits.norder = itorder_;
       rktraits.nstage = itorder_;
       gexrk_ = new GExRKStepper<GFTYPE>(rktraits, *grid_);

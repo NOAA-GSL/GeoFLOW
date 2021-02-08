@@ -30,7 +30,7 @@ void gemm(GBlasHandle h,
 {
 	GEOFLOW_TRACE();
 
-#if defined(USE_CBLAS)
+#if defined(GEOFLOW_USE_CBLAS)
 	  if constexpr ( std::is_same<T,float>::value ) {
 		GEOFLOW_TRACE_START("cblas_sgemm(...)");
 	    cblas_sgemm( (CBLAS_ORDER)Order, (CBLAS_TRANSPOSE)TransA, (CBLAS_TRANSPOSE)TransB,
@@ -50,7 +50,7 @@ void gemm(GBlasHandle h,
         GEOFLOW_TRACE_STOP();
 	  }
 
-#elif defined(USE_CUBLAS)
+#elif defined(GEOFLOW_USE_CUBLAS)
 
   static const GBlasOp cuBlasOps[] = { CUBLAS_OP_N, CUBLAS_OP_T, CUBLAS_OP_C };
 
@@ -105,7 +105,7 @@ void batched_gemm(cuMatBlockDat &cudat,
   GINT   nstreams=cudat.pStream.size();
   GSIZET iastart, iastride, ibstride, szblk;
  
-#if defined(USE_CBLAS)
+#if defined(GEOFLOW_USE_CBLAS)
 
   szblk = M * K;
 
@@ -119,7 +119,7 @@ void batched_gemm(cuMatBlockDat &cudat,
 
   }
 
-#elif defined(USE_CUBLAS)
+#elif defined(GEOFLOW_USE_CUBLAS)
   GINT        bcount;
   GBlasStatus stat;
   static const GBlasOp cuBlasOps[] = { CUBLAS_OP_N, CUBLAS_OP_T, CUBLAS_OP_C };

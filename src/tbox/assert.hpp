@@ -113,7 +113,7 @@
 	#include "tbox/pio.hpp"   // pio::
 	#define ASSERT(EXP)                                                      \
 		do {                                                                 \
-			using namespace geoflow::tbox;                                 \
+			using namespace geoflow::tbox;                                   \
 			if (!(EXP)) {                                                    \
 				pio::perr << std::endl;                                      \
 				pio::perr << "***** Failed assertion *****" << std::endl;    \
@@ -128,7 +128,7 @@
 
 	#define ASSERT_MSG(EXP,MSG)                                              \
 		do {                                                                 \
-			using namespace geoflow::tbox;                                 \
+			using namespace geoflow::tbox;                                   \
 			if (!(EXP)) {                                                    \
 				pio::perr << std::endl;                                      \
 				pio::perr << "***** Failed assertion *****" << std::endl;    \
@@ -146,11 +146,10 @@
 	#define VERIFY_MSG(EXP,MSG) ASSERT_MSG(EXP,MSG)
 #else
 	#define ASSERT(EXP)
+	#define ASSERT_MSG(EXP,MSG)
 	#define VERIFY(EXP)         do{(void)(EXP);}while(0)
 	#define VERIFY_MSG(EXP,MSG) do{(void)(EXP);}while(0)
 #endif
-
-
 
 
 #endif /* GEOFLOW_DEBUG_ASSERT_H_ */

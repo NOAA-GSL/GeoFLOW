@@ -89,6 +89,9 @@ GBOOL GInitStateFactory<EquationType>::set_by_direct(const PropertyTree& ptree, 
   else if ( "initstate_boxdrybubble"       == sinit ) {
     bret = ginitstate::impl_boxdrybubble     (ptree, sinit, grid, stinfo, time, utmp, ub, u);
   }
+  else if ( "initstate_icosabcconv"        == sinit ) {
+    bret = ginitstate::impl_icosabcconv      (ptree, sinit, grid, stinfo, time, utmp, ub, u);
+  }
   else if ( "initstate_boxsod"             == sinit ) {
     bret = ginitstate::impl_boxsod           (ptree, sinit, grid, stinfo, time, utmp, ub, u);
   }

@@ -33,6 +33,7 @@ n2_                   (0),
 icsz_                 (_G_MAT_CACHE_SIZE),
 singzero_             (1e-12)
 {
+  GEOFLOW_TRACE();
   data_.resize(1);
 } // end of constructor 1 
 
@@ -53,7 +54,7 @@ n2_                   (size2),
 icsz_                 (_G_MAT_CACHE_SIZE),
 singzero_             (1e-12)
 {
-
+  GEOFLOW_TRACE();
   data_.resize(n1_*n2_);
 
   zero();
@@ -75,7 +76,7 @@ n2_                   (size1),
 icsz_                 (_G_MAT_CACHE_SIZE),
 singzero_             (1e-12)
 {
-
+  GEOFLOW_TRACE();
   data_.resize(n1_*n2_);
 
   zero();
@@ -99,7 +100,7 @@ n2_                   (m2),
 icsz_                 (_G_MAT_CACHE_SIZE),
 singzero_             (1e-12)
 {
-
+  GEOFLOW_TRACE();
   // build matrix data_ structure:
   data_.resize(n1_*n2_);
   for ( auto j=0; j< n1_*n2_; j++ ) data_[j] = array[j];
@@ -126,7 +127,7 @@ n2_                   (0),
 icsz_                 (_G_MAT_CACHE_SIZE),
 singzero_             (1e-12)
 {
-
+  GEOFLOW_TRACE();
   // Build matrix data structure:
   if ( ind == NULL ) {
     std::cout << "GTMatrix<T>::GTMatrix (4): NULL reference index set" << std::endl;
@@ -155,7 +156,7 @@ singzero_             (1e-12)
 template<class T> 
 GTMatrix<T>::GTMatrix(const GTMatrix<T> &m)
 {
-
+  GEOFLOW_TRACE();
   // copy member data:
   n1_       = m.n1_;
   n2_       = m.n2_;
@@ -180,6 +181,7 @@ GTMatrix<T>::GTMatrix(const GTMatrix<T> &m)
 template<class T> 
 GTMatrix<T>::~GTMatrix<T>()
 {
+    GEOFLOW_TRACE();
 }
 
 //**********************************************************************************
@@ -192,6 +194,7 @@ GTMatrix<T>::~GTMatrix<T>()
 template<class T> 
 GBOOL GTMatrix<T>::operator==(const GTMatrix<T> &m)
 {
+    GEOFLOW_TRACE();
   if ( m.n1_ != n1_ || m.n2_ != n2_ ) return FALSE;
 
   return (this->data_ == m.data());
@@ -208,6 +211,7 @@ GBOOL GTMatrix<T>::operator==(const GTMatrix<T> &m)
 template<class T> 
 GTMatrix<T> &GTMatrix<T>::operator=(const GTMatrix<T> &m)
 {
+    GEOFLOW_TRACE();
   if ( &m != this ) {
     if ( m.n1_ != n1_ || m.n2_ != n2_ ) {
       std::cout << "GTMatrix<T>::=: incompatible matrices" << std::endl;
@@ -236,6 +240,7 @@ GTMatrix<T> &GTMatrix<T>::operator=(const GTMatrix<T> &m)
 template<class T> 
 GSIZET GTMatrix<T>::size(GINT idir) const
 {
+    GEOFLOW_TRACE();
   if      ( idir == 1 ) return n1_;
   else if ( idir == 2 ) return n2_;
   else                  {
@@ -256,6 +261,7 @@ GSIZET GTMatrix<T>::size(GINT idir) const
 template<class T> 
 void  GTMatrix<T>::operator=(T m)
 {
+  GEOFLOW_TRACE();
   GSIZET   i;
 
   for ( i=0; i<n1_*n2_; i++ ) { 
@@ -274,6 +280,7 @@ void  GTMatrix<T>::operator=(T m)
 template<class T> 
 void  GTMatrix<T>::operator=(const GTVector<T> &v)
 {
+  GEOFLOW_TRACE();
   assert(n1_ == n2_ && "Matrix is not square");
 
   GSIZET   i;
@@ -292,6 +299,7 @@ void  GTMatrix<T>::operator=(const GTVector<T> &v)
 template<class T>
 void GTMatrix<T>::operator+=(const T a)
 {
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::operator+=(T)");
 
@@ -308,6 +316,7 @@ void GTMatrix<T>::operator+=(const T a)
 template<class T>
 void GTMatrix<T>::operator-=(const T a)
 {
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::operator+=(T)");
 
@@ -327,6 +336,7 @@ void GTMatrix<T>::operator-=(const T a)
 template<class T>
 void GTMatrix<T>::operator*=(const T a)
 {
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::operator*=(T)");
 
@@ -345,16 +355,10 @@ void GTMatrix<T>::operator*=(const T a)
 template<class T>
 void GTMatrix<T>::operator+=(const GTMatrix<T> &a)
 {
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::operator+=(GTMatrix<T> &)");
-
-  #if defined(_G_BOUNDS_CHK)
-  if ( this->n1_ != a.dim(1) || this->n2_ !=a.dim(2) ) {
-    std::cout << "GTMatrix<T>::+: incompatible matrices"<< std::endl;
-    exit(1);
-  }
-  #endif
-
+  ASSERT(!( this->n1_ != a.dim(1) || this->n2_ !=a.dim(2) ));
   data_ += a.data();
 
 }
@@ -369,16 +373,10 @@ void GTMatrix<T>::operator+=(const GTMatrix<T> &a)
 template<class T>
 void GTMatrix<T>::operator-=(const GTMatrix<T> &a)
 {
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::operator-=(GTMatrix<T> &)");
-
-  #if defined(_G_BOUNDS_CHK)
-  if ( this->n1_ != a.dim(1) || this->n2_ !=a.dim(2) ) {
-    std::cout << "GTMatrix<T>::+: incompatible matrices"<< std::endl;
-    exit(1);
-  }
-  #endif
-
+  ASSERT(!( this->n1_ != a.dim(1) || this->n2_ !=a.dim(2) ));
   data_ -= a.data();
 
 }
@@ -394,6 +392,7 @@ void GTMatrix<T>::operator-=(const GTMatrix<T> &a)
 template<class T>
 GTMatrix<T> GTMatrix<T>::operator*(const T a)
 {
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::operator*(T)");
 
@@ -414,6 +413,7 @@ GTMatrix<T> GTMatrix<T>::operator*(const T a)
 template<class T>
 GTVector<T> GTMatrix<T>::operator*(const GTVector<T> &a)
 {
+  GEOFLOW_TRACE();
   return this->matvec_impl_(a, typename std::is_floating_point<T>::type());
 } // end, method operator*
 
@@ -428,6 +428,7 @@ template<class T>
 GTMatrix<T>
 GTMatrix<T>::operator+(const GTMatrix &a)
 {
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::operator+(GTMatrix<T> &)");
 
@@ -448,6 +449,7 @@ template<class T>
 GTMatrix<T>
 GTMatrix<T>::operator-(const GTMatrix &a)
 {
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::operator-(GTMatrix<T> &)");
 
@@ -468,6 +470,7 @@ template<class T>
 GTMatrix<T>
 GTMatrix<T>::operator*(const GTMatrix<T> &a)
 {
+  GEOFLOW_TRACE();
   return this->matmat_impl_(a, typename std::is_floating_point<T>::type());
 } // end, method operator*
 
@@ -482,7 +485,7 @@ GTMatrix<T>::operator*(const GTMatrix<T> &a)
 template<class T> 
 GBOOL GTMatrix<T>::resize(GSIZET new1, GSIZET new2)
 {
-
+  GEOFLOW_TRACE();
   n1_ = new1;
   n2_ = new2;
 
@@ -506,7 +509,7 @@ GBOOL GTMatrix<T>::resize(GSIZET new1, GSIZET new2)
 template<class T> 
 GBOOL GTMatrix<T>::resizem(GSIZET new1, GSIZET new2)
 {
-  
+  GEOFLOW_TRACE();
 
   if ( new1*new2 > n1_*n2_ ) {
     data_.resizem(new1*new2);
@@ -534,6 +537,7 @@ GBOOL GTMatrix<T>::resizem(GSIZET new1, GSIZET new2)
 template<class T> 
 GSIZET GTMatrix<T>::dim(GINT idir) const
 {
+  GEOFLOW_TRACE();
   if      ( idir == 1 ) return n1_;
   else if ( idir == 2 ) return n2_;
   else    {
@@ -553,6 +557,7 @@ GSIZET GTMatrix<T>::dim(GINT idir) const
 template<class T> 
 void GTMatrix<T>::zero()
 { 
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::zero");
 
@@ -572,6 +577,7 @@ void GTMatrix<T>::zero()
 template<class T> 
 GBOOL  GTMatrix<T>::transpose(GTMatrix<T> &trans)
 {
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value || std::is_pointer<T>::value,
     "Invalid template type: GTMatrix<T>::transpose(GTMatrix<T> &)");
 
@@ -603,7 +609,7 @@ GBOOL  GTMatrix<T>::transpose(GTMatrix<T> &trans)
 template<class T> 
 GBOOL  GTMatrix<T>::transpose(T *&trans, GSIZET nx, GSIZET ny)
 {
-
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value || std::is_pointer<T>::value,
     "Invalid template type: GTMatrix<T>::transpose(GTMatrix<T> &,GSIZET,GSIZET)");
 
@@ -635,6 +641,7 @@ GBOOL  GTMatrix<T>::transpose(T *&trans, GSIZET nx, GSIZET ny)
 //**********************************************************************************
 template<class T> void GTMatrix<T>::transpose()
 {
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value || std::is_pointer<T>::value,
     "Invalid template type: GTMatrix<T>::transpose()");
 
@@ -666,6 +673,7 @@ template<class T> void GTMatrix<T>::transpose()
 template<class T>
 GBOOL GTMatrix<T>::inverse(GTMatrix<T> &mret)
 {
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::inverse(GTMatrix<T> &)");
 
@@ -752,6 +760,7 @@ GBOOL GTMatrix<T>::inverse(GTMatrix<T> &mret)
 template<class T>
 GBOOL  GTMatrix<T>::inverse(GTMatrix<T> &mret, GSIZET nx, GSIZET ny)
 {
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::inverse(GTMatrix<T> &, GSIZET, GSIZET)");
 
@@ -836,6 +845,7 @@ GBOOL  GTMatrix<T>::inverse(GTMatrix<T> &mret, GSIZET nx, GSIZET ny)
 template<class T>
 GTMatrix<T> GTMatrix<T>::inverse()
 {
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::inverse()");
 
@@ -861,6 +871,7 @@ GTMatrix<T> GTMatrix<T>::inverse()
 template<class T> 
 GBOOL  GTMatrix<T>::isSymmetric()
 {
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value || std::is_pointer<T>::value,
     "Invalid template type: GTMatrix<T>::inverse()");
 
@@ -892,6 +903,7 @@ GBOOL  GTMatrix<T>::isSymmetric()
 template<class T>
 GBOOL  GTMatrix<T>::improve(T **&a, T **alud, GSIZET n, GLLONG *&indx, T b[], T x[])
 {
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::improve()");
 
@@ -929,6 +941,7 @@ GBOOL  GTMatrix<T>::improve(T **&a, T **alud, GSIZET n, GLLONG *&indx, T b[], T 
 template<class T>
 GBOOL  GTMatrix<T>::wludcmp(T **&a, GSIZET   n, GLLONG   *&indx, T *d)
 {
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::wludcmp()");
 
@@ -1002,6 +1015,7 @@ GBOOL  GTMatrix<T>::wludcmp(T **&a, GSIZET   n, GLLONG   *&indx, T *d)
 template<class T>
 GBOOL  GTMatrix<T>::lubksb(T **&a, GSIZET   nd, GLLONG   *&indx, T b[])
 {
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::lubksb()");
 
@@ -1070,6 +1084,7 @@ GBOOL  GTMatrix<T>::lubksb(T **&a, GSIZET   nd, GLLONG   *&indx, T b[])
 template<class T>
 GBOOL  GTMatrix<T>::ludcmp(T **&a, GSIZET   nd, GLLONG *&indx, T *d)
 {
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::ludcmp()");
 
@@ -1146,6 +1161,7 @@ GBOOL  GTMatrix<T>::ludcmp(T **&a, GSIZET   nd, GLLONG *&indx, T *d)
 template<class T> 
 GSIZET  GTMatrix<T>::isamax(GSIZET n, T *sx, GSIZET incx)
 {
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::isamax()");
 
@@ -1193,6 +1209,7 @@ GSIZET  GTMatrix<T>::isamax(GSIZET n, T *sx, GSIZET incx)
 template<class T>
 GBOOL GTMatrix<T>::svdcmp(T **a, GSIZET m, GSIZET n, T w[], T **v)
 {
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::svdcmp(T **,GSIZET,GSIZET,T *,T **)");
 
@@ -1400,6 +1417,7 @@ GBOOL GTMatrix<T>::svdcmp(T **a, GSIZET m, GSIZET n, T w[], T **v)
 template<class T>
 GBOOL GTMatrix<T>::svdcmp(GTVector<T> &w, GTMatrix<T> &v,  GTVector<T> &rv1)
 {
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::svdcmp(GTVector<T> &,GTMatrix<T> &,GTVector<T>&)");
 
@@ -1608,6 +1626,7 @@ GBOOL GTMatrix<T>::svdcmp(GTVector<T> &w, GTMatrix<T> &v,  GTVector<T> &rv1)
 template<class T>
 GBOOL GTMatrix<T>::svdcmp(GTVector<T> &w, GTMatrix<T> &v,  GTVector<T> &rv1, GSIZET nx, GSIZET ny)
 {
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::svdcmp(GTVector<T> &,GTMatrix<T> &,GTVector<T>&,GSIZET,GSIZET)");
 
@@ -1815,6 +1834,7 @@ GBOOL GTMatrix<T>::svdcmp(GTVector<T> &w, GTMatrix<T> &v,  GTVector<T> &rv1, GSI
 template<class T>
 void GTMatrix<T>::jacobi(GTVector<T> &d, GTMatrix<T> &v, GSIZET &nrot, GTMatrix<T> &a, GTVector<T> &b, GTVector<T> &z)
 {
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::jacobi");
 
@@ -1915,6 +1935,7 @@ void GTMatrix<T>::jacobi(GTVector<T> &d, GTMatrix<T> &v, GSIZET &nrot, GTMatrix<
 template<class T>
 void GTMatrix<T>::setSingularZero(GDOUBLE tol)
 {
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::setSingularZero");
 
@@ -1932,6 +1953,7 @@ void GTMatrix<T>::setSingularZero(GDOUBLE tol)
 //**********************************************************************************
 template<class T> void GTMatrix<T>::set(T a)
 {
+  GEOFLOW_TRACE();
   data_.set(a);
 
 } // end, method set
@@ -1950,7 +1972,7 @@ template<class T> void GTMatrix<T>::set(T a)
 //**********************************************************************************
 template<class T> void GTMatrix<T>::set(T *array, GSIZET n1, GSIZET n2)
 {
-  
+  GEOFLOW_TRACE();
   n1_ = n1;
   n2_ = n2;
   data_.resize(n1_*n2_);
@@ -1970,6 +1992,7 @@ template<class T> void GTMatrix<T>::set(T *array, GSIZET n1, GSIZET n2)
 template<class T>
 T GTMatrix<T>::dpythag(T a, T b)
 {
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::dpythag");
 
@@ -1993,6 +2016,7 @@ T GTMatrix<T>::dpythag(T a, T b)
 template<class T>
 void GTMatrix<T>::svbksub(T **u, T w[], T **v, GSIZET n, GSIZET m, T b[], T x[])
 {
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::svbksub");
 
@@ -2031,6 +2055,7 @@ void GTMatrix<T>::svbksub(T **u, T w[], T **v, GSIZET n, GSIZET m, T b[], T x[])
 template<class T>
 void GTMatrix<T>::choldc(T **a, T p[], GSIZET n)
 {
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::choldc(T **,T *, GSIZET)");
 
@@ -2070,6 +2095,7 @@ void GTMatrix<T>::choldc(T **a, T p[], GSIZET n)
 template<class T>
 void GTMatrix<T>::choldc(GTMatrix<T> &a, GTVector<T> &p)
 {
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::choldc(GTMatrix<T>&,GTVector<T>&)");
 
@@ -2108,6 +2134,7 @@ void GTMatrix<T>::choldc(GTMatrix<T> &a, GTVector<T> &p)
 template<class T>
 void GTMatrix<T>::createIdentity()
 {
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::createIdentity");
 
@@ -2249,6 +2276,7 @@ GSIZET GTMatrix<T>::multiplicity(T val, GSZBuffer &irow, GSZBuffer &icol)
 template<class T>
 GSIZET GTMatrix<T>::distinctrow( GSIZET irow, T *&val, GSIZET *&icol, GSIZET &n, GTVector<T> &tunique, GTVector<GSIZET> &itmp)
 {
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value || std::is_pointer<T>::value,
     "Invalid template type: GTMatrix<T>::distinctrow(GSIZET,T*,GSIZET*,GSIZET&)");
 
@@ -2279,6 +2307,7 @@ GSIZET GTMatrix<T>::distinctrow( GSIZET irow, T *&val, GSIZET *&icol, GSIZET &n,
 template<class T>
 GSIZET GTMatrix<T>::distinctrow( GSIZET irow, GTVector<T> &val, GSZBuffer &icol,                                 GTVector<T> &tunique, GTVector<GSIZET> &itmp)
 {
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value || std::is_pointer<T>::value,
     "Invalid template type: GTMatrix<T>::distinctrow(GSIZET,T*,GTVector<T>&,GSZBuffer&)");
 
@@ -2329,6 +2358,7 @@ GSIZET GTMatrix<T>::distinctrow( GSIZET irow, GTVector<T> &val, GSZBuffer &icol,
 template<class T>
 GSIZET GTMatrix<T>::distinctrow_floor( GSIZET irow, T *&val, GSIZET *&icol, GSIZET &n, T floor, GTVector<T> &tunique, GTVector<GSIZET> &itmp)
 {
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::distinctrow_floor(GSIZET,T*,GSIZET*,GSIZET&)");
 
@@ -2361,6 +2391,7 @@ GSIZET GTMatrix<T>::distinctrow_floor( GSIZET irow, T *&val, GSIZET *&icol, GSIZ
 template<class T>
 GSIZET GTMatrix<T>::distinctrow_floor( GSIZET irow, GTVector<T> &val, GSZBuffer &icol, T floor, GTVector<T> &tunique, GTVector<GSIZET> &itmp)
 {
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::distinctrow_floor(GSIZET,T*,GSIZET*,GSIZET&)");
 
@@ -2405,6 +2436,7 @@ GSIZET GTMatrix<T>::distinctrow_floor( GSIZET irow, GTVector<T> &val, GSZBuffer 
 template<class T>
 GSIZET GTMatrix<T>::distinctcol( GSIZET icol, T *&val, GSIZET *&irow, GSIZET &n, GTVector<T> &tunique, GTVector<GSIZET> &itmp)
 {
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value || std::is_pointer<T>::value,
     "Invalid template type: GTMatrix<T>::distinctcol(GSIZET,T*,GSIZET*,GSIZET&)");
 
@@ -2438,6 +2470,7 @@ template<class T>
 GSIZET GTMatrix<T>::distinctcol( GSIZET icol, GTVector<T> &val, GSZBuffer &irow,
                                  GTVector<T> &tunique, GTVector<GSIZET> &itmp)
 {
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value || std::is_pointer<T>::value,
     "Invalid template type: GTMatrix<T>::distinctcol(GSIZET,T*,GTVector<T>&,GSZBuffer&)");
 
@@ -2490,6 +2523,7 @@ GSIZET GTMatrix<T>::distinctcol( GSIZET icol, GTVector<T> &val, GSZBuffer &irow,
 template<class T>
 GSIZET GTMatrix<T>::distinctcol_floor( GSIZET icol, T *&vals, GSIZET *&irow, GSIZET &n, T floor, GTVector<T> &tunique, GTVector<GSIZET> &itmp)
 {
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::distinctcol_floor(GSIZET,T*,GSIZET*,GSIZET&)");
 
@@ -2524,6 +2558,7 @@ GSIZET GTMatrix<T>::distinctcol_floor( GSIZET icol, T *&vals, GSIZET *&irow, GSI
 template<class T>
 GSIZET GTMatrix<T>::distinctcol_floor( GSIZET icol, GTVector<T> &vals, GSZBuffer &irow, T floor, GTVector<T> &tunique, GTVector<GSIZET> &itmp)
 {
+  GEOFLOW_TRACE();
   static_assert(std::is_arithmetic<T>::value,
     "Invalid template type: GTMatrix<T>::distinctcol_floor(GSIZET,T*,GSIZET*,GSIZET&)");
 
@@ -2563,6 +2598,7 @@ GSIZET GTMatrix<T>::distinctcol_floor( GSIZET icol, GTVector<T> &vals, GSZBuffer
 template<class T>
 void GTMatrix<T>::setCacheBlockingFactor(GINT icsz)
 {
+  GEOFLOW_TRACE();
   icsz_ = MAX(icsz,0);
 
 } // end, method SetCacheBlocking
@@ -2578,6 +2614,7 @@ void GTMatrix<T>::setCacheBlockingFactor(GINT icsz)
 template<class T>
 void GTMatrix<T>::updatehost()
 {
+  GEOFLOW_TRACE();
   data_.updatehost();
 } // end, method updatehost
 
@@ -2592,6 +2629,7 @@ void GTMatrix<T>::updatehost()
 template<class T> 
 void GTMatrix<T>::updatedev()
 {
+  GEOFLOW_TRACE();
   data_.updatedev();
 } //nd of method updatedev
 
@@ -2611,6 +2649,7 @@ void GTMatrix<T>::updatedev()
 template<class T>
 GTVector<T> GTMatrix<T>::matvec_impl_(const GTVector<T> &obj, std::true_type)
 {
+  GEOFLOW_TRACE();
   GTVector<T> vret(this->size(1));
 
   GSIZET n1 = this->size(1);
@@ -2656,6 +2695,7 @@ GTVector<T> GTMatrix<T>::matvec_impl_(const GTVector<T> &obj, std::true_type)
 template<class T>
 GTVector<T> GTMatrix<T>::matvec_impl_(const GTVector<T> &obj, std::false_type)
 {
+  GEOFLOW_TRACE();
   GTVector<T> vret(this->size(1));
 
   for ( auto i=0; i<this->size(1); i++ ) {
@@ -2687,6 +2727,7 @@ template<class T>
 GTMatrix<T>
 GTMatrix<T>::matmat_impl_(const GTMatrix &obj, std::true_type)
 {
+  GEOFLOW_TRACE();
   GTMatrix mret(this->size(1),obj.size(2));
 
 
@@ -2741,6 +2782,7 @@ template<class T>
 GTMatrix<T>
 GTMatrix<T>::matmat_impl_(const GTMatrix &obj, std::false_type)
 {
+  GEOFLOW_TRACE();
   GTMatrix mret(this->size(1),obj.size(2));
 
   for ( auto j=0; j<obj.size(2); j++ ) {

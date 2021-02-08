@@ -13,7 +13,6 @@
    #include <omp.h>
 #endif
 
-#include "gexec.h"
 #include "gtypes.h"
 #include <stdio.h>
 #include <math.h>
@@ -50,16 +49,12 @@
 #include "gupdatebdy_factory.hpp"
 #include "gspecterrain_factory.hpp"
 #include "tbox/command_line.hpp"
+#include "tbox/pio.hpp"
 #include "tbox/property_tree.hpp"
 #include "tbox/mpixx.hpp"
 #include "tbox/global_manager.hpp"
 #include "tbox/input_manager.hpp"
 #include "tbox/tracer.hpp"
-
-
-using namespace geoflow::pdeint;
-using namespace geoflow::tbox;
-using namespace std;
 
 
 template< // Complete typepack

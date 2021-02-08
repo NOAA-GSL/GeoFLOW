@@ -16,6 +16,8 @@
 #include "gtvector.hpp"
 #include "gtmatrix.hpp"
 
+#include "tbox/tracer.hpp"
+
 template<typename T>
 class GDD_base
 {

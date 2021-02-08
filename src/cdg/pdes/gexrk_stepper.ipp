@@ -21,18 +21,20 @@ GExRKStepper<T>::GExRKStepper(Traits &traits, GGrid &grid)
 :
 bRHS_                 (FALSE),
 bapplybc_             (FALSE),
-bSSP_           (traits.bssp),
+bSSP_           (traits.bSSP),
 norder_       (traits.norder),
 nstage_       (traits.nstage),
 grid_                 (&grid),
 ggfx_               (NULLPTR)
 {
   if ( !bSSP_ ) {
-    butcher_ .setOrder(norder_);
+    butcher_ .setOrder(norder_); // nstage_ is ignored
   }
   else {
-    assert(norder_==3 && nstage_==4);
+    assert( (norder_==3 && nstage_==4)
+        ||  (norder_==3 && nstage_==3) );
   }
+
 } // end of constructor method
 
 
@@ -72,7 +74,7 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &uf, State &ub
 
   assert(bRHS_  && "(1) RHS callback not set");
   if ( bSSP_ ) {
-    step_s(t, uin, uf, ub, dt, tmp, uout);
+    step_ssp(t, uin, uf, ub, dt, tmp, uout);
   }
   else {
     step_b(t, uin, uf, ub, dt, tmp, uout);
@@ -103,7 +105,7 @@ void GExRKStepper<T>::step(const Time &t, State &uin, State &uf, State &ub,
 {
   assert(bRHS_  && "(2) RHS callback not set");
   if ( bSSP_ ) {
-    step_b(t, uin, uf, ub, dt, tmp);
+    step_ssp(t, uin, uf, ub, dt, tmp);
   }
   else {
     step_b(t, uin, uf, ub, dt, tmp);
@@ -156,6 +158,7 @@ void GExRKStepper<T>::step_b(const Time &t, const State &uin, State &uf, State &
   
   h = dt ; 
 
+
   // Set temp space, initialize iteration:
   for ( n=0; n<nstate; n++ ) {
     u   [n] =  tmp[n];
@@ -169,6 +172,8 @@ void GExRKStepper<T>::step_b(const Time &t, const State &uin, State &uf, State &
     }
   }
 
+  tt = t ;
+  if ( bapplybc_  ) bdy_apply_callback_ (tt, uout, ub); 
  
   for ( m=0; m<nstage_-1; m++ ) { // cycle thru stages minus 1
     // Compute k_m:
@@ -189,12 +194,13 @@ void GExRKStepper<T>::step_b(const Time &t, const State &uin, State &uf, State &
     // accumulate the sum in uout here: 
     for ( n=0; n<nstate; n++ ) { // for each state member, u
       if ( ggfx_ != NULLPTR ) {
-        ggfx_->doOp(*K_[m][n], typename GGFX<T>::Smooth());
+        ggfx_->doOp(*K_[m][n], GGFX<GFTYPE>::Smooth());
       }
       *isum     = (*K_[m][n])*( (*c)[m]*h );
       *uout[n] += *isum; // += h * c_m * k_m
     }
     GMTK::constrain2sphere(*grid_, uout);
+    if ( bapplybc_  ) bdy_apply_callback_ (tt, uout, ub); 
   } // end, m-loop
 
    // Do contrib from final stage, M = nstage_:
@@ -206,21 +212,11 @@ void GExRKStepper<T>::step_b(const Time &t, const State &uin, State &uf, State &
    }
     GMTK::constrain2sphere(*grid_, u);
 
-#if 0
-   if ( ggfx_ != NULLPTR ) {
-     for ( n=0; n<nstate; n++ ) { // for each state member, u
-       ggfx_->doOp(*u[n], typename GGFX<T>::Smooth());
-     }
-   }
-#endif
-
    if ( bapplybc_  ) bdy_apply_callback_ (tt, u, ub); 
    rhs_callback_( tt, u, uf, ub, h, K_[0]); // k_M at stage M
 
-   if ( ggfx_ != NULLPTR ) {
-     for ( n=0; n<nstate; n++ ) { // for each state member, uout
-       ggfx_->doOp(*K_[0][n], typename GGFX<T>::Smooth());
-     }
+   for ( n=0; ggfx_!=NULLPTR && n<nstate; n++ ) { // for each state member, uout
+     ggfx_->doOp(*K_[0][n], GGFX<GFTYPE>::Smooth());
    }
 
    // Compute final output state, and set its bcs and
@@ -232,10 +228,8 @@ void GExRKStepper<T>::step_b(const Time &t, const State &uin, State &uf, State &
    if ( bapplybc_  ) bdy_apply_callback_ (tt, uout, ub); 
    GMTK::constrain2sphere(*grid_, uout);
 
-   if ( ggfx_ != NULLPTR ) {
-     for ( n=0; n<nstate; n++ ) { // for each state member, uout
-       ggfx_->doOp(*uout[n], typename GGFX<T>::Smooth());
-     }
+   for ( n=0; ggfx_!=NULLPTR && n<nstate; n++ ) { // for each state member, uout
+     ggfx_->doOp(*uout[n], GGFX<GFTYPE>::Smooth());
    }
 
    if ( bapplybc_  ) bdy_apply_callback_ (tt, uout, ub); 
@@ -313,7 +307,7 @@ void GExRKStepper<T>::step_b(const Time &t, State &uin, State &uf, State &ub,
     if ( bapplybc_  ) bdy_apply_callback_ (tt, u, ub); 
     if ( ggfx_ != NULLPTR ) {
       for ( n=0; n<nstate; n++ ) { // for each state member, u
-        ggfx_->doOp(*u[n], typename GGFX<T>::Smooth());
+        ggfx_->doOp(*u[n], GGFX<GFTYPE>::Smooth());
       }
     }
     rhs_callback_( tt, u, uf, ub, h, K_[m] ); // k_m at stage m
@@ -330,7 +324,7 @@ void GExRKStepper<T>::step_b(const Time &t, State &uin, State &uf, State &ub,
    for ( n=0; n<nstate; n++ ) { // for each state member, u
      for ( j=0,*isum=0.0; j<nstage_-1; j++ ) *isum += (*K_[j][n]) * ( (*beta)(nstage_-1,j)*h );
      *u[n] = (*uin[n]) + (*isum);
-      if ( ggfx_ != NULLPTR ) ggfx_->doOp(*u[n], typename GGFX<T>::Smooth());
+      if ( ggfx_ != NULLPTR ) ggfx_->doOp(*u[n], GGFX<GFTYPE>::Smooth());
    }
    if ( bapplybc_  ) bdy_apply_callback_ (tt, u, ub); 
    rhs_callback_( tt, u, uf, ub, h, K_[0]); // k_M at stage M
@@ -342,7 +336,7 @@ void GExRKStepper<T>::step_b(const Time &t, State &uin, State &uf, State &ub,
    if ( bapplybc_  ) bdy_apply_callback_ (tt, uout, ub); 
    if ( ggfx_ != NULLPTR ) {
      for ( n=0; n<nstate; n++ ) { // for each state member, uouyt
-       ggfx_->doOp(*uout[n], typename GGFX<T>::Smooth());
+       ggfx_->doOp(*uout[n], GGFX<GFTYPE>::Smooth());
      }
    }
    if ( bapplybc_  ) bdy_apply_callback_ (tt, uout, ub); 
@@ -374,12 +368,14 @@ void GExRKStepper<T>::resize(GINT nstate)
 } // end of method resize
 
 
-#if 0
+
 //**********************************************************************************
 //**********************************************************************************
-// METHOD     : step_s (1)
+// METHOD     : step_ssp (1)
 // DESCRIPTION: Computes one SSP RK step at specified timestep. Note: callback 
 //              to RHS-computation function must be set prior to entry.
+//              The input state is not overwritten. This is a driver for specific
+//              methods that handle different norder_ and nstage_.
 //
 //
 // ARGUMENTS  : t    : time, t^n, for state, uin=u^n
@@ -394,7 +390,43 @@ void GExRKStepper<T>::resize(GINT nstate)
 // RETURNS    : none.
 //**********************************************************************************
 template<typename T>
-void GExRKStepper<T>::step_s(const Time &t, const State &uin, State &uf, State &ub,  
+void GExRKStepper<T>::step_ssp(const Time &t, const State &uin, State &uf, State &ub,  
+                           const Time &dt, State &tmp, State &uout)
+{
+  if      ( norder_ == 3 && nstage_ == 3 ) {
+    step_ssp33(t, uin, uf, ub, dt, tmp, uout);
+  }
+  else if ( norder_ == 3 && nstage_ == 4 ) {
+    step_ssp34(t, uin, uf, ub, dt, tmp, uout);
+  }
+  else {
+    assert(FALSE);
+  }
+
+} // end, method step_ssp (1)
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD     : step_s34
+// DESCRIPTION: Computes one SSP RK34 (3rd order, 4 stages) step at 
+//              specified timestep. Note: callback to RHS-computation 
+//              function must be set prior to entry.
+//
+//
+// ARGUMENTS  : t    : time, t^n, for state, uin=u^n
+//              uin  : initial (entry) state, u^n
+//              uf   : forcing tendency
+//              ub   : bdy tendency
+//              dt   : time step
+//              tmp  : tmp space. Must have at least NState*(M+1)+1 vectors,
+//                     where NState is the number of state vectors.
+//              uout : updated state, at t^n+1
+//               
+// RETURNS    : none.
+//**********************************************************************************
+template<typename T>
+void GExRKStepper<T>::step_ssp34(const Time &t, const State &uin, State &uf, State &ub,  
                            const Time &dt, State &tmp, State &uout)
 {
 
@@ -424,7 +456,7 @@ void GExRKStepper<T>::step_s(const Time &t, const State &uin, State &uf, State &
   GMTK::constrain2sphere(*grid_, K_[0]);
   for ( i=0; i<nstate; i++ )  {
     if ( ggfx_ != NULLPTR ) {
-      ggfx_->doOp(*K_[0][i], typename GGFX<T>::Smooth());
+      ggfx_->doOp(*K_[0][i], GGFX<GFTYPE>::Smooth());
     }
   }
  
@@ -439,7 +471,7 @@ void GExRKStepper<T>::step_s(const Time &t, const State &uin, State &uf, State &
   GMTK::constrain2sphere(*grid_, K_[1]);
   for ( i=0; i<nstate; i++ )  {
     if ( ggfx_ != NULLPTR ) {
-      ggfx_->doOp(*K_[1][i], typename GGFX<T>::Smooth());
+      ggfx_->doOp(*K_[1][i], GGFX<GFTYPE>::Smooth());
     }
   }
  
@@ -455,7 +487,7 @@ void GExRKStepper<T>::step_s(const Time &t, const State &uin, State &uf, State &
   GMTK::constrain2sphere(*grid_, K_[2]);
   for ( i=0; i<nstate; i++ )  {
     if ( ggfx_ != NULLPTR ) {
-      ggfx_->doOp(*K_[2][i], typename GGFX<T>::Smooth());
+      ggfx_->doOp(*K_[2][i], GGFX<GFTYPE>::Smooth());
     }
   }
 
@@ -470,19 +502,19 @@ void GExRKStepper<T>::step_s(const Time &t, const State &uin, State &uf, State &
   GMTK::constrain2sphere(*grid_, uout);
   for ( i=0; i<nstate; i++ )  {
     if ( ggfx_ != NULLPTR ) {
-      ggfx_->doOp(*uout[i], typename GGFX<T>::Smooth());
+      ggfx_->doOp(*uout[i], GGFX<GFTYPE>::Smooth());
     }
   }
   
-} // end of method step_s (1)
-#endif
+} // end of method step_ssp34
 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD     : step_s (1)
-// DESCRIPTION: Computes one SSP RK step at specified timestep. Note: callback 
-//              to RHS-computation function must be set prior to entry.
+// METHOD     : step_ssp33 (1)
+// DESCRIPTION: Computes one SSP RK3e (3rd order, 3 stages) step at 
+//              specified timestep. Note: callback to RHS-computation 
+//              function must be set prior to entry.
 //
 //
 // ARGUMENTS  : t    : time, t^n, for state, uin=u^n
@@ -497,7 +529,7 @@ void GExRKStepper<T>::step_s(const Time &t, const State &uin, State &uf, State &
 // RETURNS    : none.
 //**********************************************************************************
 template<typename T>
-void GExRKStepper<T>::step_s(const Time &t, const State &uin, State &uf, State &ub,  
+void GExRKStepper<T>::step_ssp33(const Time &t, const State &uin, State &uf, State &ub,  
                            const Time &dt, State &tmp, State &uout)
 {
 
@@ -524,7 +556,7 @@ void GExRKStepper<T>::step_s(const Time &t, const State &uin, State &uf, State &
   GMTK::constrain2sphere(*grid_, K_[0]);
   for ( i=0; i<nstate; i++ )  {
     if ( ggfx_ != NULLPTR ) {
-      ggfx_->doOp(*K_[0][i], typename GGFX<T>::Smooth());
+      ggfx_->doOp(*K_[0][i], GGFX<GFTYPE>::Smooth());
     }
   }
  
@@ -539,7 +571,7 @@ void GExRKStepper<T>::step_s(const Time &t, const State &uin, State &uf, State &
   GMTK::constrain2sphere(*grid_, K_[1]);
   for ( i=0; i<nstate; i++ )  {
     if ( ggfx_ != NULLPTR ) {
-      ggfx_->doOp(*K_[1][i], typename GGFX<T>::Smooth());
+      ggfx_->doOp(*K_[1][i], GGFX<GFTYPE>::Smooth());
     }
   }
  
@@ -554,18 +586,20 @@ void GExRKStepper<T>::step_s(const Time &t, const State &uin, State &uf, State &
   GMTK::constrain2sphere(*grid_, uout);
   for ( i=0; i<nstate; i++ )  {
     if ( ggfx_ != NULLPTR ) {
-      ggfx_->doOp(*uout[i], typename GGFX<T>::Smooth());
+      ggfx_->doOp(*uout[i], GGFX<GFTYPE>::Smooth());
     }
   }
 
-} // end of method step_s (1)
+} // end of method step_ssp33
+
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD     : step_s (2)
+// METHOD     : step_ssp (2)
 // DESCRIPTION: Computes one SSP RK step at specified timestep. Note: callback 
 //              to RHS-computation function must be set prior to entry.
-//              The input state is overwritten.
+//              The input state is overwritten. This is a driver for specific
+//              methods that handle different norder_ and nstage_.
 //
 // ARGUMENTS  : t    : time, t^n, for state, uin=u^n
 //              uin  : initial (entry) state, u^n
@@ -576,13 +610,13 @@ void GExRKStepper<T>::step_s(const Time &t, const State &uin, State &uf, State &
 // RETURNS    : none.
 //**********************************************************************************
 template<typename T>
-void GExRKStepper<T>::step_s(const Time &t, State &uin, State &uf, State &ub,  
+void GExRKStepper<T>::step_ssp(const Time &t, State &uin, State &uf, State &ub,  
                            const Time &dt, State &tmp)
 {
 
-  assert(FALSE && "Not ready yet");
+  assert(FALSE && "Not implemented yet");
 
-} // end of method step_s (2)
+} // end of method step_ssp (2)
 
 
 //**********************************************************************************

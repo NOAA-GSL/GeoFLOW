@@ -83,10 +83,12 @@ public:
           GBOOL          bconserved  = FALSE;
           GBOOL          bforced     = FALSE;
           GBOOL          variabledt  = FALSE;
+          GBOOL          bSSP        = FALSE;// use strong stab preserv. RK?
           GINT           nstate      = GDIM; // no. vars in state vec
           GINT           nsolve      = GDIM; // no. vars to solve for
           GINT           ntmp        = 8;
           GINT           itorder     = 2;
+          GINT           nstage      = 2;
           GINT           inorder     = 2;
           GFTYPE         courant     = 0.5;
           GFTYPE         nu          = 0.0;
@@ -149,10 +151,12 @@ private:
         GBOOL               bforced_;       // use forcing vectors
         GBOOL               bsteptop_;      // is there a top-of-step callback?
         GBOOL               bvariabledt_;   // is dt allowed to vary?
+        GBOOL               bSSP_;          // use strong stab. preserv. RK?
         GStepperType        isteptype_;     // stepper type
         GINT                nsteps_ ;       // num steps taken
         GINT                itorder_;       // time deriv order
         GINT                inorder_;       // nonlin term order
+        GINT                nstage_;        // no. stages in time deriv RK
         GFTYPE              courant_;       // Courant number if dt varies
         GTVector<GFTYPE>    tcoeffs_;       // coeffs for time deriv
         GTVector<GFTYPE>    acoeffs_;       // coeffs for NL adv term

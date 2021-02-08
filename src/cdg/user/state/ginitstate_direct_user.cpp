@@ -660,7 +660,7 @@ GBOOL impl_boxdrybubble(const PropertyTree &ptree, GString &sconfig, GGrid &grid
   std::vector<GFTYPE> xc, xr;  
   GString             sblock;
 
-  PropertyTree bubbptree   = ptree.getPropertyTree(sconfig);
+  PropertyTree inittree    = ptree.getPropertyTree(sconfig);
   sblock                   = ptree.getValue<GString>("pde_name");
   PropertyTree convptree   = ptree.getPropertyTree(sblock);
 
@@ -678,9 +678,9 @@ GBOOL impl_boxdrybubble(const PropertyTree &ptree, GString &sconfig, GGrid &grid
   pb    = u[GDIM+3];// background pressure  , from solver
   nxy   = (*xnodes)[0].size(); // same size for x, y, z
 
-  T0    = bubbptree.getValue<GFTYPE>("T_pert", 15.0);    // temp. perturb. magnitude (K)
-  xc    = bubbptree.getArray<GFTYPE>("x_center");        // center location
-  xr    = bubbptree.getArray<GFTYPE>("x_width");         // bubble width
+  T0    = inittree.getValue<GFTYPE>("T_pert", 15.0);    // temp. perturb. magnitude (K)
+  xc    = inittree.getArray<GFTYPE>("x_center");        // center location
+  xr    = inittree.getArray<GFTYPE>("x_width");         // bubble width
   P0    = convptree.getValue<GFTYPE>("P0");              // ref pressure (mb or hPa)
   P0   *= 100.0;                                         // convert to Pa
   Ts    = convptree.getValue<GFTYPE>("T_surf");          // surf temp
@@ -727,9 +727,96 @@ GBOOL impl_boxdrybubble(const PropertyTree &ptree, GString &sconfig, GGrid &grid
 
 } // end of method impl_boxdrybubble
 
+
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : impl_boxdrybubble
+// METHOD : impl_icosabcconv
+// DESC   : Initialize state for GMConv solver with ABC initial conditions
+//          on velocity, and sinusoidal function in theta
+// ARGS   : ptree  : main prop tree
+//          sconfig: ptree block name containing variable config
+//          grid   : grid
+//          stinfo : StateInfo
+//          t      : time
+//          utmp   : tmp arrays
+//          ub     : bdy vectors (one for each state element)
+//          u      : current state
+// RETURNS: TRUE on success; else FALSE 
+//**********************************************************************************
+GBOOL impl_icosabcconv(const PropertyTree &ptree, GString &sconfig, GGrid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &u)
+{
+
+  GString             serr = "impl_icosabcconv: ";
+  GSIZET              kdn, kup, nxy;
+  GFTYPE              A, B, C, poly;
+  GFTYPE              x, y, z, r, lat, lon;
+  GFTYPE              exner, p, pi2, P0, T0;
+  GTVector<GFTYPE>   *d, *e;
+  GString             sblock;
+
+  PropertyTree inittree    = ptree.getPropertyTree(sconfig);
+  sblock                   = ptree.getValue<GString>("pde_name");
+  PropertyTree convptree   = ptree.getPropertyTree(sblock);
+
+
+  GGridIcos  *icos   = dynamic_cast <GGridIcos*>(&grid);
+  assert(icos && "Must use ICOS grid");
+
+  GTVector<GTVector<GFTYPE>> *xnodes = &grid.xNodes();
+
+  assert(u.size() >= GDIM+1);
+
+  e     = u  [GDIM];// int. energy density
+  d     = u[GDIM+1];// total density 
+  nxy   = (*xnodes)[0].size(); // same size for x, y, z
+
+  T0    = inittree.getValue<GFTYPE>("T0", 15.0);  
+  P0    = inittree.getValue<GFTYPE>("P0", 15.0); // in mb 
+        P0 *= 100.0; // convert to Pa
+  A     = inittree.getValue<GFTYPE>("A", 0.9);  
+  B     = inittree.getValue<GFTYPE>("B", 1.0);
+  C     = inittree.getValue<GFTYPE>("C", 1.1);
+  poly  = inittree.getValue<GFTYPE>("poly", 0.0); 
+  kdn   = inittree.getValue  <GINT>("kdn", 1); 
+  kup   = inittree.getValue  <GINT>("kup", 10); 
+
+
+ *u[0]  = 0.0; // sx
+ *u[1]  = 0.0; // sy
+ *u[2]  = 0.0; // sz
+ *d     = 0.0;
+
+  // Initialize each variable:
+  for ( auto j=0; j<nxy; j++ ) {
+     x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
+     r   = sqrt(x*x + y*y + z*z);
+     lat = asin(z/r);
+     lon = atan2(y,x);
+     for ( auto k=kdn; k<kup; k++ ) { // sum over wavemodes
+       (*d)   [j] +=  ( B*cos(pi2*y) + C*sin(pi2*z) ) / pow(k,poly);
+     }
+     for ( auto k=kdn; k<kup; k++ ) { // sum over wavemodes
+       pi2         = 2.0*PI*k;
+       (*u[0])[j] +=  ( B*cos(k*lon) + C*sin(pi2*r) ) / pow(k,poly);
+       (*u[1])[j] +=  ( A*sin(k*lon) + C*cos(pi2*r) ) / pow(k,poly);
+       (*u[2])[j] +=  ( A*cos(k*lon) + B*sin(k*lon) ) / pow(k,poly);
+     }
+     (*u[0])[j] *=  (*d)[j];
+     (*u[1])[j] *=  (*d)[j];
+     (*u[2])[j] *=  (*d)[j];
+     p           = (*d)[j] * RD * T0;
+     exner       = pow(p/P0, RD/CPD);
+     (*e)[j]     = CVD * (*d)[j] * T0*exner; 
+  } // end, coord j-loop 
+
+  return TRUE;
+
+} // end of method impl_icosabcconv
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : impl_boxsod
 // DESC   : Initialize state for GMConv solver with Sod shock tube.
 // ARGS   : ptree  : main prop tree
 //          sconfig: ptree block name containing variable config

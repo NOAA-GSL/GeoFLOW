@@ -11,10 +11,10 @@
 
 #include "gtvector.hpp"
 
-#if defined(USE_CBLAS)
+#if defined(GEOFLOW_USE_CBLAS)
 #include "cblas.h"
 #endif
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
   #include "cuda_runtime_api.h"
   #include "cublas_v2.h"
 #endif
@@ -26,7 +26,7 @@ enum GBLAS_ORDER     {CblasRowMajor=101, CblasColMajor=102};
 enum GBLAS_TRANSPOSE {CblasNoTrans=111, CblasTrans=112, CblasConjTrans=113};
 
 // Types, defs:
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
   typedef cudaStream_t      GCuStream;
   typedef cublasHandle_t    GBlasHandle;
   typedef cublasStatus_t    GBlasStatus;

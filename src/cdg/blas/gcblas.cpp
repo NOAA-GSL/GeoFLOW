@@ -19,8 +19,9 @@ namespace GCBLAS
 //**********************************************************************************
 void handle_create(GBlasHandle &h)
 {
+  GEOFLOW_TRACE();
   GBlasStatus stat;
-  #if defined(USE_CUBLAS)
+  #if defined(GEOFLOW_USE_CUBLAS)
     stat = cublasCreate(&h);
     assert(stat == CUBLAS_STATUS_SUCCESS);
   #else
@@ -39,7 +40,8 @@ void handle_create(GBlasHandle &h)
 //**********************************************************************************
 void handle_destroy(GBlasHandle &h)
 {
-  #if defined(USE_CUBLAS)
+  GEOFLOW_TRACE();
+  #if defined(GEOFLOW_USE_CUBLAS)
     cublasDestroy(h);
   #endif
 } // end, handle_destroy
@@ -54,8 +56,9 @@ void handle_destroy(GBlasHandle &h)
 //**********************************************************************************
 void stream_create(GCuStream &pstream)
 {
+  GEOFLOW_TRACE();
   GBlasError ret;
-  #if defined(USE_CUBLAS)
+  #if defined(GEOFLOW_USE_CUBLAS)
     ret = cudaStreamCreate(&pstream);
     assert(ret == cudaSuccess);
   #endif
@@ -71,8 +74,9 @@ void stream_create(GCuStream &pstream)
 //**********************************************************************************
 void stream_destroy(GCuStream &pstream)
 {
+  GEOFLOW_TRACE();
   GBlasError ret;
-  #if defined(USE_CUBLAS)
+  #if defined(GEOFLOW_USE_CUBLAS)
     ret = cudaStreamDestroy(pstream);
     assert(ret == cudaSuccess);
   #endif

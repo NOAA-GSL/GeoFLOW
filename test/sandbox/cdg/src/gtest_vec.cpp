@@ -5,7 +5,6 @@
 // Copyright    : Copyright 2018. Colorado State University. All rights reserved
 // Derived From : none.
 //==================================================================================
-#include "gexec.h"
 #include "gtypes.h"
 #include <cstdio>
 #include <unistd.h>

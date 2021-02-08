@@ -22,7 +22,6 @@
 // Following is a list of preprocessor variables that may be set:
 // _G_AUTO_CREATE_DEV : Auto-copy/create classes on device
 // _G_AUTO_UPDATE_DEV : Auto-update data on device after computation
-// _G_BOUNDS_CHK      : Do bounds checking
 // _GLAPACK           : Set if using external Lapack API
 // _G_VEC_CACHE_SIZE  : Sets vector (BLAS II) op cache blocking factor
 // _G_MAT_CACHE_SIZE  : Sets vector op (BLAS III) cache blocking factor
@@ -48,7 +47,6 @@ typedef std::string GString;
 
 // Globally-defined defs:
 // _G_AUTO_CREATE_DEV: Auto-create class data and class on device if ACC defined
-// _G_BOUNDS_CHK     : Do data bounds check
 
 // Basic data types:
 #define GBYTE      unsigned char
@@ -250,14 +248,17 @@ const char * const sGStateCompType [] ={"GSC_KINETIC","GSC_MAGNETIC","GSC_DENSIT
   #define GET_HIWORD(a) ( a >> _WLO )
 #endif
 #if !defined(SET_LOWORD)
-  #define SET_LOWORD(a,b)   (a &= HIMASK);( a |= (b & LOMASK) )
+  #define SET_LOWORD(a,b)   ( a &= HIMASK );( a |= (b & LOMASK) )
 #endif
 #if !defined(SET_HIWORD)
-  #define SET_HIWORD(a,b) (a &= LOMASK);( a |= ( b << _WLO ) )
+  #define SET_HIWORD(a,b) ( a &= LOMASK );( a |= ( b << _WLO ) )
+#endif
+#if !defined(SET_DSWORD)
+  #define SET_DSWORD(u,lo,hi) SET_LOWORD(u,lo);SET_HIWORD(u,hi) 
 #endif
 
 
-#if !defined GError
+#if !defined(GError)
   #define GError() printf("Error: %s; line: %d\n",__FILE__,__LINE__);
 #endif
 
@@ -270,6 +271,13 @@ const char * const sGStateCompType [] ={"GSC_KINETIC","GSC_MAGNETIC","GSC_DENSIT
 
 
 #endif // _G_TYPES_DEF
+
+#if !defined(_G_SGN)
+#define  _G_SGN
+template<typename T> int sgn(T val) {
+    return ( T(0) < val ) - ( val < T(0) );
+}
+#endif
 
 #endif // !defined(_GTYPES_HPP)
 

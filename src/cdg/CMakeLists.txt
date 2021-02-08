@@ -36,7 +36,7 @@ target_include_directories(cdg
 #
 target_sources(cdg
 	PRIVATE
-		${GHOME}/blas/cff_blas.F
+	${GHOME}/blas/cff_blas.F
         ${GHOME}/blas/qmxmp.F
         ${GHOME}/blas/dmxmp.F
         ${GHOME}/blas/fmxmp.F
@@ -50,8 +50,6 @@ target_sources(cdg
         ${GHOME}/grid/ggrid_box.cpp
         
         ${GHOME}/config/gspecbdy_factory.cpp 
-        
-#        ${GHOME}/io/gio.cpp
         
         ${GHOME}/sem/gelem_base.cpp
         ${GHOME}/sem/gmass.cpp
@@ -97,7 +95,6 @@ target_include_directories(cdg
 		"$<INSTALL_INTERFACE:${MY_INSTALL_INCDIR}>"
 		"$<BUILD_INTERFACE:${MY_PROJECT_INCDIR}>"
 		"$<BUILD_INTERFACE:${MY_INSTALL_SRCDIR}>"
-		"$<$<BOOL:${CBLAS_FOUND}>:${CBLAS_INCLUDE_DIRS_DEP}>"
 	)
 
 #
@@ -113,10 +110,10 @@ target_link_libraries(cdg
 		"$<$<BOOL:${Boost_MPI_FOUND}>:Boost::mpi>"
 		"$<$<BOOL:${PAPI_FOUND}>:PAPI::PAPI>"
 		"$<$<BOOL:${GPTL_FOUND}>:GPTL::GPTL>"
-		"$<$<BOOL:${CBLAS_FOUND}>:${CBLAS_LIBRARIES_DEP}>"
 		"$<$<BOOL:${OpenACC_CXX_FOUND}>:OpenACC::OpenACC_CXX>"	
 		"$<$<TARGET_EXISTS:CUDA::cudart>:CUDA::cudart>"
-        "$<$<TARGET_EXISTS:CUDA::cublas>:CUDA::cublas>"	
+                "$<$<TARGET_EXISTS:CUDA::cublas>:CUDA::cublas>"	
+                "$<$<BOOL:${CBLAS_FOUND}>:CBLAS::CBLAS>"
 	)
 
 #

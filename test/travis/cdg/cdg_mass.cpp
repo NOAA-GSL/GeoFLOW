@@ -6,7 +6,6 @@
 // Derived From : none.
 //==================================================================================
 
-#include "gexec.h"
 #include "gtypes.h"
 #include <cstdio>
 #include <unistd.h>
@@ -29,9 +28,6 @@
 #include "ggrid_factory.hpp"
 #include "gio_observer.hpp"
 #include "gio.hpp"
-#if defined(GEOFLOW_USE_GPTL)
-  #include "gptl.h"
-#endif
 
 
 using namespace geoflow::pdeint;
@@ -121,13 +117,6 @@ int main(int argc, char **argv)
     GINT myrank  = GComm::WorldRank();
     GINT nprocs  = GComm::WorldSize();
 
-#if defined(GEOFLOW_USE_GPTL)
-    // Set GTPL options:
-    GPTLsetoption (GPTLcpu, 1);
-
-    // Initialize GPTL:
-    GPTLinitialize();
-#endif
     EH_MESSAGE("main: Read prop tree...");
 
     // Get minimal property tree:
@@ -152,17 +141,8 @@ int main(int argc, char **argv)
 
     EH_MESSAGE("main: Generate grid...");
 
-    // Generate grid:
-#if defined(GEOFLOW_USE_GPTL)
-    GPTLstart("gen_grid");
-#endif
-
     ObserverFactory<MyTypes>::get_traits(ptree, "gio_observer", binobstraits);
     grid_ = GGridFactory<MyTypes>::build(ptree, gbasis, pIO, binobstraits, comm_);
-
-#if defined(GEOFLOW_USE_GPTL)
-    GPTLstop("gen_grid");
-#endif
 
     EH_MESSAGE("main: Initialize gather-scatter...");
 
@@ -176,17 +156,16 @@ int main(int argc, char **argv)
 
     GTVector<GFTYPE> f(grid_->ndof());
     GTVector<GFTYPE> g(grid_->ndof());
-    GTVector<GFTYPE> *imult = &ggfx.get_imult();
+
+    GTVector<GFTYPE> imult_ref(grid_->ndof());
+    GTVector<GFTYPE> *imult = &imult_ref;
+    ggfx.get_imult(imult_ref);
+
 //  GTVector<GFTYPE> *jac = &(grid_->Jac());
     GTVector<GTVector<GFTYPE>*> utmp(1);
     GMass massop(*grid_,FALSE);
 
     f = 1.0;
-#if 0
-//  ggfx.doOp(f, GGFX_OP_SMOOTH);
-    // Multiply f by inverse multiplicity:
-    f.pointProd(*imult);
-#endif
 
     EH_MESSAGE("main: Compute integral...");
 
@@ -194,9 +173,7 @@ int main(int argc, char **argv)
     GFTYPE gintegral;
 
 #if 0
-    GPTLstart("massop_prod");
     massop.opVec_prod(f,utmp,g);
-    GPTLstop("massop_prod");
     std::cout << "main: mass_prod_sum=" << g.sum() << std::endl;
   
     integral = g.sum();
@@ -258,11 +235,6 @@ int main(int argc, char **argv)
       cout << serr << " Success!" << endl;
     }
 
-#if defined(GEOFLOW_USE_GPTL)
-    GPTLpr_file("timing.txt");
-    GPTLfinalize();
-#endif
-
     GComm::TermComm();
 
     return(gerrcode);
@@ -287,66 +259,18 @@ int main(int argc, char **argv)
 //         grid    : Grid object
 //         ggfx    : gather/scatter op, GGFX
 //**********************************************************************************
-void init_ggfx(PropertyTree &ptree, Grid &grid, GGFX<GFTYPE> &ggfx)
+void init_ggfx(PropertyTree& ptree, GGrid& grid, GGFX<GFTYPE>& ggfx)
 {
-  GString                        serr = "init_ggfx: ";
-  GFTYPE                         delta;
-  GFTYPE                         rad;
-  GMorton_KeyGen<GNODEID,GFTYPE> gmorton;
-  GTPoint<GFTYPE>                dX, porigin, P0;
-  GTVector<GNODEID>              glob_indices;
-  GTVector<GTVector<GFTYPE>>    *xnodes;
-  GString                        sgrid;
-  std::vector<GFTYPE>            pstd;
-  PropertyTree                   gtree;
-
-  sgrid = ptree.getValue<GString>("grid_type");
-  gtree = ptree.getPropertyTree(sgrid);
-
-  if ( sgrid == "grid_box" ) {
-    pstd = gtree.getArray<GFTYPE>("xyz0");
-    P0   = pstd;
-  }
-  if ( sgrid == "grid_icos" ) {
-    rad   = gtree.getValue<GFTYPE>("radius");
-    P0.x1 = -rad ;
-    P0.x2 = -rad ;
-    P0.x3 = -rad ;
-  }
-  if ( sgrid == "grid_sphere" ) {
-    rad   = gtree.getValue<GFTYPE>("radiuso");
-    P0.x1 = -rad ;
-    P0.x2 = -rad ;
-    P0.x3 = -rad ;
+  const auto ndof = grid_->ndof();
+  std::vector<std::array<GFTYPE,GDIM>> xyz(ndof);
+  for(std::size_t i = 0; i < ndof; i++){
+	  for(std::size_t d = 0; d < GDIM; d++){
+		  xyz[i][d] = grid.xNodes()[d][i];
+	  }
   }
 
-  // First, periodize coords if required to, 
-  // before labeling nodes:
-  if ( typeid(grid) == typeid(GGridBox) ) { 
-    static_cast<GGridBox*>(&grid)->periodize();
-  }
-
-  delta  = grid.minnodedist();
-  dX     = 0.1*delta;
-  xnodes = &grid.xNodes();
-  glob_indices.resize(grid.ndof());
-
-  // Integralize *all* internal nodes
-  // using Morton indices:
-  gmorton.setIntegralLen(P0,dX);
-
-  gmorton.key(glob_indices, *xnodes);
-
-  // Initialize gather/scatter operator:
-  GBOOL bret;
-  bret = ggfx.init(glob_indices);
-  assert(bret && "Initialization of GGFX operator failed");
-
-  // Unperiodize nodes now that connectivity map is
-  // generated, so that coordinates mean what they should:
-  if ( typeid(grid) == typeid(GGridBox) ) { // periodize coords
-    static_cast<GGridBox*>(&grid)->unperiodize();
-  }
+  // Create GGFX
+  ggfx.init(0.25*grid.minnodedist(), xyz);
 
 } // end method init_ggfx
 

@@ -22,6 +22,7 @@
 #include "gmtk.hpp"
 #include "pdeint/equation_base.hpp"
 
+#define DO_BDY
 
 template<typename TypePack>
 class GDivOp
@@ -54,7 +55,7 @@ public:
         };
 
                           GDivOp() = delete;
-                          GDivOp(Grid &grid, Traits &traits);
+                          GDivOp(Traits &traits, Grid &grid);
                           GDivOp(const GDivOp &);
                          ~GDivOp();
 

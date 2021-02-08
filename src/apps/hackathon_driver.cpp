@@ -8,14 +8,12 @@
 //==================================================================================
 
 
-#include "gexec.h"
 #include "gtypes.h"
 #include "gcomm.hpp"
 #include "ggfx.hpp"
 #include "gllbasis.hpp"
 #include "gmass.hpp"
 #include "gmorton_keygen.hpp"
-#include "gmtk.hpp"
 #include "ggrid_factory.hpp"
 #include "pdeint/observer_base.hpp"
 #include "pdeint/observer_factory.hpp"
