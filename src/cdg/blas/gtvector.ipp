@@ -20,7 +20,7 @@
   # define _G_VEC_CACHE_SIZE 16
 #endif
 
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
 #include "cublas.h"
 #endif
 
@@ -41,6 +41,7 @@ n_                    (0),
 icsz_ (_G_VEC_CACHE_SIZE),
 bdatalocal_        (TRUE)
 {
+  GEOFLOW_TRACE();
   gindex_(n_, n_, 0, n_-1, 1,  0);
   gindex_keep_ = gindex_;
 }
@@ -60,7 +61,8 @@ n_                    (n),
 icsz_ (_G_VEC_CACHE_SIZE),
 bdatalocal_        (TRUE)
 {
-#if defined(USE_CUBLAS)
+  GEOFLOW_TRACE();
+#if defined(GEOFLOW_USE_CUBLAS)
   if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
     cudaMallocManaged(&data_, n_*sizeof(T), cudaMemAttachGlobal);
   }
@@ -89,11 +91,12 @@ data_           (NULLPTR),
 icsz_ (_G_VEC_CACHE_SIZE),
 bdatalocal_        (TRUE)
 {
+  GEOFLOW_TRACE();
   gindex_ = gi;
   gindex_keep_ = gindex_;
   n_=gindex_.end()+1+gindex_.pad();
 
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
   if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
     cudaMallocManaged(&data_, n_*sizeof(T), cudaMemAttachGlobal);
   }
@@ -121,7 +124,8 @@ n_           (obj.size()),
 icsz_ (_G_VEC_CACHE_SIZE),
 bdatalocal_        (TRUE)
 {
-#if defined(USE_CUBLAS)
+  GEOFLOW_TRACE();
+#if defined(GEOFLOW_USE_CUBLAS)
   if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
     cudaMallocManaged(&data_, n_*sizeof(T), cudaMemAttachGlobal);
   }
@@ -158,7 +162,8 @@ n_            (n/istride),
 icsz_ (_G_VEC_CACHE_SIZE),
 bdatalocal_        (TRUE)
 {
-#if defined(USE_CUBLAS)
+  GEOFLOW_TRACE();
+#if defined(GEOFLOW_USE_CUBLAS)
   if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
     cudaMallocManaged(&data_, n_*sizeof(T), cudaMemAttachGlobal);
   }
@@ -198,8 +203,9 @@ n_            (n/istride),
 icsz_ (_G_VEC_CACHE_SIZE),
 bdatalocal_     (blocmgd)
 {
+  GEOFLOW_TRACE();
   if ( bdatalocal_ ) {
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
     if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
       cudaMallocManaged(&data_, n_*sizeof(T), cudaMemAttachGlobal);
     }
@@ -239,7 +245,8 @@ n_           (obj.size()),
 icsz_ (_G_VEC_CACHE_SIZE),
 bdatalocal_        (TRUE)
 {
-#if defined(USE_CUBLAS)
+  GEOFLOW_TRACE();
+#if defined(GEOFLOW_USE_CUBLAS)
   if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
     cudaMallocManaged(&data_, n_*sizeof(T), cudaMemAttachGlobal);
   }
@@ -268,7 +275,8 @@ bdatalocal_        (TRUE)
 template<class T>
 GTVector<T>::~GTVector()
 {
-#if defined(USE_CUBLAS)
+  GEOFLOW_TRACE();
+#if defined(GEOFLOW_USE_CUBLAS)
     cudaFree(data_);
 #else
   if ( data_  != NULLPTR  && bdatalocal_ ) delete [] data_;
@@ -287,6 +295,7 @@ GTVector<T>::~GTVector()
 template<class T>
 GSIZET GTVector<T>::size() const
 {
+  GEOFLOW_TRACE();
   return gindex_.end() - gindex_.beg() + 1;
 } // end, method size
 
@@ -331,6 +340,7 @@ GIndex &GTVector<T>::getIndex()
 template<class T> 
 void GTVector<T>::resize(GSIZET nnew)
 {
+  GEOFLOW_TRACE();
   assert(bdatalocal_ && "Data not local; cannot resize");
   
   GLLONG ibeg    = gindex_.beg();
@@ -340,7 +350,7 @@ void GTVector<T>::resize(GSIZET nnew)
 
   if ( (iend-ibeg+1+ipad) > n_ ) {      // must reallocate; change capacity
     if ( this->data_ != NULLPTR ) { 
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
       cudaFree(this->data_);
 #else
       delete [] this->data_;
@@ -348,7 +358,7 @@ void GTVector<T>::resize(GSIZET nnew)
       this->data_ = NULLPTR; 
     }
     this->n_ = iend-ibeg+1+ipad;
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
   if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
     cudaMallocManaged(&data_, n_*sizeof(T), cudaMemAttachGlobal);
   }
@@ -375,6 +385,7 @@ void GTVector<T>::resize(GSIZET nnew)
 template<class T> 
 void GTVector<T>::resize(GIndex &gi)
 {
+  GEOFLOW_TRACE();
   assert(bdatalocal_ && "Data not local; cannot resize");
 
   GLLONG nnew    = gi.end()+gi.pad()+1;
@@ -385,7 +396,7 @@ void GTVector<T>::resize(GIndex &gi)
 
   if ( (iend-ibeg+1+ipad) > n_ ) {      // must reallocate; change capacity
     if ( this->data_ != NULLPTR ) { 
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
       cudaFree(this->data_);
 #else
       delete [] this->data_; 
@@ -393,7 +404,7 @@ void GTVector<T>::resize(GIndex &gi)
       this->data_ = NULLPTR; 
     }
     this->n_ = iend-ibeg+1+ipad;
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
   if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
     cudaMallocManaged(&data_, n_*sizeof(T), cudaMemAttachGlobal);
   }
@@ -419,11 +430,12 @@ void GTVector<T>::resize(GIndex &gi)
 template<class T>
 void GTVector<T>::resizem(GSIZET nnew)
 {
+  GEOFLOW_TRACE();
   if ( nnew > n_ ) {
 
     assert(bdatalocal_ && "Data not local; cannot resize");
 
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
   if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
     cudaMallocManaged(&data_, n_*sizeof(T), cudaMemAttachGlobal);
   }
@@ -450,6 +462,7 @@ void GTVector<T>::resizem(GSIZET nnew)
 template<class T> 
 void GTVector<T>::reserve(GSIZET nnew)
 {
+  GEOFLOW_TRACE();
   assert(bdatalocal_ && "Can reserve only on data local vector");
 
   T *ttmp=NULLPTR;
@@ -459,7 +472,7 @@ void GTVector<T>::reserve(GSIZET nnew)
   GLLONG ipad    = gindex_.pad();
 
   // Check: is following exception-safe? No....
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
   if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
     cudaMallocManaged(&ttmp, (ibeg+nnew+ipad)*sizeof(T), cudaMemAttachGlobal);
   }
@@ -475,14 +488,14 @@ void GTVector<T>::reserve(GSIZET nnew)
   if ( nnew > n_ ) { // growing
     for ( auto j=0; j<n_; j++ ) ttmp[j] = this->data_[j];
     if ( this->data_ != NULLPTR ){
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
       cudaFree(this->data_);
 #else
       delete [] this->data_;
 #endif
       this->data_ = NULLPTR; 
     }
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
   if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
     cudaMallocManaged(&data_, (ibeg+nnew+ipad)*sizeof(T), cudaMemAttachGlobal);
   }
@@ -503,14 +516,14 @@ void GTVector<T>::reserve(GSIZET nnew)
   else if ( nnew < n_ ) { // shrinking
     for ( auto j=0; j<nnew; j++ ) ttmp[j] = this->data_[j];
     if ( this->data_ != NULLPTR ) {
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
       cudaFree(this->data_);
 #else
       delete [] this->data_;
 #endif
       this->data_ = NULLPTR; 
     }
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
   if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
     cudaMallocManaged(&data_, (ibeg+nnew+ipad)*sizeof(T), cudaMemAttachGlobal);
   }
@@ -542,8 +555,9 @@ void GTVector<T>::reserve(GSIZET nnew)
 template<class T>
 void GTVector<T>::clear()
 {
+  GEOFLOW_TRACE();
   if ( data_ != NULLPTR ) {
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
       cudaFree(this->data_);
 #else
     delete [] data_;
@@ -566,7 +580,7 @@ void GTVector<T>::clear()
 template<class T>
 void GTVector<T>::push_back(const T &obj)
 {
-
+  GEOFLOW_TRACE();
   GSIZET nnew = gindex_.end() + gindex_.pad() + 2;
 
   if ( nnew > n_ ) { // reallocate if required
@@ -658,6 +672,7 @@ const T *GTVector<T>::data() const
 template<class T> 
 GBOOL GTVector<T>::operator==(const GTVector<T> &obj) 
 {
+  GEOFLOW_TRACE();
   if ( !(this->gindex_ == obj.gindex_) ) return FALSE;
 
   GBOOL bret = TRUE;
@@ -680,6 +695,7 @@ GBOOL GTVector<T>::operator==(const GTVector<T> &obj)
 template<class T>
 GTVector<T> &GTVector<T>::operator=(const GTVector<T> &obj)
 {
+  GEOFLOW_TRACE();
   if ( this == &obj) {
     return *this;
   }
@@ -690,7 +706,7 @@ GTVector<T> &GTVector<T>::operator=(const GTVector<T> &obj)
 
   if ( data_ == NULLPTR ) {
     n_ = obj.capacity();
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
     if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
       cudaMallocManaged(&data_, n_*sizeof(T), cudaMemAttachGlobal);
     }
@@ -734,14 +750,15 @@ GTVector<T> &GTVector<T>::operator=(const GTVector<T> &obj)
 template<class T> 
 GTVector<T> &GTVector<T>::operator=(const std::vector<T> &obj) 
 {
-  
+  GEOFLOW_TRACE();
+
   if ( n_ > 0 ) { // If not allocated, allocate; else it's an error
     assert( (this->n_ < obj.capacity() || this->data_ != NULLPTR) && "L-vector has insufficient size");
   }
 
   if ( data_ == NULLPTR ) {
     n_ = obj.capacity();
-#if defined(USE_CUBLAS)
+#if defined(GEOFLOW_USE_CUBLAS)
     if ( !std::is_class<T>::value && !std::is_pointer<T>::value && std::is_floating_point<T>::value ) {
       cudaMallocManaged(&data_, n_*sizeof(T), cudaMemAttachGlobal);
     }
@@ -778,6 +795,7 @@ GTVector<T> &GTVector<T>::operator=(const std::vector<T> &obj)
 template<class T>
 void GTVector<T>::operator=(T a)
 {
+  GEOFLOW_TRACE();
   for ( auto j=gindex_.beg(); j<=gindex_.end(); j+=gindex_.stride() ) {
     data_[j] = a;
   }
@@ -801,6 +819,7 @@ void GTVector<T>::operator=(T a)
 template<class T> 
 void  GTVector<T>::range(GLONG ibeg, GLONG iend)
 {
+  GEOFLOW_TRACE();
 //assert(iend < n_ && ibeg <= iend && "Invalid range specification");
   if (  ibeg <= iend
    &&  (ibeg >= static_cast<GLONG>(n_) 
@@ -826,9 +845,8 @@ void  GTVector<T>::range(GLONG ibeg, GLONG iend)
 template<class T> 
 void  GTVector<T>::range_reset()
 {
-
+  GEOFLOW_TRACE();
   gindex_ = gindex_keep_;
-  
 } // end of method range_reset
 
 
@@ -842,6 +860,7 @@ void  GTVector<T>::range_reset()
 template<class T> 
 void GTVector<T>::set(T a)
 { 
+  GEOFLOW_TRACE();
   for ( auto j=gindex_.beg(); j<=gindex_.end(); j+=gindex_.stride() ) {
     data_[j] = a;
   }
@@ -862,6 +881,7 @@ void GTVector<T>::set(T a)
 template<class T> 
 void GTVector<T>::set(T *a, GSIZET n)
 { 
+  GEOFLOW_TRACE();
 #if !defined(GEOFLOW_USE_OPENACC)
   ASSERT(!(gindex_.beg()+n > gindex_.end()+1));
 #endif
@@ -887,6 +907,7 @@ void GTVector<T>::set(T *a, GSIZET n)
 template<class T> 
 void GTVector<T>::updatehost()
 {
+  GEOFLOW_TRACE();
 } // end of method updatehost
 
 
@@ -900,6 +921,7 @@ void GTVector<T>::updatehost()
 template<class T> 
 void GTVector<T>::updatedev()
 {
+  GEOFLOW_TRACE();
 } // end of method updatedev
 
 //**********************************************************************************
@@ -915,6 +937,7 @@ void GTVector<T>::updatedev()
 //**********************************************************************************
 template<class T> void GTVector<T>::transpose(GSIZET n)
 {
+  GEOFLOW_TRACE();
   assert(std::is_arithmetic<T>::value || std::is_pointer<T>::value &&
     "Invalid template type: GTVector<T>::transpose()");
 
@@ -940,6 +963,7 @@ template<class T>
 GTVector<T>
 GTVector<T>::operator+(const T b)
 {
+  GEOFLOW_TRACE();
     GTVector ans(*this);
     ans += b;
     return ans;
@@ -956,6 +980,7 @@ template<class T>
 GTVector<T>
 GTVector<T>::operator-(const T b)
 {
+  GEOFLOW_TRACE();
     GTVector ans(*this);
     ans -= b;
     return ans;
@@ -972,6 +997,7 @@ template<class T>
 GTVector<T>
 GTVector<T>::operator*(const T b)
 {
+  GEOFLOW_TRACE();
     GTVector ans(*this);
     ans *= b;
     return ans;
@@ -988,6 +1014,7 @@ template<class T>
 GTVector<T>
 GTVector<T>::operator+(const GTVector &obj)
 {
+  GEOFLOW_TRACE();
   return this->add_impl_(obj, typename std::is_floating_point<T>::type());
 } // end, operator+
 
@@ -1003,6 +1030,7 @@ template<class T>
 GTVector<T>
 GTVector<T>::operator-(const GTVector &obj)
 {
+  GEOFLOW_TRACE();
   return this->sub_impl_(obj, typename std::is_floating_point<T>::type());
 } // end, operator-
 
@@ -1017,6 +1045,7 @@ template<class T>
 GTVector<T>
 GTVector<T>::operator*(const GTVector &obj)
 {
+  GEOFLOW_TRACE();
   return this->mul_impl_(obj, typename std::is_floating_point<T>::type());
 } // end, operator*
 
@@ -1031,6 +1060,7 @@ GTVector<T>::operator*(const GTVector &obj)
 template<class T>
 T GTVector<T>::dot(const GTVector &obj)
 {
+  GEOFLOW_TRACE();
   assert(std::is_arithmetic<T>::value &&
     "Invalid template type: GVector<T>::dot()");
 
@@ -1055,6 +1085,7 @@ T GTVector<T>::dot(const GTVector &obj)
 template<class T>
 T GTVector<T>::gdot(const GTVector &obj, GC_COMM comm)
 {
+  GEOFLOW_TRACE();
   assert(std::is_arithmetic<T>::value &&
     "Invalid template type: GVector<T>::gdot()");
 
@@ -1082,6 +1113,7 @@ T GTVector<T>::gdot(const GTVector &obj, GC_COMM comm)
 template<class T>
 T GTVector<T>::gdot(const GTVector &b, const GTVector &c, GC_COMM comm)
 {
+  GEOFLOW_TRACE();
   assert(std::is_arithmetic<T>::value &&
     "Invalid template type: GVector<T>::gdot()");
 
@@ -1110,6 +1142,7 @@ template<class T>
 void
 GTVector<T>::operator+=(const T b)
 {
+  GEOFLOW_TRACE();
   for ( auto j=this->gindex_.beg(); j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
     this->data_[j] += b;
   }
@@ -1131,6 +1164,7 @@ template<class T>
 void
 GTVector<T>::operator-=(const T b)
 {
+  GEOFLOW_TRACE();
   for ( auto j=this->gindex_.beg(); j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
     this->data_[j] -= b;
   }
@@ -1152,6 +1186,7 @@ template<class T>
 void
 GTVector<T>::operator*=(const T b)
 {
+  GEOFLOW_TRACE();
   for ( auto j=this->gindex_.beg(); j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
     this->data_[j] *= b;
   }
@@ -1175,6 +1210,7 @@ template<class T>
 void
 GTVector<T>::operator+=(const GTVector &obj)
 {
+  GEOFLOW_TRACE();
   if ( obj.size() > 1 ) {
     for ( auto j=this->gindex_.beg(); j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
       this->data_[j] += obj[j-this->gindex_.beg()];
@@ -1205,7 +1241,7 @@ template<class T>
 void
 GTVector<T>::operator-=(const GTVector &obj)
 {
-
+  GEOFLOW_TRACE();
   if ( obj.size() > 1 ) {
     for ( auto j=this->gindex_.beg(); j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
       this->data_[j] -= obj[j-this->gindex_.beg()];
@@ -1236,6 +1272,7 @@ template<class T>
 void
 GTVector<T>::operator*=(const GTVector &obj)
 {
+  GEOFLOW_TRACE();
   if ( obj.size() > 1 ) {
     for ( auto j=this->gindex_.beg(); j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
       this->data_[j] *= obj[j-this->gindex_.beg()];
@@ -1265,6 +1302,7 @@ template<class T>
 void
 GTVector<T>::operator/=(const GTVector &obj)
 {
+  GEOFLOW_TRACE();
   if ( obj.size() > 1 ) {
     for ( auto j=this->gindex_.beg(); j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
       this->data_[j] /= obj[j-this->gindex_.beg()];
@@ -1293,6 +1331,7 @@ GTVector<T>::operator/=(const GTVector &obj)
 template<class T>
 GBOOL GTVector<T>::isfinite()
 {
+  GEOFLOW_TRACE();
   GBOOL bret = TRUE;
 
   for ( auto j=this->gindex_.beg(); j<=this->gindex_.end() && j<=this->gindex_.end() && bret; j+=this->gindex_.stride() ) {
@@ -1315,6 +1354,7 @@ GBOOL GTVector<T>::isfinite()
 template<class T>
 GBOOL GTVector<T>::isfinite(GSIZET &iwhere)
 {
+  GEOFLOW_TRACE();
   GBOOL bret = TRUE;
 
   for ( auto j=this->gindex_.beg(); j<=this->gindex_.end() && j<=this->gindex_.end() && bret; j+=this->gindex_.stride() ) {
@@ -1338,6 +1378,7 @@ template<class T>
 T
 GTVector<T>::maxn(GSIZET n)
 {
+  GEOFLOW_TRACE();
   T fm = std::numeric_limits<T>::min();
 
   for ( auto j=this->gindex_.beg(); j<this->gindex_.beg()+n && j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
@@ -1360,6 +1401,7 @@ template<class T>
 GSIZET
 GTVector<T>::imax()
 {
+  GEOFLOW_TRACE();
   GSIZET imax;
   T fm = std::numeric_limits<T>::min();
 
@@ -1386,6 +1428,7 @@ template<class T>
 T
 GTVector<T>::max()
 {
+  GEOFLOW_TRACE();
   T fm = std::numeric_limits<T>::min();
 
   for ( auto j=this->gindex_.beg(); j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
@@ -1408,6 +1451,7 @@ template<class T>
 T
 GTVector<T>::amax()
 {
+  GEOFLOW_TRACE();
   assert(std::is_arithmetic<T>::value && "Requires arithmetic template parameter");
 
   T fm = std::numeric_limits<T>::min();
@@ -1432,6 +1476,7 @@ template<class T>
 T
 GTVector<T>::amaxdiff(T tiny)
 {
+  GEOFLOW_TRACE();
   assert(std::is_arithmetic<T>::value && "Requires arithmetic template parameter");
 
   T diff;
@@ -1458,6 +1503,7 @@ template<class T>
 T
 GTVector<T>::minn(GSIZET n)
 {
+  GEOFLOW_TRACE();
   assert(std::is_arithmetic<T>::value && "Requires arithmetic template parameter");
 
   T fm = std::numeric_limits<T>::max();
@@ -1482,6 +1528,7 @@ template<class T>
 GSIZET
 GTVector<T>::imin()
 {
+  GEOFLOW_TRACE();
   assert(std::is_arithmetic<T>::value && "Requires arithmetic template parameter");
 
   GSIZET imin;
@@ -1510,6 +1557,7 @@ template<class T>
 T
 GTVector<T>::min()
 {
+  GEOFLOW_TRACE();
   T fm = std::numeric_limits<T>::max();
 
   for ( auto j=this->gindex_.beg(); j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
@@ -1532,6 +1580,7 @@ template<class T>
 T
 GTVector<T>::amin()
 {
+  GEOFLOW_TRACE();
   assert(std::is_arithmetic<T>::value && "Requires arithmetic template parameter");
 
   T fm = std::numeric_limits<T>::max();
@@ -1556,6 +1605,7 @@ template<class T>
 T
 GTVector<T>::amindiff(T tiny)
 {
+  GEOFLOW_TRACE();
   assert(std::is_arithmetic<T>::value && "Requires arithmetic template parameter");
 
   T diff;
@@ -1584,6 +1634,7 @@ template<class T>
 void
 GTVector<T>::pointProd(const GTVector<T> &obj, GTVector<T> &ret ) 
 {
+  GEOFLOW_TRACE();
   ASSERT(!( (obj.size() > 1 && obj.size() < this->size()) || ret.size() < this->size() ));
 
   if ( obj.size() > 1 ) {
@@ -1617,6 +1668,7 @@ template<class T>
 void
 GTVector<T>::pointProd(const T a, const GTVector<T> &obj, GTVector<T> &ret ) 
 {
+  GEOFLOW_TRACE();
   ASSERT( (ret.size() >= this->size()) && (obj.size() >= this->size()) );
 
   if ( obj.size() > 1 ) {
@@ -1648,6 +1700,7 @@ template<class T>
 void
 GTVector<T>::pointProd(const GTVector<T> &obj)
 {
+  GEOFLOW_TRACE();
   ASSERT(!( obj.size() > 1 && obj.size() < this->size() ));
 
   if ( obj.size() > 1 ) {
@@ -1681,6 +1734,7 @@ template<class T>
 void
 GTVector<T>::apointProd(const T a, const GTVector<T> &obj ) 
 {
+  GEOFLOW_TRACE();
   ASSERT(!( (obj.size() != this->size()) && obj.size() != 1 ));
 
   if ( obj.size() > 1 ) {
@@ -1709,6 +1763,7 @@ template<class T>
 void
 GTVector<T>::constProd(const T b, GTVector<T> &ret) 
 {
+  GEOFLOW_TRACE();
   ASSERT(!(ret.size() < this->size()));
 
   T *dret=ret.data();
@@ -1731,6 +1786,7 @@ template<class T>
 T
 GTVector<T>::sum()
 {
+  GEOFLOW_TRACE();
   T      sum=static_cast<T>(0);
 
   for ( auto j=this->gindex_.beg(); j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
@@ -1752,6 +1808,7 @@ template<class T>
 T
 GTVector<T>::sum(GSIZET ibeg, GSIZET iend) 
 {
+  GEOFLOW_TRACE();
   T      sum=static_cast<T>(0);
   assert(ibeg >= this->gindex_.beg() && iend <= this->gindex_.end());
   for ( auto j=ibeg; j<=iend; j+=this->gindex_.stride() ) {
@@ -1773,6 +1830,7 @@ template<class T>
 T
 GTVector<T>::infnorm() 
 {
+  GEOFLOW_TRACE();
   GDOUBLE xnorm=0.0;
 
   for ( auto j=this->gindex_.beg(); j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
@@ -1794,6 +1852,7 @@ template<class T>
 T
 GTVector<T>::Eucnorm() 
 {
+  GEOFLOW_TRACE();
   GDOUBLE n, xnorm=0.0;
 
   n = 0.0;
@@ -1818,6 +1877,7 @@ template<class T>
 void
 GTVector<T>::rpow(const GDOUBLE p)
 {
+  GEOFLOW_TRACE();
   assert(std::is_arithmetic<T>::value && "Requires arithmetic template parameter");
 
   GDOUBLE b;
@@ -1840,6 +1900,7 @@ template<class T>
 void
 GTVector<T>::abs()
 {
+  GEOFLOW_TRACE();
   assert(std::is_arithmetic<T>::value && "Requires arithmetic template parameter");
   for ( auto j=this->gindex_.beg(); j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
 //  tmp = sqrt( std::pow<GDOUBLE>(static_cast<GDOUBLE>(data_[j]),2) );
@@ -2083,7 +2144,7 @@ template<class T>
 GBOOL
 GTVector<T>::onlycontains(T val)
 {
-
+  GEOFLOW_TRACE();
   if ( this->data_ == NULLPTR ) return TRUE;
 
   GLLONG i=this->gindex_.beg();
@@ -2109,7 +2170,7 @@ template<class T>
 GLONG
 GTVector<T>::findfirst(T val)
 {
-
+  GEOFLOW_TRACE();
   if ( this->data_ == NULLPTR ) return -1;
 
   GLLONG i=this->gindex_.beg();
@@ -2134,7 +2195,7 @@ template<class T>
 GLONG
 GTVector<T>::findlast(T val)
 {
-
+  GEOFLOW_TRACE();
   if ( this->data_ == NULLPTR ) return -1;
 
   GLLONG i=this->gindex_.end();
@@ -2162,7 +2223,7 @@ template<class T>
 GBOOL
 GTVector<T>::contains(T val, GSIZET &iwhere)
 {
-
+  GEOFLOW_TRACE();
 #if 0
   assert(std::is_arithmetic<T>::value || std::is_string<T>::value || std::is_pointer<T>::value &&
     "Invalid template type: contains(T, GSIZET&)");
@@ -2199,6 +2260,7 @@ template<class T>
 GSIZET
 GTVector<T>::contains(T val, GSIZET *&iwhere, GSIZET &nw)
 {
+  GEOFLOW_TRACE();
 #if 0
   assert(std::is_arithmetic<T>::value || std::is_enum<T>::value || std::is_pointer<T>::value &&
     "Invalid template type: contains(T, GSIZET&)");
@@ -2248,6 +2310,7 @@ template<class T>
 GBOOL
 GTVector<T>::containsn(T val, GSIZET n, GSIZET &iwhere)
 {
+  GEOFLOW_TRACE();
 #if 0
   assert(std::is_arithmetic<T>::value || std::is_enum<T>::value || std::is_pointer<T>::value &&
     "Invalid template type: containsn(T, GSIZET, GSIZET&)");
@@ -2280,6 +2343,7 @@ template<class T>
 GBOOL
 GTVector<T>::contains(T val)
 {
+  GEOFLOW_TRACE();
 #if 0
   assert(std::is_arithmetic<T>::value || std::is_enum<T>::value || std::is_pointer<T>::value &&
     "Invalid template type: contains(T)");
@@ -2306,6 +2370,7 @@ template<class T>
 GBOOL
 GTVector<T>::containsn(T val, GSIZET n)
 {
+  GEOFLOW_TRACE();
 #if 0
   assert(std::is_arithmetic<T>::value || std::is_enum<T>::value || std::is_pointer<T>::value &&
     "Invalid template type: containsn(T, GSIZET)");
@@ -2340,6 +2405,7 @@ template<class T>
 GBOOL
 GTVector<T>::contains_floor(T val, GSIZET  &iwhere, T floor, GSIZET istart)
 {
+  GEOFLOW_TRACE();
   assert(std::is_arithmetic<T>::value || std::is_enum<T>::value &&
     "Invalid template type: contains_floor");
 
@@ -2377,6 +2443,7 @@ template<class T>
 GBOOL
 GTVector<T>::contains_ceil(T val, GSIZET  &iwhere, T ceil, GSIZET istart)
 {
+  GEOFLOW_TRACE();
   assert(std::is_arithmetic<T>::value || std::is_enum<T>::value &&
     "Invalid template type: contains_ceil");
 
@@ -2422,7 +2489,7 @@ GSIZET
 GTVector<T>::distinctrng(GSIZET ibeg, GSIZET n, GSIZET is, T *&vals,
                          GSIZET *&indices, GSIZET  &nd, T * const &tunique, GSIZET * const &itmp)
 {
-
+  GEOFLOW_TRACE();
   GLLONG nfound;
   GBOOL bcont;
 
@@ -2485,7 +2552,7 @@ GTVector<T>::distinctrng(GSIZET ibeg, GSIZET n, GSIZET is,
                          GSIZET *&indices, GSIZET  &nd,
                          T * const &tunique, GSIZET * const &itmp)
 {
-
+  GEOFLOW_TRACE();
   GLLONG i;
   GLLONG nfound;
   GBOOL bcont;
@@ -2547,6 +2614,7 @@ GTVector<T>::distinctrng_floor(GSIZET ibeg, GSIZET n, GSIZET is, T *&vals,
                                GSIZET *&indices, GSIZET  &nd, T floor, 
                                T * const &tunique, GSIZET * const &itmp)
 {
+  GEOFLOW_TRACE();
   GLLONG nfound;
   GBOOL bcont;
 
@@ -2613,7 +2681,7 @@ GTVector<T>::distinctrng_floor(GSIZET ibeg, GSIZET n, GSIZET is,
                                GSIZET *&indices, GSIZET  &nd, T floor,
                                T * const &tunique, GSIZET * const &itmp)
 {
-
+  GEOFLOW_TRACE();
   GLLONG nfound;
   GBOOL bcont;
 
@@ -2667,6 +2735,7 @@ GSIZET
 GTVector<T>::distinct(GSIZET  *&indices, GSIZET  &nd, 
                       T * const &tunique, GSIZET *const &itmp)
 {
+  GEOFLOW_TRACE();
 
   GSIZET n = distinctrng(this->gindex_.beg(), this->gindex_.end()-this->gindex_.end()+1, 1, indices, nd, tunique, itmp);
 
@@ -2697,6 +2766,7 @@ GSIZET
 GTVector<T>::distinct_floor(GSIZET  *&indices, GSIZET  &nd, 
                             T floor, T * const &tunique, GSIZET * const &itmp)
 {
+  GEOFLOW_TRACE();
   assert(std::is_arithmetic<T>::value || std::is_arithmetic<T>::value &&
     "Invalid template type: distinct_floor(GSIZET*, GSIZET&, T)");
 
@@ -2718,6 +2788,7 @@ template<class T>
 void
 GTVector<T>::sortdecreasing()
 {
+  GEOFLOW_TRACE();
   assert(std::is_arithmetic<T>::value || std::is_arithmetic<T>::value || std::is_pointer<T>::value &&
     "Invalid template type: sortdecreasing(1)");
 
@@ -2758,6 +2829,7 @@ template<class T>
 void
 GTVector<T>::sortdecreasing(GTVector<GSIZET> &isort)
 {
+  GEOFLOW_TRACE();
   assert(std::is_arithmetic<T>::value || std::is_arithmetic<T>::value || std::is_pointer<T>::value &&
     "Invalid template type: sortdecreasing(2)");
 
@@ -2804,6 +2876,7 @@ template<class T>
 void
 GTVector<T>::sortincreasing()
 {
+  GEOFLOW_TRACE();
   assert(std::is_arithmetic<T>::value || std::is_arithmetic<T>::value || std::is_pointer<T>::value &&
     "Invalid template type: sortincreasing(1)");
 
@@ -2846,6 +2919,7 @@ template<class T>
 void
 GTVector<T>::sortincreasing(GTVector<GSIZET> &isort)
 {
+  GEOFLOW_TRACE();
   assert(std::is_arithmetic<T>::value || std::is_arithmetic<T>::value || std::is_pointer<T>::value &&
     "Invalid template type: sortincreasing (2)");
 
@@ -2893,6 +2967,7 @@ template<class T>
 GLLONG
 GTVector<T>::partitions2l(T *a, GLLONG start, GLLONG end)
 {
+  GEOFLOW_TRACE();
   assert(std::is_arithmetic<T>::value || std::is_arithmetic<T>::value || std::is_pointer<T>::value &&
   "Invalid template type: partitions2l");
 
@@ -2938,6 +3013,7 @@ template<class T>
 GLLONG
 GTVector<T>::partitions2l(T *a, GSIZET *isort,  GLLONG start, GLLONG end)
 {
+  GEOFLOW_TRACE();
   assert(std::is_arithmetic<T>::value || std::is_arithmetic<T>::value || std::is_pointer<T>::value &&
   "Invalid template type: partitions2l");
 
@@ -2983,6 +3059,7 @@ template<class T>
 GLLONG
 GTVector<T>::partitionl2s(T *a, GLLONG start, GLLONG end)
 {
+  GEOFLOW_TRACE();
   assert(std::is_arithmetic<T>::value || std::is_arithmetic<T>::value || std::is_pointer<T>::value &&
   "Invalid template type: partitionl2s");
 
@@ -3028,6 +3105,7 @@ template<class T>
 GLLONG
 GTVector<T>::partitionl2s(T *a, GSIZET *isort, GLLONG start, GLLONG end)
 {
+  GEOFLOW_TRACE();
   assert(std::is_arithmetic<T>::value || std::is_arithmetic<T>::value || std::is_pointer<T>::value &&
   "Invalid template type: partitionl2s");
 
@@ -3073,6 +3151,7 @@ template<class T>
 void
 GTVector<T>::quicksorts2l(T *a, GLLONG start, GLLONG end)
 {
+  GEOFLOW_TRACE();
   assert(std::is_arithmetic<T>::value || std::is_arithmetic<T>::value || std::is_pointer<T>::value &&
   "Invalid template type: quicksorts2l");
 
@@ -3104,6 +3183,7 @@ template<class T>
 void
 GTVector<T>::quicksorts2l(T *a, GSIZET *isort,  GLLONG start, GLLONG end)
 {
+  GEOFLOW_TRACE();
   assert(std::is_arithmetic<T>::value || std::is_arithmetic<T>::value || std::is_pointer<T>::value &&
   "Invalid template type: quicksorts2l");
 
@@ -3132,6 +3212,7 @@ template<class T>
 void
 GTVector<T>::quicksortl2s(T *a, GLLONG start, GLLONG end)
 {
+  GEOFLOW_TRACE();
   assert(std::is_arithmetic<T>::value || std::is_arithmetic<T>::value || std::is_pointer<T>::value &&
   "Invalid template type: quicksortl2s");
 
@@ -3162,6 +3243,7 @@ template<class T>
 void
 GTVector<T>::quicksortl2s(T *a, GSIZET *isort, GLLONG start, GLLONG end)
 {
+  GEOFLOW_TRACE();
   assert(std::is_arithmetic<T>::value || std::is_arithmetic<T>::value || std::is_pointer<T>::value &&
   "Invalid template type: quicksortl2s");
 
@@ -3188,6 +3270,7 @@ template<class T>
 GTVector<T>
 GTVector<T>::add_impl_(const GTVector<T> &obj, std::false_type d)
 {
+  GEOFLOW_TRACE();
   GTVector vret(this->gindex_);
 
   T a = static_cast<T>(1);
@@ -3222,6 +3305,7 @@ template<class T>
 GTVector<T>
 GTVector<T>::add_impl_(const GTVector &obj, std::true_type d)
 {
+  GEOFLOW_TRACE();
   GTVector vret(this->gindex_);
   
   T a = static_cast<T>(1);
@@ -3263,6 +3347,7 @@ template<class T>
 GTVector<T>
 GTVector<T>::sub_impl_(const GTVector &obj, std::false_type d)
 {
+  GEOFLOW_TRACE();
   GTVector vret(this->gindex_);
 
   if ( obj.size() > 1 ) {
@@ -3295,6 +3380,7 @@ template<class T>
 GTVector<T>
 GTVector<T>::sub_impl_(const GTVector &obj, std::true_type d)
 {
+  GEOFLOW_TRACE();
   GTVector vret(this->gindex_);
 
   T a = static_cast<T>(1);
@@ -3335,6 +3421,7 @@ template<class T>
 GTVector<T>
 GTVector<T>::mul_impl_(const GTVector &obj, std::false_type d)
 {
+  GEOFLOW_TRACE();
   GTVector vret(this->gindex_);
 
   T a = static_cast<T>(1);
@@ -3369,6 +3456,7 @@ template<class T>
 GTVector<T>
 GTVector<T>::mul_impl_(const GTVector &obj, std::true_type d)
 {
+  GEOFLOW_TRACE();
     return mul_impl_(obj,std::false_type());
 } // end, mul_impl_
 
@@ -3385,7 +3473,7 @@ GTVector<T>::mul_impl_(const GTVector &obj, std::true_type d)
 template<class T>
 void GTVector<T>::concat(T *arr, GSIZET narr)
 {
-
+  GEOFLOW_TRACE();
   GLLONG istride = gindex_.stride();
   GLLONG ipad    = gindex_.pad();
 

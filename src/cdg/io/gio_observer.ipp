@@ -6,6 +6,8 @@
 // Derived From : ObserverBase.
 //==================================================================================
 
+#include "tbox/tracer.hpp"
+
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : Constructor method (1)
@@ -27,6 +29,7 @@ time_last_        (0.0),
 pIO_           (io_ptr),
 pEqn_        (equation)
 { 
+  GEOFLOW_TRACE();
   this->grid_  = &grid;
   stateinfo_   = equation->stateinfo(); 
 //this->iotraits_  = &io_obj.get_traits(); 
@@ -50,7 +53,7 @@ pEqn_        (equation)
 template<typename EquationType>
 void GIOObserver<EquationType>::observe_impl(const Time &t, const State &u, const State &uf)
 {
-
+  GEOFLOW_TRACE();
   assert(bInit_ && "Object not initialized");
 
   mpixx::communicator comm;
@@ -123,7 +126,7 @@ void GIOObserver<EquationType>::observe_impl(const Time &t, const State &u, cons
 template<typename EquationType>
 void GIOObserver<EquationType>::init_impl(StateInfo &info)
 {
-
+  GEOFLOW_TRACE();
    time_last_  = info.time ;
    ocycle_     = info.index;
  
@@ -145,6 +148,7 @@ void GIOObserver<EquationType>::init_impl(StateInfo &info)
 template<typename EquationType>
 void GIOObserver<EquationType>::print_derived(const Time &t, const State &u)
 {
+  GEOFLOW_TRACE();
 
   GString            sop;   // math operation
 //GTVector<GString>  sdqnames;

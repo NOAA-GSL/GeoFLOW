@@ -42,6 +42,7 @@ ndim_                     (GDIM),
 gdd_                   (NULLPTR),
 lshapefcn_             (NULLPTR)
 {
+  GEOFLOW_TRACE();
   assert((b.size() == GDIM ) 
         && "Basis has incorrect dimensionalilty");
 
@@ -130,6 +131,7 @@ lshapefcn_             (NULLPTR)
 //**********************************************************************************
 GGridBox::~GGridBox()
 {
+  GEOFLOW_TRACE();
   if ( lshapefcn_ != NULLPTR ) delete lshapefcn_;
   if ( gdd_       != NULLPTR ) delete gdd_;
 } // end, destructor
@@ -144,6 +146,7 @@ GGridBox::~GGridBox()
 //**********************************************************************************
 std::ostream &operator<<(std::ostream &str, GGridBox &e)
 {
+  GEOFLOW_TRACE();
   
   str << "    Lbox: " << e.Lbox_;
   str << std::endl << " Centroids: " ;
@@ -164,6 +167,7 @@ std::ostream &operator<<(std::ostream &str, GGridBox &e)
 //**********************************************************************************
 void GGridBox::set_partitioner(GDD_base<GFTYPE> *gdd)
 {
+  GEOFLOW_TRACE();
 
   gdd_ = gdd;
 
@@ -179,6 +183,7 @@ void GGridBox::set_partitioner(GDD_base<GFTYPE> *gdd)
 //**********************************************************************************
 void GGridBox::init2d()
 {
+  GEOFLOW_TRACE();
 
   find_subdomain();
 
@@ -194,6 +199,7 @@ void GGridBox::init2d()
 //**********************************************************************************
 void GGridBox::init3d()
 {
+  GEOFLOW_TRACE();
 
   find_subdomain();
 
@@ -210,6 +216,7 @@ void GGridBox::init3d()
 //**********************************************************************************
 void GGridBox::do_elems()
 {
+  GEOFLOW_TRACE();
   if ( ndim_ == 2 ) do_elems2d();
   if ( ndim_ == 3 ) do_elems3d();
 
@@ -229,6 +236,7 @@ void GGridBox::do_elems()
 void GGridBox::do_elems(GTMatrix<GINT> &p,
                         GTVector<GTVector<GFTYPE>> &xnodes)
 {
+  GEOFLOW_TRACE();
   if ( ndim_ == 2 ) do_elems2d(p, xnodes);
   if ( ndim_ == 3 ) do_elems3d(p, xnodes);
 
@@ -251,6 +259,7 @@ void GGridBox::do_elems(GTMatrix<GINT> &p,
 //**********************************************************************************
 void GGridBox::do_elems2d()
 {
+  GEOFLOW_TRACE();
   assert(gbasis_.size()>0 && "Must set basis first");
   assert(ndim_ == 2 && "Dimension must be 2");
 
@@ -360,7 +369,7 @@ void GGridBox::do_elems2d()
 //**********************************************************************************
 void GGridBox::do_elems3d()
 {
-
+  GEOFLOW_TRACE();
   assert(gbasis_.size()>0 && "Must set basis first");
   assert(ndim_ == 3 && "Dimension must be 3");
 
@@ -471,6 +480,7 @@ void GGridBox::do_elems3d()
 void GGridBox::do_elems2d(GTMatrix<GINT> &p,
                           GTVector<GTVector<GFTYPE>> &gxnodes)
 {
+  GEOFLOW_TRACE();
   assert(gbasis_.size()>0 && "Must set basis pool first");
   assert(ndim_ == 2 && "Dimension must be 2");
 
@@ -582,6 +592,7 @@ void GGridBox::do_elems2d(GTMatrix<GINT> &p,
 void GGridBox::do_elems3d(GTMatrix<GINT> &p,
                           GTVector<GTVector<GFTYPE>> &gxnodes)
 {
+  GEOFLOW_TRACE();
   assert(gbasis_.size()>0 && "Must set basis pool first");
   assert(ndim_ == 3 && "Dimension must be 3");
 
@@ -698,6 +709,7 @@ void GGridBox::do_elems3d(GTMatrix<GINT> &p,
 //**********************************************************************************
 void GGridBox::print(const GString &filename)
 {
+  GEOFLOW_TRACE();
   GString serr = "GGridBox::print: ";
   std::ofstream ios;
 
@@ -739,6 +751,7 @@ void GGridBox::print(const GString &filename)
 //**********************************************************************************
 void GGridBox::periodize()
 {
+  GEOFLOW_TRACE();
   assert(bInitialized_ && "Object not initialized");
 
   
@@ -795,6 +808,7 @@ void GGridBox::periodize()
 //**********************************************************************************
 void GGridBox::unperiodize()
 {
+  GEOFLOW_TRACE();
   // Use data from 'periodize' method to unset change in
   // coordinates:
 
@@ -831,7 +845,7 @@ void GGridBox::unperiodize()
 //**********************************************************************************
 void GGridBox::find_subdomain()
 {
-
+  GEOFLOW_TRACE();
   GSIZET          n=0, nglobal, nperrank, nthisrank, ntot, nxy;
   GLONG           beg_lin, end_lin;
   GLONG           ib, ie, jb, je, kb, ke;
@@ -927,8 +941,8 @@ void GGridBox::config_bdy(const PropertyTree           &ptree,
                           GTVector<GFTYPE>             &Mbdy)
                           
 {
+   GEOFLOW_TRACE();
   // Cycle over all geometric boundaries, and configure:
-
   GBOOL              bret, bperiodic=FALSE;
   GSIZET             nind;
   GTVector<GBOOL>    buniform(2*GDIM);
@@ -1069,6 +1083,7 @@ void GGridBox::config_bdy(const PropertyTree           &ptree,
 void GGridBox::find_bdy_ind2d(GINT bdyid, GBOOL bunique, GTVector<GSIZET> &ikeep,
                               GTVector<GUINT> &debdy, GTVector<GSIZET> &ibdy)
 {
+  GEOFLOW_TRACE();
   assert(bdyid >=0 && bdyid < 2*GDIM);
 
   GUINT  uu;
@@ -1201,6 +1216,7 @@ void GGridBox::find_bdy_ind2d(GINT bdyid, GBOOL bunique, GTVector<GSIZET> &ikeep
 void GGridBox::find_bdy_ind3d(GINT bdyid, GBOOL bunique, GTVector<GSIZET> &ikeep, 
                               GTVector<GUINT> &debdy, GTVector<GSIZET> &ibdy)
 {
+  GEOFLOW_TRACE();
 
   GUINT  uu;
   GSIZET nbdy, n, nold;
@@ -1342,6 +1358,7 @@ void GGridBox::find_bdy_ind2d(GINT bdyid, GBOOL bunique, GTVector<GSIZET> &ikeep
                               GTVector<GFTYPE> &mbdy, GTVector<GUINT> &debdy, 
                               GTVector<GSIZET> &ibdy)
 {
+  GEOFLOW_TRACE();
   assert(bdyid >=0 && bdyid < 2*GDIM);
 
   GBOOL             bexist;
@@ -1455,6 +1472,7 @@ void GGridBox::find_bdy_ind3d(GINT bdyid, GBOOL bunique, GTVector<GSIZET> &ikeep
                               GTVector<GFTYPE> &mbdy, GTVector<GUINT> &debdy, 
                               GTVector<GSIZET> &ibdy)
 {
+  GEOFLOW_TRACE();
   assert(bdyid >=0 && bdyid < 2*GDIM);
 #if 0
   GBOOL             bexist;
@@ -1558,6 +1576,7 @@ void GGridBox::find_bdy_ind3d(GINT bdyid, GBOOL bunique, GTVector<GSIZET> &ikeep
 //**********************************************************************************
 GBOOL GGridBox::is_global_vertex(GTPoint<GFTYPE> &pt)
 {
+  GEOFLOW_TRACE();
   GBOOL           bret = FALSE;
 
   for( auto j=0; j<pow(2,ndim_) && !bret; j++ ) {
@@ -1580,7 +1599,7 @@ GBOOL GGridBox::is_global_vertex(GTPoint<GFTYPE> &pt)
 //**********************************************************************************
 GBOOL GGridBox::on_global_edge(GINT iface, GTPoint<GFTYPE> &pt)
 {
-
+  GEOFLOW_TRACE();
   assert( iface >=0 && iface <=5 && "Invalid face ID specification");
 
   GBOOL           bret = FALSE;
@@ -1652,7 +1671,7 @@ void GGridBox::do_face_normals(GTMatrix<GTVector<GFTYPE>>    &dXdXi,
                                GTVector<GTVector<GFTYPE>>    &normals,
                                GTVector<GINT>                &depComp)
 {
-
+  GEOFLOW_TRACE();
   assert(gieface.size() == gdeface.size() );
 
   GSIZET nface;
@@ -1704,6 +1723,7 @@ void GGridBox::do_face_normals2d(GTMatrix<GTVector<GFTYPE>>    &dXdXi,
                                  GTVector<GTVector<GFTYPE>>    &normals,
                                  GTVector<GINT>                &depComp)
 {
+  GEOFLOW_TRACE();
    GINT              ib, ic, ip; 
    GUINT             id, it;
    GSIZET            mult;
@@ -1821,6 +1841,7 @@ void GGridBox::do_face_normals3d(GTMatrix<GTVector<GFTYPE>>    &dXdXi,
                                  GTVector<GTVector<GFTYPE>>    &normals,
                                  GTVector<GINT>                &depComp)
 {
+  GEOFLOW_TRACE();
    GINT            fi, ib, ic; 
    GUINT           id, it; 
    GINT            ifx [6][2] = { {0,2}, {1,2}, {2,0},
@@ -1881,6 +1902,7 @@ void GGridBox::do_bdy_normals(GTMatrix<GTVector<GFTYPE>>    &dXdXi,
                               GTVector<GTVector<GFTYPE>>    &normals,
                               GTVector<GINT>                &depComp)
 {
+  GEOFLOW_TRACE();
 
   GSIZET icurr, nbdy, nface;
 
@@ -1967,6 +1989,7 @@ void GGridBox::do_bdy_normals2d(GTMatrix<GTVector<GFTYPE>>    &dXdXi,
                                 GTVector<GTVector<GFTYPE>>    &normals,
                                 GTVector<GINT>                &depComp)
 {
+  GEOFLOW_TRACE();
 #if 0
    GINT            ib, ic, ip;
    GUINT           id, it;
@@ -2061,6 +2084,7 @@ void GGridBox::do_bdy_normals3d(GTMatrix<GTVector<GFTYPE>>    &dXdXi,
                                 GTVector<GTVector<GFTYPE>>    &normals,
                                 GTVector<GINT>                &depComp)
 {
+  GEOFLOW_TRACE();
 #if 0
    GSIZET          ib, ic, ip; 
    GINT            ixi[6][2] = { {0,2}, {1,2}, {0,2}, 

@@ -158,8 +158,8 @@ template<>
 void grad(GGrid &grid, GTVector<GFTYPE> &u, const GINT idir, 
           GTVector<GTVector<GFTYPE>*> &tmp, GTVector<GFTYPE> &gradc)
 {
-  assert ( idir >0 && idir <=3 && "Invalid compoment specified");
   GEOFLOW_TRACE();
+  assert ( idir >0 && idir <=3 && "Invalid compoment specified");
 
   grid.deriv(u, idir, *tmp[0], gradc);
 

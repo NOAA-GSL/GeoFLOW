@@ -1134,6 +1134,7 @@ void GGrid::deriv(GTVector<GFTYPE> &u, GINT idir, GTVector<GFTYPE> &utmp,
 void GGrid::wderiv(GTVector<GFTYPE> &u, GINT idir, GBOOL dotrans, 
                   GTVector<GFTYPE> &utmp, GTVector<GFTYPE> &du)
 {
+  GEOFLOW_TRACE();
   assert(bInitialized_ && "Object not inititialized");
 
 
@@ -1209,6 +1210,7 @@ GTVector<GFTYPE> t1(ndof());
 void GGrid::wderiv(GTVector<GFTYPE> &u, GINT idir, GBOOL bwghts, GTVector<GFTYPE> &utmp, 
                    GTVector<GFTYPE> &du)
 {
+  GEOFLOW_TRACE();
   assert(bInitialized_ && "Object not inititialized");
 
 
@@ -1253,6 +1255,7 @@ void GGrid::wderiv(GTVector<GFTYPE> &u, GINT idir, GBOOL bwghts, GTVector<GFTYPE
 //**********************************************************************************
 void GGrid::init_local_face_info()
 {
+  GEOFLOW_TRACE();
   GBOOL                        bret;
   GSIZET                       ibeg, iend; // beg, end indices for global array
   GTVector<GINT>               itmp; 
@@ -1487,8 +1490,7 @@ void GGrid::add_terrain(const State &xb, State &utmp)
 //************************************************************************************
 void GGrid::smooth(GTVector<GFTYPE> &tmp, GTVector<GFTYPE> &u)
 {
-
-  GEOFLOW_TRACE_STOP();
+  GEOFLOW_TRACE();
 
   tmp = u;
 

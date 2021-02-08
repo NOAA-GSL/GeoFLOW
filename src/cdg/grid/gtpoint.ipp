@@ -23,6 +23,7 @@ x3        (0),
 x4        (0),
 eps_      (0)
 {
+  GEOFLOW_TRACE();
   if ( std::is_floating_point<T>::value ) {
     eps_ = 100*std::numeric_limits<T>::min();
   }
@@ -50,6 +51,7 @@ x3        (0),
 x4        (0),
 eps_      (0)
 {
+  GEOFLOW_TRACE();
   if ( std::is_floating_point<T>::value ) {
     eps_ = 100*std::numeric_limits<T>::min();
   }
@@ -77,6 +79,7 @@ x2        (0),
 x3        (0),
 x4        (0)
 {
+  GEOFLOW_TRACE();
   px_.resize(gdim_); 
   if ( gdim_ > 0 ) px_[0] = &x1;
   if ( gdim_ > 1 ) px_[1] = &x2;
@@ -95,6 +98,7 @@ x4        (0)
 template<typename T>
 GTPoint<T>::GTPoint(const GTPoint<T> &e)
 {
+  GEOFLOW_TRACE();
   gdim_ = e.gdim_;
   eps_  = e.eps_;
   x1 = e.x1;
@@ -119,6 +123,7 @@ GTPoint<T>::GTPoint(const GTPoint<T> &e)
 template<typename T>
 GTPoint<T>::~GTPoint()
 {
+  GEOFLOW_TRACE();
 }
 
 //**********************************************************************************
@@ -132,6 +137,7 @@ GTPoint<T>::~GTPoint()
 template<typename T>
 void GTPoint<T>::setBracket(T e)
 {
+  GEOFLOW_TRACE();
   eps_ = e;
 } // end of method setBracket
 
@@ -146,6 +152,7 @@ void GTPoint<T>::setBracket(T e)
 template<typename T>
 T GTPoint<T>::getBracket()
 {
+  GEOFLOW_TRACE();
   return eps_; 
 } // end of method getBracket
 
@@ -159,6 +166,7 @@ T GTPoint<T>::getBracket()
 template<typename T>
 void GTPoint<T>::resize(GINT dim)
 {
+  GEOFLOW_TRACE();
   gdim_ = dim;
   px_.resize(gdim_); 
   if ( gdim_ > 0 ) px_[0] = &x1;

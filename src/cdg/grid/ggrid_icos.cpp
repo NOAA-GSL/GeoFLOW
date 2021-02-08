@@ -47,8 +47,8 @@ radiuso_                          (0.0), // don't need this one in 2d
 gdd_                          (NULLPTR),
 lshapefcn_                    (NULLPTR)
 {
-  assert(b.size() == GDIM && "Basis has incorrect dimensionality");
   GEOFLOW_TRACE();
+  assert(b.size() == GDIM && "Basis has incorrect dimensionality");
   
   GString snorm;
   GString gname   = ptree.getValue<GString>("grid_type");
@@ -111,7 +111,7 @@ GGridIcos::~GGridIcos()
 //**********************************************************************************
 std::ostream &operator<<(std::ostream &str, GGridIcos &e)
 {
-  
+  GEOFLOW_TRACE();
   str << " radiusi: " << e.radiusi_;
   str << " radiusi: " << e.radiuso_;
   str << " level  : " << e.ilevel_;
@@ -346,6 +346,7 @@ void GGridIcos::lagrefine()
 //**********************************************************************************
 void GGridIcos::do_elems()
 {
+  GEOFLOW_TRACE();
   if ( ndim_ == 2 ) do_elems2d(irank_);
   if ( ndim_ == 3 ) do_elems3d(irank_);
 
@@ -365,6 +366,7 @@ void GGridIcos::do_elems()
 void GGridIcos::do_elems(GTMatrix<GINT> &p,
                         GTVector<GTVector<GFTYPE>> &xnodes)
 {
+  GEOFLOW_TRACE();
   if ( ndim_ == 2 ) do_elems2d(p, xnodes);
   if ( ndim_ == 3 ) do_elems3d(p, xnodes);
 
@@ -840,6 +842,7 @@ void GGridIcos::do_elems3d(GTMatrix<GINT> &p,
 //**********************************************************************************
 void GGridIcos::print(const GString &filename, GCOORDSYST icoord)
 {
+  GEOFLOW_TRACE();
   GString serr = "GridIcos::print: ";
   std::ofstream ios;
 
@@ -1274,8 +1277,8 @@ void GGridIcos::do_bdy_normals3d(GTMatrix<GTVector<GFTYPE>>  &dXdXi,
                                  GTVector<GTVector<GFTYPE>>  &normals,
                                  GTVector<GINT>              &idepComp)
 {
+  GEOFLOW_TRACE();
 #if 0
-	GEOFLOW_TRACE();
    GSIZET          ib, ic, ip; 
    GFTYPE          tiny;
    GFTYPE          xm;

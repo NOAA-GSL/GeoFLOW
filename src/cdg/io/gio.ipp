@@ -6,6 +6,8 @@
 // Derived From : IOBase.
 //==================================================================================
 
+#include "tbox/tracer.hpp"
+
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : Constructor method (1)
@@ -23,6 +25,7 @@ comm_                       (comm),
 cfname_                  (NULLPTR),
 nfname_                        (0)
 { 
+  GEOFLOW_TRACE();
 #if !defined(GEOFLOW_USE_MPI)
   assert(this->traits_->io_type == IOBase<IOType>::GIO_COLL && "Collective IO only allowed if MPI is used");
 #endif
@@ -40,6 +43,7 @@ nfname_                        (0)
 template<typename IOType>
 GIO<IOType>::~GIO()
 { 
+  GEOFLOW_TRACE();
 #if defined(GEOFLOW_USE_MPI)
   MPI_Type_free(&mpi_state_type_);
 #endif
@@ -57,6 +61,7 @@ GIO<IOType>::~GIO()
 template<typename IOType>
 void GIO<IOType>::update_type(StateInfo &info)
 {
+  GEOFLOW_TRACE();
 
   // Update formats based on info. This must be called before 
   // test on traits_->io_type:
@@ -84,6 +89,7 @@ void GIO<IOType>::update_type(StateInfo &info)
 template<typename IOType>
 void GIO<IOType>::init()
 {
+  GEOFLOW_TRACE();
 
   if ( this->traits_.io_type != IOBase<IOType>::GIO_COLL ) {
     bInit_ = TRUE;
@@ -148,6 +154,7 @@ void GIO<IOType>::init()
 template<typename IOType>
 void GIO<IOType>::write_state_impl(std::string filepref, StateInfo &info, const State &u)
 {
+  GEOFLOW_TRACE();
   GString        serr = "write_state_impl: ";
   GSIZET         nb, nc, nd;
   GTVector<GTVector<Value>>
@@ -241,6 +248,7 @@ void GIO<IOType>::write_state_impl(std::string filepref, StateInfo &info, const 
 template<typename IOType>
 void GIO<IOType>::read_state_impl(std::string filepref, StateInfo &info, State  &u, bool bstate)
 {
+  GEOFLOW_TRACE();
   GString              serr ="read_state_impl: ";
   GINT                 ivers, nc, nr, nt;
   GElemType            igtype;
@@ -312,6 +320,7 @@ void GIO<IOType>::read_state_impl(std::string filepref, StateInfo &info, State  
 template<typename IOType>
 void GIO<IOType>::read_state_info_impl(std::string filename, StateInfo &info)
 {
+  GEOFLOW_TRACE();
   GString              serr ="read_state_info_impl: ";
   GSIZET               nh;
   Traits               ttraits;
@@ -337,6 +346,7 @@ void GIO<IOType>::read_state_info_impl(std::string filename, StateInfo &info)
 template<typename IOType>
 GSIZET GIO<IOType>::write_posix(GString filename, StateInfo &info, const GTVector<Value> &u) 
 {
+  GEOFLOW_TRACE();
 
     GString  serr ="write_posix: ";
     FILE     *fp;
@@ -381,6 +391,7 @@ GSIZET GIO<IOType>::write_posix(GString filename, StateInfo &info, const GTVecto
 template<typename IOType>
 GSIZET GIO<IOType>::read_posix(GString filename, StateInfo &info, GTVector<Value> &u, bool bstate)
 {
+  GEOFLOW_TRACE();
 
     GString serr = "read_posix: ";
     FILE     *fp;
@@ -447,6 +458,7 @@ GSIZET GIO<IOType>::read_posix(GString filename, StateInfo &info, GTVector<Value
 template<typename IOType>
 GSIZET GIO<IOType>::write_header_posix(GString filename, StateInfo &info, Traits &traits)
 {
+  GEOFLOW_TRACE();
     GString serr ="write_header_posix: ";
     GINT   imulti = static_cast<GINT>(traits.multivar);
     GSIZET nb, nd, nh, numr;
@@ -500,6 +512,7 @@ GSIZET GIO<IOType>::write_header_posix(GString filename, StateInfo &info, Traits
 template<typename IOType>
 GSIZET GIO<IOType>::write_header_coll(GString filename, StateInfo &info, Traits &traits)
 {
+  GEOFLOW_TRACE();
   GString serr ="write_header: ";
   GINT       nh, imulti, iret;
   GSIZET     nb, numr;
@@ -562,6 +575,7 @@ GSIZET GIO<IOType>::write_header_coll(GString filename, StateInfo &info, Traits 
 template<typename IOType>
 GSIZET GIO<IOType>::read_header(GString filename, StateInfo &info, Traits &traits)
 {
+  GEOFLOW_TRACE();
 
     GString serr ="read_header: ";
     GINT imulti ;
@@ -644,6 +658,7 @@ GSIZET GIO<IOType>::read_header(GString filename, StateInfo &info, Traits &trait
 template<typename IOType>
 GSIZET GIO<IOType>::sz_header(const StateInfo &info, const Traits &traits)
 {
+  GEOFLOW_TRACE();
 
     GString serr ="sz_header: ";
     GSIZET nd, numr;
@@ -668,6 +683,7 @@ GSIZET GIO<IOType>::sz_header(const StateInfo &info, const Traits &traits)
 template<typename IOType>
 void GIO<IOType>::resize(GINT n)
 {
+  GEOFLOW_TRACE();
 
   if ( n > nfname_ ) {
     if ( cfname_ != NULLPTR ) delete [] cfname_;
@@ -691,6 +707,7 @@ void GIO<IOType>::resize(GINT n)
 template<typename IOType>
 GSIZET GIO<IOType>::write_coll(GString filename, StateInfo &info, const State &u)
 {
+  GEOFLOW_TRACE();
 #if !defined(GEOFLOW_USE_MPI)
   #error "Illegal entry into GIO<IOType>::write_coll: MPI not defined"
 #endif
@@ -764,6 +781,7 @@ GSIZET GIO<IOType>::write_coll(GString filename, StateInfo &info, const State &u
 template<typename IOType>
 GSIZET GIO<IOType>::read_coll(GString filename, StateInfo &info, State &u, bool bstate)
 {
+  GEOFLOW_TRACE();
 #if defined(GEOFLOW_USE_MPI)
 
     GString        serr = "read_coll: ";

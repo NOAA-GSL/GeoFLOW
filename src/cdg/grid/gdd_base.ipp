@@ -26,6 +26,7 @@ GDD_base<T>::GDD_base(GINT nprocs)
 :
 nprocs_  (nprocs)
 {
+  GEOFLOW_TRACE();
 } // end of constructor method (1)
 
 
@@ -39,6 +40,7 @@ nprocs_  (nprocs)
 template<typename T>
 GDD_base<T>::GDD_base(const GDD_base &obj)
 {
+  GEOFLOW_TRACE();
   nprocs_ = obj.nprocs_;
 } // end, destructor
 
@@ -53,6 +55,7 @@ GDD_base<T>::GDD_base(const GDD_base &obj)
 template<typename T>
 GDD_base<T>::~GDD_base()
 {
+  GEOFLOW_TRACE();
 } // end, destructor
 
 
@@ -72,6 +75,7 @@ GDD_base<T>::~GDD_base()
 template<typename T>
 GSIZET GDD_base<T>::doDD(const GTVector<GTVector<T>>&x, GINT irank, GTVector<GINT> &iret)
 {
+  GEOFLOW_TRACE();
   GString serr = "GDD_base<T>::doDD (1): ";
   assert(irank >=0 && irank < nprocs_ && "Invalid rank");
 
@@ -114,6 +118,7 @@ GSIZET GDD_base<T>::doDD(const GTVector<GTVector<T>>&x, GINT irank, GTVector<GIN
 template<typename T>
 GSIZET GDD_base<T>::doDD(const GTVector<GTPoint<T>> &x, GINT irank, GTVector<GINT> &iret)
 {
+  GEOFLOW_TRACE();
   GString serr = "GDD_base<T>::doDD (2): ";
   assert(irank >=0 && irank < nprocs_ && "Invalid rank");
 

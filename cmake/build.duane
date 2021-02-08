@@ -1,28 +1,34 @@
 #
-# ========================== Build Options ===========================
+# =====================================================================
+#                           Build Options
+# =====================================================================
 #
-set   (GDIM "2")                            # Dimensionality
-
-option(DO_TESTS       "DO_TESTS"      OFF)  # Build testing targets
-option(DO_GEOFLOW     "DO_GEOFLOW"    ON )  # Build GeoFLOW target
-
-option(DO_DEBUG       "DO_DEBUG"      OFF)  # Compile for DEBUG
-option(USE_OPENMP     "USE_OPENMP"    OFF)  # Compile for OpenMP
-option(USE_OPENACC    "USE_OPENACC"   OFF)  # Compile for OpenACC
-option(USE_GBLAS      "USE_GBLAS"     ON )  # Use GBlas instead of C 
-option(USE_MPI        "USE_MPI"       ON )  # Build with MPI?
-option(USE_GPTL       "USE_GPTL"      OFF)  # Build with GPTL?
-option(USE_PAPI       "USE_PAPI"      OFF)  # Is GPTL built with PAPI support?
-option(DO_AUTO_PROF   "DO_AUTO_PROF"  OFF)  # Do auto-profing with GPTL?
-option(VERBOSE_CMAKE  "VERBOSE_CMAKE" ON )  # Verbose CMake Ouput
 
 #
-# ============================== Build Type ============================
-# Default: 
-# > cmake -D CMAKE_BUILD_TYPE=Debug
+# ---------------------------- Variables ------------------------------
 #
-set(CMAKE_BUILD_TYPE debug
-CACHE STRING "Type of build to configure")
+set(GDIM                  2         CACHE STRING "Problem Dimension")
+set(GEOFLOW_BUILD_TYPE    "Release" CACHE STRING "Build Type")
+set(OpenACC_ACCEL_TARGET  "tesla"   CACHE STRING "Target for OpenACC")
+
+#
+# ------------------------ Options (ON/OFF) ---------------------------
+#
+option(GEOFLOW_BUILD_TESTS        "Build testing targets"      ON)
+option(GEOFLOW_BUILD_GEOFLOW      "Build GeoFLOW target"       ON)
+
+option(GEOFLOW_USE_MPI            "Build with MPI"             ON)   
+option(GEOFLOW_USE_OPENMP         "Compile for OpenMP"        OFF)
+option(GEOFLOW_USE_CUBLAS         "Build with cuBLAS"         OFF)  
+option(GEOFLOW_USE_OPENACC        "Using OpenACC"             OFF)
+
+option(GEOFLOW_USE_GPTL           "Build with GPTL"           OFF)
+option(GEOFLOW_GPTL_AUTO_PROF     "Do auto-profing with GPTL" OFF)
+option(GEOFLOW_VERBOSE_CMAKE      "Verbose MakeFile Ouput"    OFF)
+
+option(GEOFLOW_TRACER_USE_PIO     "Use PIO Traced Ouput"      OFF)
+option(GEOFLOW_TRACER_USE_NVTX    "Use NVTX Profiling"        OFF)
+option(GEOFLOW_TRACER_USE_GPTL    "Use GPTL Profiling"        OFF)
 
 #
 # ==================== Compiler (Serial+Parallel) ======================
