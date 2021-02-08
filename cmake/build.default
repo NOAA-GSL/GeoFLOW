@@ -20,7 +20,6 @@ option(GEOFLOW_BUILD_GEOFLOW      "Build GeoFLOW target"       ON)
 option(GEOFLOW_USE_MPI            "Build with MPI"             ON)   
 option(GEOFLOW_USE_OPENMP         "Compile for OpenMP"        OFF)
 option(GEOFLOW_USE_CUBLAS         "Build with cuBLAS"         OFF)  
-option(GEOFLOW_USE_CBLAS          "Use System CBLAS"          OFF)  
 option(GEOFLOW_USE_OPENACC        "Using OpenACC"             OFF)
 
 option(GEOFLOW_USE_GPTL           "Build with GPTL"           OFF)
