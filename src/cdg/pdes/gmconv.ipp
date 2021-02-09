@@ -1420,6 +1420,7 @@ void GMConv<TypePack>::compute_derived_impl(const State &u, GString sop,
                                             State &utmp, State &uout, 
                                             std::vector<GINT> &iuout)
 { 
+  GINT   nc;
   Ftype  fact1, fact2, tb;
   State  tu(1);
 
@@ -1495,11 +1496,12 @@ void GMConv<TypePack>::compute_derived_impl(const State &u, GString sop,
     iuout.resize(1); iuout[0] = 0;
   }
   else if ( "vel"      == sop ) { // x-velocity
-    assert(uout .size() >= GDIM   && "Incorrect no. output components");
+    nc = grid_->gtype() == GE_2DEMBEDDED ? 3 : GDIM;;
+    assert(uout .size() >= nc  && "Incorrect no. output components");
     assert(utmp .size() >= 1   && "Incorrect no. tmp components");
-    iuout.resize(GDIM); 
+    iuout.resize(nc); 
     if ( !traits_.usemomden ) {
-     for ( auto j=0; j<GDIM; j++ ) {
+     for ( auto j=0; j<nc; j++ ) {
        *uout[j] = *u[j];
        iuout[j] = j;
      }
@@ -1507,8 +1509,8 @@ void GMConv<TypePack>::compute_derived_impl(const State &u, GString sop,
     else {
      *utmp[0] = *u[DENSITY];
       if ( traits_.usebase ) *utmp[0] += *u[BASESTATE];
-      utmp[0]->rpow(-1.0);
-      for ( auto j=0; j<GDIM; j++ ) {
+      utmp[0]->rpow(-1.0); // 1/d
+      for ( auto j=0; j<nc; j++ ) {
        *uout[j] = *u[j]; *uout[j] *= *utmp[0];
        iuout[j] = j;
      }
