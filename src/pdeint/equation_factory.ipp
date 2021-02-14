@@ -72,6 +72,7 @@ EquationFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid){
 	else if( "pde_mconv" == equation_name ) {
 		using EqnImpl = GMConv<ET>;
 
+                int nc_ = grid.gtype() == GE_2DEMBEDDED ? 3 : GDIM;
                 ctraits.docoriolis  = eqn_ptree.getValue<bool>  ("docoriolis");
                 ctraits.dodry       = eqn_ptree.getValue<bool>  ("dodry");
                 ctraits.dofallout   = eqn_ptree.getValue<bool>  ("dofallout");
@@ -83,7 +84,7 @@ EquationFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid){
                 ctraits.nbase       = ctraits.usebase ? 2 : 0;
                 ctraits.nlsector    = eqn_ptree.getValue<bool>  ("nliq",0);
                 ctraits.nisector    = eqn_ptree.getValue<bool>  ("nice",0);
-                ctraits.nsolve      = GDIM + 2                 // mom + denTot + energy_den
+                ctraits.nsolve      = nc_ + 2                 // mom + denTot + energy_den
                                     + (!ctraits.dodry ? 1 : 0) // vapor
                                     + ( ctraits.dofallout ? ctraits.nlsector 
                                                         + ctraits.nisector : 0); // q_i
