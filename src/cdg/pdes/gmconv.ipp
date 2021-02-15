@@ -26,6 +26,7 @@ nevolve_                     (0),
 nhydro_                      (0),
 nmoist_                      (0),
 icycle_                      (0),
+nc_                       (GDIM),
 gmass_                 (NULLPTR),
 gimass_                (NULLPTR),
 /*
@@ -47,6 +48,8 @@ steptop_callback_      (NULLPTR)
 
   traits_.iforced.resize(traits.iforced.size());
   traits_ = traits;
+
+  nc_ = grid_->gtype() == GE_2DEMBEDDED ? 3 : GDIM;
 
   if ( GDIM == 2 && icos ) {
     assert( !traits_.dograv && !traits_.dofallout  
@@ -199,7 +202,7 @@ void GMConv<TypePack>::dudt_impl(const Time &t, const State &u, const State &uf,
   StateComp *dp, *e, *p, *rhoT, *T; // energy, den, pressure, temperature
   StateComp *Mass;
   StateComp *tmp1, *tmp2;
-  State      g(GDIM); 
+  State      g(nc_); 
 
   // NOTE:
   // Make sure that, in init(), Helmholtz op is using only
@@ -545,21 +548,20 @@ void GMConv<TypePack>::init_impl(State &u, State &tmp)
 
   GBOOL      bmultilevel = FALSE;
   GSIZET     n;
-  GSIZET     nc = grid_->gtype() == GE_2DEMBEDDED ? 3 : GDIM;
   GINT       nexcl, nrhstmp;
   GGridIcos *icos = dynamic_cast<GGridIcos*>(grid_);
   CompDesc  *icomptype = &this->stateinfo().icomptype;
  
   assert(tmp.size() >= this->tmp_size());
 
-  v_.resize(GDIM); v_ = NULLPTR;
-  W_.resize(GDIM); W_ = NULLPTR;
+  v_.resize(nc_); v_ = NULLPTR;
+  W_.resize(nc_); W_ = NULLPTR;
 
   
   // Set space for state velocity, if needed:
   nexcl = 0;
   if ( traits_.usemomden ) {
-    for ( auto j=0; j<GDIM; j++ ) {
+    for ( auto j=0; j<v_.size(); j++ ) {
       v_[j] = tmp[j];
       nexcl++;
     }
@@ -567,7 +569,7 @@ void GMConv<TypePack>::init_impl(State &u, State &tmp)
 
   // Set space for terminal velocity, if needed:
   if ( icos && (traits_.nlsector || traits_.nisector)) {
-    for ( auto j=0; j<GDIM; j++ ) {
+    for ( auto j=0; j<W_.size(); j++ ) {
       W_[j] = tmp[j+v_.size()];
       nexcl++;
     }
@@ -609,7 +611,7 @@ void GMConv<TypePack>::init_impl(State &u, State &tmp)
   kappa_ = traits_.kappa;
 
   // Find no. state and solve members, and component types:
-  for( auto j=0; j<GDIM; j++ ) icomptype->push_back(GSC_KINETIC); 
+  for( auto j=0; j<v_.size(); j++ ) icomptype->push_back(GSC_KINETIC); 
   icomptype->push_back(GSC_DENSITYT); 
   icomptype->push_back(GSC_ENERGY); 
   if ( !traits_.dodry ) {
@@ -628,12 +630,12 @@ void GMConv<TypePack>::init_impl(State &u, State &tmp)
   // Specify starting indices for each sector
   // (negative if invalid):
   MOMENTUM   = 0;
-  ENERGY     = GDIM;
+  ENERGY     = nc_;
   DENSITY    = ENERGY+1;
   VAPOR      = traits_.dodry ? -1 : DENSITY+1;
   LIQMASS    = traits_.dodry ? -1 : VAPOR+1;
   ICEMASS    = traits_.dodry ? -1 : LIQMASS+traits_.nlsector;
-  PRESCRIBED = traits_.dodry ? GDIM+2 : ICEMASS+traits_.nisector;
+  PRESCRIBED = traits_.dodry ? nc_+2 : ICEMASS+traits_.nisector;
   BASESTATE  = PRESCRIBED;
   LIQTERMV   = traits_.dodry ? -1 : BASESTATE+traits_.nbase;
   ICETERMV   = traits_.dodry ? -1 : LIQTERMV+traits_.nlsector;
@@ -680,9 +682,9 @@ void GMConv<TypePack>::init_impl(State &u, State &tmp)
       // we're sure there's no overlap:
       uold_   .resize(traits_.nsolve); // RK-solution at time level n
       uevolve_.resize(traits_.nsolve); // current RK solution
-      ubase_.resize(traits_.nbase); // points to base-state components
+      ubase_  .resize(traits_.nbase);  // points to base-state components
       urktmp_ .resize(traits_.nsolve*(traits_.itorder+1)+1); // RK stepping work space
-      urhstmp_.resize(szrhstmp()); // work space for RHS
+      urhstmp_.resize(szrhstmp());     // work space for RHS
       nrhstmp = utmp_.size()-uold_.size()-urktmp_.size();
 
       assert(nrhstmp >= szrhstmp() && "Invalid rhstmp array size");
@@ -790,7 +792,7 @@ void GMConv<TypePack>::init_impl(State &u, State &tmp)
   // misc. helper arrays:
   nhydro_ = traits_.dodry ? 0 : traits_.nlsector + traits_.nisector + 1;
   nmoist_ = traits_.dodry ? 0 : nhydro_ + 1;
-  nevolve_ = GDIM + 2 + nmoist_;
+  nevolve_ = nc_ + 2 + nmoist_;
   this->stateinfo().nevolve = traits_.nsolve;
   this->stateinfo().npresc  = traits_.nstate - traits_.nsolve;
   qi_   .resize(nmoist_);
@@ -799,8 +801,8 @@ void GMConv<TypePack>::init_impl(State &u, State &tmp)
   tvliq_.resize(traits_.nlsector);
   qice_ .resize(traits_.nisector);
   tvice_.resize(traits_.nisector);
-  fv_   .resize(GDIM); 
-  s_   . resize(GDIM); 
+  fv_   .resize(nc_); 
+  s_   . resize(nc_); 
 
   qi_   = NULLPTR;
   tvi_  = NULLPTR;
@@ -811,7 +813,6 @@ void GMConv<TypePack>::init_impl(State &u, State &tmp)
   fv_   = NULLPTR;
   s_    = NULLPTR;
 
-  assert(this->get_filter_list().size() == nevolve_ );
 
   compute_base(u);
 
@@ -1027,7 +1028,7 @@ void GMConv<TypePack>::compute_vpref(StateComp &tvi, State &W)
    GGridIcos *icos = dynamic_cast<GGridIcos*>(grid_);
    GGridBox  *box  = dynamic_cast <GGridBox*>(grid_);
 
-   assert(W.size() == GDIM);
+   assert(W.size() == nc_);
 
    // Specify components for Cartesian grid:
    if ( box != NULLPTR ) {
@@ -1035,7 +1036,7 @@ void GMConv<TypePack>::compute_vpref(StateComp &tvi, State &W)
      // as preferred 'fallout' direction. In 2d, this
      // will be the 2-coord; in 3d, the 3-coord:
      W = NULLPTR;
-     W[GDIM-1] = &tvi; 
+     W[nc_-1] = &tvi; 
      return;
    }
 
@@ -1088,14 +1089,14 @@ void GMConv<TypePack>::compute_vpref(StateComp &tvi, GINT idir, StateComp &W)
    GGridIcos *icos = dynamic_cast<GGridIcos*>(grid_);
    GGridBox  *box  = dynamic_cast <GGridBox*>(grid_);
 
-   assert(idir > 0 && idir <= GDIM);
+   assert(idir > 0 && idir <= nc_);
 
    // Specify components for Cartesian grid:
    if ( box != NULLPTR ) {
      // In Cartesian coords, select the 'z' direction
      // as preferred 'fallout' direction. In 2d, this
      // will be the 2-coord; in 3d, the 3-coord:
-     if ( idir != GDIM ) {
+     if ( idir != nc_ ) {
        W = 0.0;
      }
      else {
@@ -1169,7 +1170,7 @@ void GMConv<TypePack>::compute_falloutsrc(StateComp &g, State &qi, State &tvi, G
    StateComp  *div, *qg; 
 
    assert(tvi.size() == qi.size());
-   assert(utmp.size() >= 2*GDIM+1);
+   assert(utmp.size() >= 2*nc_+1);
    assert(jexcl < 0 || (jexcl >=0 && jexcl < qi.size()));
 
    // Compute:
@@ -1180,8 +1181,8 @@ void GMConv<TypePack>::compute_falloutsrc(StateComp &g, State &qi, State &tvi, G
 
    nhydro = qi.size(); // traits_.nlsector + traits_.nisector;
 
-   qg    = utmp[GDIM+1];    // temp
-   div   = utmp[GDIM+2];    // temp
+   qg    = utmp[nc_+1];    // temp
+   div   = utmp[nc_+2];    // temp
    for ( auto j=0; j<nhydro; j++ ) {
      if ( j == jexcl ) continue;  
 
@@ -1223,10 +1224,10 @@ void GMConv<TypePack>::compute_pe(StateComp &rhoT, State &qi, State &tvi, State 
    GString     serr = "GMConv<TypePack>::compute_pe: ";
    GINT        nhydro; // no. hydrometeors
    StateComp   *tmp1, *tmp2;
-   State       g(GDIM); 
+   State       g(nc_); 
 
    assert(tvi.size() == qi.size());
-   assert(utmp.size() >= GDIM+2);
+   assert(utmp.size() >= nc_+2);
 
    // Compute:
    //    r = Sum_i rhoT q_i vec{g} . vec{W}_i,
@@ -1236,11 +1237,11 @@ void GMConv<TypePack>::compute_pe(StateComp &rhoT, State &qi, State &tvi, State 
 
    nhydro = qi.size(); // traits_.nlsector + traits_.nisector;
 
-   tmp1 = utmp[GDIM];
-   tmp2 = utmp[GDIM+1];
+   tmp1 = utmp[nc_];
+   tmp2 = utmp[nc_+1];
 
    // Set tmp space for gravity vector:
-   for ( auto j=0; j<GDIM; j++ ) g[j] = utmp[j];
+   for ( auto j=0; j<nc_; j++ ) g[j] = utmp[j];
   
    // Compute Cartersian components of gravity vector field:
   *tmp1 = -GG;
@@ -1291,8 +1292,8 @@ void GMConv<TypePack>::compute_base(State &u)
      // will be the 2-coord; in 3d, the 3-coord:
      for ( auto j=0; j<(*xnodes)[0].size(); j++ ) {
        x = (*xnodes)[0][j]; y = (*xnodes)[1][j];
-       if ( GDIM == 3 ) z = (*xnodes)[2][j];
-       r         = GDIM == 3 ? z : y;
+       if ( nc_ == 3 ) z = (*xnodes)[2][j];
+       r         = nc_ == 3 ? z : y;
        T         = traits_.Ts_base - GG*r/CPD;
        ptmp[j]   = traits_.P0_base*pow(T/traits_.Ts_base,CPD/RD);
        dtmp[j]   = ptmp[j] / ( RD * T );
@@ -1335,19 +1336,19 @@ void GMConv<TypePack>::assign_helpers(const State &u, const State &uf)
    qi_  = NULLPTR;
    tvi_ = NULLPTR;
    for ( auto j=0; j<nhydro_; j++ ) { //
-     qi_ [j] = u[GDIM+3+j]; // set mass frac vector
-     tvi_[j] = u[GDIM+3+nhydro_+j]; // set term speed for each qi
+     qi_ [j] = u[nc_+3+j]; // set mass frac vector
+     tvi_[j] = u[nc_+3+nhydro_+j]; // set term speed for each qi
    }
-   for ( auto j=0; j<GDIM; j++ ) fv_[j] = uf[j]; // kinetic forcing vector
+   for ( auto j=0; j<nc_; j++ ) fv_[j] = uf[j]; // kinetic forcing vector
    for ( auto j=0; j<traits_.nbase; j++ ) ubase_[j] = u[BASESTATE+j]; // base state
 
    GINT nliq = traits_.nlsector;
    GINT nice = traits_.nisector;
-   for ( auto j=0; j<GDIM; j++ ) s_    [j] = u[j];
-   for ( auto j=0; j<nliq; j++ ) qliq_ [j] = u[GDIM+3+j];
-   for ( auto j=0; j<nice; j++ ) qice_ [j] = u[GDIM+3+nliq+j];
-   for ( auto j=0; j<nliq; j++ ) tvliq_[j] = u[GDIM+3+  nliq+nice+j];
-   for ( auto j=0; j<nice; j++ ) tvice_[j] = u[GDIM+3+2*nliq+nice+j];
+   for ( auto j=0; j<s_.size(); j++ ) s_    [j] = u[j];
+   for ( auto j=0; j<nliq; j++ ) qliq_ [j] = u[nc_+3+j];
+   for ( auto j=0; j<nice; j++ ) qice_ [j] = u[nc_+3+nliq+j];
+   for ( auto j=0; j<nliq; j++ ) tvliq_[j] = u[nc_+3+  nliq+nice+j];
+   for ( auto j=0; j<nice; j++ ) tvice_[j] = u[nc_+3+2*nliq+nice+j];
 
 } // end of method assign_helpers
 
@@ -1368,12 +1369,12 @@ GINT GMConv<TypePack>::szrhstmp()
    
   // Get tmp size for operators:
   if ( box ) {
-    sum += box->gtype() == GE_DEFORMED ? 2*GDIM : GDIM;
+    sum += box->gtype() == GE_DEFORMED ? 2*nc_ : nc_;
   }
   else {
-    sum += 2*GDIM;
+    sum += 2*nc_;
   }
-  sum += GDIM + 3; // size for compute_* methods
+  sum += nc_ + 3; // size for compute_* methods
   sum += 6;        // size for misc tmp space in dudt_impl
 
   return sum;
@@ -1392,8 +1393,8 @@ GINT GMConv<TypePack>::tmp_size_impl()
 {
   GINT sum = 0;
  
-  sum += GDIM;                               // for v_ 
-  sum += traits_.nlsector || traits_.nisector ? GDIM : 0;  // for W_
+  sum += nc_;                                 // for v_ 
+  sum += traits_.nlsector || traits_.nisector ? nc_ : 0;  // for W_
   sum += traits_.nsolve;                     // old state storage
   sum += traits_.nsolve
        * (traits_.itorder+1)+1;              // RKK storage
@@ -1495,11 +1496,11 @@ void GMConv<TypePack>::compute_derived_impl(const State &u, GString sop,
     iuout.resize(1); iuout[0] = 0;
   }
   else if ( "vel"      == sop ) { // x-velocity
-    assert(uout .size() >= GDIM   && "Incorrect no. output components");
-    assert(utmp .size() >= 1   && "Incorrect no. tmp components");
-    iuout.resize(GDIM); 
+    assert(uout .size() >= nc_  && "Incorrect no. output components");
+    assert(utmp .size() >= 1    && "Incorrect no. tmp components");
+    iuout.resize(nc_); 
     if ( !traits_.usemomden ) {
-     for ( auto j=0; j<GDIM; j++ ) {
+     for ( auto j=0; j<nc_; j++ ) {
        *uout[j] = *u[j];
        iuout[j] = j;
      }
@@ -1507,8 +1508,8 @@ void GMConv<TypePack>::compute_derived_impl(const State &u, GString sop,
     else {
      *utmp[0] = *u[DENSITY];
       if ( traits_.usebase ) *utmp[0] += *u[BASESTATE];
-      utmp[0]->rpow(-1.0);
-      for ( auto j=0; j<GDIM; j++ ) {
+      utmp[0]->rpow(-1.0); // 1/d
+      for ( auto j=0; j<nc_; j++ ) {
        *uout[j] = *u[j]; *uout[j] *= *utmp[0];
        iuout[j] = j;
      }

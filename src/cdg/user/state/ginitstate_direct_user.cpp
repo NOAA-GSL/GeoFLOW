@@ -660,7 +660,7 @@ GBOOL impl_boxdrybubble(const PropertyTree &ptree, GString &sconfig, GGrid &grid
   std::vector<GFTYPE> xc, xr;  
   GString             sblock;
 
-  PropertyTree inittree    = ptree.getPropertyTree(sconfig);
+  PropertyTree inittree   = ptree.getPropertyTree(sconfig);
   sblock                   = ptree.getValue<GString>("pde_name");
   PropertyTree convptree   = ptree.getPropertyTree(sblock);
 
@@ -748,15 +748,19 @@ GBOOL impl_icosabcconv(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
 
   GString             serr = "impl_icosabcconv: ";
   GSIZET              kdn, kup, nxy;
-  GFTYPE              A, B, C, poly;
-  GFTYPE              x, y, z, r, lat, lon;
+  GFTYPE              alpha, A, B, C, hphase, poly;
+  GFTYPE              x, y, z, r, ri, ro, lat, lon;
   GFTYPE              exner, p, pi2, P0, T0;
   GTVector<GFTYPE>   *d, *e;
+  GTVector<GTVector<GFTYPE>*>
+                      vh(2);
   GString             sblock;
 
   PropertyTree inittree    = ptree.getPropertyTree(sconfig);
   sblock                   = ptree.getValue<GString>("pde_name");
   PropertyTree convptree   = ptree.getPropertyTree(sblock);
+  sblock                   = ptree.getValue<GString>("grid_type");
+  PropertyTree gridptree   = ptree.getPropertyTree(sblock);
 
 
   GGridIcos  *icos   = dynamic_cast <GGridIcos*>(&grid);
@@ -770,6 +774,14 @@ GBOOL impl_icosabcconv(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
   d     = u[GDIM+1];// total density 
   nxy   = (*xnodes)[0].size(); // same size for x, y, z
 
+  #if defined(_G_IS2D)
+  ro     = gridptree.getValue <GFTYPE>("radius");
+  ri     = 0.0;
+  #elif defined(_G_IS3D)
+  ri     = gridptree.getValue <GFTYPE>("radiusi");
+  ro     = gridptree.getValue <GFTYPE>("radiuso");
+  #endif
+  hphase = 2.0*PI/(ro - ri);
   T0    = inittree.getValue<GFTYPE>("T0", 15.0);  
   P0    = inittree.getValue<GFTYPE>("P0", 15.0); // in mb 
         P0 *= 100.0; // convert to Pa
@@ -780,6 +792,8 @@ GBOOL impl_icosabcconv(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
   kdn   = inittree.getValue  <GINT>("kdn", 1); 
   kup   = inittree.getValue  <GINT>("kup", 10); 
 
+  vh[0] = utmp[0];
+  vh[1] = utmp[1];
 
  *u[0]  = 0.0; // sx
  *u[1]  = 0.0; // sy
@@ -790,24 +804,32 @@ GBOOL impl_icosabcconv(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
   for ( auto j=0; j<nxy; j++ ) {
      x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
      r   = sqrt(x*x + y*y + z*z);
+     alpha =  hphase*(r - ri);
      lat = asin(z/r);
      lon = atan2(y,x);
      for ( auto k=kdn; k<kup; k++ ) { // sum over wavemodes
-       (*d)   [j] +=  ( B*cos(pi2*y) + C*sin(pi2*z) ) / pow(k,poly);
+       (*d)   [j] +=  ( B*cos(pi2*y+alpha) + C*sin(pi2*z+alpha) ) / pow(k,poly);
      }
      for ( auto k=kdn; k<kup; k++ ) { // sum over wavemodes
        pi2         = 2.0*PI*k;
-       (*u[0])[j] +=  ( B*cos(k*lon) + C*sin(pi2*r) ) / pow(k,poly);
-       (*u[1])[j] +=  ( A*sin(k*lon) + C*cos(pi2*r) ) / pow(k,poly);
-       (*u[2])[j] +=  ( A*cos(k*lon) + B*sin(k*lon) ) / pow(k,poly);
+#if 0
+       (*u[0])[j] +=  ( B*cos(k*lon) + C*sin(k*lat) ) / pow(k,poly);
+       (*u[1])[j] +=  ( A*sin(k*lon) + C*cos(k*lat) ) / pow(k,poly);
+       (*u[2])[j] +=  ( A*cos(k*lon) + B*sin(k*lat) ) / pow(k,poly);
+#else
+       (*vh[0])[j] +=  A*cos    (k*lat+alpha) / pow(k,poly); // lat
+       (*vh[1])[j] +=  B*sin(2.0*k*lat+alpha) / pow(k,poly); // long
+#endif
      }
-     (*u[0])[j] *=  (*d)[j];
-     (*u[1])[j] *=  (*d)[j];
-     (*u[2])[j] *=  (*d)[j];
      p           = (*d)[j] * RD * T0;
      exner       = pow(p/P0, RD/CPD);
      (*e)[j]     = CVD * (*d)[j] * T0*exner; 
   } // end, coord j-loop 
+
+  // Convert from 2d surface to 3d Cartesian 
+  // momentum densities:
+  GMTK::vsphere2cart(grid, vh, GVECTYPE_PHYS, u);
+  for ( auto j=0; j<3; j++ ) *u[j] *=  *d;
 
   return TRUE;
 
