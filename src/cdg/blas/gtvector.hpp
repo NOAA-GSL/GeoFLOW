@@ -35,7 +35,6 @@
   # define _G_VEC_CACHE_SIZE 16
 #endif
 
-#undef _G_DEBUG
 
 template <class T> class GTVector
 {
@@ -98,26 +97,12 @@ template <class T> class GTVector
     void updatedev();
 
     inline T& operator[](const GSIZET i) {
-#if defined(_G_DEBUG)
-      if ( i+gindex_.beg() > gindex_.end() ) {
-        std::cout << "GTVector::operator[]: out of bounds" << std::endl;
-        while(1);
-      }
-#else
       ASSERT_MSG(!( i+gindex_.beg() > gindex_.end() ), "i = " << i);
-#endif
       return data_[i+gindex_.beg()];
     };
 
     inline const T& operator[](const GSIZET i) const {
-#if defined(_G_DEBUG)
-      if ( i+gindex_.beg() > gindex_.end() ) {
-        std::cout << "GTVector::operator[]: out of bounds" << std::endl;
-        while(1);
-      }
-#else
       ASSERT_MSG(!( i+gindex_.beg() > gindex_.end() ), "i = " << i);
-#endif
       return data_[i+gindex_.beg()];
     };
 
