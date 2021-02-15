@@ -24,7 +24,6 @@ option(GEOFLOW_USE_CUBLAS         "Build with cuBLAS"         OFF)
 option(GEOFLOW_USE_OPENACC        "Using OpenACC"             OFF)
 
 option(GEOFLOW_USE_GPTL           "Build with GPTL"           OFF)
-option(GEOFLOW_GPTL_AUTO_PROF     "Do auto-profing with GPTL" OFF)
 option(GEOFLOW_VERBOSE_CMAKE      "Verbose MakeFile Ouput"    OFF)
 
 option(GEOFLOW_TRACER_USE_PIO     "Use PIO Traced Ouput"      OFF)
