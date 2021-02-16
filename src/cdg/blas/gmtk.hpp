@@ -227,7 +227,7 @@ namespace GMTK
   template<typename T>
   GDOUBLE energyinj(GGrid &grid, const GTVector<GTVector<T>*> &u, const GTVector<GTVector<T>*> &uf, GTVector<GTVector<T>*> &tmp, GBOOL isglobal, GBOOL ismax=FALSE);
   template<typename T>
-  void domathop(GGrid &grid, const GTVector<GTVector<T>*> &uin, const GString sop, GTVector<GTVector<T>*> &utmp, GTVector<GTVector<T>*> &uout, GTVector<GINT> &iuout);
+  void domathop(GGrid &grid, const GTVector<GTVector<T>*> &uin, const GString sop, GTVector<GTVector<T>*> &utmp, GTVector<GTVector<T>*> &uout, std::vector<GINT> &iuout);
 
 };
 

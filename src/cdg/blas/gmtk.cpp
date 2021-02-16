@@ -1000,7 +1000,7 @@ return static_cast<GFTYPE>(einj);
 // RETURNS: none
 //**********************************************************************************
 template<>
-void domathop(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &uin,  const GString sop, GTVector<GTVector<GFTYPE>*> &utmp, GTVector<GTVector<GFTYPE>*> &uout, GTVector<GINT> &iuout)
+void domathop(GGrid &grid, const GTVector<GTVector<GFTYPE>*> &uin,  const GString sop, GTVector<GTVector<GFTYPE>*> &utmp, GTVector<GTVector<GFTYPE>*> &uout, std::vector<GINT> &iuout)
 {
   GEOFLOW_TRACE();
   GINT                        ib, nxy;

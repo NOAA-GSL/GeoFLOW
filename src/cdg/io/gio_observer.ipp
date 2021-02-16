@@ -152,7 +152,7 @@ void GIOObserver<EquationType>::print_derived(const Time &t, const State &u)
 
   GString            sop;   // math operation
 //GTVector<GString>  sdqnames;
-  GTVector<GINT>     iuin(3), iuout(3);
+  std::vector<GINT>  iuout(3);
   State              tmp(5),  uout(3);
   GString            agg_derived;
   std::vector<GINT>  isout;
