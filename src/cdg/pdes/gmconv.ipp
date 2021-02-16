@@ -1515,6 +1515,14 @@ void GMConv<TypePack>::compute_derived_impl(const State &u, GString sop,
      }
     }
   }
+  else if ( "ke"      == sop ) { // kinetic energy
+    assert(uout .size() >= 1    && "Incorrect no. output components");
+    assert(utmp .size() >= 2    && "Incorrect no. tmp components");
+   *utmp[1] = *u[DENSITY];
+    utmp[1]->rpow(-1);
+    compute_v(u, *utmp[1], v_);
+    GMTK::domathop(*grid_, v_, "vmag", utmp, uout, iuout);
+  }
   else {
     assert(FALSE);
   }
