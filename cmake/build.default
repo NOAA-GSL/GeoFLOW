@@ -26,6 +26,18 @@ option(GEOFLOW_USE_OPENACC        "Using OpenACC"             OFF)
 option(GEOFLOW_USE_GPTL           "Build with GPTL"           OFF)
 option(GEOFLOW_VERBOSE_CMAKE      "Verbose MakeFile Ouput"    OFF)
 
+#
+# ---------------------------- Profiling ------------------------------
+#
 option(GEOFLOW_TRACER_USE_PIO     "Use PIO Traced Ouput"      OFF)
 option(GEOFLOW_TRACER_USE_NVTX    "Use NVTX Profiling"        OFF)
 option(GEOFLOW_TRACER_USE_GPTL    "Use GPTL Profiling"        OFF)
+
+#
+# ------------------------- Assert Behavior ---------------------------
+# Only if BUILD_TYPE = Debug
+#
+option(GEOFLOW_ASSERT_STACK  "Stack Trace on Assertion Failure"   ON)
+option(GEOFLOW_ASSERT_CORE   "Core Dump on Assertion Failure"     ON)
+option(GEOFLOW_ASSERT_HANG   "Hang on Assertion Failure"          ON)
+
