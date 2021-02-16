@@ -747,7 +747,7 @@ GBOOL impl_icosabcconv(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
 {
 
   GString             serr = "impl_icosabcconv: ";
-  GSIZET              kdn, kup, nxy;
+  GSIZET              kdn, kup, nc, nxy;
   GFTYPE              alpha, A, B, C, hphase, poly;
   GFTYPE              x, y, z, r, ri, ro, lat, lon;
   GFTYPE              exner, p, pi2, P0, T0;
@@ -766,12 +766,13 @@ GBOOL impl_icosabcconv(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
   GGridIcos  *icos   = dynamic_cast <GGridIcos*>(&grid);
   assert(icos && "Must use ICOS grid");
 
+  nc = grid.gtype() == GE_2DEMBEDDED ? 3 : GDIM;
   GTVector<GTVector<GFTYPE>> *xnodes = &grid.xNodes();
 
-  assert(u.size() >= GDIM+1);
+  assert(u.size() >= nc+1);
 
-  e     = u  [GDIM];// int. energy density
-  d     = u[GDIM+1];// total density 
+  e     = u  [nc];// int. energy density
+  d     = u[nc+1];// total density 
   nxy   = (*xnodes)[0].size(); // same size for x, y, z
 
   #if defined(_G_IS2D)
@@ -808,7 +809,7 @@ GBOOL impl_icosabcconv(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
      lat = asin(z/r);
      lon = atan2(y,x);
      for ( auto k=kdn; k<kup; k++ ) { // sum over wavemodes
-       (*d)   [j] +=  ( B*cos(pi2*y+alpha) + C*sin(pi2*z+alpha) ) / pow(k,poly);
+       (*d)   [j] +=  ( B*cos(pi2*y+alpha) + C*sin(pi2*z+alpha) ) / pow(k,poly) + 0.001;
      }
      for ( auto k=kdn; k<kup; k++ ) { // sum over wavemodes
        pi2         = 2.0*PI*k;
