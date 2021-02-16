@@ -65,9 +65,58 @@
 #ifdef GEOFLOW_INSURE_USE
 #define NULL_USE(EXP) do { \
        if(0) {char *temp = (char *)&variable; temp++;} \
-    } while (0)
+    } while (0);
 #else
 #define NULL_USE(EXP)
+#endif
+
+
+//
+// Force a Hang
+// Infinite Loop to force a hang to attach debugger
+//
+#ifdef GEOFLOW_ASSERT_HANG
+	#include "tbox/pio.hpp"
+    #define MANUAL_FORCE_HANG								  	        \
+		do {														    \
+			pio::perr << std::endl;                                     \
+			pio::perr << "******************************" << std::endl; \
+			pio::perr << "********* FORCED HANG ********" << std::endl; \
+			pio::perr << "******************************" << std::endl; \
+			pio::perr << std::endl;                                     \
+			while( true ) {                                             \
+				if (0) int nullstatement = 0;                           \
+			}                                 			                \
+		} while (0);
+#else
+	#define MANUAL_FORCE_HANG
+#endif
+
+//
+// Trigger a Core Dump
+// Dumps core but keeps running
+//
+#ifdef GEOFLOW_ASSERT_CORE
+	#include <sys/types.h>
+    #include <unistd.h>
+	#include <sys/wait.h>
+	#include <cstdlib>
+    #define MANUAL_CORE_DUMP								            \
+		do {														    \
+			pio::perr << std::endl;                                     \
+			pio::perr << "******* Dumping Core ******" << std::endl;    \
+			pio::perr << std::endl;                                     \
+            int st = 0;        			                                \
+			pid_t p = fork();                                           \
+            if (!p) {                                                   \
+				signal(SIGABRT, SIG_DFL);                               \
+				std::abort();                                           \
+			} else {                                                    \
+				waitpid(p, &st, 0);                                     \
+			}                                                           \
+		} while (0);
+#else
+	#define MANUAL_CORE_DUMP
 #endif
 
 //
@@ -76,9 +125,9 @@
 // colliding with other names of free so we deallocate using
 // realloc() with 0 size;
 //
-#ifdef GEOFLOW_USE_TRACEBACK
+#ifdef GEOFLOW_ASSERT_STACK
 	#include "tbox/pio.hpp" // pio::
-	#include <execinfo.h>          // backtrace
+	#include <execinfo.h>   // backtrace
     #define MANUAL_TRACEBACK								  	        \
 		do {														    \
 			void* callstack[128];                             			\
@@ -89,7 +138,7 @@
 				pio::perr << strs[i] << std::endl;           			\
 			}                                               		    \
 			free(strs);                                  			    \
-		} while (0)
+		} while (0);
 #else
 	#define MANUAL_TRACEBACK
 #endif
@@ -121,10 +170,12 @@
 				pio::perr << "File: " << __FILE__ << std::endl;              \
 				pio::perr << "Line: " << __LINE__ << std::endl;              \
 				pio::perr << std::endl;                                      \
-				MANUAL_TRACEBACK;									         \
+				MANUAL_TRACEBACK									         \
+				MANUAL_CORE_DUMP                                             \
+				MANUAL_FORCE_HANG                                            \
 				EH::abort();                                                 \
 			}                                                                \
-		} while (0)
+		} while (0);
 
 	#define ASSERT_MSG(EXP,MSG)                                              \
 		do {                                                                 \
@@ -137,10 +188,12 @@
 				pio::perr << "Line: " << __LINE__ << std::endl;              \
 				pio::perr << "Message: " << MSG << std::endl;                \
 				pio::perr << std::endl;                                      \
-				MANUAL_TRACEBACK;									         \
+				MANUAL_TRACEBACK									         \
+				MANUAL_CORE_DUMP                                             \
+				MANUAL_FORCE_HANG                                            \
 				EH::abort();                                                 \
 			}                                                                \
-		} while (0)
+		} while (0);
 
 	#define VERIFY(EXP)         ASSERT(EXP)
 	#define VERIFY_MSG(EXP,MSG) ASSERT_MSG(EXP,MSG)

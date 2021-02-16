@@ -22,6 +22,10 @@
 #cmakedefine GEOFLOW_TRACER_USE_PIO
 #cmakedefine GEOFLOW_TRACER_USE_GPTL
 
+#cmakedefine GEOFLOW_ASSERT_HANG
+#cmakedefine GEOFLOW_ASSERT_CORE
+#cmakedefine GEOFLOW_ASSERT_STACK
+
 #if defined(GEOFLOW_USE_CBLAS) && defined(GEOFLOW_USE_CUBLAS)
 #warning "Both CBLAS and cuBLAS Selected (Defaulted to CBLAS)"
 #undef GEOFLOW_USE_CUBLAS
@@ -46,7 +50,6 @@
 #if !defined(NDEBUG)
 #define GEOFLOW_USE_STATIC_ASSERTIONS  // Turn on static assertions.
 #define GEOFLOW_USE_RUNTIME_ASSERTIONS // Turn on runtime assertions.
-#define GEOFLOW_USE_TRACEBACK          // Turn on traceback when asserts.
 #endif
 
 /** Insure empty loops are not optimized away
