@@ -1522,6 +1522,8 @@ void GMConv<TypePack>::compute_derived_impl(const State &u, GString sop,
     utmp[1]->rpow(-1);
     compute_v(u, *utmp[1], v_);
     GMTK::domathop(*grid_, v_, "vmag", utmp, uout, iuout);
+    uout[0]->pointProd(*u[DENSITY]);
+   *uout[0] *= 0.5;
   }
   else {
     assert(FALSE);
