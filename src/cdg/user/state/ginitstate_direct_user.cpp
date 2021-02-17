@@ -13,6 +13,7 @@
 #include "ginitstate_direct_user.hpp"
 #include "ggrid_box.hpp"
 #include "ggrid_icos.hpp"
+#include <random>
 
 
 namespace ginitstate {
@@ -755,6 +756,9 @@ GBOOL impl_icosabcconv(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
   GTVector<GTVector<GFTYPE>*>
                       vh(2);
   GString             sblock;
+  std::default_random_engine        generator;
+  std::normal_distribution<GFTYPE> *distribution;
+
 
   PropertyTree inittree    = ptree.getPropertyTree(sconfig);
   sblock                   = ptree.getValue<GString>("pde_name");
@@ -802,29 +806,27 @@ GBOOL impl_icosabcconv(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
  *d     = 0.0;
 
   // Initialize each variable:
-  for ( auto j=0; j<nxy; j++ ) {
-     x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
-     r   = sqrt(x*x + y*y + z*z);
-     alpha =  hphase*(r - ri);
-     lat = asin(z/r);
-     lon = atan2(y,x);
-     for ( auto k=kdn; k<kup; k++ ) { // sum over wavemodes
-       (*d)   [j] +=  ( B*cos(pi2*y+alpha) + C*sin(pi2*z+alpha) ) / pow(k,poly) + 0.001;
-     }
-     for ( auto k=kdn; k<kup; k++ ) { // sum over wavemodes
-       pi2         = 2.0*PI*k;
+  for ( auto k=kdn; k<kup; k++ ) { // sum over wavemodes
+    alpha =  hphase*(r - ri)*(*distribution)(generator);
+    for ( auto j=0; j<nxy; j++ ) {
+      x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
+      r   = sqrt(x*x + y*y + z*z);
+      lat = asin(z/r);
+      lon = atan2(y,x);
+      (*d)   [j] +=  ( B*cos(pi2*y+alpha) + C*sin(pi2*z+alpha) ) / pow(k,poly) + 0.001;
+      pi2         = 2.0*PI*k;
 #if 0
-       (*u[0])[j] +=  ( B*cos(k*lon) + C*sin(k*lat) ) / pow(k,poly);
-       (*u[1])[j] +=  ( A*sin(k*lon) + C*cos(k*lat) ) / pow(k,poly);
-       (*u[2])[j] +=  ( A*cos(k*lon) + B*sin(k*lat) ) / pow(k,poly);
+      (*u[0])[j] +=  ( B*cos(k*lon) + C*sin(k*lat) ) / pow(k,poly);
+      (*u[1])[j] +=  ( A*sin(k*lon) + C*cos(k*lat) ) / pow(k,poly);
+      (*u[2])[j] +=  ( A*cos(k*lon) + B*sin(k*lat) ) / pow(k,poly);
 #else
-       (*vh[0])[j] +=  A*cos    (k*lat+alpha) / pow(k,poly); // lat
-       (*vh[1])[j] +=  B*sin(2.0*k*lat+alpha) / pow(k,poly); // long
+      (*vh[0])[j] +=  A*cos    (k*lat+alpha) / pow(k,poly); // lat
+      (*vh[1])[j] +=  B*sin(2.0*k*lat+alpha) / pow(k,poly); // long
 #endif
-     }
-     p           = (*d)[j] * RD * T0;
-     exner       = pow(p/P0, RD/CPD);
-     (*e)[j]     = CVD * (*d)[j] * T0*exner; 
+      p           = (*d)[j] * RD * T0;
+      exner       = pow(p/P0, RD/CPD);
+      (*e)[j]     = CVD * (*d)[j] * T0*exner; 
+    }
   } // end, coord j-loop 
 
   // Convert from 2d surface to 3d Cartesian 
