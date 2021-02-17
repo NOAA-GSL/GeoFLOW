@@ -749,7 +749,7 @@ GBOOL impl_icosabcconv(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
 
   GString             serr = "impl_icosabcconv: ";
   GSIZET              kdn, kup, nc, nxy;
-  GFTYPE              alpha, A, B, C, hphase, poly;
+  GFTYPE              alpha, A, B, C, fact,hphase, poly;
   GFTYPE              x, y, z, r, ri, ro, lat, lon;
   GFTYPE              exner, p, pi2, P0, T0;
   GTVector<GFTYPE>   *d, *e;
@@ -814,15 +814,16 @@ GBOOL impl_icosabcconv(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
       r   = sqrt(x*x + y*y + z*z);
       lat = asin(z/r);
       lon = atan2(y,x);
-      (*d)   [j] +=  ( B*cos(pi2*y+alpha) + C*sin(pi2*z+alpha) ) / pow(k,poly) + 0.001;
+      (*d)   [j] +=  fabs( B*cos(pi2*y+alpha) + C*sin(pi2*z+alpha) ) / pow(k,poly) + 0.001;
       pi2         = 2.0*PI*k;
+      fact         = exp(-32.0*lat*lat/(PI*PI));
 #if 0
       (*u[0])[j] +=  ( B*cos(k*lon) + C*sin(k*lat) ) / pow(k,poly);
       (*u[1])[j] +=  ( A*sin(k*lon) + C*cos(k*lat) ) / pow(k,poly);
       (*u[2])[j] +=  ( A*cos(k*lon) + B*sin(k*lat) ) / pow(k,poly);
 #else
-      (*vh[0])[j] +=  A*cos    (k*lat+alpha) / pow(k,poly); // lat
-      (*vh[1])[j] +=  B*sin(2.0*k*lat+alpha) / pow(k,poly); // long
+      (*vh[0])[j] +=  fact*A*cos    (k*lat+alpha) / pow(k,poly); // lat
+      (*vh[1])[j] +=  fact*B*sin(2.0*k*lat+alpha) / pow(k,poly); // long
 #endif
       p           = (*d)[j] * RD * T0;
       exner       = pow(p/P0, RD/CPD);
