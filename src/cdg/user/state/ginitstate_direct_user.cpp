@@ -775,6 +775,7 @@ GBOOL impl_icosabcconv(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
 
   assert(u.size() >= nc+1);
 
+  distribution = new normal_distribution<GFTYPE>(0,2.0*PI);
   e     = u  [nc];// int. energy density
   d     = u[nc+1];// total density 
   nxy   = (*xnodes)[0].size(); // same size for x, y, z
@@ -833,6 +834,8 @@ GBOOL impl_icosabcconv(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
   // momentum densities:
   GMTK::vsphere2cart(grid, vh, GVECTYPE_PHYS, u);
   for ( auto j=0; j<3; j++ ) *u[j] *=  *d;
+
+  if ( distribution != NULLPTR ) delete distribution;
 
   return TRUE;
 
