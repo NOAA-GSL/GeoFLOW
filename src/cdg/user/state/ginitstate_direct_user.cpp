@@ -757,7 +757,7 @@ GBOOL impl_icosabcconv(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
                       vh(2);
   GString             sblock;
   std::default_random_engine        generator;
-  std::normal_distribution<GFTYPE> *distribution;
+  std::normal_distribution<GFTYPE> *distribution=NULLPTR;
 
 
   PropertyTree inittree    = ptree.getPropertyTree(sconfig);
