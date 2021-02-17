@@ -119,7 +119,7 @@ void GIO<IOType>::init()
 
 
 #if defined(GEOFLOW_USE_MPI)
-  MPI_Type_free(&mpi_state_type_);
+//MPI_Type_free(&mpi_state_type_);
 
 
   sztot = extent.sum();
