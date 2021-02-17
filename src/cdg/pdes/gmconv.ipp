@@ -1035,8 +1035,7 @@ void GMConv<TypePack>::compute_vpref(StateComp &tvi, State &W)
      // In Cartesian coords, select the 'z' direction
      // as preferred 'fallout' direction. In 2d, this
      // will be the 2-coord; in 3d, the 3-coord:
-     W = NULLPTR;
-     W[nc_-1] = tvi; 
+    *W[nc_-1] = tvi; 
      return;
    }
 
