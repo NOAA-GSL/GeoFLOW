@@ -28,6 +28,7 @@ GBdyType str2bdytype(const GString &stype)
     if ( stype.compare(s0) == 0 ) return static_cast<GBdyType>(j);
   }
   assert(FALSE && "Invalid boundary type");
+  return static_cast<GBdyType>(0);
 } // end, str2bdytype
 
 
@@ -47,6 +48,7 @@ GStateCompType str2comptype(const GString &stype)
     if ( stype.compare(s0) == 0 ) return static_cast<GStateCompType>(j);
   }
   assert(FALSE && "Invalid state component type");
+  return static_cast<GStateCompType>(0);
 } // end, str2comptype
 
 

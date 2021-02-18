@@ -67,7 +67,8 @@ public:
                       GINT         solve_impl(Operator& A, const StateComp& b, StateComp& x);
                       GINT         solve_impl(Operator& A, const StateComp& b, 
                                               const StateComp& xb, StateComp& x);
-                      GINT         solve_impl(const StateComp& b, StateComp& x) {assert(FALSE);}
+                      GINT         solve_impl(const StateComp& b, StateComp& x) {assert(FALSE);
+                                       return 1;}
                       void         set_precond(Preconditioner& precond)
                                    {precond_ = &precond;}
                       StateComp&   get_residuals() { return residuals_; }  
