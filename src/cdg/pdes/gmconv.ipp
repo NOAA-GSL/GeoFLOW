@@ -200,7 +200,7 @@ void GMConv<TypePack>::dudt_impl(const Time &t, const State &u, const State &uf,
   GINT       nice, nliq ;
   StateComp *irhoT, *Ltot;
   StateComp *dp, *e, *p, *rhoT, *T; // energy, den, pressure, temperature
-  StateComp *Mass;
+  StateComp *Mass=grid_->massop().data();
   StateComp *tmp1, *tmp2;
   State      g(nc_); 
 
@@ -340,7 +340,6 @@ void GMConv<TypePack>::dudt_impl(const Time &t, const State &u, const State &uf,
    *dp -= *ubase_[0];                 // density fluctuation
    *p  -= *ubase_[1];                 // pressure fluctuation
   }
-  Mass = grid_->massop().data();
   for ( auto j=0; j<v_.size(); j++ ) { // for each component
 
     gdiv_->apply(*s_[j], v_, urhstmp_, *dudt[j]); 
