@@ -300,7 +300,7 @@ void GMConv<TypePack>::dudt_impl(const Time &t, const State &u, const State &uf,
 
   gdiv_->apply(*tmp1, v_, urhstmp_, *dudt[ENERGY]); 
 
-  gstressen_->apply(*rhoT, v_, urhstmp_, *tmp1);          // [mu u_i s^{ij}],j
+  gstressen_->apply(*rhoT, v_, urhstmp_, *tmp1);   // [mu u_i s^{ij}],j
  *dudt[ENERGY] -= *tmp1;                           // -= [mu u^i s^{ij}],j
 
   if ( traits_.dofallout || !traits_.dodry ) {
@@ -372,9 +372,9 @@ void GMConv<TypePack>::dudt_impl(const Time &t, const State &u, const State &uf,
     if ( traits_.dograv || traits_.usebase ) {
      *tmp1 = -GG; 
       compute_vpref(*tmp1, j+1, *tmp2);               // compute grav component
-      tmp2->pointProd(*dp, *tmp1);
-     *tmp1 *= *Mass;             
-     *dudt[j] -= *tmp1;                               // -= rho' vec{g} M J
+      tmp2->pointProd(*dp, *tmp2);
+     *tmp2 *= *Mass;             
+     *dudt[j] -= *tmp2;                               // -= rho' vec{g} M J
     }
 
     if ( traits_.bforced && uf[j] != NULLPTR ) {                    
@@ -1035,8 +1035,7 @@ void GMConv<TypePack>::compute_vpref(StateComp &tvi, State &W)
      // In Cartesian coords, select the 'z' direction
      // as preferred 'fallout' direction. In 2d, this
      // will be the 2-coord; in 3d, the 3-coord:
-     W = NULLPTR;
-     W[nc_-1] = &tvi; 
+    *W[nc_-1] = tvi; 
      return;
    }
 
