@@ -26,11 +26,11 @@ public:
                            GKeyGen() {};
                           ~GKeyGen() {};
 
-virtual  void              key(KT id[], GTPoint<FT> point[], GINT  n)=0;             // Use GTPoint
-virtual  void              key(GTVector<KT> &id, GTVector<GTPoint<FT>> &point)=0;    // Use GTPoint
-virtual void               key(GTVector<KT> &id, GTVector<GTVector<FT>> &x)=0;        // Use GTVector for points
+virtual  void              key(KT id[], GTPoint<FT> point[], GINT  n)=0;             // For GTPoint
+virtual  void              key(GTVector<KT> &id, GTVector<GTPoint<FT>> &point)=0;    // For GTPoint vector
+virtual void               key(GTVector<KT> &id, GTVector<GTVector<FT>> &x)=0;        // For GTVector vector
 virtual void               key(GTVector<KT> &id, GTVector<GTVector<FT>> &x,
-                               GTVector<GINT> &ix)=0;                                 // Use ix members of GTVector x for points
+                               GTVector<GINT> &ix)=0;                                 // For ix members of GTVector x for points
 
 
 private:

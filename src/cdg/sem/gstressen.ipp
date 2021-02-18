@@ -131,7 +131,7 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, GINT idir, State &utmp
   tfact_.resizem(u[0]->size());
 #endif
 
-  // so = -D^{T,j} [mu [D_i u_j + Dj u_i) + Dk zeta u_k delta_ij ]:
+  // so = -D^{T,j} [mu d [D_i u_j + Dj u_i) + Dk zeta d u_k delta_ij ]:
   //    + bdy surface terms:
   // Below, i = idir:
 
@@ -154,7 +154,7 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, GINT idir, State &utmp
 #endif
   }
 
-  // Do -D^{T,j} [mu (D_j u_i) ] terms:
+  // Do -D^{T,j} [mu d (D_j u_i) ] terms:
   for ( auto j=0; j<nxy; j++ ) { 
     grid_->deriv(*u[idir-1], j+1, *utmp[0], *utmp[1]);
     // Point-multiply by mu before taking 'divergence':
@@ -173,7 +173,7 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, GINT idir, State &utmp
   }
 
   // Compute dilitation term:
-  //   -D^{T,j} (zeta (Div u) delta_ij):
+  //   -D^{T,j} (zeta d (Div u) delta_ij):
   grid_->deriv(*u[0]  , 1, *utmp[0], *utmp[1]); // store Div in utmp[1]]
   for ( auto j=1; j<nxy; j++ ) { 
     grid_->deriv(*u[j]  , j+1, *utmp[0], *utmp[2]); 
@@ -199,7 +199,7 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, GINT idir, State &utmp
  
 #if defined(DO_BDY)
   // Compute surface terms for
-  //  Integral zeta (Div u) delta_ij.n^j dV:
+  //  Integral zeta d (Div u) delta_ij.n^j dV:
   // Use kernel above, for i=idir:
   for ( auto b=0; b<igbdy->size(); b++ ) {
     k = (*igbdy)[b];
@@ -249,11 +249,11 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp
   tfact_.resizem(u[0]->size());
 #endif
 
-  // eo -= D^{T,j} [ kappa u^i [D_i u_j + Dj u_i) 
-  //    + lambda u^i (Dk u^k) delta_ij ]
+  // eo -= D^{T,j} [ kappa d  u^i [D_i u_j + Dj u_i) 
+  //    + lambda d u^i (Dk u^k) delta_ij ]
   //    + surface terms:
 
-  // - D^{T,j} [ kappa u^i (D_i u_j) ] terms:
+  // - D^{T,j} [ kappa d u^i (D_i u_j) ] terms:
   eo = 0.0;
   for ( auto j=0; j<nxy; j++ ) { 
    *utmp[1] = 0.0;
@@ -277,7 +277,7 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp
 #endif
   }
 
-  // -= D^{T,j} [ kappa u^i (D_j u_i) ] terms:
+  // -= D^{T,j} [ kappa d u^i (D_j u_i) ] terms:
   for ( auto j=0; j<nxy; j++ ) { 
    *utmp[1] = 0.0;
     for ( auto i=0; i<nxy; i++ ) {
@@ -301,12 +301,12 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp
   }
 
   // Compute dilitation term:
-  //   -= D^{T,j} (lambda (Div u) delta_ij):
+  //   -= D^{T,j} (lambda d (Div u) delta_ij):
   //   ... First, compute Div u:
   // (NOTE: we'll use MTK to compute Div u eventually):
 
-  // eo = [ kappa  u_i (Del_i u_j + Del_j u_i)],j 
-  //    + [ lambda u_i (Div u delta_ij) ],j 
+  // eo = [ kappa  d u_i (Del_i u_j + Del_j u_i)],j 
+  //    + [ lambda d u_i (Div u delta_ij) ],j 
 
   grid_->deriv(*u[0]  , 1, *utmp[0], *utmp[1]); // store Div in utmp[1]]
   for ( auto j=1; j<nxy; j++ ) { 
@@ -326,7 +326,7 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp
 #endif
 
   // Now compute
-  //  -= D^{T,j} [lambda u^i (Div u) delta_ij]:
+  //  -= D^{T,j} [lambda d u^i (Div u) delta_ij]:
   for ( auto j=0; j<nxy; j++ ) { 
     u[j]->pointProd(*utmp[1],*utmp[2]); 
     grid_->wderiv(*utmp[2], j+1, TRUE, *utmp[0], *utmp[3]); 
