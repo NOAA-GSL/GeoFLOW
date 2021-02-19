@@ -47,7 +47,7 @@ GAdvect<TypePack>::~GAdvect()
 //                for GE_2DEMBEDDED elements.
 // ARGS   : p   : input p field
 //          u   : input vector field
-//          utmp: tmp arrays
+//          utmp: tmp arrays, sie >= 2
 //          po  : output (result) vector
 //             
 // RETURNS:  none
