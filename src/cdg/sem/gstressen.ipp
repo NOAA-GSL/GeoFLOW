@@ -104,7 +104,7 @@ GStressEnOp<TypePack>::~GStressEnOp()
 // ARGS   : d   : density
 //          u   : input vector field
 //          idir: which momentum component we're computing for
-//          utmp: array of tmp arrays
+//          utmp: array of tmp arrays. At least 3 required.
 //          so  : output (result) vector component, idir
 //             
 // RETURNS:  none
@@ -224,7 +224,7 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, GINT idir, State &utmp
 //               + [ lambda u_i (Div u delta_ij) ],j 
 // ARGS   : d   : density
 //          u   : input vector field
-//          utmp: array of tmp arrays
+//          utmp: array of tmp arrays. At least 4 required.
 //          eo  : output (result) vector component, idir
 //             
 // RETURNS:  none
