@@ -138,7 +138,7 @@ void GDivOp<TypePack>::apply(State &u, State &utmp, StateComp &div)
   GINT       nxy = grid_->gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
   GSIZET     k;
   GTVector<GSIZET>          *igbdy   = &grid_->igbdy() ;
-  GTVector<GTVector<Ftype>> *normals = &grid_->bdyNormal(); 
+  GTVector<GTVector<Ftype>> *normals = &grid_->bdyNormals(); 
   StateComp                 *mass    =  grid_->massop().data();
   StateComp                 *bmass   = &grid_->bdyMass();
 
