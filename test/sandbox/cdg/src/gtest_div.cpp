@@ -144,6 +144,7 @@ int main(int argc, char **argv)
     // Create state and tmp space:
     State     utmp (4);
     State     v    (nc);
+    State     vb   (nc);
     StateComp da, diff, div, u;
     
     for ( auto j=0; j<utmp .size(); j++ ) utmp [j] = new StateComp(grid_->size());
@@ -151,6 +152,7 @@ int main(int argc, char **argv)
     div  .resize(grid_->size());
     diff .resize(grid_->size());
     da   .resize(grid_->size());
+    vb   = NULLPTR;
 
     /////////////////////////////////////////////////////////////////
     ////////////////////// Compute solutions/////////////////////////
@@ -197,6 +199,19 @@ int main(int argc, char **argv)
 
     for ( auto j=0; j<nc; j++ ) dnorm = da.amax();
 
+#if 0
+    StateInfo  stateinfo;
+    BdyUpdateList *updatelist = &grid_->bdy_update_list();;
+    for ( auto k=0; k<updatelist->size(); k++ ) { // foreach grid bdy
+      for ( auto j=0; j<(*updatelist)[j].size(); j++ ) { // each update method
+        (*updatelist)[k][j]->update(*grid_, stateinfo, time, utmp, v, vb);
+      }
+    }
+#else
+    grid_->set_usebdydata(FALSE);  // turn off use of bdy data
+#endif
+
+
     // Compute numerical divergence:
     GEOFLOW_TRACE_START("gdiv");
     for ( auto n=0; n<ncyc; n++ ) {
@@ -207,8 +222,6 @@ int main(int argc, char **argv)
     // divide by MJ
     for ( auto j=0; j<div.size(); j++ ) div[j] /= (*mass)[j];
 
-cout << "da  =" <<  da << endl;
-cout << "div =" <<  div<< endl;
 
     // Find inf-norm and L2-norm errors for each method::
     GTVector<GFTYPE> errs(2); // for each method, Linf and L2 errs
@@ -230,6 +243,10 @@ cout << "div =" <<  div<< endl;
     if ( myrank == 0 ) {
       if ( errs[1] > eps ) {
         std::cout << "main: ---------------------------GDivOp FAILED: " << errs[1]<< std::endl;
+//da.range(1, 10); div.range(1, 10);
+cout << "da  =" <<  da << endl;
+cout << "div =" <<  div<< endl;
+da.range_reset(); div.range_reset();
       errcode += 1;
       } else {
         std::cout << "main: ---------------------------GDivOp OK: " << errs[1] << std::endl;
