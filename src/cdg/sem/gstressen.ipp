@@ -116,6 +116,7 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, GINT idir, State &utmp
   assert( utmp.size() >= 4
        && "Insufficient temp space specified");
 
+  GBOOL      usebdy = grid_->usebdydata();
   GINT       nxy = grid_->gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
   GINT                       isgn;
   GSIZET                     k;
@@ -147,7 +148,7 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, GINT idir, State &utmp
 
 #if defined(DO_BDY)
     // Compute bdy terms for this component, j:
-    for ( auto b=0; b<igbdy->size(); b++ ) {
+    for ( auto b=0; usebdy && b<igbdy->size(); b++ ) {
       k = (*igbdy)[b];
       so[k] += (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
     }
@@ -165,7 +166,7 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, GINT idir, State &utmp
 
 #if defined(DO_BDY)
     // Compute surface terms for this component, j:
-    for ( auto b=0; b<igbdy->size(); b++ ) {
+    for ( auto b=0; usebdy && b<igbdy->size(); b++ ) {
       k = (*igbdy)[b];
       so[k] += (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
     }
@@ -201,7 +202,7 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, GINT idir, State &utmp
   // Compute surface terms for
   //  Integral zeta d (Div u) delta_ij.n^j dV:
   // Use kernel above, for i=idir:
-  for ( auto b=0; b<igbdy->size(); b++ ) {
+  for ( auto b=0; usebdy && b<igbdy->size(); b++ ) {
     k = (*igbdy)[b];
   #if defined(DO_COMPRESS_MODES_ONLY)
     so[k] += (*utmp[1])[k]*tfact_[k] * (*normals)[idir-1][b] * (*bmass)[b];
@@ -236,6 +237,7 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp
   assert( utmp.size() >= 4
        && "Insufficient temp space specified");
 
+  GBOOL      usebdy = grid_->usebdydata();
   GINT       nxy = grid_->gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
   Ftype                      isgn;
   GSIZET                     k;
@@ -270,7 +272,7 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp
 
 #if defined(DO_BDY)
     // Do the surface terms for jth component of normal:
-    for ( auto b=0; b<igbdy->size(); b++ ) {
+    for ( auto b=0; usebdy && b<igbdy->size(); b++ ) {
       k = (*igbdy)[b];
       eo[k] += (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
     }
@@ -293,7 +295,7 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp
 
 #if defined(DO_BDY)
     // Do the surface terms for jth component of normal:
-    for ( auto b=0; b<igbdy->size(); b++ ) {
+    for ( auto b=0; usebdy && b<igbdy->size(); b++ ) {
       k = (*igbdy)[b];
       eo[k] += (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
     }
@@ -337,7 +339,7 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp
 
 #if defined(DO_BDY)
     // Do the surface terms for jth component of normal:
-    for ( auto b=0; b<igbdy->size(); b++ ) {
+    for ( auto b=0; usebdy && b<igbdy->size(); b++ ) {
       k = (*igbdy)[b];
     #if defined(DO_COMPRESS_MODES_ONLY)
       eo[k] += (*utmp[2])[k]*tfact_[k] * (*normals)[j][b] * (*bmass)[b];

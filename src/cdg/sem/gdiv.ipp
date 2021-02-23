@@ -67,6 +67,7 @@ void GDivOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp &div
   assert( utmp.size() >= 3
        && "Insufficient temp space specified");
 
+  GBOOL      usebdy = grid_->usebdydata();
   GINT       nxy = grid_->gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
   GSIZET                     k;
   GTVector<GSIZET>          *igbdy   = &grid_->igbdy();
@@ -88,7 +89,7 @@ void GDivOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp &div
       // Global bdy terms:
       //  Note: utmp[1] should contain effect of bdy conditions,
       //        which are imposed on entry
-      for ( auto b=0; b<igbdy->size(); b++ ) {
+      for ( auto b=0; usebdy && b<igbdy->size(); b++ ) {
         k = (*igbdy)[b];
         div[k] += (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
       }
@@ -135,6 +136,7 @@ void GDivOp<TypePack>::apply(State &u, State &utmp, StateComp &div)
   assert( utmp.size() >= 2
        && "Insufficient temp space specified");
 
+  GBOOL      usebdy = grid_->usebdydata();
   GINT       nxy = grid_->gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
   GSIZET     k;
   GTVector<GSIZET>          *igbdy   = &grid_->igbdy() ;
@@ -154,7 +156,7 @@ void GDivOp<TypePack>::apply(State &u, State &utmp, StateComp &div)
        div -= *utmp[1];
 
 #if defined(DO_BDY)
-      for ( auto b=0; b<igbdy->size(); b++ ) {
+      for ( auto b=0; usebdy && b<igbdy->size(); b++ ) {
         k = (*igbdy)[b];
         div[k] += (*u[j])[k] * (*normals)[j][b] * (*bmass)[b];
       }
