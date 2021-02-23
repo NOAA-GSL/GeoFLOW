@@ -203,6 +203,9 @@ virtual void                 print(const GString &filename){}          // print 
         GC_COMM              get_comm() { return comm_; }              // get communicator
         void                 set_derivtype(GDerivType gt);             // set deriv. method
         GDerivType           get_derivtype() { return gderivtype_; }   // return deriv. method
+        GBOOL                usebdydata() { return usebdydat_;}        // get usebdydata flag
+        void                 set_usebdydata(GBOOL bflag) 
+                             {usebdydat_ = bflag;}                     // set usebdydata flag
  
 
 virtual void                 config_bdy(const PropertyTree &ptree, 
@@ -269,6 +272,7 @@ virtual void                        do_bdy_normals(GTMatrix<GTVector<GFTYPE>> &d
         GBOOL                       bapplybc_;      // bc apply callback set
         GBOOL                       do_face_normals_; // compute elem face normals for fluxes?
         GBOOL                       bpconst_;       // is p const among elems?
+        GBOOL                       usebdydat_;     // flag to set to use bdy data
         GINT                        nstreams_;      // no. CUDA streams
         GDerivType                  gderivtype_;    // ref. deriv method type
 
