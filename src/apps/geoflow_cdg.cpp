@@ -834,8 +834,7 @@ void do_restart(const PropertyTree &ptree, GGrid &, State &u,
 void init_ggfx(PropertyTree &ptree, GGrid &grid, GGFX<GFTYPE> *&ggfx) {
     GEOFLOW_TRACE();
 
-    // First, periodize coords if required to,
-    // before labeling nodes:
+    // Periodize coords if needed
     if (typeid(grid) == typeid(GGridBox)) {
         static_cast<GGridBox *>(&grid)->periodize();
     }
@@ -848,9 +847,8 @@ void init_ggfx(PropertyTree &ptree, GGrid &grid, GGFX<GFTYPE> *&ggfx) {
         }
     }
 
-    // Unperiodize nodes now that connectivity map is
-    // generated, so that coordinates mean what they should:
-    if (typeid(grid) == typeid(GGridBox)) {  // periodize coords
+    // Unperiodize nodes now that connectivity map is generated
+    if (typeid(grid) == typeid(GGridBox)) {
         static_cast<GGridBox *>(&grid)->unperiodize();
     }
 
