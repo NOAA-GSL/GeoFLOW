@@ -211,24 +211,24 @@ int main(int argc, char **argv)
     } // end, loop over grid points
 
     // Analytic ingtegral of Div v:
-    if      ( GDIM == 2 ) { da_int  = pow(P1.x1,pi[0][0]  )*pow(P0.x1,pi[0][0]  )
-                                    * pow(P1.x2,pi[0][1]+1)*pow(P0.x2,pi[0][1]+1)
+    if      ( GDIM == 2 ) { da_int  = (pow(P1.x1,pi[0][0]  )-pow(P0.x1,pi[0][0]  ))
+                                    * (pow(P1.x2,pi[0][1]+1)-pow(P0.x2,pi[0][1]+1))
                                     / (pi[0][1]+1); 
-                            da_int += pow(P1.x1,pi[1][0]+1)*pow(P0.x1,pi[1][0]+1)
-                                    * pow(P1.x2,pi[1][1]  )*pow(P0.x2,pi[1][1])
+                            da_int += (pow(P1.x1,pi[1][0]+1)-pow(P0.x1,pi[1][0]+1))
+                                    * (pow(P1.x2,pi[1][1]  )-pow(P0.x2,pi[1][1]  ))
                                     / (pi[1][0]+1);
     }
-    else if ( GDIM == 3 ) { da_int  = pow(P1.x1,pi[0][0]  )*pow(P0.x1,pi[0][0]  )
-                                    * pow(P1.x2,pi[0][1]+1)*pow(P0.x2,pi[0][1]+1)
-                                    * pow(P1.x3,pi[0][2]+1)*pow(P0.x3,pi[0][2]+1)
+    else if ( GDIM == 3 ) { da_int  = (pow(P1.x1,pi[0][0]  )-pow(P0.x1,pi[0][0]  ))
+                                    * (pow(P1.x2,pi[0][1]+1)-pow(P0.x2,pi[0][1]+1))
+                                    * (pow(P1.x3,pi[0][2]+1)-pow(P0.x3,pi[0][2]+1))
                                     / ( (pi[0][1]+1)*(pi[0][2]+1) ); 
-                            da_int += pow(P1.x1,pi[1][0]+1)*pow(P0.x1,pi[1][0]+1)
-                                    * pow(P1.x2,pi[1][1]  )*pow(P0.x2,pi[1][1]  )
-                                    * pow(P1.x3,pi[1][2]+1)*pow(P0.x3,pi[1][2]+1)
+                            da_int += (pow(P1.x1,pi[1][0]+1)-pow(P0.x1,pi[1][0]+1))
+                                    * (pow(P1.x2,pi[1][1]  )-pow(P0.x2,pi[1][1]  ))
+                                    * (pow(P1.x3,pi[1][2]+1)-pow(P0.x3,pi[1][2]+1))
                                     / ( (pi[1][0]+1)*(pi[1][2]+1) ); 
-                            da_int += pow(P1.x1,pi[2][0]+1)*pow(P0.x1,pi[2][0]+1)
-                                    * pow(P1.x2,pi[2][1]+1)*pow(P0.x2,pi[2][1]+1)
-                                    * pow(P1.x3,pi[2][2]  )*pow(P0.x3,pi[2][2]  )
+                            da_int += (pow(P1.x1,pi[2][0]+1)-pow(P0.x1,pi[2][0]+1))
+                                    * (pow(P1.x2,pi[2][1]+1)-pow(P0.x2,pi[2][1]+1))
+                                    * (pow(P1.x3,pi[2][2]  )-pow(P0.x3,pi[2][2]  ))
                                     / ( (pi[2][0]+1)*(pi[2][1]+1) ); 
     }
 
@@ -255,7 +255,7 @@ int main(int argc, char **argv)
     div_loc = div.sum();
     GComm::Allreduce(&div_loc, &div_int, 1, T2GCDatatype<GFTYPE>(), GC_OP_SUM, comm);
 
-#if 0
+#if 1
     // divide by MJ
     for ( auto j=0; j<div.size(); j++ ) div[j] /= (*mass)[j];
 #endif
