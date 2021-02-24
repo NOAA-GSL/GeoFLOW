@@ -1755,23 +1755,23 @@ void GGridBox::do_face_normals2d(GTMatrix<GTVector<GFTYPE>>    &dXdXi,
        }
        else if ( it == GElem_base::VERTEX ) {
          if ( id == 0 ) {
-           xp[0] =  0.0; //-1.0/sqrt(2.0);
-           xp[1] = -1.0; //-1.0/sqrt(2.0);
+           xp[0] = -1.0/sqrt(2.0);
+           xp[1] = -1.0/sqrt(2.0);
            face_mass[j] *= dXdXi(0,0)[ib];
          }
          else if ( id == 1 ) {
-           xp[0] =  1.0; // 1.0/sqrt(2.0);
-           xp[1] =  0.0; // 1.0/sqrt(2.0);
+           xp[0] =  1.0/sqrt(2.0);
+           xp[1] =  1.0/sqrt(2.0);
            face_mass[j] *= dXdXi(1,0)[ib];
          }
          else if ( id == 2 ) {
-           xp[0] =  0.0; // 1.0/sqrt(2.0);
-           xp[1] =  1.0; // 1.0/sqrt(2.0);
+           xp[0] =  1.0/sqrt(2.0);
+           xp[1] =  1.0/sqrt(2.0);
            face_mass[j] *= dXdXi(0,0)[ib];
          }
          else if ( id == 3 ) {
-           xp[0] = -1.0; //-1.0/sqrt(2.0);
-           xp[1] =  0.0; // 1.0/sqrt(2.0);
+           xp[0] = -1.0/sqrt(2.0);
+           xp[1] =  1.0/sqrt(2.0);
            face_mass[j] *= dXdXi(1,0)[ib];
          }
          for ( ic=0; ic<GDIM && fabs(xp[ic]) < tiny; ic++ );
@@ -1784,7 +1784,7 @@ void GGridBox::do_face_normals2d(GTMatrix<GTVector<GFTYPE>>    &dXdXi,
        face_mass[j] *= xp.mag(); // |k X d_X_/dxi_ip| is face Jac
        xp.unit(); xp *= xm;
 #endif
-//cout << "do_face_normals2d: j=" << j << " id=" << id << " it=" << it << " norm=" << xp << " idep=" << ic << endl; 
+cout << "do_face_normals2d: j=" << j << " id=" << id << " it=" << it << " norm=" << xp << " idep=" << ic << " ib=" << ib << endl; 
      } // end, j-loop over bdy face nodes
    }
    else if ( this->gtype_ == GE_DEFORMED 
