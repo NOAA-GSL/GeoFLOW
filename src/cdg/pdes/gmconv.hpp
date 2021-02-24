@@ -136,6 +136,7 @@ public:
           GBOOL           variabledt  = FALSE;  // use variable timestep?
           GBOOL           bvarvterm   = FALSE;  // time dep term velocities?
           GBOOL           divopcolloc = TRUE;   // use collocation in GDivOp?
+          GBOOL           usebdydata  = TRUE;   // use bdy data in GDivOp GStressen?
           GBOOL           Stokeshyp   = FALSE;  // use Stokes hypothesis
           GBOOL           bindepdiss  = FALSE;  // indep. mom & energy diss?
           GBOOL           bSSP        = FALSE;  // use strong stab pres RK?

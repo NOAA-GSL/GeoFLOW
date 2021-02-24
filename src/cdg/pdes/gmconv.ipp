@@ -750,6 +750,7 @@ void GMConv<TypePack>::init_impl(State &u, State &tmp)
 
   typename GDivOp<TypePack>::Traits trgdiv;
   trgdiv.docollocation = traits_.divopcolloc;
+  grid_->set_usebdydata(traits_.usebdydata); // Set usebdydata flag in grid
   if ( traits_.bconserved ) {
     assert(FALSE && "Conservation not yet supported");
 //  gpdv_  = new GpdV<TypePack>(*grid_);
