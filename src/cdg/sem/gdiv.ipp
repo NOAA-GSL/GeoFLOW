@@ -145,7 +145,6 @@ void GDivOp<TypePack>::apply(State &u, State &utmp, StateComp &div)
   StateComp                 *bmass   = &grid_->bdyMass();
 
 
-
   if ( !traits_.docollocation ) {
 
     // div = -D^{T,j} ( u_j ) 
