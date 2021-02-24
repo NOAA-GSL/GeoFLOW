@@ -82,6 +82,7 @@ int main(int argc, char **argv)
 {
 	GEOFLOW_TRACE_INITIALIZE();
 
+    GBOOL   usebdy;
     GINT    errcode=0 ;
     GINT    nc=GDIM; // no. coords
     GFTYPE  eps=100.0*std::numeric_limits<GFTYPE>::epsilon();
@@ -170,11 +171,13 @@ int main(int argc, char **argv)
 
     // Initialize u: set p, q, r exponents;
     //   u = x^p y^q z^r:
+    usebdy = divptree.getValue<GBOOL>("usebdydat");
     std::vector<std::vector<GFTYPE>> 
             vpoly = divptree.getArray2D<GFTYPE>("poly");
     std::vector<std::vector<GFTYPE>> 
             pi(GDIM);
     trdiv.docollocation = divptree.getValue<GBOOL>("docolloc");
+    grid_->set_usebdydata(usebdy);
     gdiv = new GDivOp<MyTypes>(trdiv, *grid_);
     
     GINT    ncyc  = divptree.getValue<GINT>("ncycles",100);
@@ -239,8 +242,6 @@ int main(int argc, char **argv)
         (*updatelist)[k][j]->update(*grid_, stateinfo, time, utmp, v, vb);
       }
     }
-#else
-    grid_->set_usebdydata(FALSE);  // turn off use of bdy data
 #endif
 
 
