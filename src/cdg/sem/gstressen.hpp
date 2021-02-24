@@ -36,7 +36,6 @@
 #include "gmtk.hpp"
 #include "pdeint/equation_base.hpp"
 
-#undef  DO_BDY
 #undef  DO_COMPRESS_MODES_ONLY
 
 template<typename TypePack>

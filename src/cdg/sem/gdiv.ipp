@@ -85,7 +85,6 @@ void GDivOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp &div
        grid_->wderiv(*utmp[1], j+1, TRUE, *utmp[0], *utmp[2]);
        div -= *utmp[2];
 
-#if defined(DO_BDY)
       // Global bdy terms:
       //  Note: utmp[1] should contain effect of bdy conditions,
       //        which are imposed on entry
@@ -93,7 +92,6 @@ void GDivOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp &div
         k = (*igbdy)[b];
         div[k] += (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
       }
-#endif
     }
   }
   else {
@@ -154,12 +152,10 @@ void GDivOp<TypePack>::apply(State &u, State &utmp, StateComp &div)
        grid_->wderiv(*u[j], j+1, TRUE, *utmp[0], *utmp[1]);
        div -= *utmp[1];
 
-#if defined(DO_BDY)
       for ( auto b=0; usebdy && b<igbdy->size(); b++ ) {
         k = (*igbdy)[b];
         div[k] += (*u[j])[k] * (*normals)[j][b] * (*bmass)[b];
       }
-#endif
     }
   }
   else {

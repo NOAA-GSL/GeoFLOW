@@ -146,13 +146,11 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, GINT idir, State &utmp
     grid_->wderiv(*utmp[1]  , j+1, TRUE, *utmp[0], *utmp[2]);
     so -= *utmp[2];
 
-#if defined(DO_BDY)
     // Compute bdy terms for this component, j:
     for ( auto b=0; usebdy && b<igbdy->size(); b++ ) {
       k = (*igbdy)[b];
       so[k] += (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
     }
-#endif
   }
 
   // Do -D^{T,j} [mu d (D_j u_i) ] terms:
@@ -164,13 +162,11 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, GINT idir, State &utmp
     grid_->wderiv(*utmp[1]  , j+1, TRUE, *utmp[0], *utmp[2]);
     so -= *utmp[2];
 
-#if defined(DO_BDY)
     // Compute surface terms for this component, j:
     for ( auto b=0; usebdy && b<igbdy->size(); b++ ) {
       k = (*igbdy)[b];
       so[k] += (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
     }
-#endif
   }
 
   // Compute dilitation term:
@@ -198,7 +194,6 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, GINT idir, State &utmp
 #endif
   so -= *utmp[2];
  
-#if defined(DO_BDY)
   // Compute surface terms for
   //  Integral zeta d (Div u) delta_ij.n^j dV:
   // Use kernel above, for i=idir:
@@ -210,7 +205,6 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, GINT idir, State &utmp
     so[k] += (*utmp[1])[k] * (*normals)[idir-1][b] * (*bmass)[b];
   #endif
   }
-#endif 
 
 
 
@@ -270,13 +264,11 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp
     grid_->wderiv(*utmp[1], j+1, TRUE, *utmp[0], *utmp[2]);
     eo -= *utmp[2];
 
-#if defined(DO_BDY)
     // Do the surface terms for jth component of normal:
     for ( auto b=0; usebdy && b<igbdy->size(); b++ ) {
       k = (*igbdy)[b];
       eo[k] += (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
     }
-#endif
   }
 
   // -= D^{T,j} [ kappa d u^i (D_j u_i) ] terms:
@@ -293,13 +285,11 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp
     grid_->wderiv(*utmp[1], j+1, TRUE, *utmp[0], *utmp[2]);
     eo -= *utmp[2];
 
-#if defined(DO_BDY)
     // Do the surface terms for jth component of normal:
     for ( auto b=0; usebdy && b<igbdy->size(); b++ ) {
       k = (*igbdy)[b];
       eo[k] += (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
     }
-#endif
   }
 
   // Compute dilitation term:
@@ -337,7 +327,6 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp
 #endif
     eo -= *utmp[3];
 
-#if defined(DO_BDY)
     // Do the surface terms for jth component of normal:
     for ( auto b=0; usebdy && b<igbdy->size(); b++ ) {
       k = (*igbdy)[b];
@@ -347,7 +336,6 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp
       eo[k] += (*utmp[2])[k] * (*normals)[j][b] * (*bmass)[b];
     #endif
     }
-#endif
   }
 
 } // end of method apply (2)
