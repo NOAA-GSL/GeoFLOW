@@ -50,6 +50,7 @@
     "bconserved"      : false,
     "usedivop"        : true,
     "divopcolloc"     : true,
+    "usebdydat"       : true,
     "Stokeshyp"       : true,
     "bindepdiss"      : false,
     "nliq"            : 0,
