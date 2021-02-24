@@ -10,6 +10,7 @@ set(test_cdg_files
 		  cdg_cg.cpp    
 		  cdg_ggfx.cpp
 		  cdg_gmtk.cpp
+		  cdg_interp.cpp
 		  cdg_mass.cpp
 )
 
