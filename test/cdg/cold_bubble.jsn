@@ -19,22 +19,6 @@
     "x_center"   : [0, 3000.0, 1000.0],
     "x_width"    : [4000.0, 2000.0, 2000.0]
   },
-  "grid_icos": {
-    "grid_name"   : "grid_icos",
-    "ilevel"      : 1,
-    "refine_type" : "GICOS_BISECTION",
-    "radius"      : 1.0,
-    "maxit"       : 128,
-    "tol"         : 1.0e-8,
-    "norm_type"   : "GCG_NORM_INF"
-  },
-  "grid_sphere" : {
-    "grid_name" : "grid_sphere",
-    "radiusi"   : 1.0,
-    "radiuso"   : 2.0,
-    "bdy_inner": "GBDY_DIRICHLET",
-    "bdy_outer": "GBDY_SPONGE"
-  },
   "0-flux": {
     "bdy_class"        : "uniform",
     "base_type"        : ["GBDY_0FLUX"],
@@ -48,6 +32,7 @@
     "dogravity"       : true,
     "bconserved"      : false,
     "divopcolloc"     : true,
+    "usebdydat"       : true,
     "Stokeshyp"       : false,
     "bindepdiss"      : false,
     "nliq"            : 0,

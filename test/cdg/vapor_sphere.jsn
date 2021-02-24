@@ -150,7 +150,7 @@
     "observer_name"      : "gio_observer",
     "idir"               : "outs",
     "odir"               : "outs",
-    "cadence_type"       : "time",
+    "cadence_type"       : "cycle",
     "cycle_interval"     : 1,
     "time_interval"      : 0.5,
     "state_names"        : ["s1", "s2", "s3", "e", "d"],
@@ -170,7 +170,7 @@
   "time_integration": {
     "integ_type" : "cycle",
     "time_end"   : 2001.0,
-    "cycle_end"  : 1,
+    "cycle_end"  : 10,
     "dt"         : 0.000000175
   }
 
