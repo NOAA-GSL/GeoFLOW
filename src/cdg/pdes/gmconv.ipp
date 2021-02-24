@@ -1157,7 +1157,7 @@ void GMConv<TypePack>::compute_vpref(StateComp &tvi, GINT idir, StateComp &W)
 //          jexcl: which hydrometeor index to exclude from sum. If jexcl<0,
 //                 exclude none. This index must be the 0-starting index of
 //                 the hydrometeor in the qi array.
-//          utmp : tmp vectors; GDIM+3 required
+//          utmp : tmp vectors; at least 5 required
 //          r    : fallout src field
 // RETURNS: none.
 //**********************************************************************************
@@ -1169,7 +1169,7 @@ void GMConv<TypePack>::compute_falloutsrc(StateComp &g, State &qi, State &tvi, G
    StateComp  *div, *qg; 
 
    assert(tvi.size() == qi.size());
-   assert(utmp.size() >= 2*nc_+1);
+   assert(utmp.size() >= 5);
    assert(jexcl < 0 || (jexcl >=0 && jexcl < qi.size()));
 
    // Compute:
@@ -1180,8 +1180,8 @@ void GMConv<TypePack>::compute_falloutsrc(StateComp &g, State &qi, State &tvi, G
 
    nhydro = qi.size(); // traits_.nlsector + traits_.nisector;
 
-   qg    = utmp[nc_+1];    // temp
-   div   = utmp[nc_+2];    // temp
+   qg    = utmp[3];    // temp
+   div   = utmp[4];    // temp
    for ( auto j=0; j<nhydro; j++ ) {
      if ( j == jexcl ) continue;  
 
@@ -1213,7 +1213,7 @@ void GMConv<TypePack>::compute_falloutsrc(StateComp &g, State &qi, State &tvi, G
 //          qi   : hydrometeor mass fractions
 //          tvi  : terminal velocity vector for each qi hydrometeor, from which
 //                 vec{W} is computed
-//          utmp : tmp vectors; GDIM+2 required
+//          utmp : tmp vectors; nc_+2 required
 //          r    : fallout potential energy
 // RETURNS: none.
 //**********************************************************************************
@@ -1363,17 +1363,13 @@ void GMConv<TypePack>::assign_helpers(const State &u, const State &uf)
 template<typename TypePack>
 GINT GMConv<TypePack>::szrhstmp()
 {
-  GINT       sum = 0;
+  GINT       maxop, sum = 0;
   GGridBox  *box = dynamic_cast <GGridBox*>(grid_);
    
-  // Get tmp size for operators:
-  if ( box ) {
-    sum += box->gtype() == GE_DEFORMED ? 2*nc_ : nc_;
-  }
-  else {
-    sum += 2*nc_;
-  }
-  sum += nc_ + 3; // size for compute_* methods
+  maxop = MAX(4,nc_+2); // stressen max
+  if ( traits_.dofallout && !traits_.dodry ) maxop = MAX(5,maxop);
+
+  sum += maxop;
   sum += 6;        // size for misc tmp space in dudt_impl
 
   return sum;
