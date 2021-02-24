@@ -92,6 +92,7 @@ int main(int argc, char **argv)
     std::vector<GINT> 
             pstd(GDIM);  
     GTVector<GFTYPE> *mass;
+    GTPoint<GFTYPE> dP, P0, P1;
     GC_COMM comm = GC_COMM_WORLD;
 
     // Initialize comm:
@@ -124,6 +125,14 @@ int main(int argc, char **argv)
     assert(sgrid == "grid_box"); // use only Cartesian grids
     assert(pstd.size() >= GDIM); 
 
+    std::vector<GFTYPE> vstd;
+    vstd = gridptree.getArray<GFTYPE>("xyz0");
+    P0   = vstd;
+    vstd = gridptree.getArray<GFTYPE>("delxyz");
+    dP   = vstd;
+    P1   = P0 + dP;
+
+
     pvec.resize(pstd.size()); pvec = pstd; pvec.range(0,GDIM-1);
 
     // Create basis:
@@ -142,6 +151,7 @@ int main(int argc, char **argv)
     /////////////////////////////////////////////////////////////////
 
     // Create state and tmp space:
+    GFTYPE    da_int, div_int, div_loc;
     State     utmp (4);
     State     v    (nc);
     State     vb   (nc);
@@ -178,7 +188,7 @@ int main(int argc, char **argv)
     for ( auto j=0; j<GDIM; j++) {
       pi[j].resize(3); 
       for ( auto i=0; i<3   ; i++) pi[j][i] = 0.0;
-      for ( auto i=0; i<GDIM; i++) pi[j][i] = vpoly[j][i];
+      for ( auto i=0; i<GDIM; i++) pi[j][i] = fabs(vpoly[j][i]);
     }
 
     // Set scalar field, and analytic derivative:
@@ -190,12 +200,34 @@ int main(int argc, char **argv)
       (*v[1])[j]   = pow(x,pi[1][0])*pow(y,pi[1][1])*pow(z,pi[1][2]); 
       if ( GDIM == 3 )
       (*v[2])[j]   = pow(x,pi[2][0])*pow(y,pi[2][1])*pow(z,pi[2][2]); 
-      da     [j]   = pi[0][0]*pow(x,pi[0][0]-1)*pow(y,pi[0][1])*pow(z,pi[0][2])
-                   + pi[1][1]*pow(x,pi[1][0])*pow(y,pi[1][1]-1)*pow(z,pi[1][2]);
+      da     [j]   = pi[0][0] < 1e-8 ? 0.0 : pi[0][0]*pow(x,pi[0][0]-1)*pow(y,pi[0][1])*pow(z,pi[0][2]);
+      da     [j]  += pi[1][1] < 1e-8 ? 0.0 :  pi[1][1]*pow(x,pi[1][0])*pow(y,pi[1][1]-1)*pow(z,pi[1][2]);
       if ( GDIM == 3 ) da[j] +=
-                   + pi[2][2]*pow(x,pi[1][0])*pow(y,pi[1][1])*pow(z,pi[1][2]-1);
+                   pi[2][2] < 1e-8 ? 0.0 : pi[2][2]*pow(x,pi[1][0])*pow(y,pi[1][1])*pow(z,pi[1][2]-1);
 
     } // end, loop over grid points
+
+    // Analytic ingtegral of Div v:
+    if      ( GDIM == 2 ) { da_int  = pow(P1.x1,pi[0][0]  )*pow(P0.x1,pi[0][0]  )
+                                    * pow(P1.x2,pi[0][1]+1)*pow(P0.x2,pi[0][1]+1)
+                                    / (pi[0][1]+1); 
+                            da_int += pow(P1.x1,pi[1][0]+1)*pow(P0.x1,pi[1][0]+1)
+                                    * pow(P1.x2,pi[1][1]  )*pow(P0.x2,pi[1][1])
+                                    / (pi[1][0]+1);
+    }
+    else if ( GDIM == 3 ) { da_int  = pow(P1.x1,pi[0][0]  )*pow(P0.x1,pi[0][0]  )
+                                    * pow(P1.x2,pi[0][1]+1)*pow(P0.x2,pi[0][1]+1)
+                                    * pow(P1.x3,pi[0][2]+1)*pow(P0.x3,pi[0][2]+1)
+                                    / ( (pi[0][1]+1)*(pi[0][2]+1) ); 
+                            da_int += pow(P1.x1,pi[1][0]+1)*pow(P0.x1,pi[1][0]+1)
+                                    * pow(P1.x2,pi[1][1]  )*pow(P0.x2,pi[1][1]  )
+                                    * pow(P1.x3,pi[1][2]+1)*pow(P0.x3,pi[1][2]+1)
+                                    / ( (pi[1][0]+1)*(pi[1][2]+1) ); 
+                            da_int += pow(P1.x1,pi[2][0]+1)*pow(P0.x1,pi[2][0]+1)
+                                    * pow(P1.x2,pi[2][1]+1)*pow(P0.x2,pi[2][1]+1)
+                                    * pow(P1.x3,pi[2][2]  )*pow(P0.x3,pi[2][2]  )
+                                    / ( (pi[2][0]+1)*(pi[2][1]+1) ); 
+    }
 
     for ( auto j=0; j<nc; j++ ) dnorm = da.amax();
 
@@ -219,9 +251,19 @@ int main(int argc, char **argv)
     }
     GEOFLOW_TRACE_STOP();
 
+    div_loc = div.sum();
+    GComm::Allreduce(&div_loc, &div_int, 1, T2GCDatatype<GFTYPE>(), GC_OP_SUM, comm);
+
+#if 0
     // divide by MJ
     for ( auto j=0; j<div.size(); j++ ) div[j] /= (*mass)[j];
+#endif
 
+cout << "v1  =" <<  *v[0]  << endl;
+cout << "v2  =" <<  *v[1]  << endl;
+cout << "div =" <<  div<< endl;
+cout << "da  =" <<  da << endl;
+cout << "div_int  =" <<  div_int << " da_int=" << da_int <<  endl;
 
     // Find inf-norm and L2-norm errors for each method::
     GTVector<GFTYPE> errs(2); // for each method, Linf and L2 errs
@@ -230,6 +272,7 @@ int main(int argc, char **argv)
     /////////////////////////////////////////////////////////////////
     //////////////////////// Compute Errors /////////////////////////
     /////////////////////////////////////////////////////////////////
+#if 0
     diff     = da - div;
    *utmp [0] = diff;                   // for inf-norm
    *utmp [1] = diff; utmp[1]->rpow(2); // for L2 norm
@@ -240,13 +283,13 @@ int main(int argc, char **argv)
     // Accumulate to find global inf-norm:
     GComm::Allreduce(lnorm.data(), gnorm.data(), 1, T2GCDatatype<GFTYPE>(), GC_OP_MAX, comm);
     errs[0] = gnorm[0]; errs[1] = gnorm[1];
+#else
+    errs[1] = fabs(da_int - div_int);
+#endif
+
     if ( myrank == 0 ) {
       if ( errs[1] > eps ) {
         std::cout << "main: ---------------------------GDivOp FAILED: " << errs[1]<< std::endl;
-//da.range(1, 10); div.range(1, 10);
-cout << "da  =" <<  da << endl;
-cout << "div =" <<  div<< endl;
-da.range_reset(); div.range_reset();
       errcode += 1;
       } else {
         std::cout << "main: ---------------------------GDivOp OK: " << errs[1] << std::endl;
