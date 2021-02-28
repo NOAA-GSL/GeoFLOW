@@ -986,9 +986,9 @@ void GGridBox::config_bdy(const PropertyTree           &ptree,
     bdytree      = ptree.getPropertyTree(sbdy);
     bdyclass     = bdytree.getValue<GString>("bdy_class", "uniform");
     if ( ndim_ == 2 ) 
-      find_bdy_ind2d(j, TRUE, ikeep, mtmp, utmp, itmp); // unique bdy node ids only
+      find_bdy_ind2d(j, FALSE, ikeep, mtmp, utmp, itmp); // unique bdy node ids only
     if ( ndim_ == 3 ) 
-      find_bdy_ind3d(j, TRUE, ikeep, mtmp, utmp, itmp); // unique bdy node ids only
+      find_bdy_ind3d(j, FALSE, ikeep, mtmp, utmp, itmp); // unique bdy node ids only
     assert(itmp.size() == utmp.size());
     igbdyf [j].resize(itmp.size()); igbdyf [j] = itmp;
     igbdyft[j].resize(itmp.size()); igbdyft[j] = GBDY_NONE;
@@ -1045,6 +1045,7 @@ void GGridBox::config_bdy(const PropertyTree           &ptree,
 
 
   } // end, global bdy face loop
+cout << "GridBox::config_bdy: igbdy=" << igbdy << endl;
 
   if ( bperiodic ) {
     if ( ndim_ == 2 ) {
@@ -1405,6 +1406,7 @@ void GGridBox::find_bdy_ind2d(GINT bdyid, GBOOL bunique, GTVector<GSIZET> &ikeep
     default:
       assert(FALSE);
   }
+
    
   istart = 0;
   nbdy   = 0;
@@ -1419,7 +1421,7 @@ void GGridBox::find_bdy_ind2d(GINT bdyid, GBOOL bunique, GTVector<GSIZET> &ikeep
       ie      = ind[i] + istart ;
       if ( bunique ) bexist = ktmp.containsn(ie,nkeep);
       if ( !bunique || !bexist ) {
-        itmp[nbdy] = ie;
+        itmp[nbdy] = ie; // 'global' index 
         mtmp[nbdy] = (*emass)[ind[i]];
         SET_DSWORD(utmp[nbdy], GElem_base::FACE, bdyid);
         // Check if point is a vertex:
@@ -1435,6 +1437,7 @@ void GGridBox::find_bdy_ind2d(GINT bdyid, GBOOL bunique, GTVector<GSIZET> &ikeep
     } // end, element's glob bdy
     istart += nnodes;
   } // end, elem loop
+
 
   // Fill return arrays:
   ibdy.resize(nbdy);
@@ -1747,7 +1750,8 @@ void GGridBox::do_face_normals2d(GTMatrix<GTVector<GFTYPE>>    &dXdXi,
        if ( it == GElem_base::FACE) {
          xm = (id == 0 || id == 3) ? -1.0 : 1.0;
          xp[(id+1)%2] = xm; 
-         face_mass[j] *= dXdXi(id%2,0)[ib];
+//cout << "GGridBox::do_face_normals2d: before : face_mass[j]=" << face_mass[j] << endl;
+         face_mass[j] *= dXdXi(id%2,0)[ib];  // incl Jacobian in mass 
          for ( ic=0; ic<GDIM && fabs(xp[ic]) < tiny; ic++ );
          assert(ic < GDIM); // no normal components > 0
          for ( auto i=0; i<normals.size(); i++ ) normals[i][j] = xp[i];
@@ -1755,23 +1759,43 @@ void GGridBox::do_face_normals2d(GTMatrix<GTVector<GFTYPE>>    &dXdXi,
        }
        else if ( it == GElem_base::VERTEX ) {
          if ( id == 0 ) {
+#if 1
            xp[0] = -1.0/sqrt(2.0);
            xp[1] = -1.0/sqrt(2.0);
+#else
+           xp[0] =  0.0;
+           xp[1] = -1.0;
+#endif
            face_mass[j] *= dXdXi(0,0)[ib];
          }
          else if ( id == 1 ) {
+#if 1
            xp[0] =  1.0/sqrt(2.0);
-           xp[1] =  1.0/sqrt(2.0);
+           xp[1] = -1.0/sqrt(2.0);
+#else
+           xp[0] =  0.0;
+           xp[1] = -1.0;
+#endif
            face_mass[j] *= dXdXi(1,0)[ib];
          }
          else if ( id == 2 ) {
+#if 1
            xp[0] =  1.0/sqrt(2.0);
            xp[1] =  1.0/sqrt(2.0);
+#else
+           xp[0] =  0.0;
+           xp[1] =  1.0;
+#endif
            face_mass[j] *= dXdXi(0,0)[ib];
          }
          else if ( id == 3 ) {
+#if 1
            xp[0] = -1.0/sqrt(2.0);
            xp[1] =  1.0/sqrt(2.0);
+#else
+           xp[0] =  0.0;
+           xp[1] =  1.0;
+#endif
            face_mass[j] *= dXdXi(1,0)[ib];
          }
          for ( ic=0; ic<GDIM && fabs(xp[ic]) < tiny; ic++ );
@@ -1784,7 +1808,8 @@ void GGridBox::do_face_normals2d(GTMatrix<GTVector<GFTYPE>>    &dXdXi,
        face_mass[j] *= xp.mag(); // |k X d_X_/dxi_ip| is face Jac
        xp.unit(); xp *= xm;
 #endif
-cout << "do_face_normals2d: j=" << j << " id=" << id << " it=" << it << " norm=" << xp << " idep=" << ic << " ib=" << ib << endl; 
+//cout << "GGridBox::do_face_normals2d: after: face_mass[j]=" << face_mass[j] << endl;
+//cout << "do_face_normals2d: j=" << j << " id=" << id << " it=" << it << " norm=" << xp << " idep=" << ic << " ib=" << ib << endl; 
      } // end, j-loop over bdy face nodes
    }
    else if ( this->gtype_ == GE_DEFORMED 
