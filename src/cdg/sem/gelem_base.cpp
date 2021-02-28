@@ -1493,7 +1493,7 @@ void GElem_base::get_indirect2d(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GVVInt &ve
 
   // Indirection indices for faces (same as for edges):
   face_ind.resize(nFaces_);
-  face_mass.resize(N[0]*N[1]);
+  face_mass.resize(N[0]*N[1]); // full elem size required!
   face_mass = 0.0;
   face_desc.resize(nFaces_);
   for ( auto j=0; j<nFaces_; j++ ) { 
