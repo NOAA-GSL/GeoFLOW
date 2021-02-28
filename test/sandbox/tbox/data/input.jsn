@@ -1,0 +1,20 @@
+{
+	
+	"object_1": {
+		"age": 36
+	},
+	
+	"bool_value" : true,
+	"bool_array" : [true, false, true, false, true],
+	
+	"int_value" : 12,
+	"int_array" : [0,1,2,3,4],
+	
+	"real_value" : 3.1415,
+	"real_array" : [1.1, 2.2, 3.3, 4.4, 5.5],
+	
+	"string_value" : "hello",
+	"string_array" : ["does", "this", "string", "array", "work"],
+
+	"2D Array" : [ [0,1,2], [1,2,3], [2,3,4] ]
+}
