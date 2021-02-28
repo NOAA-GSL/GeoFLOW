@@ -255,13 +255,15 @@ int main(int argc, char **argv)
     div_loc = div.sum();
     GComm::Allreduce(&div_loc, &div_int, 1, T2GCDatatype<GFTYPE>(), GC_OP_SUM, comm);
 
+
+cout << "v1  =" <<  *v[0]  << endl;
+cout << "v2  =" <<  *v[1]  << endl;
+cout << "divJM =" <<  div<< endl;
+cout << "mass=" <<  *mass << endl;
 #if 1
     // divide by MJ
     for ( auto j=0; j<div.size(); j++ ) div[j] /= (*mass)[j];
 #endif
-
-cout << "v1  =" <<  *v[0]  << endl;
-cout << "v2  =" <<  *v[1]  << endl;
 cout << "div =" <<  div<< endl;
 cout << "da  =" <<  da << endl;
 cout << "div_int  =" <<  div_int << " da_int=" << da_int <<  endl;
