@@ -355,11 +355,12 @@ void GMConv<TypePack>::dudt_impl(const Time &t, const State &u, const State &uf,
    *dudt[j] -= *tmp1;                                 // -= Grad p'
 #else
     grid_->deriv(*p, j+1, *tmp2, *tmp1);              // Grad p'
-   *tmp1 *= *Mass; 
+   *tmp1 *= *Mass;                                    // M Grad p' 
    *dudt[j] += *tmp1;                                 // += Grad p'
 #endif
 
-    gstressen_->apply(*rhoT, v_, j+1, urhstmp_, *tmp1);      // [mu s^{ij}],j
+    gstressen_->apply(*rhoT, v_, j+1, urhstmp_, 
+                                         *tmp1);      // [mu s^{ij}],j
    *dudt[j] -= *tmp1;                                 // -= [mu s^{ij}],j
 
     if ( traits_.docoriolis ) {
