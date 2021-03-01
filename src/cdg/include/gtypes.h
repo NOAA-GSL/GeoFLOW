@@ -234,21 +234,21 @@ const char * const sGStateCompType [] ={"GSC_KINETIC","GSC_MAGNETIC","GSC_DENSIT
 
 
 // Macros for 'packing' unsigned ints:
-#define _WLO 4
+#define _WLO BITSPERBYTE*sizeof(GUINT)/2
 #if !defined(LOMASK)
-  #define LOMASK      ( ~( (~(GUINT)0) << _WLO ) )
+  #define LOMASK          ( ~( (~(GUINT)0) << _WLO ) )
 #endif
 #if !defined(HIMASK)
-  #define HIMASK      ( ~LOMASK ) 
+  #define HIMASK          ( ~LOMASK ) 
 #endif
 #if !defined(GET_LOWORD)
-  #define GET_LOWORD(a) ( a & LOMASK )
+  #define GET_LOWORD(a)   ( a & LOMASK )
 #endif
 #if !defined(GET_HIWORD)
-  #define GET_HIWORD(a) ( a >> _WLO )
+  #define GET_HIWORD(a)   ( a >> _WLO )
 #endif
 #if !defined(SET_LOWORD)
-  #define SET_LOWORD(a,b)   ( a &= HIMASK );( a |= (b & LOMASK) )
+  #define SET_LOWORD(a,b) ( a &= HIMASK );( a |= (b & LOMASK) )
 #endif
 #if !defined(SET_HIWORD)
   #define SET_HIWORD(a,b) ( a &= LOMASK );( a |= ( b << _WLO ) )
@@ -257,6 +257,35 @@ const char * const sGStateCompType [] ={"GSC_KINETIC","GSC_MAGNETIC","GSC_DENSIT
   #define SET_DSWORD(u,lo,hi) SET_LOWORD(u,lo);SET_HIWORD(u,hi) 
 #endif
 
+// Node id description macros (must act on unsigned ints):
+#define _NDSZ  BITSPERBYTE*sizeof(GUINT)/3
+#if !defined(NDIDMASK) // Node ID mask
+  #define NDIDMASK        ( ~( (~(GUINT)0) << _NDSZ ) )
+#endif
+#if !defined(NDTPMASK) // Node type mask
+  #define NDTPMASK        ( ( (~(GUINT)0) >> _NDSZ ) << _NDSZ )
+#endif
+#if !defined(NDHOMASK) // Node's parent face (host) id mask
+  #define NDHOMASK        ( ~NDIDMASK )
+#endif
+#if !defined(GET_NDID)
+  #define GET_NDID(a)     ( a & NDIDMASK )
+#endif
+#if !defined(GET_NDTYPE)
+  #define GET_NDTYPE(a)   ( (a & NDTPMASK) >> _NDSZ )
+#endif
+#if !defined(GET_NDHOST)
+  #define GET_NDHOST(a)   ( (a & NDHOMASK) >> _NDSZ*2 )
+#endif
+#if !defined(SET_NDID)
+  #define SET_NDID(a,b)   ( a &= NDHOMASK );( a &= NDTPMASK );( a |= b )
+#endif
+#if !defined(SET_NDTYPE)
+  #define SET_NDTYPE(a,b) ( a &= NDHOMASK );( a &= NDHOMASK );( a |= (b << _NDSZ) )
+#endif
+#if !defined(SET_NDHOST)
+  #define SET_NDHOST(a,b) ( a &= NDTPMASK );( a &= NDIDMASK );( a |= ( b << _NDSZ*2 ) )
+#endif
 
 #if !defined(GError)
   #define GError() printf("Error: %s; line: %d\n",__FILE__,__LINE__);
