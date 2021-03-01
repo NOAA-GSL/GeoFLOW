@@ -1234,17 +1234,18 @@ void GGridBox::find_bdy_ind3d(GINT bdyid, GBOOL bunique, GTVector<GSIZET> &ikeep
   switch ( bdyid ) {
     case 0: // southern vert face:
       for( auto i=0; i<xNodes_[0].size(); i++ ) { // face 0
+        SET_NDHOST(uu, bdyid);
         if ( FUZZYEQ(P0_.x2,xNodes_[1][i],eps_) ) {
           pt.assign(xNodes_, i);
-          SET_LOWORD(uu, GElem_base::FACE);
-          SET_HIWORD(uu, 0);
+          SET_NDTYPE(uu, GElem_base::FACE);
+          SET_NDID(uu, 0);
           if ( FUZZYEQ(P0_.x1,xNodes_[0][i],eps_) ) {
-            SET_LOWORD(uu, GElem_base::EDGE);
-            SET_HIWORD(uu, 3);
+            SET_NDTYPE(uu, GElem_base::EDGE);
+            SET_NDID(uu, 3);
           }
           else if ( FUZZYEQ(P1_.x1,xNodes_[0][i],eps_) ) {
-            SET_LOWORD(uu, GElem_base::VERTEX);
-            SET_HIWORD(uu, 2);
+            SET_NDTYPE(uu, GElem_base::VERTEX);
+            SET_NDID(uu, 2);
           }
 //        if ( incl_edge || !on_global_edge(0,pt) ) nbdy++;
           if ( !bunique  || !ikeep.contains(i) ) {
@@ -1364,20 +1365,25 @@ void GGridBox::find_bdy_ind2d(GINT bdyid, GBOOL bunique, GTVector<GSIZET> &ikeep
 
   GBOOL             bexist;
   GUINT             iv[2*GDIM][2] = { {0,1}, {1,2}, {3,2}, {0,3} }; // vertex ids for each face
-  GSIZET            ie, istart, nbdy, nind, nkeep, nnodes;
+  GSIZET            ie, istart, nbdy, nind, nkeep, ntmp, nnodes;
   GTVector<GUINT>   utmp;
   GTVector<GSIZET>  ind, itmp, ktmp;
   GTVector<GFTYPE> *emass, mtmp;
   GTPoint<GFTYPE>   xp;
   GTVector<GTPoint<GFTYPE>>
                     v(2);
-  GVVFType         *xnodes;
+  GVVFType         *xlnodes;
   
   nkeep = ikeep.size();
-  itmp.resize(xNodes_[0].size());
-  ktmp.resize(xNodes_[0].size());
-  utmp.resize(xNodes_[0].size());
-  mtmp.resize(xNodes_[0].size());
+  
+  if ( bunique ) 
+    ntmp  = xNodes_[0].size(); 
+  else
+    ntmp  = xNodes_[0].size() + pow(2,GDIM) + (GDIM > 2 ? 2*GDIM : 0);
+  itmp.resize(ntmp);
+  ktmp.resize(ntmp);
+  utmp.resize(ntmp);
+  mtmp.resize(ntmp);
 
   for ( auto j=0; j<nkeep; j++ ) ktmp[j] = ikeep[j];
 
@@ -1411,13 +1417,13 @@ void GGridBox::find_bdy_ind2d(GINT bdyid, GBOOL bunique, GTVector<GSIZET> &ikeep
   istart = 0;
   nbdy   = 0;
   for ( auto e=0; e<gelems_.size(); e++ ) { 
-    xnodes = &gelems_[e]->xNodes();
+    xlnodes= &gelems_[e]->xNodes();
     emass  = &gelems_[e]->face_mass();
     nnodes = gelems_[e]->nnodes();
-    nind   = geoflow::in_seg(v, *xnodes, ind); // get indices on segment
+    nind   = geoflow::in_seg(v, *xlnodes, ind); // get indices on segment
     // For each index on bdy, set description:
     for ( auto i=0; i<nind; i++ ) { 
-      xp.assign(*xnodes, ind[i]);
+      xp.assign(*xlnodes, ind[i]);
       ie      = ind[i] + istart ;
       if ( bunique ) bexist = ktmp.containsn(ie,nkeep);
       if ( !bunique || !bexist ) {
@@ -1728,7 +1734,7 @@ void GGridBox::do_face_normals2d(GTMatrix<GTVector<GFTYPE>>    &dXdXi,
 {
   GEOFLOW_TRACE();
    GINT              ib, ic, ip; 
-   GUINT             id, it;
+   GUINT             id, ih, it;
    GSIZET            mult;
    GFTYPE            tiny;
    GFTYPE            xm;
@@ -1744,8 +1750,9 @@ void GGridBox::do_face_normals2d(GTMatrix<GTVector<GFTYPE>>    &dXdXi,
    if ( this->gtype_ == GE_REGULAR ) {
      for ( auto j=0; j<gieface.size(); j++ ) { // all points on iedge
        ib = gieface[j];
-       id = GET_HIWORD(gdeface[j]); 
-       it = GET_LOWORD(gdeface[j]);
+       id = GET_NDID(gdeface[j]); 
+       it = GET_NDTYPE(gdeface[j]);
+       ih = GET_NDHOST(gdeface[j]);
        xp = 0.0;
        if ( it == GElem_base::FACE) {
          xm = (id == 0 || id == 3) ? -1.0 : 1.0;
@@ -1759,43 +1766,28 @@ void GGridBox::do_face_normals2d(GTMatrix<GTVector<GFTYPE>>    &dXdXi,
        }
        else if ( it == GElem_base::VERTEX ) {
          if ( id == 0 ) {
-#if 1
-           xp[0] = -1.0/sqrt(2.0);
-           xp[1] = -1.0/sqrt(2.0);
-#else
-           xp[0] =  0.0;
+           if      ( ih == 0 ) xp[1] = -1.0;
+           else if ( ih == 3 ) xp[0] = -1.0;
+           else    assert(FALSE);
            xp[1] = -1.0;
-#endif
            face_mass[j] *= dXdXi(0,0)[ib];
          }
          else if ( id == 1 ) {
-#if 1
-           xp[0] =  1.0/sqrt(2.0);
-           xp[1] = -1.0/sqrt(2.0);
-#else
-           xp[0] =  0.0;
-           xp[1] = -1.0;
-#endif
+           if      ( ih == 0 ) xp[1] = -1.0;
+           else if ( ih == 1 ) xp[0] =  1.0;
+           else    assert(FALSE);
            face_mass[j] *= dXdXi(1,0)[ib];
          }
          else if ( id == 2 ) {
-#if 1
-           xp[0] =  1.0/sqrt(2.0);
-           xp[1] =  1.0/sqrt(2.0);
-#else
-           xp[0] =  0.0;
-           xp[1] =  1.0;
-#endif
+           if      ( ih == 1 ) xp[0] =  1.0;
+           else if ( ih == 2 ) xp[1] =  1.0;
+           else    assert(FALSE);
            face_mass[j] *= dXdXi(0,0)[ib];
          }
          else if ( id == 3 ) {
-#if 1
-           xp[0] = -1.0/sqrt(2.0);
-           xp[1] =  1.0/sqrt(2.0);
-#else
-           xp[0] =  0.0;
-           xp[1] =  1.0;
-#endif
+           if      ( ih == 2 ) xp[1] =  1.0;
+           else if ( ih == 3 ) xp[0] = -1.0;
+           else    assert(FALSE);
            face_mass[j] *= dXdXi(1,0)[ib];
          }
          for ( ic=0; ic<GDIM && fabs(xp[ic]) < tiny; ic++ );
@@ -1809,7 +1801,7 @@ void GGridBox::do_face_normals2d(GTMatrix<GTVector<GFTYPE>>    &dXdXi,
        xp.unit(); xp *= xm;
 #endif
 //cout << "GGridBox::do_face_normals2d: after: face_mass[j]=" << face_mass[j] << endl;
-//cout << "do_face_normals2d: j=" << j << " id=" << id << " it=" << it << " norm=" << xp << " idep=" << ic << " ib=" << ib << endl; 
+cout << "do_face_normals2d: j=" << j << " id=" << id << " it=" << it << " ih=" << ih << " norm=" << xp << " idep=" << ic << " ib=" << ib << endl; 
      } // end, j-loop over bdy face nodes
    }
    else if ( this->gtype_ == GE_DEFORMED 
@@ -1818,8 +1810,9 @@ void GGridBox::do_face_normals2d(GTMatrix<GTVector<GFTYPE>>    &dXdXi,
      // for face:
      for ( auto j=0; j<gieface.size(); j++ ) { // all points on iedge
        ib = gieface[j];
-       id = GET_HIWORD(gdeface[j]); 
-       it = GET_LOWORD(gdeface[j]);
+       id = GET_NDID(gdeface[j]); 
+       it = GET_NDTYPE(gdeface[j]);
+       ih = GET_NDHOST(gdeface[j]);
        ip = id == 1 || id == 3 ? 0 : 1;
        for ( auto i=0; i<dXdXi.size(2); i++ ) { // over _X_
          p1[i] = dXdXi(ip,i)[ib]; 
@@ -1868,7 +1861,7 @@ void GGridBox::do_face_normals3d(GTMatrix<GTVector<GFTYPE>>    &dXdXi,
 {
   GEOFLOW_TRACE();
    GINT            fi, ib, ic; 
-   GUINT           id, it; 
+   GUINT           id, ih,it; 
    GINT            ifx [6][2] = { {0,2}, {1,2}, {2,0},
                                   {2,1}, {1,0}, {0,1} }; // ref x's for each face
    GINT            ief[12]    = {0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3 }; // face for each edge
@@ -1881,8 +1874,9 @@ void GGridBox::do_face_normals3d(GTMatrix<GTVector<GFTYPE>>    &dXdXi,
    // Bdy normal is dvec{X} / dxi_xi X dvec{X} / dxi_eta
    for ( auto j=0; j<gieface.size(); j++ ) { // all points on iedge
      ib = gieface[j];
-     id = GET_HIWORD(gdeface[j]); // id (which face it sits on)
-     it = GET_LOWORD(gdeface[j]); // VERTEX, EDGE, FACE
+     id = GET_NDID(gdeface[j]); // id (which face it sits on)
+     it = GET_NDTYPE(gdeface[j]); // VERTEX, EDGE, FACE
+     ih = GET_NDHOST(gdeface[j]);
      if      ( it == GElem_base::VERTEX ) fi = ivf[id];
      else if ( it == GElem_base::EDGE   ) fi = ief[id];
      else if ( it == GElem_base::FACE   ) fi = id;
@@ -2032,8 +2026,8 @@ void GGridBox::do_bdy_normals2d(GTMatrix<GTVector<GFTYPE>>    &dXdXi,
      // perp. to edge:
      for ( auto j=0; j<igbdy.size(); j++ ) { // all points on iedge
        ib = igbdy[j];
-       id = GET_HIWORD(debdy[j]); 
-       it = GET_LOWORD(debdy[j]);
+       id = GET_NDID(debdy[j]); 
+       it = GET_NDTYPE(debdy[j]);
        ip = id % 2;
        xm = id == 1 || id == 2 ? -1.0 : 1.0;
        for ( auto i=0; i<normals.size(); i++ ) normals[i][j] = 0.0; 
