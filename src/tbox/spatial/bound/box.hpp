@@ -188,6 +188,20 @@ public:
 		}
 	}
 
+	/**
+	 * Scale this BBox side length
+	 *
+	 * Stretch this bounding box length by constant
+	 */
+	void scale(const value_type& s) noexcept {
+		for(size_type i = 0; i < min_.size(); ++i){
+			auto new_half_length = value_type(0.5) * s * this->length(i);
+			auto orig_cent = this->center(i);
+			min_[i] = orig_cent - new_half_length;
+			max_[i] = orig_cent + new_half_length;
+		}
+	}
+
 	//-------------------------------------------------------------------------
 	// Boolean Operators
 	//-------------------------------------------------------------------------

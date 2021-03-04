@@ -13,9 +13,31 @@
 #include <numeric>
 #include <random>
 #include <vector>
-// #include "ginterp.hpp"
+#include "ginterp.hpp"
 #include "tbox/pio.hpp"
 #include "boost/mpi.hpp"
+
+
+template<typename T, std::size_t D>
+T true_solution(const std::array<T,D>& a){
+    T ans = 3 * a[0] * a[0];
+    if constexpr (D >= 2){
+        ans += 2 * a[1];
+    }
+    if constexpr (D >= 3){
+        ans -= a[2];
+    }
+    return ans;
+};
+
+template <typename T, std::size_t D>
+std::string array_to_string(const std::array<T, D>& a) {
+    std::string ans;
+    for (auto& val : a) {
+        ans += std::to_string(val) + " ";
+    }
+    return ans;
+};
 
 
 int main(int argc, char **argv){
@@ -25,9 +47,9 @@ int main(int argc, char **argv){
 	using size_type  = std::size_t;
 	using value_type = double;
 	using point_type = std::array<value_type, NDIM>;
-    constexpr int num_targets = 1000;
+    constexpr int num_targets = 10;
     constexpr int num_sources = 1000;
-    constexpr int num_repeat  = 100;
+    constexpr int num_repeat  = num_sources;
 
 	// Start Up MPI and find my place in it
     mpi::environment  env(argc,argv);
@@ -59,7 +81,7 @@ int main(int argc, char **argv){
 
     // Generate Source Locations
     // Random within the full global domain
-    std::vector<point_type> source_xyz(num_sources+num_repeat);
+    std::vector<point_type> source_xyz(num_sources);
     for(size_type d = 0; d < NDIM; ++d){    
         std::uniform_real_distribution<value_type> dis(global_min_bound[d], global_max_bound[d]);
         for(size_type id = 0; id < num_sources; ++id){
@@ -67,9 +89,32 @@ int main(int argc, char **argv){
         }
     }
 
+    // Ensure target region corners are included as sources for testing
+    if constexpr ( NDIM == 1 ){
+        source_xyz.push_back( {rank_min_bound[0]} );
+        source_xyz.push_back( {rank_max_bound[0]} );
+    }
+    if constexpr ( NDIM == 2 ){
+        source_xyz.push_back( {rank_min_bound[0],rank_min_bound[1]} );
+        source_xyz.push_back( {rank_max_bound[0],rank_min_bound[1]} );
+        source_xyz.push_back( {rank_max_bound[0],rank_max_bound[1]} );
+        source_xyz.push_back( {rank_min_bound[0],rank_max_bound[1]} );
+    }
+    // if constexpr ( NDIM == 3 ){
+    //     source_xyz.push_back( {rank_min_bound[0],rank_min_bound[1],rank_min_bound[2]} );
+    //     source_xyz.push_back( {rank_max_bound[0],rank_min_bound[1],rank_min_bound[2]} );
+    //     source_xyz.push_back( {rank_max_bound[0],rank_max_bound[1],rank_min_bound[2]} );
+    //     source_xyz.push_back( {rank_min_bound[0],rank_max_bound[1],rank_min_bound[2]} );
+    //     source_xyz.push_back( {rank_min_bound[0],rank_min_bound[1],rank_max_bound[2]} );
+    //     source_xyz.push_back( {rank_max_bound[0],rank_min_bound[1],rank_max_bound[2]} );
+    //     source_xyz.push_back( {rank_max_bound[0],rank_max_bound[1],rank_max_bound[2]} );
+    //     source_xyz.push_back( {rank_min_bound[0],rank_max_bound[1],rank_max_bound[2]} );    
+    // }
+
     // Create some Repeat Sources in data
+    const auto sz = source_xyz.size();
     for(size_type i = 0; i < num_repeat; ++i){  
-        source_xyz[num_sources + i] = source_xyz[ std::size_t(i * (num_sources-1) / num_repeat) ];
+        source_xyz.push_back( source_xyz[ std::size_t(i * (sz-1) / num_repeat) ] );
     }
 
     // Generate Target Locations
@@ -82,41 +127,37 @@ int main(int argc, char **argv){
         }
     }
 
+    // Add a Source at 1st Target Location for Checking Exact Match
+    source_xyz.push_back(target_xyz[0]);
+
     // Build Known Solution at Sources
     std::vector<value_type> source_soln(source_xyz.size(), 0);
     for(size_type id = 0; id < source_xyz.size(); ++id){
-        for(size_type d = 0; d < NDIM; ++d){    
-            source_soln[id] += d * source_xyz[id][d];
-        }
+        source_soln[id] = true_solution(source_xyz[id]);
     }
 
     // Build Known Solution at Targets (for Checking Only)
     std::vector<value_type> target_exact_soln(target_xyz.size(), 0);
     for(size_type id = 0; id < target_xyz.size(); ++id){
-        for(size_type d = 0; d < NDIM; ++d){    
-            target_exact_soln[id] += d * target_xyz[id][d];
-        }
+        target_exact_soln[id] = true_solution(target_xyz[id]);
     }
 
-	// Determine a tolerance to assume points are the same
-	auto tolerance = dx_per_rank / 1000;
+    // Determine a tolerance to assume points are the same
+    auto tolerance = dx_per_rank / 1000;
 
-	// Init GInterp
-	// GInterp interp;
-	// interp.init(tolerance,source_xyz,target_xyz);
+    // Init GInterp
+    std::vector<value_type> target_soln(target_xyz.size());
+	GInterp<value_type>::interpolate(tolerance,source_xyz,source_soln,target_xyz,target_soln);
 
-	// // Perform Interpolations using solutions at sources
-	// auto target_soln = interp.interpolate(source_soln);
-
-	// // Check Answer against known solution
-	// value_type error_tolerance = 0.01;
-	// for(size_type i = 0; i < num_targets; ++i) {
-	// 	auto percent_error = std::abs(target_soln[i] - target_exact_soln[i])/target_exact_soln[i];
-	// 	if( percent_error > error_tolerance ){
-	// 		pio::pout << "Index = " << i << " %Error = " << percent_error << std::endl;
-	// 		return 1;
-	// 	}
-	// }
+	// Check Answer against known solution
+	value_type error_tolerance = 0.01;
+    auto percent_error = std::abs(target_soln[0] - target_exact_soln[0])/target_exact_soln[0];
+	if( percent_error > error_tolerance ){
+		pio::perr << "At Index = " << 0 << " Percent Error = " << percent_error << std::endl;
+        pio::perr << "Returned Target Solution = " << target_soln[0] << std::endl;
+        pio::perr << "Exact Target Solution    = " << target_exact_soln[0] << std::endl;
+		return 1;
+	}
 
 	pio::finalize();
 	return 0;

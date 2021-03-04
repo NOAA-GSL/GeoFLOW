@@ -263,6 +263,15 @@ public:
 		}
 	}
 
+	/**
+	 * Scale this Sphere radius
+	 *
+	 * Scale this Sphere radius by s
+	 */
+	void scale(const value_type& s) noexcept {
+		radius_ *= s;
+	}
+
 	//-------------------------------------------------------------------------
 	// Boolean Operators
 	//-------------------------------------------------------------------------
