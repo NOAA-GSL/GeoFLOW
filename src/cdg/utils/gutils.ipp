@@ -189,7 +189,7 @@ void compute_p(const GTVector<T> &Temp, const GTVector<T> &d, const GTVector<T> 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : in_seg
+// METHOD : in_seg (1)
 // DESC   : Determine if points, x, lie within segment 
 //          defined by verts. Return indices of contained x
 //          in ind vector, and return the number of points found
@@ -224,13 +224,54 @@ GSIZET in_seg(const GTVector<GTPoint<T>> &verts, const GTVector<GTVector<T>> &x,
   
   return nfound;
 
-} // end of method in_seg
+} // end of method in_seg (1)
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : in_seg (2)
+// DESC   : Determine if points, x, lie within segment 
+//          defined by verts. Return indices of contained x
+//          in ind vector, and return the number of points found
+// ARGS   : verts: use first 2 points to define segment
+//          x    : test points
+//          ix   : indirection indices in x to consider
+//          ind  : vector of indices in x that lie on segment. Reallocated
+//                 if necessary to be of insufficient size
+// RETURNS: number of points found on segment (valid number of points in ind)
+//**********************************************************************************
+template<typename T>
+GSIZET in_seg(const GTVector<GTPoint<T>> &verts, const GTVector<GTVector<T>> &x, const GTVector<GSIZET> &ix, GTVector<GSIZET> &ind)
+{
+  GINT       ndim;
+  GSIZET     nfound;
+  T          mr1, mr2;
+  GTPoint<T> c(3), d(3), p(3), r1(3), r2(3);
+
+  p    = 0.0;
+  d    = verts[1] ; d -= verts[0];
+  ndim = x.size();
+  ind.resizem(x[0].size());
+  nfound = 0;
+  for ( auto i=0; i<ix.size(); i++ ) {
+    p.assign(x, ix[i]);
+    r1 = p ; r1 -= verts[0]; mr1 = r1.mag();
+    r2 = p ; r2 -= verts[1]; mr2 = r2.mag();
+    d.cross(r1, c); // c = d X r1
+    if ( (mr1+mr2) <= d.mag() ) {
+      ind[nfound++] = ix[i];
+    }
+  } // end, test point loop
+  
+  return nfound;
+
+} // end of method in_seg (2)
 
 
 //**********************************************************************************
 //**********************************************************************************
 
-// METHOD : in_poly 
+// METHOD : in_poly (1)
 // DESC   : Determine if points, x, lie within polygon 
 //          defined by verts. Return indices of enclosed x
 //          in ind vector, and return the number of points found
@@ -283,8 +324,67 @@ GSIZET in_poly(GTVector<GTPoint<T>> &verts, const GTVector<GTVector<T>> &x, T ep
 
   return nfound;   
 
-} // end of method in_poly 
+} // end of method in_poly (1)
 
+
+//**********************************************************************************
+//**********************************************************************************
+
+// METHOD : in_poly (2)
+// DESC   : Determine if points, x, lie within polygon 
+//          defined by verts. Return indices of enclosed x
+//          in ind vector, and return the number of points found
+// ARGS   : verts: vertices defining polygon, in 'counter-clockwise' order
+//          x    : test points (x, y, ... z arrays)
+//          ix   : indirection indices in x to consider
+//          ind  : vector of indices in x that lie on segment. Reallocated
+//                 if necessary to be of insufficient size
+//          eps  : 'zero' value
+// RETURNS: number of points found in polygon (valid number of points in ind)
+//**********************************************************************************
+template<typename T>
+GSIZET in_poly(GTVector<GTPoint<T>> &verts, const GTVector<GTVector<T>> &x, const GTVector<GSIZET> &ix, T eps, GTVector<GSIZET> &ind)
+{
+  GINT         nverts;
+  GSIZET       nfound;
+  T            dotdrN, dotdrc;
+  GTPoint<T>   c, N, dr, r1, r2, xp;
+
+  ind.resizem(x[0].size());
+  nverts = verts.size();
+  nfound = 0;
+  for ( auto i=0; i<ix.size(); i++ ) {
+    for ( auto n=0; n<verts.size(); n++ ) {
+
+      // Assume vertices in counterclockwise order, and
+      // compute normal to edge segment n, np1. This vector
+      // points 'inward' in a r.h. sense:
+      r1 = verts[(n+1)%nverts]; r1 -= verts[n];
+      r2 = verts[(n+2)%nverts]; r2  -= verts[(n+1)%nverts];
+     
+      r1.cross(r2, c); // c = r1 X r2, normal to plane
+
+      c.cross(r1, N);  // N = c X r1, in plane 
+
+      xp.assign(x, ix[i]); // test point
+
+      // Compute vector dr =  r_test - polyVertex:
+      dr = xp; dr -= verts[n];
+      dotdrN = dr.dot(N);
+      dotdrc = dr.dot(c);
+
+      // If dr dot N < 0, or there is a component perp to plane of
+      // polygon (dotPar !=0 ) then point is outside of polygon:
+      if ( (fabs(dotdrN) > eps && dotdrN < 0) 
+        ||  fabs(dotdrc) > eps ) {
+        ind[nfound++] = ix[i];
+      }
+    } // end, vert loop
+  }   // end, test point loop
+
+  return nfound;   
+
+} // end of method in_poly (2)
 
 
 } // end, namespace
