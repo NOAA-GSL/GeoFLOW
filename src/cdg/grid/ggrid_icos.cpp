@@ -882,7 +882,7 @@ void GGridIcos::print(const GString &filename, GCOORDSYST icoord)
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : config_bdy
+// METHOD : config_gbdy
 // DESC   : Configure 3d spherical boundaries from ptree
 // ARGS   : 
 //          ptree : main prop tree 
@@ -890,16 +890,12 @@ void GGridIcos::print(const GString &filename, GCOORDSYST icoord)
 //                  gives vector of global bdy ids. Allocated here.
 //          igbdyft: bdy type ids for each index in igbdyf. Allocated here.
 //          igbdy  : 'flat' version of igbdyf
-//          debdy  : node descriptor for each index in igbdy
-//          Mbdy   : bdy mass (quadrature weights)
 // RETURNS: none.
 //**********************************************************************************
-void GGridIcos::config_bdy(const geoflow::tbox::PropertyTree &ptree, 
+void GGridIcos::config_gbdy(const geoflow::tbox::PropertyTree &ptree, 
                            GTVector<GTVector<GSIZET>>   &igbdyf, 
                            GTVector<GTVector<GBdyType>> &igbdyft,
-                           GTVector<GSIZET>             &igbdy,
-                           GTVector<GUINT>              &debdy,
-                           GTVector<GFTYPE>             &Mbdy)
+                           GTVector<GSIZET>             &igbdy)
 {
 	GEOFLOW_TRACE();
   // Cycle over all geometric boundaries, and configure:
@@ -925,13 +921,13 @@ void GGridIcos::config_bdy(const geoflow::tbox::PropertyTree &ptree,
   bdynames[1] = "bdy_outer";
 
   if ( !ptree.isValue<GString>("grid_type") ) {
-    cout << "GGridIcos::config_bdy: grid_type not set" << endl;
+    cout << "GGridIcos::config_gbdy: grid_type not set" << endl;
     assert(FALSE);
   }
   gname     = ptree.getValue<GString>("grid_type");
 
   if ( !ptree.isPropertyTree(gname) ) {
-    cout << "GGridIcos::config_bdy: grid_type block " << gname << " not found" << endl;
+    cout << "GGridIcos::config_gbdy: grid_type block " << gname << " not found" << endl;
     assert(FALSE);
   }
   gridptree = ptree.getPropertyTree(gname);
@@ -954,7 +950,7 @@ void GGridIcos::config_bdy(const geoflow::tbox::PropertyTree &ptree,
     sbdy         = gridptree.getValue<GString>(bdynames[j]);
     bdytree      = ptree.getPropertyTree(sbdy);
     bdyclass     = bdytree.getValue<GString>("bdy_class", "uniform");
-    find_bdy_ind3d(rbdy[j], itmp); 
+    find_gbdy_ind3d(rbdy[j], itmp); 
     igbdyf [j].resize(itmp.size()); igbdyf [j] = itmp;
     igbdyft[j].resize(itmp.size()); igbdyft[j] = GBDY_NONE;
     nind = 0;
@@ -1001,19 +997,19 @@ void GGridIcos::config_bdy(const geoflow::tbox::PropertyTree &ptree,
     }
   } // end, canonical bdy loop
 
-} // end of method config_bdy
+} // end of method config_gbdy
 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : find_bdy_ind3d
+// METHOD : find_gbdy_ind3d
 // DESC   : Find global bdy indices (indices into xNodes_ arrays) that
 //          corresp to specified radius
 // ARGS   : radius   : radius
 //          ibdy     : array of indices into xNodes that comprise this boundary
 // RETURNS: none.
 //**********************************************************************************
-void GGridIcos::find_bdy_ind3d(GFTYPE radius, GTVector<GSIZET> &ibdy)
+void GGridIcos::find_gbdy_ind3d(GFTYPE radius, GTVector<GSIZET> &ibdy)
 {
 	GEOFLOW_TRACE();
   GFTYPE          eps, r;
@@ -1029,12 +1025,12 @@ void GGridIcos::find_bdy_ind3d(GFTYPE radius, GTVector<GSIZET> &ibdy)
       }
   }
 
-} // end, method find_bdy_ind3d
+} // end, method find_gbdy_ind3d
 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : do_face_normals
+// METHOD : elem_bdy_data
 // DESC   : Compute normals to each element face
 // ARGS   : 
 //          dXdXi     : matrix of dX_i/dXi_j matrix elements, s.t.
@@ -1048,33 +1044,27 @@ void GGridIcos::find_bdy_ind3d(GFTYPE radius, GTVector<GSIZET> &ibdy)
 //                      component index whose normal component is nonzero)
 // RETURNS: none
 //**********************************************************************************
-void GGridIcos::do_face_normals(GTMatrix<GTVector<GFTYPE>> &dXdXi,
-                                GTVector<GSIZET>           &gieface,
-                                GTVector<GUINT>            &gdeface,
-                                GTVector<GFTYPE>           &face_mass,
-                                GTVector<GTVector<GFTYPE>> &normals,
-                                GTVector<GINT>             &depComp)
+void GGridIcos::elem_bdy_data(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+                              GTVector<GSIEZT>                 &igeface,
+                              GTVector<GFTYPE>                 &face_mass,
+                              GTVector<GTVector<GFTYPE>>       &normals)
 {
 
 	GEOFLOW_TRACE();
   #if defined(_G_IS2D)
-
-    do_face_normals2d(dXdXi, gieface, gdeface, face_mass, normals, depComp);
-
+    elem_bdy_data2d(dXdXi, gieface, gdeface, face_mass, normals, depComp);
   #elif defined(_G_IS3D)
-
-    do_face_normals3d(dXdXi, gieface, gdeface, face_mass, normals, depComp);
-
+    elem_bdy_data3d(dXdXi, gieface, gdeface, face_mass, normals, depComp);
   #else
     #error Invalid problem dimensionality
   #endif
 
-} // end, method do_face_normals
+} // end, method elem_bdy_data
 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : do_face_normals2d
+// METHOD : elem_bdy_data2d
 // DESC   : Compute normals to each element face in 2d
 // ARGS   : 
 //          dXdXi     : matrix of dX_i/dXi_j matrix elements, s.t.
@@ -1088,7 +1078,7 @@ void GGridIcos::do_face_normals(GTMatrix<GTVector<GFTYPE>> &dXdXi,
 //                      component index whose normal component is nonzero)
 // RETURNS: none
 //**********************************************************************************
-void GGridIcos::do_face_normals2d(GTMatrix<GTVector<GFTYPE>> &dXdXi,
+void GGridIcos::elem_bdy_data2d(GTMatrix<GTVector<GFTYPE>> &dXdXi,
                                   GTVector<GSIZET>           &gieface,
                                   GTVector<GUINT>            &gdeface,
                                   GTVector<GFTYPE>           &face_mass,
@@ -1131,12 +1121,12 @@ void GGridIcos::do_face_normals2d(GTMatrix<GTVector<GFTYPE>> &dXdXi,
    }
 
 
-} // end, method do_face_normals2d
+} // end, method elem_bdy_data2d
 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : do_face_normals3d
+// METHOD : elem_bdy_data3d
 // DESC   : Compute normals to each element face in 3d
 // ARGS   : 
 //          dXdXi     : matrix of dX_i/dXi_j matrix elements, s.t.
@@ -1150,14 +1140,15 @@ void GGridIcos::do_face_normals2d(GTMatrix<GTVector<GFTYPE>> &dXdXi,
 //                      component index whose normal component is nonzero)
 // RETURNS: none
 //**********************************************************************************
-void GGridIcos::do_face_normals3d(GTMatrix<GTVector<GFTYPE>> &dXdXi,
-                                  GTVector<GSIZET>           &gieface,
-                                  GTVector<GUINT>            &gdeface,
-                                  GTVector<GFTYPE>           &face_mass,
-                                  GTVector<GTVector<GFTYPE>> &normals,
-                                  GTVector<GINT>             &depComp)
+void GGridIcos::elem_bdy_data3d(GINT                             ibdy,
+                                  GBOOL                            bunique,
+                                  const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+                                  const GTVector<GSIZET>           &igbdy,
+                                  GTVector<GTVector<GFTYPE>>       &normals,
+                                  GTVector<GINT>                   &idepComp)
 {
-	GEOFLOW_TRACE();
+   GEOFLOW_TRACE();
+
    GINT            ib, ic, id;
    GINT            ixi[6][2] = { {0,2}, {1,2}, {2,0},
                                  {2,1}, {1,0}, {0,1} };
@@ -1184,14 +1175,16 @@ void GGridIcos::do_face_normals3d(GTMatrix<GTVector<GFTYPE>> &dXdXi,
      for ( auto i=0; i<normals.size(); i++ ) normals[i][j] = xp[i];
    }
 
-} // end, method do_face_normals3d
+} // end, method elem_bdy_data3d
 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : do_bdy_normals
+// METHOD : do_gbdy_normals
 // DESC   : Compute normals to each domain bdy 
 // ARGS   : 
+//          ibdy    : which canonical bdy we're working on
+//          bunique : retain only unique nodes? 
 //          dXdXi   : matrix of dX_i/dXi_j matrix elements, s.t.
 //                    dXdX_i(i,j) = dx^j/dxi^i
 //          igbdy   : vector of bdy indices
@@ -1200,14 +1193,14 @@ void GGridIcos::do_face_normals3d(GTMatrix<GTVector<GFTYPE>> &dXdXi,
 //                    component index whose normal component is nonzero)
 // RETURNS: none
 //**********************************************************************************
-void GGridIcos::do_bdy_normals(GTMatrix<GTVector<GFTYPE>>    &dXdXi,
-                               GTVector<GSIZET>              &igbdy,
-                               GTVector<GUINT>               &debdy,
-                               GTVector<GFTYPE>              &bdy_mass,
-                               GTVector<GTVector<GFTYPE>>    &normals,
-                               GTVector<GINT>                &idepComp)
+void GGridIcos::do_gbdy_normals(GINT                              ibdy,
+                                GBOOL                             bunique,
+                                const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+                                const GTVector<GSIZET>           &igbdy,
+                                GTVector<GTVector<GFTYPE>>       &normals,
+                                GTVector<GINT>                   &idepComp)
 {
-	GEOFLOW_TRACE();
+  GEOFLOW_TRACE();
   GSIZET icurr, nbdy, nface;
 
 #if 0
@@ -1216,41 +1209,31 @@ void GGridIcos::do_bdy_normals(GTMatrix<GTVector<GFTYPE>>    &dXdXi,
     nbdy += igbdy_face[j].size();
   }
 #endif
-  nbdy = igbdy.size();
-  idepComp.resize(nbdy);
-  for ( auto j=0; j<normals.size(); j++ ) normals[j].resize(nbdy);
 
 
   #if defined(_G_IS2D)
-    // No bdys in 2D
-  #elif defined(_G_IS3D)
+  #if defined(_G_IS3D)
+    nbdy = igbdy.size();
+    idepComp.resize(nbdy);
+    for ( auto j=0; j<normals.size(); j++ ) normals[j].resize(nbdy);
 
-#if 0
-  icurr = 0;
-  for ( auto j=0; j<2; j++ ) {      // for each global bdy face
-    nface = igbdy_face[j].size();   // # bdy nodes on this face
-    idepComp.range(icurr,icurr+nface-1);
-    for ( auto k=0; k<normals.size(); k++ ) normals[k].range(icurr,icurr+nface-1);
-    do_bdy_normals3d(dXdXi, igbdy_face[j], j, normals, idepComp);
-    icurr += nface;
-  }
-#endif
-    do_bdy_normals3d(dXdXi, igbdy, debdy, bdy_mass, normals, idepComp);
+    do_gbdy_normals3d(ibdy, bunique, dXdXi, igbdy, normals, idepComp);
+
+    // Reset vector ranges:
+    idepComp.range_reset();
+    for ( auto j=0; j<normals.size(); j++ ) normals[j].range_reset();
   #else
     #error Invalid problem dimensionality
   #endif
 
-  // Reset vector ranges:
-  idepComp.range_reset();
-  for ( auto j=0; j<normals.size(); j++ ) normals[j].range_reset();
 
 
-} // end, method do_bdy_normals
+} // end, method do_gbdy_normals
 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : do_bdy_normals3d
+// METHOD : do_gbdy_normals3d
 // DESC   : Compute normals to each domain bdy in 2d. Also
 //          provide the vector component index for the dependent
 //          component, so that we can easily enforce, say, the constraint
@@ -1261,51 +1244,49 @@ void GGridIcos::do_bdy_normals(GTMatrix<GTVector<GFTYPE>>    &dXdXi,
 //          coordinate directions. This method should be called 
 //          after terrain is added.
 // ARGS   : 
+//          ibdy     : which canonical bdy we're working on
+//          bunique  : retain only unique nodes? 
 //          dXdXi   : matrix of dX_i/dXi_j matrix elements, s.t.
 //                    dXdX_i(i,j) = dx^j/dxi^i
 //          igbdy   : vector of bdy indices
-//          iface   : which global face igbdy list represents
 //          normals : vector of normal components
 //          idepComp: vector index dependent on the other indices (first 
 //                    component index whose normal component is nonzero)
 // RETURNS: none
 //**********************************************************************************
-void GGridIcos::do_bdy_normals3d(GTMatrix<GTVector<GFTYPE>>  &dXdXi,
-                                 GTVector<GSIZET>            &igbdy,
-                                 GTVector<GUINT>             &debdy,
-                                 GTVector<GFTYPE>            &bdy_mass,
-                                 GTVector<GTVector<GFTYPE>>  &normals,
-                                 GTVector<GINT>              &idepComp)
+void GGridIcos::do_gbdy_normals3d(GINT                              ibdy,
+                                  GBOOL                             bunique,
+                                  const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+                                  const GTVector<GSIZET>           &igbdy,
+                                  GTVector<GTVector<GFTYPE>>       &normals,
+                                  GTVector<GINT>                   &idepComp)
 {
   GEOFLOW_TRACE();
-#if 0
-   GSIZET          ib, ic, ip; 
-   GFTYPE          tiny;
-   GFTYPE          xm;
-   GTPoint<GFTYPE> xp(3), p1(3), p2(3);
-   tiny  = 100.0*std::numeric_limits<GFTYPE>::epsilon(); 
+  GSIZET          ib, ic, ip;
+  GUINT           id;
+  GFTYPE          tiny;
+  GFTYPE          xm;
+  GTPoint<GFTYPE> xp(3), p1(3), p2(3);
+  tiny  = 100.0*std::numeric_limits<GFTYPE>::epsilon();
 
-   xm = iface == 1 ? -1.0 : 1.0;
-
-   // Normals depend on element type:
-   if ( this->gtype_ == GE_DEFORMED ) {
+  if ( this->gtype_ == GE_DEFORMED ) {
      // Bdy normal is dvec{X} / dxi_xi X dvec{X} / dxi_eta
      for ( auto j=0; j<igbdy.size(); j++ ) { // all points on iedge
        ib = igbdy[j];
-       for ( auto i=0; i<this->dXdXi_.size(2); i++ ) { // over _X_
-         p1[i] = this->dXdXi_(0,i)[ib]; // d_X_/dxi
-         p2[i] = this->dXdXi_(1,i)[ib]; // d_X_/deta
+       xm = id == 1 || id == 2 || id == 5 ? 1.0 : -1.0;
+       for ( auto i=0; i<dXdXi.size(2); i++ ) { // over _X_
+         p1[i] = dXdXi(0,i)[ib]; // d_X_/dxi
+         p2[i] = dXdXi(1,i)[ib]; // d_X_/deta
        }
        p1.cross(p2, xp);   // xp = p1 X p2
-       xp.unit(); 
-       xp *= xm;
+       xp.unit();
        for ( ic=0; ic<xp.dim(); ic++ ) if ( fabs(xp[ic]) > tiny ) break;
        assert(ic >= GDIM); // no normal components > 0
        for ( auto i=0; i<normals.size(); i++ ) normals[i][j] = xp[i];
-       idepComp[j] = ic;  // dependent component
+       depComp[j] = ic;  // dependent component
      }
    }
-#endif
 
-} // end, method do_bdy_normals3d
+
+} // end, method do_gbdy_normals3d
 

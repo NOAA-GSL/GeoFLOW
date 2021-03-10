@@ -184,10 +184,6 @@ virtual void                 print(const GString &filename){}          // print 
                              { return faceMass_; }                     // elem face Mass * Jac
         GTVector<GSIZET>
                             &gieface() { return gieface_;}             // elem face indices into glob u for all elem faces
-        GTVector<GINT>
-                            &giefaceid() { return giefaceid_;}         // elem face id for each gieface_
-        GTVector<GUINT>
-                            &gdeface() { return gdeface_;}             // elem face node 'descriptions'
         BinnedBdyIndex
                             &igbdy_binned() { return igbdy_binned_;}   // global dom bdy indices binned into GBdyType
         GTVector<GSIZET>
@@ -196,10 +192,9 @@ virtual void                 print(const GString &filename){}          // print 
                             &igbdy_bdyface() { return igbdy_bdyface_;} // bdy ind for each face node
         GTVector<GTVector<GBdyType>>  
                             &igbdyt_bdyface() { return igbdyt_bdyface_;}// bdy types for each face node
-        GTVector<GFTYPE>    &bdyMass() { return bdyMass_; }            // bdy Mass * Jac
         GTVector<GTVector<GFTYPE>>
                             &bdyNormals() { return bdyNormals_; }      // bdy normals
-        GTVector<GINT>      &idepComp  () { return idepComp_; }        // dependent vector components on bdy 
+        GTVector<GINT>      &idepComp  () { return idepComp_; }        // dependent vector components on gbdy 
         GC_COMM              get_comm() { return comm_; }              // get communicator
         void                 set_derivtype(GDerivType gt);             // set deriv. method
         GDerivType           get_derivtype() { return gderivtype_; }   // return deriv. method
@@ -208,12 +203,6 @@ virtual void                 print(const GString &filename){}          // print 
                              {usebdydat_ = bflag;}                     // set usebdydata flag
  
 
-virtual void                 config_bdy(const PropertyTree &ptree, 
-                               GTVector<GTVector<GSIZET>>   &igbdyf, 
-                               GTVector<GTVector<GBdyType>> &igbdyft,
-                               GTVector<GSIZET>             &igbdy,
-                               GTVector<GUINT>              &debdy,
-                               GTVector<GFTYPE>             &Mbdy)=0;  // config bdy
 
         GGFX<GFTYPE>        &get_ggfx() { return *ggfx_; }             // get GGFX op
         void                 set_ggfx(GGFX<GFTYPE> &ggfx) 
@@ -244,23 +233,20 @@ protected:
                                               GINT idir, GBOOL dotrans, GTVector<GFTYPE> &du);
         void                 grefderiv_constp(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
                                               GINT idir, GBOOL dotrans, GTVector<GFTYPE> &du);
-        GBOOL                 ispconst();
-virtual void                        do_face_normals(GTMatrix<GTVector<GFTYPE>> &dXdXi, 
-                                      GTVector<GSIZET>           &igface,
-                                      GTVector<GUINT>            &dgface,
-                                      GTVector<GFTYPE>           &face_mass,
-                                      GTVector<GTVector<GFTYPE>> &normals,
-                                      GTVector<GINT>             &idepComp)=0;
-                                                                      // compute normals to elem faces 
-virtual void                        do_bdy_normals(GTMatrix<GTVector<GFTYPE>> &dXdXi,
-                                      GTVector<GSIZET>           &igbdy,
-                                      GTVector<GUINT>            &debdy,  
-                                      GTVector<GFTYPE>           &bdy_mass,
-                                      GTVector<GTVector<GFTYPE>> &normals,
-                                      GTVector<GINT>             &idepComp)=0;
+        GBOOL                ispconst();
+virtual void                 config_gbdy(const PropertyTree &ptree, 
+                               GTVector<GTVector<GSIZET>>   &igbdyf, 
+                               GTVector<GTVector<GBdyType>> &igbdyft,
+                               GTVector<GSIZET>             &igbdy)=0; // config bdy
+virtual void                 elem_bdy_data(
+                               const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+                               GTVector<GSIEZT>                 &igeface,
+                               GTVector<GFTYPE>                 &face_mass,
+                               GTVector<GTVector<GFTYPE>>       &normals)=0;// compute elem face data
+
                                                                       // compute bdy normals entry point
 
-        void                        init_local_face_info();           // get local face info
+//      void                        init_local_face_info();           // get local face info
         void                        globalize_coords();               // create global coord vecs from elems
         void                        init_bc_info();                   // configure bdys
         void                        def_geom_init();                  // iniitialze deformed elems
@@ -295,13 +281,9 @@ virtual void                        do_bdy_normals(GTMatrix<GTVector<GFTYPE>> &d
         GMass                      *imass_;         // inverse of mass operator
         GTVector<GFTYPE>            Jac_;           // interior Jacobian, global
         GTVector<GFTYPE>            faceJac_;       // face Jacobians, global
-        GTVector<GFTYPE>            bdyMass_;       // MJ on the bdy surfaces
         GTVector<GFTYPE>            faceMass_;      // elem face mass * Jacobians
         GTVector<GTVector<GFTYPE>>  faceNormals_;   // normal to elem faces each face node point (2d & 3d), global
         GTVector<GSIZET>            gieface_;       // index into global field indicating elem face node
-        GTVector<GINT>              giefaceid_;     // elem face id for each gieface_
-        GTVector<GUINT>             gdeface_;       // 'desc' of each face node
-        GTVector<GUINT>             debdy_;         // 'desc' of each global bdy node
         GTVector<GTVector<GFTYPE>>  bdyNormals_;    // normal to surface at each bdy node point (2d & 3d), global
         GTVector<GINT>              idepComp_;      // dependent component index at each bdy point
         BinnedBdyIndex              igbdy_binned_;  // index into global field indicating a domain bdy--by type

@@ -61,20 +61,6 @@ public:
         void                do_elems();                                   // compute grid for irank
         void                do_elems(GTMatrix<GINT> &p,
                               GTVector<GTVector<GFTYPE>> &xnodes);        // compute elems from restart data)
-        void                do_face_normals(
-                              GTMatrix<GTVector<GFTYPE>> &dXdXi,
-                              GTVector<GSIZET>           &gieface,
-                              GTVector<GUINT>            &gdeface,
-                              GTVector<GFTYPE>           &face_mass,
-                              GTVector<GTVector<GFTYPE>> &normals,
-                              GTVector<GINT>             &depComp);       // com
-        void                do_bdy_normals(
-                              GTMatrix<GTVector<GFTYPE>>    &dXdXi,
-                              GTVector<GSIZET>              &igbdy,
-                              GTVector<GUINT>               &debdy,
-                              GTVector<GFTYPE>              &bdy_mass,
-                              GTVector<GTVector<GFTYPE>>    &normals,
-                              GTVector<GINT>                &idepComp);   // compute normals to domain bdy
 
         void                set_partitioner(GDD_base<GTICOS> *d);         // set and use GDD object
         GTVector<GTriangle<GTICOS>> 
@@ -83,12 +69,16 @@ public:
                            &get_hmesh(){ return hmesh_;}                  // get complete hex  mesh
         void                print(const GString &filename, 
                             GCOORDSYST icoord=GICOS_LATLONG);             // print grid to file
-        void                config_bdy(const geoflow::tbox::PropertyTree &ptree,
-                                       GTVector<GTVector<GSIZET>>   &igbdyf,
-                                       GTVector<GTVector<GBdyType>> &igbdyt,
-                                       GTVector<GSIZET>             &igbdy,
-                                       GTVector<GUINT>              &debdy,
-                                       GTVector<GFTYPE>             &Mbdy); // config
+        void                config_gbdy(const geoflow::tbox::PropertyTree &ptree,
+                              GTVector<GTVector<GSIZET>>   &igbdyf,
+                              <GTVector<GBdyType>> &igbdyt,
+                              GTVector<GSIZET>             &igbdy);       // config global bdy
+        void                elem_gbdy_data(
+                              const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+                              GTVector<GSIEZT>                 &igeface,
+                              GTVector<GFTYPE>                 &face_mass,
+                              GTVector<GTVector<GFTYPE>>       &normals);  // compute faces data
+
 
 friend  std::ostream&       operator<<(std::ostream&, GGridIcos &);         // Output stream operator
  
@@ -161,29 +151,35 @@ friend  std::ostream&       operator<<(std::ostream&, GGridIcos &);         // O
                               GTVector<GTVector<GFTYPE>> &xnodes); // do 2d grid restart
          void               do_elems3d(GTMatrix<GINT> &p,
                               GTVector<GTVector<GFTYPE>> &xnodes); // do 3d grid restart
-         void               config_bdy(const geoflow::tbox::PropertyTree &ptree,
-                            GTVector<GTVector<GSIZET>>   &igbdy,
-                            GTVector<GTVector<GBdyType>> &igbdyt); // configure bdy
-         void               find_bdy_ind3d(GFTYPE radius, 
-                                           GTVector<GSIZET> &ibdy);// find bdy indices for bdy=radius
-         void               do_face_normals2d(GTMatrix<GTVector<GFTYPE>> &dXdXi,
-                              GTVector<GSIZET>           &gieface,
-                              GTVector<GUINT>            &gdeface,
-                              GTVector<GFTYPE>           &face_mass,
-                              GTVector<GTVector<GFTYPE>> &normals,
-                              GTVector<GINT>             &depComp);// compute normals to elem faces in 2d
-         void               do_face_normals3d(GTMatrix<GTVector<GFTYPE>> &dXdXi,
-                              GTVector<GSIZET>           &gieface,
-                              GTVector<GUINT>            &gdeface,
-                              GTVector<GFTYPE>           &face_mass,
-                              GTVector<GTVector<GFTYPE>> &normals,
-                              GTVector<GINT>             &depComp);// compute normals to elem faces in :d
-                                                                 
-         void               do_bdy_normals3d(
-                              GTMatrix<GTVector<GFTYPE>>    &dXdXi,
+         void               config_gbdy(const geoflow::tbox::PropertyTree &ptree,
+                            GTVector<GTVector<GSIZET>>   &igbdyf,
+                            GTVector<GTVector<GBdyType>> &igbdyt,
+                            GTVector<GSIZET>             &igbdy);  // configure bdy
+         void               find_gbdy_ind3d(GFTYPE radius, 
+                                            GTVector<GSIZET> &ibdy);// find bdy indices for bdy=radius
+        void                elem_bdy_data2d(
+                              const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+                              GTVector<GSIEZT>                 &gieface,
+                              GTVector<GFTYPE>                 &face_mass,
+                              GTVector<GTVector<GFTYPE>>       &normals); // compute 2d elem face data
+        void                elem_bdy_data3d(
+                              const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+                              GTVector<GSIEZT>                 &gieface,
+                              GTVector<GFTYPE>                 &face_mass,
+                              GTVector<GTVector<GFTYPE>>       &normals); // compute 3d elem face data
+
+         void               do_gbdy_normals(
+                              GINT                           ibdy,
+                              GBOOL                          bunique,
+                              const GTMatrix<GTVector<GFTYPE>>    &dXdXi,
                               GTVector<GSIZET>              &igbdy,
-                              GTVector<GUINT>               &debdy,
-                              GTVector<GFTYPE>              &bdy_mass,
+                              GTVector<GTVector<GFTYPE>>    &normals,
+                              GTVector<GINT>                &idepComp);// compute normals to doimain bdy in 3d
+         void               do_gbdy_normals3d(
+                              GINT                           ibdy,
+                              GBOOL                          bunique,
+                              const GTMatrix<GTVector<GFTYPE>>    &dXdXi,
+                              GTVector<GSIZET>              &igbdy,
                               GTVector<GTVector<GFTYPE>>    &normals,
                               GTVector<GINT>                &idepComp);// compute normals to doimain bdy in 3d
 

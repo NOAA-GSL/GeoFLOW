@@ -467,7 +467,8 @@ void GGrid::grid_init()
   else if ( itype_[GE_REGULAR]   .size() > 0 ) gtype_ = GE_REGULAR;
 
   globalize_coords    (); // set glob vec of node coords
-  init_local_face_info(); // find glob vec of face indices
+
+//init_local_face_info(); // find glob vec of face indices
 
 
   // All element bdy/face data should have been set by now:
@@ -787,28 +788,14 @@ void GGrid::do_normals()
   assert(gelems_.size() > 0 && "Elements not set");
 
   GString         serr = "GridIcos::do_normals: ";
-  GSIZET          nxy = gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
-  GSIZET          n;
-  GTPoint<GFTYPE> pt;
-  GTVector<GINT>  idep;
 
-  // Note: at a given node, the (Cartesian) normals are
-  // computed as n_j = (dX_/dxi  X  dX_/deta)_j, where
-  // (xi, eta) define the surface, and X_ = (x, y, z)
-  // are the physical coordinates. Knoweldge of the 
 
   // Set element face normals. Note: arrays for 
   // normals are allocated in these calls:
   if ( do_face_normals_ ) {
-    idep.resize(gieface_.size());
-    do_face_normals(dXdXi_, gieface_, gdeface_, faceMass_, faceNormals_, idep);
+    elem_bdy_data(dXdXi_, gieface_, faceMass_, faceNormals_);
   }
-  
-  // Set domain boundary node normals:
-//do_bdy_normals(dXdXi_, igbdy_, debdy_, bdyMass_, bdyNormals_, idepComp_);
-  idepComp_.resize(igbdy_.size());
-  do_face_normals(dXdXi_, igbdy_, debdy_, bdyMass_, bdyNormals_, idepComp_);
-   
+
 } // end of method do_normals
 
 
@@ -1273,16 +1260,9 @@ void GGrid::init_local_face_info()
 
   n = 0;
   for ( auto e=0; e<gelems_.size(); e++ ) { // get global # face nodes
-#if 0
-    ieface = &gelems_[e]->face_indices(); // set in child class
-    for ( auto j=0; j<ieface->size(); j++ ) { // count elem face nodes
-      for ( auto k=0; k<(*ieface)[j].size(); k++) n++; 
-    }
-#endif
     n += gelems_[e]->nfnodes();
   }
   gieface_.resize(n);
-  gdeface_.resize(n);
   faceMass_.resize(n);
 
   itmp.resize(n);
@@ -1319,11 +1299,9 @@ void GGrid::init_local_face_info()
   } // end, element loop
 
   gieface_ .resize(m); 
-  gdeface_ .resize(m);
   faceMass_.resize(m);
   for ( auto j=0; j<m; j++ ) {
     gieface_ [j] = itmp[j];
-    gdeface_ [j] = utmp[j];
     faceMass_[j] = ftmp[j];
   }
 
@@ -1348,7 +1326,7 @@ void GGrid::init_bc_info()
 
   // Find boundary indices & types from config file 
   // specification, for _each_ natural/canonical domain face:
-  config_bdy(ptree_, igbdy_bdyface_, igbdyt_bdyface_, igbdy_, debdy_, bdyMass_);
+  config_gbdy(ptree_, igbdy_bdyface_, igbdyt_bdyface_, igbdy_);
 
   // Flatten bdy index indirection array; this is
   // done in child classes, and stored in igbdy_.
