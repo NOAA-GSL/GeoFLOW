@@ -263,10 +263,10 @@ const char * const sGStateCompType [] ={"GSC_KINETIC","GSC_MAGNETIC","GSC_DENSIT
   #define NDIDMASK        ( ~( (~(GUINT)0) << _NDSZ ) )
 #endif
 #if !defined(NDTPMASK) // Node type mask
-  #define NDTPMASK        ( ( (~(GUINT)0) >> _NDSZ ) << _NDSZ )
+  #define NDTPMASK        ( ( (NDIDMASK) << _NDSZ ) )
 #endif
 #if !defined(NDHOMASK) // Node's parent face (host) id mask
-  #define NDHOMASK        ( ~NDIDMASK )
+  #define NDHOMASK        ( ( (NDTPMASK) << _NDSZ ) ) 
 #endif
 #if !defined(GET_NDID)
   #define GET_NDID(a)     ( a & NDIDMASK )
@@ -278,13 +278,21 @@ const char * const sGStateCompType [] ={"GSC_KINETIC","GSC_MAGNETIC","GSC_DENSIT
   #define GET_NDHOST(a)   ( (a & NDHOMASK) >> _NDSZ*2 )
 #endif
 #if !defined(SET_NDID)
-  #define SET_NDID(a,b)   ( a &= NDHOMASK );( a &= NDTPMASK );( a |= b )
+  #define SET_NDID(a,b)   ( a |= ( b & NDIDMASK ) )
 #endif
 #if !defined(SET_NDTYPE)
-  #define SET_NDTYPE(a,b) ( a &= NDHOMASK );( a &= NDHOMASK );( a |= (b << _NDSZ) )
+  #define SET_NDTYPE(a,b) ( a |= ( ( b << _NDSZ ) & NDTPMASK ) )  
 #endif
 #if !defined(SET_NDHOST)
-  #define SET_NDHOST(a,b) ( a &= NDTPMASK );( a &= NDIDMASK );( a |= ( b << _NDSZ*2 ) )
+  #define SET_NDHOST(a,b) ( a |= ( ( b << _NDSZ*2 ) & NDHOMASK ) )
+#endif
+
+#if !defined(SET_ND)
+  #define SET_ND(u,ID,TYPE,HOST) SET_NDID(u,ID);SET_NDTYPE(u,TYPE);SET_NDHOST(u,HOST)
+#endif
+
+#if !defined(SET_ND)
+  #define SET_ND(u,ID,TYPE,HOST) SET_NDID(u,ID);SET_NDTYPE(u,TYPE);SET_NDHOST(u,HOST)
 #endif
 
 #if !defined(GError)
