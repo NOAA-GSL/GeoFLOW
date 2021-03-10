@@ -982,7 +982,7 @@ void GGridBox::config_gbdy(const PropertyTree           &ptree,
     sbdy         = gridptree.getValue<GString>(bdynames[j]);
     bdytree      = ptree.getPropertyTree(sbdy);
     bdyclass     = bdytree.getValue<GString>("bdy_class", "uniform");
-    find_bdy_ind   (j, FALSE, ikeep, mtmp, utmp, itmp); // bdy node ids only
+    find_gbdy_ind  (j, FALSE, ikeep, mtmp, utmp, itmp); // bdy node ids only
     do_gbdy_normals(j, FALSE, dXdXi_, itmp, bdyNormals_, idepClomp_); // all bdy nodes 
     igbdyf [j].resize(itmp.size()); igbdyf [j] = itmp;
     igbdyft[j].resize(itmp.size()); igbdyft[j] = GBDY_NONE;
