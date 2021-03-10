@@ -952,25 +952,6 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
   }
 
 
-#if 0
-  // Compute face Jacobians. Linearize edge nodes, including them
-  // in order:
-  GINT ntot=0;
-  GTVector<GINT> iedge;
-  for ( j=0; j<nEdges_; j++ ) ntot += edge_indices_[j].size();
-  iedge.resize(ntot);
-  for ( j=0,ntot=0; j<nEdges_; j++ ) { 
-    for ( k=0; k<edge_indices_[j].size(); k++ ) 
-      iedge[ntot++] = edge_indices_[j][k];
-  }
-  if ( elemtype_ == GE_2DEMBEDDED || elemtype_ == GE_DEFORMED ) {
-    Jac(rij, fjac, pChk, iedge.data(), iedge.size()); 
-  }
-  else if ( elemtype_ == GE_REGULAR ) {
-    fjac = jac[0];
-  } 
-#endif
-
 } // end of method dogeom2d
 
 
@@ -1060,25 +1041,6 @@ void GElem_base::dogeom3d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
   else  {
     jac = 0.125*L[0]*L[1]*L[2];
   }
-
-#if 0
-  // Compute face Jacobians. Linearize edge nodes, including them
-  // in order:
-  GINT ntot=0;
-  GTVector<GINT> iface;
-  for ( j=0; j<nFaces_; j++ ) ntot += face_indices_[j].size();
-  iface.resize(ntot);
-  for ( j=0,ntot=0; j<nFaces_; j++ ) { 
-    for ( k=0; k<face_indices_[j].size(); k++ ) 
-      iface[ntot++] = face_indices_[j][k];
-  }
-  if ( elemtype_ == GE_2DEMBEDDED || elemtype_ == GE_DEFORMED ) {
-    Jac(rij, fjac, pChk, iface.data(), iface.size()); 
-  }
-  else if ( elemtype_ == GE_REGULAR ) {
-    fjac = jac[0];
-  } 
-#endif
 
 } // end of method dogeom3d
 
@@ -1224,7 +1186,7 @@ void GElem_base::Jac_embed(GMVFType &G, GTVector<GFTYPE> &jac, GBOOL &pChk, GINT
   assert((G.size(1) == 3 && G.size(2) == 3) 
        && "Invalid matrix dimension"); // must have 3 coordinates
 
-  // Compute Jac, and check Jacobian for being positive-definiteness.
+  // Compute Jac, and check Jacobian for positive-definiteness.
   // We compuate the Jacobian as the inner product of
   // (_x_ is vector Cartesian coordinate)
   //      Jacobian is: d_x_/dzeta . _g_
@@ -2264,3 +2226,28 @@ void GElem_base::operator=(const GElem_base &e)
 
 } // end, method operator=
 
+
+//***********************************************************************************
+//***********************************************************************************
+// METHOD : isvert
+// DESC   : Returns TRUE if specified integer is a vertex id, and sets ivert to the 
+//          verex index. Else returns FALSE, and ivert is unfilled.
+// ARGS   : 
+//          ind  : Index into element volume
+//          ivert: If return us TRUE, contains the vertex id
+// RETURNS: none.
+//***********************************************************************************
+GBOOL GElem_base::isvert(GSIZET ind, GUINT &ivert)
+{
+
+  GBOOL bfound=FALSE;
+
+  for ( auto j=0; !bfound && j<vert_indices_.size(); j++ ) {
+    if ( ind == vert_indices_[j][0] ) {
+      bfound = TRUE;
+      ivert  = static_cast<GUINT>(j);
+    }
+  } 
+
+  return bfound;
+} // end, isvert
