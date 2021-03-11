@@ -1071,48 +1071,66 @@ void GGridIcos::elem_bdy_data(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
 //                      dXdX_i(i,j) = dx^j/dxi^i
 //          gieface   : vector of face indices into global volume fields 
 //                      for all facase
-//          gdeface   : description for each face node
 //          face_mass : mass on eleme faces
-//          normals   : vector of normal components
-//          depComp   : vector index dependent on the other indices (first 
-//                      component index whose normal component is nonzero)
+//          normals   : vector of normal components at each elem bdy node
 // RETURNS: none
 //**********************************************************************************
-void GGridIcos::elem_bdy_data2d(GTMatrix<GTVector<GFTYPE>> &dXdXi,
-                                  GTVector<GSIZET>           &gieface,
-                                  GTVector<GUINT>            &gdeface,
-                                  GTVector<GFTYPE>           &face_mass,
-                                  GTVector<GTVector<GFTYPE>> &normals,
-                                  GTVector<GINT>             &depComp)
+void GGridIcos::elem_bdy_data2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+                                GTVector<GSIEZT>                 &gieface,
+                                GTVector<GFTYPE>                 &face_mass,
+                                GTVector<GTVector<GFTYPE>>       &normals)
 {
 	GEOFLOW_TRACE();
    GINT              ib, ic, id,  ip;
+   GSIZET            istart, nbdy, n;
    GFTYPE            tiny;
    GFTYPE            xm;
    GTPoint<GFTYPE>   kp(3), xp(3), p1(3), p2(3);
+   GTVector<GINT>   *face_ind;
+   GTVector<GFTYPE> *mass;
+
 
    tiny  = 100.0*std::numeric_limits<GFTYPE>::epsilon();
    kp    = 1.0/sqrt(3.0); // unit vector in radial direction
 
+   // Get number of elem bdy nodes, and 
+   // allocate arrays:
+   nbdy = 0;
+   for ( auto e=0; e<gelems_.size(); e++ ) {
+     for ( auto j=0; j<gelems_[e]->nfaces(); j++ ) {
+       nbdy += = gelems_[e]->face_indices(j).size(();
+     }
+   }
+   gieface  .resize(nbdy);
+   face_mass.resize(nbdy);
+   for ( auto j=0; j<normals.size(); j++ ) {
+     normals[j].resize(nbdy);
+     normals[j] = 0.0;
+   }
 
+   nbdy = 0;
    if ( this->gtype_ == GE_DEFORMED
     ||  this->gtype_ == GE_2DEMBEDDED ) {
-     // Bdy normal is hat{k} X dvec{X} / dxi_iedge,
-     // for face:
-     for ( auto j=0; j<gieface.size(); j++ ) { // all points on iedge
-       ib = gieface  [j];
-       id = NDHOST(gdeface[j]);
-       ip = id%2;
-       xm = id == 2 || id == 3 ? 1.0 : -1.0;
-       for ( auto i=0; i<dXdXi.size(2); i++ ) { // over _X_
-         p1[i] = dXdXi(ip,i)[ib];
+
+     istart = 0;
+     for ( auto e=0; e<gelems_.size(); e++ ) {
+       face_ind  = &gelems_[e]->face_indices(j);
+       mass      = &gelems_[e]->face_mass();
+       for ( auto j=0; j<gieface.size(); j++ ) { // all points on iedge
+         ib = (*face_ind)[i] + istart
+         id = NDHOST(gdeface[j]);
+         ip = id%2;
+         xm = id == 2 || id == 3 ? 1.0 : -1.0;
+         for ( auto i=0; i<dXdXi.size(2); i++ ) { // over _X_
+           p1[i] = dXdXi(ip,i)[ib];
+         }
+         kp.cross(p1, xp);   // xp =  p1 X k
+         face_mass [nbdy] *= xp.mag(); // |k X d_X_/dxi_ip| is face Jac
+         xp *= xm; xp.unit();
+         for ( ic=0; ic<GDIM && fabs(xp[ic]) < tiny; ic++ );
+         assert(ic < GDIM); // no normal components > 0
+         for ( auto i=0; i<normals.size(); i++ ) normals[i][j] = xp[i];
        }
-       kp.cross(p1, xp);   // xp =  p1 X k
-       face_mass  [j] *= xp.mag(); // |k X d_X_/dxi_ip| is face Jac
-       xp *= xm; xp.unit();
-       for ( ic=0; ic<GDIM && fabs(xp[ic]) < tiny; ic++ );
-       assert(ic < GDIM); // no normal components > 0
-       for ( auto i=0; i<normals.size(); i++ ) normals[i][j] = xp[i];
      }
    }
    else {
@@ -1132,48 +1150,63 @@ void GGridIcos::elem_bdy_data2d(GTMatrix<GTVector<GFTYPE>> &dXdXi,
 //          gieface   : vector of face indices into global volume fields 
 //                      for all facase
 //          face_mass : mass on eleme faces
-//          gdeface   : description for each face node
-//          normals   : vector of normal components
-//          depComp   : vector index dependent on the other indices (first 
-//                      component index whose normal component is nonzero)
+//          normals   : vector of normal components at each elem bdy node
 // RETURNS: none
 //**********************************************************************************
-void GGridIcos::elem_bdy_data3d(GINT                             ibdy,
-                                  GBOOL                            bunique,
-                                  const GTMatrix<GTVector<GFTYPE>> &dXdXi,
-                                  const GTVector<GSIZET>           &igbdy,
-                                  GTVector<GTVector<GFTYPE>>       &normals,
-                                  GTVector<GINT>                   &idepComp)
+void GGridIcos::elem_bdy_data3d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+                                GTVector<GSIEZT>                 &gieface,
+                                GTVector<GFTYPE>                 &face_mass,
+                                GTVector<GTVector<GFTYPE>>       &normals)
 {
    GEOFLOW_TRACE();
 
    GINT            ib, ic, id;
    GINT            ixi[6][2] = { {0,2}, {1,2}, {2,0},
                                  {2,1}, {1,0}, {0,1} };
-   GFTYPE          tiny;
+   GSIZET          istart, nbdy;
+   GFTYPE          tiny, xm;
    GTPoint<GFTYPE> xp(3), p1(3), p2(3);
 
    tiny  = 100.0*std::numeric_limits<GFTYPE>::epsilon();
 
+   // Get number of elem bdy nodes, and 
+   // allocate arrays:
+   nbdy = 0;
+   for ( auto e=0; e<gelems_.size(); e++ ) {
+     for ( auto j=0; j<gelems_[e]->nfaces(); j++ ) {
+       nbdy += = gelems_[e]->face_indices(j).size(();
+     }
+   }
+   gieface  .resize(nbdy);
+   face_mass.resize(nbdy);
+   for ( auto j=0; j<normals.size(); j++ ) {
+     normals[j].resize(nbdy);
+     normals[j] = 0.0;
+   }
+
    if ( this->gtype_ == GE_DEFORMED
     ||  this->gtype_ == GE_2DEMBEDDED ) {
-     // Bdy normal is dvec{X} / dxi_xi X dvec{X} / dxi_eta
-     for ( auto j=0; j<gieface.size(); j++ ) { // all points on iedge
-       ib = gieface[j];
-       id = gdeface[j];
-       xm = id == 2 || id == 3 ? 1.0 : -1.0;
-       // Find derivs of _X_ wrt face's reference coords;
-       // the cross prod of these vectors is the normal:
-       for ( auto i=0; i<dXdXi.size(2); i++ ) { // d_X_/dXi
-         p1[i] = dXdXi(ixi[j][0],i)[ib]; // d_X_/dxi
-         p2[i] = dXdXi(ixi[j][1],i)[ib]; // d_X_/deta
+     for ( auto e=0; e<gelems_.size(); e++ ) {
+       face_ind  = &gelems_[e]->face_indices(j);
+       mass      = &gelems_[e]->face_mass();
+       // Bdy normal is dvec{X} / dxi_xi X dvec{X} / dxi_eta
+       for ( auto j=0; j<gieface.size(); j++ ) { // all points on iedge
+         ib = gieface[j];
+         id = gdeface[j];
+         xm = id == 0 || id == 1 || id == 5 ? 1.0 : -1.0;
+         // Find derivs of _X_ wrt face's reference coords;
+         // the cross prod of these vectors is the normal:
+         for ( auto i=0; i<dXdXi.size(2); i++ ) { // d_X_/dXi
+           p1[i] = dXdXi(ixi[j][0],i)[ib]; // d_X_/dxi
+           p2[i] = dXdXi(ixi[j][1],i)[ib]; // d_X_/deta
+         }
+         p1.cross(p2, xp);   // xp = p1 X p2
+         face_mass  [j] *= xp.mag(); // d_X_/dxi X d_X_/deta| is face Jac
+         xp.unit();
+         for ( ic=0; ic<GDIM && fabs(xp[ic]) < tiny; ic++ );
+         assert(ic < GDIM); // no normal components > 0
+         for ( auto i=0; i<normals.size(); i++ ) normals[i][j] = xp[i];
        }
-       p1.cross(p2, xp);   // xp = p1 X p2
-       face_mass  [j] *= xp.mag(); // d_X_/dxi X d_X_/deta| is face Jac
-       xp.unit();
-       for ( ic=0; ic<GDIM && fabs(xp[ic]) < tiny; ic++ );
-       assert(ic < GDIM); // no normal components > 0
-       for ( auto i=0; i<normals.size(); i++ ) normals[i][j] = xp[i];
      }
    }
    else {
