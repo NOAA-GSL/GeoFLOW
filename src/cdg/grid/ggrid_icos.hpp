@@ -169,19 +169,17 @@ friend  std::ostream&       operator<<(std::ostream&, GGridIcos &);         // O
                               GTVector<GTVector<GFTYPE>>       &normals); // compute 3d elem face data
 
          void               do_gbdy_normals(
-                              GINT                           ibdy,
-                              GBOOL                          bunique,
-                              const GTMatrix<GTVector<GFTYPE>>    &dXdXi,
-                              GTVector<GSIZET>              &igbdy,
-                              GTVector<GTVector<GFTYPE>>    &normals,
-                              GTVector<GINT>                &idepComp);// compute normals to doimain bdy in 3d
+                                 const GTVector<GSIZET>           &igbdy,
+                                 const GTVector<GUINT>            &debdy,
+                                 const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+                                 GTVector<GTVector<GFTYPE>>       &normals,
+                                 GTVector<GINT>                   &depComp);
          void               do_gbdy_normals3d(
-                              GINT                           ibdy,
-                              GBOOL                          bunique,
-                              const GTMatrix<GTVector<GFTYPE>>    &dXdXi,
-                              GTVector<GSIZET>              &igbdy,
-                              GTVector<GTVector<GFTYPE>>    &normals,
-                              GTVector<GINT>                &idepComp);// compute normals to doimain bdy in 3d
+                                 const GTVector<GSIZET>           &igbdy,
+                                 const GTVector<GUINT>            &debdy,
+                                 const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+                                 GTVector<GTVector<GFTYPE>>       &normals,
+                                 GTVector<GINT>                   &depComp);
 
          GString            sreftype_;      // subdivision/refinement type
          GINT               ilevel_;        // refinement level (>= 0)

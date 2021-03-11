@@ -945,21 +945,21 @@ void GGridIcos::config_gbdy(const geoflow::tbox::PropertyTree &ptree,
   // Note: bdys are configured by way of geometry's
   //       natural decomposition: here, by inner and
   //       outer spherical surfaces. But the bdy indices 
-  //       and types returned on exist contain info for all bdys:
+  //       and types returned on exit contain info for all bdys:
   for ( auto j=0; j<2; j++ ) { // cycle over 2 spherical surfaces
     sbdy         = gridptree.getValue<GString>(bdynames[j]);
     bdytree      = ptree.getPropertyTree(sbdy);
     bdyclass     = bdytree.getValue<GString>("bdy_class", "uniform");
     find_gbdy_ind3d(rbdy[j], itmp); 
+    do_gbdy_normals(j, FALSE, dXdXi_, itmp, bdyNormals_, idepClomp_); // all bdy nodes 
+
     igbdyf [j].resize(itmp.size()); igbdyf [j] = itmp;
     igbdyft[j].resize(itmp.size()); igbdyft[j] = GBDY_NONE;
     nind = 0;
     for ( auto k=0; k<igbdyf.size(); k++ ) nind += igbdyf[k].size();
-    this->igbdy_  .resize(nind); // vol indices of bdy nodes in base; bdy update needs this
+    igbdy  .resize(nind); // vol indices of bdy nodes in base; bdy update needs this
     nind = 0;
-    for ( auto k=0; k<igbdyf.size(); k++ ) { // over can. bdy faces
-      for ( auto i=0; i<igbdyf[k].size(); i++ ) this->igbdy_[nind++] = igbdyf[k][i];
-    }
+    for ( auto i=0; i<igbdyf[j].size(); i++ ) igbdy[nind++] = igbdyf[j][i];
 
     geoflow::get_bdy_block(bdytree, stblock);
     if ( "uniform" == bdyclass ) { // uniform bdy conditions
@@ -1092,8 +1092,7 @@ void GGridIcos::elem_bdy_data2d(GTMatrix<GTVector<GFTYPE>> &dXdXi,
    GTPoint<GFTYPE>   kp(3), xp(3), p1(3), p2(3);
 
    tiny  = 100.0*std::numeric_limits<GFTYPE>::epsilon();
-   kp    = 0.0;
-   kp[2] = 1.0; // k-vector
+   kp    = 1.0/sqrt(3.0); // unit vector in radial direction
 
 
    if ( this->gtype_ == GE_DEFORMED
@@ -1102,24 +1101,23 @@ void GGridIcos::elem_bdy_data2d(GTMatrix<GTVector<GFTYPE>> &dXdXi,
      // for face:
      for ( auto j=0; j<gieface.size(); j++ ) { // all points on iedge
        ib = gieface  [j];
-       id = gdeface  [j];
-       ip = id == 1 || id == 3 ? 0 : 1;
+       id = NDHOST(gdeface[j]);
+       ip = id%2;
+       xm = id == 2 || id == 3 ? 1.0 : -1.0;
        for ( auto i=0; i<dXdXi.size(2); i++ ) { // over _X_
          p1[i] = dXdXi(ip,i)[ib];
        }
-       kp.cross(p1, xp);   // xp = k X p1
-       ip = id%2;
+       kp.cross(p1, xp);   // xp =  p1 X k
        face_mass  [j] *= xp.mag(); // |k X d_X_/dxi_ip| is face Jac
-       xp.unit();
+       xp *= xm; xp.unit();
        for ( ic=0; ic<GDIM && fabs(xp[ic]) < tiny; ic++ );
        assert(ic < GDIM); // no normal components > 0
        for ( auto i=0; i<normals.size(); i++ ) normals[i][j] = xp[i];
      }
    }
    else {
-     assert(FALSE);
+     assert(FALSE && "Invalid grid type");
    }
-
 
 } // end, method elem_bdy_data2d
 
@@ -1157,22 +1155,29 @@ void GGridIcos::elem_bdy_data3d(GINT                             ibdy,
 
    tiny  = 100.0*std::numeric_limits<GFTYPE>::epsilon();
 
-   // Bdy normal is dvec{X} / dxi_xi X dvec{X} / dxi_eta
-   for ( auto j=0; j<gieface.size(); j++ ) { // all points on iedge
-     ib = gieface[j];
-     id = gdeface[j];
-     // Find derivs of _X_ wrt face's reference coords;
-     // the cross prod of these vectors is the normal:
-     for ( auto i=0; i<dXdXi.size(2); i++ ) { // d_X_/dXi
-       p1[i] = dXdXi(ixi[j][0],i)[ib]; // d_X_/dxi
-       p2[i] = dXdXi(ixi[j][1],i)[ib]; // d_X_/deta
+   if ( this->gtype_ == GE_DEFORMED
+    ||  this->gtype_ == GE_2DEMBEDDED ) {
+     // Bdy normal is dvec{X} / dxi_xi X dvec{X} / dxi_eta
+     for ( auto j=0; j<gieface.size(); j++ ) { // all points on iedge
+       ib = gieface[j];
+       id = gdeface[j];
+       xm = id == 2 || id == 3 ? 1.0 : -1.0;
+       // Find derivs of _X_ wrt face's reference coords;
+       // the cross prod of these vectors is the normal:
+       for ( auto i=0; i<dXdXi.size(2); i++ ) { // d_X_/dXi
+         p1[i] = dXdXi(ixi[j][0],i)[ib]; // d_X_/dxi
+         p2[i] = dXdXi(ixi[j][1],i)[ib]; // d_X_/deta
+       }
+       p1.cross(p2, xp);   // xp = p1 X p2
+       face_mass  [j] *= xp.mag(); // d_X_/dxi X d_X_/deta| is face Jac
+       xp.unit();
+       for ( ic=0; ic<GDIM && fabs(xp[ic]) < tiny; ic++ );
+       assert(ic < GDIM); // no normal components > 0
+       for ( auto i=0; i<normals.size(); i++ ) normals[i][j] = xp[i];
      }
-     p1.cross(p2, xp);   // xp = p1 X p2
-     face_mass  [j] *= xp.mag(); // d_X_/dxi X d_X_/deta| is face Jac
-     xp.unit();
-     for ( ic=0; ic<GDIM && fabs(xp[ic]) < tiny; ic++ );
-     assert(ic < GDIM); // no normal components > 0
-     for ( auto i=0; i<normals.size(); i++ ) normals[i][j] = xp[i];
+   }
+   else {
+     assert(FALSE && "Invalid grid type");
    }
 
 } // end, method elem_bdy_data3d
@@ -1183,45 +1188,34 @@ void GGridIcos::elem_bdy_data3d(GINT                             ibdy,
 // METHOD : do_gbdy_normals
 // DESC   : Compute normals to each domain bdy 
 // ARGS   : 
-//          ibdy    : which canonical bdy we're working on
-//          bunique : retain only unique nodes? 
-//          dXdXi   : matrix of dX_i/dXi_j matrix elements, s.t.
-//                    dXdX_i(i,j) = dx^j/dxi^i
-//          igbdy   : vector of bdy indices
-//          normals : vector of normal components
-//          idepComp: vector index dependent on the other indices (first 
-//                    component index whose normal component is nonzero)
+//          igbdy    : vector of bdy indices into global volume fields 
+//          debdy    : array of node 'descriptions', with dimension of igbdy
+//          dXdXi    : matrix of dX_i/dXi_j matrix elements, s.t.
+//                     dXdX_i(i,j) = dx^j/dxi^i
+//          normals  : vector of normal components, each of dim of igbdy
+//          depComp  : vector index dependent on the other indices (first 
+//                     component index whose normal component is nonzero)
+
 // RETURNS: none
 //**********************************************************************************
-void GGridIcos::do_gbdy_normals(GINT                              ibdy,
-                                GBOOL                             bunique,
+void GGridIcos::do_gbdy_normals(const GTVector<GSIZET>           &igbdy,
+                                const GTVector<GUINT>            &debdy,
                                 const GTMatrix<GTVector<GFTYPE>> &dXdXi,
-                                const GTVector<GSIZET>           &igbdy,
                                 GTVector<GTVector<GFTYPE>>       &normals,
                                 GTVector<GINT>                   &idepComp)
 {
   GEOFLOW_TRACE();
-  GSIZET icurr, nbdy, nface;
-
-#if 0
-  nbdy = 0;
-  for ( auto j=0; j<igbdy_face.size(); j++ ) {
-    nbdy += igbdy_face[j].size();
-  }
-#endif
-
+  GSIZET nbdy;
 
   #if defined(_G_IS2D)
+    return;
   #if defined(_G_IS3D)
     nbdy = igbdy.size();
     idepComp.resize(nbdy);
     for ( auto j=0; j<normals.size(); j++ ) normals[j].resize(nbdy);
 
-    do_gbdy_normals3d(ibdy, bunique, dXdXi, igbdy, normals, idepComp);
+    do_gbdy_normals3d(igbdy, debdy, dXdXi, normals, idepComp);
 
-    // Reset vector ranges:
-    idepComp.range_reset();
-    for ( auto j=0; j<normals.size(); j++ ) normals[j].range_reset();
   #else
     #error Invalid problem dimensionality
   #endif
@@ -1244,22 +1238,21 @@ void GGridIcos::do_gbdy_normals(GINT                              ibdy,
 //          coordinate directions. This method should be called 
 //          after terrain is added.
 // ARGS   : 
-//          ibdy     : which canonical bdy we're working on
-//          bunique  : retain only unique nodes? 
-//          dXdXi   : matrix of dX_i/dXi_j matrix elements, s.t.
-//                    dXdX_i(i,j) = dx^j/dxi^i
-//          igbdy   : vector of bdy indices
-//          normals : vector of normal components
-//          idepComp: vector index dependent on the other indices (first 
-//                    component index whose normal component is nonzero)
+//          igbdy    : vector of bdy indices into global volume fields 
+//          debdy    : array of node 'descriptions', with dimension of igbdy
+//          dXdXi    : matrix of dX_i/dXi_j matrix elements, s.t.
+//                     dXdX_i(i,j) = dx^j/dxi^i
+//          normals  : vector of normal components, each of dim of igbdy
+//          depComp  : vector index dependent on the other indices (first 
+//                     component index whose normal component is nonzero)
+
 // RETURNS: none
 //**********************************************************************************
-void GGridIcos::do_gbdy_normals3d(GINT                              ibdy,
-                                  GBOOL                             bunique,
-                                  const GTMatrix<GTVector<GFTYPE>> &dXdXi,
-                                  const GTVector<GSIZET>           &igbdy,
-                                  GTVector<GTVector<GFTYPE>>       &normals,
-                                  GTVector<GINT>                   &idepComp)
+void GGridIcos::do_gbdy_normals(const GTVector<GSIZET>           &igbdy,
+                                const GTVector<GUINT>            &debdy,
+                                const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+                                GTVector<GTVector<GFTYPE>>       &normals,
+                                GTVector<GINT>                   &depComp)
 {
   GEOFLOW_TRACE();
   GSIZET          ib, ic, ip;
@@ -1267,18 +1260,21 @@ void GGridIcos::do_gbdy_normals3d(GINT                              ibdy,
   GFTYPE          tiny;
   GFTYPE          xm;
   GTPoint<GFTYPE> xp(3), p1(3), p2(3);
+
   tiny  = 100.0*std::numeric_limits<GFTYPE>::epsilon();
 
   if ( this->gtype_ == GE_DEFORMED ) {
      // Bdy normal is dvec{X} / dxi_xi X dvec{X} / dxi_eta
-     for ( auto j=0; j<igbdy.size(); j++ ) { // all points on iedge
+     for ( auto j=0; j<igbdy.size(); j++ ) { // all points on face
        ib = igbdy[j];
+       id = GET_NDHOST(debdy[j]); // host face id
        xm = id == 1 || id == 2 || id == 5 ? 1.0 : -1.0;
        for ( auto i=0; i<dXdXi.size(2); i++ ) { // over _X_
          p1[i] = dXdXi(0,i)[ib]; // d_X_/dxi
          p2[i] = dXdXi(1,i)[ib]; // d_X_/deta
        }
        p1.cross(p2, xp);   // xp = p1 X p2
+       xp *= xm;
        xp.unit();
        for ( ic=0; ic<xp.dim(); ic++ ) if ( fabs(xp[ic]) > tiny ) break;
        assert(ic >= GDIM); // no normal components > 0
@@ -1286,7 +1282,9 @@ void GGridIcos::do_gbdy_normals3d(GINT                              ibdy,
        depComp[j] = ic;  // dependent component
      }
    }
-
+   else {
+     assert(FALSE && "Invalid grid type");
+   }
 
 } // end, method do_gbdy_normals3d
 
