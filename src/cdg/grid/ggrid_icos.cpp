@@ -1080,11 +1080,11 @@ void GGridIcos::elem_bdy_data2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
                                 GTVector<GFTYPE>                 &face_mass,
                                 GTVector<GTVector<GFTYPE>>       &normals)
 {
-	GEOFLOW_TRACE();
-   GINT              ib, ic, id,  ip;
+   GEOFLOW_TRACE();
+   GINT              ib, ip;
    GSIZET            istart, nbdy, n;
    GFTYPE            tiny;
-   GFTYPE            xm;
+   GFTYPE            jac, xm;
    GTPoint<GFTYPE>   kp(3), xp(3), p1(3), p2(3);
    GTVector<GINT>   *face_ind;
    GTVector<GFTYPE> *mass;
@@ -1116,22 +1116,26 @@ void GGridIcos::elem_bdy_data2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
      for ( auto e=0; e<gelems_.size(); e++ ) {
        face_ind  = &gelems_[e]->face_indices(j);
        mass      = &gelems_[e]->face_mass();
-       for ( auto j=0; j<gieface.size(); j++ ) { // all points on iedge
-         ib = (*face_ind)[i] + istart
-         id = NDHOST(gdeface[j]);
-         ip = id%2;
-         xm = id == 2 || id == 3 ? 1.0 : -1.0;
-         for ( auto i=0; i<dXdXi.size(2); i++ ) { // over _X_
-           p1[i] = dXdXi(ip,i)[ib];
+       n         = 0; // index along elem bdy
+       for ( auto j=0; j<gelems_[e]->nfaces(); j++ ) { // over all faces
+         face_ind  = &gelems_[e]->face_indices(j);
+         xm = j == 2 || j == 3 ? 1.0 : -1.0;
+         for ( auto i=0; i<face_ind->size(); i++ ) { // over elem bdy points
+           ib = (*face_ind)[i] + istart; // indir. index into global vol
+           for ( auto i=0; i<dXdXi.size(2); i++ ) { // over _X_
+             p1[i] = dXdXi(j%2,i)[ib];
+           }
+           kp.cross(p1, xp);   // xp =  p1 X k
+           gieface[nbdy] = ib;
+           xp *= xm; xp.unit();
+           for ( auto k=0; k<normals.size(); k++ ) normals[k][nbdy] = xp[k];
+           jac = p1.mag();
+           face_mass [nbdy++] = (*mass)[n] * jac;
+           n++;
          }
-         kp.cross(p1, xp);   // xp =  p1 X k
-         face_mass [nbdy] *= xp.mag(); // |k X d_X_/dxi_ip| is face Jac
-         xp *= xm; xp.unit();
-         for ( ic=0; ic<GDIM && fabs(xp[ic]) < tiny; ic++ );
-         assert(ic < GDIM); // no normal components > 0
-         for ( auto i=0; i<normals.size(); i++ ) normals[i][j] = xp[i];
-       }
-     }
+         istart += gelems_[e]->nnodes();
+       } // end, elem face loop
+     } // end, elem loop
    }
    else {
      assert(FALSE && "Invalid grid type");
@@ -1184,16 +1188,20 @@ void GGridIcos::elem_bdy_data3d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
      normals[j] = 0.0;
    }
 
+   nbdy = 0;
    if ( this->gtype_ == GE_DEFORMED
     ||  this->gtype_ == GE_2DEMBEDDED ) {
+
+     istart = 0;
      for ( auto e=0; e<gelems_.size(); e++ ) {
-       face_ind  = &gelems_[e]->face_indices(j);
        mass      = &gelems_[e]->face_mass();
-       // Bdy normal is dvec{X} / dxi_xi X dvec{X} / dxi_eta
-       for ( auto j=0; j<gieface.size(); j++ ) { // all points on iedge
-         ib = gieface[j];
-         id = gdeface[j];
-         xm = id == 0 || id == 1 || id == 5 ? 1.0 : -1.0;
+       n         = 0;
+       for ( auto j=0; j<gelems_[e]->nfaces(); j++ ) { // over all faces
+         face_ind  = &gelems_[e]->face_indices(j);
+         xm = j == 2 || j == 3 ? 1.0 : -1.0;
+         // Bdy normal is dvec{X} / dxi_xi X dvec{X} / dxi_eta
+         for ( auto i=0; i<face_ind->size(); i++ ) { // over elem bdy points
+         xm = j == 0 || j == 1 || j == 5 ? 1.0 : -1.0;
          // Find derivs of _X_ wrt face's reference coords;
          // the cross prod of these vectors is the normal:
          for ( auto i=0; i<dXdXi.size(2); i++ ) { // d_X_/dXi
@@ -1201,11 +1209,12 @@ void GGridIcos::elem_bdy_data3d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
            p2[i] = dXdXi(ixi[j][1],i)[ib]; // d_X_/deta
          }
          p1.cross(p2, xp);   // xp = p1 X p2
-         face_mass  [j] *= xp.mag(); // d_X_/dxi X d_X_/deta| is face Jac
-         xp.unit();
-         for ( ic=0; ic<GDIM && fabs(xp[ic]) < tiny; ic++ );
-         assert(ic < GDIM); // no normal components > 0
-         for ( auto i=0; i<normals.size(); i++ ) normals[i][j] = xp[i];
+         xp *= xm; xp.unit(); 
+         gieface      [nbdy] = ib;
+         for ( auto k=0; k<normals.size(); k++ ) normals[k][nbdy] = xp[k];
+         jac = xp.mag();
+         face_mass  [nbdy++] = (*mass)[n] * jac;
+         n++;
        }
      }
    }
