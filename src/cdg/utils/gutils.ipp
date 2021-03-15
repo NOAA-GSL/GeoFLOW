@@ -387,5 +387,78 @@ GSIZET in_poly(GTVector<GTPoint<T>> &verts, const GTVector<GTVector<T>> &x, cons
 } // end of method in_poly (2)
 
 
+//**********************************************************************************
+//**********************************************************************************
+
+// METHOD : fuzzyeq (1)
+// DESC   : Determine which, if any, members of input array are 'fuzzy
+//          equal' to vcomp, and provide memberindces in return array, 
+//          ind.
+// ARGS   : v    : vertices defining polygon, in 'counter-clockwise' order
+//          vcomp: test points value to compare with v elements
+//          eps  : 'fuzzy' epsilon value
+//          ind  : vector of indices in v that are 'fuzy qual' to vcomp. 
+//                 Reallocated if necessary to be of sufficient size
+// RETURNS: number of points found in v that are 'fuzzy equal' to vcomp
+//**********************************************************************************
+template<typename T>
+GSIZET fuzzyeq(const GTVector<T> &v, T vcomp, T eps, GTVector<GSIZET> &ind)
+{
+  nfound=0;
+
+  for ( auto j=0; j<v.size(); j++ ) {
+    nfound += FUZZEEQ(v[j], vcomp, eps) ? 1 : 0;
+  }
+
+  ind.resizem(nfound);
+  nfound = 0;
+  for ( auto j=0; j<v.size(); j++ ) {
+    if ( FUZZEEQ(v[j], vcomp, eps) ) {
+      ind[nfound++] = j;
+    }
+  }
+
+  return nfound;
+
+} // end, methood fuzzyeq (1)
+
+
+//**********************************************************************************
+//**********************************************************************************
+
+// METHOD : fuzzyeq (2)
+// DESC   : Determine which, if any, members of input array are 'fuzzy
+//          equal' to vcomp, and provide memberindces in return array, 
+//          ind.
+// ARGS   : v    : vertices defining polygon, in 'counter-clockwise' order
+//          iv   : which indices in v to examine
+//          vcomp: test points value to compare with v elements
+//          eps  : 'fuzzy' epsilon value
+//          ind  : vector of indices in v that are 'fuzy qual' to vcomp. 
+//                 Reallocated if necessary to be of sufficient size
+// RETURNS: number of points found in v that are 'fuzzy equal' to vcomp
+//**********************************************************************************
+template<typename T>
+GSIZET fuzzyeq(const GTVector<T> &v, const GTVector<GSIZET> &iv, T vcomp, T eps, GTVector<GSIZET> &ind)
+{
+  nfound=0;
+
+  for ( auto j=0; j<iv.size(); j++ ) {
+    nfound += FUZZEEQ(v[iv[j]], vcomp, eps) ? 1 : 0;
+  }
+
+  ind.resizem(nfound);
+  nfound = 0;
+  for ( auto j=0; j<iv.size(); j++ ) {
+    if ( FUZZEEQ(v[iv[j]], vcomp, eps) ) {
+      ind[nfound++] = iv[j];
+    }
+  }
+
+  return nfound;
+
+} // end, methood fuzzyeq (2)
+
+ 
 } // end, namespace
 

@@ -55,6 +55,11 @@ GSIZET in_poly(const GTVector<GTPoint<T>> &vertices, const GTVector<GTVector<T>>
 template<typename T>
 GSIZET in_poly(const GTVector<GTPoint<T>> &vertices, const GTVector<GTVector<T>> &x, const GTVector<GSIZET> &ix, T eps, GTVector<GSIZET> &ind);
 
+template<typename T>
+GSIZET fuzzyeq(const GTVector<T> &v, GFTYPE vcomp, T eps, GTVector<GSIZET> &ind);
+template<typename T>
+GSIZET fuzzyeq(const GTVector<T> &v, const GTVector<GSIZET> &iv, GFTYPE vcomp, T eps, GTVector<GSIZET> &ind);
+
 } // end, namespace geoflow
 
 #include "gutils.ipp"
