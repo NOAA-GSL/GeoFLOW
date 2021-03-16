@@ -124,7 +124,7 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, GINT idir, State &utmp
   GTVector<GSIZET>          *igbdy   = &grid_->igbdy() ;
   GTVector<GTVector<Ftype>> *normals = &grid_->bdyNormals();
   StateComp                 *mass    =  grid_->massop().data();
-  StateComp                 *bmass   = &grid_->bdyMass();
+  StateComp                 *bmass   = &grid_->faceMass();
 
   assert( idir > 0 && idir <= nxy );
 
@@ -239,7 +239,7 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp
   GTVector<GSIZET>          *igbdy   = &grid_->igbdy() ;
   GTVector<GTVector<Ftype>> *normals = &grid_->bdyNormals();
   StateComp                 *mass    =  grid_->massop().data();
-  StateComp                 *bmass   = &grid_->bdyMass();
+  StateComp                 *bmass   = &grid_->faceMass();
 
 #if defined(DO_COMPRESS_MODES_ONLY)
   tfact_.resizem(u[0]->size());

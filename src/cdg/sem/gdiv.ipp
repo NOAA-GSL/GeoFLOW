@@ -73,7 +73,7 @@ void GDivOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp &div
   GTVector<GSIZET>          *igbdy   = &grid_->igbdy();
   GTVector<GTVector<Ftype>> *normals = &grid_->bdyNormals(); 
   StateComp                 *mass    =  grid_->massop().data();
-  StateComp                 *bmass   = &grid_->bdyMass();
+  StateComp                 *bmass   = &grid_->faceMass();
 
 
   if ( !traits_.docollocation ) {
@@ -140,7 +140,7 @@ void GDivOp<TypePack>::apply(State &u, State &utmp, StateComp &div)
   GTVector<GSIZET>          *igbdy   = &grid_->igbdy() ;
   GTVector<GTVector<Ftype>> *normals = &grid_->bdyNormals(); 
   StateComp                 *mass    =  grid_->massop().data();
-  StateComp                 *bmass   = &grid_->bdyMass();
+  StateComp                 *bmass   = &grid_->faceMass();
 
 
   if ( !traits_.docollocation ) {
@@ -154,6 +154,7 @@ void GDivOp<TypePack>::apply(State &u, State &utmp, StateComp &div)
 
       for ( auto b=0; usebdy && b<igbdy->size(); b++ ) {
         k = (*igbdy)[b];
+cout << "GDiv:: apply(2): k=" << k << " b=" << b << " nx=" << (*normals)[0][b] << " ny=" << (*normals)[1][b] << " bmass=" << (*bmass)[b] << endl;
         div[k] += (*u[j])[k] * (*normals)[j][b] * (*bmass)[b];
       }
     }
