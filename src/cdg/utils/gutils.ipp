@@ -470,7 +470,7 @@ GSIZET fuzzyeq(const GTVector<T> &v, const GTVector<GSIZET> &iv, T vcomp, T eps,
 // RETURNS: none.
 //**********************************************************************************
 template<typename TOLD, typename TNEW>
-void fuzzyeq(const GTVector<TOLD> &vold, GTVector<TNEW> &vnew)
+void convert(const GTVector<TOLD> &vold, GTVector<TNEW> &vnew)
 {
 
   vnew.resize(vold.size());
