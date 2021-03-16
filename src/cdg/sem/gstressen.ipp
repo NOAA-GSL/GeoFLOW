@@ -121,7 +121,7 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, GINT idir, State &utmp
   GINT                       isgn;
   GSIZET                     k;
   Ftype                      fsgn;
-  GTVector<GSIZET>          *igbdy   = &grid_->igbdy() ;
+  GTVector<GSIZET>          *ieface  = &grid_->gieface() ;
   GTVector<GTVector<Ftype>> *normals = &grid_->faceNormals();
   StateComp                 *mass    =  grid_->massop().data();
   StateComp                 *bmass   = &grid_->faceMass();
@@ -147,8 +147,8 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, GINT idir, State &utmp
     so -= *utmp[2];
 
     // Compute bdy terms for this component, j:
-    for ( auto b=0; usebdy && b<igbdy->size(); b++ ) {
-      k = (*igbdy)[b];
+    for ( auto b=0; usebdy && b<ieface->size(); b++ ) {
+      k = (*ieface)[b];
       so[k] += (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
     }
   }
@@ -163,8 +163,8 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, GINT idir, State &utmp
     so -= *utmp[2];
 
     // Compute surface terms for this component, j:
-    for ( auto b=0; usebdy && b<igbdy->size(); b++ ) {
-      k = (*igbdy)[b];
+    for ( auto b=0; usebdy && b<ieface->size(); b++ ) {
+      k = (*ieface)[b];
       so[k] += (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
     }
   }
@@ -197,8 +197,8 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, GINT idir, State &utmp
   // Compute surface terms for
   //  Integral zeta d (Div u) delta_ij.n^j dV:
   // Use kernel above, for i=idir:
-  for ( auto b=0; usebdy && b<igbdy->size(); b++ ) {
-    k = (*igbdy)[b];
+  for ( auto b=0; usebdy && b<ieface->size(); b++ ) {
+    k = (*ieface)[b];
   #if defined(DO_COMPRESS_MODES_ONLY)
     so[k] += (*utmp[1])[k]*tfact_[k] * (*normals)[idir-1][b] * (*bmass)[b];
   #else
@@ -236,7 +236,7 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp
   Ftype                      isgn;
   GSIZET                     k;
   Ftype                      fsgn;
-  GTVector<GSIZET>          *igbdy   = &grid_->igbdy() ;
+  GTVector<GSIZET>          *ieface  = &grid_->gieface() ;
   GTVector<GTVector<Ftype>> *normals = &grid_->faceNormals();
   StateComp                 *mass    =  grid_->massop().data();
   StateComp                 *bmass   = &grid_->faceMass();
@@ -265,8 +265,8 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp
     eo -= *utmp[2];
 
     // Do the surface terms for jth component of normal:
-    for ( auto b=0; usebdy && b<igbdy->size(); b++ ) {
-      k = (*igbdy)[b];
+    for ( auto b=0; usebdy && b<ieface->size(); b++ ) {
+      k = (*ieface)[b];
       eo[k] += (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
     }
   }
@@ -286,8 +286,8 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp
     eo -= *utmp[2];
 
     // Do the surface terms for jth component of normal:
-    for ( auto b=0; usebdy && b<igbdy->size(); b++ ) {
-      k = (*igbdy)[b];
+    for ( auto b=0; usebdy && b<ieface->size(); b++ ) {
+      k = (*ieface)[b];
       eo[k] += (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
     }
   }
@@ -328,8 +328,8 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp
     eo -= *utmp[3];
 
     // Do the surface terms for jth component of normal:
-    for ( auto b=0; usebdy && b<igbdy->size(); b++ ) {
-      k = (*igbdy)[b];
+    for ( auto b=0; usebdy && b<ieface->size(); b++ ) {
+      k = (*ieface)[b];
     #if defined(DO_COMPRESS_MODES_ONLY)
       eo[k] += (*utmp[2])[k]*tfact_[k] * (*normals)[j][b] * (*bmass)[b];
     #else

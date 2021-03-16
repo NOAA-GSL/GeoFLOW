@@ -70,7 +70,7 @@ void GDivOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp &div
   GBOOL      usebdy = grid_->usebdydata();
   GINT       nxy = grid_->gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
   GSIZET                     k;
-  GTVector<GSIZET>          *igbdy   = &grid_->igbdy();
+  GTVector<GSIZET>          *ieface  = &grid_->gieface();
   GTVector<GTVector<Ftype>> *normals = &grid_->faceNormals(); 
   StateComp                 *mass    =  grid_->massop().data();
   StateComp                 *bmass   = &grid_->faceMass();
@@ -88,8 +88,8 @@ void GDivOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp &div
       // Global bdy terms:
       //  Note: utmp[1] should contain effect of bdy conditions,
       //        which are imposed on entry
-      for ( auto b=0; usebdy && b<igbdy->size(); b++ ) {
-        k = (*igbdy)[b];
+      for ( auto b=0; usebdy && b<ieface->size(); b++ ) {
+        k = (*ieface)[b];
         div[k] += (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
       }
     }
@@ -137,7 +137,7 @@ void GDivOp<TypePack>::apply(State &u, State &utmp, StateComp &div)
   GBOOL      usebdy = grid_->usebdydata();
   GINT       nxy = grid_->gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
   GSIZET     k;
-  GTVector<GSIZET>          *igbdy   = &grid_->igbdy() ;
+  GTVector<GSIZET>          *ieface  = &grid_->gieface() ;
   GTVector<GTVector<Ftype>> *normals = &grid_->faceNormals(); 
   StateComp                 *mass    =  grid_->massop().data();
   StateComp                 *bmass   = &grid_->faceMass();
@@ -152,9 +152,9 @@ void GDivOp<TypePack>::apply(State &u, State &utmp, StateComp &div)
        grid_->wderiv(*u[j], j+1, TRUE, *utmp[0], *utmp[1]);
        div -= *utmp[1];
 
-      for ( auto b=0; usebdy && b<igbdy->size(); b++ ) {
-        k = (*igbdy)[b];
-cout << "GDiv:: apply(2): k=" << k << " b=" << b << " nx=" << (*normals)[0][b] << " ny=" << (*normals)[1][b] << " bmass=" << (*bmass)[b] << endl;
+      for ( auto b=0; usebdy && b<ieface->size(); b++ ) {
+        k = (*ieface)[b];
+//cout << "GDiv:: apply(2): k=" << k << " b=" << b << " nx=" << (*normals)[0][b] << " ny=" << (*normals)[1][b] << " bmass=" << (*bmass)[b] << endl;
         div[k] += (*u[j])[k] * (*normals)[j][b] * (*bmass)[b];
       }
     }
