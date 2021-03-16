@@ -552,7 +552,7 @@ void GGrid::grid_init(GTMatrix<GINT> &p,
   globalize_coords    (); // set glob vec of node coords
 
   // All element bdy/face data should have been set by now:
-  init_bc_info();
+  init_bc_info(TRUE); // TRUE == restart
 
   if ( itype_[GE_2DEMBEDDED].size() > 0
     || itype_  [GE_DEFORMED].size() > 0 ) {
@@ -775,8 +775,8 @@ void GGrid::reg_geom_init()
 // METHOD : do_normals
 // DESC   : Compute normals to elem faces, and to domain boundary 
 //          nodes. Note: init_bc_info must be called prior to entry.
-// ARGS   : none
-// RETURNS: none
+// ARGS   : none.
+// RETURNS: none.
 //**********************************************************************************
 void GGrid::do_normals()
 {
@@ -1313,10 +1313,10 @@ void GGrid::init_local_face_info()
 // METHOD : init_bc_info
 // DESC   : Set global bdy condition data from the element bdy data,
 //          to be called after elements have been set.
-// ARGS   : none
+// ARGS   : bterrain: tells us if we're doing terrain (TRUE) or not (FALSE)
 // RETURNS: none.
 //**********************************************************************************
-void GGrid::init_bc_info()
+void GGrid::init_bc_info(GBOOL bterrain)
 {
        GEOFLOW_TRACE();
   GSIZET   nind;
@@ -1324,8 +1324,9 @@ void GGrid::init_bc_info()
 
 
   // Find boundary indices & types from config file 
-  // specification, for _each_ natural/canonical domain face:
-  config_gbdy(ptree_, igbdy_bdyface_, igbdyt_bdyface_, igbdy_);
+  // specification, for _each_ natural/canonical domain face.
+  // Bdy normals etc. are also computed internally:
+  config_gbdy(ptree_, bterrain, igbdy_bdyface_, igbdyt_bdyface_, igbdy_, degbdy_);
 
   // Flatten bdy index indirection array; this is
   // done in child classes, and stored in igbdy_.

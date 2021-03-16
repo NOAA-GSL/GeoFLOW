@@ -235,72 +235,75 @@ protected:
                                               GINT idir, GBOOL dotrans, GTVector<GFTYPE> &du);
         GBOOL                ispconst();
 virtual void                 config_gbdy(const PropertyTree &ptree, 
+                               GBOOL                         bterrain,
                                GTVector<GTVector<GSIZET>>   &igbdyf, 
                                GTVector<GTVector<GBdyType>> &igbdyft,
-                               GTVector<GSIZET>             &igbdy)=0; // config bdy
+                               GTVector<GSIZET>             &igbdy,
+                               GTVector<GUINT>              &debdy)=0; // config bdy
 virtual void                 elem_bdy_data(
                                const GTMatrix<GTVector<GFTYPE>> &dXdXi,
                                GTVector<GSIZET>                 &igeface,
                                GTVector<GFTYPE>                 &face_mass,
                                GTVector<GTVector<GFTYPE>>       &normals)=0;// compute elem face data
 
-                                                                      // compute bdy normals entry point
+                                                                       // compute bdy normals entry point
 
-//      void                        init_local_face_info();           // get local face info
-        void                        globalize_coords();               // create global coord vecs from elems
-        void                        init_bc_info();                   // configure bdys
-        void                        def_geom_init();                  // iniitialze deformed elems
-        void                        reg_geom_init();                  // initialize regular elems
-        void                        do_normals();                     // compute normals to elem faces and domain bdy
+//      void                        init_local_face_info();            // get local face info
+        void                        globalize_coords();                // create global coord vecs from elems
+        void                        init_bc_info(GBOOL bterrain=FALSE);// configure bdys
+        void                        def_geom_init();                   // iniitialze deformed elems
+        void                        reg_geom_init();                   // initialize regular elems
+        void                        do_normals();                      // compute normals to elem faces and domain bdy
         GFTYPE                      find_min_dist(); 
 
-        GBOOL                       bInitialized_;  // object initialized?
-        GBOOL                       bapplybc_;      // bc apply callback set
-        GBOOL                       do_face_normals_; // compute elem face normals for fluxes?
-        GBOOL                       bpconst_;       // is p const among elems?
-        GBOOL                       usebdydat_;     // flag to set to use bdy data
-        GINT                        nstreams_;      // no. CUDA streams
-        GDerivType                  gderivtype_;    // ref. deriv method type
+        GBOOL                       bInitialized_;     // object initialized?
+        GBOOL                       bapplybc_;         // bc apply callback set
+        GBOOL                       do_face_normals_;  // compute elem face normals for fluxes?
+        GBOOL                       bpconst_;          // is p const among elems?
+        GBOOL                       usebdydat_;        // flag to set to use bdy data
+        GINT                        nstreams_;         // no. CUDA streams
+        GDerivType                  gderivtype_;       // ref. deriv method type
 
-        GElemType                   gtype_;         // element types comprising grid
-        GINT                        irank_;         // MPI task id
-        GINT                        nprocs_;        // number of MPI tasks
-        GSIZET                      ngelems_;       // global number of elements
-        GC_COMM                     comm_;          // communicator
-        GFTYPE                      minnodedist_;   // min node length array (for each elem)
-	GFTYPE                      volume_;        // grid volume
-	GFTYPE                      ivolume_;       // 1 / grid volume
-        GElemList                   gelems_;        // element list
-        GTVector<GFTYPE>            etmp_;          // elem-level tmp vector
-        GTVector<GTVector<GSIZET>>  itype_;         // indices in elem list of each type
-        GTVector<GSIZET>            ntype_;         // no. elems of each type on grid
-        GTMatrix<GTVector<GFTYPE>>  dXidX_;         // matrix Rij = dXi^j/dX^i, global
-        GTMatrix<GTVector<GFTYPE>>  dXdXi_;         // matrix Bij = dX^j/dXi^i, global, used for constructing normals
-        GTVector<GTVector<GFTYPE>>  xNodes_;        // Cart coords of all node points
-        GMass                      *mass_;          // mass operator
-        GMass                      *imass_;         // inverse of mass operator
-        GTVector<GFTYPE>            Jac_;           // interior Jacobian, global
-        GTVector<GFTYPE>            faceJac_;       // face Jacobians, global
-        GTVector<GFTYPE>            faceMass_;      // elem face mass * Jacobians
-        GTVector<GTVector<GFTYPE>>  faceNormals_;   // normal to elem faces each face node point (2d & 3d), global
-        GTVector<GSIZET>            gieface_;       // index into global field indicating elem face node
-        GTVector<GTVector<GFTYPE>>  bdyNormals_;    // normal to surface at each bdy node point (2d & 3d), global
-        GTVector<GINT>              idepComp_;      // dependent component index at each bdy point
-        BinnedBdyIndex              igbdy_binned_;  // index into global field indicating a domain bdy--by type
-        GTVector<GTVector<GSIZET>>  igbdy_bdyface_;// volumbe index for each bdy node on each face
-        GTVector<GTVector<GBdyType>> igbdyt_bdyface_;// bdy type for each igbdt_bdyface_
-        GTVector<GSIZET>            igbdy_;         // index into global field indicating a domain bdy
+        GElemType                   gtype_;            // element types comprising grid
+        GINT                        irank_;            // MPI task id
+        GINT                        nprocs_;           // number of MPI tasks
+        GSIZET                      ngelems_;          // global number of elements
+        GC_COMM                     comm_;             // communicator
+        GFTYPE                      minnodedist_;      // min node length array (for each elem)
+	GFTYPE                      volume_;           // grid volume
+	GFTYPE                      ivolume_;          // 1 / grid volume
+        GElemList                   gelems_;           // element list
+        GTVector<GFTYPE>            etmp_;             // elem-level tmp vector
+        GTVector<GTVector<GSIZET>>  itype_;            // indices in elem list of each type
+        GTVector<GSIZET>            ntype_;            // no. elems of each type on grid
+        GTMatrix<GTVector<GFTYPE>>  dXidX_;            // matrix Rij = dXi^j/dX^i, global
+        GTMatrix<GTVector<GFTYPE>>  dXdXi_;            // matrix Bij = dX^j/dXi^i, global, used for constructing normals
+        GTVector<GTVector<GFTYPE>>  xNodes_;           // Cart coords of all node points
+        GMass                      *mass_;             // mass operator
+        GMass                      *imass_;            // inverse of mass operator
+        GTVector<GFTYPE>            Jac_;              // interior Jacobian, global
+        GTVector<GFTYPE>            faceJac_;          // face Jacobians, global
+        GTVector<GFTYPE>            faceMass_;         // elem face mass * Jacobians
+        GTVector<GTVector<GFTYPE>>  faceNormals_;      // normal to elem faces each face node point (2d & 3d), global
+        GTVector<GSIZET>            gieface_;          // index into global field indicating elem face node
+        GTVector<GTVector<GFTYPE>>  bdyNormals_;       // normal to surface at each bdy node point (2d & 3d), global
+        GTVector<GINT>              idepComp_;         // dependent component index at each bdy point
+        GTVector<GUINT>             degbdy_;           // gbdy node descriptorsgbdy node descriptors
+        BinnedBdyIndex              igbdy_binned_;     // index into global field indicating a domain bdy--by type
+        GTVector<GTVector<GSIZET>>  igbdy_bdyface_;    // volumbe index for each bdy node on each face
+        GTVector<GTVector<GBdyType>> igbdyt_bdyface_;  // bdy type for each igbdt_bdyface_
+        GTVector<GSIZET>            igbdy_;            // index into global field indicating a domain bdy
         BdyUpdateList               bdy_update_list_;
-                                                    // bdy update class list
-        GTVector<GFTYPE>            mask_;          // bdy mask
-        PropertyTree                ptree_;         // main prop tree
-        GGFX<GFTYPE>               *ggfx_;          // connectivity operator
+                                                       // bdy update class list
+        GTVector<GFTYPE>            mask_;             // bdy mask
+        PropertyTree                ptree_;            // main prop tree
+        GGFX<GFTYPE>               *ggfx_;             // connectivity operator
         LinSolverBase<CGTypes>::Traits
-                                    cgtraits_;      // GCG operator traits
+                                    cgtraits_;         // GCG operator traits
 
         std::function<void(const Time &t, State &u, State &ub)>
                                     bdy_apply_callback_;            
-        GCBLAS::cuMatBlockDat       cudat_;         // CUDA data structure
+        GCBLAS::cuMatBlockDat       cudat_;            // CUDA data structure
 };
 
 #endif
