@@ -198,9 +198,9 @@ virtual void                 print(const GString &filename){}          // print 
         GC_COMM              get_comm() { return comm_; }              // get communicator
         void                 set_derivtype(GDerivType gt);             // set deriv. method
         GDerivType           get_derivtype() { return gderivtype_; }   // return deriv. method
-        GBOOL                usebdydata() { return usebdydat_;}        // get usebdydata flag
+        GBOOL                usebdydata() { return do_face_normals_;}  // get usebdydata flag
         void                 set_usebdydata(GBOOL bflag) 
-                             {usebdydat_ = bflag;}                     // set usebdydata flag
+                             {do_face_normals_= bflag;}                // set usebdydata flag
  
 
 
