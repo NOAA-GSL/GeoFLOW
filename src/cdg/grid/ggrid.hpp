@@ -240,7 +240,7 @@ virtual void                 config_gbdy(const PropertyTree &ptree,
                                GTVector<GSIZET>             &igbdy)=0; // config bdy
 virtual void                 elem_bdy_data(
                                const GTMatrix<GTVector<GFTYPE>> &dXdXi,
-                               GTVector<GSIEZT>                 &igeface,
+                               GTVector<GSIZET>                 &igeface,
                                GTVector<GFTYPE>                 &face_mass,
                                GTVector<GTVector<GFTYPE>>       &normals)=0;// compute elem face data
 

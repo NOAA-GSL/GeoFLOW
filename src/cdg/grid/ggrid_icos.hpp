@@ -71,11 +71,11 @@ public:
                             GCOORDSYST icoord=GICOS_LATLONG);             // print grid to file
         void                config_gbdy(const geoflow::tbox::PropertyTree &ptree,
                               GTVector<GTVector<GSIZET>>   &igbdyf,
-                              <GTVector<GBdyType>> &igbdyt,
+                              GTVector<GBdyType>           &igbdyt,
                               GTVector<GSIZET>             &igbdy);       // config global bdy
         void                elem_gbdy_data(
                               const GTMatrix<GTVector<GFTYPE>> &dXdXi,
-                              GTVector<GSIEZT>                 &igeface,
+                              GTVector<GSIZET>                 &igeface,
                               GTVector<GFTYPE>                 &face_mass,
                               GTVector<GTVector<GFTYPE>>       &normals);  // compute faces data
 
@@ -155,31 +155,37 @@ friend  std::ostream&       operator<<(std::ostream&, GGridIcos &);         // O
                             GTVector<GTVector<GSIZET>>   &igbdyf,
                             GTVector<GTVector<GBdyType>> &igbdyt,
                             GTVector<GSIZET>             &igbdy);  // configure bdy
-         void               find_gbdy_ind3d(GFTYPE radius, 
-                                            GTVector<GSIZET> &ibdy);// find bdy indices for bdy=radius
+         void               find_gbdy_ind3d(GFTYPE radius,
+                               GTVector<GSIZET> &igbdy,
+                               GTVector<GUINT>  &debdy);                    // 
+        void                elem_bdy_data(
+                              const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+                              GTVector<GSIZET>                 &gieface,
+                              GTVector<GFTYPE>                 &face_mass,
+                              GTVector<GTVector<GFTYPE>>       &normals); // compute elem face data entry point
         void                elem_bdy_data2d(
                               const GTMatrix<GTVector<GFTYPE>> &dXdXi,
-                              GTVector<GSIEZT>                 &gieface,
+                              GTVector<GSIZET>                 &gieface,
                               GTVector<GFTYPE>                 &face_mass,
                               GTVector<GTVector<GFTYPE>>       &normals); // compute 2d elem face data
         void                elem_bdy_data3d(
                               const GTMatrix<GTVector<GFTYPE>> &dXdXi,
-                              GTVector<GSIEZT>                 &gieface,
+                              GTVector<GSIZET>                 &gieface,
                               GTVector<GFTYPE>                 &face_mass,
                               GTVector<GTVector<GFTYPE>>       &normals); // compute 3d elem face data
 
          void               do_gbdy_normals(
-                                 const GTVector<GSIZET>           &igbdy,
-                                 const GTVector<GUINT>            &debdy,
-                                 const GTMatrix<GTVector<GFTYPE>> &dXdXi,
-                                 GTVector<GTVector<GFTYPE>>       &normals,
-                                 GTVector<GINT>                   &depComp);
+                               const GTVector<GSIZET>           &igbdy,
+                               const GTVector<GUINT>            &debdy,
+                               const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+                               GTVector<GTVector<GFTYPE>>       &normals,
+                               GTVector<GINT>                   &depComp);
          void               do_gbdy_normals3d(
-                                 const GTVector<GSIZET>           &igbdy,
-                                 const GTVector<GUINT>            &debdy,
-                                 const GTMatrix<GTVector<GFTYPE>> &dXdXi,
-                                 GTVector<GTVector<GFTYPE>>       &normals,
-                                 GTVector<GINT>                   &depComp);
+                               const GTVector<GSIZET>           &igbdy,
+                               const GTVector<GUINT>            &debdy,
+                               const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+                               GTVector<GTVector<GFTYPE>>       &normals,
+                               GTVector<GINT>                   &depComp);
 
          GString            sreftype_;      // subdivision/refinement type
          GINT               ilevel_;        // refinement level (>= 0)

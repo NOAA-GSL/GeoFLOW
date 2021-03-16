@@ -902,7 +902,8 @@ void GGridIcos::config_gbdy(const geoflow::tbox::PropertyTree &ptree,
 
   GBOOL              bret;
   GSIZET             nind;
-  GTVector<GSIZET>   itmp;
+  GTVector<GUINT>    utmp;
+  GTVector<GSIZET>   ikeep, itmp;
   GTVector<GFTYPE>   rbdy(2);
   GTVector<GString>  bdynames(2);
   std::vector<GString>  svec;
@@ -950,8 +951,9 @@ void GGridIcos::config_gbdy(const geoflow::tbox::PropertyTree &ptree,
     sbdy         = gridptree.getValue<GString>(bdynames[j]);
     bdytree      = ptree.getPropertyTree(sbdy);
     bdyclass     = bdytree.getValue<GString>("bdy_class", "uniform");
-    find_gbdy_ind3d(rbdy[j], itmp); 
-    do_gbdy_normals(j, FALSE, dXdXi_, itmp, bdyNormals_, idepClomp_); // all bdy nodes 
+    find_gbdy_ind3d(rbdy[j], itmp, utmp); // bdy node ids only
+
+    do_gbdy_normals(itmp, utmp, dXdXi_, bdyNormals_, idepComp_); 
 
     igbdyf [j].resize(itmp.size()); igbdyf [j] = itmp;
     igbdyft[j].resize(itmp.size()); igbdyft[j] = GBDY_NONE;
@@ -1000,32 +1002,77 @@ void GGridIcos::config_gbdy(const geoflow::tbox::PropertyTree &ptree,
 } // end of method config_gbdy
 
 
+
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : find_gbdy_ind3d
 // DESC   : Find global bdy indices (indices into xNodes_ arrays) that
-//          corresp to specified radius
-// ARGS   : radius   : radius
+//          corresp to specified bdy in 3d
+// ARGS   : radius   : booundary radius
+//          debdy    : array of descriptors for each index in ibd
 //          ibdy     : array of indices into xNodes that comprise this boundary
 // RETURNS: none.
 //**********************************************************************************
-void GGridIcos::find_gbdy_ind3d(GFTYPE radius, GTVector<GSIZET> &ibdy)
+void GGridIcos::find_gbdy_ind3d(GFTYPE radius,
+                                GTVector<GSIZET> &ibdy,
+                                GTVector<GUINT>  &debdy) 
 {
-	GEOFLOW_TRACE();
-  GFTYPE          eps, r;
-  GTPoint<GFTYPE> pt(ndim_);
+  GEOFLOW_TRACE();
 
-  ibdy.clear();
-  eps = 1.0e4*std::numeric_limits<GFTYPE>::epsilon();
+  GBOOL             bexist, bglobale, bglobalv;
+  GSIZET            ie, istart, nbdy, nind, ntmp, nnodes;
+  GFTYPE            eps;
+  GTVector<GUINT>   utmp;
+  GTVector<GINT>   *face_ind;
+  GTVector<GSIZET>  ind, itmp;
+  GTVector<GSIZET>  fi;
+  GTVector<GFTYPE>  r;
+  GVVFType         *xlnodes;
+  
+  ntmp  = xNodes_[0].size() + pow(2,GDIM) + (GDIM > 2 ? 2*GDIM : 0);
+  itmp.resize(ntmp);
+  utmp.resize(ntmp); utmp = 0;
 
-  for ( auto i=0; i<xNodes_[0].size(); i++ ) { 
-      r = sqrt(pow(xNodes_[0][i],2)+pow(xNodes_[1][i],2)+pow(xNodes_[2][i],2));
-      if ( FUZZYEQ(r, radius, eps) ) {
-        ibdy.push_back(i);
-      }
+  eps = 1.0e2*std::numeric_limits<GFTYPE>::epsilon();
+
+  
+  istart = 0;
+  nbdy   = 0;
+  for ( auto e=0; e<gelems_.size(); e++ ) { 
+    xlnodes= &gelems_[e]->xNodes();
+    nnodes = gelems_[e]->nnodes();
+    r.resize(nnodes);
+    for ( auto j=0; j<nnodes; j++ ) r[j] = sqrt(pow((*xlnodes)[0][j],2)
+                                         +      pow((*xlnodes)[1][j],2)
+                                         +      pow((*xlnodes)[2][j],2));
+    for ( auto j=0; j<gelems_[e]->nfaces(); j++ ) {
+       face_ind  = &gelems_[e]->face_indices(j);
+       geoflow:convert<GINT,GSIZET>(*face_ind, fi);
+       nind      = geoflow::fuzzyeq<GFTYPE>(r, fi, radius, eps, ind); // get indices on domain surface
+      // For each index on bdy, set description:
+      for ( auto i=0; i<nind; i++ ) { 
+        ie      = ind[i] + istart ;
+        // Set node host face: 
+        SET_ND(utmp[nbdy], 0, GElem_base::FACE, (GUINT)j );
+        itmp [nbdy] = ie; // 'global' index 
+        nbdy++; 
+      } // end, element's glob bdy
+    } // end, j-loop
+    istart += nnodes;
+  } // end, elem loop
+
+
+  // Fill return arrays:
+  ibdy.resize(nbdy);
+  debdy.resize(nbdy);
+
+  for( auto j=0; j<nbdy; j++ ) {
+    ibdy [j] = itmp[j];  // bdy node in volume 
+    debdy[j] = utmp[j];  // bdy node description
   }
 
 } // end, method find_gbdy_ind3d
+
 
 
 //**********************************************************************************
@@ -1045,16 +1092,16 @@ void GGridIcos::find_gbdy_ind3d(GFTYPE radius, GTVector<GSIZET> &ibdy)
 // RETURNS: none
 //**********************************************************************************
 void GGridIcos::elem_bdy_data(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
-                              GTVector<GSIEZT>                 &igeface,
+                              GTVector<GSIZET>                 &gieface,
                               GTVector<GFTYPE>                 &face_mass,
                               GTVector<GTVector<GFTYPE>>       &normals)
 {
 
 	GEOFLOW_TRACE();
   #if defined(_G_IS2D)
-    elem_bdy_data2d(dXdXi, gieface, gdeface, face_mass, normals, depComp);
+    elem_bdy_data2d(dXdXi, gieface, face_mass, normals);
   #elif defined(_G_IS3D)
-    elem_bdy_data3d(dXdXi, gieface, gdeface, face_mass, normals, depComp);
+    elem_bdy_data3d(dXdXi, gieface, face_mass, normals);
   #else
     #error Invalid problem dimensionality
   #endif
@@ -1076,7 +1123,7 @@ void GGridIcos::elem_bdy_data(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
 // RETURNS: none
 //**********************************************************************************
 void GGridIcos::elem_bdy_data2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
-                                GTVector<GSIEZT>                 &gieface,
+                                GTVector<GSIZET>                 &gieface,
                                 GTVector<GFTYPE>                 &face_mass,
                                 GTVector<GTVector<GFTYPE>>       &normals)
 {
@@ -1098,7 +1145,7 @@ void GGridIcos::elem_bdy_data2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
    nbdy = 0;
    for ( auto e=0; e<gelems_.size(); e++ ) {
      for ( auto j=0; j<gelems_[e]->nfaces(); j++ ) {
-       nbdy += = gelems_[e]->face_indices(j).size(();
+       nbdy += gelems_[e]->face_indices(j).size();
      }
    }
    gieface  .resize(nbdy);
@@ -1114,11 +1161,10 @@ void GGridIcos::elem_bdy_data2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
 
      istart = 0;
      for ( auto e=0; e<gelems_.size(); e++ ) {
-       face_ind  = &gelems_[e]->face_indices(j);
-       mass      = &gelems_[e]->face_mass();
        n         = 0; // index along elem bdy
        for ( auto j=0; j<gelems_[e]->nfaces(); j++ ) { // over all faces
          face_ind  = &gelems_[e]->face_indices(j);
+         mass      = &gelems_[e]->face_mass();
          xm = j == 2 || j == 3 ? 1.0 : -1.0;
          for ( auto i=0; i<face_ind->size(); i++ ) { // over elem bdy points
            ib = (*face_ind)[i] + istart; // indir. index into global vol
@@ -1158,18 +1204,20 @@ void GGridIcos::elem_bdy_data2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
 // RETURNS: none
 //**********************************************************************************
 void GGridIcos::elem_bdy_data3d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
-                                GTVector<GSIEZT>                 &gieface,
+                                GTVector<GSIZET>                 &gieface,
                                 GTVector<GFTYPE>                 &face_mass,
                                 GTVector<GTVector<GFTYPE>>       &normals)
 {
    GEOFLOW_TRACE();
 
-   GINT            ib, ic, id;
-   GINT            ixi[6][2] = { {0,2}, {1,2}, {2,0},
-                                 {2,1}, {1,0}, {0,1} };
-   GSIZET          istart, nbdy;
-   GFTYPE          tiny, xm;
-   GTPoint<GFTYPE> xp(3), p1(3), p2(3);
+   GINT             ib, ic, id;
+   GINT             ixi[6][2] = { {0,2}, {1,2}, {2,0},
+                                  {2,1}, {1,0}, {0,1} };
+   GSIZET           istart, nbdy, n;
+   GFTYPE           jac, tiny, xm;
+   GTPoint<GFTYPE>  xp(3), p1(3), p2(3);
+   GTVector<GINT>   *face_ind;
+   GTVector<GFTYPE> *mass;
 
    tiny  = 100.0*std::numeric_limits<GFTYPE>::epsilon();
 
@@ -1178,7 +1226,7 @@ void GGridIcos::elem_bdy_data3d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
    nbdy = 0;
    for ( auto e=0; e<gelems_.size(); e++ ) {
      for ( auto j=0; j<gelems_[e]->nfaces(); j++ ) {
-       nbdy += = gelems_[e]->face_indices(j).size(();
+       nbdy += gelems_[e]->face_indices(j).size();
      }
    }
    gieface  .resize(nbdy);
@@ -1201,20 +1249,21 @@ void GGridIcos::elem_bdy_data3d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
          xm = j == 2 || j == 3 ? 1.0 : -1.0;
          // Bdy normal is dvec{X} / dxi_xi X dvec{X} / dxi_eta
          for ( auto i=0; i<face_ind->size(); i++ ) { // over elem bdy points
-         xm = j == 0 || j == 1 || j == 5 ? 1.0 : -1.0;
-         // Find derivs of _X_ wrt face's reference coords;
-         // the cross prod of these vectors is the normal:
-         for ( auto i=0; i<dXdXi.size(2); i++ ) { // d_X_/dXi
-           p1[i] = dXdXi(ixi[j][0],i)[ib]; // d_X_/dxi
-           p2[i] = dXdXi(ixi[j][1],i)[ib]; // d_X_/deta
+           xm = j == 0 || j == 1 || j == 5 ? 1.0 : -1.0;
+           // Find derivs of _X_ wrt face's reference coords;
+           // the cross prod of these vectors is the normal:
+           for ( auto i=0; i<dXdXi.size(2); i++ ) { // d_X_/dXi
+             p1[i] = dXdXi(ixi[j][0],i)[ib]; // d_X_/dxi
+             p2[i] = dXdXi(ixi[j][1],i)[ib]; // d_X_/deta
+           }
+           p1.cross(p2, xp);   // xp = p1 X p2
+           xp *= xm; xp.unit(); 
+           gieface      [nbdy] = ib;
+           for ( auto k=0; k<normals.size(); k++ ) normals[k][nbdy] = xp[k];
+           jac = xp.mag();
+           face_mass  [nbdy++] = (*mass)[n] * jac;
+           n++;
          }
-         p1.cross(p2, xp);   // xp = p1 X p2
-         xp *= xm; xp.unit(); 
-         gieface      [nbdy] = ib;
-         for ( auto k=0; k<normals.size(); k++ ) normals[k][nbdy] = xp[k];
-         jac = xp.mag();
-         face_mass  [nbdy++] = (*mass)[n] * jac;
-         n++;
        }
      }
    }
@@ -1251,7 +1300,7 @@ void GGridIcos::do_gbdy_normals(const GTVector<GSIZET>           &igbdy,
 
   #if defined(_G_IS2D)
     return;
-  #if defined(_G_IS3D)
+  #elif defined(_G_IS3D)
     nbdy = igbdy.size();
     idepComp.resize(nbdy);
     for ( auto j=0; j<normals.size(); j++ ) normals[j].resize(nbdy);
@@ -1259,7 +1308,7 @@ void GGridIcos::do_gbdy_normals(const GTVector<GSIZET>           &igbdy,
     do_gbdy_normals3d(igbdy, debdy, dXdXi, normals, idepComp);
 
   #else
-    #error Invalid problem dimensionality
+    #error "Invalid problem dimensionality"
   #endif
 
 
@@ -1290,11 +1339,12 @@ void GGridIcos::do_gbdy_normals(const GTVector<GSIZET>           &igbdy,
 
 // RETURNS: none
 //**********************************************************************************
-void GGridIcos::do_gbdy_normals(const GTVector<GSIZET>           &igbdy,
-                                const GTVector<GUINT>            &debdy,
-                                const GTMatrix<GTVector<GFTYPE>> &dXdXi,
-                                GTVector<GTVector<GFTYPE>>       &normals,
-                                GTVector<GINT>                   &depComp)
+void GGridIcos::do_gbdy_normals3d(
+                                  const GTVector<GSIZET>           &igbdy,
+                                  const GTVector<GUINT>            &debdy,
+                                  const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+                                  GTVector<GTVector<GFTYPE>>       &normals,
+                                  GTVector<GINT>                   &depComp)
 {
   GEOFLOW_TRACE();
   GSIZET          ib, ic, ip;

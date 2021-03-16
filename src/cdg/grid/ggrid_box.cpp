@@ -186,7 +186,7 @@ void GGridBox::init2d()
 {
   GEOFLOW_TRACE();
 
-  find_subdomain();
+  find_rank_subdomain();
 
 } // end of method init2d
 
@@ -202,7 +202,7 @@ void GGridBox::init3d()
 {
   GEOFLOW_TRACE();
 
-  find_subdomain();
+  find_rank_subdomain();
 
 } // end, method init3d
 
@@ -933,9 +933,11 @@ void GGridBox::find_rank_subdomain()
 // RETURNS: none.
 //**********************************************************************************
 void GGridBox::config_gbdy(const PropertyTree           &ptree, 
-                          GTVector<GTVector<GSIZET>>   &igbdyf, 
-                          GTVector<GTVector<GBdyType>> &igbdyft,
-                          GTVector<GSIZET>             &igbdy)
+                           GBOOL                         findbdy,
+                           GTVector<GTVector<GSIZET>>   &igbdyf, 
+                           GTVector<GTVector<GBdyType>> &igbdyft,
+                           GTVector<GSIZET>             &igbdy,
+                           GTVector<GUINT>              &degbdy)
                           
 {
    GEOFLOW_TRACE();
@@ -944,9 +946,7 @@ void GGridBox::config_gbdy(const PropertyTree           &ptree,
   GSIZET             nind;
   GTVector<GBOOL>    buniform(2*GDIM);
   GTVector<GBdyType> bdytype(2*GDIM);
-  GTVector<GUINT>    utmp;
   GTVector<GSIZET>   ikeep, itmp;
-  GTVector<GFTYPE>   mtmp;
   GTVector<GString>  bdynames (2*GDIM);
   std::vector<GString>
                      svec;
@@ -982,8 +982,8 @@ void GGridBox::config_gbdy(const PropertyTree           &ptree,
     sbdy         = gridptree.getValue<GString>(bdynames[j]);
     bdytree      = ptree.getPropertyTree(sbdy);
     bdyclass     = bdytree.getValue<GString>("bdy_class", "uniform");
-    find_gbdy_ind  (j, FALSE, ikeep, mtmp, utmp, itmp); // bdy node ids only
-    do_gbdy_normals(j, FALSE, dXdXi_, itmp, bdyNormals_, idepClomp_); // all bdy nodes 
+    find_gbdy_ind  (j, FALSE, ikeep, itmp, degbdy); // bdy node ids only
+    do_gbdy_normals(dXdXi_, itmp, bdyNormals_, idepClomp_); // all bdy nodes 
     igbdyf [j].resize(itmp.size()); igbdyf [j] = itmp;
     igbdyft[j].resize(itmp.size()); igbdyft[j] = GBDY_NONE;
     nind = igbdy.size(); // current size
@@ -1167,9 +1167,9 @@ void GGridBox::do_gbdy_normals(const GTVector<GSIZET>           &igbdy,
   // Compute global boundary normals and associated data:
 
 #if defined(_G_IS2D)
-  do_gbdy_normals2d(dXdXi, igbdy, normals, depComp);
+  do_gbdy_normals2d(igbdy, debdy, dXdXi, normals, depComp);
 #elif defined(_G_IS3D)
-  do_gbdy_normals3d(dXdXi, igbdy, normals, depComp);
+  do_gbdy_normals3d(igbdy, debdy, dXdXi, normals, depComp);
 #else
   #error Invalid problem dimensionality
 #endif
@@ -1351,6 +1351,21 @@ void GGridBox::do_gbdy_normals3d(const GTVector<GSIZET>           &igbdy,
 
 
 
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : find_gbdy_ind
+// DESC   : Find global bdy indices (indices into xNodes_ arrays) that
+//          corresp to specified bdy. This is the main entry point.
+// ARGS   : bdyid    : box-boundary id
+//          bunique  : don't include repeated vertex/edge points on 
+//                     bdy face that are shared with another bdy face
+//          ikeep    : used if bunique=TRUE; will store current list of bdy
+//                     node ids for all bdy nodes that don't already appear in 
+//                     ikeep buffer
+//          debdy    : array of descriptors for each index in ibd
+//          ibdy     : array of indices into xNodes that comprise this boundary
+// RETURNS: none.
+//**********************************************************************************
 void GGridBox::find_gbdy_ind(GINT bdyid, GBOOL bunique, 
                              GTVector<GSIZET> &ikeep,
                              GTVector<GSIZET> &ibdy,
@@ -1369,6 +1384,21 @@ void GGridBox::find_gbdy_ind(GINT bdyid, GBOOL bunique,
 } // end, method find_gbdy_ind 
 
 
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : find_gbdy_ind3d
+// DESC   : Find global bdy indices (indices into xNodes_ arrays) that
+//          corresp to specified bdy in 2d
+// ARGS   : bdyid    : box-boundary id
+//          bunique  : don't include repeated vertex/edge points on 
+//                     bdy face that are shared with another bdy face
+//          ikeep    : used if bunique=TRUE; will store current list of bdy
+//                     node ids for all bdy nodes that don't already appear in 
+//                     ikeep buffer
+//          debdy    : array of descriptors for each index in ibd
+//          ibdy     : array of indices into xNodes that comprise this boundary
+// RETURNS: none.
+//**********************************************************************************
 void GGridBox::find_gbdy_ind2d(GINT bdyid, GBOOL bunique, 
                                GTVector<GSIZET> &ikeep,
                                GTVector<GSIZET> &ibdy,
@@ -1394,7 +1424,7 @@ void GGridBox::find_gbdy_ind2d(GINT bdyid, GBOOL bunique,
   ntmp  = bunique ? xNodes_[0].size(); 
         : xNodes_[0].size() + pow(2,GDIM) + (GDIM > 2 ? 2*GDIM : 0);
   itmp.resize(ntmp);
-  ktmp.resize(ntmp);
+  if ( bunique ) ktmp.resize(ntmp);
   utmp.resize(ntmp); utmp = 0;
 
   for ( auto j=0; j<nkeep; j++ ) ktmp[j] = ikeep[j];
@@ -1445,14 +1475,16 @@ void GGridBox::find_gbdy_ind2d(GINT bdyid, GBOOL bunique,
         if ( bglobalv ) { // elem vertex on global  bdy vertex
           SET_ND(utmp[nbdy], ivert, GElem_base::VERTEX, bdyid);
           itmp [nbdy] = ie; // 'global' index 
-          ktmp[nkeep] = ie; // to store in keep
-          nbdy++; nkeep++;
+          if ( bunique ) ktmp[nkeep] = ie; // to store in keep
+          nbdy++; 
+          if ( bunique ) nkeep++;
         }
         else { // is on bdy face
           SET_ND(utmp[nbdy], bdyid, GElem_base::FACE, bdyid);
           itmp [nbdy] = ie; // 'global' index 
-          ktmp[nkeep] = ie; // to store in keep
-          nbdy++; nkeep++;
+           if ( bunique ) ktmp[nkeep] = ie; // to store in keep
+          nbdy++; 
+          if ( bunique ) nkeep++;
         }
       }
     } // end, element's glob bdy
@@ -1463,13 +1495,13 @@ void GGridBox::find_gbdy_ind2d(GINT bdyid, GBOOL bunique,
   // Fill return arrays:
   ibdy.resize(nbdy);
   debdy.resize(nbdy);
-  ikeep.resize(nkeep);
+  if ( bunique ) ikeep.resize(nkeep);
 
   for( auto j=0; j<nbdy; j++ ) {
     ibdy [j] = itmp[j];  // bdy node in volume 
     debdy[j] = utmp[j];  // bdy node description
   }
-  for( auto j=0; j<nkeep; j++ ) ikeep[j] = ktmp[j];
+  for( auto j=0; j<bunique && nkeep; j++ ) ikeep[j] = ktmp[j];
 
 } // end, method find_gbdy_ind2d
 
@@ -1513,10 +1545,10 @@ void GGridBox::find_gbdy_ind3d(GINT bdyid, GBOOL bunique,
   ntmp  = bunique ? xNodes_[0].size(); 
         : xNodes_[0].size() + pow(2,GDIM) + (GDIM > 2 ? 2*GDIM : 0);
   itmp.resize(ntmp);
-  ktmp.resize(ntmp);
+  if ( bunique ) ktmp.resize(ntmp);
   utmp.resize(ntmp); utmp = 0;
 
-  for ( auto j=0; j<nkeep; j++ ) ktmp[j] = ikeep[j];
+  for ( auto j=0; j<bunique && nkeep; j++ ) ktmp[j] = ikeep[j];
 
   v[0].setBracket(eps_);
   v[1].setBracket(eps_);
@@ -1605,8 +1637,9 @@ void GGridBox::find_gbdy_ind3d(GINT bdyid, GBOOL bunique,
         // Do not check for node identity, just uniquenes:
         SET_ND(utmp[nbdy], bdyid, GElem_base::FACE, bdyid);
         itmp [nbdy] = ie; // 'global' index 
-        ktmp[nkeep] = ie; // to store in keep
-        nbdy++; nkeep++;
+        if ( bunique ) ktmp[nkeep] = ie; // to store in keep
+        nbdy++; 
+        if ( bunique ) nkeep++;
       } // end, unique conditional
     } // end, element's glob bdy
     istart += nnodes;
@@ -1616,13 +1649,13 @@ void GGridBox::find_gbdy_ind3d(GINT bdyid, GBOOL bunique,
   // Fill return arrays:
   ibdy.resize(nbdy);
   debdy.resize(nbdy);
-  ikeep.resize(nkeep);
+  if ( bunique ) ikeep.resize(nkeep);
 
   for( auto j=0; j<nbdy; j++ ) {
     ibdy [j] = itmp[j];  // bdy node in volume 
     debdy[j] = utmp[j];  // bdy node description
   }
-  for( auto j=0; j<nkeep; j++ ) ikeep[j] = ktmp[j];
+  for( auto j=0; j<bunique && nkeep; j++ ) ikeep[j] = ktmp[j];
 
 } // end, method find_gbdy_ind3d
 
@@ -1643,7 +1676,7 @@ void GGridBox::find_gbdy_ind3d(GINT bdyid, GBOOL bunique,
 // RETURNS: none.
 //**********************************************************************************
 void GGridBox::elem_bdy_data(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
-                             GTVector<GSIEZT>                 &gieface,
+                             GTVector<GSIZET>                 &gieface,
                              GTVector<GFTYPE>                 &face_mass,
                              GTVector<GTVector<GFTYPE>>       &normals)
 {
@@ -1673,7 +1706,7 @@ void GGridBox::elem_bdy_data(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
 // RETURNS: none.
 //**********************************************************************************
 void GGridBox::elem_bdy_data2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
-                               GTVector<GSIEZT>                 &gieface,
+                               GTVector<GSIZET>                 &gieface,
                                GTVector<GFTYPE>                 &face_mass,
                                GTVector<GTVector<GFTYPE>>       &normals)
 {
@@ -1782,7 +1815,7 @@ void GGridBox::elem_bdy_data2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
 // RETURNS: none.
 //**********************************************************************************
 void GGridBox::elem_bdy_data3d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
-                               GTVector<GSIEZT>                 &gieface,
+                               GTVector<GSIZET>                 &gieface,
                                GTVector<GFTYPE>                 &face_mass,
                                GTVector<GTVector<GFTYPE>>       &normals)
 {
@@ -1883,4 +1916,6 @@ void GGridBox::elem_bdy_data3d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
    }
 
 } // end, method elem_bdy_data3d
+
+
 

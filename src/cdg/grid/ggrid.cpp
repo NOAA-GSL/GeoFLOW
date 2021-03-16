@@ -468,8 +468,6 @@ void GGrid::grid_init()
 
   globalize_coords    (); // set glob vec of node coords
 
-//init_local_face_info(); // find glob vec of face indices
-
 
   // All element bdy/face data should have been set by now:
 
@@ -552,7 +550,6 @@ void GGrid::grid_init(GTMatrix<GINT> &p,
   else if ( itype_[GE_REGULAR]   .size() > 0 ) gtype_ = GE_REGULAR;
 
   globalize_coords    (); // set glob vec of node coords
-  init_local_face_info(); // find glob vec of face indices
 
   // All element bdy/face data should have been set by now:
   init_bc_info();
@@ -1233,6 +1230,7 @@ void GGrid::wderiv(GTVector<GFTYPE> &u, GINT idir, GBOOL bwghts, GTVector<GFTYPE
 #endif
 
 
+#if 0
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : init_local_face_info
@@ -1307,6 +1305,7 @@ void GGrid::init_local_face_info()
 
 
 } // end, init_local_face_info
+#endif
 
 
 //**********************************************************************************
