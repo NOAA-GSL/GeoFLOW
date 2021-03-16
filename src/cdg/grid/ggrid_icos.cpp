@@ -1101,7 +1101,7 @@ void GGridIcos::find_gbdy_ind3d(GFTYPE radius,
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : elem_bdy_data
+// METHOD : elem_face_data
 // DESC   : Compute normals to each element face
 // ARGS   : 
 //          dXdXi     : matrix of dX_i/dXi_j matrix elements, s.t.
@@ -1113,7 +1113,7 @@ void GGridIcos::find_gbdy_ind3d(GFTYPE radius,
 //          normals   : vector of normal components
 // RETURNS: none
 //**********************************************************************************
-void GGridIcos::elem_bdy_data(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+void GGridIcos::elem_face_data(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
                               GTVector<GSIZET>                 &gieface,
                               GTVector<GFTYPE>                 &face_mass,
                               GTVector<GTVector<GFTYPE>>       &normals)
@@ -1121,19 +1121,19 @@ void GGridIcos::elem_bdy_data(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
 
 	GEOFLOW_TRACE();
   #if defined(_G_IS2D)
-    elem_bdy_data2d(dXdXi, gieface, face_mass, normals);
+    elem_face_data2d(dXdXi, gieface, face_mass, normals);
   #elif defined(_G_IS3D)
-    elem_bdy_data3d(dXdXi, gieface, face_mass, normals);
+    elem_face_data3d(dXdXi, gieface, face_mass, normals);
   #else
     #error Invalid problem dimensionality
   #endif
 
-} // end, method elem_bdy_data
+} // end, method elem_face_data
 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : elem_bdy_data2d
+// METHOD : elem_face_data2d
 // DESC   : Compute normals to each element face in 2d
 // ARGS   : 
 //          dXdXi     : matrix of dX_i/dXi_j matrix elements, s.t.
@@ -1144,7 +1144,7 @@ void GGridIcos::elem_bdy_data(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
 //          normals   : vector of normal components at each elem bdy node
 // RETURNS: none
 //**********************************************************************************
-void GGridIcos::elem_bdy_data2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+void GGridIcos::elem_face_data2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
                                 GTVector<GSIZET>                 &gieface,
                                 GTVector<GFTYPE>                 &face_mass,
                                 GTVector<GTVector<GFTYPE>>       &normals)
@@ -1209,12 +1209,12 @@ void GGridIcos::elem_bdy_data2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
      assert(FALSE && "Invalid grid type");
    }
 
-} // end, method elem_bdy_data2d
+} // end, method elem_face_data2d
 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : elem_bdy_data3d
+// METHOD : elem_face_data3d
 // DESC   : Compute normals to each element face in 3d
 // ARGS   : 
 //          dXdXi     : matrix of dX_i/dXi_j matrix elements, s.t.
@@ -1225,7 +1225,7 @@ void GGridIcos::elem_bdy_data2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
 //          normals   : vector of normal components at each elem bdy node
 // RETURNS: none
 //**********************************************************************************
-void GGridIcos::elem_bdy_data3d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+void GGridIcos::elem_face_data3d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
                                 GTVector<GSIZET>                 &gieface,
                                 GTVector<GFTYPE>                 &face_mass,
                                 GTVector<GTVector<GFTYPE>>       &normals)
@@ -1293,7 +1293,7 @@ void GGridIcos::elem_bdy_data3d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
      assert(FALSE && "Invalid grid type");
    }
 
-} // end, method elem_bdy_data3d
+} // end, method elem_face_data3d
 
 
 //**********************************************************************************

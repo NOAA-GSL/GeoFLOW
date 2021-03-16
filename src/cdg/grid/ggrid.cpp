@@ -662,7 +662,7 @@ void GGrid::def_geom_init()
    Jac_.range_reset();
 // faceJac_.range_reset();
 
-   do_normals();
+   do_face_data();
 
    GComm::Synch(comm_);
    
@@ -762,7 +762,7 @@ void GGrid::reg_geom_init()
    Jac_.range_reset();
 // faceJac_.range_reset();
 
-   do_normals();
+   do_face_data();
 
    GComm::Synch(comm_);
    
@@ -772,28 +772,28 @@ void GGrid::reg_geom_init()
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : do_normals
+// METHOD : do_face_data
 // DESC   : Compute normals to elem faces, and to domain boundary 
 //          nodes. Note: init_bc_info must be called prior to entry.
 // ARGS   : none.
 // RETURNS: none.
 //**********************************************************************************
-void GGrid::do_normals()
+void GGrid::do_face_data()
 {
        GEOFLOW_TRACE();
 
   assert(gelems_.size() > 0 && "Elements not set");
 
-  GString         serr = "GridIcos::do_normals: ";
+  GString         serr = "GridIcos::do_face_data: ";
 
 
   // Set element face normals. Note: arrays for 
   // normals are allocated in these calls:
   if ( do_face_normals_ ) {
-    elem_bdy_data(dXdXi_, gieface_, faceMass_, faceNormals_);
+    elem_face_data(dXdXi_, gieface_, faceMass_, faceNormals_);
   }
 
-} // end of method do_normals
+} // end of method do_face_data
 
 
 //**********************************************************************************

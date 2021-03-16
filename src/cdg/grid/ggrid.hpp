@@ -240,7 +240,7 @@ virtual void                 config_gbdy(const PropertyTree &ptree,
                                GTVector<GTVector<GBdyType>> &igbdyft,
                                GTVector<GSIZET>             &igbdy,
                                GTVector<GUINT>              &debdy)=0; // config bdy
-virtual void                 elem_bdy_data(
+virtual void                 elem_face_data(
                                const GTMatrix<GTVector<GFTYPE>> &dXdXi,
                                GTVector<GSIZET>                 &igeface,
                                GTVector<GFTYPE>                 &face_mass,
@@ -253,7 +253,7 @@ virtual void                 elem_bdy_data(
         void                        init_bc_info(GBOOL bterrain=FALSE);// configure bdys
         void                        def_geom_init();                   // iniitialze deformed elems
         void                        reg_geom_init();                   // initialize regular elems
-        void                        do_normals();                      // compute normals to elem faces and domain bdy
+        void                        do_face_data();                    // compute normals to elem faces 
         GFTYPE                      find_min_dist(); 
 
         GBOOL                       bInitialized_;     // object initialized?

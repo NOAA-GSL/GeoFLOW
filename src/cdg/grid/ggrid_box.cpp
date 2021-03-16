@@ -1685,7 +1685,7 @@ void GGridBox::find_gbdy_ind3d(GINT bdyid, GBOOL bunique,
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : elem_bdy_data
+// METHOD : elem_face_data
 // DESC   : Main entry point into methods that compute ids, normals, 
 //          and mass x Jacobian for each face of a 2d or 3d element
 //          
@@ -1698,26 +1698,26 @@ void GGridBox::find_gbdy_ind3d(GINT bdyid, GBOOL bunique,
 //          normals   : vector of normal components
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::elem_bdy_data(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+void GGridBox::elem_face_data(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
                              GTVector<GSIZET>                 &gieface,
                              GTVector<GFTYPE>                 &face_mass,
                              GTVector<GTVector<GFTYPE>>       &normals)
 {
     
 #if defined(_G_IS2D)
-  elem_bdy_data2d(dXdXi, gieface, face_mass, normals);
+  elem_face_data2d(dXdXi, gieface, face_mass, normals);
 #elif defined (_G_IS3D)
-  elem_bdy_data3d(dXdXi, gieface, face_mass, normals);
+  elem_face_data3d(dXdXi, gieface, face_mass, normals);
 #else
   #error "Dimensionality undefined"
 #endif
 
-} // end. elem_bdy_data main entry point
+} // end. elem_face_data main entry point
 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : elem_bdy_data2d
+// METHOD : elem_face_data2d
 // DESC   : Find 2d element boundary normals and mass
 // ARGS   : dXdXi     : matrix of dX_i/dXi_j matrix elements, s.t.
 //                      dXdX_i(i,j) = dx^j/dxi^i, specified 'globally'
@@ -1728,7 +1728,7 @@ void GGridBox::elem_bdy_data(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
 //          normals   : vector of normal components at each elem bdy node
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::elem_bdy_data2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+void GGridBox::elem_face_data2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
                                GTVector<GSIZET>                 &gieface,
                                GTVector<GFTYPE>                 &face_mass,
                                GTVector<GTVector<GFTYPE>>       &normals)
@@ -1821,12 +1821,12 @@ void GGridBox::elem_bdy_data2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
      assert(FALSE);
    }
 
-} // end, method elem_bdy_data2d
+} // end, method elem_face_data2d
 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : elem_bdy_data3d
+// METHOD : elem_face_data3d
 // DESC   : Find 3d element boundary normals and mass
 // ARGS   : dXdXi     : matrix of dX_i/dXi_j matrix elements, s.t.
 //                      dXdX_i(i,j) = dx^j/dxi^i, specified 'globally'
@@ -1837,7 +1837,7 @@ void GGridBox::elem_bdy_data2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
 //          normals   : vector of normal components at each elem bdy node
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::elem_bdy_data3d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+void GGridBox::elem_face_data3d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
                                GTVector<GSIZET>                 &gieface,
                                GTVector<GFTYPE>                 &face_mass,
                                GTVector<GTVector<GFTYPE>>       &normals)
@@ -1938,7 +1938,7 @@ void GGridBox::elem_bdy_data3d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
      assert(FALSE);
    }
 
-} // end, method elem_bdy_data3d
+} // end, method elem_face_data3d
 
 
 
