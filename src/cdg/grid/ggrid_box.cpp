@@ -1736,7 +1736,7 @@ void GGridBox::elem_face_data2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
 {
    GEOFLOW_TRACE();
 
-   GINT              fi, ib, ip;
+   GINT              fi, ib, id, ip;
    GSIZET            istart, nbdy;
    GFTYPE            tiny;
    GFTYPE            jac, xm;
@@ -1774,14 +1774,16 @@ void GGridBox::elem_face_data2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
        mass      = &gelems_[e]->face_mass();
        for ( auto j=0; j<gelems_[e]->nfaces(); j++ ) { 
          face_ind  = &gelems_[e]->face_indices(j);
-         ip = j % 2;
+         id = j % 2;
+         ip = (j+1) % 2;
          xm = j == 1 || j == 2 ? 1.0 : -1.0;
          for ( auto i=0; i<face_ind->size(); i++ ) { // over elem bdy points
            fi = (*face_ind)[i]; // index into elem data
            ib = fi + istart;    // index into global volume data
            gieface      [nbdy] = ib;
-           face_mass    [nbdy] = (*mass)[fi] * dXdXi(ip,0)[ib];
+           face_mass    [nbdy] = (*mass)[fi] * dXdXi(id,0)[ib];
            normals[ip][nbdy++] = xm;
+//cout << "GBox::elem_face_data2d: nbdy=" << nbdy << " e=" << e << " face=" << j << " nx=" << normals[0][nbdy-1] << " ny=" << normals[1][nbdy-1] << " faceMass=" << face_mass[nbdy-1] << " gie=" << ib << endl;
          }
        } // end, elem face loop
        istart += gelems_[e]->nnodes();
@@ -1797,17 +1799,16 @@ void GGridBox::elem_face_data2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
        mass      = &gelems_[e]->face_mass();
        for ( auto j=0; j<gelems_[e]->nfaces(); j++ ) { 
          face_ind  = &gelems_[e]->face_indices(j);
-         ip = j % 2;
+         id = j % 2;
          xm = j == 1 || j == 2 ? 1.0 : -1.0;
          for ( auto i=0; i<face_ind->size(); i++ ) { // over elem bdy points
            fi = (*face_ind)[i]; // index into elem data
            ib = fi + istart;    // index into global volume data
-           for ( auto k=0; k<dXdXi.size(2); k++ ) p1[k] = dXdXi(ip,k)[ib];
+           for ( auto k=0; k<dXdXi.size(2); k++ ) p1[k] = dXdXi(id,k)[ib];
            kp.cross(p1, xp);   // xp = k X p1 == elem face normal
            xp *= xm; xp.unit();
            gieface      [nbdy] = ib;
            for ( auto k=0; k<normals.size(); k++ ) normals[k][nbdy] = xp[k];
-//         jac = sqrt( pow(dXdXi(ip,0),2)[ib] + pow(dXdXi(ip,1),2)[ib] );
            jac = p1.mag();
            face_mass [nbdy++] = (*mass)[fi] * jac; 
          }
