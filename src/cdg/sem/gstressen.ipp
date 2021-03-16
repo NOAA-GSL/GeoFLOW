@@ -122,7 +122,7 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, GINT idir, State &utmp
   GSIZET                     k;
   Ftype                      fsgn;
   GTVector<GSIZET>          *igbdy   = &grid_->igbdy() ;
-  GTVector<GTVector<Ftype>> *normals = &grid_->bdyNormals();
+  GTVector<GTVector<Ftype>> *normals = &grid_->faceNormals();
   StateComp                 *mass    =  grid_->massop().data();
   StateComp                 *bmass   = &grid_->faceMass();
 
@@ -237,7 +237,7 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp
   GSIZET                     k;
   Ftype                      fsgn;
   GTVector<GSIZET>          *igbdy   = &grid_->igbdy() ;
-  GTVector<GTVector<Ftype>> *normals = &grid_->bdyNormals();
+  GTVector<GTVector<Ftype>> *normals = &grid_->faceNormals();
   StateComp                 *mass    =  grid_->massop().data();
   StateComp                 *bmass   = &grid_->faceMass();
 
