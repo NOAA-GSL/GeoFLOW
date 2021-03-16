@@ -916,6 +916,9 @@ void GGridIcos::config_gbdy(const geoflow::tbox::PropertyTree &ptree,
   UpdateBasePtr      base_ptr;
   stBdyBlock         stblock;
 
+
+  bdyNormals_.resizem(GDIM);
+
   // If doing re-doing with terrain, assume that the incomming 
   // bdy spec (igbdy* and degbdy) is done, and just compute
   // the normals:
@@ -1150,8 +1153,8 @@ void GGridIcos::elem_face_data2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
                                 GTVector<GTVector<GFTYPE>>       &normals)
 {
    GEOFLOW_TRACE();
-   GINT              ib, ip;
-   GSIZET            istart, nbdy, n;
+   GINT              fi, ib, ip;
+   GSIZET            istart, nbdy;
    GFTYPE            tiny;
    GFTYPE            jac, xm;
    GTPoint<GFTYPE>   kp(3), xp(3), p1(3), p2(3);
@@ -1183,13 +1186,13 @@ void GGridIcos::elem_face_data2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
 
      istart = 0;
      for ( auto e=0; e<gelems_.size(); e++ ) {
-       n         = 0; // index along elem bdy
        for ( auto j=0; j<gelems_[e]->nfaces(); j++ ) { // over all faces
          face_ind  = &gelems_[e]->face_indices(j);
          mass      = &gelems_[e]->face_mass();
          xm = j == 2 || j == 3 ? 1.0 : -1.0;
          for ( auto i=0; i<face_ind->size(); i++ ) { // over elem bdy points
-           ib = (*face_ind)[i] + istart; // indir. index into global vol
+           fi = (*face_ind)[i]; // index into elem data
+           ib = fi + istart;    // indir. index into global vol
            for ( auto i=0; i<dXdXi.size(2); i++ ) { // over _X_
              p1[i] = dXdXi(j%2,i)[ib];
            }
@@ -1198,11 +1201,10 @@ void GGridIcos::elem_face_data2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
            xp *= xm; xp.unit();
            for ( auto k=0; k<normals.size(); k++ ) normals[k][nbdy] = xp[k];
            jac = p1.mag();
-           face_mass [nbdy++] = (*mass)[n] * jac;
-           n++;
+           face_mass [nbdy++] = (*mass)[fi] * jac;
          }
-         istart += gelems_[e]->nnodes();
        } // end, elem face loop
+       istart += gelems_[e]->nnodes();
      } // end, elem loop
    }
    else {
@@ -1232,10 +1234,10 @@ void GGridIcos::elem_face_data3d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
 {
    GEOFLOW_TRACE();
 
-   GINT             ib, ic, id;
+   GINT             fi, ib, ic, id;
    GINT             ixi[6][2] = { {0,2}, {1,2}, {2,0},
                                   {2,1}, {1,0}, {0,1} };
-   GSIZET           istart, nbdy, n;
+   GSIZET           istart, nbdy;
    GFTYPE           jac, tiny, xm;
    GTPoint<GFTYPE>  xp(3), p1(3), p2(3);
    GTVector<GINT>   *face_ind;
@@ -1265,13 +1267,13 @@ void GGridIcos::elem_face_data3d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
      istart = 0;
      for ( auto e=0; e<gelems_.size(); e++ ) {
        mass      = &gelems_[e]->face_mass();
-       n         = 0;
        for ( auto j=0; j<gelems_[e]->nfaces(); j++ ) { // over all faces
          face_ind  = &gelems_[e]->face_indices(j);
-         xm = j == 2 || j == 3 ? 1.0 : -1.0;
+         xm = j == 0 || j == 1 || j == 5 ? 1.0 : -1.0;
          // Bdy normal is dvec{X} / dxi_xi X dvec{X} / dxi_eta
          for ( auto i=0; i<face_ind->size(); i++ ) { // over elem bdy points
-           xm = j == 0 || j == 1 || j == 5 ? 1.0 : -1.0;
+           fi = (*face_ind)[i]; // index into elem data
+           ib = fi + istart;    // index into global volume data
            // Find derivs of _X_ wrt face's reference coords;
            // the cross prod of these vectors is the normal:
            for ( auto i=0; i<dXdXi.size(2); i++ ) { // d_X_/dXi
@@ -1283,10 +1285,10 @@ void GGridIcos::elem_face_data3d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
            gieface      [nbdy] = ib;
            for ( auto k=0; k<normals.size(); k++ ) normals[k][nbdy] = xp[k];
            jac = xp.mag();
-           face_mass  [nbdy++] = (*mass)[n] * jac;
-           n++;
-         }
-       }
+           face_mass  [nbdy++] = (*mass)[fi] * jac;
+         } // end, i-loop
+         istart += gelems_[e]->nnodes();
+       } // end, elem loop
      }
    }
    else {

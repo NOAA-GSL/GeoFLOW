@@ -960,6 +960,7 @@ void GGridBox::config_gbdy(const PropertyTree           &ptree,
   UpdateBasePtr      base_ptr;
 
 
+  bdyNormals_.resizem(GDIM);
 
   // If doing re-doing with terrain, assume that the incomming 
   // bdy spec (igbdy* and degbdy) is done, and just compute
@@ -1735,8 +1736,8 @@ void GGridBox::elem_face_data2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
 {
    GEOFLOW_TRACE();
 
-   GINT              ib, ip;
-   GSIZET            istart, nbdy, n;
+   GINT              fi, ib, ip;
+   GSIZET            istart, nbdy;
    GFTYPE            tiny;
    GFTYPE            jac, xm;
    GTPoint<GFTYPE>   kp(3), xp(3), p1(3), p2(3);
@@ -1771,20 +1772,19 @@ void GGridBox::elem_face_data2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
      istart = 0;
      for ( auto e=0; e<gelems_.size(); e++ ) { // over all elements
        mass      = &gelems_[e]->face_mass();
-       n         = 0; // index along elem bdy
        for ( auto j=0; j<gelems_[e]->nfaces(); j++ ) { 
          face_ind  = &gelems_[e]->face_indices(j);
          ip = j % 2;
          xm = j == 1 || j == 2 ? 1.0 : -1.0;
          for ( auto i=0; i<face_ind->size(); i++ ) { // over elem bdy points
-           ib = (*face_ind)[i] + istart; // index into global volume data
+           fi = (*face_ind)[i]; // index into elem data
+           ib = fi + istart;    // index into global volume data
            gieface      [nbdy] = ib;
-           face_mass        [nbdy] = (*mass)[n] * dXdXi(ip,0)[ib];
+           face_mass    [nbdy] = (*mass)[fi] * dXdXi(ip,0)[ib];
            normals[ip][nbdy++] = xm;
-           n++;
          }
-         istart += gelems_[e]->nnodes();
        } // end, elem face loop
+       istart += gelems_[e]->nnodes();
      } // end, elem loop
 
    }
@@ -1795,13 +1795,13 @@ void GGridBox::elem_face_data2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
      istart = 0;
      for ( auto e=0; e<gelems_.size(); e++ ) { // over all elements
        mass      = &gelems_[e]->face_mass();
-       n         = 0; // index along elem bdy
        for ( auto j=0; j<gelems_[e]->nfaces(); j++ ) { 
          face_ind  = &gelems_[e]->face_indices(j);
          ip = j % 2;
          xm = j == 1 || j == 2 ? 1.0 : -1.0;
          for ( auto i=0; i<face_ind->size(); i++ ) { // over elem bdy points
-           ib = (*face_ind)[i] + istart; // index into global volume data
+           fi = (*face_ind)[i]; // index into elem data
+           ib = fi + istart;    // index into global volume data
            for ( auto k=0; k<dXdXi.size(2); k++ ) p1[k] = dXdXi(ip,k)[ib];
            kp.cross(p1, xp);   // xp = k X p1 == elem face normal
            xp *= xm; xp.unit();
@@ -1809,11 +1809,10 @@ void GGridBox::elem_face_data2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
            for ( auto k=0; k<normals.size(); k++ ) normals[k][nbdy] = xp[k];
 //         jac = sqrt( pow(dXdXi(ip,0),2)[ib] + pow(dXdXi(ip,1),2)[ib] );
            jac = p1.mag();
-           face_mass [nbdy++] = (*mass)[n] * jac; 
-           n++;
+           face_mass [nbdy++] = (*mass)[fi] * jac; 
          }
-         istart += gelems_[e]->nnodes();
        } // end, elem face loop
+       istart += gelems_[e]->nnodes();
      } // end, elem loop
 
    }
@@ -1849,8 +1848,8 @@ void GGridBox::elem_face_data3d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
                                     {1,2}, {0,1}, {0,1} }; 
    // normal direction for each rergular face:
    GUINT             if2n[6]    = { 0, 1, 0, 1, 2, 2 };
-   GINT              ib, ip;
-   GSIZET            istart, nbdy, n;
+   GINT              fi, ib, ip;
+   GSIZET            istart, nbdy;
    GFTYPE            tiny;
    GFTYPE            jac, xm;
    GTPoint<GFTYPE>   kp(3), xp(3), p1(3), p2(3);
@@ -1884,21 +1883,20 @@ void GGridBox::elem_face_data3d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
      istart = 0;
      for ( auto e=0; e<gelems_.size(); e++ ) { // over all elements
        mass      = &gelems_[e]->face_mass();
-       n         = 0; // index along elem bdy
        for ( auto j=0; j<gelems_[e]->nfaces(); j++ ) { 
          face_ind  = &gelems_[e]->face_indices(j);
          ip = if2n[j];
          xm = j < 4 || j == 5 ? 1.0 : -1.0;
          for ( auto i=0; i<face_ind->size(); i++ ) { // over elem bdy points
-           ib = (*face_ind)[i] + istart; // index into global volume data
+           fi = (*face_ind)[i]; // index into elem data
+           ib = fi + istart;    // index into global volume data
            gieface    [nbdy] = ib;
            jac               = dXdXi(if2r[j][0],0)[ib] * dXdXi(if2r[j][0],1)[ib];
            normals[ip][nbdy] = xm;
-           face_mass[nbdy++] = (*mass)[n] * jac;
-           n++;
+           face_mass[nbdy++] = (*mass)[fi] * jac;
          }
-         istart += gelems_[e]->nnodes();
        } // end, elem face loop
+       istart += gelems_[e]->nnodes();
      } // end, elem loop
 
    }
@@ -1909,12 +1907,12 @@ void GGridBox::elem_face_data3d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
      istart = 0;
      for ( auto e=0; e<gelems_.size(); e++ ) { // over all elements
        mass      = &gelems_[e]->face_mass();
-       n         = 0; // index along elem bdy
        for ( auto j=0; j<gelems_[e]->nfaces(); j++ ) { 
          face_ind  = &gelems_[e]->face_indices(j);
          xm = j < 4 || j == 5 ? 1.0 : -1.0;
          for ( auto i=0; i<face_ind->size(); i++ ) { // over elem bdy points
-           ib = (*face_ind)[i] + istart; // index into global volume data
+           fi = (*face_ind)[i]; // index into elem data
+           ib = fi + istart;    // index into global volume data
            for ( auto k=0; k<dXdXi.size(2); k++ ) p1[k] = dXdXi(if2r[j][0],k)[ib];
            for ( auto k=0; k<dXdXi.size(2); k++ ) p2[k] = dXdXi(if2r[j][1],k)[ib];
            p1.cross(p2,xp); // normal = p1 X p2
@@ -1926,11 +1924,10 @@ void GGridBox::elem_face_data3d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
                              + xp.x2 * dXdXi(2,2)[ib];
            xp *= xm; xp.unit();
            for ( auto k=0; k<normals.size(); k++ ) normals[k][nbdy] = xp[k];
-           face_mass[nbdy++] = (*mass)[n] * jac; 
-           n++;
+           face_mass[nbdy++] = (*mass)[fi] * jac; 
          }
-         istart += gelems_[e]->nnodes();
        } // end, elem face loop
+       istart += gelems_[e]->nnodes();
      } // end, elem loop
 
    }
