@@ -41,7 +41,7 @@ GGrid::GGrid(const geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,G
 :
 bInitialized_                   (FALSE),
 bapplybc_                       (FALSE),
-do_face_normals_                (FALSE),
+do_face_normals_                 (TRUE),
 bpconst_                         (TRUE),
 gderivtype_                (GDV_CONSTP),
 usebdydat_                       (TRUE),
