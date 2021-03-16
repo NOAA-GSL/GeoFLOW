@@ -404,23 +404,23 @@ GSIZET in_poly(GTVector<GTPoint<T>> &verts, const GTVector<GTVector<T>> &x, cons
 template<typename T>
 GSIZET fuzzyeq(const GTVector<T> &v, T vcomp, T eps, GTVector<GSIZET> &ind)
 {
-  nfound=0;
+  GSIZET nfound=0;
 
   for ( auto j=0; j<v.size(); j++ ) {
-    nfound += FUZZEEQ(v[j], vcomp, eps) ? 1 : 0;
+    nfound += FUZZYEQ(v[j], vcomp, eps) ? 1 : 0;
   }
 
   ind.resizem(nfound);
   nfound = 0;
   for ( auto j=0; j<v.size(); j++ ) {
-    if ( FUZZEEQ(v[j], vcomp, eps) ) {
+    if ( FUZZYEQ(v[j], vcomp, eps) ) {
       ind[nfound++] = j;
     }
   }
 
   return nfound;
 
-} // end, methood fuzzyeq (1)
+} // end, method fuzzyeq (1)
 
 
 //**********************************************************************************
@@ -441,23 +441,46 @@ GSIZET fuzzyeq(const GTVector<T> &v, T vcomp, T eps, GTVector<GSIZET> &ind)
 template<typename T>
 GSIZET fuzzyeq(const GTVector<T> &v, const GTVector<GSIZET> &iv, T vcomp, T eps, GTVector<GSIZET> &ind)
 {
-  nfound=0;
+  GSIZET nfound=0;
 
   for ( auto j=0; j<iv.size(); j++ ) {
-    nfound += FUZZEEQ(v[iv[j]], vcomp, eps) ? 1 : 0;
+    nfound += FUZZYEQ(v[iv[j]], vcomp, eps) ? 1 : 0;
   }
 
   ind.resizem(nfound);
   nfound = 0;
   for ( auto j=0; j<iv.size(); j++ ) {
-    if ( FUZZEEQ(v[iv[j]], vcomp, eps) ) {
+    if ( FUZZYEQ(v[iv[j]], vcomp, eps) ) {
       ind[nfound++] = iv[j];
     }
   }
 
   return nfound;
 
-} // end, methood fuzzyeq (2)
+} // end, method fuzzyeq (2)
+
+
+//**********************************************************************************
+//**********************************************************************************
+
+// METHOD : convert
+// DESC   : Convert vector from one type to another
+// ARGS   : vold : old array
+//          vnew : new array
+// RETURNS: none.
+//**********************************************************************************
+template<typename TOLD, typename TNEW>
+void fuzzyeq(const GTVector<TOLD> &vold, GTVector<TNEW> &vnew)
+{
+
+  vnew.resize(vold.size());
+
+  for ( auto j=0; j<vold.size(); j++ ) {
+    vnew[j] = static_cast<TNEW>(vold[j]);
+  }
+
+} // end, method convert
+
 
  
 } // end, namespace

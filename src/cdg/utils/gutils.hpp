@@ -56,9 +56,12 @@ template<typename T>
 GSIZET in_poly(const GTVector<GTPoint<T>> &vertices, const GTVector<GTVector<T>> &x, const GTVector<GSIZET> &ix, T eps, GTVector<GSIZET> &ind);
 
 template<typename T>
-GSIZET fuzzyeq(const GTVector<T> &v, GFTYPE vcomp, T eps, GTVector<GSIZET> &ind);
+GSIZET fuzzyeq(const GTVector<T> &v, T vcomp, T eps, GTVector<GSIZET> &ind);
 template<typename T>
-GSIZET fuzzyeq(const GTVector<T> &v, const GTVector<GSIZET> &iv, GFTYPE vcomp, T eps, GTVector<GSIZET> &ind);
+GSIZET fuzzyeq(const GTVector<T> &v, const GTVector<GSIZET> &iv, T vcomp, T eps, GTVector<GSIZET> &ind);
+
+template<typename TOLD, typename TNEW>
+void convert(const GTVector<TOLD> &v, GTVector<TNEW> &vnew);
 
 } // end, namespace geoflow
 
