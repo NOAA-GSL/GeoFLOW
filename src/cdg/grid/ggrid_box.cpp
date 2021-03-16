@@ -925,27 +925,31 @@ void GGridBox::find_rank_subdomain()
 // METHOD : config_gbdy
 // DESC   : Configure 2d & 3d box boundary from ptree
 // ARGS   : 
-//          ptree  : main prop tree 
-//          igbdyf : For each natural/canonical global boundary face,
-//                   gives vector of global bdy ids. Allocated here.
-//          igbdyft: bdy type ids for each index in igbdyf. Allocated here.
-//          igbdy  : 'flat' version of igbdyf
+//          ptree   : main prop tree 
+//          bterrain: is this a restart (TRUE) or not FALSE)?
+//          igbdyf  : For each natural/canonical global boundary face,
+//                    gives vector of global bdy ids. Allocated here.
+//          igbdyft : bdy type ids for each index in igbdyf. Allocated here.
+//          igbdy   : 'flat' version of igbdyf
+//          degbdy  : 'node descriptor' for each point in igdby
 // RETURNS: none.
 //**********************************************************************************
 void GGridBox::config_gbdy(const PropertyTree           &ptree, 
-                           GBOOL                         findbdy,
+                           GBOOL                         bterrain,
                            GTVector<GTVector<GSIZET>>   &igbdyf, 
                            GTVector<GTVector<GBdyType>> &igbdyft,
                            GTVector<GSIZET>             &igbdy,
                            GTVector<GUINT>              &degbdy)
                           
 {
-   GEOFLOW_TRACE();
+  GEOFLOW_TRACE();
+
   // Cycle over all geometric boundaries, and configure:
   GBOOL              bret, bperiodic=FALSE;
   GSIZET             nind;
   GTVector<GBOOL>    buniform(2*GDIM);
   GTVector<GBdyType> bdytype(2*GDIM);
+  GTVector<GUINT>    utmp;
   GTVector<GSIZET>   ikeep, itmp;
   GTVector<GString>  bdynames (2*GDIM);
   std::vector<GString>
@@ -954,6 +958,23 @@ void GGridBox::config_gbdy(const PropertyTree           &ptree,
   PropertyTree       bdytree, gridptree;
   stBdyBlock         stblock;
   UpdateBasePtr      base_ptr;
+
+
+
+  // If doing re-doing with terrain, assume that the incomming 
+  // bdy spec (igbdy* and degbdy) is done, and just compute
+  // the normals:
+  // NOTE: Later, we'll have to check that PERIODIC bdy conditions
+  //       & terrain are consistent, but for now, we just assume
+  //       user has specified these properly
+  if  ( bterrain ) {
+    for ( auto j=0; j<2*GDIM; j++ ) { // over each canonical bdy
+      do_gbdy_normals(dXdXi_, igbdy,  degbdy, bdyNormals_, idepComp_); // all bdy nodes 
+    }
+    return;
+  }
+
+
 
   bdynames[0] = "bdy_x_0";
   bdynames[1] = "bdy_x_1";
@@ -982,14 +1003,16 @@ void GGridBox::config_gbdy(const PropertyTree           &ptree,
     sbdy         = gridptree.getValue<GString>(bdynames[j]);
     bdytree      = ptree.getPropertyTree(sbdy);
     bdyclass     = bdytree.getValue<GString>("bdy_class", "uniform");
-    find_gbdy_ind  (j, FALSE, ikeep, itmp, degbdy); // bdy node ids only
-    do_gbdy_normals(dXdXi_, itmp, bdyNormals_, idepClomp_); // all bdy nodes 
+    find_gbdy_ind  (j, FALSE, ikeep, itmp, utmp); // bdy node ids only
+    do_gbdy_normals(dXdXi_, itmp, utmp, bdyNormals_, idepComp_); // all bdy nodes 
     igbdyf [j].resize(itmp.size()); igbdyf [j] = itmp;
     igbdyft[j].resize(itmp.size()); igbdyft[j] = GBDY_NONE;
     nind = igbdy.size(); // current size
     igbdy.reserve(nind+itmp.size());
+    degbdy.reserve(nind+itmp.size());
     for ( auto k=0; k<itmp.size(); k++ ) {
       igbdy.push_back(itmp[k]);
+      degbdy.push_back(utmp[k]);
     }
     if ( "uniform" == bdyclass ) { // uniform bdy conditions
       geoflow::get_bdy_block(bdytree, stblock);
@@ -1140,36 +1163,36 @@ GBOOL GGridBox::on_global_edge(GINT iface, GTPoint<GFTYPE> &pt)
 // METHOD : do_gbdy_normals
 // DESC   : Compute normals to each domain bdy 
 // ARGS   : 
-//          igbdy    : vector of bdy indices into global volume fields 
-//          debdy    : array of node 'descriptions'
 //          dXdXi    : matrix of dX_i/dXi_j matrix elements, s.t.
 //                     dXdX_i(i,j) = dx^j/dxi^i
+//          igbdy    : vector of bdy indices into global volume fields 
+//          debdy    : array of node 'descriptions'
 //          normals  : vector of normal components
-//          depComp  : vector index dependent on the other indices (first 
+//          idepComp : vector index dependent on the other indices (first 
 //                     component index whose normal component is nonzero)
 // RETURNS: none
 //**********************************************************************************
-void GGridBox::do_gbdy_normals(const GTVector<GSIZET>           &igbdy,
+void GGridBox::do_gbdy_normals(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+                               const GTVector<GSIZET>           &igbdy,
                                const GTVector<GUINT>            &debdy,
-                               const GTMatrix<GTVector<GFTYPE>> &dXdXi,
                                GTVector<GTVector<GFTYPE>>       &normals,
-                               GTVector<GINT>                   &depComp)
+                               GTVector<GINT>                   &idepComp)
 {
   GEOFLOW_TRACE();
 
   GSIZET nbdy;
 
   nbdy = igbdy.size();
-  depComp.resize(nbdy);
+  idepComp.resize(nbdy);
   for ( auto j=0; j<normals.size(); j++ ) normals[j].resize(nbdy);
 
 
   // Compute global boundary normals and associated data:
 
 #if defined(_G_IS2D)
-  do_gbdy_normals2d(igbdy, debdy, dXdXi, normals, depComp);
+  do_gbdy_normals2d(dXdXi, igbdy, debdy, normals, idepComp);
 #elif defined(_G_IS3D)
-  do_gbdy_normals3d(igbdy, debdy, dXdXi, normals, depComp);
+  do_gbdy_normals3d(dXdXi, igbdy, debdy, normals, idepComp);
 #else
   #error Invalid problem dimensionality
 #endif
@@ -1191,12 +1214,12 @@ void GGridBox::do_gbdy_normals(const GTVector<GSIZET>           &igbdy,
 //          coordinate directions. This method should be called 
 //          after terrain is added.
 // ARGS   : 
-//          igbdy    : vector of bdy indices into global volume fields 
-//          debdy    : array of node 'descriptions', with dimension of igbdy
 //          dXdXi    : matrix of dX_i/dXi_j matrix elements, s.t.
 //                     dXdX_i(i,j) = dx^j/dxi^i
+//          igbdy    : vector of bdy indices into global volume fields 
+//          debdy    : array of node 'descriptions', with dimension of igbdy
 //          normals  : vector of normal components, each of dim of igbdy
-//          depComp  : vector index dependent on the other indices (first 
+//          idepComp : vector index dependent on the other indices (first 
 //                     component index whose normal component is nonzero)
 //          Note:
 //          dXdXi   : matrix of dX_i/dXi_j matrix elements, s.t.
@@ -1204,14 +1227,14 @@ void GGridBox::do_gbdy_normals(const GTVector<GSIZET>           &igbdy,
 //                    must be computed prior to entry.
 // RETURNS: none
 //**********************************************************************************
-void GGridBox::do_gbdy_normals2d(const GTVector<GSIZET>           &igbdy,
+void GGridBox::do_gbdy_normals2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+                                 const GTVector<GSIZET>           &igbdy,
                                  const GTVector<GUINT>            &debdy,
-                                 const GTMatrix<GTVector<GFTYPE>> &dXdXi,
                                  GTVector<GTVector<GFTYPE>>       &normals,
-                                 GTVector<GINT>                   &depComp)
+                                 GTVector<GINT>                   &idepComp)
 {
    GEOFLOW_TRACE();
-   GINT            ib, ip;
+   GINT            ib, ic, ip;
    GUINT           id;
    GFTYPE          tiny;
    GFTYPE          xm;
@@ -1232,7 +1255,7 @@ void GGridBox::do_gbdy_normals2d(const GTVector<GSIZET>           &igbdy,
        xm = id == 1 || id == 2 ? 1.0 : -1.0;
        for ( auto i=0; i<normals.size(); i++ ) normals[i][j] = 0.0; 
        normals[ip][j] = xm;
-       depComp    [j] = ip; // dependent component
+       idepComp   [j] = ip; // dependent component
      }
    }
    else if ( this->gtype_ == GE_DEFORMED ) {
@@ -1251,7 +1274,7 @@ void GGridBox::do_gbdy_normals2d(const GTVector<GSIZET>           &igbdy,
        for ( ic=0; ic<GDIM; ic++ ) if ( fabs(xp[ic]) > tiny ) break;
        assert(ic >= GDIM); // no normal components > 0
        for ( auto i=0; i<normals.size(); i++ ) normals[i][j] = xp[i];
-       depComp[j] = ic;  // dependent component
+       idepComp[j] = ic;  // dependent component
      }
    }
    else if ( this->gtype_ == GE_2DEMBEDDED ) {
@@ -1271,7 +1294,7 @@ void GGridBox::do_gbdy_normals2d(const GTVector<GSIZET>           &igbdy,
        for ( ic=0; ic<xp.dim(); ic++ ) if ( fabs(xp[ic]) > tiny ) break;
        assert(ic >= GDIM); // no normal components > 0
        for ( auto i=0; i<normals.size(); i++ ) normals[i][j] = xp[i];
-       depComp[j] = ic;  // dependent component
+       idepComp[j] = ic;  // dependent component
      }
    }
 
@@ -1296,15 +1319,15 @@ void GGridBox::do_gbdy_normals2d(const GTVector<GSIZET>           &igbdy,
 //          dXdXi    : matrix of dX_i/dXi_j matrix elements, s.t.
 //                     dXdX_i(i,j) = dx^j/dxi^i
 //          normals  : vector of normal components, each of dim of igbdy
-//          depComp  : vector index dependent on the other indices (first 
+//          idepComp : vector index dependent on the other indices (first 
 //                     component index whose normal component is nonzero)
 // RETURNS: none
 //**********************************************************************************
-void GGridBox::do_gbdy_normals3d(const GTVector<GSIZET>           &igbdy,
+void GGridBox::do_gbdy_normals3d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+                                 const GTVector<GSIZET>           &igbdy,
                                  const GTVector<GUINT>            &debdy,
-                                 const GTMatrix<GTVector<GFTYPE>> &dXdXi,
                                  GTVector<GTVector<GFTYPE>>       &normals,
-                                 GTVector<GINT>                   &depComp)
+                                 GTVector<GINT>                   &idepComp)
 {
    GEOFLOW_TRACE();
    GSIZET          ib, ic, ip; 
@@ -1326,7 +1349,7 @@ void GGridBox::do_gbdy_normals3d(const GTVector<GSIZET>           &igbdy,
        xm = id == 1 || id == 2 || id == 5 ? 1.0 : -1.0;
        for ( auto i=0; i<normals.size(); i++ ) normals[i][j] = 0.0; 
        normals[ip][j] = xm;
-       depComp    [j] = ip; // dependent component
+       idepComp   [j] = ip; // dependent component
      }
    }
    else if ( this->gtype_ == GE_DEFORMED ) {
@@ -1343,7 +1366,7 @@ void GGridBox::do_gbdy_normals3d(const GTVector<GSIZET>           &igbdy,
        for ( ic=0; ic<xp.dim(); ic++ ) if ( fabs(xp[ic]) > tiny ) break;
        assert(ic >= GDIM); // no normal components > 0
        for ( auto i=0; i<normals.size(); i++ ) normals[i][j] = xp[i];
-       depComp[j] = ic;  // dependent component
+       idepComp[j] = ic;  // dependent component
      }
    }
 
@@ -1421,7 +1444,7 @@ void GGridBox::find_gbdy_ind2d(GINT bdyid, GBOOL bunique,
   
   nkeep = ikeep.size();
   
-  ntmp  = bunique ? xNodes_[0].size(); 
+  ntmp  = bunique ? xNodes_[0].size()
         : xNodes_[0].size() + pow(2,GDIM) + (GDIM > 2 ? 2*GDIM : 0);
   itmp.resize(ntmp);
   if ( bunique ) ktmp.resize(ntmp);
@@ -1461,7 +1484,7 @@ void GGridBox::find_gbdy_ind2d(GINT bdyid, GBOOL bunique,
   for ( auto e=0; e<gelems_.size(); e++ ) { 
     xlnodes= &gelems_[e]->xNodes();
     nnodes = gelems_[e]->nnodes();
-    nind   = geoflow::in_poly(v, *xlnodes, ind); // get indices on segment
+    nind   = geoflow::in_seg<GFTYPE>(v, *xlnodes, ind); // get indices on segment
     // For each index on bdy, set description:
     for ( auto i=0; i<nind; i++ ) { 
       xp.assign(*xlnodes, ind[i]);
@@ -1530,7 +1553,7 @@ void GGridBox::find_gbdy_ind3d(GINT bdyid, GBOOL bunique,
   assert(bdyid >=0 && bdyid < 2*GDIM);
 
   GBOOL             bexist, bglobale, bglobalv;
-  GUINT             ev[4][2]; ie[4]; 
+  GUINT             ev[4][2]; 
   GUINT             ivert;
   GSIZET            ie, istart, nbdy, nind, nind1, nkeep, ntmp, nnodes;
   GTVector<GUINT>   utmp;
@@ -1542,7 +1565,7 @@ void GGridBox::find_gbdy_ind3d(GINT bdyid, GBOOL bunique,
   
   nkeep = ikeep.size();
   
-  ntmp  = bunique ? xNodes_[0].size(); 
+  ntmp  = bunique ? xNodes_[0].size()
         : xNodes_[0].size() + pow(2,GDIM) + (GDIM > 2 ? 2*GDIM : 0);
   itmp.resize(ntmp);
   if ( bunique ) ktmp.resize(ntmp);
@@ -1562,60 +1585,60 @@ void GGridBox::find_gbdy_ind3d(GINT bdyid, GBOOL bunique,
       v [1][0] = P1_[0]; v [1][1] = P0_[1]; v [1][2] = P0_[2];
       v [2][0] = P1_[0]; v [2][1] = P0_[1]; v [2][2] = P1_[2];
       v [3][0] = P0_[0]; v [3][1] = P0_[1]; v [3][2] = P1_[2];
-      ev[0][0] = 0     ; ev[0][1] = 1; ie[0] = 0; // edge vertices, edge id
-      ev[1][0] = 1     ; ev[1][1] = 2; ie[1] = 9;  
-      ev[2][0] = 3     ; ev[2][1] = 2; ie[2] = 4; 
-      ev[3][0] = 0     ; ev[3][1] = 3; ie[3] = 8;  
+      ev[0][0] = 0     ; ev[0][1] = 1; // edge vertices ids
+      ev[1][0] = 1     ; ev[1][1] = 2;
+      ev[2][0] = 3     ; ev[2][1] = 2;
+      ev[3][0] = 0     ; ev[3][1] = 3;
       break;
     case 1: 
       v [0][0] = P1_[0]; v [0][1] = P0_[1]; v [0][2] = P0_[2]; 
       v [1][0] = P1_[0]; v [1][1] = P1_[1]; v [1][2] = P0_[2];
       v [2][0] = P1_[0]; v [2][1] = P1_[1]; v [2][2] = P1_[2];
       v [3][0] = P1_[0]; v [3][1] = P0_[1]; v [3][2] = P0_[2];
-      ev[0][0] = 0; ev[0][1] = 1; ie[0] = 1;
-      ev[1][0] = 1; ev[1][1] = 2; ie[1] = 10;
-      ev[2][0] = 3; ev[2][1] = 2; ie[2] = 5;
-      ev[3][0] = 0; ev[3][1] = 3; ie[3] = 9;
+      ev[0][0] = 0; ev[0][1] = 1;
+      ev[1][0] = 1; ev[1][1] = 2;
+      ev[2][0] = 3; ev[2][1] = 2;
+      ev[3][0] = 0; ev[3][1] = 3;
       break;
     case 2: 
       v [0][0] = P0_[0]; v [0][1] = P1_[1]; v [0][2] = P0_[2]; 
       v [1][0] = P1_[0]; v [1][1] = P1_[1]; v [1][2] = P0_[2];
       v [2][0] = P1_[0]; v [2][1] = P1_[1]; v [2][2] = P1_[2];
       v [3][0] = P0_[0]; v [3][1] = P1_[1]; v [3][2] = P1_[2];
-      ev[0][0] = 0; ev[0][1] = 1; ie[0] = 2;
-      ev[1][0] = 1; ev[1][1] = 2; ie[1] = 10;
-      ev[2][0] = 3; ev[2][1] = 2; ie[2] = 11;
-      ev[3][0] = 0; ev[3][1] = 3; ie[3] = 8;
+      ev[0][0] = 0; ev[0][1] = 1;
+      ev[1][0] = 1; ev[1][1] = 2;
+      ev[2][0] = 3; ev[2][1] = 2; 
+      ev[3][0] = 0; ev[3][1] = 3;
       break;
     case 3:
       v [0][0] = P0_[0]; v [0][1] = P0_[1]; v [0][2] = P0_[2]; 
       v [1][0] = P0_[0]; v [1][1] = P1_[1]; v [1][2] = P0_[2];
       v [2][0] = P0_[0]; v [2][1] = P1_[1]; v [2][2] = P1_[2];
       v [3][0] = P0_[0]; v [3][1] = P0_[1]; v [3][2] = P1_[2];
-      ev[0][0] = 0; ev[0][1] = 1; ie[0] = 3;
-      ev[1][0] = 1; ev[1][1] = 2; ie[1] = 11;
-      ev[2][0] = 3; ev[2][1] = 2; ie[2] = 7;
-      ev[3][0] = 0; ev[3][1] = 3; ie[3] = 8;
+      ev[0][0] = 0; ev[0][1] = 1; 
+      ev[1][0] = 1; ev[1][1] = 2; 
+      ev[2][0] = 3; ev[2][1] = 2;
+      ev[3][0] = 0; ev[3][1] = 3;
       break;
     case 4: 
       v [0][0] = P0_[0]; v [0][1] = P0_[1]; v [0][2] = P0_[2]; 
       v [1][0] = P1_[0]; v [1][1] = P0_[1]; v [1][2] = P0_[2];
       v [2][0] = P1_[0]; v [2][1] = P1_[1]; v [2][2] = P0_[2];
       v [3][0] = P0_[0]; v [3][1] = P1_[1]; v [3][2] = P0_[2];
-      ev[0][0] = 0; ev[0][1] = 1; ie[0] = 0;
-      ev[1][0] = 1; ev[1][1] = 2; ie[1] = 1;
-      ev[2][0] = 3; ev[2][1] = 2; ie[2] = 2;
-      ev[3][0] = 0; ev[3][1] = 3; ie[3] = 3;
+      ev[0][0] = 0; ev[0][1] = 1;
+      ev[1][0] = 1; ev[1][1] = 2;
+      ev[2][0] = 3; ev[2][1] = 2;
+      ev[3][0] = 0; ev[3][1] = 3;
       break;
     case 5: 
       v [0][0] = P0_[0]; v [0][1] = P0_[1]; v [0][2] = P1_[2]; 
       v [1][0] = P1_[0]; v [1][1] = P0_[1]; v [1][2] = P1_[2];
       v [2][0] = P1_[0]; v [2][1] = P1_[1]; v [2][2] = P1_[2];
       v [3][0] = P0_[0]; v [3][1] = P1_[1]; v [3][2] = P1_[2];
-      ev[0][0] = 0; ev[0][1] = 1; ie[0] = 4;
-      ev[1][0] = 1; ev[1][1] = 2; ie[1] = 5;
-      ev[2][0] = 3; ev[2][1] = 2; ie[2] = 6;
-      ev[3][0] = 0; ev[3][1] = 3; ie[3] = 7;
+      ev[0][0] = 0; ev[0][1] = 1;
+      ev[1][0] = 1; ev[1][1] = 2;
+      ev[2][0] = 3; ev[2][1] = 2;
+      ev[3][0] = 0; ev[3][1] = 3;
       break;
     default:
       assert(FALSE);
@@ -1627,7 +1650,7 @@ void GGridBox::find_gbdy_ind3d(GINT bdyid, GBOOL bunique,
   for ( auto e=0; e<gelems_.size(); e++ ) { 
     xlnodes= &gelems_[e]->xNodes();
     nnodes = gelems_[e]->nnodes();
-    nind   = geoflow::in_poly(v, *xlnodes, eps_, ind); // get indices on domain surface
+    nind   = geoflow::in_poly<GFTYPE>(v, *xlnodes, eps_, ind); // get indices on domain surface
     // For each index on bdy, set description:
     for ( auto i=0; i<nind; i++ ) { 
       xp.assign(*xlnodes, ind[i]);
@@ -1682,9 +1705,9 @@ void GGridBox::elem_bdy_data(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
 {
     
 #if defined(_G_IS2D)
-  elembdy_info2d(dXdXi, gieface, face_mass, normals);
+  elem_bdy_data2d(dXdXi, gieface, face_mass, normals);
 #elif defined (_G_IS3D)
-  elembdy_info3d(dXdXi, gieface, face_mass, normals);
+  elem_bdy_data3d(dXdXi, gieface, face_mass, normals);
 #else
   #error "Dimensionality undefined"
 #endif
@@ -1730,7 +1753,7 @@ void GGridBox::elem_bdy_data2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
    nbdy = 0;
    for ( auto e=0; e<gelems_.size(); e++ ) {
      for ( auto j=0; j<gelems_[e]->nfaces(); j++ ) {
-       nbdy += = gelems_[e]->face_indices(j).size(();
+       nbdy += gelems_[e]->face_indices(j).size();
      }
    }
    gieface.resize(nbdy);
@@ -1822,10 +1845,10 @@ void GGridBox::elem_bdy_data3d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
    GEOFLOW_TRACE();
 
    // Reference coords for each face:
-   GUINT             if2r[2*GDIM][2] = { {0,2}, {1,2}, {0,2}, 
-                                         {1,2}, {0,1}, {0,1} }; 
+   GUINT             if2r[6][2] = { {0,2}, {1,2}, {0,2}, 
+                                    {1,2}, {0,1}, {0,1} }; 
    // normal direction for each rergular face:
-   GUINT             if2n[2*GDIM]    = { 0, 1, 0, 1, 2, 2 };
+   GUINT             if2n[6]    = { 0, 1, 0, 1, 2, 2 };
    GINT              ib, ip;
    GSIZET            istart, nbdy, n;
    GFTYPE            tiny;
@@ -1844,7 +1867,7 @@ void GGridBox::elem_bdy_data3d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
    nbdy = 0;
    for ( auto e=0; e<gelems_.size(); e++ ) {
      for ( auto j=0; j<gelems_[e]->nfaces(); j++ ) {
-       nbdy += = gelems_[e]->face_indices(j).size(();
+       nbdy += gelems_[e]->face_indices(j).size();
      }
    }
    gieface  .resize(nbdy);

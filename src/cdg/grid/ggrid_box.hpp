@@ -51,14 +51,16 @@ public:
         void                periodize();                                     // periodize coords, if allowed
         void                unperiodize();                                   // un-periodize coords, if allow
         void                config_gbdy(const geoflow::tbox::PropertyTree &ptree,
+                              GBOOL                         bterrain,
                               GTVector<GTVector<GSIZET>>   &igbdyf, 
                               GTVector<GTVector<GBdyType>> &igbdyt,
-                              GTVector<GSIZET>             &igbdy);     // config bdy
+                              GTVector<GSIZET>             &igbdy,
+                              GTVector<GUINT>              &degbdy);         // config bdy
         void                elem_bdy_data(
                               const GTMatrix<GTVector<GFTYPE>> &dXdXi,
                               GTVector<GSIZET>                 &gieface,
                               GTVector<GFTYPE>                 &face_mass,
-                              GTVector<GTVector<GFTYPE>>       &normals);          // compute elem face data
+                              GTVector<GTVector<GFTYPE>>       &normals);    // compute elem face data
 const    GTPoint<GFTYPE>   &getP0() {return P0_; }                           // get blob bdy point 
 const    GTPoint<GFTYPE>   &getP1() {return P1_; }                           // get blob bdy point 
 
@@ -95,16 +97,19 @@ private:
         void                do_gbdy_normals  (
                                const GTMatrix<GTVector<GFTYPE>> &dXdXi,
                                const GTVector<GSIZET>           &igbdy,
-                               const GTVector<GTVector<GFTYPE>> &normals,
+                               const GTVector<GUINT>            &degbdy,
+                                     GTVector<GTVector<GFTYPE>> &normals,
                                GTVector<GINT>                   &idepComp); // compute normals entry point
          void               do_gbdy_normals2d(
                               const GTMatrix<GTVector<GFTYPE>> &dXdXi,
                               const GTVector<GSIZET>           &igbdy,
+                              const GTVector<GUINT>            &degbdy,
                               GTVector<GTVector<GFTYPE>>       &normals,
                               GTVector<GINT>                   &idepComp);  // compute normals to doimain bdy in 2d
          void               do_gbdy_normals3d(
                               const GTMatrix<GTVector<GFTYPE>> &dXdXi,
                               const GTVector<GSIZET>           &igbdy,
+                              const GTVector<GUINT>            &degbdy,
                               GTVector<GTVector<GFTYPE>>       &normals,
                               GTVector<GINT>                   &idepComp);       // compute normals to doimain bdy in 3d
         void                find_rank_subdomain();                               // find task's default subdomain

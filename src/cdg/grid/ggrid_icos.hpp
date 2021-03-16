@@ -70,9 +70,11 @@ public:
         void                print(const GString &filename, 
                             GCOORDSYST icoord=GICOS_LATLONG);             // print grid to file
         void                config_gbdy(const geoflow::tbox::PropertyTree &ptree,
-                              GTVector<GTVector<GSIZET>>   &igbdyf,
-                              GTVector<GBdyType>           &igbdyt,
-                              GTVector<GSIZET>             &igbdy);       // config global bdy
+                            GBOOL                         bterrain,
+                            GTVector<GTVector<GSIZET>>   &igbdyf,
+                            GTVector<GTVector<GBdyType>> &igbdyft,
+                            GTVector<GSIZET>             &igbdy,
+                            GTVector<GUINT>              &degbdy);        // configure domain/global bdy
         void                elem_gbdy_data(
                               const GTMatrix<GTVector<GFTYPE>> &dXdXi,
                               GTVector<GSIZET>                 &igeface,
@@ -175,15 +177,15 @@ friend  std::ostream&       operator<<(std::ostream&, GGridIcos &);         // O
                               GTVector<GTVector<GFTYPE>>       &normals); // compute 3d elem face data
 
          void               do_gbdy_normals(
+                               const GTMatrix<GTVector<GFTYPE>> &dXdXi,
                                const GTVector<GSIZET>           &igbdy,
                                const GTVector<GUINT>            &debdy,
-                               const GTMatrix<GTVector<GFTYPE>> &dXdXi,
                                GTVector<GTVector<GFTYPE>>       &normals,
                                GTVector<GINT>                   &depComp);
          void               do_gbdy_normals3d(
+                               const GTMatrix<GTVector<GFTYPE>> &dXdXi,
                                const GTVector<GSIZET>           &igbdy,
                                const GTVector<GUINT>            &debdy,
-                               const GTMatrix<GTVector<GFTYPE>> &dXdXi,
                                GTVector<GTVector<GFTYPE>>       &normals,
                                GTVector<GINT>                   &depComp);
 
