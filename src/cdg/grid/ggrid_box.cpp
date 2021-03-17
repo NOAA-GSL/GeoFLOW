@@ -1264,6 +1264,7 @@ void GGridBox::do_gbdy_normals2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
        for ( auto i=0; i<normals.size(); i++ ) normals[i][j] = 0.0; 
        normals[ip][j] = xm;
        idepComp   [j] = ip; // dependent component
+//cout << "GGridBox::do_gbdy_normals: ib=" << ib << " ihost=" << id << " iperp=" << ip << " xm=" << xm << endl;
      }
    }
    else if ( this->gtype_ == GE_DEFORMED ) {
