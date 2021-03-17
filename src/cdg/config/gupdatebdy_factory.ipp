@@ -34,7 +34,7 @@ GUpdateBdyFactory<Types>::build(const PropertyTree& ptree, GString &supdate, Gri
     || ""             == supdate ) {
     using UpdateImpl = NullUpdateBdy<Types>;
 
-    // Allocate observer Implementation
+    // Allocate update Implementation
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl());
 
     // Set back to base type
@@ -167,7 +167,7 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree& ptree, GString &supd
       traits.callback = GUpdateBdyFactory<Types>::get_inflow_callback(sblock, id);
     }
     traits.ptree = ptree;
-    // Allocate observer Implementation
+    // Allocate update Implementation
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
 
     // Set back to base type
@@ -185,7 +185,7 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree& ptree, GString &supd
       traits.compute_once = sptree.getValue<GBOOL>("compute_once");
     }
     
-    // Allocate observer Implementation
+    // Allocate update Implementation
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
 
     // Set back to base type
@@ -198,11 +198,11 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree& ptree, GString &supd
 
     traits.istate.resize(nstate); traits.istate = istate;
     traits.bdyid  = id;
-    traits.ibdyvol = ibdy;
+    traits.ibdyvol.resize(ibdy.size()); traits.ibdyvol = ibdy;
     traits.ibdyloc.resize(traits.ibdyvol.size());
     // Find index of ibdyvol in global bdy vector:
     for ( auto j=0; j<traits.ibdyloc.size(); j++ ) {
-      iloc = igbdy->findlast(traits.ibdyvol[j]);
+      iloc = igbdy->findfirst(traits.ibdyvol[j]);
       assert(iloc >= 0);
       traits.ibdyloc[j] = iloc;
     }
@@ -210,7 +210,7 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree& ptree, GString &supd
       traits.compute_once = sptree.getValue<GBOOL>("compute_once");
     }
     
-    // Allocate observer Implementation
+    // Allocate update Implementation
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
 
     // Set back to base type
@@ -229,7 +229,7 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree& ptree, GString &supd
       traits.compute_once = sptree.getValue<GBOOL>("compute_once");
     }
     
-    // Allocate observer Implementation
+    // Allocate update Implementation
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
 
     // Set back to base type
@@ -266,7 +266,7 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree& ptree, GString &supd
     if ( traits.idir < 0 ) traits.ro = xmin[abs(traits.idir)-1];
     else                   traits.ro = xmax[abs(traits.idir)-1];
 
-    // Allocate observer Implementation
+    // Allocate update Implementation
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
 
     // Set back to base type
