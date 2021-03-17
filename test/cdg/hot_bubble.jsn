@@ -93,7 +93,7 @@
   },
   "dissipation_traits": {
     "nu"      : 4000.0,
-    "kappa"   : 4000.0, 
+    "eta"     : 4000.0, 
     "zeta"    : 4000.0, 
     "lambda"  : 4000.0, 
     "nu_type" : "constant"

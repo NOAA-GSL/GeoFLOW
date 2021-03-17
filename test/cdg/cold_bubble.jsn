@@ -53,7 +53,7 @@
     "grid_name" : "grid_box",
     "xyz0"      : [-25600, 0, 0],
     "delxyz"    : [51200.0, 10000.0, 1.0],
-    "num_elems" : [256, 50, 1],
+    "num_elems" : [128, 25, 1],
     "bdy_x_0"   : "0-flux",
     "bdy_x_1"   : "0-flux",
     "bdy_y_0"   : "0-flux",
@@ -75,7 +75,7 @@
   },
   "dissipation_traits": {
     "nu"      : 100.0,
-    "kappa"   : 100.0,
+    "eta"     : 100.0,
     "zeta"    : 100.0,
     "lambda"  : 100.0,
     "nu_type" : "constant"
@@ -116,8 +116,8 @@
     "observer_name"      : "gio_observer",
     "idir"               : "outs",
     "odir"               : "outs",
-    "cadence_type"       : "time",
-    "cycle_interval"     : 100,
+    "cadence_type"       : "cycle",
+    "cycle_interval"     : 1,
     "time_interval"      : 10.0,
     "state_names"        : ["s1", "s2", "e", "d"],
     "grid_names"         : ["xgrid", "ygrid", "zgrid"],
