@@ -605,10 +605,10 @@ void GMConv<TypePack>::init_impl(State &u, State &tmp)
   // this is set to be constant, based on configuration,
   // even though the solver can accommodate spatially
   // variable dissipation:
-  nu_.resize(1);
-  nu_ = traits_.nu;
-  kappa_.resize(1);
-  kappa_ = traits_.kappa;
+  nu_  .resize(1);
+  nu_  = traits_.nu;
+  eta_ .resize(1);
+  eta_ = traits_.eta;
 
   // Find no. state and solve members, and component types:
   for( auto j=0; j<v_.size(); j++ ) icomptype->push_back(GSC_KINETIC); 
@@ -731,12 +731,13 @@ void GMConv<TypePack>::init_impl(State &u, State &tmp)
 //ghelm_      = new GHelmholtz(*grid_);
   
   typename GStressEnOp<TypePack>::Traits trstress;
+  trstress.type       = GStressEnOp<TypePack>::GSTRESS_REDUCED;
   trstress.Stokes_hyp = traits_.Stokeshyp;
   trstress.indep_diss = traits_.bindepdiss;
-  trstress.mu    .resize(nu_   .size());  trstress.mu    = nu_;
-  trstress.zeta  .resize(nu_   .size());  trstress.zeta  = traits_.zeta; 
-  trstress.kappa .resize(kappa_.size());  trstress.kappa = kappa_;
-  trstress.lambda.resize(kappa_.size());  trstress.lambda= traits_.lambda;
+  trstress.nu    .resize(nu_  .size());  trstress.nu    = nu_;
+  trstress.zeta  .resize(nu_  .size());  trstress.zeta  = traits_.zeta; 
+  trstress.eta   .resize(eta_ .size());  trstress.eta   = eta_;
+  trstress.lambda.resize(eta_ .size());  trstress.lambda= traits_.lambda;
   gstressen_  = new GStressEnOp<TypePack>(trstress, *grid_);
 
   if ( traits_.isteptype ==  GSTEPPER_EXRK ) {

@@ -153,7 +153,7 @@ public:
           GFTYPE          P0_base     = 1000.0; // base state ref pressure (mb)
           GFTYPE          courant     = 0.5;    // Courant factor
           GFTYPE          nu          = 0.0;    // shear viscosity constant
-          GFTYPE          kappa       = 0.0;    // energy-shear visc constant
+          GFTYPE          eta         = 0.0;    // energy-shear visc constant
           GFTYPE          zeta        = 0.0;    // mom bulk viscosity constant
           GFTYPE          lambda      = 0.0;    // energy bulk shear visc const
           GTVector<GINT>  iforced;              // state comps to force
@@ -168,7 +168,7 @@ public:
         GMConv &operator=(const GMConv &bu) = default;
 
         StateComp           &get_nu() { return nu_; };                       // Set nu/viscosity
-        StateComp           &get_kappa() { return kappa_; };                 // Set nu/viscosity
+        StateComp           &get_eta() { return eta_; };                     // Set nu/viscosity
 
         void                set_steptop_callback(
                             std::function<void(const Time &t, State &u, 
@@ -258,7 +258,7 @@ inline  GINT                szrhstmp();
         GTVector<GString>
                             valid_types_;   // valid stepping methods supported
         GTVector<GFTYPE>    nu_   ;         // KE dissipoation
-        GTVector<GFTYPE>    kappa_;         // internal energy dissipoation
+        GTVector<GFTYPE>    eta_;           // internal energy dissipoation
         GTVector<GFTYPE>    dxmin_ ;        // element face mins
         GTVector<GFTYPE>    maxbyelem_ ;    // element-based maxima for dt
         std::vector<GINT>   stdiforced_;    // traits_.iforced as a std::vector
