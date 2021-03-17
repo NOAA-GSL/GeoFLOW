@@ -976,8 +976,6 @@ void GGridIcos::config_gbdy(const geoflow::tbox::PropertyTree &ptree,
     bdyclass     = bdytree.getValue<GString>("bdy_class", "uniform");
     find_gbdy_ind3d(rbdy[j], itmp, utmp); // bdy node ids only
 
-    do_gbdy_normals(dXdXi_, itmp, utmp, bdyNormals_, idepComp_); 
-
     igbdyf [j].resize(itmp.size()); igbdyf [j] = itmp;
     igbdyft[j].resize(itmp.size()); igbdyft[j] = GBDY_NONE;
     nind = 0;
@@ -1025,6 +1023,9 @@ void GGridIcos::config_gbdy(const geoflow::tbox::PropertyTree &ptree,
       assert(FALSE && "Invalid bdy_class");
     }
   } // end, canonical bdy loop
+
+  // With global list of domain boundaries, compute bdy data:
+  do_gbdy_normals(dXdXi_, igbdy, degbdy, bdyNormals_, idepComp_); 
 
 } // end of method config_gbdy
 

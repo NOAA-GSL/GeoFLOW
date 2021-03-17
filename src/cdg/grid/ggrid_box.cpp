@@ -1005,7 +1005,6 @@ void GGridBox::config_gbdy(const PropertyTree           &ptree,
     bdytree      = ptree.getPropertyTree(sbdy);
     bdyclass     = bdytree.getValue<GString>("bdy_class", "uniform");
     find_gbdy_ind  (j, FALSE, ikeep, itmp, utmp); // bdy node ids only
-    do_gbdy_normals(dXdXi_, itmp, utmp, bdyNormals_, idepComp_); // all bdy nodes 
     igbdyf [j].resize(itmp.size()); igbdyf [j] = itmp;
     igbdyft[j].resize(itmp.size()); igbdyft[j] = GBDY_NONE;
     nind = igbdy.size(); // current size
@@ -1059,7 +1058,11 @@ void GGridBox::config_gbdy(const PropertyTree           &ptree,
 
 
   } // end, global bdy face loop
-cout << "GridBox::config_gbdy: igbdy=" << igbdy << endl;
+
+//cout << "GridBox::config_gbdy: igbdy=" << igbdy << endl;
+
+  // With global list of domain boundaries, compute bdy data:
+  do_gbdy_normals(dXdXi_, igbdy, degbdy, bdyNormals_, idepComp_); // all bdy nodes 
 
   if ( bperiodic ) {
     if ( ndim_ == 2 ) {
@@ -1185,7 +1188,10 @@ void GGridBox::do_gbdy_normals(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
 
   nbdy = igbdy.size();
   idepComp.resize(nbdy);
-  for ( auto j=0; j<normals.size(); j++ ) normals[j].resize(nbdy);
+  for ( auto j=0; j<normals.size(); j++ ) {
+    normals[j].resize(nbdy);
+    normals[j] = 0.0;
+  }
 
 
   // Compute global boundary normals and associated data:
@@ -1245,6 +1251,7 @@ void GGridBox::do_gbdy_normals2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
    kp    = 0.0;
    kp[2] = 1.0; // k-vector
 
+
    // Normals depend on element type:
    if ( this->gtype_ == GE_REGULAR ) {
      // All normal components are 0, except the one
@@ -1252,7 +1259,7 @@ void GGridBox::do_gbdy_normals2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
      for ( auto j=0; j<igbdy.size(); j++ ) { // all points on iedge
        ib = igbdy[j];
        id = GET_NDHOST(debdy[j]); // host face id
-       ip = id % 2;
+       ip = (id+1) % 2;
        xm = id == 1 || id == 2 ? 1.0 : -1.0;
        for ( auto i=0; i<normals.size(); i++ ) normals[i][j] = 0.0; 
        normals[ip][j] = xm;
