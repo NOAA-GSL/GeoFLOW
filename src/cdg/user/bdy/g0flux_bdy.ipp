@@ -103,6 +103,8 @@ GBOOL G0FluxBdy<Types>::update_impl(
     ind  = (*igbdy)[j];            // index into volume array
     idd  = (*idep)[iloc];          // dependent vector component
 
+//if ( ind == 0 ) cout << " G0Flux:: ind=" << ind << endl;
+
     if ( idd >= 0 ) {
       xn   = (*bdyNormals)[idd][iloc];// n_idd == normal component for dependent vector comp
       sum  = 0.0;
@@ -113,6 +115,7 @@ GBOOL G0FluxBdy<Types>::update_impl(
     
       // Ensure v.n = 0:
 //    (*u[idd])[ind] = ( sum + (*bdyNormals)[idd][iloc] * (*u[idd])[ind] ) / xn;
+if ( ind == 0 && sum > 1e-4 ) cout << "G0Flux: u=" << sum/xn << endl;
       (*u[idd])[ind] = -sum / xn;
     }
     else {
