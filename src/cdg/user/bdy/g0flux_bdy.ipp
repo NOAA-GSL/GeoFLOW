@@ -115,7 +115,7 @@ GBOOL G0FluxBdy<Types>::update_impl(
     
       // Ensure v.n = 0:
 //    (*u[idd])[ind] = ( sum + (*bdyNormals)[idd][iloc] * (*u[idd])[ind] ) / xn;
-if ( ind == 0 && sum > 1e-4 ) cout << "G0Flux: u=" << sum/xn << endl;
+//if ( ind == 0 && sum > 1e-4 ) cout << "G0Flux: u=" << sum/xn << endl;
       (*u[idd])[ind] = -sum / xn;
     }
     else {
