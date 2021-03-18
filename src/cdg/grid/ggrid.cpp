@@ -1116,7 +1116,7 @@ void GGrid::deriv(GTVector<GFTYPE> &u, GINT idir, GTVector<GFTYPE> &utmp,
 // RETURNS: none.
 //**********************************************************************************
 void GGrid::wderiv(GTVector<GFTYPE> &u, GINT idir, GBOOL dotrans, 
-                  GTVector<GFTYPE> &utmp, GTVector<GFTYPE> &du)
+                   GTVector<GFTYPE> &utmp, GTVector<GFTYPE> &du)
 {
   GEOFLOW_TRACE();
   assert(bInitialized_ && "Object not inititialized");
@@ -1326,6 +1326,7 @@ void GGrid::init_bc_info(GBOOL bterrain)
   // specification, for _each_ natural/canonical domain face.
   // Bdy normals etc. are also computed internally:
   config_gbdy(ptree_, bterrain, igbdy_bdyface_, igbdyt_bdyface_, igbdy_, degbdy_);
+
 
   // Flatten bdy index indirection array; this is
   // done in child classes, and stored in igbdy_.

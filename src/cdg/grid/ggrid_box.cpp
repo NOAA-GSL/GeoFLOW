@@ -946,7 +946,7 @@ void GGridBox::config_gbdy(const PropertyTree           &ptree,
 
   // Cycle over all geometric boundaries, and configure:
   GBOOL              bret, bperiodic=FALSE;
-  GSIZET             nind;
+  GSIZET             igbdy_start, nind;
   GTVector<GBOOL>    buniform(2*GDIM);
   GTVector<GBdyType> bdytype(2*GDIM);
   GTVector<GUINT>    utmp;
@@ -1000,6 +1000,7 @@ void GGridBox::config_gbdy(const PropertyTree           &ptree,
   // Handle uniform, nonuniform bdy conditions:
   // Note: If "uniform" not specified for a boundary, then
   //       user MUST supply a method to configure it.
+  igbdy_start = 0;
   for ( auto j=0; j<2*GDIM; j++ ) { // over each canonical bdy
     sbdy         = gridptree.getValue<GString>(bdynames[j]);
     bdytree      = ptree.getPropertyTree(sbdy);
@@ -1021,12 +1022,11 @@ void GGridBox::config_gbdy(const PropertyTree           &ptree,
         bdytype [j] = GBDY_PERIODIC;
         igbdyft [j] = GBDY_PERIODIC;
         bperiodic    = bperiodic || bdytype[j] == GBDY_PERIODIC;
-      
       }
       // May have different uniform bdys for different state comps:
       for ( auto k=0; k<stblock.tbdy.size() && !bperiodic; k++ ) {
         base_ptr = GUpdateBdyFactory<BdyTypePack>::build(ptree, sbdy, *this,  j,
-                                            stblock.tbdy[k], stblock.istate[k], stblock.value[k], itmp);
+                                            stblock.tbdy[k], stblock.istate[k], stblock.value[k], itmp, igbdy_start);
         igbdyft[j] = stblock.tbdy[k];
         bdy_update_list_[j].push_back(base_ptr);
       }
@@ -1042,7 +1042,7 @@ void GGridBox::config_gbdy(const PropertyTree           &ptree,
         GSpecBdyFactory::dospec(bdytree, *this, j, itmp);
         for ( auto k=0; k<svec.size(); k++ ) { // for each sub-block
           base_ptr = GUpdateBdyFactory<BdyTypePack>::build(ptree, svec[k], *this,  j,
-                                              stblock.tbdy[k], stblock.istate[k], stblock.value[k], itmp);
+                                              stblock.tbdy[k], stblock.istate[k], stblock.value[k], itmp, igbdy_start);
 
           for ( auto m=0; m<itmp.size(); m++ ) {
             if ( igbdyf[j].contains(itmp[m]) ) igbdyft[j][m] = stblock.tbdy[k];
@@ -1055,14 +1055,21 @@ void GGridBox::config_gbdy(const PropertyTree           &ptree,
     else {
       assert(FALSE && "Invalid bdy_class");
     }
-
+    
+    igbdy_start += itmp.size();
 
   } // end, global bdy face loop
 
-//cout << "GridBox::config_gbdy: igbdy=" << igbdy << endl;
 
   // With global list of domain boundaries, compute bdy data:
   do_gbdy_normals(dXdXi_, igbdy, degbdy, bdyNormals_, idepComp_); // all bdy nodes 
+GSIZET *ind=NULLPTR;
+nind = 0;
+igbdy.contains(0, ind, nind);
+for ( auto j=0; j<nind; j++ )
+cout << "GridBox::config_gbdy: igbdy[" << j << "]=" << igbdy[ind[j]] 
+<< " n=(" << bdyNormals_[0][ind[j]] << "," << bdyNormals_[1][ind[j]] << ")" << endl;
+delete [] ind;
 
   if ( bperiodic ) {
     if ( ndim_ == 2 ) {
@@ -1418,7 +1425,7 @@ void GGridBox::find_gbdy_ind(GINT bdyid, GBOOL bunique,
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : find_gbdy_ind3d
+// METHOD : find_gbdy_ind2d
 // DESC   : Find global bdy indices (indices into xNodes_ arrays) that
 //          corresp to specified bdy in 2d
 // ARGS   : bdyid    : box-boundary id
