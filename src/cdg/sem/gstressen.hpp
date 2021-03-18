@@ -76,6 +76,7 @@ public:
         // GStressEn solver traits:
         struct Traits {
           GSressenType  type       = GSTRESS_REDUCED; // operator type
+          GBOOL         full_colloc= TRUE; // If GSTRESS_FULL, do colloc discret'n?
           GBOOL         Stokes_hyp = TRUE; // use Stokes hypothesis?
           GBOOL         indep_diss = TRUE; // use indep. diss'n for mom & energy?
           
@@ -97,13 +98,17 @@ public:
 
 
 private:
-        void              mom_update_full      (StateComp &d, State &u, GINT idir, 
-                                                State  &utmp, StateComp &si); 
-        void              energy_update_full   (StateComp &d, State &u, 
-                                                State  &utmp,  StateComp &e);
-        void              mom_update_reduced   (StateComp &d, State &u, GINT idir, 
-                                                State  &utmp, StateComp &si); 
-        void              energy_update_reduced(StateComp &d, State &u, 
+        void              mom_update_full_coll      (StateComp &d, State &u, GINT idir, 
+                                                     State  &utmp, StateComp &si); 
+        void              energy_update_full_coll   (StateComp &d, State &u, 
+                                                    State  &utmp,  StateComp &e);
+        void              mom_update_full_cons      (StateComp &d, State &u, GINT idir, 
+                                                     State  &utmp, StateComp &si); 
+        void              energy_update_full_cons   (StateComp &d, State &u, 
+                                                    State  &utmp,  StateComp &e);
+        void              mom_update_reduced        (StateComp &d, State &u, GINT idir, 
+                                                     State  &utmp, StateComp &si); 
+        void              energy_update_reduced     (StateComp &d, State &u, 
                                                 State  &utmp,  StateComp &e);
         
         Mass             *massop_;     // mass matrix, required
