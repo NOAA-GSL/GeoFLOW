@@ -570,7 +570,8 @@ void GStressEnOp<TypePack>::energy_update_full_cons(StateComp &d, State &u, Stat
 // METHOD : mom_update_reduced
 // DESC   : Compute application of this operator to input momentum vector:
 //            so_i = d [nu u_i,j ],j
-//          where mu = nu d, and nu is the kinematic viscosity
+//          where mu = nu d, and nu is the kinematic viscosity. This 
+//          operator uses 'collocation' discretization only.
 // ARGS   : d   : density
 //          u   : input vector field
 //          idir: which momentum component we're computing for
@@ -617,7 +618,8 @@ void GStressEnOp<TypePack>::mom_update_reduced(StateComp &d, State &u, GINT idir
 // DESC   : Compute application of this operator to input energy:
 //            eo = [ eta  u_i  Del_j u_i],j 
 //          where
-//            eta  = d eta, and eta is the kinematic viscosity
+//            eta  = d eta, and eta is the kinematic viscosity. This
+//          operator uses 'collocation' discretization only.
 // ARGS   : d   : density
 //          u   : input vector field
 //          utmp: array of tmp arrays. At least 4 required.
