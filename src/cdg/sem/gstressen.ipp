@@ -46,7 +46,7 @@ lambda_              (NULLPTR)
     zeta_   = &traits_.zeta;
     eta_    = &traits_.eta;
     lambda_ = &traits_.lambda;
-  } else { // kappa, lambda are mu, zeta:
+  } else { // eta, lambda are mu, zeta:
     assert(traits_.nu.size() > 0 );
     if  ( traits_.Stokes_hyp ) {
       traits_.zeta.resize(traits_.nu.size());
@@ -118,12 +118,12 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, GINT idir, State &utmp
 //**********************************************************************************
 // METHOD : apply (2)
 // DESC   : Compute application of this operator to input energy:
-//            eo = [ kappa  u_i (Del_i u_j + Del_j u_i)],j 
+//            eo = [ eta  u_i (Del_i u_j + Del_j u_i)],j 
 //               + [ lambda u_i (Div u delta_ij) ],j 
-//            kappa  = d eta; lambda = d zeta'
+//            eta  = d eta; lambda = d zeta'
 //          or
-//            eo = [ kappa  u_i ( Del_j u_i)],j 
-//            kappa  = d eta; 
+//            eo = [ eta  u_i ( Del_j u_i)],j 
+//            eta  = d eta; 
 //          and traits select the operator used.
 //
 // ARGS   : d   : density
@@ -266,73 +266,11 @@ void GStressEnOp<TypePack>::mom_update_full(StateComp &d, State &u, GINT idir, S
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : mom_update_reduced
-// DESC   : Compute application of this operator to input momentum vector:
-//            so_i = [mu u_i,j ],j
-//          where mu = nu d, and nu is the kinematic viscosity
-// ARGS   : d   : density
-//          u   : input vector field
-//          idir: which momentum component we're computing for
-//          utmp: array of tmp arrays. At least 3 required.
-//          so  : output (result) vector component, idir
-//             
-// RETURNS:  none
-//**********************************************************************************
-template<typename TypePack>
-void GStressEnOp<TypePack>::mom_update_reduced(StateComp &d, State &u, GINT idir, State &utmp, StateComp &so) 
-{
-
-  assert( utmp.size() >= 4
-       && "Insufficient temp space specified");
-
-  GBOOL      usebdy = grid_->usebdydata();
-  GINT       nxy = grid_->gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
-  GINT                       isgn;
-  GSIZET                     k;
-  Ftype                      fsgn;
-  GTVector<GSIZET>          *ieface  = &grid_->gieface() ;
-  GTVector<GTVector<Ftype>> *normals = &grid_->faceNormals();
-  StateComp                 *bmass   = &grid_->faceMass();
-
-  assert( idir > 0 && idir <= nxy );
-
-#if defined(DO_COMPRESS_MODES_ONLY)
-  tfact_.resizem(u[0]->size());
-#endif
-
-  // so_idir = -D^{T,j} [nu d  Dj u_idir) ]:
-  //      + bdy surface terms:
-  // Below, i = idir:
-
-  so = 0.0;
-
-  // Do -D^{T,j} [mu d (D_j u_i) ] terms:
-  for ( auto j=0; j<nxy; j++ ) { 
-    grid_->deriv(*u[idir-1], j+1, *utmp[0], *utmp[1]);
-    // Point-multiply by mu before taking 'divergence':
-    utmp[1]->pointProd(d);
-    utmp[1]->pointProd(*nu_);
-    grid_->wderiv(*utmp[1]  , j+1, TRUE, *utmp[0], *utmp[2]);
-    so -= *utmp[2];
-
-    // Compute surface terms for this component, j:
-    for ( auto b=0; usebdy && b<ieface->size(); b++ ) {
-      k = (*ieface)[b];
-      so[k] += (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
-    }
-  }
-
-
-} // end of method mom_update_reduced
-
-
-//**********************************************************************************
-//**********************************************************************************
 // METHOD : energy_update_full
 // DESC   : Compute application of this operator to input energy:
-//            eo = [ kappa  u_i (Del_i u_j + Del_j u_i)],j 
+//            eo = [ eta  u_i (Del_i u_j + Del_j u_i)],j 
 //               + [ lambda u_i (Div u delta_ij) ],j 
-//            kappa  = d eta; lambda = d lambda'
+//            eta  = d eta; lambda = d lambda'
 //          where eta and lambda' are the kinematic quantities
 // ARGS   : d   : density
 //          u   : input vector field
@@ -361,11 +299,11 @@ void GStressEnOp<TypePack>::energy_update_full(StateComp &d, State &u, State &ut
   tfact_.resizem(u[0]->size());
 #endif
 
-  // eo -= D^{T,j} [ kappa d  u^i [D_i u_j + Dj u_i) 
+  // eo -= D^{T,j} [ eta d  u^i [D_i u_j + Dj u_i) 
   //    + lambda d u^i (Dk u^k) delta_ij ]
   //    + surface terms:
 
-  // - D^{T,j} [ kappa d u^i (D_i u_j) ] terms:
+  // - D^{T,j} [ eta d u^i (D_i u_j) ] terms:
   eo = 0.0;
   for ( auto j=0; j<nxy; j++ ) { 
    *utmp[1] = 0.0;
@@ -374,7 +312,7 @@ void GStressEnOp<TypePack>::energy_update_full(StateComp &d, State &u, State &ut
        utmp[2]->pointProd(*u[i]);
       *utmp[1] += *utmp[2];
     }
-    // Point-multiply by kappa before taking 'divergence':
+    // Point-multiply by eta before taking 'divergence':
     utmp[1]->pointProd(d);
     utmp[1]->pointProd(*eta_);
     grid_->wderiv(*utmp[1], j+1, TRUE, *utmp[0], *utmp[2]);
@@ -387,7 +325,7 @@ void GStressEnOp<TypePack>::energy_update_full(StateComp &d, State &u, State &ut
     }
   }
 
-  // -= D^{T,j} [ kappa d u^i (D_j u_i) ] terms:
+  // -= D^{T,j} [ eta d u^i (D_j u_i) ] terms:
   for ( auto j=0; j<nxy; j++ ) { 
    *utmp[1] = 0.0;
     for ( auto i=0; i<nxy; i++ ) {
@@ -395,7 +333,7 @@ void GStressEnOp<TypePack>::energy_update_full(StateComp &d, State &u, State &ut
        utmp[2]->pointProd(*u[i]);
        *utmp[1] += *utmp[2];
     }
-    // Point-multiply by kappa before taking 'divergence':
+    // Point-multiply by eta before taking 'divergence':
     utmp[1]->pointProd(d);
     utmp[1]->pointProd(*eta_);
     grid_->wderiv(*utmp[1], j+1, TRUE, *utmp[0], *utmp[2]);
@@ -413,7 +351,7 @@ void GStressEnOp<TypePack>::energy_update_full(StateComp &d, State &u, State &ut
   //   ... First, compute Div u:
   // (NOTE: we'll use MTK to compute Div u eventually):
 
-  // eo = [ kappa  d u_i (Del_i u_j + Del_j u_i)],j 
+  // eo = [ eta  d u_i (Del_i u_j + Del_j u_i)],j 
   //    + [ lambda d u_i (Div u delta_ij) ],j 
 
   grid_->deriv(*u[0]  , 1, *utmp[0], *utmp[1]); // store Div in utmp[1]]
@@ -459,11 +397,70 @@ void GStressEnOp<TypePack>::energy_update_full(StateComp &d, State &u, State &ut
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD : mom_update_reduced
+// DESC   : Compute application of this operator to input momentum vector:
+//            so_i = d [nu u_i,j ],j
+//          where mu = nu d, and nu is the kinematic viscosity
+// ARGS   : d   : density
+//          u   : input vector field
+//          idir: which momentum component we're computing for
+//          utmp: array of tmp arrays. At least 3 required.
+//          so  : output (result) vector component, idir
+//             
+// RETURNS:  none
+//**********************************************************************************
+template<typename TypePack>
+void GStressEnOp<TypePack>::mom_update_reduced(StateComp &d, State &u, GINT idir, State &utmp, StateComp &so) 
+{
+
+  assert( utmp.size() >= 4
+       && "Insufficient temp space specified");
+
+  GBOOL      usebdy = grid_->usebdydata();
+  GINT       nxy = grid_->gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
+  GINT                       isgn;
+  GSIZET                     k;
+  Ftype                      fsgn;
+  GTVector<GSIZET>          *ieface  = &grid_->gieface() ;
+  GTVector<GTVector<Ftype>> *normals = &grid_->faceNormals();
+  StateComp                 *bmass   = &grid_->faceMass();
+
+  assert( idir > 0 && idir <= nxy );
+
+
+  // so_idir = -D^{T,j} [nu d  Dj u_idir) ]:
+  //      + bdy surface terms:
+  // Below, i = idir:
+
+  so = 0.0;
+
+  // Do -D^{T,j} [nu d (D_j u_i) ] terms:
+  for ( auto j=0; j<nxy; j++ ) { 
+    grid_->deriv(*u[idir-1], j+1, *utmp[0], *utmp[1]);
+    // Point-multiply by nu before taking 'divergence':
+    utmp[1]->pointProd(d);
+    utmp[1]->pointProd(*nu_);
+    grid_->wderiv(*utmp[1]  , j+1, TRUE, *utmp[0], *utmp[2]);
+    so -= *utmp[2];
+
+    // Compute surface terms for this component, j:
+    for ( auto b=0; usebdy && b<ieface->size(); b++ ) {
+      k = (*ieface)[b];
+      so[k] += (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
+    }
+  }
+
+
+} // end of method mom_update_reduced
+
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD : energy_update_reduced
 // DESC   : Compute application of this operator to input energy:
-//            eo = [ kappa  u_i  Del_j u_i],j 
+//            eo = [ eta  u_i  Del_j u_i],j 
 //          where
-//            kappa  = d eta, and eta is the kinematic viscosity
+//            eta  = d eta, and eta is the kinematic viscosity
 // ARGS   : d   : density
 //          u   : input vector field
 //          utmp: array of tmp arrays. At least 4 required.
@@ -487,16 +484,12 @@ void GStressEnOp<TypePack>::energy_update_reduced(StateComp &d, State &u, State 
   GTVector<GTVector<Ftype>> *normals = &grid_->faceNormals();
   StateComp                 *bmass   = &grid_->faceMass();
 
-#if defined(DO_COMPRESS_MODES_ONLY)
-  tfact_.resizem(u[0]->size());
-#endif
-
-  // eo -= D^{T,j} [ kappa d  u^i Dj u_i] 
+  // eo -= D^{T,j} [ eta d  u^i Dj u_i] 
   //    + surface terms:
 
   eo = 0.0;
 
-  // -= D^{T,j} [ kappa d u^i (D_j u_i) ] terms:
+  // -= D^{T,j} [ eta d u^i (D_j u_i) ] terms:
   for ( auto j=0; j<nxy; j++ ) { 
    *utmp[1] = 0.0;
     for ( auto i=0; i<nxy; i++ ) {
@@ -504,7 +497,7 @@ void GStressEnOp<TypePack>::energy_update_reduced(StateComp &d, State &u, State 
        utmp[2]->pointProd(*u[i]);
        *utmp[1] += *utmp[2];
     }
-    // Point-multiply by kappa before taking 'divergence':
+    // Point-multiply by eta before taking 'divergence':
     utmp[1]->pointProd(d);
     utmp[1]->pointProd(*eta_);
     grid_->wderiv(*utmp[1], j+1, TRUE, *utmp[0], *utmp[2]);

@@ -99,10 +99,10 @@ public:
 private:
         void              mom_update_full      (StateComp &d, State &u, GINT idir, 
                                                 State  &utmp, StateComp &si); 
-        void              mom_update_reduced   (StateComp &d, State &u, GINT idir, 
-                                                State  &utmp, StateComp &si); 
         void              energy_update_full   (StateComp &d, State &u, 
                                                 State  &utmp,  StateComp &e);
+        void              mom_update_reduced   (StateComp &d, State &u, GINT idir, 
+                                                State  &utmp, StateComp &si); 
         void              energy_update_reduced(StateComp &d, State &u, 
                                                 State  &utmp,  StateComp &e);
         
