@@ -104,7 +104,7 @@ template<typename TypePack>
 void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
 {
   GString    serr = "GMConv<TypePack>::dt_impl: ";
-  GFTYPE     dtmin, dt1;
+  Ftype      dtmin, dt1;
   StateComp *csq, *p;
   StateComp *rhoT, *tmp1, *tmp2;
 
@@ -134,11 +134,11 @@ void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
   compute_v(u, *tmp1, v_); 
 
   compute_cv(u, *tmp1, *tmp2);                     // Cv
-  geoflow::compute_temp(*u[ENERGY], *rhoT, *tmp2, *tmp1);  // temperature
+  geoflow::compute_temp<Ftype>(*u[ENERGY], *rhoT, *tmp2, *tmp1);  // temperature
   compute_qd(u, *tmp2);                            // dry mass ratio
-  geoflow::compute_p(*tmp1, *rhoT, *tmp2, RD, *p); // partial pressure for dry air
+  geoflow::compute_p<Ftype>(*tmp1, *rhoT, *tmp2, RD, *p); // partial pressure for dry air
   if ( !traits_.dodry ) {
-    geoflow::compute_p(*tmp1, *rhoT, *u[VAPOR], RV, *tmp2); // partial pressure for vapor
+    geoflow::compute_p<Ftype>(*tmp1, *rhoT, *u[VAPOR], RV, *tmp2); // partial pressure for vapor
    *p += *tmp2;
   }
 
@@ -193,13 +193,207 @@ void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
 template<typename TypePack>
 void GMConv<TypePack>::dudt_impl(const Time &t, const State &u, const State &uf,  const State &ub, const Time &dt, Derivative &dudt)
 {
+  if ( traits_.dodry ) {
+    dudt_dry(t, u, uf, ub, dt, dudt);
+  }
+  else {
+    dudt_wet(t, u, uf, ub, dt, dudt);
+  }
+}
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : dudt_dry
+// DESC   : Compute RHS for explicit schemes
+// ARGS   : t   : time
+//          u   : state. 
+//          uf  : forcing tendency state vector
+//          ub  : bdy state vector
+//          dt  : time step
+//          dudt: accelerations, returned
+// RETURNS: none.
+//**********************************************************************************
+template<typename TypePack>
+void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf,  const State &ub, const Time &dt, Derivative &dudt)
+{
   assert(!traits_.bconserved &&
          "conservation not yet supported"); 
 
-  GString    serr = "GMConv<TypePack>::dudt_impl: ";
+  GString    serr = "GMConv<TypePack>::dudt_dry: ";
   GINT       nice, nliq ;
   StateComp *irhoT, *Ltot;
-  StateComp *dp, *e, *p, *rhoT, *T; // energy, den, pressure, temperature
+  StateComp *dd, *e, *p, *rhoT, *T; // energy, den, pressure, temperature
+  StateComp *Mass=grid_->massop().data();
+  StateComp *tmp1, *tmp2;
+  State      g(nc_); 
+
+  // NOTE:
+  // Make sure that, in init(), Helmholtz op is using only
+  // weak Laplacian (q * mass term isn't being used), or there will 
+  // be problems. This is required for explicit schemes, for
+  // which this method is called.
+
+  assert( !traits_.bconserved ); // don't allow conservative form yet
+
+  // Set tmp pool for RHS computations:
+  assert(urhstmp_.size() >= szrhstmp());
+  Ltot  = urhstmp_[urhstmp_.size()-1];
+  rhoT  = urhstmp_[urhstmp_.size()-2];
+  irhoT = urhstmp_[urhstmp_.size()-3];
+  tmp1  = urhstmp_[urhstmp_.size()-4];
+  tmp2  = urhstmp_[urhstmp_.size()-5];
+
+#if 0
+  // Do filtering, if any:
+  FilterList *fl = &this->get_filter_list();
+  for ( auto j=0; j<fl->size(); j++ ) {
+    if ( (*fl)[j] != NULLPTR ) {
+      (*fl)[j]->apply(t, *u[j], urhstmp_);
+    }
+  }
+#endif
+
+
+  // Get total density and inverse: *rhoT  = *u[DENSITY]; 
+ *rhoT = *u[DENSITY];
+  if ( traits_.usebase ) *rhoT +=  *ubase_[0];   
+ *irhoT = *rhoT;
+  irhoT->rpow(-1.0);
+
+  // Compute velocity for timestep:
+  compute_v(s_, *irhoT, v_); // stored in v_
+  
+  // Compute all terms as though they are on the LHS, then
+  // change the sign and divide by Mass at the end....
+
+
+  // *************************************************************
+  // Total density RHS:
+  // *************************************************************
+
+  gdiv_->apply(*rhoT, v_, urhstmp_, *dudt[DENSITY]); 
+
+  if ( uf[DENSITY] != NULLPTR ) {
+cout << "dudt_dry: uf[MOMENTUM]" << endl;
+     *dudt[DENSITY] -= *uf[DENSITY];//  += sdot(s_rhoT)
+  }
+  
+  p     = urhstmp_[urhstmp_.size()-3]; // holds pressure
+  T     = urhstmp_[urhstmp_.size()-6]; // holds temperature
+  e     = u[ENERGY];                   // internal energy density
+
+  // *************************************************************
+  // Energy equation RHS:
+  // *************************************************************
+  compute_cv(u, *tmp1, *tmp2);                     // Cv
+  geoflow::compute_temp<Ftype>(*e, *rhoT, *tmp2, *T);     // temperature
+  compute_qd  (u, *tmp1);                          // dry mass ratio
+  geoflow::compute_p<Ftype>(*T, *rhoT, *tmp1, RD, *p);    // partial pressure for dry air
+
+  GMTK::saxpy<Ftype>(*tmp1, *e, 1.0, *p, 1.0);     // h = p+e, enthalpy density
+
+  gdiv_->apply(*tmp1, v_, urhstmp_, *dudt[ENERGY]); 
+
+  gstressen_->apply(*rhoT, v_, urhstmp_, *tmp1);   // [mu u_i s^{ij}],j
+ *dudt[ENERGY] -= *tmp1;                           // -= [mu u^i s^{ij}],j
+
+  gadvect_->apply(*p, v_, urhstmp_, *tmp1);         // v.Grad p 
+ *dudt[ENERGY] -= *tmp1;                            // -= v . Grad p
+
+  GMTK::dot<Ftype>(fv_, v_, *tmp2, *tmp1);
+ *dudt[ENERGY] += *tmp1;                            // += f_kinetic . v
+
+  if ( uf[ENERGY] != NULLPTR ) {                    
+cout << "dudt_dry: uf[ENERGY]" << endl;
+    *tmp1 = *uf[ENERGY]; *tmp1 *= *Mass;
+    GMTK::saxpy<Ftype>(*dudt[ENERGY], 1.0, *tmp1, -1.0); 
+                                                    // -= q_heat
+  }
+
+  // *************************************************************
+  // Momentum equations RHS:
+  // *************************************************************
+  dd   = urhstmp_[urhstmp_.size()-6]; // holds density fluctuation
+ *dd   = (*rhoT); 
+  if ( traits_.usebase ) {
+   *dd -= *ubase_[0];                 // density fluctuation
+   *p  -= *ubase_[1];                 // pressure fluctuation
+  }
+  for ( auto j=0; j<v_.size(); j++ ) { // for each component
+
+    gdiv_->apply(*s_[j], v_, urhstmp_, *dudt[j]); 
+
+
+#if 0
+    grid_->wderiv(*p, j+1, TRUE, *tmp2, *tmp1);       // Grad p'
+   *dudt[j] -= *tmp1;                                 // -= Grad p'
+#else
+    grid_->deriv(*p, j+1, *tmp2, *tmp1);              // Grad p'
+   *tmp1 *= *Mass;                                    // M Grad p' 
+   *dudt[j] += *tmp1;                                 // += Grad p'
+#endif
+
+    gstressen_->apply(*rhoT, v_, j+1, urhstmp_, 
+                                         *tmp1);      // [mu s^{ij}],j
+   *dudt[j] -= *tmp1;                                 // -= [mu s^{ij}],j
+
+    if ( traits_.docoriolis ) {
+      GMTK::cross_prod_s(traits_.omega, s_, j+1, *tmp1);
+     *tmp1 *= *Mass;             
+      GMTK::saxpy<Ftype>(*dudt[j], 1.0, *tmp1, 2.0);  // += 2 Omega X (rhoT v) M J
+    }
+
+    if ( traits_.dograv || traits_.usebase ) {
+     *tmp1 = -GG; 
+      compute_vpref(*tmp1, j+1, *tmp2);               // compute grav component
+      tmp2->pointProd(*dd, *tmp2);
+     *tmp2 *= *Mass;             
+     *dudt[j] -= *tmp2;                               // -= rho' vec{g} M J
+    }
+
+    if ( traits_.bforced && uf[j] != NULLPTR ) {                    
+cout << "dudt_dry: uf[MOMENTUM]" << endl;
+      *tmp1 = *uf[j]; *tmp1 *= *Mass;
+      GMTK::saxpy<Ftype>(*dudt[j], 1.0, *tmp1, -1.0); 
+                                                      // -= f_v
+    }
+
+  } // end, momentum loop
+
+  // Multiply RHS by -M^-1 to (1) place all terms on the 'RHS',
+  // and (2) to account for factor of M on du/dt term:
+  for ( auto j=0; j<nevolve_; j++ ) {
+    dudt[j]->apointProd(-1.0, *gimass_->data());// dudt -> -M^-1 dudt
+  }
+
+  istage_++;
+  
+} // end of method dudt_dry
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : dudt_wet
+// DESC   : Compute RHS for explicit schemes
+// ARGS   : t   : time
+//          u   : state. 
+//          uf  : forcing tendency state vector
+//          ub  : bdy state vector
+//          dt  : time step
+//          dudt: accelerations, returned
+// RETURNS: none.
+//**********************************************************************************
+template<typename TypePack>
+void GMConv<TypePack>::dudt_wet(const Time &t, const State &u, const State &uf,  const State &ub, const Time &dt, Derivative &dudt)
+{
+  assert(!traits_.bconserved &&
+         "conservation not yet supported"); 
+
+  GString    serr = "GMConv<TypePack>::dudt_wet: ";
+  GINT       nice, nliq ;
+  StateComp *irhoT, *Ltot;
+  StateComp *dd, *e, *p, *rhoT, *T; // energy, den, pressure, temperature
   StateComp *Mass=grid_->massop().data();
   StateComp *tmp1, *tmp2;
   State      g(nc_); 
@@ -288,11 +482,11 @@ void GMConv<TypePack>::dudt_impl(const Time &t, const State &u, const State &uf,
   // Energy equation RHS:
   // *************************************************************
   compute_cv(u, *tmp1, *tmp2);                     // Cv
-  geoflow::compute_temp(*e, *rhoT, *tmp2, *T);     // temperature
+  geoflow::compute_temp<Ftype>(*e, *rhoT, *tmp2, *T);     // temperature
   compute_qd  (u, *tmp1);                          // dry mass ratio
-  geoflow::compute_p(*T, *rhoT, *tmp1, RD, *p);    // partial pressure for dry air
+  geoflow::compute_p<Ftype>(*T, *rhoT, *tmp1, RD, *p);    // partial pressure for dry air
   if ( !traits_.dodry ) {
-    geoflow::compute_p(*T, *rhoT, *u[VAPOR], RV, *tmp1); // partial pressure for vapor
+    geoflow::compute_p<Ftype>(*T, *rhoT, *u[VAPOR], RV, *tmp1); // partial pressure for vapor
    *p += *tmp1;
   }
 
@@ -334,10 +528,10 @@ void GMConv<TypePack>::dudt_impl(const Time &t, const State &u, const State &uf,
   // *************************************************************
   // Momentum equations RHS:
   // *************************************************************
-  dp   = urhstmp_[urhstmp_.size()-6]; // holds density fluctuation
- *dp   = (*rhoT); 
+  dd   = urhstmp_[urhstmp_.size()-6]; // holds density fluctuation
+ *dd   = (*rhoT); 
   if ( traits_.usebase ) {
-   *dp -= *ubase_[0];                 // density fluctuation
+   *dd -= *ubase_[0];                 // density fluctuation
    *p  -= *ubase_[1];                 // pressure fluctuation
   }
   for ( auto j=0; j<v_.size(); j++ ) { // for each component
@@ -372,7 +566,7 @@ void GMConv<TypePack>::dudt_impl(const Time &t, const State &u, const State &uf,
     if ( traits_.dograv || traits_.usebase ) {
      *tmp1 = -GG; 
       compute_vpref(*tmp1, j+1, *tmp2);               // compute grav component
-      tmp2->pointProd(*dp, *tmp2);
+      tmp2->pointProd(*dd, *tmp2);
      *tmp2 *= *Mass;             
      *dudt[j] -= *tmp2;                               // -= rho' vec{g} M J
     }
@@ -393,7 +587,7 @@ void GMConv<TypePack>::dudt_impl(const Time &t, const State &u, const State &uf,
 
   istage_++;
   
-} // end of method dudt_impl
+} // end of method dudt_wet
 
 
 //**********************************************************************************
@@ -1427,7 +1621,7 @@ void GMConv<TypePack>::compute_derived_impl(const State &u, GString sop,
     compute_cv(u, *utmp[0], *utmp[1]);                      // Cv
    *utmp[0] = *u[DENSITY];
     if ( traits_.usebase ) *utmp[0] += *u[BASESTATE];       // total density
-    geoflow::compute_temp(*u[ENERGY], *utmp[0], *utmp[1], *uout[0]);  // temperature
+    geoflow::compute_temp<Ftype>(*u[ENERGY], *utmp[0], *utmp[1], *uout[0]);  // temperature
     iuout.resize(1); iuout[0] = 0;
   }
   else if ( "press"    == sop ) { // pressure (total)
@@ -1436,11 +1630,11 @@ void GMConv<TypePack>::compute_derived_impl(const State &u, GString sop,
     compute_cv(u, *utmp[0], *utmp[1]);                     // Cv
    *utmp[2] = *u[DENSITY];
     if ( traits_.usebase ) *utmp[2] += *u[BASESTATE];       // total density
-    geoflow::compute_temp(*u[ENERGY], *utmp[2], *utmp[1], *utmp[3]);  // temperature
+    geoflow::compute_temp<Ftype>(*u[ENERGY], *utmp[2], *utmp[1], *utmp[3]);  // temperature
     compute_qd(u, *utmp[0]);
-    geoflow::compute_p(*utmp[3], *utmp[2], *utmp[0], RD, *uout[0]);
+    geoflow::compute_p<Ftype>(*utmp[3], *utmp[2], *utmp[0], RD, *uout[0]);
     if ( !traits_.dodry ) {
-      geoflow::compute_p(*utmp[3], *utmp[2], *u[VAPOR], RV, *utmp[0]);
+      geoflow::compute_p<Ftype>(*utmp[3], *utmp[2], *u[VAPOR], RV, *utmp[0]);
      *uout[0] += *utmp[0];
     }
     iuout.resize(1); iuout[0] = 0;

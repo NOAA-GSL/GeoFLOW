@@ -204,6 +204,10 @@ private:
 
         void                dudt_impl  (const Time &t, const State &u, const State &uf, const State &ub,
                                         const Time &dt, Derivative &dudt);
+        void                dudt_dry   (const Time &t, const State &u, const State &uf, const State &ub,
+                                        const Time &dt, Derivative &dudt);
+        void                dudt_wet   (const Time &t, const State &u, const State &uf, const State &ub,
+                                        const Time &dt, Derivative &dudt);
         void                step_exrk  (const Time &t, State &uin, State &uf, State &ub,
                                         const Time &dt, State &uout);
         void                step_multistep(const Time &t, State &uin, State &uf, State &ub,
