@@ -50,9 +50,9 @@ class GUpdateBdyFactory
                                 State      &ub)>;
 
 
-	static UpdateBdyBasePtr build(const PropertyTree& sptree, GString &supdate, Grid &grid, const GINT id, GBdyType bdytype, GTVector<GINT> &istate, GTVector<GFTYPE> &value, GTVector<GSIZET> &ibdy);
+	static UpdateBdyBasePtr build(const PropertyTree& sptree, GString &supdate, Grid &grid, const GINT id, GBdyType bdytype, GTVector<GINT> &istate, GTVector<GFTYPE> &value, GTVector<GSIZET> &ibdy, GSIZET igbdy_start);
 
-	static UpdateBdyBasePtr  get_bdy_class (const PropertyTree& ptree, GString &supdate, Grid &grid, const GINT id, const GBdyType bdytype, GTVector<GINT> &istate, GTVector<GFTYPE> &value, GTVector<GSIZET> &ibdy);
+	static UpdateBdyBasePtr  get_bdy_class (const PropertyTree& ptree, GString &supdate, Grid &grid, const GINT id, const GBdyType bdytype, GTVector<GINT> &istate, GTVector<GFTYPE> &value, GTVector<GSIZET> &ibdy, GSIZET igbdy_start);
 
   private:
         static  CallbackPtr       get_inflow_callback(const GString& sname, const GINT id);

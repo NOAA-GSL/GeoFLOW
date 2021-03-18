@@ -19,12 +19,14 @@
 //          istate  : state array the method applies to
 //          value   : vector of Dirichlet values
 //          ibdy    : bdy indirection indices into computational volume
+//          igbdy_start:
+//                    where ibdy start in global bdy index list
 //                   
 // RETURNS: none.
 //**********************************************************************************
 template<typename Types>
 typename GUpdateBdyFactory<Types>::UpdateBdyBasePtr
-GUpdateBdyFactory<Types>::build(const PropertyTree& ptree, GString &supdate, Grid &grid, const GINT id, GBdyType bdytype, GTVector<GINT> &istate, GTVector<GFTYPE> &value, GTVector<GSIZET> &ibdy)
+GUpdateBdyFactory<Types>::build(const PropertyTree& ptree, GString &supdate, Grid &grid, const GINT id, GBdyType bdytype, GTVector<GINT> &istate, GTVector<GFTYPE> &value, GTVector<GSIZET> &ibdy, GSIZET igbdy_start)
 {
   GBOOL              bret = FALSE;
   UpdateBdyBasePtr   base_ptr;
@@ -47,7 +49,7 @@ GUpdateBdyFactory<Types>::build(const PropertyTree& ptree, GString &supdate, Gri
     assert(FALSE);
   }
 
-  base_ptr = GUpdateBdyFactory<Types>::get_bdy_class(ptree, supdate, grid, id, bdytype, istate, value, ibdy);
+  base_ptr = GUpdateBdyFactory<Types>::get_bdy_class(ptree, supdate, grid, id, bdytype, istate, value, ibdy, igbdy_start);
 
   return base_ptr;
 
@@ -110,12 +112,14 @@ GUpdateBdyFactory<Types>::get_inflow_callback(const GString& sname, const GINT i
 //          value   : vector of Dirichlet values
 //          ibdy    : indirection indices into computational volume, 
 //                    representing the bdy nodes this method applies to
+//          igbdy_start:
+//                    where ibdy start in global bdy index list
 //                   
 // RETURNS: none.
 //**********************************************************************************
 template<typename Types>
 typename GUpdateBdyFactory<Types>::UpdateBdyBasePtr
-GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree& ptree, GString &supdate, Grid &grid, const GINT id, const GBdyType bdytype, GTVector<GINT> &istate, GTVector<GFTYPE> &value, GTVector<GSIZET> &ibdy)
+GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree& ptree, GString &supdate, Grid &grid, const GINT id, const GBdyType bdytype, GTVector<GINT> &istate, GTVector<GFTYPE> &value, GTVector<GSIZET> &ibdy, GSIZET igbdy_start)
 {
   GINT               nstate;
   GLONG              iloc;
@@ -202,7 +206,7 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree& ptree, GString &supd
     traits.ibdyloc.resize(traits.ibdyvol.size());
     // Find index of ibdyvol in global bdy vector:
     for ( auto j=0; j<traits.ibdyloc.size(); j++ ) {
-      iloc = igbdy->findfirst(traits.ibdyvol[j]);
+      iloc = j + igbdy_start;;
       assert(iloc >= 0);
       traits.ibdyloc[j] = iloc;
     }
