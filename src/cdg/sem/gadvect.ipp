@@ -78,7 +78,7 @@ void GAdvect<TypePack>::apply(StateComp &p, const State &u, State &utmp, StateCo
     utmp[0]->pointProd(*u[j]);
     po += *utmp[0];
   }
-  po.pointProd(*grid_->massop().data());
+  po.pointProd(*grid_->massop().data()); // multiply by mass
 
 } // end of method apply
 
