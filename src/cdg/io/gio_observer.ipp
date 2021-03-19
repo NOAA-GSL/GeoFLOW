@@ -18,7 +18,7 @@
 //          traits  : Traits sturcture
 //**********************************************************************************
 template<typename EquationType>
-GIOObserver<EquationType>::GIOObserver(const EqnBasePtr &equation, Grid &grid,  const IOBasePtr &io_ptr, typename ObserverBase<EquationType>::Traits &traits):
+GIOObserver<EquationType>::GIOObserver(EqnBasePtr &equation, Grid &grid,  const IOBasePtr &io_ptr, typename ObserverBase<EquationType>::Traits &traits):
 ObserverBase<EquationType>(equation, grid, traits),
 bprgrid_         (TRUE),
 bInit_          (FALSE),

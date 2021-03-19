@@ -52,7 +52,7 @@ public:
                "Grid is of incorrect type");
 
                            GIOObserver() = delete;
-                           GIOObserver(const EqnBasePtr &equation, Grid &grid, const IOBasePtr &io_ptr,
+                           GIOObserver(EqnBasePtr &equation, Grid &grid, const IOBasePtr &io_ptr,
                                        typename ObserverBase<EquationType>::Traits &traits);
 
                           ~GIOObserver() = default;
