@@ -44,7 +44,7 @@ ObserverFactory<ET>::build(const tbox::PropertyTree& ptree, const std::string ob
 		// Set back to base type
 		base_ptr = obs_impl;
 	}
-        else if( "gio_observer" == observer_name ) {
+    else if( "gio_observer" == observer_name ) {
 		using ObsImpl = GIOObserver<ET>;
 
 		// Allocate observer Implementation
@@ -58,7 +58,7 @@ ObserverFactory<ET>::build(const tbox::PropertyTree& ptree, const std::string ob
 		// Set back to base type
 		base_ptr = obs_impl;
         }
-        else if( "burgers_diag" == observer_name ) {
+    else if( "burgers_diag" == observer_name ) {
 		using ObsImpl = GBurgersDiag<ET>;
 
 		// Allocate observer Implementation
@@ -67,7 +67,7 @@ ObserverFactory<ET>::build(const tbox::PropertyTree& ptree, const std::string ob
 		// Set back to base type
 		base_ptr = obs_impl;
         }
-        else if( "gmconv_diag" == observer_name ) {
+    else if( "gmconv_diag" == observer_name ) {
 		using ObsImpl = GMConvDiag<ET>;
 
 		// Allocate observer Implementation
