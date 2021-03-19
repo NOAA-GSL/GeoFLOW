@@ -241,8 +241,8 @@ void GMConvDiag<EquationType>::do_max(const Time t, const State &u, const State 
   lmax[2] = utmp[2]->amax();
 
 
-  // Gather final sums:
-  GComm::Allreduce(lmax.data(), gmax.data(), 3, T2GCDatatype<GFTYPE>(), GC_OP_SUM, grid_->get_comm());
+  // Gather final extrema:
+  GComm::Allreduce(lmax.data(), gmax.data(), 3, T2GCDatatype<GFTYPE>(), GC_OP_MAX, grid_->get_comm());
   mass = gmax[0]; eint = gmax[1]; ke = gmax[2]; 
 
 
