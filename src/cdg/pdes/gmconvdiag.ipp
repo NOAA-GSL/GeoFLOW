@@ -121,24 +121,30 @@ void GMConvDiag<EquationType>::do_L2(const Time t, const State &u, const State &
   GFTYPE absu, absw, eint, ke, mass;
   GTVector<GFTYPE> *d, *di, *e;
   GTVector<GFTYPE> lmax(3), gmax(3);
+  typename GMConv<EquationType>::Traits trsolver;
+
+  trsolver = solver_->get_traits();
 
   // Make things a little easier:
   GTVector<GTVector<GFTYPE>*> utmp(3);
   for ( auto j=0; j<utmp.size(); j++ ) utmp[j] = (*utmp_)[j];
 
-  // Find local integrated mass:
-  d = u[solver_->DENSITY];
-  lmax[0] = grid_->integrate(*d, *utmp[0], FALSE);
-
   // Find internal energy density:
   e = u[solver_->ENERGY];
   lmax[1] = grid_->integrate(*e, *utmp[0], FALSE);
 
+  // Find local integrated mass:
+  d = u[solver_->DENSITY];
+ *utmp[1] = *d;
+  if ( trsolver.usebase ) *utmp[1] += *u[solver_->BASESTATE];
+  lmax[0] = grid_->integrate(*utmp[1], *utmp[0], FALSE);
+
   // Find kinetic energy density:  0.5 rho v^2
-  di = utmp[0]; *di = *d; di->rpow(-1); // inverse density
+  di = utmp[1]; di->rpow(-1); // inverse (total) density
   solver_->compute_v(u, 1, *di, *utmp[2]);
   for ( auto j=1; j<ndim; j++ ) {
     solver_->compute_v(u, j+1, *di, *utmp[1]);
+    utmp[1]->rpow(2);
    *utmp[2] +=  *utmp[1];
   }
   utmp[2]->apointProd(0.5, *d);;
@@ -173,7 +179,7 @@ void GMConvDiag<EquationType>::do_L2(const Time t, const State &u, const State &
       ios << "#time      Mass       KE        E_int    " << std::endl;
     }
 
-    ios << t  
+    ios << t  << setprecision(8) 
         << "    " << mass  << "    "  << eint
         << "    " << ke
         << std::endl;
@@ -202,35 +208,43 @@ void GMConvDiag<EquationType>::do_max(const Time t, const State &u, const State 
   GBOOL   isreduced= FALSE;
   GBOOL   ismax    = FALSE;
   GINT    nd, ndim = grid_->gtype() == GE_2DEMBEDDED ? 3 : GDIM;
-  GFTYPE  absu, absw, eint, ke, mass;
+  GFTYPE absu, absw, eint, ke, mass;
   GTVector<GFTYPE> *d, *di, *e;
   GTVector<GFTYPE> lmax(3), gmax(3);
+  typename GMConv<EquationType>::Traits trsolver;
+
+  trsolver = solver_->get_traits();
+
+  // Make things a little easier:
   GTVector<GTVector<GFTYPE>*> utmp(3);
-
   for ( auto j=0; j<utmp.size(); j++ ) utmp[j] = (*utmp_)[j];
-
-  // Find local integrated mass:
-  d = u[solver_->DENSITY];
-  lmax[0] = d->max();
 
   // Find internal energy density:
   e = u[solver_->ENERGY];
-  lmax[1] = e->max();
+  lmax[1] = e->amax();
+
+  // Find local integrated mass:
+  d = u[solver_->DENSITY];
+ *utmp[1] = *d;
+  if ( trsolver.usebase ) *utmp[1] += *u[solver_->BASESTATE];
+  lmax[0] = utmp[1]->amax();
 
   // Find kinetic energy density:  0.5 rho v^2
-  di = utmp[0]; *di = *d; di->rpow(-1); // inverse density
+  di = utmp[1]; di->rpow(-1); // inverse (total) density
   solver_->compute_v(u, 1, *di, *utmp[2]);
   for ( auto j=1; j<ndim; j++ ) {
     solver_->compute_v(u, j+1, *di, *utmp[1]);
+    utmp[1]->rpow(2);
    *utmp[2] +=  *utmp[1];
   }
   utmp[2]->apointProd(0.5, *d);;
-  lmax[2] = utmp[2]->max();
+  lmax[2] = utmp[2]->amax();
 
 
   // Gather final sums:
-  GComm::Allreduce(lmax.data(), gmax.data(), 3, T2GCDatatype<GFTYPE>(), GC_OP_MAX, grid_->get_comm());
+  GComm::Allreduce(lmax.data(), gmax.data(), 3, T2GCDatatype<GFTYPE>(), GC_OP_SUM, grid_->get_comm());
   mass = gmax[0]; eint = gmax[1]; ke = gmax[2]; 
+
 
   // Print data to file:
   GBOOL         doheader=FALSE;
@@ -255,7 +269,7 @@ void GMConvDiag<EquationType>::do_max(const Time t, const State &u, const State 
       ios << "#time      Mass       KE        E_int    " << std::endl;
     }
 
-    ios << t  
+    ios << t  << setprecision(8) 
         << "    " << mass  << "    "  << ke
         << "    " << eint   
         << std::endl;
