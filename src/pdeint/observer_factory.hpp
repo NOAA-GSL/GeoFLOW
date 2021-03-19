@@ -18,6 +18,7 @@
 #include "gio_observer.hpp"
 #include "io_factory.hpp"
 #include "gburgersdiag.hpp"
+#include "gmconvdiag.hpp"
 
 
 namespace geoflow {
