@@ -702,7 +702,7 @@ GBOOL impl_boxdrybubble(const PropertyTree &ptree, GString &sconfig, GGrid &grid
     L         = sqrt(L);
     exnerb    = pow((*pb)[j]/P0, RD/CPD);
     delT      = L <= 1.0 ? 2.0*T0*pow(cos(0.5*PI*L),2.0) : 0.0;
-#if 1
+#if 0
     // Ts, delT are pot'l temp, 
     (*T) [j]  = (Ts + delT)*exnerb; // T = (theta + dtheta)*exner
     pj        = (*pb)[j]; 
@@ -711,14 +711,14 @@ GBOOL impl_boxdrybubble(const PropertyTree &ptree, GString &sconfig, GGrid &grid
     (*e)[j]   = CVD * dj * ( (*T)[j] ); // e = Cv d (T+delT);
 //  (*T) [j]  = (Ts + delT)*exnerb; // T = (theta + dtheta)*exner
 //  (*T) [j]  = (thetab + delT)*exnerb;
-//  (*d)[j]   = pj / ( RD * (*T)[j] )  - (*db)[j];
+//  (*dd)[j]  = pj / ( RD * (*T)[j] )  - (*db)[j];
 //  (*e)[j]   = CVD * dj * (thetab+delT)*(exnerb); // e = Cv d (theta+dtheta) * exner;
 
 #else
     // Check that hydrostatic state is maintained:
-    (*d)[j]   = 0.0;
-    (*T)[j]   = Ts*exnerb; // T = (theta + dtheta)*exner
-    (*e)[j]   = CVD * (*db)[j] * ( (*T)[j] ); // e = Cv d (T);
+    (*dd)[j]   = 0.0;
+    (*T) [j]   = Ts*exnerb; // T = (theta + dtheta)*exner
+    (*e) [j]   = CVD * (*db)[j] * ( (*T)[j] ); // e = Cv d (T);
 #endif
 
   }
