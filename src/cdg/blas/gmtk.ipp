@@ -1144,7 +1144,7 @@ void paxy(GTVector<T> &x, T a, const GTVector<T> &y)
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD :    saxpy (1)
+// METHOD :    saxpby (1)
 // DESC   : 
 //             compute x = ax + by
 //          
@@ -1156,7 +1156,7 @@ void paxy(GTVector<T> &x, T a, const GTVector<T> &y)
 // RETURNS: GTVector & 
 //**********************************************************************************
 template<typename T>
-void saxpy(GTVector<T> &x, T a, GTVector<T> &y, T b) 
+void saxpby(GTVector<T> &x, T a, GTVector<T> &y, T b) 
 {
 	GEOFLOW_TRACE();
   if ( y.size() > 1 ) {
@@ -1169,12 +1169,12 @@ void saxpy(GTVector<T> &x, T a, GTVector<T> &y, T b)
       x[j] = a*x[j] + b*y[0];
     }
   }
-} // end of method saxpy (1)
+} // end of method saxpby (1)
 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD :    saxpy (2)
+// METHOD :    saxpby (2)
 // DESC   : 
 //             compute z = ax + by
 //          
@@ -1187,7 +1187,7 @@ void saxpy(GTVector<T> &x, T a, GTVector<T> &y, T b)
 // RETURNS: GTVector & 
 //**********************************************************************************
 template<typename T>
-void saxpy(GTVector<T> &z, GTVector<T> &x, T a, GTVector<T> &y, T b) 
+void saxpby(GTVector<T> &z, GTVector<T> &x, T a, GTVector<T> &y, T b) 
 {
 	GEOFLOW_TRACE();
   if ( y.size() > 1 ) {
@@ -1200,7 +1200,7 @@ void saxpy(GTVector<T> &z, GTVector<T> &x, T a, GTVector<T> &y, T b)
       z[j] = a*x[j] + b*y[0];
     }
   }
-} // end of method saxpy (1)
+} // end of method saxpby (1)
 
 
 //**********************************************************************************
@@ -2680,11 +2680,11 @@ void dot(GTVector<GTVector<T>*> &x, GTVector<GTVector<T>*> &y, GTVector<T> &tmp,
        tmp =  (*x[j])[0] * (*y[j])[0];
      }
      else if ( x[j]->size() >  1 && y[j]->size() == 1 ) { // y constant
-       GMTK::saxpy<T>(tmp, 1.0, *x[j], (*y[j])[0]);  
+       GMTK::saxpby<T>(tmp, 1.0, *x[j], (*y[j])[0]);  
        
      }
      else if ( x[j]->size() == 1 && y[j]->size() >  1 ) { // x constant
-       GMTK::saxpy<T>(tmp, 1.0, *y[j], (*x[j])[0]);  
+       GMTK::saxpby<T>(tmp, 1.0, *y[j], (*x[j])[0]);  
      }
      else {                                               // x, y of full length
        x[j]->pointProd(*y[j], tmp);

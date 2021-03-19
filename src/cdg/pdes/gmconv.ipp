@@ -291,7 +291,7 @@ cout << "dudt_dry: uf[MOMENTUM]" << endl;
   compute_qd  (u, *tmp1);                          // dry mass ratio
   geoflow::compute_p<Ftype>(*T, *rhoT, *tmp1, RD, *p);    // partial pressure for dry air
 
-  GMTK::saxpy<Ftype>(*tmp1, *e, 1.0, *p, 1.0);     // h = p+e, enthalpy density
+  GMTK::saxpby<Ftype>(*tmp1, *e, 1.0, *p, 1.0);     // h = p+e, enthalpy density
 
   gdiv_->apply(*tmp1, v_, urhstmp_, *dudt[ENERGY]); 
 
@@ -307,7 +307,7 @@ cout << "dudt_dry: uf[MOMENTUM]" << endl;
   if ( uf[ENERGY] != NULLPTR ) {                    
 cout << "dudt_dry: uf[ENERGY]" << endl;
     *tmp1 = *uf[ENERGY]; *tmp1 *= *Mass;
-    GMTK::saxpy<Ftype>(*dudt[ENERGY], 1.0, *tmp1, -1.0); 
+    GMTK::saxpby<Ftype>(*dudt[ENERGY], 1.0, *tmp1, -1.0); 
                                                     // -= q_heat
   }
 
@@ -341,7 +341,7 @@ cout << "dudt_dry: uf[ENERGY]" << endl;
     if ( traits_.docoriolis ) {
       GMTK::cross_prod_s(traits_.omega, s_, j+1, *tmp1);
      *tmp1 *= *Mass;             
-      GMTK::saxpy<Ftype>(*dudt[j], 1.0, *tmp1, 2.0);  // += 2 Omega X (rhoT v) M J
+      GMTK::saxpby<Ftype>(*dudt[j], 1.0, *tmp1, 2.0);  // += 2 Omega X (rhoT v) M J
     }
 
     if ( traits_.dograv || traits_.usebase ) {
@@ -355,7 +355,7 @@ cout << "dudt_dry: uf[ENERGY]" << endl;
     if ( traits_.bforced && uf[j] != NULLPTR ) {                    
 cout << "dudt_dry: uf[MOMENTUM]" << endl;
       *tmp1 = *uf[j]; *tmp1 *= *Mass;
-      GMTK::saxpy<Ftype>(*dudt[j], 1.0, *tmp1, -1.0); 
+      GMTK::saxpby<Ftype>(*dudt[j], 1.0, *tmp1, -1.0); 
                                                       // -= f_v
     }
 
@@ -446,7 +446,7 @@ void GMConv<TypePack>::dudt_wet(const Time &t, const State &u, const State &uf, 
 
   if ( traits_.dofallout ) {
     compute_falloutsrc(*rhoT, qi_, tvi_, -1, urhstmp_, *Ltot);
-    GMTK::saxpy<Ftype>(*dudt[DENSITY], 1.0, *Ltot, 1.0);   // += Ltot
+    GMTK::saxpby<Ftype>(*dudt[DENSITY], 1.0, *Ltot, 1.0);   // += Ltot
   }
   if ( uf[DENSITY] != NULLPTR ) *dudt[DENSITY] -= *uf[DENSITY];//  += sdot(s_rhoT)
   
@@ -469,7 +469,7 @@ void GMConv<TypePack>::dudt_wet(const Time &t, const State &u, const State &uf, 
     if ( uf[VAPOR+j] != NULLPTR ) {             // add in sdot(s_i)/rhoT
       *tmp1 = *uf[VAPOR+1]; *tmp1 *= *irhoT;    // dot(s)/rhoT 
       *tmp1 *= *Mass;
-      GMTK::saxpy<Ftype>(*dudt[VAPOR+j], 1.0, *tmp1, -1.0); 
+      GMTK::saxpby<Ftype>(*dudt[VAPOR+j], 1.0, *tmp1, -1.0); 
                                                // -= dot(s)/rhoT
     }
   }
@@ -490,7 +490,7 @@ void GMConv<TypePack>::dudt_wet(const Time &t, const State &u, const State &uf, 
    *p += *tmp1;
   }
 
-  GMTK::saxpy<Ftype>(*tmp1, *e, 1.0, *p, 1.0);     // h = p+e, enthalpy density
+  GMTK::saxpby<Ftype>(*tmp1, *e, 1.0, *p, 1.0);     // h = p+e, enthalpy density
 
   gdiv_->apply(*tmp1, v_, urhstmp_, *dudt[ENERGY]); 
 
@@ -521,7 +521,7 @@ void GMConv<TypePack>::dudt_wet(const Time &t, const State &u, const State &uf, 
 
   if ( uf[ENERGY] != NULLPTR ) {                    
     *tmp1 = *uf[ENERGY]; *tmp1 *= *Mass;
-    GMTK::saxpy<Ftype>(*dudt[ENERGY], 1.0, *tmp1, -1.0); 
+    GMTK::saxpby<Ftype>(*dudt[ENERGY], 1.0, *tmp1, -1.0); 
                                                     // -= q_heat
   }
 
@@ -560,7 +560,7 @@ void GMConv<TypePack>::dudt_wet(const Time &t, const State &u, const State &uf, 
     if ( traits_.docoriolis ) {
       GMTK::cross_prod_s(traits_.omega, s_, j+1, *tmp1);
      *tmp1 *= *Mass;             
-      GMTK::saxpy<Ftype>(*dudt[j], 1.0, *tmp1, 2.0);  // += 2 Omega X (rhoT v) M J
+      GMTK::saxpby<Ftype>(*dudt[j], 1.0, *tmp1, 2.0);  // += 2 Omega X (rhoT v) M J
     }
 
     if ( traits_.dograv || traits_.usebase ) {
@@ -573,7 +573,7 @@ void GMConv<TypePack>::dudt_wet(const Time &t, const State &u, const State &uf, 
 
     if ( traits_.bforced && uf[j] != NULLPTR ) {                    
       *tmp1 = *uf[j]; *tmp1 *= *Mass;
-      GMTK::saxpy<Ftype>(*dudt[j], 1.0, *tmp1, -1.0); 
+      GMTK::saxpby<Ftype>(*dudt[j], 1.0, *tmp1, -1.0); 
                                                       // -= f_v
     }
 
@@ -1118,16 +1118,16 @@ void GMConv<TypePack>::compute_cv(const State &u, StateComp &utmp, StateComp &cv
    ibeg     = LIQMASS;
    for ( auto k=ibeg; k<ibeg+traits_.nlsector+1; k++ ) { // liquids
       utmp    -= *u[k];         // subtract in ql_k
-      GMTK::saxpy<Ftype>(cv, 0.0, *u[k], CVL); // add in Cvl * ql_k
+      GMTK::saxpby<Ftype>(cv, 0.0, *u[k], CVL); // add in Cvl * ql_k
    }
    ibeg = LIQMASS + traits_.nlsector;;
    for ( auto k=ibeg; k<ibeg+traits_.nisector; k++ ) { // ices
      utmp    -= *u[k];         // subtract in qi_k
      cv       += (*u[k]) * CVI; // add in Cvi * qi_k
-     GMTK::saxpy<Ftype>(cv, 0.0, *u[k], CVI); // add in Cvi * qi_k
+     GMTK::saxpby<Ftype>(cv, 0.0, *u[k], CVI); // add in Cvi * qi_k
    }
    // After subtracting q_i, final result is qd=q_dry, so:
-   GMTK::saxpy<Ftype>(cv, 0.0, utmp, CVD); // Final Cv += Cvd * qd
+   GMTK::saxpby<Ftype>(cv, 0.0, utmp, CVD); // Final Cv += Cvd * qd
 
 } // end of method compute_cv
 
@@ -1680,7 +1680,7 @@ void GMConv<TypePack>::compute_derived_impl(const State &u, GString sop,
   else if ( "den"      == sop ) { // density (total)
     assert(uout .size() >= 1   && "Incorrect no. output components");
     if ( traits_.usebase ) {
-      GMTK::saxpy(*uout[0], *u[DENSITY], 1.0, *u[BASESTATE], 1.0); 
+      GMTK::saxpby(*uout[0], *u[DENSITY], 1.0, *u[BASESTATE], 1.0); 
     }
     else {
       *uout[0] = *u[DENSITY];

@@ -182,7 +182,7 @@ void GExRKStepper<T>::step_b(const Time &t, const State &uin, State &uf, State &
 
     for ( n=0; n<nstate; n++ ) { // for each state member, u
       for ( j=0,*isum=0.0; j<m; j++ )
-        GMTK::saxpy(*isum,  1.0, *K_[j][n], (*beta)(m,j)*h);
+        GMTK::saxpby(*isum,  1.0, *K_[j][n], (*beta)(m,j)*h);
      *u[n]  = (*uin[n]) + (*isum);
     }
     GMTK::constrain2sphere(*grid_, u);
@@ -207,7 +207,7 @@ void GExRKStepper<T>::step_b(const Time &t, const State &uin, State &uf, State &
    tt = t + (*alpha)[nstage_-1]*h;
    for ( n=0; n<nstate; n++ ) { // for each state member, u
      for ( j=0,*isum=0.0; j<nstage_-1; j++ ) 
-       GMTK::saxpy(*isum,  1.0, *K_[j][n], (*beta)(nstage_-1,j)*h);
+       GMTK::saxpby(*isum,  1.0, *K_[j][n], (*beta)(nstage_-1,j)*h);
      *u[n] = (*uin[n]) + (*isum);
    }
     GMTK::constrain2sphere(*grid_, u);
@@ -450,7 +450,7 @@ void GExRKStepper<T>::step_ssp34(const Time &t, const State &uin, State &uf, Sta
   dtt = dt;
   step_euler(tt, uin, uf, ub, dtt, K_[0]);   
   for ( i=0; i<nstate; i++ )  {
-    GMTK::saxpy(*K_[0][i],  0.5, *uin[i], 0.5);
+    GMTK::saxpby(*K_[0][i],  0.5, *uin[i], 0.5);
   }
   if ( bapplybc_  ) bdy_apply_callback_ (tt, K_[0], ub); 
   GMTK::constrain2sphere(*grid_, K_[0]);
@@ -465,7 +465,7 @@ void GExRKStepper<T>::step_ssp34(const Time &t, const State &uin, State &uf, Sta
   dtt = dt;
   step_euler(tt, K_[0], uf, ub, dtt, K_[1]);   
   for ( i=0; i<nstate; i++ )  {
-    GMTK::saxpy(*K_[1][i],  0.5, *K_[0][i], 0.5);
+    GMTK::saxpby(*K_[1][i],  0.5, *K_[0][i], 0.5);
   }
   if ( bapplybc_  ) bdy_apply_callback_ (tt, K_[1], ub); 
   GMTK::constrain2sphere(*grid_, K_[1]);
@@ -480,8 +480,8 @@ void GExRKStepper<T>::step_ssp34(const Time &t, const State &uin, State &uf, Sta
   dtt = dt;
   step_euler(tt, K_[1], uf, ub, dtt, K_[2]);   
   for ( i=0; i<nstate; i++ )  {
-    GMTK::saxpy(*K_[2][i],  1.0/6.0, *K_[1][i], 1.0/6.0);
-    GMTK::saxpy(*K_[2][i],  1.0, *uin[i], 2.0/3.0);
+    GMTK::saxpby(*K_[2][i],  1.0/6.0, *K_[1][i], 1.0/6.0);
+    GMTK::saxpby(*K_[2][i],  1.0, *uin[i], 2.0/3.0);
   }
   if ( bapplybc_  ) bdy_apply_callback_ (tt, K_[2], ub); 
   GMTK::constrain2sphere(*grid_, K_[2]);
@@ -496,7 +496,7 @@ void GExRKStepper<T>::step_ssp34(const Time &t, const State &uin, State &uf, Sta
   dtt = dt;
   step_euler(tt, K_[2], uf, ub, dtt, uout);   
   for ( i=0; i<nstate; i++ )  {
-    GMTK::saxpy(*uout[i],  0.5, *K_[2][i], 0.5);
+    GMTK::saxpby(*uout[i],  0.5, *K_[2][i], 0.5);
   }
   if ( bapplybc_  ) bdy_apply_callback_ (tt, uout, ub); 
   GMTK::constrain2sphere(*grid_, uout);
@@ -565,7 +565,7 @@ void GExRKStepper<T>::step_ssp33(const Time &t, const State &uin, State &uf, Sta
   dtt = dt;
   step_euler(tt, K_[0], uf, ub, dtt, K_[1]);   
   for ( i=0; i<nstate; i++ )  {
-    GMTK::saxpy(*K_[1][i],  0.25, *uin[i], 0.75);
+    GMTK::saxpby(*K_[1][i],  0.25, *uin[i], 0.75);
   }
   if ( bapplybc_  ) bdy_apply_callback_ (tt, K_[1], ub); 
   GMTK::constrain2sphere(*grid_, K_[1]);
@@ -580,7 +580,7 @@ void GExRKStepper<T>::step_ssp33(const Time &t, const State &uin, State &uf, Sta
   dtt = dt;
   step_euler(tt, K_[1], uf, ub, dtt, uout);   
   for ( i=0; i<nstate; i++ )  {
-    GMTK::saxpy(*uout[i],  2.0/3.0, *uin[i], 1.0/3.0);
+    GMTK::saxpby(*uout[i],  2.0/3.0, *uin[i], 1.0/3.0);
   }
   if ( bapplybc_  ) bdy_apply_callback_ (tt, uout, ub); 
   GMTK::constrain2sphere(*grid_, uout);
@@ -643,7 +643,7 @@ void GExRKStepper<T>::step_euler(const Time &t, const State &uin, State &uf, Sta
 
   rhs_callback_( t, uin, uf, ub, dt, uout ); 
   for ( auto i=0; i<uout.size(); i++ ) {
-    GMTK::saxpy(*uout[i],  dt, *uin[i], 1.0);
+    GMTK::saxpby(*uout[i],  dt, *uin[i], 1.0);
   }
 
 } // end, step_euler
