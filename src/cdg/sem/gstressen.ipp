@@ -593,7 +593,7 @@ void GStressEnOp<TypePack>::mom_update_reduced(StateComp &d, State &u, GINT idir
   assert( idir > 0 && idir <= nxy );
 
 
-  // so_idir = D^{j} [nu d  Dj u_idir) ]:
+  // so_idir = d D^{j} [nu Dj u_idir) ]:
   // Below, i = idir:
 
   so = 0.0;
@@ -638,7 +638,7 @@ void GStressEnOp<TypePack>::energy_update_reduced(StateComp &d, State &u, State 
   GBOOL      usebdy = grid_->usebdydata();
   GINT       nxy = grid_->gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
 
-  // eo = D^{j} [ eta d  u^i Dj u_i] 
+  // eo = d D^{j} [ eta u^i Dj u_i] 
 
   eo = 0.0;
 
