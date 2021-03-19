@@ -11,7 +11,7 @@
   "restart_index"     : 0,
   "benchmark"         : false,
   "do_comparison"     : false,
-  "observer_list"     : ["gio_observer", "burgers_diag"],
+  "observer_list"     : ["gio_observer", "gmconv_diag"],
   "IO_implementation" : "gio",
   "terrain_type"      : "none",
   "initstate_boxdrybubble": {
@@ -138,8 +138,8 @@
     "derived_quantities"       : [],
     "state_derived_quantities" : ["temp","press","vel","dptemp","ptemp","den"]
   },
-  "burgers_diag": {
-    "observer_name"      : "burgers_diag",
+  "gmconv_diag": {
+    "observer_name"      : "gmconv_diag",
     "idir"               : ".",
     "odir"               : ".",
     "interval_freq_fact" : 100.0,
