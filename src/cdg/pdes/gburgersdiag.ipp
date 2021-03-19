@@ -3,7 +3,7 @@
 // Date         : 3/28/19 (DLR)
 // Description  : Observer object for carrying out L2 & extrema diagnostics for
 //                kinetic quantities
-// Copyright    : Copyright 2019. Colorado State University. All rights reserved
+// Copyright    : Copyright 2019. Colorado State University. All rights reserved.
 // Derived From : ObserverBase.
 //==================================================================================
 
@@ -14,7 +14,7 @@
 // ARGS   : traits: Traits sturcture
 //**********************************************************************************
 template<typename EquationType>
-GBurgersDiag<EquationType>::GBurgersDiag(const EqnBasePtr &equation, Grid &grid, typename ObserverBase<EquationType>::Traits &traits):
+GBurgersDiag<EquationType>::GBurgersDiag(EqnBasePtr &equation, Grid &grid, typename ObserverBase<EquationType>::Traits &traits):
 ObserverBase<EquationType>(equation, grid, traits),
 bInit_          (FALSE),
 cycle_          (0),
@@ -135,10 +135,10 @@ void GBurgersDiag<EquationType>::do_kinetic_L2(const Time t, const State &u, con
 
   // Make things a little easier:
   GTVector<GTVector<GFTYPE>*> utmp(5);
-  for ( GINT j=0; j<5; j++ ) utmp[j] = (*utmp_)[j];
+  for ( auto j=0; j<5; j++ ) utmp[j] = (*utmp_)[j];
 
   // Find kinetic components to operate on:
-  for ( GINT j=0; j<ikinetic_.size(); j++ ) ku_[j] = u[ikinetic_[j]];
+  for ( auto j=0; j<ikinetic_.size(); j++ ) ku_[j] = u[ikinetic_[j]];
 
 
   // Energy = <u^2>/2
@@ -149,7 +149,7 @@ void GBurgersDiag<EquationType>::do_kinetic_L2(const Time t, const State &u, con
   lmax[1] = 0.0;
   if ( ku_.size() == 1 || traits_.treat_as_1d ) {
     nd = traits_.treat_as_1d ? 1 : ndim;
-    for ( GINT j=0; j<nd; j++ ) {
+    for ( auto j=0; j<nd; j++ ) {
       GMTK::grad<GFTYPE>(*grid_, *ku_[0], j+1, utmp, *utmp[2]);
       utmp[2]->rpow(2);
       lmax[1] += grid_->integrate(*utmp[2],*utmp[0], isreduced); 
@@ -232,10 +232,10 @@ void GBurgersDiag<EquationType>::do_kinetic_max(const Time t, const State &u, co
 
   // Make things a little easier:
   GTVector<GTVector<GFTYPE>*> utmp(6);
-  for ( GINT j=0; j<6; j++ ) utmp[j] = (*utmp_)[j];
+  for ( auto j=0; j<6; j++ ) utmp[j] = (*utmp_)[j];
 
   // Find kinetic components to operate on:
-  for ( GINT j=0; j<ikinetic_.size(); j++ ) ku_[j] = u[ikinetic_[j]];
+  for ( auto j=0; j<ikinetic_.size(); j++ ) ku_[j] = u[ikinetic_[j]];
 
   // Energy = <u^2>/2
   lmax[0] = GMTK::energy(*grid_, ku_, utmp, isreduced, ismax);
@@ -244,7 +244,7 @@ void GBurgersDiag<EquationType>::do_kinetic_max(const Time t, const State &u, co
   lmax[1] = 0.0;
   if ( ku_.size() == 1 || traits_.treat_as_1d ) {
     nd = traits_.treat_as_1d ? 1 : ndim;
-    for ( GINT j=0; j<nd; j++ ) {
+    for ( auto j=0; j<nd; j++ ) {
       GMTK::grad<GFTYPE>(*grid_, *ku_[0], j+1, utmp, *utmp[2]);
       lmax[1] = MAX(lmax[1],utmp[2]->amax()); 
     }

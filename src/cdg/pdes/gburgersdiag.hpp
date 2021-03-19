@@ -3,7 +3,7 @@
 // Date         : 3/28/19 (DLR)
 // Description  : Observer object for carrying out L2 & extrema diagnostics for
 //                Burgers equation.
-// Copyright    : Copyright 2019. Colorado State University. All rights reserved
+// Copyright    : Copyright 2019. Colorado State University. All rights reserved.
 // Derived From : ObserverBase.
 //==================================================================================
 #if !defined(_GBURGERSDIAG_OBS_HPP)
@@ -57,7 +57,7 @@ public:
                "Grid is of incorrect type");
 
                            GBurgersDiag() = delete;
-                           GBurgersDiag(const EqnBasePtr &equation, Grid &grid, typename ObserverBase<EquationType>::Traits &traits);
+                           GBurgersDiag(EqnBasePtr &equation, Grid &grid, typename ObserverBase<EquationType>::Traits &traits);
                           ~GBurgersDiag() = default;
                            GBurgersDiag(const GBurgersDiag &a) = default;
                            GBurgersDiag &operator=(const GBurgersDiag &bu) = default;
