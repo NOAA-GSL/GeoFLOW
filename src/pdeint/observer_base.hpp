@@ -96,8 +96,8 @@ public:
         };
 
         ObserverBase() = default;
-	ObserverBase(const EqnBasePtr& equation, Grid& grid, Traits& traits) {eqn_ptr_=equation; traits_=traits; grid_= &grid; utmp_=nullptr;}
-	ObserverBase(const ObserverBase& obs) = default;
+	ObserverBase(EqnBasePtr& equation, Grid& grid, Traits& traits) {eqn_ptr_=equation; traits_=traits; grid_= &grid; utmp_=nullptr;}
+	ObserverBase(ObserverBase& obs) = default;
 	virtual ~ObserverBase() = default;
 	ObserverBase& operator=(const ObserverBase& obs) = default;
 
