@@ -657,7 +657,7 @@ GBOOL impl_boxdrybubble(const PropertyTree &ptree, GString &sconfig, GGrid &grid
   GSIZET              nxy;
   GFTYPE              x, y, z, r;
   GFTYPE              delT, dj, exnerb, exner, L, P0, pj, thetab, T0, Ts;
-  GTVector<GFTYPE>   *db, *d, *e, *pb, *Tb;
+  GTVector<GFTYPE>   *db, *dd, *e, *pb, *T;
   std::vector<GFTYPE> xc, xr;  
   GString             sblock;
 
@@ -672,9 +672,9 @@ GBOOL impl_boxdrybubble(const PropertyTree &ptree, GString &sconfig, GGrid &grid
 
   assert(u.size() == GDIM+4);
 
-  Tb    = utmp[0];  // background temp
+  T     = utmp[0];  // background temp
   e     = u  [GDIM];// int. energy density
-  d     = u[GDIM+1];// total density fluctuation
+  dd    = u[GDIM+1];// total density fluctuation
   db    = u[GDIM+2];// background density fluct, from solver
   pb    = u[GDIM+3];// background pressure  , from solver
   nxy   = (*xnodes)[0].size(); // same size for x, y, z
@@ -691,7 +691,7 @@ GBOOL impl_boxdrybubble(const PropertyTree &ptree, GString &sconfig, GGrid &grid
  *u[0]  = 0.0; // sx
  *u[1]  = 0.0; // sy
  if ( GDIM == 3 ) *u[2]  = 0.0; // sz
- *d     = 0.0;
+ *dd    = 0.0;
 
   for ( auto j=0; j<nxy; j++ ) { 
     x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; 
@@ -704,21 +704,21 @@ GBOOL impl_boxdrybubble(const PropertyTree &ptree, GString &sconfig, GGrid &grid
     delT      = L <= 1.0 ? 2.0*T0*pow(cos(0.5*PI*L),2.0) : 0.0;
 #if 1
     // Ts, delT are pot'l temp, 
-    (*Tb)[j]  = (Ts + delT)*exnerb; // T = (theta + dtheta)*exner
+    (*T) [j]  = (Ts + delT)*exnerb; // T = (theta + dtheta)*exner
     pj        = (*pb)[j]; 
-    (*d)[j]   = pj / ( RD * (*Tb)[j]  ) - (*db)[j];
-    dj        = (*d)[j] + (*db)[j];
-    (*e)[j]   = CVD * dj * ( (*Tb)[j] ); // e = Cv d (T+delT);
-//  (*Tb)[j]  = (Ts + delT)*exnerb; // T = (theta + dtheta)*exner
-//  (*Tb)[j]  = (thetab + delT)*exnerb;
-//  (*d)[j]   = pj / ( RD * (*Tb)[j] )  - (*db)[j];
+    (*dd)[j]  = pj / ( RD * (*T)[j]  ) - (*db)[j];
+    dj        = (*dd)[j] + (*db)[j]; // total density
+    (*e)[j]   = CVD * dj * ( (*T)[j] ); // e = Cv d (T+delT);
+//  (*T) [j]  = (Ts + delT)*exnerb; // T = (theta + dtheta)*exner
+//  (*T) [j]  = (thetab + delT)*exnerb;
+//  (*d)[j]   = pj / ( RD * (*T)[j] )  - (*db)[j];
 //  (*e)[j]   = CVD * dj * (thetab+delT)*(exnerb); // e = Cv d (theta+dtheta) * exner;
 
 #else
     // Check that hydrostatic state is maintained:
     (*d)[j]   = 0.0;
-    (*Tb)[j]  = Ts*exnerb; // T = (theta + dtheta)*exner
-    (*e)[j]   = CVD * (*db)[j] * ( (*Tb)[j] ); // e = Cv d (T);
+    (*T)[j]   = Ts*exnerb; // T = (theta + dtheta)*exner
+    (*e)[j]   = CVD * (*db)[j] * ( (*T)[j] ); // e = Cv d (T);
 #endif
 
   }
@@ -899,7 +899,7 @@ GBOOL impl_boxsod(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Stat
     if ( GDIM == 3 ) z = (*xnodes)[2][j];
     pj = a*atan((x-xc)/width) + b;
        
-//  (*d)[j]   = (*pb)[j] / ( RD * ( (*Tb)[j] + delT ) ) - (*db)[j];
+//  (*d)[j]   = (*pb)[j] / ( RD * ( (*T)[j] + delT ) ) - (*db)[j];
     (*d)[j]   = pj / ( RD * T0 );
     (*e) [j]  = CVD * (*d)[j]  * T0;
 cout << "boxsod: p=" << pj << " d=" << (*d)[j] <<  endl;
