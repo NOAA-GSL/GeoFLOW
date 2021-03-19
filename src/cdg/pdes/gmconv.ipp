@@ -273,11 +273,6 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
 
   gdiv_->apply(*rhoT, v_, urhstmp_, *dudt[DENSITY]); 
 
-  if ( uf[DENSITY] != NULLPTR ) {
-cout << "dudt_dry: uf[MOMENTUM]" << endl;
-     *dudt[DENSITY] -= *uf[DENSITY];//  += sdot(s_rhoT)
-  }
-  
   p     = urhstmp_[urhstmp_.size()-3]; // holds pressure
   T     = urhstmp_[urhstmp_.size()-6]; // holds temperature
   e     = u[ENERGY];                   // internal energy density
@@ -285,30 +280,21 @@ cout << "dudt_dry: uf[MOMENTUM]" << endl;
   // *************************************************************
   // Energy equation RHS:
   // *************************************************************
-  compute_cv(u, *tmp1, *tmp2);                     // Cv
+  compute_cv(u, *tmp1, *tmp2);                      // Cv
   geoflow::compute_temp<Ftype>(*e, *rhoT, *tmp2, *T);     // temperature
-  compute_qd  (u, *tmp1);                          // dry mass ratio
+  compute_qd  (u, *tmp1);                           // dry mass ratio
   geoflow::compute_p<Ftype>(*T, *rhoT, *tmp1, RD, *p);    // partial pressure for dry air
 
-  GMTK::saxpby<Ftype>(*tmp1, *e, 1.0, *p, 1.0);    // h = p+e, enthalpy density
+  GMTK::saxpby<Ftype>(*tmp1, *e, 1.0, *p, 1.0);     // h = p+e, enthalpy density
 
-  gdiv_->apply(*tmp1, v_, urhstmp_, *dudt[ENERGY]); 
+  gdiv_->apply(*tmp1, v_, urhstmp_, *dudt[ENERGY]); // Div(h v) 
 
-  gstressen_->apply(*rhoT, v_, urhstmp_, *tmp1);   // [mu u_i s^{ij}],j
- *dudt[ENERGY] -= *tmp1;                           // -= [mu u^i s^{ij}],j
+  gstressen_->apply(*rhoT, v_, urhstmp_, *tmp1);    // [mu u_i s^{ij}],j
+ *dudt[ENERGY] -= *tmp1;                            // -= [mu u^i s^{ij}],j
 
   gadvect_->apply(*p, v_, urhstmp_, *tmp1);         // v.Grad p 
  *dudt[ENERGY] -= *tmp1;                            // -= v . Grad p
 
-  GMTK::dot<Ftype>(fv_, v_, *tmp2, *tmp1);
- *dudt[ENERGY] += *tmp1;                            // += f_kinetic . v
-
-  if ( uf[ENERGY] != NULLPTR ) {                    
-cout << "dudt_dry: uf[ENERGY]" << endl;
-    *tmp1 = *uf[ENERGY]; *tmp1 *= *Mass;
-    GMTK::saxpby<Ftype>(*dudt[ENERGY], 1.0, *tmp1, -1.0); 
-                                                    // -= q_heat
-  }
 
   // *************************************************************
   // Momentum equations RHS:
@@ -349,13 +335,6 @@ cout << "dudt_dry: uf[ENERGY]" << endl;
       tmp2->pointProd(*dd, *tmp2);
      *tmp2 *= *Mass;             
      *dudt[j] -= *tmp2;                               // -= rho' vec{g} M J
-    }
-
-    if ( traits_.bforced && uf[j] != NULLPTR ) {                    
-cout << "dudt_dry: uf[MOMENTUM]" << endl;
-      *tmp1 = *uf[j]; *tmp1 *= *Mass;
-      GMTK::saxpby<Ftype>(*dudt[j], 1.0, *tmp1, -1.0); 
-                                                      // -= f_v
     }
 
   } // end, momentum loop
