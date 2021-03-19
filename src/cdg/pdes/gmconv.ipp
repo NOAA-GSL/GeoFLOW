@@ -290,7 +290,7 @@ cout << "dudt_dry: uf[MOMENTUM]" << endl;
   compute_qd  (u, *tmp1);                          // dry mass ratio
   geoflow::compute_p<Ftype>(*T, *rhoT, *tmp1, RD, *p);    // partial pressure for dry air
 
-  GMTK::saxpby<Ftype>(*tmp1, *e, 1.0, *p, 1.0);     // h = p+e, enthalpy density
+  GMTK::saxpby<Ftype>(*tmp1, *e, 1.0, *p, 1.0);    // h = p+e, enthalpy density
 
   gdiv_->apply(*tmp1, v_, urhstmp_, *dudt[ENERGY]); 
 
@@ -427,8 +427,7 @@ void GMConv<TypePack>::dudt_wet(const Time &t, const State &u, const State &uf, 
   // Get total density and inverse: *rhoT  = *u[DENSITY]; 
  *rhoT = *u[DENSITY];
   if ( traits_.usebase ) *rhoT +=  *ubase_[0];   
- *irhoT = *rhoT;
-  irhoT->rpow(-1.0);
+ *irhoT = *rhoT; irhoT->rpow(-1.0);
 
   // Compute velocity for timestep:
   compute_v(s_, *irhoT, v_); // stored in v_
