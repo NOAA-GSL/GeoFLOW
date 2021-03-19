@@ -161,6 +161,18 @@ public:
           GString         ssteptype;            // stepping method
         };
 
+        // Starting indices for each sector:
+        GINT               MOMENTUM;
+        GINT               ENERGY;
+        GINT               DENSITY;
+        GINT               VAPOR;
+        GINT               LIQMASS;
+        GINT               ICEMASS;
+        GINT               PRESCRIBED;
+        GINT               BASESTATE;
+        GINT               LIQTERMV;
+        GINT               ICETERMV;
+
         GMConv() = delete; 
         GMConv(Grid &grid, GMConv<TypePack>::Traits &traits);
        ~GMConv();
@@ -177,6 +189,8 @@ public:
 
         GMConv<TypePack>::Traits &get_traits() { return traits_; }           // Get traits
                                             
+inline  void                compute_v    (const State &u, StateComp &di, State &v);
+inline  void                compute_v    (const State &u, GINT idir, StateComp &di, StateComp &vi);
 
 protected:
         void                step_impl(const Time &t, State &uin, State &uf, State &ub, 
@@ -217,7 +231,6 @@ inline  void                compute_cv   (const State &u, StateComp &utmp, State
 inline  void                compute_qd   (const State &u, StateComp &qd);
 inline  void                compute_falloutsrc
                                          (StateComp &g, State &qi, State &v, GINT jexcl, State &utmp, StateComp &r );
-inline  void                compute_v    (const State &u, StateComp &id, State &v);
 inline  void                compute_vpref(StateComp &tv, State &W);
 inline  void                compute_vpref(StateComp &tv, GINT idir, StateComp &W);
 inline  void                assign_helpers(const State &u, const State &uf);
@@ -286,17 +299,6 @@ inline  GINT                szrhstmp();
         std::function<void(const Time &t, State &u, const Time &dt)>
                            steptop_callback_;
 
-        // Starting indices for each sector:
-        GINT               MOMENTUM;
-        GINT               ENERGY;
-        GINT               DENSITY;
-        GINT               VAPOR;
-        GINT               LIQMASS;
-        GINT               ICEMASS;
-        GINT               PRESCRIBED;
-        GINT               BASESTATE;
-        GINT               LIQTERMV;
-        GINT               ICETERMV;
 
 
 };

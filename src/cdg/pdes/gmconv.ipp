@@ -1146,7 +1146,7 @@ void GMConv<TypePack>::compute_qd(const State &u, StateComp &qd)
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : compute_v
+// METHOD : compute_v (1)
 // DESC   : Compute velocity from momentum density in state vector.
 //             v_i = s_i/ d
 //          where v_i is the member data array, d  is (total) density 
@@ -1158,7 +1158,7 @@ void GMConv<TypePack>::compute_qd(const State &u, StateComp &qd)
 template<typename TypePack>
 void GMConv<TypePack>::compute_v(const State &u, StateComp &id, State &v)
 {
-   GString    serr = "GMConv<TypePack>::compute_v: ";
+   GString    serr = "GMConv<TypePack>::compute_v(1): ";
 
 
    if ( !traits_.usemomden ) {
@@ -1177,7 +1177,40 @@ void GMConv<TypePack>::compute_v(const State &u, StateComp &id, State &v)
      *v[j] *= id[j];  // divide by density
    }
 
-} // end of method compute_v
+} // end of method compute_v (1)
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : compute_v (2)
+// DESC   : Compute velocity component from momentum density in state vector.
+//             v_i = s_i/ d
+//          where v_i is the member data array, d  is (total) density 
+// ARGS   : u    : state
+//          idir : which component to compute
+//          id   : 1/denstiy
+//          v    : velocity state component
+// RETURNS: none. Member data, v_, is set here
+//**********************************************************************************
+template<typename TypePack>
+void GMConv<TypePack>::compute_v(const State &u, GINT idir, StateComp &id, StateComp &v)
+{
+   GString    serr = "GMConv<TypePack>::compute_v: ";
+
+   assert(idir > 0 && idir <= nc_ );
+
+   if ( !traits_.usemomden ) {
+     // State uses velocity form already so 
+     // do pointer assignment:
+     v = *u[idir-1];
+     return;
+   }
+
+   // Find velocity from momentum density:
+   v  = *u[idir-1];  // deep copy
+   v *= id[idir-1];  // divide by density
+
+} // end of method compute_v (2)
 
 
 //**********************************************************************************
