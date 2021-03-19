@@ -129,7 +129,7 @@ void GMConvDiag<EquationType>::do_L2(const Time t, const State &u, const State &
   GTVector<GTVector<GFTYPE>*> utmp(3);
   for ( auto j=0; j<utmp.size(); j++ ) utmp[j] = (*utmp_)[j];
 
-  // Find internal energy density:
+  // Find internal energy density, <e>:
   e = u[solver_->ENERGY];
   lmax[1] = grid_->integrate(*e, *utmp[0], FALSE);
 
@@ -137,9 +137,10 @@ void GMConvDiag<EquationType>::do_L2(const Time t, const State &u, const State &
   d = u[solver_->DENSITY];
  *utmp[1] = *d;
   if ( trsolver.usebase ) *utmp[1] += *u[solver_->BASESTATE];
-  lmax[0] = grid_->integrate(*utmp[1], *utmp[0], FALSE);
+  lmax[0] = grid_->integrate(*utmp[1], *utmp[0], FALSE)
+          / grid_->volume();
 
-  // Find kinetic energy density:  0.5 rho v^2
+  // Find kinetic energy density,  <0.5 rho v^2>
   di = utmp[1]; di->rpow(-1); // inverse (total) density
   solver_->compute_v(u, 1, *di, *utmp[2]);
   for ( auto j=1; j<ndim; j++ ) {
@@ -148,7 +149,8 @@ void GMConvDiag<EquationType>::do_L2(const Time t, const State &u, const State &
    *utmp[2] +=  *utmp[1];
   }
   utmp[2]->apointProd(0.5, *d);;
-  lmax[2] = grid_->integrate(*utmp[2], *utmp[0], FALSE);
+  lmax[2] = grid_->integrate(*utmp[2], *utmp[0], FALSE)
+          / grid_->volume();
 
 
   // Gather final sums:
@@ -176,10 +178,10 @@ void GMConvDiag<EquationType>::do_L2(const Time t, const State &u, const State &
     ios.open(fullfile,std::ios_base::app);
     if ( doheader ) {
       ios << "#nelems=" << ne << " dxmin=" << dxmin << " elmin=" << elmin << " elmax=" << elmax << " elavg=" << elavg << std::endl;
-      ios << "#time      Mass       KE        E_int    " << std::endl;
+      ios << "#time      Mass       <KE>        <E_int>    " << std::endl;
     }
 
-    ios << t  << setprecision(8) 
+    ios << t  << setprecision(15) 
         << "    " << mass  << "    "  << eint
         << "    " << ke
         << std::endl;
@@ -266,10 +268,10 @@ void GMConvDiag<EquationType>::do_max(const Time t, const State &u, const State 
     ios.open(fullfile,std::ios_base::app);
     if ( doheader ) {
       ios << "#nelems=" << ne << " dxmin=" << dxmin << " elmin=" << elmin << " elmax=" << elmax << " elavg=" << elavg << std::endl;
-      ios << "#time      Mass       KE        E_int    " << std::endl;
+      ios << "#time      den_tot       KE        E_int    " << std::endl;
     }
 
-    ios << t  << setprecision(8) 
+    ios << t  << setprecision(15) 
         << "    " << mass  << "    "  << ke
         << "    " << eint   
         << std::endl;
