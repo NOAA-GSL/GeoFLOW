@@ -178,7 +178,7 @@ void GMConvDiag<EquationType>::do_L2(const Time t, const State &u, const State &
     ios.open(fullfile,std::ios_base::app);
     if ( doheader ) {
       ios << "#nelems=" << ne << " dxmin=" << dxmin << " elmin=" << elmin << " elmax=" << elmax << " elavg=" << elavg << std::endl;
-      ios << "#time      Mass       <d KE>        <E_int>    " << std::endl;
+      ios << "#time      Mass       <e>         <d KE>     " << std::endl;
     }
 
     ios << t  << scientific << setprecision(15) 
@@ -270,12 +270,12 @@ void GMConvDiag<EquationType>::do_max(const Time t, const State &u, const State 
     ios.open(fullfile,std::ios_base::app);
     if ( doheader ) {
       ios << "#nelems=" << ne << " dxmin=" << dxmin << " elmin=" << elmin << " elmax=" << elmax << " elavg=" << elavg << std::endl;
-      ios << "#time      den_tot       d KE        E_int    " << std::endl;
+      ios << "#time      den_tot        e           d KE      " << std::endl;
     }
 
     ios << t  << scientific << setprecision(15) 
-        << "    " << mass  << "    "  << ke
-        << "    " << eint   
+        << "    " << mass  << "    "  << eint
+        << "    " << ke
         << std::endl;
     ios.close();
   }
