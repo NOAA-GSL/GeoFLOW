@@ -131,14 +131,14 @@ void GMConvDiag<EquationType>::do_L2(const Time t, const State &u, const State &
 
   // Find internal energy density, <e>:
   e = u[solver_->ENERGY];
-  lmax[1] = grid_->integrate(*e, *utmp[0], FALSE);
+  lmax[1] = grid_->integrate(*e, *utmp[0], FALSE)
+          / grid_->volume();
 
   // Find local integrated mass:
   d = u[solver_->DENSITY];
  *utmp[1] = *d;
   if ( trsolver.usebase ) *utmp[1] += *u[solver_->BASESTATE];
-  lmax[0] = grid_->integrate(*utmp[1], *utmp[0], FALSE)
-          / grid_->volume();
+  lmax[0] = grid_->integrate(*utmp[1], *utmp[0], FALSE);
 
   // Find kinetic energy density,  <0.5 rho v^2>
   di = utmp[1]; di->rpow(-1); // inverse (total) density
@@ -181,7 +181,7 @@ void GMConvDiag<EquationType>::do_L2(const Time t, const State &u, const State &
       ios << "#time      Mass       <KE>        <E_int>    " << std::endl;
     }
 
-    ios << t  << setprecision(15) 
+    ios << t  << scientific << setprecision(15) 
         << "    " << mass  << "    "  << eint
         << "    " << ke
         << std::endl;
@@ -271,7 +271,7 @@ void GMConvDiag<EquationType>::do_max(const Time t, const State &u, const State 
       ios << "#time      den_tot       KE        E_int    " << std::endl;
     }
 
-    ios << t  << setprecision(15) 
+    ios << t  << scientific << setprecision(15) 
         << "    " << mass  << "    "  << ke
         << "    " << eint   
         << std::endl;
