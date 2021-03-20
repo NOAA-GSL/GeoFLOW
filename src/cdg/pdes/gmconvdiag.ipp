@@ -131,8 +131,7 @@ void GMConvDiag<EquationType>::do_L2(const Time t, const State &u, const State &
 
   // Find internal energy density, <e>:
   e = u[solver_->ENERGY];
-  lmax[1] = grid_->integrate(*e, *utmp[0], FALSE)
-          / grid_->volume();
+  lmax[1] = grid_->integrate(*e, *utmp[0], FALSE);
 
   // Find local integrated mass:
   d = u[solver_->DENSITY];
@@ -149,13 +148,12 @@ void GMConvDiag<EquationType>::do_L2(const Time t, const State &u, const State &
    *utmp[2] +=  *utmp[1];
   }
   utmp[2]->apointProd(0.5, *d);;
-  lmax[2] = grid_->integrate(*utmp[2], *utmp[0], FALSE)
-          / grid_->volume();
+  lmax[2] = grid_->integrate(*utmp[2], *utmp[0], FALSE);
 
 
   // Gather final sums:
   GComm::Allreduce(lmax.data(), gmax.data(), 3, T2GCDatatype<GFTYPE>(), GC_OP_SUM, grid_->get_comm());
-  mass = gmax[0]; eint = gmax[1]; ke = gmax[2]; 
+  mass = gmax[0]; eint = gmax[1]/grid_->volume(); ke = gmax[2]/grid_->volume(); 
 
   // Print data to file:
   GBOOL         doheader=FALSE;
