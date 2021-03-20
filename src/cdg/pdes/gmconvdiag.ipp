@@ -119,7 +119,7 @@ void GMConvDiag<EquationType>::do_L2(const Time t, const State &u, const State &
   GBOOL   ismax    = FALSE;
   GINT    nd, ndim = grid_->gtype() == GE_2DEMBEDDED ? 3 : GDIM;
   GFTYPE absu, absw, eint, ke, mass;
-  GTVector<GFTYPE> *d, *di, *e;
+  GTVector<GFTYPE> *d, *e;
   GTVector<GFTYPE> lmax(3), gmax(3);
   typename GMConv<EquationType>::Traits trsolver;
 
@@ -140,14 +140,16 @@ void GMConvDiag<EquationType>::do_L2(const Time t, const State &u, const State &
   lmax[0] = grid_->integrate(*utmp[1], *utmp[0], FALSE);
 
   // Find kinetic energy density,  <0.5 rho v^2>
-  di = utmp[1]; di->rpow(-1); // inverse (total) density
-  solver_->compute_v(u, 1, *di, *utmp[2]);
+  *utmp[0] = *utmp[1]; utmp[0]->rpow(-1); // inverse total density
+  solver_->compute_v(u, 1, *utmp[0], *utmp[2]); utmp[2]->rpow(2);
   for ( auto j=1; j<ndim; j++ ) {
-    solver_->compute_v(u, j+1, *di, *utmp[1]);
+    solver_->compute_v(u, j+1, *utmp[0], *utmp[1]);
     utmp[1]->rpow(2);
    *utmp[2] +=  *utmp[1];
   }
-  utmp[2]->apointProd(0.5, *d);;
+ *utmp[1] = *d;
+  if ( trsolver.usebase ) *utmp[1] += *u[solver_->BASESTATE];
+  utmp[2]->apointProd(0.5, *utmp[1]); // d v^2
   lmax[2] = grid_->integrate(*utmp[2], *utmp[0], FALSE);
 
 
@@ -176,7 +178,7 @@ void GMConvDiag<EquationType>::do_L2(const Time t, const State &u, const State &
     ios.open(fullfile,std::ios_base::app);
     if ( doheader ) {
       ios << "#nelems=" << ne << " dxmin=" << dxmin << " elmin=" << elmin << " elmax=" << elmax << " elavg=" << elavg << std::endl;
-      ios << "#time      Mass       <KE>        <E_int>    " << std::endl;
+      ios << "#time      Mass       <d KE>        <E_int>    " << std::endl;
     }
 
     ios << t  << scientific << setprecision(15) 
@@ -209,7 +211,7 @@ void GMConvDiag<EquationType>::do_max(const Time t, const State &u, const State 
   GBOOL   ismax    = FALSE;
   GINT    nd, ndim = grid_->gtype() == GE_2DEMBEDDED ? 3 : GDIM;
   GFTYPE absu, absw, eint, ke, mass;
-  GTVector<GFTYPE> *d, *di, *e;
+  GTVector<GFTYPE> *d, *e;
   GTVector<GFTYPE> lmax(3), gmax(3);
   typename GMConv<EquationType>::Traits trsolver;
 
@@ -230,14 +232,16 @@ void GMConvDiag<EquationType>::do_max(const Time t, const State &u, const State 
   lmax[0] = utmp[1]->amax();
 
   // Find kinetic energy density:  0.5 rho v^2
-  di = utmp[1]; di->rpow(-1); // inverse (total) density
-  solver_->compute_v(u, 1, *di, *utmp[2]);
+  *utmp[0] = *utmp[1]; utmp[0]->rpow(-1); // inverse total density
+  solver_->compute_v(u, 1, *utmp[0], *utmp[2]); utmp[2]->rpow(2);
   for ( auto j=1; j<ndim; j++ ) {
-    solver_->compute_v(u, j+1, *di, *utmp[1]);
+    solver_->compute_v(u, j+1, *utmp[0], *utmp[1]);
     utmp[1]->rpow(2);
    *utmp[2] +=  *utmp[1];
   }
-  utmp[2]->apointProd(0.5, *d);;
+ *utmp[1] = *d;
+  if ( trsolver.usebase ) *utmp[1] += *u[solver_->BASESTATE];
+  utmp[2]->apointProd(0.5, *utmp[1]);;
   lmax[2] = utmp[2]->amax();
 
 
@@ -266,7 +270,7 @@ void GMConvDiag<EquationType>::do_max(const Time t, const State &u, const State 
     ios.open(fullfile,std::ios_base::app);
     if ( doheader ) {
       ios << "#nelems=" << ne << " dxmin=" << dxmin << " elmin=" << elmin << " elmax=" << elmax << " elavg=" << elavg << std::endl;
-      ios << "#time      den_tot       KE        E_int    " << std::endl;
+      ios << "#time      den_tot       d KE        E_int    " << std::endl;
     }
 
     ios << t  << scientific << setprecision(15) 
