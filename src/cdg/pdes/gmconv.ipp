@@ -267,12 +267,6 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
   // change the sign and divide by Mass at the end....
 
 
-  // *************************************************************
-  // Total density RHS:
-  // *************************************************************
-
-  gdiv_->apply(*rhoT, v_, urhstmp_, *dudt[DENSITY]); 
-
   p     = urhstmp_[urhstmp_.size()-3]; // holds pressure
   T     = urhstmp_[urhstmp_.size()-6]; // holds temperature
   e     = u[ENERGY];                   // internal energy density
@@ -294,6 +288,13 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
 
   gadvect_->apply(*p, v_, urhstmp_, *tmp1);         // v.Grad p 
  *dudt[ENERGY] -= *tmp1;                            // -= v . Grad p
+
+
+  // *************************************************************
+  // Total density RHS:
+  // *************************************************************
+
+  gdiv_->apply(*rhoT, v_, urhstmp_, *dudt[DENSITY]); 
 
 
   // *************************************************************
