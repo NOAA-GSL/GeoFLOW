@@ -258,16 +258,15 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
 
 
   // Get total density and inverse: *rhoT  = *u[DENSITY]; 
- *rhoT = *u[DENSITY];
-  if ( traits_.usebase ) *rhoT +=  *ubase_[0];   
- *irhoT = *rhoT; irhoT->rpow(-1.0); // 1/rhoT
+  *rhoT = *u[DENSITY];
+//if ( traits_.usebase ) *rhoT +=  *ubase_[0];   
+ *irhoT = *u[DENSITY]; irhoT->rpow(-1.0); // 1/rhoT
 
   // Compute velocity for timestep:
   compute_v(s_, *irhoT, v_); // stored in v_
   
   // Compute all terms as though they are on the LHS, then
   // change the sign and divide by Mass at the end....
-
 
   p     = urhstmp_[stmp.size()+2]; // holds pressure
   T     = urhstmp_[stmp.size()+5]; // holds temperature
@@ -276,20 +275,20 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
   // *************************************************************
   // Energy equation RHS:
   // *************************************************************
-  compute_cv(u, *tmp1, *tmp2);                      // Cv
+  compute_cv(u, *tmp1, *tmp2);                            // Cv
   geoflow::compute_temp<Ftype>(*e, *rhoT, *tmp2, *T);     // temperature
-  compute_qd  (u, *tmp1);                           // dry mass ratio
+  compute_qd  (u, *tmp1);                                 // dry mass ratio
   geoflow::compute_p<Ftype>(*T, *rhoT, *tmp1, RD, *p);    // partial pressure for dry air
 
-  GMTK::saxpby<Ftype>(*tmp1, *e, 1.0, *p, 1.0);     // h = p+e, enthalpy density
+  GMTK::saxpby<Ftype>(*tmp1, *e, 1.0, *p, 1.0); // h = p+e, enthalpy density
 
   gdiv_->apply(*tmp1, v_, stmp, *dudt[ENERGY]); // Div(h v) 
 
   gstressen_->apply(*rhoT, v_, stmp, *tmp1);    // [mu u_i s^{ij}],j
- *dudt[ENERGY] -= *tmp1;                            // -= [mu u^i s^{ij}],j
+ *dudt[ENERGY] -= *tmp1;                        // -= [mu u^i s^{ij}],j
 
   gadvect_->apply(*p, v_, stmp, *tmp1);         // v.Grad p 
- *dudt[ENERGY] -= *tmp1;                            // -= v . Grad p
+ *dudt[ENERGY] -= *tmp1;                        // -= v . Grad p
 
 
   // *************************************************************
