@@ -227,6 +227,7 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
   StateComp *Mass=grid_->massop().data();
   StateComp *tmp1, *tmp2;
   State      g(nc_); 
+  State      stmp(4);
 
   // NOTE:
   // Make sure that, in init(), Helmholtz op is using only
@@ -238,11 +239,12 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
 
   // Set tmp pool for RHS computations:
   assert(urhstmp_.size() >= szrhstmp());
-  Ltot  = urhstmp_[urhstmp_.size()-1];
-  rhoT  = urhstmp_[urhstmp_.size()-2];
-  irhoT = urhstmp_[urhstmp_.size()-3];
-  tmp1  = urhstmp_[urhstmp_.size()-4];
-  tmp2  = urhstmp_[urhstmp_.size()-5];
+  for ( auto j=0; j<stmp.size(); j++ ) stmp[j]=urhstmp_[j];
+  Ltot  = urhstmp_[stmp.size()  ];
+  rhoT  = urhstmp_[stmp.size()+1];
+  irhoT = urhstmp_[stmp.size()+2];
+  tmp1  = urhstmp_[stmp.size()+3];
+  tmp2  = urhstmp_[stmp.size()+4];
 
 #if 0
   // Do filtering, if any:
@@ -267,8 +269,8 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
   // change the sign and divide by Mass at the end....
 
 
-  p     = urhstmp_[urhstmp_.size()-3]; // holds pressure
-  T     = urhstmp_[urhstmp_.size()-6]; // holds temperature
+  p     = urhstmp_[stmp.size()+2]; // holds pressure
+  T     = urhstmp_[stmp.size()+5]; // holds temperature
   e     = u[ENERGY];                   // internal energy density
 
   // *************************************************************
@@ -281,12 +283,12 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
 
   GMTK::saxpby<Ftype>(*tmp1, *e, 1.0, *p, 1.0);     // h = p+e, enthalpy density
 
-  gdiv_->apply(*tmp1, v_, urhstmp_, *dudt[ENERGY]); // Div(h v) 
+  gdiv_->apply(*tmp1, v_, stmp, *dudt[ENERGY]); // Div(h v) 
 
-  gstressen_->apply(*rhoT, v_, urhstmp_, *tmp1);    // [mu u_i s^{ij}],j
+  gstressen_->apply(*rhoT, v_, stmp, *tmp1);    // [mu u_i s^{ij}],j
  *dudt[ENERGY] -= *tmp1;                            // -= [mu u^i s^{ij}],j
 
-  gadvect_->apply(*p, v_, urhstmp_, *tmp1);         // v.Grad p 
+  gadvect_->apply(*p, v_, stmp, *tmp1);         // v.Grad p 
  *dudt[ENERGY] -= *tmp1;                            // -= v . Grad p
 
 
@@ -294,13 +296,13 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
   // Total density RHS:
   // *************************************************************
 
-  gdiv_->apply(*rhoT, v_, urhstmp_, *dudt[DENSITY]); 
+  gdiv_->apply(*rhoT, v_, stmp, *dudt[DENSITY]); 
 
 
   // *************************************************************
   // Momentum equations RHS:
   // *************************************************************
-  dd   = urhstmp_[urhstmp_.size()-6]; // holds density fluctuation
+  dd   = urhstmp_[stmp.size()+5]; // holds density fluctuation
  *dd   = (*rhoT); 
   if ( traits_.usebase ) {
    *dd -= *ubase_[0];                 // density fluctuation
@@ -308,7 +310,7 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
   }
   for ( auto j=0; j<v_.size(); j++ ) { // for each component
 
-    gdiv_->apply(*s_[j], v_, urhstmp_, *dudt[j]); 
+    gdiv_->apply(*s_[j], v_, stmp, *dudt[j]); 
 
 
 #if 0
@@ -320,7 +322,7 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
    *dudt[j] += *tmp1;                                 // += Grad p'
 #endif
 
-    gstressen_->apply(*rhoT, v_, j+1, urhstmp_, 
+    gstressen_->apply(*rhoT, v_, j+1, stmp, 
                                          *tmp1);      // [mu s^{ij}],j
    *dudt[j] -= *tmp1;                                 // -= [mu s^{ij}],j
 
