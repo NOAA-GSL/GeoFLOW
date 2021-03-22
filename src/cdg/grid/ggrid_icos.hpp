@@ -161,17 +161,17 @@ friend  std::ostream&       operator<<(std::ostream&, GGridIcos &);         // O
                                GTVector<GSIZET> &igbdy,
                                GTVector<GUINT>  &debdy);                    // 
         void                elem_face_data(
-                              const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+                              GTMatrix<GTVector<GFTYPE>>       &dXdXi,
                               GTVector<GSIZET>                 &gieface,
                               GTVector<GFTYPE>                 &face_mass,
                               GTVector<GTVector<GFTYPE>>       &normals); // compute elem face data entry point
         void                elem_face_data2d(
-                              const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+                              GTMatrix<GTVector<GFTYPE>>       &dXdXi,
                               GTVector<GSIZET>                 &gieface,
                               GTVector<GFTYPE>                 &face_mass,
                               GTVector<GTVector<GFTYPE>>       &normals); // compute 2d elem face data
         void                elem_face_data3d(
-                              const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+                              GTMatrix<GTVector<GFTYPE>>       &dXdXi,
                               GTVector<GSIZET>                 &gieface,
                               GTVector<GFTYPE>                 &face_mass,
                               GTVector<GTVector<GFTYPE>>       &normals); // compute 3d elem face data

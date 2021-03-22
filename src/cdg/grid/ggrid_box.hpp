@@ -57,7 +57,7 @@ public:
                               GTVector<GSIZET>             &igbdy,
                               GTVector<GUINT>              &degbdy);         // config bdy
         void                elem_face_data(
-                              const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+                              GTMatrix<GTVector<GFTYPE>>       &dXdXi,
                               GTVector<GSIZET>                 &gieface,
                               GTVector<GFTYPE>                 &face_mass,
                               GTVector<GTVector<GFTYPE>>       &normals);    // compute elem face data
@@ -116,12 +116,12 @@ private:
         void                find_rank_subdomain();                               // find task's default subdomain
 
         void                elem_face_data2d(
-                              const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+                              GTMatrix<GTVector<GFTYPE>>       &dXdXi,
                               GTVector<GSIZET>                 &gieface,
                               GTVector<GFTYPE>                 &face_mass,
                               GTVector<GTVector<GFTYPE>>       &normals);          // compute 2d elem face data
         void                elem_face_data3d(
-                              const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+                              GTMatrix<GTVector<GFTYPE>>       &dXdXi,
                               GTVector<GSIZET>                 &gieface,
                               GTVector<GFTYPE>                 &face_mass,
                               GTVector<GTVector<GFTYPE>>       &normals);          // compute 3d elem face data

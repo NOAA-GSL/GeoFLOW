@@ -1121,10 +1121,10 @@ void GGridIcos::find_gbdy_ind3d(GFTYPE radius,
 //          normals   : vector of normal components
 // RETURNS: none
 //**********************************************************************************
-void GGridIcos::elem_face_data(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
-                              GTVector<GSIZET>                 &gieface,
-                              GTVector<GFTYPE>                 &face_mass,
-                              GTVector<GTVector<GFTYPE>>       &normals)
+void GGridIcos::elem_face_data(GTMatrix<GTVector<GFTYPE>>       &dXdXi,
+                               GTVector<GSIZET>                 &gieface,
+                               GTVector<GFTYPE>                 &face_mass,
+                               GTVector<GTVector<GFTYPE>>       &normals)
 {
 
 	GEOFLOW_TRACE();
@@ -1152,7 +1152,7 @@ void GGridIcos::elem_face_data(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
 //          normals   : vector of normal components at each elem bdy node
 // RETURNS: none
 //**********************************************************************************
-void GGridIcos::elem_face_data2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+void GGridIcos::elem_face_data2d(GTMatrix<GTVector<GFTYPE>>      &dXdXi,
                                 GTVector<GSIZET>                 &gieface,
                                 GTVector<GFTYPE>                 &face_mass,
                                 GTVector<GTVector<GFTYPE>>       &normals)
@@ -1232,10 +1232,10 @@ void GGridIcos::elem_face_data2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
 //          normals   : vector of normal components at each elem bdy node
 // RETURNS: none
 //**********************************************************************************
-void GGridIcos::elem_face_data3d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
-                                GTVector<GSIZET>                 &gieface,
-                                GTVector<GFTYPE>                 &face_mass,
-                                GTVector<GTVector<GFTYPE>>       &normals)
+void GGridIcos::elem_face_data3d(GTMatrix<GTVector<GFTYPE>>       &dXdXi,
+                                 GTVector<GSIZET>                 &gieface,
+                                 GTVector<GFTYPE>                 &face_mass,
+                                 GTVector<GTVector<GFTYPE>>       &normals)
 {
    GEOFLOW_TRACE();
 

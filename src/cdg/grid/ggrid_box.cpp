@@ -1753,10 +1753,10 @@ void GGridBox::find_gbdy_ind3d(GINT bdyid, GBOOL bunique,
 //          normals   : vector of normal components
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::elem_face_data(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
-                             GTVector<GSIZET>                 &gieface,
-                             GTVector<GFTYPE>                 &face_mass,
-                             GTVector<GTVector<GFTYPE>>       &normals)
+void GGridBox::elem_face_data(GTMatrix<GTVector<GFTYPE>> &dXdXi,
+                              GTVector<GSIZET>                 &gieface,
+                              GTVector<GFTYPE>                 &face_mass,
+                              GTVector<GTVector<GFTYPE>>       &normals)
 {
     
 #if defined(_G_IS2D)
@@ -1783,10 +1783,10 @@ void GGridBox::elem_face_data(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
 //          normals   : vector of normal components at each elem bdy node
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::elem_face_data2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
-                               GTVector<GSIZET>                 &gieface,
-                               GTVector<GFTYPE>                 &face_mass,
-                               GTVector<GTVector<GFTYPE>>       &normals)
+void GGridBox::elem_face_data2d(GTMatrix<GTVector<GFTYPE>>       &dXdXi,
+                                GTVector<GSIZET>                 &gieface,
+                                GTVector<GFTYPE>                 &face_mass,
+                                GTVector<GTVector<GFTYPE>>       &normals)
 {
    GEOFLOW_TRACE();
 
@@ -1796,7 +1796,7 @@ void GGridBox::elem_face_data2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
    GFTYPE            jac, xm;
    GTPoint<GFTYPE>   kp(3), xp(3), p1(3), p2(3);
    GTVector<GINT>   *face_ind;
-   GTVector<GFTYPE> *mass;
+   GTVector<GFTYPE> *mass, *pdX;
 
    tiny  = 100.0*std::numeric_limits<GFTYPE>::epsilon();
    kp    = 0.0;
@@ -1826,16 +1826,16 @@ void GGridBox::elem_face_data2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
      istart = 0;
      for ( auto e=0; e<gelems_.size(); e++ ) { // over all elements
        mass      = &gelems_[e]->face_mass();
-       for ( auto j=0; j<gelems_[e]->nfaces(); j++ ) { 
+       for ( auto j=0; j<gelems_[e]->nfaces(); j++ ) { // loop over faces
          face_ind  = &gelems_[e]->face_indices(j);
          id = j % 2;
-         ip = (j+1) % 2;
+         ip = (j+1) % 2; pdX = &dXdXi(id,0);
          xm = j == 1 || j == 2 ? 1.0 : -1.0;
          for ( auto i=0; i<face_ind->size(); i++ ) { // over elem bdy points
            fi = (*face_ind)[i]; // index into elem data
            ib = fi + istart;    // index into global volume data
            gieface      [nbdy] = ib;
-           face_mass    [nbdy] = (*mass)[fi] * dXdXi(id,0)[ib];
+           face_mass    [nbdy] = (*mass)[fi] * (*pdX)[ib];
            normals[ip][nbdy++] = xm;
 //cout << "GBox::elem_face_data2d: nbdy=" << nbdy << " e=" << e << " face=" << j << " nx=" << normals[0][nbdy-1] << " ny=" << normals[1][nbdy-1] << " faceMass=" << face_mass[nbdy-1] << " gie=" << ib << endl;
          }
@@ -1891,10 +1891,10 @@ void GGridBox::elem_face_data2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
 //          normals   : vector of normal components at each elem bdy node
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::elem_face_data3d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
-                               GTVector<GSIZET>                 &gieface,
-                               GTVector<GFTYPE>                 &face_mass,
-                               GTVector<GTVector<GFTYPE>>       &normals)
+void GGridBox::elem_face_data3d(GTMatrix<GTVector<GFTYPE>>       &dXdXi,
+                                GTVector<GSIZET>                 &gieface,
+                                GTVector<GFTYPE>                 &face_mass,
+                                GTVector<GTVector<GFTYPE>>       &normals)
 {
    GEOFLOW_TRACE();
 
