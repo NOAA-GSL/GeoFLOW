@@ -866,8 +866,8 @@ void GGridBox::find_rank_subdomain()
     dx[k] = Lbox_[k] / static_cast<GFTYPE>(ne_[k]);
   }
 
-testty_.resize(nglobal);
-testid_.resize(nglobal);
+testty_.resize(nthisrank);
+testid_.resize(nthisrank);
 
   // Compute vertices of all hexes ('cubes')
   // for this task:
