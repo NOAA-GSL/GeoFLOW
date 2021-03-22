@@ -291,10 +291,10 @@ cout << "main: dmult=" << dmult << endl;
 
     if ( myrank == 0 ) {
       if ( errs[0] > eps ) {
-        std::cout << "main: ---------------------------GDivOp FAILED: " << errs[0]<< std::endl;
+        std::cout << "main: ---------------------------FAILED: " << errs[0]<< std::endl;
       errcode += 1;
       } else {
-        std::cout << "main: ---------------------------GDivOp OK: " << errs[0] << std::endl;
+        std::cout << "main: ---------------------------OK: " << errs[0] << std::endl;
         errcode += 0;
       }
     }
