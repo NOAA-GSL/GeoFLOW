@@ -657,7 +657,7 @@ GBOOL impl_boxdrybubble(const PropertyTree &ptree, GString &sconfig, GGrid &grid
   GSIZET              nxy;
   GFTYPE              x, y, z, r;
   GFTYPE              delT, dj, exnerb, exner, L, P0, pj, thetab, T0, Ts;
-  GTVector<GFTYPE>   *db, *dd, *e, *pb, *T;
+  GTVector<GFTYPE>   *db, *d, *e, *pb, *T;
   std::vector<GFTYPE> xc, xr;  
   GString             sblock;
 
@@ -674,8 +674,8 @@ GBOOL impl_boxdrybubble(const PropertyTree &ptree, GString &sconfig, GGrid &grid
 
   T     = utmp[0];  // background temp
   e     = u  [GDIM];// int. energy density
-  dd    = u[GDIM+1];// total density fluctuation
-  db    = u[GDIM+2];// background density fluct, from solver
+  d     = u[GDIM+1];// total density fluctuation
+  db    = u[GDIM+2];// total density 
   pb    = u[GDIM+3];// background pressure  , from solver
   nxy   = (*xnodes)[0].size(); // same size for x, y, z
 
@@ -691,7 +691,7 @@ GBOOL impl_boxdrybubble(const PropertyTree &ptree, GString &sconfig, GGrid &grid
  *u[0]  = 0.0; // sx
  *u[1]  = 0.0; // sy
  if ( GDIM == 3 ) *u[2]  = 0.0; // sz
- *dd    = 0.0;
+ *d     = 0.0;
 
   for ( auto j=0; j<nxy; j++ ) { 
     x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; 
@@ -706,17 +706,17 @@ GBOOL impl_boxdrybubble(const PropertyTree &ptree, GString &sconfig, GGrid &grid
     // Ts, delT are pot'l temp, 
     (*T) [j]  = (Ts + delT)*exnerb; // T = (theta + dtheta)*exner
     pj        = (*pb)[j]; 
-    (*dd)[j]  = pj / ( RD * (*T)[j]  ) - (*db)[j];
-    dj        = (*dd)[j] + (*db)[j]; // total density
+    (*d) [j]  = pj / ( RD * (*T)[j]  ) - (*db)[j];
+    dj        = (*d)[j] + (*db)[j]; // total density
     (*e)[j]   = CVD * dj * ( (*T)[j] ); // e = Cv d (T+delT);
 //  (*T) [j]  = (Ts + delT)*exnerb; // T = (theta + dtheta)*exner
 //  (*T) [j]  = (thetab + delT)*exnerb;
-//  (*dd)[j]  = pj / ( RD * (*T)[j] )  - (*db)[j];
+//  (*d) [j]  = pj / ( RD * (*T)[j] )  - (*db)[j];
 //  (*e)[j]   = CVD * dj * (thetab+delT)*(exnerb); // e = Cv d (theta+dtheta) * exner;
 
 #else
     // Check that hydrostatic state is maintained:
-    (*dd)[j]   = 0.0;
+    (*d) [j]   = (*db)[j];
     (*T) [j]   = Ts*exnerb; // T = (theta + dtheta)*exner
     (*e) [j]   = CVD * (*db)[j] * ( (*T)[j] ); // e = Cv d (T);
 #endif
