@@ -66,6 +66,7 @@ const    GTPoint<GFTYPE>   &getP1() {return P1_; }                           // 
 
          void               print(const GString &filename);                  // print grid to file
 
+
 friend  std::ostream&       operator<<(std::ostream&, GGridBox &);           // Output stream operator
  
 
@@ -152,6 +153,7 @@ private:
          GTVector<GSIZET>    periodicids_;   // node ids that were made periodic in 1 or more dirs
          GTVector<GUINT>     periodicdirs_;  // integer with bits 1, 2, 3 set for direction of periodiscity
          GTVector<GFTYPE>    Lbox_;          // length of box edges (x, y, [and z])
+
 
 };
 

@@ -866,6 +866,9 @@ void GGridBox::find_rank_subdomain()
     dx[k] = Lbox_[k] / static_cast<GFTYPE>(ne_[k]);
   }
 
+testty_.resize(nglobal);
+testid_.resize(nglobal);
+
   // Compute vertices of all hexes ('cubes')
   // for this task:
   if ( ndim_ == 2 ) {
@@ -873,33 +876,69 @@ void GGridBox::find_rank_subdomain()
     qmesh_.resize(nthisrank);
     beg_lin = nperrank*irank_; end_lin = beg_lin + nthisrank - 1;
     jb = beg_lin/ne_[0]; je = end_lin/ne_[0];
-    for ( GLONG j=jb; j<=je; j++ ) {
+    for ( auto j=jb; j<=je; j++ ) {
       ib = MAX(beg_lin-static_cast<GLONG>(j*ne_[0]),0); 
       ie = MIN(end_lin-static_cast<GLONG>(j*ne_[0]),ne_[0]-1); 
-      for ( GLONG i=ib; i<=ie; i++ ) {
+      for ( auto i=ib; i<=ie; i++ ) {
         for ( auto l=0; l<4; l++ ) qmesh_[n][l].resize(ndim_);
         v0.x1 = P0_.x1+i*dx.x1; v0.x2 = P0_.x2+j*dx.x2;
                                          qmesh_[n].v1 = v0;
         dv.x1 = dx.x1 ; dv.x2 = 0.0  ;   qmesh_[n].v2 = v0 + dv;
         dv.x1 = dx.x1 ; dv.x2 = dx.x2;   qmesh_[n].v3 = v0 + dv;
         dv.x1 = 0.0   ; dv.x2 = dx.x2;   qmesh_[n].v4 = v0 + dv;
+
+if      ( i == 0        && j == 0        ) {
+  testty_[n] = 0; // corner elem
+  testid_[n] = 0; 
+}
+else if ( i == ne_[0]-1 && j == 0        ) {
+  testty_[n] = 0; // corner elem
+  testid_[n] = 1; 
+}
+else if ( i == ne_[0]-1 && j == ne_[1]-1 ) {
+  testty_[n] = 0; // corner elem
+  testid_[n] = 2; 
+}
+else if ( i == 0        && j == ne_[1]-1 ) {
+  testty_[n] = 0; // corner elem
+  testid_[n] = 3; 
+}
+else if ( j == 0 ) {
+  testty_[n] = 1; // non-corner edge
+  testid_[n] = 0; 
+}
+else if ( i == ne_[0]-1 ) {
+  testty_[n] = 1; // non-corner edge elem
+  testid_[n] = 1; 
+}
+else if ( j == ne_[1]-1 ) {
+  testty_[n] = 1; // non-corner edge elem
+  testid_[n] = 2; 
+}
+else if ( i == 0 ) {
+  testty_[n] = 1; // non-corner edge elem
+  testid_[n] = 3; 
+}
+else {
+  testty_[n] = 2; // interior elem
+  testid_[n] = -1; // interior id
+}
         n++;
       }
     }
-
   } // end, ndim==2 test
   else if ( ndim_ == 3 ) {
     hmesh_.resize(nthisrank);
     nxy = ne_[0] * ne_[1];
     beg_lin = nperrank*irank_; end_lin = beg_lin + nthisrank - 1;
     kb = beg_lin/nxy; ke = end_lin/nxy;
-    for ( GLONG k=kb; k<=ke; k++ ) { 
+    for ( auto k=kb; k<=ke; k++ ) { 
       jb = MAX((beg_lin-static_cast<GLONG>(k*nxy))/ne_[0],0); 
       je = MIN((end_lin-static_cast<GLONG>(k*nxy))/ne_[0],ne_[1]-1);
-      for ( GLONG j=jb; j<=je; j++ ) { 
+      for ( auto j=jb; j<=je; j++ ) { 
         ib = MAX(beg_lin-static_cast<GLONG>(k*nxy+j*ne_[0]),0); 
         ie = MIN(end_lin-static_cast<GLONG>(k*nxy+j*ne_[0]),ne_[0]-1); 
-        for ( GLONG i=ib; i<=ie; i++ ) { 
+        for ( auto i=ib; i<=ie; i++ ) { 
           v0.x1 = P0_.x1+i*dx.x1; v0.x2 = P0_.x2+j*dx.x2; v0.x3 = P0_.x3+k*dx.x3; 
                                                           hmesh_[n].v1 = v0;
           dv.x1 = dx.x1 ; dv.x2 = 0.0  ; dv.x3 = 0.0   ;  hmesh_[n].v2 = v0 + dv;

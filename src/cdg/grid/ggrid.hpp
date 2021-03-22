@@ -224,6 +224,10 @@ virtual void                 print(const GString &filename){}          // print 
         void                 compute_grefdiv(GTVector<GTVector<GFTYPE>*> &u, GTVector<GFTYPE> &etmp,
                                               GBOOL btrans, GTVector<GFTYPE> &divu);
 
+                             GTVector<GINT>    &testid() { return testid_; }
+                             GTVector<GINT>    &testty() { return testty_; }
+
+
 friend  std::ostream&        operator<<(std::ostream&, GGrid &);       // Output stream operator
  
 
@@ -304,6 +308,9 @@ virtual void                 elem_face_data(
         std::function<void(const Time &t, State &u, State &ub)>
                                     bdy_apply_callback_;            
         GCBLAS::cuMatBlockDat       cudat_;            // CUDA data structure
+
+        GTVector<GINT>   testid_;
+        GTVector<GINT>   testty_;
 };
 
 #endif
