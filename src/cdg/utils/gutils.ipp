@@ -161,14 +161,14 @@ void compute_temp(const GTVector<T> &e, const GTVector<T> &d, const GTVector<T> 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : compute_p 
-// DESC   : Compute total pressure from state
+// METHOD : compute_p (1)
+// DESC   : Compute partial pressure from total density, 
 //              p = d ( q R) T,
 //          with total density, d, q the
 //          dry mass fraction, R the gas constants, 
 //          and T the temperature.
 // ARGS   : Temp: temperature
-//          d: density
+//          d: total density
 //          q: mass fraction
 //          R: gas constant
 //          p: pressure fluctuation field returned
@@ -177,14 +177,41 @@ void compute_temp(const GTVector<T> &e, const GTVector<T> &d, const GTVector<T> 
 template<typename T>
 void compute_p(const GTVector<T> &Temp, const GTVector<T> &d, const GTVector<T> &q, GFTYPE R, GTVector<T> &p)
 {
-   GString    serr = "compute_p: ";
+   GString    serr = "compute_p(1): ";
 
    // p' = d q R T:
    for ( auto j=0; j<p.size(); j++ ) {
      p[j] = d[j] * q[j] * R * Temp[j];
    }
 
-} // end of method compute_p 
+} // end of method compute_p (1)
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : compute_p (2)
+// DESC   : Compute partial pressure from int. energy density
+//              p = ( q R) e / Cv,
+//          with mass frraction, q, gas constant, R, and 
+//          total specific heat, Cv
+// ARGS   : e : internal energy density
+//          q : mass fraction
+//          R : gas constant
+//          cv: (total) specific heat at const. volume
+//          p : pressure fluctuation field returned
+// RETURNS: none.
+//**********************************************************************************
+template<typename T>
+void compute_p(const GTVector<T> &e, const GTVector<T> &q, GFTYPE R, const GTVector<T> &cv, GTVector<T> &p)
+{
+   GString    serr = "compute_p(2): ";
+
+   // p = q R e / Cv:
+   for ( auto j=0; j<p.size(); j++ ) {
+     p[j] = q[j] * R * e[j] / cv[j];
+   }
+
+} // end of method compute_p (2)
 
 
 //**********************************************************************************

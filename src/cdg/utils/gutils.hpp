@@ -45,6 +45,8 @@ template<typename T>
 void compute_temp(const GTVector<T> &e, const GTVector<T> &d, const GTVector<T> &cv,  GTVector<T> &temp);
 template<typename T>
 void compute_p(const GTVector<T> &Temp, const GTVector<T> &d, const GTVector<T> &q, GFTYPE R, GTVector<T> &p);
+template<typename T>
+void compute_p(const GTVector<T> &e, const GTVector<T> &q, GFTYPE R, const GTVector<T> &cv, GTVector<T> &p);
 
 template<typename T>
 GSIZET in_seg(const GTVector<GTPoint<T>> &vertices, const GTVector<GTVector<T>> &x, GTVector<GSIZET> &ind);
