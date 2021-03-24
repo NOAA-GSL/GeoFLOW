@@ -16,7 +16,7 @@
   "terrain_type"      : "none",
   "initstate_boxdrybubble": {
     "T_pert"     : -15.0,
-    "x_center"   : [0, 3000.0, 1000.0],
+    "x_center"   : [4000, 3000.0, 1000.0],
     "x_width"    : [4000.0, 2000.0, 2000.0]
   },
   "0-flux": {
@@ -42,8 +42,8 @@
     "dofallout"       : false,
     "dogravity"       : true,
     "bconserved"      : false,
-    "divopcolloc"     : false,
-    "usebdydat"       : true,
+    "divopcolloc"     : true,
+    "usebdydat"       : false,
     "Stokeshyp"       : false,
     "bindepdiss"      : false,
     "nliq"            : 0,
@@ -82,7 +82,7 @@
     "stab_preserving"  : false,
     "extrap_order"     : 2,
     "variable_dt"      : true,
-    "courant"          : 0.1
+    "courant"          : 0.005
   },
   "dissipation_traits": {
     "nu"      : 0.0,
