@@ -246,21 +246,10 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
   tmp1  = urhstmp_[stmp.size()+3];
   tmp2  = urhstmp_[stmp.size()+4];
 
-#if 0
-  // Do filtering, if any:
-  FilterList *fl = &this->get_filter_list();
-  for ( auto j=0; j<fl->size(); j++ ) {
-    if ( (*fl)[j] != NULLPTR ) {
-      (*fl)[j]->apply(t, *u[j], urhstmp_);
-    }
-  }
-#endif
-
-
   // Get total density and inverse: *rhoT  = *u[DENSITY]; 
   *rhoT = *u[DENSITY];
 //if ( traits_.usebase ) *rhoT +=  *ubase_[0];   
- *irhoT = *u[DENSITY]; irhoT->rpow(-1.0); // 1/rhoT
+ *irhoT = *rhoT; irhoT->rpow(-1.0); // 1/rhoT
 
   // Compute velocity for timestep:
   compute_v(s_, *irhoT, v_); // stored in v_
@@ -270,25 +259,23 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
 
   p     = urhstmp_[stmp.size()+2]; // holds pressure
   T     = urhstmp_[stmp.size()+5]; // holds temperature
-  e     = u[ENERGY];                   // internal energy density
+  e     = u[ENERGY];               // current internal energy density
 
   // *************************************************************
   // Energy equation RHS:
   // *************************************************************
   compute_cv(u, *tmp1, *tmp2);                            // Cv
-  geoflow::compute_temp<Ftype>(*e, *rhoT, *tmp2, *T);     // temperature
   compute_qd  (u, *tmp1);                                 // dry mass ratio
-  geoflow::compute_p<Ftype>(*T, *rhoT, *tmp1, RD, *p);    // partial pressure for dry air
+  geoflow::compute_p<Ftype>(*e, *tmp1, RD, *tmp2, *p);    // partial pressure for dry air
 
   GMTK::saxpby<Ftype>(*tmp1, *e, 1.0, *p, 1.0); // h = p+e, enthalpy density
-
   gdiv_->apply(*tmp1, v_, stmp, *dudt[ENERGY]); // Div(h v) 
-
-  gstressen_->apply(*rhoT, v_, stmp, *tmp1);    // [mu u_i s^{ij}],j
- *dudt[ENERGY] -= *tmp1;                        // -= [mu u^i s^{ij}],j
 
   gadvect_->apply(*p, v_, stmp, *tmp1);         // v.Grad p 
  *dudt[ENERGY] -= *tmp1;                        // -= v . Grad p
+
+  gstressen_->apply(*rhoT, v_, stmp, *tmp1);    // [mu u_i s^{ij}],j
+ *dudt[ENERGY] -= *tmp1;                        // -= [mu u^i s^{ij}],j
 
 
   // *************************************************************
@@ -301,30 +288,23 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
   // *************************************************************
   // Momentum equations RHS:
   // *************************************************************
-  dd   = urhstmp_[stmp.size()+5]; // holds density fluctuation
+  dd   = urhstmp_[stmp.size()+5];      // holds density fluctuation
  *dd   = (*rhoT); 
+#if 0
   if ( traits_.usebase ) {
-   *dd -= *ubase_[0];                 // density fluctuation
-   *p  -= *ubase_[1];                 // pressure fluctuation
+   *dd -= *ubase_[0];                  // density fluctuation
+   *p  -= *ubase_[1];                  // pressure fluctuation
   }
-  for ( auto j=0; j<v_.size(); j++ ) { // for each component
+#endif
+  for ( auto j=0; j<s_.size(); j++ ) { // for each component
 
     gdiv_->apply(*s_[j], v_, stmp, *dudt[j]); 
 
-
-#if 0
-    grid_->wderiv(*p, j+1, TRUE, *tmp2, *tmp1);       // Grad p'
-   *dudt[j] -= *tmp1;                                 // -= Grad p'
-#else
     grid_->deriv(*p, j+1, *tmp2, *tmp1);              // Grad p'
    *tmp1 *= *Mass;                                    // M Grad p' 
    *dudt[j] += *tmp1;                                 // += Grad p'
-#endif
 
-    gstressen_->apply(*rhoT, v_, j+1, stmp, 
-                                         *tmp1);      // [mu s^{ij}],j
-   *dudt[j] -= *tmp1;                                 // -= [mu s^{ij}],j
-
+#if 0
     if ( traits_.docoriolis ) {
       GMTK::cross_prod_s(traits_.omega, s_, j+1, *tmp1);
      *tmp1 *= *Mass;             
@@ -338,6 +318,11 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
      *tmp2 *= *Mass;             
      *dudt[j] -= *tmp2;                               // -= rho' vec{g} M J
     }
+#endif
+
+    gstressen_->apply(*rhoT, v_, j+1, stmp, 
+                                         *tmp1);      // [mu s^{ij}],j
+   *dudt[j] -= *tmp1;                                 //  -= [mu s^{ij}],j
 
   } // end, momentum loop
 
@@ -377,6 +362,7 @@ void GMConv<TypePack>::dudt_wet(const Time &t, const State &u, const State &uf, 
   StateComp *Mass=grid_->massop().data();
   StateComp *tmp1, *tmp2;
   State      g(nc_); 
+  State      stmp(4);
 
   // NOTE:
   // Make sure that, in init(), Helmholtz op is using only
@@ -388,11 +374,12 @@ void GMConv<TypePack>::dudt_wet(const Time &t, const State &u, const State &uf, 
 
   // Set tmp pool for RHS computations:
   assert(urhstmp_.size() >= szrhstmp());
-  Ltot  = urhstmp_[urhstmp_.size()-1];
-  rhoT  = urhstmp_[urhstmp_.size()-2];
-  irhoT = urhstmp_[urhstmp_.size()-3];
-  tmp1  = urhstmp_[urhstmp_.size()-4];
-  tmp2  = urhstmp_[urhstmp_.size()-5];
+  for ( auto j=0; j<stmp.size(); j++ ) stmp[j]=urhstmp_[j];
+  Ltot  = urhstmp_[stmp.size()  ];
+  rhoT  = urhstmp_[stmp.size()+1];
+  irhoT = urhstmp_[stmp.size()+2];
+  tmp1  = urhstmp_[stmp.size()+3];
+  tmp2  = urhstmp_[stmp.size()+4];
 
 #if 0
   // Do filtering, if any:
@@ -421,10 +408,10 @@ void GMConv<TypePack>::dudt_wet(const Time &t, const State &u, const State &uf, 
   // Total density RHS:
   // *************************************************************
 
-  gdiv_->apply(*rhoT, v_, urhstmp_, *dudt[DENSITY]); 
+  gdiv_->apply(*rhoT, v_, stmp, *dudt[DENSITY]); 
 
   if ( traits_.dofallout ) {
-    compute_falloutsrc(*rhoT, qi_, tvi_, -1, urhstmp_, *Ltot);
+    compute_falloutsrc(*rhoT, qi_, tvi_, -1, stmp, *Ltot);
     GMTK::saxpby<Ftype>(*dudt[DENSITY], 1.0, *Ltot, 1.0);   // += Ltot
   }
   if ( uf[DENSITY] != NULLPTR ) *dudt[DENSITY] -= *uf[DENSITY];//  += sdot(s_rhoT)
@@ -437,10 +424,10 @@ void GMConv<TypePack>::dudt_wet(const Time &t, const State &u, const State &uf, 
   // where Ltot is total fallout source over liq + ice sectors:
   // *************************************************************
   for ( auto j=0; j<nmoist_; j++ ) {
-    gadvect_->apply(*qi_[j], v_, urhstmp_, *dudt[VAPOR+j]); // apply advection
+    gadvect_->apply(*qi_[j], v_, stmp, *dudt[VAPOR+j]); // apply advection
     compute_vpref(*tvi_[j], W_);
    *tmp1 = (*qi_[j]) * (*rhoT);                 // q_i rhoT
-    gdiv_->apply(*tmp1, W_, urhstmp_, *tmp2); 
+    gdiv_->apply(*tmp1, W_, stmp, *tmp2); 
    *tmp2 *= *irhoT;                             // Div(q_i rhoT W)/rhoT
    *dudt[VAPOR+j] = *tmp2;                      // += Div(q_i rhoT W)/rhoT
     *tmp1  = (*Ltot) * (*irhoT); *tmp1 *= (*qi_[j]);// q_i/rhoT Ltot
@@ -449,20 +436,20 @@ void GMConv<TypePack>::dudt_wet(const Time &t, const State &u, const State &uf, 
       *tmp1 = *uf[VAPOR+1]; *tmp1 *= *irhoT;    // dot(s)/rhoT 
       *tmp1 *= *Mass;
       GMTK::saxpby<Ftype>(*dudt[VAPOR+j], 1.0, *tmp1, -1.0); 
-                                               // -= dot(s)/rhoT
+                                                // -= dot(s)/rhoT
     }
   }
  
-  p     = urhstmp_[urhstmp_.size()-3]; // holds pressure
-  T     = urhstmp_[urhstmp_.size()-6]; // holds temperature
+  p     = urhstmp_[stmp.size()+2]; // holds pressure
+  T     = urhstmp_[stmp.size()+5]; // holds temperature
   e     = u[ENERGY];                   // internal energy density
 
   // *************************************************************
   // Energy equation RHS:
   // *************************************************************
-  compute_cv(u, *tmp1, *tmp2);                     // Cv
+  compute_cv(u, *tmp1, *tmp2);                            // Cv
   geoflow::compute_temp<Ftype>(*e, *rhoT, *tmp2, *T);     // temperature
-  compute_qd  (u, *tmp1);                          // dry mass ratio
+  compute_qd  (u, *tmp1);                                 // dry mass ratio
   geoflow::compute_p<Ftype>(*T, *rhoT, *tmp1, RD, *p);    // partial pressure for dry air
   if ( !traits_.dodry ) {
     geoflow::compute_p<Ftype>(*T, *rhoT, *u[VAPOR], RV, *tmp1); // partial pressure for vapor
@@ -471,27 +458,27 @@ void GMConv<TypePack>::dudt_wet(const Time &t, const State &u, const State &uf, 
 
   GMTK::saxpby<Ftype>(*tmp1, *e, 1.0, *p, 1.0);     // h = p+e, enthalpy density
 
-  gdiv_->apply(*tmp1, v_, urhstmp_, *dudt[ENERGY]); 
+  gdiv_->apply(*tmp1, v_, stmp, *dudt[ENERGY]); 
 
-  gstressen_->apply(*rhoT, v_, urhstmp_, *tmp1);   // [mu u_i s^{ij}],j
+  gstressen_->apply(*rhoT, v_, stmp, *tmp1);       // [mu u_i s^{ij}],j
  *dudt[ENERGY] -= *tmp1;                           // -= [mu u^i s^{ij}],j
 
   if ( traits_.dofallout || !traits_.dodry ) {
     GMTK::paxy(*tmp1, *rhoT, CVL, *T);             // tmp1 = C_liq rhoT T
-    compute_falloutsrc(*tmp1, qliq_, tvliq_, -1.0, urhstmp_, *Ltot);
+    compute_falloutsrc(*tmp1, qliq_, tvliq_, -1.0, stmp, *Ltot);
                                                    // liquid fallout src
    *dudt[ENERGY] += *Ltot;                         // += L_liq
     GMTK::paxy(*tmp1, *rhoT, CVI, *T);             // tmp1 = C_ice rhoT T
-    compute_falloutsrc(*tmp1, qice_, tvice_, -1.0, urhstmp_, *Ltot); 
+    compute_falloutsrc(*tmp1, qice_, tvice_, -1.0, stmp, *Ltot); 
                                                    // ice fallout src
    *dudt[ENERGY] += *Ltot;                         // += L_ice
   }
 
-  gadvect_->apply(*p, v_, urhstmp_, *tmp1);         // v.Grad p 
+  gadvect_->apply(*p, v_, stmp, *tmp1);             // v.Grad p 
  *dudt[ENERGY] -= *tmp1;                            // -= v . Grad p
 
   if ( traits_.dograv && traits_.dofallout ) {
-    compute_pe(*rhoT, qi_, tvi_, urhstmp_, *tmp1);
+    compute_pe(*rhoT, qi_, tvi_, stmp, *tmp1);
    *dudt[ENERGY] += *tmp1;                          // += Sum_i rhoT q_i g.W_i
   }
 
@@ -507,18 +494,18 @@ void GMConv<TypePack>::dudt_wet(const Time &t, const State &u, const State &uf, 
   // *************************************************************
   // Momentum equations RHS:
   // *************************************************************
-  dd   = urhstmp_[urhstmp_.size()-6]; // holds density fluctuation
+  dd   = urhstmp_[stmp.size()+5]; // holds density fluctuation
  *dd   = (*rhoT); 
   if ( traits_.usebase ) {
    *dd -= *ubase_[0];                 // density fluctuation
    *p  -= *ubase_[1];                 // pressure fluctuation
   }
-  for ( auto j=0; j<v_.size(); j++ ) { // for each component
+  for ( auto j=0; j<s_.size(); j++ ) { // for each component
 
-    gdiv_->apply(*s_[j], v_, urhstmp_, *dudt[j]); 
+    gdiv_->apply(*s_[j], v_, stmp, *dudt[j]); 
 
     if ( traits_.dofallout || !traits_.dodry ) {
-      compute_falloutsrc(*u[j], qliq_, tvi_,-1.0, urhstmp_, *Ltot);
+      compute_falloutsrc(*u[j], qliq_, tvi_,-1.0, stmp, *Ltot);
                                                       // hydrometeor fallout src
      *dudt[j] += *Ltot;                               // += L_tot
     }
@@ -532,7 +519,7 @@ void GMConv<TypePack>::dudt_wet(const Time &t, const State &u, const State &uf, 
    *dudt[j] += *tmp1;                                 // += Grad p'
 #endif
 
-    gstressen_->apply(*rhoT, v_, j+1, urhstmp_, 
+    gstressen_->apply(*rhoT, v_, j+1, stmp, 
                                          *tmp1);      // [mu s^{ij}],j
    *dudt[j] -= *tmp1;                                 // -= [mu s^{ij}],j
 
@@ -616,6 +603,7 @@ void GMConv<TypePack>::step_impl(const Time &t, State &uin, State &uf, State &ub
       break;
   }
 
+#if 0
   // Do filtering, if any:
   FilterList *fl = &this->get_filter_list();
   for ( auto j=0; j<fl->size(); j++ ) {
@@ -623,6 +611,7 @@ void GMConv<TypePack>::step_impl(const Time &t, State &uin, State &uf, State &ub
       (*fl)[j]->apply(t, *uevolve_[j], urhstmp_);
     }
   }
+#endif
 
   apply_bc_impl(t, uin, ub);
 
@@ -1127,12 +1116,10 @@ void GMConv<TypePack>::compute_qd(const State &u, StateComp &qd)
    GINT       ibeg;
 
    // Compute qd:
-   if ( traits_.dodry ) { // if dry dynamics only
-     qd = 1.0;  
-     return;
-   }
 
    qd  = 1.0;  
+   if ( traits_.dodry ) return;
+
    qd -= (*u[VAPOR]);      // running total 1- Sum_k q_k
    ibeg = LIQMASS;
    for ( auto k=ibeg; k<ibeg+traits_.nlsector+1; k++ ) { // liquids
@@ -1487,6 +1474,7 @@ void GMConv<TypePack>::compute_base(State &u)
              *xnodes = &grid_->xNodes();
 
    if ( !traits_.usebase ) return;
+
 
    GGridIcos *icos = dynamic_cast<GGridIcos*>(grid_);
    GGridBox  *box  = dynamic_cast <GGridBox*>(grid_);
