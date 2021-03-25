@@ -75,6 +75,9 @@ Grid      *grid_ = NULLPTR;
 IOBasePtr  pIO_  = NULLPTR; // ptr to IOBase operator
 
 
+void init_ggfx(GGrid &grid, GGFX<GFTYPE> &ggfx);
+
+#define PERIODIC
 
 
 int main(int argc, char **argv)
@@ -138,19 +141,10 @@ int main(int argc, char **argv)
     grid_ = GGridFactory<MyTypes>::build(ptree, gbasis, pIO_, binobstraits, comm);
     mass = grid_->massop().data();
 
-
     // Create GGFX operator:
     GGFX<GFTYPE> ggfx;
-    std::vector<std::array<GFTYPE,GDIM>> xyz(grid_->ndof());
-    const auto ndof = grid_->ndof(); 
-    for(std::size_t i = 0; i < ndof; i++){
-      for(std::size_t d = 0; d < GDIM; d++){
-        xyz[i][d] = grid_->xNodes()[d][i];
-      }
-    }
-  
-    // Create GGFX 
-    ggfx.init(0.25*grid_->minnodedist(), xyz);
+    init_ggfx(*grid_, ggfx);
+
 
     // Compute multiplicity:
     GTVector<GFTYPE> amult(grid_->ndof());
@@ -177,6 +171,7 @@ int main(int argc, char **argv)
       dim = (*gelems)[e]->dim();
       for ( auto j=0; j<dim[1]; j++ ) {
         for ( auto i=0; i<dim[0]; i++ ) {
+#if !defined(PERIODIC)
           if      ( (*testty)[ne] == 0  ) { // vert elem
             if      ( (*testid)[ne] == 0 ) {
               if      ( i == 0        && j == 0        ) amult[n] = 1;
@@ -260,6 +255,106 @@ int main(int argc, char **argv)
               else if ( j == 0                         ) amult[n] = 2; 
               else if ( j == dim[1]-1                  ) amult[n] = 2; 
           }
+#else
+          if      ( (*testty)[ne] == 0  ) { // vert elem
+            if      ( (*testid)[ne] == 0 ) {
+              if      ( i == 0        && j == 0        ) amult[n] = 4;
+              else if ( i == dim[0]-1 && j == 0        ) amult[n] = 2;  
+              else if ( i == dim[0]-1 && j == dim[1]-1 ) amult[n] = 4;  
+              else if ( i == 0        && j == dim[1]-1 ) amult[n] = 2;  
+              else if ( i == dim[0]-1                  ) amult[n] = 2;  
+              else if ( i == 0                         ) amult[n] = 2;  
+              else if ( j == dim[1]-1                  ) amult[n] = 2;  
+              else if ( j == 0                         ) amult[n] = 2;  
+            }
+            else if ( (*testid)[ne] == 1 ) { 
+              if      ( i == 0        && j == 0        ) amult[n] = 2;
+              else if ( i == dim[0]-1 && j == 0        ) amult[n] = 1;  
+              else if ( i == dim[0]-1 && j == dim[1]-1 ) amult[n] = 2;  
+              else if ( i == 0        && j == dim[1]-1 ) amult[n] = 4;  
+              else if ( i == dim[0]-1 && j == dim[1]-1 ) amult[n] = 4;  
+              else if ( i == 0                         ) amult[n] = 2;  
+              else if ( i == dim[0]-1                  ) amult[n] = 2;  
+              else if ( j == 0                         ) amult[n] = 2;  
+              else if ( j == dim[1]-1                  ) amult[n] = 2;  
+            }
+            else if ( (*testid)[ne] == 2 ) { 
+              if      ( i == 0        && j == 0        ) amult[n] = 4;
+              if      ( i == dim[0]-1 && j == dim[1]-1 ) amult[n] = 4;
+              else if ( i == dim[0]-1 && j == 0        ) amult[n] = 2;  
+              else if ( i == dim[0]-1 && j == dim[1]-1 ) amult[n] = 1;  
+              else if ( i == 0        && j == dim[1]-1 ) amult[n] = 2;  
+              else if ( i == 0                         ) amult[n] = 2;  
+              else if ( i == dim[0]-1                  ) amult[n] = 2;  
+              else if ( j == 0                         ) amult[n] = 2;  
+              else if ( j == dim[1]-1                  ) amult[n] = 2;  
+            }
+            else if ( (*testid)[ne] == 3 ) { 
+              if      ( i == 0        && j == 0        ) amult[n] = 2;
+              else if ( i == dim[0]-1 && j == 0        ) amult[n] = 4;  
+              else if ( i == 0        && j == dim[1]-1 ) amult[n] = 4;  
+              else if ( i == dim[0]-1 && j == dim[1]-1 ) amult[n] = 2;  
+              else if ( i == 0        && j == dim[1]-1 ) amult[n] = 1;  
+              else if ( i == 0                         ) amult[n] = 2;  
+              else if ( i == dim[0]-1                  ) amult[n] = 2;  
+              else if ( j == 0                         ) amult[n] = 2;  
+              else if ( j == dim[1]-1                  ) amult[n] = 2;  
+            }
+          }
+          else if ( (*testty)[ne] == 1  ) { // non-vert bdy
+            if      ( (*testid)[ne] == 0 ) { 
+              if      ( i == 0        && j == 0        ) amult[n] = 2;
+              else if ( i == dim[0]-1 && j == 0        ) amult[n] = 2;  
+              else if ( i == dim[0]-1 && j == dim[1]-1 ) amult[n] = 4;  
+              else if ( i == 0        && j == dim[1]-1 ) amult[n] = 4;  
+              else if ( j == dim[1]-1                  ) amult[n] = 2;  
+              else if ( i == 0                         ) amult[n] = 2;  
+              else if ( i == dim[0]-1                  ) amult[n] = 2;  
+              else if ( j == 0                         ) amult[n] = 2;  
+              else if ( j == dim[1]-1                  ) amult[n] = 2;  
+            }
+            else if ( (*testid)[ne] == 1 ) { 
+              if      ( i == 0        && j == 0        ) amult[n] = 4;
+              else if ( i == dim[0]-1 && j == 0        ) amult[n] = 2;  
+              else if ( i == dim[0]-1 && j == dim[1]-1 ) amult[n] = 2;  
+              else if ( i == 0        && j == dim[1]-1 ) amult[n] = 4;  
+              else if ( i == 0                         ) amult[n] = 2;  
+              else if ( i == dim[0]-1                  ) amult[n] = 2;  
+              else if ( j == 0                         ) amult[n] = 2;  
+              else if ( j == dim[1]-1                  ) amult[n] = 2;  
+            }
+            else if ( (*testid)[ne] == 2 ) { 
+              if      ( i == 0        && j == 0        ) amult[n] = 4;
+              else if ( i == dim[0]-1 && j == 0        ) amult[n] = 4;  
+              else if ( i == dim[0]-1 && j == dim[1]-1 ) amult[n] = 2;  
+              else if ( i == 0        && j == dim[1]-1 ) amult[n] = 2;  
+              else if ( i == 0                         ) amult[n] = 2;  
+              else if ( i == dim[0]-1                  ) amult[n] = 2;  
+              else if ( j == 0                         ) amult[n] = 2;  
+              else if ( j == dim[1]-1                  ) amult[n] = 2;  
+            }
+            else if ( (*testid)[ne] == 3 ) { 
+              if      ( i == 0        && j == 0        ) amult[n] = 2;
+              else if ( i == dim[0]-1 && j == 0        ) amult[n] = 4;  
+              else if ( i == dim[0]-1 && j == dim[1]-1 ) amult[n] = 4;  
+              else if ( i == 0        && j == dim[1]-1 ) amult[n] = 2;  
+              else if ( i == 0                         ) amult[n] = 2;  
+              else if ( i == dim[0]-1                  ) amult[n] = 2;  
+              else if ( j == 0                         ) amult[n] = 2;  
+              else if ( j == dim[1]-1                  ) amult[n] = 2;  
+            }
+          }
+          else if ( (*testty)[ne] == 2  ) { // interior elem
+              if      ( i == 0        && j == 0        ) amult[n] = 4;
+              else if ( i == dim[0]-1 && j == 0        ) amult[n] = 4;  
+              else if ( i == dim[0]-1 && j == dim[1]-1 ) amult[n] = 4;  
+              else if ( i == 0        && j == dim[1]-1 ) amult[n] = 4;  
+              else if ( i == 0                         ) amult[n] = 2; 
+              else if ( i == dim[0]-1                  ) amult[n] = 2; 
+              else if ( j == 0                         ) amult[n] = 2; 
+              else if ( j == dim[1]-1                  ) amult[n] = 2; 
+          }
+#endif
           n++;
         } // end, i-loop
       } // end, j-loop
@@ -329,3 +424,50 @@ cout << "main: dmult=" << dmult << endl;
 
 } // end, main
 
+
+void init_ggfx(GGrid &grid, GGFX<GFTYPE> &ggfx)
+{
+
+#if defined(PERIODIC)
+cout << "init_ggfx: calling periodize..." << endl;
+    if (typeid(grid) == typeid(GGridBox)) {
+        static_cast<GGridBox *>(&grid)->periodize();
+    }
+#endif
+
+GSIZET                      ib, ic;
+GTVector<GTVector<GSIZET>>
+                           *igbdy = &grid.igbdy_bdyface();
+GTVector<GTVector<GFTYPE>> *xnodes = &grid.xNodes();
+
+cout << "init_ggfx: ig1=" << (*igbdy)[1] << endl;
+cout << "init_ggfx: ig3=" << (*igbdy)[3] << endl;
+for ( auto j=0; j<(*igbdy)[0].size(); j++ ) {
+  ib = (*igbdy)[1][j];
+  ic = (*igbdy)[3][j];
+  cout << "x0[" << ib << "] = (" << (*xnodes)[0][ib]  << "," 
+                                 << (*xnodes)[1][ib]  << "); (" 
+                                 << (*xnodes)[0][ic]  << "," 
+                                 << (*xnodes)[1][ic]  << ")" << endl;
+}
+
+
+
+    std::vector<std::array<GFTYPE,GDIM>> xyz(grid.ndof());
+    const auto ndof = grid.ndof(); 
+    for(std::size_t i = 0; i < ndof; i++){
+      for(std::size_t d = 0; d < GDIM; d++){
+        xyz[i][d] = grid_->xNodes()[d][i];
+      }   
+    }   
+  
+    // Create GGFX 
+    ggfx.init(0.25*grid.minnodedist(), xyz);
+
+#if defined(PERIODIC)
+    if (typeid(grid) == typeid(GGridBox)) {
+        static_cast<GGridBox *>(&grid)->periodize();
+    }
+#endif
+
+}
