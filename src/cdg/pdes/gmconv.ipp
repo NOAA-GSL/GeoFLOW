@@ -290,12 +290,10 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
   // *************************************************************
   dd   = urhstmp_[stmp.size()+5];      // holds density fluctuation
  *dd   = (*rhoT); 
-#if 0
   if ( traits_.usebase ) {
    *dd -= *ubase_[0];                  // density fluctuation
    *p  -= *ubase_[1];                  // pressure fluctuation
   }
-#endif
   for ( auto j=0; j<s_.size(); j++ ) { // for each component
 
     gdiv_->apply(*s_[j], v_, stmp, *dudt[j]); 
@@ -304,7 +302,7 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
    *tmp1 *= *Mass;                                    // M Grad p' 
    *dudt[j] += *tmp1;                                 // += Grad p'
 
-#if 0
+#if 1
     if ( traits_.docoriolis ) {
       GMTK::cross_prod_s(traits_.omega, s_, j+1, *tmp1);
      *tmp1 *= *Mass;             
