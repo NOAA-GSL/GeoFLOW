@@ -95,13 +95,13 @@ public:
                              GGrid() = delete;
                              GGrid(const geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GC_COMM &comm);
 
-virtual                       ~GGrid();
-//static                       GGrid *build(geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GC_COMM comm);
+virtual                     ~GGrid();
+//static                     GGrid *build(geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GC_COMM comm);
 
-virtual void                 do_elems() = 0;                            // compute grid for irank
+virtual void                 do_elems() = 0;                           // compute grid for irank
 virtual void                 do_elems(GTMatrix<GINT> &p,
-                               GTVector<GTVector<GFTYPE>> &xnodes) = 0; // compute grid on restart
-//virtual void                 set_partitioner(GDD_base<GTICOS> *d) = 0;   // set and use GDD object
+                             GTVector<GTVector<GFTYPE>> &xnodes) = 0;  // compute grid on restart
+//virtual void               set_partitioner(GDD_base<GTICOS> *d) = 0; // set and use GDD object
 
 #if 0
 virtual void                 set_bdy_callback(
@@ -224,8 +224,8 @@ virtual void                 print(const GString &filename){}          // print 
         void                 compute_grefdiv(GTVector<GTVector<GFTYPE>*> &u, GTVector<GFTYPE> &etmp,
                                               GBOOL btrans, GTVector<GFTYPE> &divu);
 
-                             GTVector<GINT>    &testid() { return testid_; }
-                             GTVector<GINT>    &testty() { return testty_; }
+         GTVector<GINT>     &testid() { return testid_; }
+         GTVector<GINT>     &testty() { return testty_; }
 
 
 friend  std::ostream&        operator<<(std::ostream&, GGrid &);       // Output stream operator
@@ -265,6 +265,7 @@ virtual void                 elem_face_data(
         GBOOL                       do_face_normals_;  // compute elem face normals for fluxes?
         GBOOL                       bpconst_;          // is p const among elems?
         GBOOL                       usebdydat_;        // flag to set to use bdy data
+        GBOOL                       do_gbdy_test_;     // create data required to test gbdys?
         GINT                        nstreams_;         // no. CUDA streams
         GDerivType                  gderivtype_;       // ref. deriv method type
 
@@ -274,6 +275,7 @@ virtual void                 elem_face_data(
         GSIZET                      ngelems_;          // global number of elements
         GC_COMM                     comm_;             // communicator
         GFTYPE                      minnodedist_;      // min node length array (for each elem)
+        GFTYPE                      eps_;              // spatial epsilon
 	GFTYPE                      volume_;           // grid volume
 	GFTYPE                      ivolume_;          // 1 / grid volume
         GElemList                   gelems_;           // element list
@@ -309,8 +311,8 @@ virtual void                 elem_face_data(
                                     bdy_apply_callback_;            
         GCBLAS::cuMatBlockDat       cudat_;            // CUDA data structure
 
-        GTVector<GINT>   testid_;
-        GTVector<GINT>   testty_;
+        GTVector<GINT>              testid_;
+        GTVector<GINT>              testty_;
 };
 
 #endif

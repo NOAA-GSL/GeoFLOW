@@ -44,10 +44,12 @@ bapplybc_                       (FALSE),
 do_face_normals_                 (TRUE),
 bpconst_                         (TRUE),
 gderivtype_                (GDV_CONSTP),
+do_gbdy_test_                   (FALSE),
 nprocs_        (GComm::WorldSize(comm)),
 ngelems_                            (0),
 irank_         (GComm::WorldRank(comm)),
-minnodedist_   (std::numeric_limits<GFTYPE>::max()),
+minnodedist_                      (0.0),
+eps_                              (0.0),
 volume_                           (0.0),
 ivolume_                          (0.0),
 comm_                            (comm),
@@ -467,13 +469,10 @@ void GGrid::grid_init()
 
   globalize_coords    (); // set glob vec of node coords
 
+  minnodedist_ = find_min_dist();
+  eps_         = 0.125*minnodedist_;
 
-  // All element bdy/face data should have been set by now:
-
-
-  init_bc_info();
-
-
+  // Create metric data, Jacobians:
   if ( gtype_ == GE_2DEMBEDDED || gtype_  == GE_DEFORMED ) {
     def_geom_init();
   }
@@ -481,6 +480,10 @@ void GGrid::grid_init()
   if ( gtype_ == GE_REGULAR ) {
     reg_geom_init();
   }
+
+  // Configure and initialize domain bdy data:
+  init_bc_info();
+
 
   // Get global number of elements:
   GSIZET nelems = gelems_.size();
@@ -490,7 +493,6 @@ void GGrid::grid_init()
 
   mass_ = new GMass(*this);
   
-  minnodedist_ = find_min_dist();
 
   // Compute (global) grid volume:
   GTVector<GFTYPE> tmp0(ndof()), tmp1(ndof());
@@ -550,8 +552,8 @@ void GGrid::grid_init(GTMatrix<GINT> &p,
 
   globalize_coords    (); // set glob vec of node coords
 
-  // All element bdy/face data should have been set by now:
-  init_bc_info(TRUE); // TRUE == restart
+  minnodedist_ = find_min_dist();
+  eps_         = 0.125*minnodedist_;
 
   if ( itype_[GE_2DEMBEDDED].size() > 0
     || itype_  [GE_DEFORMED].size() > 0 ) {
@@ -562,8 +564,9 @@ void GGrid::grid_init(GTMatrix<GINT> &p,
     reg_geom_init();
   }
 
+  // Configure and initialize domain bdy data:
+  init_bc_info(TRUE); // TRUE == restart
 
-  minnodedist_ = find_min_dist();
 
   bInitialized_ = TRUE;
 
@@ -1337,6 +1340,8 @@ void GGrid::init_bc_info(GBOOL bterrain)
   GSIZET          *ind=NULLPTR;
   GSIZET           n, nbdy;
   GTVector<GSIZET> iunique;
+
+cout << "init_bc_info: igbdy=" << igbdy_ << endl;
    
   nind = 0; 
   // Compute 'binned' structures for global indices
@@ -1345,6 +1350,7 @@ void GGrid::init_bc_info(GBOOL bterrain)
   n = 0; // cycle over all bdy nodes
   igbdy_binned_.resize(igbdy_bdyface_.size());
   for ( auto k=0; k<igbdy_bdyface_.size(); k++ ) { // cycle over canonical bdy face
+cout << "init_bc_info: igbdy[" << k << "]=" << igbdy_bdyface_[k] << endl;
     nbdy = igbdyt_bdyface_[k].size();
     igbdy_binned_ [k].resize(GBDY_MAX);
     for ( auto j=0; j<GBDY_MAX; j++ ) { // cycle over each bc type
