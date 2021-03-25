@@ -146,7 +146,9 @@ int main(int argc, char **argv)
     init_ggfx(*grid_, ggfx);
 
 
+
     // Compute multiplicity:
+    GTVector<GTVector<GFTYPE>> *xnodes = &grid_->xNodes(); 
     GTVector<GFTYPE> amult(grid_->ndof());
     GTVector<GFTYPE> dmult(grid_->ndof());
     GTVector<GFTYPE> mult(grid_->ndof());
@@ -171,6 +173,9 @@ int main(int argc, char **argv)
       dim = (*gelems)[e]->dim();
       for ( auto j=0; j<dim[1]; j++ ) {
         for ( auto i=0; i<dim[0]; i++ ) {
+//
+// NOTE: If using PERIODIC bdys, they must be _fully_ periodic!!
+//
 #if !defined(PERIODIC)
           if      ( (*testty)[ne] == 0  ) { // vert elem
             if      ( (*testid)[ne] == 0 ) {
@@ -259,20 +264,19 @@ int main(int argc, char **argv)
           if      ( (*testty)[ne] == 0  ) { // vert elem
             if      ( (*testid)[ne] == 0 ) {
               if      ( i == 0        && j == 0        ) amult[n] = 4;
-              else if ( i == dim[0]-1 && j == 0        ) amult[n] = 2;  
+              else if ( i == dim[0]-1 && j == 0        ) amult[n] = 4;  
               else if ( i == dim[0]-1 && j == dim[1]-1 ) amult[n] = 4;  
-              else if ( i == 0        && j == dim[1]-1 ) amult[n] = 2;  
+              else if ( i == 0        && j == dim[1]-1 ) amult[n] = 4;  
               else if ( i == dim[0]-1                  ) amult[n] = 2;  
               else if ( i == 0                         ) amult[n] = 2;  
               else if ( j == dim[1]-1                  ) amult[n] = 2;  
               else if ( j == 0                         ) amult[n] = 2;  
             }
             else if ( (*testid)[ne] == 1 ) { 
-              if      ( i == 0        && j == 0        ) amult[n] = 2;
-              else if ( i == dim[0]-1 && j == 0        ) amult[n] = 1;  
-              else if ( i == dim[0]-1 && j == dim[1]-1 ) amult[n] = 2;  
-              else if ( i == 0        && j == dim[1]-1 ) amult[n] = 4;  
+              if      ( i == 0        && j == 0        ) amult[n] = 4;
+              else if ( i == dim[0]-1 && j == 0        ) amult[n] = 4;  
               else if ( i == dim[0]-1 && j == dim[1]-1 ) amult[n] = 4;  
+              else if ( i == 0        && j == dim[1]-1 ) amult[n] = 4;  
               else if ( i == 0                         ) amult[n] = 2;  
               else if ( i == dim[0]-1                  ) amult[n] = 2;  
               else if ( j == 0                         ) amult[n] = 2;  
@@ -280,31 +284,29 @@ int main(int argc, char **argv)
             }
             else if ( (*testid)[ne] == 2 ) { 
               if      ( i == 0        && j == 0        ) amult[n] = 4;
-              if      ( i == dim[0]-1 && j == dim[1]-1 ) amult[n] = 4;
-              else if ( i == dim[0]-1 && j == 0        ) amult[n] = 2;  
-              else if ( i == dim[0]-1 && j == dim[1]-1 ) amult[n] = 1;  
-              else if ( i == 0        && j == dim[1]-1 ) amult[n] = 2;  
+              else if ( i == dim[0]-1 && j == 0        ) amult[n] = 4;  
+              else if ( i == dim[0]-1 && j == dim[1]-1 ) amult[n] = 4;
+              else if ( i == 0        && j == dim[1]-1 ) amult[n] = 4;  
               else if ( i == 0                         ) amult[n] = 2;  
               else if ( i == dim[0]-1                  ) amult[n] = 2;  
               else if ( j == 0                         ) amult[n] = 2;  
               else if ( j == dim[1]-1                  ) amult[n] = 2;  
             }
             else if ( (*testid)[ne] == 3 ) { 
-              if      ( i == 0        && j == 0        ) amult[n] = 2;
+              if      ( i == 0        && j == 0        ) amult[n] = 4;
               else if ( i == dim[0]-1 && j == 0        ) amult[n] = 4;  
+              else if ( i == dim[0]-1 && j == dim[1]-1 ) amult[n] = 4;  
               else if ( i == 0        && j == dim[1]-1 ) amult[n] = 4;  
-              else if ( i == dim[0]-1 && j == dim[1]-1 ) amult[n] = 2;  
-              else if ( i == 0        && j == dim[1]-1 ) amult[n] = 1;  
               else if ( i == 0                         ) amult[n] = 2;  
               else if ( i == dim[0]-1                  ) amult[n] = 2;  
               else if ( j == 0                         ) amult[n] = 2;  
               else if ( j == dim[1]-1                  ) amult[n] = 2;  
             }
           }
-          else if ( (*testty)[ne] == 1  ) { // non-vert bdy
+          else if ( (*testty)[ne] == 1  ) { // non-vertex bdy element
             if      ( (*testid)[ne] == 0 ) { 
-              if      ( i == 0        && j == 0        ) amult[n] = 2;
-              else if ( i == dim[0]-1 && j == 0        ) amult[n] = 2;  
+              if      ( i == 0        && j == 0        ) amult[n] = 4;
+              else if ( i == dim[0]-1 && j == 0        ) amult[n] = 4;  
               else if ( i == dim[0]-1 && j == dim[1]-1 ) amult[n] = 4;  
               else if ( i == 0        && j == dim[1]-1 ) amult[n] = 4;  
               else if ( j == dim[1]-1                  ) amult[n] = 2;  
@@ -315,8 +317,8 @@ int main(int argc, char **argv)
             }
             else if ( (*testid)[ne] == 1 ) { 
               if      ( i == 0        && j == 0        ) amult[n] = 4;
-              else if ( i == dim[0]-1 && j == 0        ) amult[n] = 2;  
-              else if ( i == dim[0]-1 && j == dim[1]-1 ) amult[n] = 2;  
+              else if ( i == dim[0]-1 && j == 0        ) amult[n] = 4;  
+              else if ( i == dim[0]-1 && j == dim[1]-1 ) amult[n] = 4;  
               else if ( i == 0        && j == dim[1]-1 ) amult[n] = 4;  
               else if ( i == 0                         ) amult[n] = 2;  
               else if ( i == dim[0]-1                  ) amult[n] = 2;  
@@ -326,18 +328,18 @@ int main(int argc, char **argv)
             else if ( (*testid)[ne] == 2 ) { 
               if      ( i == 0        && j == 0        ) amult[n] = 4;
               else if ( i == dim[0]-1 && j == 0        ) amult[n] = 4;  
-              else if ( i == dim[0]-1 && j == dim[1]-1 ) amult[n] = 2;  
-              else if ( i == 0        && j == dim[1]-1 ) amult[n] = 2;  
+              else if ( i == dim[0]-1 && j == dim[1]-1 ) amult[n] = 4;  
+              else if ( i == 0        && j == dim[1]-1 ) amult[n] = 4;  
               else if ( i == 0                         ) amult[n] = 2;  
               else if ( i == dim[0]-1                  ) amult[n] = 2;  
               else if ( j == 0                         ) amult[n] = 2;  
               else if ( j == dim[1]-1                  ) amult[n] = 2;  
             }
             else if ( (*testid)[ne] == 3 ) { 
-              if      ( i == 0        && j == 0        ) amult[n] = 2;
+              if      ( i == 0        && j == 0        ) amult[n] = 4;
               else if ( i == dim[0]-1 && j == 0        ) amult[n] = 4;  
               else if ( i == dim[0]-1 && j == dim[1]-1 ) amult[n] = 4;  
-              else if ( i == 0        && j == dim[1]-1 ) amult[n] = 2;  
+              else if ( i == 0        && j == dim[1]-1 ) amult[n] = 4;  
               else if ( i == 0                         ) amult[n] = 2;  
               else if ( i == dim[0]-1                  ) amult[n] = 2;  
               else if ( j == 0                         ) amult[n] = 2;  
@@ -362,6 +364,14 @@ int main(int argc, char **argv)
    
     } // end, e-loop
     
+
+for ( auto j=0; j<(*xnodes)[0].size(); j++ ) {
+  if ( mult[j] == 6 ) {
+    cout << "j=" << j << " x=(" << (*xnodes)[0][j] << "," << (*xnodes)[1][j] << ")" << endl;
+  }
+}
+
+
 
 
     // Find inf-norm and L2-norm errors for each method::
@@ -425,6 +435,8 @@ cout << "main: dmult=" << dmult << endl;
 } // end, main
 
 
+//**********************************************************************************
+//**********************************************************************************
 void init_ggfx(GGrid &grid, GGFX<GFTYPE> &ggfx)
 {
 
@@ -445,7 +457,20 @@ cout << "init_ggfx: ig3=" << (*igbdy)[3] << endl;
 for ( auto j=0; j<(*igbdy)[0].size(); j++ ) {
   ib = (*igbdy)[1][j];
   ic = (*igbdy)[3][j];
-  cout << "x0[" << ib << "] = (" << (*xnodes)[0][ib]  << "," 
+  cout << "x1/3" << ib << ", " << ic <<  "] = (" 
+                                 << (*xnodes)[0][ib]  << "," 
+                                 << (*xnodes)[1][ib]  << "); (" 
+                                 << (*xnodes)[0][ic]  << "," 
+                                 << (*xnodes)[1][ic]  << ")" << endl;
+}
+
+cout << "init_ggfx: ig0=" << (*igbdy)[0] << endl;
+cout << "init_ggfx: ig2=" << (*igbdy)[2] << endl;
+for ( auto j=0; j<(*igbdy)[0].size(); j++ ) {
+  ib = (*igbdy)[0][j];
+  ic = (*igbdy)[2][j];
+  cout << "x0/2" << ib << ", " << ic <<  "] = (" 
+                                 << (*xnodes)[0][ib]  << "," 
                                  << (*xnodes)[1][ib]  << "); (" 
                                  << (*xnodes)[0][ic]  << "," 
                                  << (*xnodes)[1][ic]  << ")" << endl;
