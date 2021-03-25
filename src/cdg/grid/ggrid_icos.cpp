@@ -1053,7 +1053,6 @@ void GGridIcos::find_gbdy_ind3d(GFTYPE radius,
 
   GBOOL             bexist, bglobale, bglobalv;
   GSIZET            ie, istart, nbdy, nind, ntmp, nnodes;
-  GFTYPE            eps;
   GTVector<GUINT>   utmp;
   GTVector<GINT>   *face_ind;
   GTVector<GSIZET>  ind, itmp;
@@ -1065,7 +1064,7 @@ void GGridIcos::find_gbdy_ind3d(GFTYPE radius,
   itmp.resize(ntmp);
   utmp.resize(ntmp); utmp = 0;
 
-  eps = 1.0e2*std::numeric_limits<GFTYPE>::epsilon();
+  eps_ = 0.125*minnodedist_;
 
   
   istart = 0;
@@ -1080,7 +1079,7 @@ void GGridIcos::find_gbdy_ind3d(GFTYPE radius,
     for ( auto j=0; j<gelems_[e]->nfaces(); j++ ) {
        face_ind  = &gelems_[e]->face_indices(j);
        geoflow::convert<GINT,GSIZET>(*face_ind, fi);
-       nind      = geoflow::fuzzyeq<GFTYPE>(r, fi, radius, eps, ind); // get indices on domain surface
+       nind      = geoflow::fuzzyeq<GFTYPE>(r, fi, radius, eps_, ind); // get indices on domain surface
       // For each index on bdy, set description:
       for ( auto i=0; i<nind; i++ ) { 
         ie      = ind[i] + istart ;
