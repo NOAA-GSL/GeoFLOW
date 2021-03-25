@@ -248,7 +248,7 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
 
   // Get total density and inverse: *rhoT  = *u[DENSITY]; 
   *rhoT = *u[DENSITY];
-//if ( traits_.usebase ) *rhoT +=  *ubase_[0];   
+  if ( traits_.usebase ) *rhoT +=  *ubase_[0];   
  *irhoT = *rhoT; irhoT->rpow(-1.0); // 1/rhoT
 
   // Compute velocity for timestep:

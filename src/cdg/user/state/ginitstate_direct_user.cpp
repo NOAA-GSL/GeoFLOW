@@ -706,7 +706,7 @@ GBOOL impl_boxdrybubble(const PropertyTree &ptree, GString &sconfig, GGrid &grid
     // Ts, delT are pot'l temp, 
     (*T) [j]  = (Ts + delT)*exnerb; // T = (theta + dtheta)*exner
     pj        = (*pb)[j]; 
-#if 0
+#if 1
     (*d) [j]  = pj / ( RD * (*T)[j]  ) - (*db)[j];
     dj        = (*d)[j] + (*db)[j]; // total density
 #else
