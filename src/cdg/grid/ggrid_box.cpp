@@ -57,6 +57,10 @@ lshapefcn_             (NULLPTR)
   assert(gname == "grid_box");
   geoflow::tbox::PropertyTree gridptree = ptree.getPropertyTree(gname);
 
+  // A hack: determine if ptree wants us to compute
+  // bdy test data:
+  do_gbdy_test_ = ptree.getValue<GBOOL>("gbdy_test_data",FALSE);
+
   // If terrain is being used, elements may not be
   // GE_REGULAR:
   this->gtype_ = GE_REGULAR;
@@ -83,7 +87,6 @@ lshapefcn_             (NULLPTR)
   snorm                 = gridptree.getValue<GString>("norm_type","GCG_NORM_INF");
   this->cgtraits_.normtype = LinSolverBase<CGTypePack>::str2normtype(snorm);
 
-  eps_ = 1.0e4*std::numeric_limits<GFTYPE>::epsilon();
   // compute global bdy range, and global vertices:
   for ( auto j=0; j<GDIM; j++ ) dP_[j] = spt[j];
   P1_ = P0_ + dP_;
@@ -312,6 +315,7 @@ void GGridBox::do_elems2d()
 
     pelem->init(*xNodes);
 
+#if 0
     // With face/edge centroids computed, compute 
     // global boundary nodes:
     for ( auto j=0; j<2*ndim_; j++ ) { // cycle over all edges
@@ -331,6 +335,7 @@ void GGridBox::do_elems2d()
         }
       }
     }
+#endif
 
 
     // Find global global interior and bdy start & stop indices represented 
@@ -537,7 +542,7 @@ void GGridBox::do_elems2d(GTMatrix<GINT> &p,
 
     pelem->init(*xNodes);
 
-
+#if 0
     // With face/edge centroids computed, compute 
     // global boundary nodes:
     for ( auto j=0; j<2*ndim_; j++ ) { // cycle over all edges
@@ -557,6 +562,7 @@ void GGridBox::do_elems2d(GTMatrix<GINT> &p,
         }
       }
     }
+#endif
 
     gelems_.push_back(pelem);
 
@@ -758,6 +764,8 @@ void GGridBox::periodize()
   
   GTVector<GFTYPE>  x(xNodes_.size()); // coord values to set to
 
+  assert(minnodedist_ > 0.0);
+  eps_ = 0.125*minnodedist_;
 
   periodicids_.clear();
   periodicdirs_.clear();
@@ -780,7 +788,7 @@ void GGridBox::periodize()
       periodicids_ [n] = id;       
       periodicdirs_[n] = 0;
       for( auto i=0; i<xNodes_.size(); i++ ) { // for x, y, z dirs
-        if ( FUZZYEQ(P1_[i],xNodes_[i][id],eps_) ) { // right/top-mosstblock.tbdy[k];i coord will change
+        if ( FUZZYEQ(P1_[i],xNodes_[i][id],eps_) ) { // right/top-mostblock.tbdy[k];i coord will change
           periodicdirs_[n] |= 1U << i;  // position right-most direction bit  
         }
       }
@@ -866,8 +874,10 @@ void GGridBox::find_rank_subdomain()
     dx[k] = Lbox_[k] / static_cast<GFTYPE>(ne_[k]);
   }
 
-testty_.resize(nthisrank);
-testid_.resize(nthisrank);
+  if ( do_gbdy_test_ ) {
+    testty_.resize(nthisrank); // elem type
+    testid_.resize(nthisrank);  // id for type
+  }
 
   // Compute vertices of all hexes ('cubes')
   // for this task:
@@ -887,6 +897,7 @@ testid_.resize(nthisrank);
         dv.x1 = dx.x1 ; dv.x2 = dx.x2;   qmesh_[n].v3 = v0 + dv;
         dv.x1 = 0.0   ; dv.x2 = dx.x2;   qmesh_[n].v4 = v0 + dv;
 
+if ( do_gbdy_test_ ) {
 if      ( i == 0        && j == 0        ) {
   testty_[n] = 0; // corner elem
   testid_[n] = 0; 
@@ -923,6 +934,7 @@ else {
   testty_[n] = 2; // interior elem
   testid_[n] = -1; // interior id
 }
+} // end, do_gbdy_test_
         n++;
       }
     }
@@ -998,6 +1010,10 @@ void GGridBox::config_gbdy(const PropertyTree           &ptree,
   stBdyBlock         stblock;
   UpdateBasePtr      base_ptr;
 
+  assert(minnodedist_ > 0.0);
+  eps_ = 0.125*minnodedist_;
+
+cout << "GGridBox::config_gbdy: eps_ = " << eps_ << endl; 
 
   bdyNormals_.resizem(GDIM);
 
@@ -1050,6 +1066,7 @@ void GGridBox::config_gbdy(const PropertyTree           &ptree,
     nind = igbdy.size(); // current size
     igbdy.reserve(nind+itmp.size());
     degbdy.reserve(nind+itmp.size());
+cout << "config_gbdy: itmp[" << j << "]=" << itmp << endl;
     for ( auto k=0; k<itmp.size(); k++ ) {
       igbdy.push_back(itmp[k]);
       degbdy.push_back(utmp[k]);
@@ -1168,6 +1185,9 @@ GBOOL GGridBox::on_global_edge(GINT iface, GTPoint<GFTYPE> &pt)
   GINT            nface=0;
   GTVector<GINT>  face(3); // at most 3 faces that point _can_ belong to
 //GTPoint<GFTYPE> pt(ndim_);
+
+  assert(minnodedist_ > 0.0);
+  eps_ = 0.125*minnodedist_;
 
   // Find faces point belongs to:
   for ( GINT j=0; j<ndim_; j++ ) {
@@ -1498,6 +1518,9 @@ void GGridBox::find_gbdy_ind2d(GINT bdyid, GBOOL bunique,
   GVVFType         *xlnodes;
   
   nkeep = ikeep.size();
+
+  assert(minnodedist_ > 0.0);
+  eps_ = 0.125*minnodedist_;
   
   ntmp  = bunique ? xNodes_[0].size()
         : xNodes_[0].size() + pow(2,GDIM) + (GDIM > 2 ? 2*GDIM : 0);
@@ -1512,7 +1535,7 @@ void GGridBox::find_gbdy_ind2d(GINT bdyid, GBOOL bunique,
   xp  .setBracket(eps_);
   switch ( bdyid ) { // get vertices defining bdy:
     // NOTE: the order of these vertices should
-    //       corresp with those in iv array:
+    //       corresp with those in if2v array:
     case 0: // lower horiz bdy:
       v[0][0] = P0_[0]; v[0][1] = P0_[1];
       v[1][0] = P1_[0]; v[1][1] = P0_[1];
@@ -1539,7 +1562,7 @@ void GGridBox::find_gbdy_ind2d(GINT bdyid, GBOOL bunique,
   for ( auto e=0; e<gelems_.size(); e++ ) { 
     xlnodes= &gelems_[e]->xNodes();
     nnodes = gelems_[e]->nnodes();
-    nind   = geoflow::in_seg<GFTYPE>(v, *xlnodes, ind); // get indices on segment
+    nind   = geoflow::in_seg<GFTYPE>(v, *xlnodes, eps_, ind); // get indices on segment
     // For each index on bdy, set description:
     for ( auto i=0; i<nind; i++ ) { 
       xp.assign(*xlnodes, ind[i]);
@@ -1551,6 +1574,7 @@ void GGridBox::find_gbdy_ind2d(GINT bdyid, GBOOL bunique,
         if      ( xp == v[0] ) { ivert = if2v[bdyid][0]; bglobalv = TRUE; }
         else if ( xp == v[1] ) { ivert = if2v[bdyid][1]; bglobalv = TRUE; }
         if ( bglobalv ) { // elem vertex on global  bdy vertex
+//cout << "config_gbdy: bdyid=" << bdyid << " ie=" << ie << " gblobalv=" << bglobalv << " xp=" << xp << " v0=" << v[0] << " `v1=" << v[1] << endl;
           SET_ND(utmp[nbdy], ivert, GElem_base::VERTEX, bdyid);
           itmp [nbdy] = ie; // 'global' index 
           if ( bunique ) ktmp[nkeep] = ie; // to store in keep
@@ -1619,6 +1643,9 @@ void GGridBox::find_gbdy_ind3d(GINT bdyid, GBOOL bunique,
   GVVFType         *xlnodes;
   
   nkeep = ikeep.size();
+
+  assert(minnodedist_ > 0.0);
+  eps_ = 0.125*minnodedist_;
   
   ntmp  = bunique ? xNodes_[0].size()
         : xNodes_[0].size() + pow(2,GDIM) + (GDIM > 2 ? 2*GDIM : 0);

@@ -131,7 +131,6 @@ private:
 
 
          GINT                ndim_;          // grid dimensionality (2 or 3)
-         GFTYPE              eps_;           // float epsilon for comparisons
          GDD_base<GFTYPE>    *gdd_;           // domain decomposition/partitioning object
          GShapeFcn_linear<GFTYPE> 
                             *lshapefcn_;     // linear shape func to compute 2d coords
