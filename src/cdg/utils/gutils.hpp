@@ -49,9 +49,9 @@ template<typename T>
 void compute_p(const GTVector<T> &e, const GTVector<T> &q, GFTYPE R, const GTVector<T> &cv, GTVector<T> &p);
 
 template<typename T>
-GSIZET in_seg(const GTVector<GTPoint<T>> &vertices, const GTVector<GTVector<T>> &x, GTVector<GSIZET> &ind);
+GSIZET in_seg(const GTVector<GTPoint<T>> &vertices, const GTVector<GTVector<T>> &x, T eps, GTVector<GSIZET> &ind);
 template<typename T>
-GSIZET in_seg(const GTVector<GTPoint<T>> &vertices, const GTVector<GTVector<T>> &x, const GTVector<GSIZET> &ix, GTVector<GSIZET> &ind);
+GSIZET in_seg(const GTVector<GTPoint<T>> &vertices, const GTVector<GTVector<T>> &x, const GTVector<GSIZET> &ix, T eps, GTVector<GSIZET> &ind);
 template<typename T>
 GSIZET in_poly(const GTVector<GTPoint<T>> &vertices, const GTVector<GTVector<T>> &x, T eps, GTVector<GSIZET> &ind);
 template<typename T>

@@ -222,29 +222,34 @@ void compute_p(const GTVector<T> &e, const GTVector<T> &q, GFTYPE R, const GTVec
 //          in ind vector, and return the number of points found
 // ARGS   : verts: use first 2 points to define segment
 //          x    : test points
+//          eps  : comparison epsilon
 //          ind  : vector of indices in x that lie on segment. Reallocated
 //                 if necessary to be of insufficient size
 // RETURNS: number of points found on segment (valid number of points in ind)
 //**********************************************************************************
 template<typename T>
-GSIZET in_seg(const GTVector<GTPoint<T>> &verts, const GTVector<GTVector<T>> &x, GTVector<GSIZET> &ind)
+GSIZET in_seg(const GTVector<GTPoint<T>> &verts, const GTVector<GTVector<T>> &x, T eps, GTVector<GSIZET> &ind)
 {
   GINT       ndim;
   GSIZET     nfound;
-  T          mr1, mr2;
+  T          a, h, m1, m2, md;
   GTPoint<T> c(3), d(3), p(3), r1(3), r2(3);
 
   p    = 0.0;
   d    = verts[1] ; d -= verts[0];
+  md   = d.mag();
   ndim = x.size();
   ind.resizem(x[0].size());
   nfound = 0;
   for ( auto i=0; i<x[0].size(); i++ ) {
     p.assign(x, i);
-    r1 = p ; r1 -= verts[0]; mr1 = r1.mag();
-    r2 = p ; r2 -= verts[1]; mr2 = r2.mag();
-    d.cross(r1, c); // c = d X r1
-    if ( (mr1+mr2) <= d.mag() ) {
+    r1 = p ; r1 -= verts[0]; m1 = r1.mag();
+    r2 = p ; r2 -= verts[1]; m2 = r2.mag();
+//  a = 0.25*sqrt( (m1+m2+md) * (m2+md-m1) * (md+m1-m2) * (m1+m2-md) ); //arrea
+    d.cross(r1,c); // c = d x r1
+    a = c.mag(); // Actually, a = 0.5 d x r1
+    h = a / md;  // height, actually, = 2 * a / md
+    if ( h <= eps &&  (m1+m2) <= (md+eps) ) {
       ind[nfound++] = i;
     }
   } // end, test point loop
@@ -263,29 +268,34 @@ GSIZET in_seg(const GTVector<GTPoint<T>> &verts, const GTVector<GTVector<T>> &x,
 // ARGS   : verts: use first 2 points to define segment
 //          x    : test points
 //          ix   : indirection indices in x to consider
+//          eps  : comparison epsilon
 //          ind  : vector of indices in x that lie on segment. Reallocated
 //                 if necessary to be of insufficient size
 // RETURNS: number of points found on segment (valid number of points in ind)
 //**********************************************************************************
 template<typename T>
-GSIZET in_seg(const GTVector<GTPoint<T>> &verts, const GTVector<GTVector<T>> &x, const GTVector<GSIZET> &ix, GTVector<GSIZET> &ind)
+GSIZET in_seg(const GTVector<GTPoint<T>> &verts, const GTVector<GTVector<T>> &x, const GTVector<GSIZET> &ix, T eps, GTVector<GSIZET> &ind)
 {
   GINT       ndim;
   GSIZET     nfound;
-  T          mr1, mr2;
+  T          a, h, m1, m2, md;
   GTPoint<T> c(3), d(3), p(3), r1(3), r2(3);
 
   p    = 0.0;
   d    = verts[1] ; d -= verts[0];
+  md   - d.mag();
   ndim = x.size();
   ind.resizem(x[0].size());
   nfound = 0;
   for ( auto i=0; i<ix.size(); i++ ) {
     p.assign(x, ix[i]);
-    r1 = p ; r1 -= verts[0]; mr1 = r1.mag();
-    r2 = p ; r2 -= verts[1]; mr2 = r2.mag();
-    d.cross(r1, c); // c = d X r1
-    if ( (mr1+mr2) <= d.mag() ) {
+    r1 = p ; r1 -= verts[0]; m1 = r1.mag();
+    r2 = p ; r2 -= verts[1]; m2 = r2.mag();
+    d.cross(r1,c); // c = d x r1
+//  a = 0.25*sqrt( (m1+m2+md) * (m2+md-m1) * (md+m1-m2) * (m1+m2-md) ); //arrea
+    a = c.mag(); // Actually, a = 0.5 d x r1
+    h = a / md;  // height, actually, = 2 * a / md
+    if ( h <= eps &&  (m1+m2) <= (md+eps) ) {
       ind[nfound++] = ix[i];
     }
   } // end, test point loop
