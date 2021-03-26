@@ -602,12 +602,12 @@ void GStressEnOp<TypePack>::mom_update_reduced(StateComp &d, State &u, GINT idir
   for ( auto j=0; j<nxy; j++ ) { 
     grid_->deriv(*u[idir-1], j+1, *utmp[0], *utmp[1]);
     // Point-multiply by nu before taking 'divergence':
-//  utmp[1]->pointProd(d);
+    utmp[1]->pointProd(d);
     utmp[1]->pointProd(*nu_);
     grid_->deriv(*utmp[1], j+1, *utmp[0], *utmp[2]);
     so += *utmp[2];
   }
-  so.pointProd(d);
+//so.pointProd(d);
 
 
 } // end of method mom_update_reduced
@@ -651,12 +651,12 @@ void GStressEnOp<TypePack>::energy_update_reduced(StateComp &d, State &u, State 
        *utmp[1] += *utmp[2];
     }
     // Point-multiply by eta before taking 'divergence':
-//  utmp[1]->pointProd(d);
+    utmp[1]->pointProd(d);
     utmp[1]->pointProd(*eta_);
     grid_->deriv(*utmp[1], j+1, *utmp[0], *utmp[2]);
     eo += *utmp[2];
   }
-  eo.pointProd(d);
+//eo.pointProd(d);
 
 } // end of method energy_update_reduced
 
