@@ -138,8 +138,8 @@ void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
   geoflow::compute_p<Ftype>(*u[ENERGY], *tmp1, RD, 
                                            *tmp2, *p);// partial pressure for dry air
   if ( !traits_.dodry ) {
-    geoflow::compute_p<Ftype>(*tmp1, *rhoT, *u[VAPOR], RV, *tmp2); // partial pressure for vapor
-   *p += *tmp2;
+    geoflow::compute_p<Ftype>(*u[ENERGY], *u[VAPOR], RV, *tmp2, *tmp1); // partial pressure for vapor
+   *p += *tmp1;
   }
 
   csq = utmp_[utmp_.size()-4];
