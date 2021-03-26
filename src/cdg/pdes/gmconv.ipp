@@ -105,7 +105,7 @@ void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
 {
   GString    serr = "GMConv<TypePack>::dt_impl: ";
   Ftype      dtmin, dt1, dtvisc;
-  StateComp *csq, *p;
+  StateComp *csq, *p, *T;
   StateComp *rhoT, *tmp1, *tmp2;
 
   assert(utmp_.size() >= 6 );
@@ -123,27 +123,29 @@ void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
   dtmin = std::numeric_limits<Ftype>::max();
 
   // Assign pointers:
-  p    = utmp_[utmp_.size()-1];
-  rhoT = utmp_[utmp_.size()-2];
-  tmp1 = utmp_[utmp_.size()-3];
-  tmp2 = utmp_[utmp_.size()-4];
+  p    = utmp_[0];
+  rhoT = utmp_[1];
+  tmp1 = utmp_[2];
+  tmp2 = utmp_[3];
+  T    = utmp_[4];
 
  *rhoT = *u[DENSITY]; 
   if ( traits_.usebase ) *rhoT += *u[BASESTATE];
  *tmp1 = *rhoT; tmp1->rpow(-1.0);
   compute_v(u, *tmp1, v_); 
 
-  compute_cv(u, *tmp1, *tmp2);                        // Cv
-  compute_qd(u, *tmp1);                               // dry mass ratio
-  geoflow::compute_p<Ftype>(*u[ENERGY], *tmp1, RD, 
-                                           *tmp2, *p);// partial pressure for dry air
+  compute_cv(u, *tmp1, *tmp2);                                 // Cv
+  geoflow::compute_temp<Ftype>(*u[ENERGY], *rhoT, *tmp2, *T);  // temperature
+
+  compute_qd(u, *tmp1);                                        // dry mass ratio
+  geoflow::compute_p<Ftype>(*T, *rhoT, *tmp1, RD, *p);         // partial pressure for dry air
   if ( !traits_.dodry ) {
-    geoflow::compute_p<Ftype>(*u[ENERGY], *u[VAPOR], RV, *tmp2, *tmp1); // partial pressure for vapor
+    geoflow::compute_p<Ftype>(*T, *rhoT, *u[VAPOR], RV, *tmp1); // partial pressure for vapor
    *p += *tmp1;
   }
 
-  csq = utmp_[utmp_.size()-4];
-  for ( auto j=0; j<p->size(); j++ ) { // sound speed, csq
+  csq = utmp_[4];
+  for ( auto j=0; j<p->size(); j++ ) {     // sound speed, csq
     (*csq)[j] = (*p)[j] / (*rhoT)[j] ;
   }
 
@@ -154,7 +156,7 @@ void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
        (*tmp1)[j] += (*v_[k])[j] * (*v_[k])[j];
      }
    }
-   *tmp1 += *csq; // v^2 + c^2
+   *tmp1 += *csq;                          // v^2 + c^2
 
   
    // Compute max(v^2 + c^2) for each element:
