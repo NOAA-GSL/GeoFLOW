@@ -104,7 +104,7 @@ template<typename TypePack>
 void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
 {
   GString    serr = "GMConv<TypePack>::dt_impl: ";
-  Ftype      dtmin, dt1;
+  Ftype      dtmin, dt1, dtvisc;
   StateComp *csq, *p;
   StateComp *rhoT, *tmp1, *tmp2;
 
@@ -133,10 +133,10 @@ void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
  *tmp1 = *rhoT; tmp1->rpow(-1.0);
   compute_v(u, *tmp1, v_); 
 
-  compute_cv(u, *tmp1, *tmp2);                     // Cv
-  geoflow::compute_temp<Ftype>(*u[ENERGY], *rhoT, *tmp2, *tmp1);  // temperature
-  compute_qd(u, *tmp2);                            // dry mass ratio
-  geoflow::compute_p<Ftype>(*tmp1, *rhoT, *tmp2, RD, *p); // partial pressure for dry air
+  compute_cv(u, *tmp1, *tmp2);                        // Cv
+  compute_qd(u, *tmp1);                               // dry mass ratio
+  geoflow::compute_p<Ftype>(*u[ENERGY], *tmp1, RD, 
+                                           *tmp2, *p);// partial pressure for dry air
   if ( !traits_.dodry ) {
     geoflow::compute_p<Ftype>(*tmp1, *rhoT, *u[VAPOR], RV, *tmp2); // partial pressure for vapor
    *p += *tmp2;
@@ -159,6 +159,12 @@ void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
   
    // Compute max(v^2 + c^2) for each element:
    GMTK::maxbyelem<Ftype>(*grid_, *tmp1, maxbyelem_);
+
+   // Estimate viscous timescale:
+   dtvisc = std::numeric_limits<Ftype>::max();
+   if ( nu_.max() > 0.0 ) {
+     dtvisc = pow(grid_->minnodedist(),2) / nu_.max();
+   }
    
    // Note: maxbyelem_ is an array with the max of v^2 + c^2 
    //       on each element
@@ -172,8 +178,8 @@ void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
    // Find minimum dt over all tasks:
    GComm::Allreduce(&dtmin, &dt1, 1, T2GCDatatype<Ftype>() , GC_OP_MIN, comm_);
 
-   // Limit any timestep-to-timestep increae to 10%:
-   dt = MIN(dt1*traits_.courant, 1.01*dt);
+   // Limit any timestep-to-timestep increae to 5%:
+   dt = MIN(MIN(dt1,dtvisc)*traits_.courant, 1.05*dt);
 
 } // end of method dt_impl
 
