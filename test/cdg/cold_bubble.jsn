@@ -31,7 +31,7 @@
     "dofallout"       : false,
     "dogravity"       : true,
     "bconserved"      : false,
-    "divopcolloc"     : true,
+    "divopcolloc"     : false,
     "usebdydat"       : true,
     "Stokeshyp"       : false,
     "bindepdiss"      : false,
@@ -71,13 +71,13 @@
     "stab_preserving"  : false,
     "extrap_order"     : 2,
     "variable_dt"      : true,
-    "courant"          : 0.1
+    "courant"          : 0.005
   },
   "dissipation_traits": {
-    "nu"      : 100.0,
-    "eta"     : 100.0,
-    "zeta"    : 100.0,
-    "lambda"  : 100.0,
+    "nu"      : 16000.0,
+    "eta"     : 16000.0,
+    "zeta"    : 16000.0,
+    "lambda"  : 16000.0,
     "nu_type" : "constant"
   },
   "gio": {
@@ -116,8 +116,8 @@
     "observer_name"      : "gio_observer",
     "idir"               : "outs",
     "odir"               : "outs",
-    "cadence_type"       : "cycle",
-    "cycle_interval"     : 1,
+    "cadence_type"       : "time",
+    "cycle_interval"     : 50,
     "time_interval"      : 10.0,
     "state_names"        : ["s1", "s2", "e", "d"],
     "grid_names"         : ["xgrid", "ygrid", "zgrid"],
