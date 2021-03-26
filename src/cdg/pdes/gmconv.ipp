@@ -897,7 +897,7 @@ void GMConv<TypePack>::init_impl(State &u, State &tmp)
 //ghelm_      = new GHelmholtz(*grid_);
   
   typename GStressEnOp<TypePack>::Traits trstress;
-  trstress.type       = GStressEnOp<TypePack>::GSTRESS_REDUCED;
+  trstress.type       = GStressEnOp<TypePack>::GSTRESS_FULL;
   trstress.full_colloc= TRUE;
   trstress.Stokes_hyp = traits_.Stokeshyp;
   trstress.indep_diss = traits_.bindepdiss;
