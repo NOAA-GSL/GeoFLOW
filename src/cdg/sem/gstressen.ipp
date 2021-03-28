@@ -30,31 +30,23 @@ lambda_              (NULLPTR)
   assert(grid_->ntype().multiplicity(0) == GE_MAX-1 
         && "Only a single element type allowed on grid");
   
-  if ( traits_.indep_diss) {// mom & en visocisities are independent
-    assert(traits_.nu.size() > 0 && traits_.eta.size()  > 0);
-    if  ( traits_.Stokes_hyp ) {
-      traits_.zeta.resize(traits_.nu.size());
-      traits_.lambda.resize(traits_.eta.size());
-      traits_.zeta  = traits_.nu   ; traits_.zeta   *= -2.0/3.0;
-      traits_.lambda= traits_.eta  ; traits_.lambda *= -2.0/3.0;
-    } else {
-      assert(traits_.zeta.size() > 0 && traits_.lambda.size()  > 0);
-      traits_.zeta   -= (traits_.nu  * (1.0/GDIM));
-      traits_.lambda -= (traits_.eta * (1.0/GDIM));
-    }
+  if  ( traits_.Stokes_hyp ) {
+    assert(traits_.nu.size() > 0);
+    traits_.zeta  .resize(traits_.nu.size());
+    traits_.lambda.resize(traits_.nu.size());
+    traits_.eta   .resize(traits_.nu.size());
+    traits_.zeta  = traits_.nu  ; traits_.zeta   *= -2.0/GDIM;
+    traits_.lambda= traits_.nu  ; 
+    traits_.eta   = traits_.nu  ; traits_.eta    *= -2.0/GDIM;
+  }
+  else if ( traits_.indep_diss ) {// mom & en visocisities spec independently
     nu_     = &traits_.nu;
     zeta_   = &traits_.zeta;
     eta_    = &traits_.eta;
     lambda_ = &traits_.lambda;
-  } else { // eta, lambda are mu, zeta:
-    assert(traits_.nu.size() > 0 );
-    if  ( traits_.Stokes_hyp ) {
-      traits_.zeta.resize(traits_.nu.size());
-      traits_.zeta = traits_.nu; traits_.zeta *= -2.0/3.0;
-    } else {
-      assert(traits_.zeta.size() > 0 );
-      traits_.zeta   -= (traits_.nu * (1.0/GDIM));
-    }
+  } 
+  else { // en visc is derivd from mom:
+    assert(traits_.nu.size() > 0 && traits_.zeta.size() > 0 );
     nu_     = &traits_.nu;
     zeta_   = &traits_.zeta;
     eta_    = &traits_.nu;
@@ -602,12 +594,12 @@ void GStressEnOp<TypePack>::mom_update_reduced(StateComp &d, State &u, GINT idir
   for ( auto j=0; j<nxy; j++ ) { 
     grid_->deriv(*u[idir-1], j+1, *utmp[0], *utmp[1]);
     // Point-multiply by nu before taking 'divergence':
-    utmp[1]->pointProd(d);
+//  utmp[1]->pointProd(d);
     utmp[1]->pointProd(*nu_);
     grid_->deriv(*utmp[1], j+1, *utmp[0], *utmp[2]);
     so += *utmp[2];
   }
-//so.pointProd(d);
+  so.pointProd(d);
 
 
 } // end of method mom_update_reduced
@@ -651,12 +643,12 @@ void GStressEnOp<TypePack>::energy_update_reduced(StateComp &d, State &u, State 
        *utmp[1] += *utmp[2];
     }
     // Point-multiply by eta before taking 'divergence':
-    utmp[1]->pointProd(d);
+//  utmp[1]->pointProd(d);
     utmp[1]->pointProd(*eta_);
     grid_->deriv(*utmp[1], j+1, *utmp[0], *utmp[2]);
     eo += *utmp[2];
   }
-//eo.pointProd(d);
+  eo.pointProd(d);
 
 } // end of method energy_update_reduced
 
