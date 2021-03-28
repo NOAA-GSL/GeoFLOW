@@ -393,7 +393,10 @@ template<typename T>
 void GExRKStepper<T>::step_ssp(const Time &t, const State &uin, State &uf, State &ub,  
                            const Time &dt, State &tmp, State &uout)
 {
-  if      ( norder_ == 3 && nstage_ == 3 ) {
+  if      ( norder_ == 2 && nstage_ == 2 ) {
+    step_ssp22(t, uin, uf, ub, dt, tmp, uout);
+  }
+  else if ( norder_ == 3 && nstage_ == 3 ) {
     step_ssp33(t, uin, uf, ub, dt, tmp, uout);
   }
   else if ( norder_ == 3 && nstage_ == 4 ) {
@@ -591,6 +594,75 @@ void GExRKStepper<T>::step_ssp33(const Time &t, const State &uin, State &uf, Sta
   }
 
 } // end of method step_ssp33
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD     : step_ssp22 (1)
+// DESCRIPTION: Computes one SSP RK2 (2nd order, 2 stages) step at 
+//              specified timestep. Note: callback to RHS-computation 
+//              function must be set prior to entry.
+//
+//
+// ARGUMENTS  : t    : time, t^n, for state, uin=u^n
+//              uin  : initial (entry) state, u^n
+//              uf   : forcing tendency
+//              ub   : bdy tendency
+//              dt   : time step
+//              tmp  : tmp space. Must have at least NState*(M+1)+1 vectors,
+//                     where NState is the number of state vectors.
+//              uout : updated state, at t^n+1
+//               
+// RETURNS    : none.
+//**********************************************************************************
+template<typename T>
+void GExRKStepper<T>::step_ssp22(const Time &t, const State &uin, State &uf, State &ub,  
+                           const Time &dt, State &tmp, State &uout)
+{
+
+  GSIZET       i, j, m, n, nstate=uin.size();
+  GFTYPE       dtt, tt;
+  
+
+  resize(nstate);    // check if we need to resize K_
+  
+  for ( j=0,n=0; j<MAX(nstage_-1,1); j++ ) {
+    for ( i=0; i<nstate; i++ )  {
+      K_[j][i] = tmp[n]; // set K storage from tmp space
+      n++;
+    }
+  }
+
+
+  // Stage 1:
+  //   u(1)  = u^n + dt L(u^n);
+  tt  = t;
+  dtt = dt;
+  step_euler(tt, uin, uf, ub, dtt, K_[0]);   
+  if ( bapplybc_  ) bdy_apply_callback_ (tt, K_[0], ub); 
+  GMTK::constrain2sphere(*grid_, K_[0]);
+  for ( i=0; i<nstate; i++ )  {
+    if ( ggfx_ != NULLPTR ) {
+      ggfx_->doOp(*K_[0][i], GGFX<GFTYPE>::Smooth());
+    }
+  }
+ 
+  // Stage 2:
+  tt  = t;
+  dtt = dt;
+  step_euler(tt, K_[1], uf, ub, dtt, uout);   
+  for ( i=0; i<nstate; i++ )  {
+    GMTK::saxpby(*uout[i],  0.5, *uin[i], 0.5);
+  }
+  if ( bapplybc_  ) bdy_apply_callback_ (tt, uout, ub); 
+  GMTK::constrain2sphere(*grid_, uout);
+  for ( i=0; i<nstate; i++ )  {
+    if ( ggfx_ != NULLPTR ) {
+      ggfx_->doOp(*uout[i], GGFX<GFTYPE>::Smooth());
+    }
+  }
+ 
+} // end of method step_ssp22
 
 
 //**********************************************************************************
