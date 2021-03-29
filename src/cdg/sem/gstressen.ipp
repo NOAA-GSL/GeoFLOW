@@ -48,11 +48,11 @@ lambda_              (NULLPTR)
   else { // energy coeffs same as for mom
     assert(traits_.nu.size() > 0 && traits_.zeta.size() > 0 );
     // From Eyink 2018 PRX 8:011022:
-    traits_.zeta = traits_.zeta - (traits_.nu / GDIM);    
+    traits_.zeta -= traits_.nu * (1.0/static_cast<Ftype>(GDIM));    
     nu_     = &traits_.nu;
     zeta_   = &traits_.zeta;
-    lambda_ = &traits_.zeta;
-    eta_    = &traits_.nu;
+    lambda_ = &traits_.nu;
+    eta_    = &traits_.zeta;
   }
 
 
