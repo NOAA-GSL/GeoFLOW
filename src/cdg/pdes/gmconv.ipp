@@ -173,10 +173,11 @@ void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
    // Note: maxbyelem_ is an array with the max of v^2 + c^2 
    //       on each element
 
+
    // Find estimate of smallest dt on this task:
    dtmin = std::numeric_limits<Ftype>::max();
    for ( auto e=0; e<maxbyelem_.size(); e++ ) {
-     dt1 = (*dxmin)[e] * (*dxmin)[e] / maxbyelem_.max() ; // this is dt^2
+     dt1 = 0.25*(*dxmin)[e] * (*dxmin)[e] / maxbyelem_[e] ; // this is dt^2
      dtmin = MIN(dtmin, sqrt(dt1)); 
    }
 
