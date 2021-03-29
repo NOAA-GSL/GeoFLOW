@@ -135,11 +135,23 @@ void GGFX<T>::display() const {
 		if(my_rank == rank){
 			pio::plog << "send_map_.size() = " << send_map_.size() <<std::endl;
 			for(auto& [srank, vec] : send_map_){
-				pio::plog << "  Sending to rank " << srank << " nodes " << vec.size() << std::endl;;
+				pio::plog << "  Sending to rank " << srank << " # nodes = " << vec.size() << std::endl;
+				for(auto& nid : vec){
+					pio::plog << " " << nid;
+				}
+				pio::plog << std::endl;
 			}
 			pio::plog << "recv_map_.size() = " << recv_map_.size() <<std::endl;
 			for(auto& [rrank, vec] : recv_map_){
-				pio::plog << "  Recving to rank " << rrank << " nodes " << vec.size() << std::endl;;
+				pio::plog << "  Receiving from rank " << rrank << " # nodes = " << vec.size() << std::endl;
+				for(auto& [remote_id, local_ids] : vec){
+					pio::plog << "  " << remote_id << " --> ";
+					for(auto& local_id : local_ids){
+						pio::plog << " " << local_id;
+					}
+					pio::plog << std::endl;
+				}
+				pio::plog << std::endl;
 			}
 			pio::plog << std::flush;
 		}
@@ -266,15 +278,14 @@ GGFX<T>::init(const T tolerance, Coordinates& xyz){
 	std::map<rank_type, std::vector<index_value_type>> recv_from_ranks;
 	for(rank_type rank = 0; rank < num_ranks; ++rank){
 		if( rank != my_rank ){ // Don't search myself (we know the answer is everything)
+			if( tbox::spatial::bound::Intersects(bnd,bounds_by_rank[rank]) ) { 
+				// If our bounds intersect we must send something
+				// - Move into buffer map (i.e. no copy)
+				// - Submit a receive request
+				// - Submit a send request
 
-			std::vector<index_value_type> search_results;
-			local_bound_indexer.query( tbox::spatial::shared::predicate::Intersects(bounds_by_rank[rank]), std::back_inserter(search_results) );
-
-			// If found any bounds within the ranks bounding region
-			// - Move into buffer map (i.e. no copy)
-			// - Submit a receive request
-			// - Submit a send request
-			if( search_results.size() > 0 ){
+				std::vector<index_value_type> search_results;
+				local_bound_indexer.query( tbox::spatial::shared::predicate::Intersects(bounds_by_rank[rank]), std::back_inserter(search_results) );
 				send_to_ranks.emplace(rank, search_results);
 
 				// Tag = 0

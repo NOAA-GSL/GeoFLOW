@@ -1342,7 +1342,7 @@ void GGrid::init_bc_info(GBOOL bterrain)
   GSIZET           n, nbdy;
   GTVector<GSIZET> iunique;
 
-cout << "init_bc_info: igbdy=" << igbdy_ << endl;
+//cout << "init_bc_info: igbdy=" << igbdy_ << endl;
    
   nind = 0; 
   // Compute 'binned' structures for global indices
@@ -1351,7 +1351,7 @@ cout << "init_bc_info: igbdy=" << igbdy_ << endl;
   n = 0; // cycle over all bdy nodes
   igbdy_binned_.resize(igbdy_bdyface_.size());
   for ( auto k=0; k<igbdy_bdyface_.size(); k++ ) { // cycle over canonical bdy face
-cout << "init_bc_info: igbdy[" << k << "]=" << igbdy_bdyface_[k] << endl;
+//cout << "init_bc_info: igbdy[" << k << "]=" << igbdy_bdyface_[k] << endl;
     nbdy = igbdyt_bdyface_[k].size();
     igbdy_binned_ [k].resize(GBDY_MAX);
     for ( auto j=0; j<GBDY_MAX; j++ ) { // cycle over each bc type

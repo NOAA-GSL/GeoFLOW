@@ -1013,7 +1013,6 @@ void GGridBox::config_gbdy(const PropertyTree           &ptree,
   assert(minnodedist_ > 0.0);
   eps_ = 0.125*minnodedist_;
 
-cout << "GGridBox::config_gbdy: eps_ = " << eps_ << endl; 
 
   bdyNormals_.resizem(GDIM);
 
@@ -1066,7 +1065,7 @@ cout << "GGridBox::config_gbdy: eps_ = " << eps_ << endl;
     nind = igbdy.size(); // current size
     igbdy.reserve(nind+itmp.size());
     degbdy.reserve(nind+itmp.size());
-cout << "config_gbdy: itmp[" << j << "]=" << itmp << endl;
+//cout << "config_gbdy: itmp[" << j << "]=" << itmp << endl;
     for ( auto k=0; k<itmp.size(); k++ ) {
       igbdy.push_back(itmp[k]);
       degbdy.push_back(utmp[k]);
@@ -1119,6 +1118,7 @@ cout << "config_gbdy: itmp[" << j << "]=" << itmp << endl;
 
   // With global list of domain boundaries, compute bdy data:
   do_gbdy_normals(dXdXi_, igbdy, degbdy, bdyNormals_, idepComp_); // all bdy nodes 
+#if 0
 GSIZET *ind=NULLPTR;
 nind = 0;
 igbdy.contains(0, ind, nind);
@@ -1126,6 +1126,7 @@ for ( auto j=0; j<nind; j++ )
 cout << "GridBox::config_gbdy: igbdy[" << j << "]=" << igbdy[ind[j]] 
 << " n=(" << bdyNormals_[0][ind[j]] << "," << bdyNormals_[1][ind[j]] << ")" << endl;
 delete [] ind;
+#endif
 
   if ( bperiodic ) {
     if ( ndim_ == 2 ) {
