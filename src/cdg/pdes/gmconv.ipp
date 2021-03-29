@@ -174,9 +174,7 @@ void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
    //       on each element
 
    // Find estimate of smallest dt on this task:
-   for ( auto e=0; e<maxbyelem_.size(); e++ ) {
-     dt1 = MIN(dt1, dxmin * dxmin / maxbyelem_[e]); // this is dt^2
-   }
+   dt1 = MIN(dt1, dxmin * dxmin / maxbyelem_.max() ); // this is dt^2
    dtmin = MIN(dtmin, sqrt(dt1)); 
 
    // Find minimum dt over all tasks:
