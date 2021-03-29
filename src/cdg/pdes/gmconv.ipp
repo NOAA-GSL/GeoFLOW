@@ -316,15 +316,16 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
      *tmp1 *= *Mass;             
       GMTK::saxpby<Ftype>(*dudt[j], 1.0, *tmp1, 2.0);  // += 2 Omega X (rhoT v) M J
     }
+#endif
 
     if ( traits_.dograv || traits_.usebase ) {
      *tmp1 = -GG; 
       compute_vpref(*tmp1, j+1, *tmp2);               // compute grav component
-      tmp2->pointProd(*dd, *tmp2);
+      tmp2->pointProd(*dd);
      *tmp2 *= *Mass;             
      *dudt[j] -= *tmp2;                               // -= rho' vec{g} M J
+
     }
-#endif
 
     gstressen_->apply(*rhoT, v_, j+1, stmp, 
                                          *tmp1);      // [mu s^{ij}],j
@@ -538,7 +539,7 @@ void GMConv<TypePack>::dudt_wet(const Time &t, const State &u, const State &uf, 
     if ( traits_.dograv || traits_.usebase ) {
      *tmp1 = -GG; 
       compute_vpref(*tmp1, j+1, *tmp2);               // compute grav component
-      tmp2->pointProd(*dd, *tmp2);
+      tmp2->pointProd(*dd);
      *tmp2 *= *Mass;             
      *dudt[j] -= *tmp2;                               // -= rho' vec{g} M J
     }
@@ -1297,11 +1298,11 @@ void GMConv<TypePack>::compute_vpref(StateComp &tvi, GINT idir, StateComp &W)
      // In Cartesian coords, select the 'z' direction
      // as preferred 'fallout' direction. In 2d, this
      // will be the 2-coord; in 3d, the 3-coord:
-     if ( idir != nc_ ) {
-       W = 0.0;
+     if ( idir == nc_ ) {
+       W = tvi; 
      }
      else {
-       W = tvi; 
+       W = 0.0;
      }
      return;
    }
