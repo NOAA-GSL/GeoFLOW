@@ -167,7 +167,7 @@ void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
    // Estimate viscous timescale:
    dtvisc = std::numeric_limits<Ftype>::max();
    if ( nu_.max() > 0.0 ) {
-     dtvisc = dxmin->min() * dxmin->min() / nu_.max();
+     dtvisc = grid_->minnodedist() * grid_->minnodedist() / nu_.max();
    }
    
    // Note: maxbyelem_ is an array with the max of v^2 + c^2 
