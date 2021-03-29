@@ -1426,7 +1426,7 @@ void GGrid::add_terrain(const State &xb, State &utmp)
    *b  = 0.0;
    *x0 = 0.0; // first guess
     cg.solve(H, *b, *xb[j], *x0);
-    cout << "GGrid::add_terrain: xb_new[" << j << "]=" << *x0 << endl;
+//  cout << "GGrid::add_terrain: xb_new[" << j << "]=" << *x0 << endl;
     xNodes_[j] = *x0;             // Reset XNodes = x0
 //GPP(comm_,"GGrid::add_terrain: new_xNodes[" << j << "]=" << xNodes_[j]);
   }
