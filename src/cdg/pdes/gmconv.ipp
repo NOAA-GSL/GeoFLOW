@@ -104,7 +104,7 @@ template<typename TypePack>
 void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
 {
   GString    serr = "GMConv<TypePack>::dt_impl: ";
-  Ftype      dtmin, dt1, dtvisc ;
+  Ftype      dtmin, dt1, dtvisc, tiny ;
   StateComp *csq, *p, *T;
   StateComp *rhoT, *tmp1, *tmp2;
   StateComp *dxmin;
@@ -184,7 +184,10 @@ void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
    GComm::Allreduce(&dtmin, &dt1, 1, T2GCDatatype<Ftype>() , GC_OP_MIN, comm_);
 
    // Limit any timestep-to-timestep increae to 5%:
-   dt = MIN(MIN(dt1,dtvisc)*traits_.courant, 1.05*dt);
+   tiny = 1000.0*numeric_limits<Ftype>::min();
+   dt = dt < tiny 
+      ? MIN(dt1,dtvisc)*traits_.courant 
+      : MIN(MIN(dt1,dtvisc)*traits_.courant, 1.05*dt);
 
 } // end of method dt_impl
 
