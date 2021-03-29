@@ -33,11 +33,11 @@ lambda_              (NULLPTR)
   if  ( traits_.Stokes_hyp ) {
     assert(traits_.nu.size() > 0);
     traits_.zeta  .resize(traits_.nu.size());
-    traits_.lambda.resize(traits_.nu.size());
-    traits_.eta   .resize(traits_.nu.size());
     traits_.zeta  = traits_.nu  ; traits_.zeta   *= -2.0/GDIM;
-    traits_.eta   = traits_.nu  ; 
-    traits_.lambda= traits_.nu  ; traits_.lambda *= -2.0/GDIM;
+    nu_     = &traits_.nu;
+    zeta_   = &traits_.zeta;
+    eta_    = &traits_.nu;
+    lambda_ = &traits_.zeta;
   }
   else if ( traits_.indep_diss ) {// mom & en visocisities spec independently
     assert(traits_.nu .size() > 0 && traits_.zeta  .size() > 0 );
