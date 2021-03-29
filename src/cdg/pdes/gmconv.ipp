@@ -191,6 +191,7 @@ void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
       : MIN(MIN(dt1,dtvisc), 1.025*dt);
 
    dt *= traits_.courant;
+
 } // end of method dt_impl
 
 
