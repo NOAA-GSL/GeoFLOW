@@ -86,6 +86,10 @@ private:
                                     State &uf, State &ub,
                                     const Time &dt, State &tmp,
                                     State &uout);                 // SSP-form
+        void               step_ssp22(const Time &t, const State &uin,
+                                    State &uf, State &ub,
+                                    const Time &dt, State &tmp,
+                                    State &uout);                 // SSP-form
         void               step_ssp33(const Time &t, const State &uin,
                                     State &uf, State &ub,
                                     const Time &dt, State &tmp,

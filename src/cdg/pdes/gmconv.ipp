@@ -104,8 +104,8 @@ template<typename TypePack>
 void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
 {
   GString    serr = "GMConv<TypePack>::dt_impl: ";
-  Ftype      dtmin, dt1;
-  StateComp *csq, *p;
+  Ftype      dtmin, dt1, dtvisc;
+  StateComp *csq, *p, *T;
   StateComp *rhoT, *tmp1, *tmp2;
 
   assert(utmp_.size() >= 6 );
@@ -123,27 +123,29 @@ void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
   dtmin = std::numeric_limits<Ftype>::max();
 
   // Assign pointers:
-  p    = utmp_[utmp_.size()-1];
-  rhoT = utmp_[utmp_.size()-2];
-  tmp1 = utmp_[utmp_.size()-3];
-  tmp2 = utmp_[utmp_.size()-4];
+  p    = utmp_[0];
+  rhoT = utmp_[1];
+  tmp1 = utmp_[2];
+  tmp2 = utmp_[3];
+  T    = utmp_[4];
 
  *rhoT = *u[DENSITY]; 
   if ( traits_.usebase ) *rhoT += *u[BASESTATE];
  *tmp1 = *rhoT; tmp1->rpow(-1.0);
   compute_v(u, *tmp1, v_); 
 
-  compute_cv(u, *tmp1, *tmp2);                     // Cv
-  geoflow::compute_temp<Ftype>(*u[ENERGY], *rhoT, *tmp2, *tmp1);  // temperature
-  compute_qd(u, *tmp2);                            // dry mass ratio
-  geoflow::compute_p<Ftype>(*tmp1, *rhoT, *tmp2, RD, *p); // partial pressure for dry air
+  compute_cv(u, *tmp1, *tmp2);                                 // Cv
+  geoflow::compute_temp<Ftype>(*u[ENERGY], *rhoT, *tmp2, *T);  // temperature
+
+  compute_qd(u, *tmp1);                                        // dry mass ratio
+  geoflow::compute_p<Ftype>(*T, *rhoT, *tmp1, RD, *p);         // partial pressure for dry air
   if ( !traits_.dodry ) {
-    geoflow::compute_p<Ftype>(*tmp1, *rhoT, *u[VAPOR], RV, *tmp2); // partial pressure for vapor
-   *p += *tmp2;
+    geoflow::compute_p<Ftype>(*T, *rhoT, *u[VAPOR], RV, *tmp1); // partial pressure for vapor
+   *p += *tmp1;
   }
 
-  csq = utmp_[utmp_.size()-4];
-  for ( auto j=0; j<p->size(); j++ ) { // sound speed, csq
+  csq = utmp_[4];
+  for ( auto j=0; j<p->size(); j++ ) {     // sound speed, csq
     (*csq)[j] = (*p)[j] / (*rhoT)[j] ;
   }
 
@@ -154,11 +156,17 @@ void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
        (*tmp1)[j] += (*v_[k])[j] * (*v_[k])[j];
      }
    }
-   *tmp1 += *csq; // v^2 + c^2
+   *tmp1 += *csq;                          // v^2 + c^2
 
   
    // Compute max(v^2 + c^2) for each element:
    GMTK::maxbyelem<Ftype>(*grid_, *tmp1, maxbyelem_);
+
+   // Estimate viscous timescale:
+   dtvisc = std::numeric_limits<Ftype>::max();
+   if ( nu_.max() > 0.0 ) {
+     dtvisc = pow(grid_->minnodedist(),2) / nu_.max();
+   }
    
    // Note: maxbyelem_ is an array with the max of v^2 + c^2 
    //       on each element
@@ -172,8 +180,8 @@ void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
    // Find minimum dt over all tasks:
    GComm::Allreduce(&dtmin, &dt1, 1, T2GCDatatype<Ftype>() , GC_OP_MIN, comm_);
 
-   // Limit any timestep-to-timestep increae to 10%:
-   dt = MIN(dt1*traits_.courant, 1.01*dt);
+   // Limit any timestep-to-timestep increae to 5%:
+   dt = MIN(MIN(dt1,dtvisc)*traits_.courant, 1.05*dt);
 
 } // end of method dt_impl
 
@@ -248,7 +256,7 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
 
   // Get total density and inverse: *rhoT  = *u[DENSITY]; 
   *rhoT = *u[DENSITY];
-//if ( traits_.usebase ) *rhoT +=  *ubase_[0];   
+  if ( traits_.usebase ) *rhoT +=  *ubase_[0];   
  *irhoT = *rhoT; irhoT->rpow(-1.0); // 1/rhoT
 
   // Compute velocity for timestep:
@@ -290,12 +298,10 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
   // *************************************************************
   dd   = urhstmp_[stmp.size()+5];      // holds density fluctuation
  *dd   = (*rhoT); 
-#if 0
   if ( traits_.usebase ) {
    *dd -= *ubase_[0];                  // density fluctuation
    *p  -= *ubase_[1];                  // pressure fluctuation
   }
-#endif
   for ( auto j=0; j<s_.size(); j++ ) { // for each component
 
     gdiv_->apply(*s_[j], v_, stmp, *dudt[j]); 
@@ -304,7 +310,7 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
    *tmp1 *= *Mass;                                    // M Grad p' 
    *dudt[j] += *tmp1;                                 // += Grad p'
 
-#if 0
+#if 1
     if ( traits_.docoriolis ) {
       GMTK::cross_prod_s(traits_.omega, s_, j+1, *tmp1);
      *tmp1 *= *Mass;             
@@ -893,7 +899,7 @@ void GMConv<TypePack>::init_impl(State &u, State &tmp)
 //ghelm_      = new GHelmholtz(*grid_);
   
   typename GStressEnOp<TypePack>::Traits trstress;
-  trstress.type       = GStressEnOp<TypePack>::GSTRESS_REDUCED;
+  trstress.type       = GStressEnOp<TypePack>::GSTRESS_FULL;
   trstress.full_colloc= TRUE;
   trstress.Stokes_hyp = traits_.Stokeshyp;
   trstress.indep_diss = traits_.bindepdiss;
