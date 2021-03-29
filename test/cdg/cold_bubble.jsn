@@ -66,12 +66,12 @@
   },
   "stepper_props": {
     "stepping_method"  : "GSTEPPER_EXRK",
-    "time_deriv_order" : 3,
-    "nstage"           : 3,
-    "stab_preserving"  : true,
+    "time_deriv_order" : 2,
+    "nstage"           : 2,
+    "stab_preserving"  : false,
     "extrap_order"     : 2,
     "variable_dt"      : true,
-    "courant"          : 0.025
+    "courant"          : 0.1
   },
   "dissipation_traits": {
     "nu"      : 250.0,
