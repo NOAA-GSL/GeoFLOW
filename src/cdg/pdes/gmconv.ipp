@@ -177,19 +177,20 @@ void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
    // Find estimate of smallest dt on this task:
    dtmin = std::numeric_limits<Ftype>::max();
    for ( auto e=0; e<maxbyelem_.size(); e++ ) {
-     dt1 = 0.25*(*dxmin)[e] * (*dxmin)[e] / maxbyelem_[e] ; // this is dt^2
+     dt1 = (*dxmin)[e] * (*dxmin)[e] / maxbyelem_[e] ; // this is dt^2
      dtmin = MIN(dtmin, sqrt(dt1)); 
    }
 
    // Find minimum dt over all tasks:
    GComm::Allreduce(&dtmin, &dt1, 1, T2GCDatatype<Ftype>() , GC_OP_MIN, comm_);
 
-   // Limit any timestep-to-timestep increae to 5%:
+   // Limit any timestep-to-timestep increae to 2.5%:
    tiny = 1000.0*numeric_limits<Ftype>::min();
    dt = dt < tiny 
-      ? MIN(dt1,dtvisc)*traits_.courant 
-      : MIN(MIN(dt1,dtvisc)*traits_.courant, 1.05*dt);
+      ? MIN(dt1,dtvisc) 
+      : MIN(MIN(dt1,dtvisc), 1.025*dt);
 
+   dt *= traits_.courant;
 } // end of method dt_impl
 
 
