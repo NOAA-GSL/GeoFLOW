@@ -45,8 +45,10 @@ lambda_              (NULLPTR)
     eta_    = &traits_.eta;
     lambda_ = &traits_.lambda;
   } 
-  else { // en visc is derivd from mom:
+  else { // energy coeffs same as for mom
     assert(traits_.nu.size() > 0 && traits_.zeta.size() > 0 );
+    // From Eyink 2018 PRX 8:011022:
+    traits_.nu = traits_.zeta - (traits_.nu / GDIM);    
     nu_     = &traits_.nu;
     zeta_   = &traits_.zeta;
     eta_    = &traits_.nu;
