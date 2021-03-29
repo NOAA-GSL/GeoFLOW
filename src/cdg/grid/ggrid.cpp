@@ -948,15 +948,14 @@ GFTYPE GGrid::find_min_dist()
 
  
   GFTYPE           tiny = 1000.0*std::numeric_limits<GFTYPE>::epsilon();
-  GTPoint<GFTYPE>  dx(3), p0(3), p1(3);
+  GTPoint<GFTYPE>  dx(3), p0(3);
 
   // Find min node distance on grid:
-  dx[2] = 0.0;
-  p0[2] = 0.0;
-  p1[2] = 0.0;
+  dx = 0.0;
+  p0 = 0.0;
 
   GFTYPE xmin = std::numeric_limits<GFTYPE>::max();
-  GFTYPE xgmin;
+  GFTYPE xgmin, xn;
 
   GComm::Synch(comm_);
 
@@ -968,12 +967,14 @@ GFTYPE GGrid::find_min_dist()
   for ( auto j=0; j<xNodes_[0].size()-1; j++ ) {
     for ( auto i=0; i<nxy; i++ ) {
       p0[i] = xNodes_[i][j];
-      p1[i] = xNodes_[i][j+1];
+      dx[i] = xNodes_[i][j+1];
     }
-    dx = p1 - p0; 
-    if ( dx.norm() > tiny ) xmin = MIN(xmin, dx.norm()); 
+    dx -= p0; 
+    xn = dx.norm();
+    if ( xn > tiny ) xmin = MIN(xmin, xn); 
   }
   GComm::Allreduce(&xmin, &xgmin, 1, T2GCDatatype<GFTYPE>() , GC_OP_MIN, comm_);
+
   return xgmin;
 
 } // end of method find_min_dist
