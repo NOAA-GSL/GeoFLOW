@@ -42,17 +42,17 @@ lambda_              (NULLPTR)
   else if ( traits_.indep_diss ) {// mom & en visocisities spec independently
     nu_     = &traits_.nu;
     zeta_   = &traits_.zeta;
-    eta_    = &traits_.eta;
     lambda_ = &traits_.lambda;
+    eta_    = &traits_.eta;
   } 
   else { // energy coeffs same as for mom
     assert(traits_.nu.size() > 0 && traits_.zeta.size() > 0 );
     // From Eyink 2018 PRX 8:011022:
-    traits_.nu = traits_.zeta - (traits_.nu / GDIM);    
+    traits_.zeta = traits_.zeta - (traits_.nu / GDIM);    
     nu_     = &traits_.nu;
     zeta_   = &traits_.zeta;
-    eta_    = &traits_.nu;
     lambda_ = &traits_.zeta;
+    eta_    = &traits_.nu;
   }
 
 
