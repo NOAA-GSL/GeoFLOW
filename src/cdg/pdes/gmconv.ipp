@@ -104,9 +104,10 @@ template<typename TypePack>
 void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
 {
   GString    serr = "GMConv<TypePack>::dt_impl: ";
-  Ftype      dtmin, dt1, dtvisc, dxmin;
+  Ftype      dtmin, dt1, dtvisc ;
   StateComp *csq, *p, *T;
   StateComp *rhoT, *tmp1, *tmp2;
+  StateComp *dxmin;
 
   assert(utmp_.size() >= 6 );
 
@@ -120,7 +121,6 @@ void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
   // where min and max are computed over the element.
   // Here, approximate |v| + c as sqrt(v^2 + c^2)
    
-  dtmin = std::numeric_limits<Ftype>::max();
 
   // Assign pointers:
   p    = utmp_[0];
@@ -129,7 +129,7 @@ void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
   tmp2 = utmp_[3];
   T    = utmp_[4];
 
-  dxmin = grid_->minnodedist();
+  dxmin = &grid_->dxmin();
 
  *rhoT = *u[DENSITY]; 
   if ( traits_.usebase ) *rhoT += *u[BASESTATE];
@@ -167,15 +167,18 @@ void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
    // Estimate viscous timescale:
    dtvisc = std::numeric_limits<Ftype>::max();
    if ( nu_.max() > 0.0 ) {
-     dtvisc = dxmin * dxmin / nu_.max();
+     dtvisc = dxmin->min() * dxmin->min() / nu_.max();
    }
    
    // Note: maxbyelem_ is an array with the max of v^2 + c^2 
    //       on each element
 
    // Find estimate of smallest dt on this task:
-   dt1 = MIN(dt1, dxmin * dxmin / maxbyelem_.max() ); // this is dt^2
-   dtmin = MIN(dtmin, sqrt(dt1)); 
+   dtmin = std::numeric_limits<Ftype>::max();
+   for ( auto e=0; e<maxbyelem_.size(); e++ ) {
+     dt1 = (*dxmin)[e] * (*dxmin)[e] / maxbyelem_.max() ; // this is dt^2
+     dtmin = MIN(dtmin, sqrt(dt1)); 
+   }
 
    // Find minimum dt over all tasks:
    GComm::Allreduce(&dtmin, &dt1, 1, T2GCDatatype<Ftype>() , GC_OP_MIN, comm_);
