@@ -36,14 +36,16 @@ lambda_              (NULLPTR)
     traits_.lambda.resize(traits_.nu.size());
     traits_.eta   .resize(traits_.nu.size());
     traits_.zeta  = traits_.nu  ; traits_.zeta   *= -2.0/GDIM;
-    traits_.lambda= traits_.nu  ; 
-    traits_.eta   = traits_.nu  ; traits_.eta    *= -2.0/GDIM;
+    traits_.eta   = traits_.nu  ; 
+    traits_.lambda= traits_.nu  ; traits_.lambda *= -2.0/GDIM;
   }
   else if ( traits_.indep_diss ) {// mom & en visocisities spec independently
+    assert(traits_.nu .size() > 0 && traits_.zeta  .size() > 0 );
+    assert(traits_.eta.size() > 0 && traits_.lambda.size() > 0 );
     nu_     = &traits_.nu;
     zeta_   = &traits_.zeta;
-    lambda_ = &traits_.lambda;
     eta_    = &traits_.eta;
+    lambda_ = &traits_.lambda;
   } 
   else { // energy coeffs same as for mom
     assert(traits_.nu.size() > 0 && traits_.zeta.size() > 0 );
@@ -51,8 +53,8 @@ lambda_              (NULLPTR)
     traits_.zeta -= traits_.nu * (1.0/static_cast<Ftype>(GDIM));    
     nu_     = &traits_.nu;
     zeta_   = &traits_.zeta;
-    lambda_ = &traits_.nu;
-    eta_    = &traits_.zeta;
+    eta_    = &traits_.nu;
+    lambda_ = &traits_.zeta;
   }
 
 
