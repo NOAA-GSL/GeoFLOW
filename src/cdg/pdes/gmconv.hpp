@@ -276,7 +276,6 @@ inline  GINT                szrhstmp();
                             valid_types_;   // valid stepping methods supported
         GTVector<GFTYPE>    nu_   ;         // KE dissipoation
         GTVector<GFTYPE>    eta_;           // internal energy dissipoation
-        GTVector<GFTYPE>    dxmin_ ;        // element face mins
         GTVector<GFTYPE>    maxbyelem_ ;    // element-based maxima for dt
         std::vector<GINT>   stdiforced_;    // traits_.iforced as a std::vector
         GGrid              *grid_;          // GGrid object
