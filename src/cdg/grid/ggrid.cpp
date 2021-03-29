@@ -284,7 +284,7 @@ GSIZET GGrid::nbdydof()
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : minlength
-// DESC   : Find elem length separation
+// DESC   : Find elem lengths for each element
 // ARGS   : dx : vector that gives the min length for each element;
 //               filled if non-NULL
 // RETURNS: GFTYPE separation
@@ -470,6 +470,7 @@ void GGrid::grid_init()
   globalize_coords    (); // set glob vec of node coords
 
   minnodedist_ = find_min_dist();
+  find_min_dist(dxmin_);
   eps_         = 0.125*minnodedist_;
 
   // Create metric data, Jacobians:
@@ -553,6 +554,7 @@ void GGrid::grid_init(GTMatrix<GINT> &p,
   globalize_coords    (); // set glob vec of node coords
 
   minnodedist_ = find_min_dist();
+  find_min_dist(dxmin_);
   eps_         = 0.125*minnodedist_;
 
   if ( itype_[GE_2DEMBEDDED].size() > 0
@@ -934,12 +936,12 @@ GTVector<GFTYPE> &GGrid::faceJac()
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : find_min_dist
+// METHOD : find_min_dist (1)
 // DESC   : Compute min inter-node distance for grid
 //          NOTE: this method isn't recommended for regular
 //                use, as it's slow.
 // ARGS   : none
-// RETURNS: none
+// RETURNS: minimum nodal dist over entire grid
 //**********************************************************************************
 GFTYPE GGrid::find_min_dist()
 {
@@ -977,7 +979,55 @@ GFTYPE GGrid::find_min_dist()
 
   return xgmin;
 
-} // end of method find_min_dist
+} // end of method find_min_dist (1)
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : find_min_dist (2)
+// DESC   : Compute min inter-node distance for each element on grid
+//          NOTE: this method isn't recommended for regular
+//                use, as it's slow.
+// ARGS   : dx  : array of smallest nodal distance for each element
+// RETURNS: none
+//**********************************************************************************
+void GGrid::find_min_dist(GTVector<GFTYPE> &dx)
+{
+       GEOFLOW_TRACE();
+  assert(gelems_.size() > 0 && "Elements not set");
+
+ 
+  GSIZET           ibeg, iend;
+  GTPoint<GFTYPE>  dd(3), p0(3);
+
+  // Find min node distance on grid:
+  dd = 0.0;
+  p0 = 0.0;
+
+  GFTYPE tiny = 1000.0*std::numeric_limits<GFTYPE>::epsilon();
+  GFTYPE xmin; 
+  GFTYPE xn;
+
+  dx.resizem(gelems_.size());
+
+  // Cycle over all node points and find min distance:
+  // NOTE: this isn't fast....
+  for ( auto e=0; e<gelems_.size(); e++ ) {
+    ibeg  = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
+    xmin  = std::numeric_limits<GFTYPE>::max();
+    for ( auto j=ibeg; j<iend; j++ ) {
+      for ( auto i=0; i<xNodes_.size(); i++ ) {
+        p0[i] = xNodes_[i][j];
+        dd[i] = xNodes_[i][j+1];
+      }
+      dd -= p0; 
+      xn = dd.norm();
+      if ( xn > tiny ) xmin  = MIN(xmin, xn); 
+    }
+    dx[e] = xmin;
+  }
+
+} // end of method find_min_dist (2)
 
 
 //**********************************************************************************
@@ -1449,6 +1499,7 @@ void GGrid::add_terrain(const State &xb, State &utmp)
 
   // Compute new minimum node distance:
   minnodedist_ = find_min_dist();
+  find_min_dist(dxmin_);
 
   // Compute new (global) grid volume:
   *utmp[0] = 1.0;

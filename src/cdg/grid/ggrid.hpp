@@ -156,7 +156,9 @@ virtual void                 print(const GString &filename){}          // print 
         GFTYPE               maxlength(GTVector<GFTYPE> *dx=NULLPTR); // find max elem length
         GFTYPE               avglength();                             // find avg elem length
         GFTYPE               minnodedist()         
-                             {return minnodedist_;}                   // find min node distance
+                             {return minnodedist_;}                   // get min node distance
+        GTVector<GFTYPE>    &dxmin()         
+                             {return dxmin_;}                         // get min node distance for each elem
         GFTYPE               volume()         
                              {return volume_;}                        // get grid volume
         GFTYPE               ivolume()         
@@ -259,6 +261,7 @@ virtual void                 elem_face_data(
         void                        reg_geom_init();                   // initialize regular elems
         void                        do_face_data();                    // compute normals to elem faces 
         GFTYPE                      find_min_dist(); 
+        void                        find_min_dist(GTVector<GFTYPE> &dx); 
 
         GBOOL                       bInitialized_;     // object initialized?
         GBOOL                       bapplybc_;         // bc apply callback set
@@ -280,6 +283,7 @@ virtual void                 elem_face_data(
 	GFTYPE                      ivolume_;          // 1 / grid volume
         GElemList                   gelems_;           // element list
         GTVector<GFTYPE>            etmp_;             // elem-level tmp vector
+        GTVector<GFTYPE>            dxmin_;            // elem-based min node dist
         GTVector<GTVector<GSIZET>>  itype_;            // indices in elem list of each type
         GTVector<GSIZET>            ntype_;            // no. elems of each type on grid
         GTMatrix<GTVector<GFTYPE>>  dXidX_;            // matrix Rij = dXi^j/dX^i, global
