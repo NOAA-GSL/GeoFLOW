@@ -255,6 +255,8 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
 
   assert( !traits_.bconserved ); // don't allow conservative form yet
 
+  assign_helpers(u, uf);
+
   // Set tmp pool for RHS computations:
   assert(urhstmp_.size() >= szrhstmp());
   for ( auto j=0; j<stmp.size(); j++ ) stmp[j]=urhstmp_[j];
@@ -387,6 +389,8 @@ void GMConv<TypePack>::dudt_wet(const Time &t, const State &u, const State &uf, 
   // which this method is called.
 
   assert( !traits_.bconserved ); // don't allow conservative form yet
+
+  assign_helpers(u, uf);
 
   // Set tmp pool for RHS computations:
   assert(urhstmp_.size() >= szrhstmp());
@@ -604,12 +608,12 @@ void GMConv<TypePack>::step_impl(const Time &t, State &uin, State &uf, State &ub
   // Set evolved state vars from input state.
   // These are not deep copies:
   for ( auto j=0; j<traits_.nsolve; j++ ) uevolve_ [j] = uin[j];
+  for ( auto j=0; j<traits_.nbase; j++ ) ubase_[j] = uin[BASESTATE+j]; // base state
   
 
   switch ( traits_.isteptype ) {
     case GSTEPPER_EXRK:
       // Assign qi, tvi, qice, qliq, tvice, tvliq:
-      assign_helpers(uin, uf);
       istage_ = 0;
       for ( auto j=0; j<uold_.size(); j++ ) *uold_[j] = *uevolve_[j];
       step_exrk(t, uold_, uf, ub, dt, uevolve_);
@@ -1552,7 +1556,6 @@ void GMConv<TypePack>::assign_helpers(const State &u, const State &uf)
      tvi_[j] = u[nc_+3+nhydro_+j]; // set term speed for each qi
    }
    for ( auto j=0; j<nc_; j++ ) fv_[j] = uf[j]; // kinetic forcing vector
-   for ( auto j=0; j<traits_.nbase; j++ ) ubase_[j] = u[BASESTATE+j]; // base state
 
    GINT nliq = traits_.nlsector;
    GINT nice = traits_.nisector;
