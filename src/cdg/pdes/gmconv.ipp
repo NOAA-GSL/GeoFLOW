@@ -255,7 +255,6 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
 
   assert( !traits_.bconserved ); // don't allow conservative form yet
 
-  assign_helpers(u, uf);
 
   // Set tmp pool for RHS computations:
   assert(urhstmp_.size() >= szrhstmp());
@@ -390,7 +389,6 @@ void GMConv<TypePack>::dudt_wet(const Time &t, const State &u, const State &uf, 
 
   assert( !traits_.bconserved ); // don't allow conservative form yet
 
-  assign_helpers(u, uf);
 
   // Set tmp pool for RHS computations:
   assert(urhstmp_.size() >= szrhstmp());
@@ -608,7 +606,7 @@ void GMConv<TypePack>::step_impl(const Time &t, State &uin, State &uf, State &ub
   // Set evolved state vars from input state.
   // These are not deep copies:
   for ( auto j=0; j<traits_.nsolve; j++ ) uevolve_ [j] = uin[j];
-  for ( auto j=0; j<traits_.nbase; j++ ) ubase_[j] = uin[BASESTATE+j]; // base state
+  for ( auto j=0; j<traits_.nbase ; j++ ) ubase_   [j] = uin[BASESTATE+j]; // base state
   
 
   switch ( traits_.isteptype ) {
@@ -616,6 +614,7 @@ void GMConv<TypePack>::step_impl(const Time &t, State &uin, State &uf, State &ub
       // Assign qi, tvi, qice, qliq, tvice, tvliq:
       istage_ = 0;
       for ( auto j=0; j<uold_.size(); j++ ) *uold_[j] = *uevolve_[j];
+      assign_helpers(uold, uf);
       step_exrk(t, uold_, uf, ub, dt, uevolve_);
       break;
     case GSTEPPER_BDFAB:
