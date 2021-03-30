@@ -614,7 +614,7 @@ void GMConv<TypePack>::step_impl(const Time &t, State &uin, State &uf, State &ub
       // Assign qi, tvi, qice, qliq, tvice, tvliq:
       istage_ = 0;
       for ( auto j=0; j<uold_.size(); j++ ) *uold_[j] = *uevolve_[j];
-      assign_helpers(uold, uf);
+      assign_helpers(uold_, uf);
       step_exrk(t, uold_, uf, ub, dt, uevolve_);
       break;
     case GSTEPPER_BDFAB:
