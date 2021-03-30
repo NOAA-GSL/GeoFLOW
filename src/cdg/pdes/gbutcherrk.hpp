@@ -3,7 +3,7 @@
 // Date         : 1/28/19 (DLR)
 // Description  : Object computing multistage Butcher tableau for
 //                explicit RK methods. 
-// Copyright    : Copyright 2019. Colorado State University. All rights reserved
+// Copyright    : Copyright 2019. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
 #if !defined(G_BUTCHERRK_HPP)
