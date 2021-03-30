@@ -104,7 +104,7 @@ template<typename TypePack>
 void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
 {
   GString    serr = "GMConv<TypePack>::dt_impl: ";
-  Ftype      dtmin, dt1, dtvisc, tiny ;
+  Ftype      dtmin, dt1, dtnew, dtvisc, tiny ;
   StateComp *csq, *p, *T;
   StateComp *rhoT, *tmp1, *tmp2;
   StateComp *dxmin;
@@ -186,11 +186,11 @@ void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
 
    // Limit any timestep-to-timestep increae to 2.5%:
    tiny = 1000.0*numeric_limits<Ftype>::min();
-   dt = dt < tiny 
-      ? MIN(dt1,dtvisc) 
-      : MIN(MIN(dt1,dtvisc), 1.025*dt);
+   dtnew = MIN(dt1,dtvisc);
 
-   dt *= traits_.courant;
+   dtnew *= traits_.courant;
+   dt     = icycle_ == 0 ? dtnew : MIN(dtnew, 1.025*dt);
+
 
 } // end of method dt_impl
 
@@ -590,6 +590,8 @@ void GMConv<TypePack>::step_impl(const Time &t, State &uin, State &uf, State &ub
   GBOOL bret;
 
   assert(bInit_);
+
+cout << "GMConv::step_impl: dt=" << dt << endl;
 
   // If there's a top-of-the-timestep callback, 
   // call it here:
