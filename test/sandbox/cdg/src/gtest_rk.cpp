@@ -97,7 +97,7 @@ int main(int argc, char **argv)
     
 
     // Create state and tmp space:
-    maxSteps = static_cast<GSIZET>((tmax - t0)/dt);
+    maxSteps = static_cast<GSIZET>((tmax - t0)/dt)+1;
     GTVector<GTVector<GFTYPE>*> u   (1);
     GTVector<GTVector<GFTYPE>*> uout(1);
     GTVector<GTVector<GFTYPE>*> ua  (1);
@@ -118,7 +118,7 @@ int main(int argc, char **argv)
     *u [0] = 0.0; // initialize numerical soln
 
     t = t0;
-    for ( GSIZET k=0; k<maxSteps+1; k++ ) {
+    for ( GSIZET k=0; k<maxSteps; k++ ) {
       gexrk.step(t, u, uf, ub, dt, utmp, uout);
       *u[0] = *uout[0];
 //    gexrk.step(t, u, uf, ub, dt, utmp);
