@@ -37,7 +37,7 @@ int main(int argc, char **argv)
     GINT    errcode, iopt;
     GINT    nstate=GDIM;  // number 'state' arrays
     GSIZET  norder=2, nstage=2, maxSteps=1;
-    GFTYPE  dt=1.0e-2, t, t0=0.0, tmax=3.14159, maxerror;
+    GFTYPE  dt=1.0e-2, dtt, t, t0=0.0, tmax=3.14159, maxerror;
 
     // : option indicates that it takes an argument.
     // Note: -i reserved for InputManager:
@@ -118,11 +118,14 @@ int main(int argc, char **argv)
     *u [0] = 0.0; // initialize numerical soln
 
     t = t0;
+    dtt = dt;
     for ( GSIZET k=0; k<maxSteps; k++ ) {
-      gexrk.step(t, u, uf, ub, dt, utmp, uout);
+      dtt = MIN(dtt,tmax-t);
+      if ( dt <= 0.0 ) break;
+      gexrk.step(t, u, uf, ub, dtt, utmp, uout);
       *u[0] = *uout[0];
 //    gexrk.step(t, u, uf, ub, dt, utmp);
-      t += dt;
+      t += dtt;
     }
 
     maxerror = fabs((*ua[0])[0]-(*u[0])[0])/(*ua[0])[0];
