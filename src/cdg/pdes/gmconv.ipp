@@ -240,7 +240,7 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
 
   GString    serr = "GMConv<TypePack>::dudt_dry: ";
   GINT       nice, nliq ;
-  StateComp *irhoT, *Ltot;
+  StateComp *irhoT;
   StateComp *dd, *e, *p, *rhoT, *T; // energy, den, pressure, temperature
   StateComp *Mass=grid_->massop().data();
   StateComp *tmp1, *tmp2;
@@ -258,11 +258,10 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
   // Set tmp pool for RHS computations:
   assert(urhstmp_.size() >= szrhstmp());
   for ( auto j=0; j<stmp.size(); j++ ) stmp[j]=urhstmp_[j];
-  Ltot  = urhstmp_[stmp.size()  ];
-  rhoT  = urhstmp_[stmp.size()+1];
-  irhoT = urhstmp_[stmp.size()+2];
-  tmp1  = urhstmp_[stmp.size()+3];
-  tmp2  = urhstmp_[stmp.size()+4];
+  rhoT  = urhstmp_[stmp.size()+0];
+  irhoT = urhstmp_[stmp.size()+1];
+  tmp1  = urhstmp_[stmp.size()+2];
+  tmp2  = urhstmp_[stmp.size()+3];
 
   // Get total density and inverse: *rhoT  = *u[DENSITY]; 
   *rhoT = *u[DENSITY];
@@ -275,8 +274,8 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
   // Compute all terms as though they are on the LHS, then
   // change the sign and divide by Mass at the end....
 
-  p     = urhstmp_[stmp.size()+2]; // holds pressure
-  T     = urhstmp_[stmp.size()+5]; // holds temperature
+  p     = urhstmp_[stmp.size()+1]; // holds pressure
+  T     = urhstmp_[stmp.size()+4]; // holds temperature
   e     = u[ENERGY];               // current internal energy density
 
   // *************************************************************
@@ -306,8 +305,8 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
   // *************************************************************
   // Momentum equations RHS:
   // *************************************************************
-  dd   = urhstmp_[stmp.size()+5];      // holds density fluctuation
- *dd   = (*rhoT); 
+  dd   = urhstmp_[stmp.size()+4];      // holds density fluctuation
+ *dd   = *rhoT; 
   if ( traits_.usebase ) {
    *dd -= *ubase_[0];                  // density fluctuation
    *p  -= *ubase_[1];                  // pressure fluctuation
@@ -320,7 +319,7 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
    *tmp1 *= *Mass;                                    // M Grad p' 
    *dudt[j] += *tmp1;                                 // += Grad p'
 
-#if 1
+#if 0
     if ( traits_.docoriolis ) {
       GMTK::cross_prod_s(traits_.omega, s_, j+1, *tmp1);
      *tmp1 *= *Mass;             
