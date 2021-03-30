@@ -67,11 +67,11 @@ void Integrator<ET>::time( const Time& t0,
 	ASSERT(nullptr != obs_ptr_);
 	using std::min;
 
+	Time dt_eff = dt;
 	Time t = t0;
 	do {
 
 		// Limit dt if requested
-		Time dt_eff = dt;
 		this->init_dt(t,u,dt_eff);
 		dt_eff = min(dt_eff, t1 - t);
 		if(0 >= dt_eff) {
