@@ -37,13 +37,14 @@ grid_           (&grid)
 //              and output to another file.
 //
 // ARGUMENTS  : t    : time, t^n, for state, uin=u^n
+//              dt   : time step
 //              u    : state
 //              uf   : forcing
 //               
 // RETURNS    : none.
 //**********************************************************************************
 template<typename EquationType>
-void GBurgersDiag<EquationType>::observe_impl(const Time &t, const State &u, const State &uf)
+void GBurgersDiag<EquationType>::observe_impl(const Time &t, const Time &dt, const State &u, const State &uf)
 {
   StateInfo info;
 
@@ -57,8 +58,8 @@ void GBurgersDiag<EquationType>::observe_impl(const Time &t, const State &u, con
         &&  (t-time_last_ >= traits_.time_interval))
     || (cycle_ == 0) ) {
 
-    do_kinetic_L2 (t, u, uf, "gbalance.txt");
-    do_kinetic_max(t, u, uf, "gmax.txt");
+    do_kinetic_L2 (t, dt, u, uf, "gbalance.txt");
+    do_kinetic_max(t, dt, u, uf, "gmax.txt");
     cycle_last_ = cycle_;
     time_last_  = t;
     ocycle_++;
@@ -115,13 +116,14 @@ void GBurgersDiag<EquationType>::init_impl(StateInfo &info)
 // METHOD     : do_kinetic_L2
 // DESCRIPTION: Compute integrated diagnostic quantities, and output to file
 // ARGUMENTS  : t  : state time
+//              dt : time step
 //              u  : state variable
 //              uf : forcing
 //              fname: file name
 // RETURNS    : none.
 //**********************************************************************************
 template<typename EquationType>
-void GBurgersDiag<EquationType>::do_kinetic_L2(const Time t, const State &u, const State &uf, const GString fname)
+void GBurgersDiag<EquationType>::do_kinetic_L2(const Time &t, const Time &dt, const State &u, const State &uf, const GString fname)
 {
   assert(utmp_ != NULLPTR && utmp_->size() > 3
       && "tmp space not set, or is insufficient");
@@ -194,10 +196,11 @@ void GBurgersDiag<EquationType>::do_kinetic_L2(const Time t, const State &u, con
     ios.open(fullfile,std::ios_base::app);
     if ( doheader ) {
       ios << "#nelems=" << ne << " dxmin=" << dxmin << " elmin=" << elmin << " elmax=" << elmax << " elavg=" << elavg << std::endl;
-      ios << "#time    KE     Enst     f.v    hel     rhel " << std::endl;
+      ios << "#time    dt      KE     Enst     f.v    hel     rhel " << std::endl;
     }
 
     ios << t  
+        << "    " << dt
         << "    " << ener  << "    "  << enst 
         << "    " << fv    << "    "  << hel
         << "    " << rhel  
@@ -213,13 +216,14 @@ void GBurgersDiag<EquationType>::do_kinetic_L2(const Time t, const State &u, con
 // METHOD     : do_kinetic_max
 // DESCRIPTION: Compute max quantities, and output to file
 // ARGUMENTS  : t    : state time
+//              dt   : time step
 //              u    : state variable
 //              uf   : forcing
 //              fname: file name
 // RETURNS    : none.
 //**********************************************************************************
 template<typename EquationType>
-void GBurgersDiag<EquationType>::do_kinetic_max(const Time t, const State &u, const State &uf, const GString fname)
+void GBurgersDiag<EquationType>::do_kinetic_max(const Time &t, const Time &dt,  const State &u, const State &uf, const GString fname)
 {
   assert(utmp_ != NULLPTR && utmp_->size() > 5
       && "tmp space not set, or is insufficient");
@@ -289,10 +293,11 @@ void GBurgersDiag<EquationType>::do_kinetic_max(const Time t, const State &u, co
     ios.open(fullfile,std::ios_base::app);
     if ( doheader ) {
       ios << "#nelems=" << ne << " dxmin=" << dxmin << " elmin=" << elmin << " elmax=" << elmax << " elavg=" << elavg << std::endl;
-      ios << "#time    KE     Enst     f.v    hel     rhel " << std::endl;
+      ios << "#time    dt    KE     Enst     f.v    hel     rhel " << std::endl;
     }
 
     ios << t  
+        << "    " << dt
         << "    " << ener  << "    "  << enst 
         << "    " << fv    << "    "  << hel
         << "    " << rhel  

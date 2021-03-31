@@ -41,13 +41,14 @@ grid_           (&grid)
 //              and output to another file.
 //
 // ARGUMENTS  : t    : time, t^n, for state, uin=u^n
+//              dt   : time step
 //              u    : state
 //              uf   : forcing
 //               
 // RETURNS    : none.
 //**********************************************************************************
 template<typename EquationType>
-void GMConvDiag<EquationType>::observe_impl(const Time &t, const State &u, const State &uf)
+void GMConvDiag<EquationType>::observe_impl(const Time &t, const Time &dt, const State &u, const State &uf)
 {
   StateInfo info;
 
@@ -61,8 +62,8 @@ void GMConvDiag<EquationType>::observe_impl(const Time &t, const State &u, const
         &&  (t-time_last_ >= traits_.time_interval))
     || (cycle_ == 0) ) {
 
-    do_L2 (t, u, uf, "gbalance.txt");
-    do_max(t, u, uf, "gmax.txt");
+    do_L2 (t, dt, u, uf, "gbalance.txt");
+    do_max(t, dt, u, uf, "gmax.txt");
     cycle_last_ = cycle_;
     time_last_  = t;
     ocycle_++;
@@ -103,13 +104,14 @@ void GMConvDiag<EquationType>::init_impl(StateInfo &info)
 // METHOD     : do_L2
 // DESCRIPTION: Compute integrated diagnostic quantities, and output to file
 // ARGUMENTS  : t  : state time
+//              dt : time step
 //              u  : state variable
 //              uf : forcing
 //              fname: file name
 // RETURNS    : none.
 //**********************************************************************************
 template<typename EquationType>
-void GMConvDiag<EquationType>::do_L2(const Time t, const State &u, const State &uf, const GString fname)
+void GMConvDiag<EquationType>::do_L2(const Time &t, const Time &dt, const State &u, const State &uf, const GString fname)
 {
   assert(utmp_ != NULLPTR && utmp_->size() > 3
       && "tmp space not set, or is insufficient");
@@ -178,10 +180,12 @@ void GMConvDiag<EquationType>::do_L2(const Time t, const State &u, const State &
     ios.open(fullfile,std::ios_base::app);
     if ( doheader ) {
       ios << "#nelems=" << ne << " dxmin=" << dxmin << " elmin=" << elmin << " elmax=" << elmax << " elavg=" << elavg << std::endl;
-      ios << "#time      Mass       <e>         <d KE>     " << std::endl;
+      ios << "#time    dt      Mass       <e>         <d KE>     " << std::endl;
     }
 
-    ios << t  << scientific << setprecision(15) 
+    ios << t  
+        << "    " << dt
+        << scientific << setprecision(15) 
         << "    " << mass  << "    "  << eint
         << "    " << ke
         << std::endl;
@@ -196,13 +200,14 @@ void GMConvDiag<EquationType>::do_L2(const Time t, const State &u, const State &
 // METHOD     : do_max
 // DESCRIPTION: Compute max quantities, and output to file
 // ARGUMENTS  : t    : state time
+//              dt   : time step
 //              u    : state variable
 //              uf   : forcing
 //              fname: file name
 // RETURNS    : none.
 //**********************************************************************************
 template<typename EquationType>
-void GMConvDiag<EquationType>::do_max(const Time t, const State &u, const State &uf, const GString fname)
+void GMConvDiag<EquationType>::do_max(const Time &t, const Time &dt, const State &u, const State &uf, const GString fname)
 {
   assert(utmp_ != NULLPTR && utmp_->size() > 3
       && "tmp space not set, or is insufficient");
@@ -270,10 +275,12 @@ void GMConvDiag<EquationType>::do_max(const Time t, const State &u, const State 
     ios.open(fullfile,std::ios_base::app);
     if ( doheader ) {
       ios << "#nelems=" << ne << " dxmin=" << dxmin << " elmin=" << elmin << " elmax=" << elmax << " elavg=" << elavg << std::endl;
-      ios << "#time      den_tot        e           d KE      " << std::endl;
+      ios << "#time    dt      den_tot        e           d KE      " << std::endl;
     }
 
-    ios << t  << scientific << setprecision(15) 
+    ios << t  
+        << "    " << dt
+        << scientific << setprecision(15) 
         << "    " << mass  << "    "  << eint
         << "    " << ke
         << std::endl;

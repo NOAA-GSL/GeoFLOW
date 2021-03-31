@@ -62,13 +62,13 @@ public:
                            GBurgersDiag(const GBurgersDiag &a) = default;
                            GBurgersDiag &operator=(const GBurgersDiag &bu) = default;
 
-        void               observe_impl(const Time &t, const State &u, const State &uf);
+        void               observe_impl(const Time &t, const Time &dt, const State &u, const State &uf);
 
         void               init_impl(StateInfo &);
 private:
 // Private methods:
-        void               do_kinetic_L2 (const Time t, const State &u, const State &uf, const GString file);
-        void               do_kinetic_max(const Time t, const State &u, const State &uf, const GString file);
+        void               do_kinetic_L2 (const Time &t, const Time &dt, const State &u, const State &uf, const GString file);
+        void               do_kinetic_max(const Time &t, const Time &dt, const State &u, const State &uf, const GString file);
 // Private data:
         GBOOL              bInit_;
         GINT               myrank_;     // MPI rank

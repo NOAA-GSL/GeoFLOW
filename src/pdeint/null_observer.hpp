@@ -40,7 +40,7 @@ public:
 
 protected:
 
-	void observe_impl(const Time& /* t */, const State& /* u */, const State& /* uf */){
+	void observe_impl(const Time& /* t */, const Time& dt /* dt */, const State& /* u */, const State& /* uf */){
 		// Do nothing ...
 	}
 	void init_impl(StateInfo &info) {}

@@ -106,10 +106,11 @@ public:
 	 *
 	 * @param[in] Traits structure
 	 * @param[in] t Time of current state
+	 * @param[in] dt Time step for current state
 	 * @param[in] u State at the current time
 	 */
-	void observe(const Time t, const State& u, const State& uf){
-		this->observe_impl(t,u,uf);
+	void observe(const Time t, const Time dt, const State& u, const State& uf){
+		this->observe_impl(t, dt, u, uf);
 	}
 
 	/**
@@ -142,7 +143,7 @@ protected:
 	/**
 	 * Must be provided by implementation
 	 */
-	virtual void observe_impl(const Time& t, const State& u, const State& uf) = 0;
+	virtual void observe_impl(const Time& t, const Time& dt, const State& u, const State& uf) = 0;
 	virtual void init_impl   (StateInfo &) = 0;
 
 };

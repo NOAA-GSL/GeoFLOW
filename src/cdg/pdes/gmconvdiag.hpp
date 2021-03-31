@@ -59,13 +59,13 @@ public:
                            GMConvDiag(const GMConvDiag &a) = default;
                            GMConvDiag &operator=(const GMConvDiag &bu) = default;
 
-        void               observe_impl(const Time &t, const State &u, const State &uf);
+        void               observe_impl(const Time &t, const Time &dt, const State &u, const State &uf);
 
         void               init_impl(StateInfo &);
 private:
 // Private methods:
-        void               do_L2 (const Time t, const State &u, const State &uf, const GString file);
-        void               do_max(const Time t, const State &u, const State &uf, const GString file);
+        void               do_L2 (const Time &t, const Time &dt, const State &u, const State &uf, const GString file);
+        void               do_max(const Time &t, const Time &dt, const State &u, const State &uf, const GString file);
 // Private data:
         GBOOL              bInit_;
         GINT               myrank_;     // MPI rank

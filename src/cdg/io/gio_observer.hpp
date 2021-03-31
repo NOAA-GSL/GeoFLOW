@@ -59,7 +59,7 @@ public:
                            GIOObserver(const GIOObserver &a) = default;
                            GIOObserver &operator=(const GIOObserver &bu) = default;
 
-        void               observe_impl(const Time &t, const State &u, const State &uf);
+        void               observe_impl(const Time &t, const Time &dt, const State &u, const State &uf);
         void               init_impl(StateInfo &);
         void               setIO(IOBasePtr ioobj) { pIO_ = ioobj; }
 
