@@ -80,7 +80,7 @@ void Integrator<ET>::time( const Time& t0,
 
 		// Call observer on solution
                 for ( auto j = 0 ; j < this->obs_ptr_->size(); j++ ) 
-		  (*this->obs_ptr_)[j]->observe(t,u,uf);
+		  (*this->obs_ptr_)[j]->observe(t,dt_eff,u,uf);
  
 		// Take Step
 		this->eqn_ptr_->step(t, u, uf, ub, dt_eff);
@@ -96,7 +96,7 @@ void Integrator<ET>::time( const Time& t0,
 
 	// Call observer on solution at final time:
         for ( auto j = 0 ; j < this->obs_ptr_->size(); j++ ) 
-          (*this->obs_ptr_)[j]->observe(t,u,uf);
+          (*this->obs_ptr_)[j]->observe(t,dt_eff,u,uf);
  
 
 
@@ -115,11 +115,11 @@ void Integrator<ET>::steps( const Time&  t0,
 	ASSERT(nullptr != obs_ptr_);
 
 
+        Time dt_eff = dt;
 	t = t0;
 	for(Size i = 0; i < n; ++i, ++cycle_){
 
 		// Limit dt if requested
-		Time dt_eff = dt;
 		this->init_dt(t,u,dt_eff);
 		if(0 >= dt_eff) {
 			EH_ERROR("Effective Time Step is 0");
@@ -127,7 +127,7 @@ void Integrator<ET>::steps( const Time&  t0,
 
 		// Call observer on solution at new t
                 for ( auto j = 0 ; j < this->obs_ptr_->size(); j++ ) 
-		  (*this->obs_ptr_)[j]->observe(t,u,uf);
+		  (*this->obs_ptr_)[j]->observe(t,dt_eff,u,uf);
 
 		// Take Step
 		this->eqn_ptr_->step(t, u, uf, ub, dt_eff);
@@ -139,7 +139,7 @@ void Integrator<ET>::steps( const Time&  t0,
 	}
         // Call observer on solution at final time:
         for ( auto j = 0 ; j < this->obs_ptr_->size(); j++ ) 
-	  (*this->obs_ptr_)[j]->observe(t,u,uf);
+	  (*this->obs_ptr_)[j]->observe(t,dt_eff,u,uf);
 
 
 }
