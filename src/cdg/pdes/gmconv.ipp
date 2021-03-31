@@ -1658,9 +1658,26 @@ void GMConv<TypePack>::compute_derived_impl(const State &u, GString sop,
     }
     iuout.resize(1); iuout[0] = 0;
   }
+  else if ( "dpress"   == sop ) { // pressure fluctuation 
+    assert(uout .size() >= 1   && "Incorrect no. output components");
+    assert(utmp .size() >= 4   && "Incorrect no. tmp components");
+    assert(traits_.usebase);
+    compute_cv(u, *utmp[0], *utmp[1]);                     // Cv
+   *utmp[2] = *u[DENSITY];
+    if ( traits_.usebase ) *utmp[2] += *u[BASESTATE];       // total density
+    geoflow::compute_temp<Ftype>(*u[ENERGY], *utmp[2], *utmp[1], *utmp[3]);  // temperature
+    compute_qd(u, *utmp[0]);
+    geoflow::compute_p<Ftype>(*utmp[3], *utmp[2], *utmp[0], RD, *uout[0]);
+    if ( !traits_.dodry ) {
+      geoflow::compute_p<Ftype>(*utmp[3], *utmp[2], *u[VAPOR], RV, *utmp[0]);
+     *uout[0] += *utmp[0];
+    }
+    iuout.resize(1); iuout[0] = 0;
+  }
   else if ( "dptemp"    == sop ) { // potential temp fluctuation
     assert(uout .size() >= 1   && "Incorrect no. output components");
     assert(utmp .size() >= 4   && "Incorrect no. tmp components");
+    assert(traits_.usebase);
     tu[0] = utmp[3];
     this->compute_derived_impl(u, "press", utmp, uout, iuout);
     this->compute_derived_impl(u, "temp" , utmp, tu  , iuout);
@@ -1701,8 +1718,14 @@ void GMConv<TypePack>::compute_derived_impl(const State &u, GString sop,
       GMTK::saxpby(*uout[0], *u[DENSITY], 1.0, *u[BASESTATE], 1.0); 
     }
     else {
-      *uout[0] = *u[DENSITY];
+      *uout[0] = *u[DENSITY];  // state is dden already
     }
+    iuout.resize(1); iuout[0] = 0;
+  }
+  else if ( "dden"      == sop ) { // density fluctuation
+    assert(uout .size() >= 1   && "Incorrect no. output components");
+    assert(traits_.usebase);
+   *uout[0] = *u[DENSITY];
     iuout.resize(1); iuout[0] = 0;
   }
   else if ( "vel"      == sop ) { // x-velocity
@@ -1720,8 +1743,8 @@ void GMConv<TypePack>::compute_derived_impl(const State &u, GString sop,
       if ( traits_.usebase ) *utmp[0] += *u[BASESTATE];
       utmp[0]->rpow(-1.0); // 1/d
       for ( auto j=0; j<nc_; j++ ) {
-       *uout[j] = *u[j]; *uout[j] *= *utmp[0];
-       iuout[j] = j;
+        *uout[j] = *u[j]; *uout[j] *= *utmp[0];
+         iuout[j] = j;
      }
     }
   }
