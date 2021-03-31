@@ -2,7 +2,7 @@
 // Module       : gexrk_stepper.hpp
 // Date         : 1/28/19 (DLR)
 // Description  : Object representing an Explicit RK stepper of a specified order
-// Copyright    : Copyright 2019. Colorado State University. All rights reserved
+// Copyright    : Copyright 2019. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
 #if !defined(_GGExRKSTEPPER_HPP)
@@ -13,6 +13,7 @@
 #include "gbutcherrk.hpp"
 #include "ggrid.hpp"
 #include "ggfx.hpp"
+#include "gmtk.hpp"
 
 #include <functional>
 
@@ -32,6 +33,7 @@ public:
         };
                            GExRKStepper() = delete;
                            GExRKStepper(Traits &traits, GGrid &grid);
+                           GExRKStepper(Traits &traits);
                           ~GExRKStepper();
                            GExRKStepper(const GExRKStepper &a) = default;
                            GExRKStepper &operator=(const GExRKStepper &bu) = default;
