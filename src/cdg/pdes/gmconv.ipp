@@ -105,6 +105,7 @@ void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
 {
   GString    serr = "GMConv<TypePack>::dt_impl: ";
   Ftype      dtmin, dt1, dtnew, dtvisc;
+  Ftype      tiny = 100.0*std::numeric_limits<Ftype>::epsilon();
   StateComp *csq, *p, *T;
   StateComp *rhoT, *tmp1, *tmp2;
   StateComp *dxmin;
@@ -185,9 +186,9 @@ void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
    GComm::Allreduce(&dtmin, &dt1, 1, T2GCDatatype<Ftype>() , GC_OP_MIN, comm_);
 
    // Limit any timestep-to-timestep increae to 2.5%:
-   dtnew = MIN(dt1,dtvisc);
-
-   dt     = dtnew * traits_.courant;
+   dtnew = MIN(dt1,dtvisc) * traits_.courant;
+   if ( dt > tiny ) dt = MIN(dtnew, 1.025*dt);
+   else             dt = dtnew;
 
 //cout << "GMConv::dt_impl: dt = " << dt << " dtnew=" << dtnew << " courant=" << traits_.courant << endl;
 // dt     = icycle_ == 0 ? dtnew : MIN(dtnew, 1.025*dt);
