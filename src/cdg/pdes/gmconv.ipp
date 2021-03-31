@@ -1672,6 +1672,7 @@ void GMConv<TypePack>::compute_derived_impl(const State &u, GString sop,
     if ( !traits_.dodry ) {
       geoflow::compute_p<Ftype>(*utmp[3], *utmp[2], *u[VAPOR], RV, *utmp[0]);
      *uout[0] += *utmp[0];
+     *uout[0] -= *u[BASESTATE-1];       // create fluctuation
     }
     iuout.resize(1); iuout[0] = 0;
   }
