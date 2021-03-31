@@ -109,7 +109,7 @@ void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
   StateComp *rhoT, *tmp1, *tmp2;
   StateComp *dxmin;
 
-  assert(dttmp_.size() >= 5 );
+  assert(utmp_.size() >= 5 );
 
   // This is an estimate. We assume the timestep is
   // is governed by fast sonic waves with speed
@@ -123,11 +123,11 @@ void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
    
 
   // Assign pointers:
-  p    = dttmp_[0];
-  rhoT = dttmp_[1];
-  tmp1 = dttmp_[2];
-  tmp2 = dttmp_[3];
-  T    = dttmp_[4];
+  p    = utmp_[0];
+  rhoT = utmp_[1];
+  tmp1 = utmp_[2];
+  tmp2 = utmp_[3];
+  T    = utmp_[4];
 
   dxmin = &grid_->dxmin();
 
@@ -146,7 +146,7 @@ void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
    *p += *tmp1;
   }
 
-  csq = dttmp_[4];
+  csq = utmp_[4];
   for ( auto j=0; j<p->size(); j++ ) {     // sound speed, csq
     (*csq)[j] = (*p)[j] / (*rhoT)[j] ;
   }
@@ -864,7 +864,6 @@ void GMConv<TypePack>::init_impl(State &u, State &tmp)
       // we're sure there's no overlap:
       uold_   .resize(traits_.nsolve); // RK-solution at time level n
       uevolve_.resize(traits_.nsolve); // current RK solution
-      dttmp_  .resize(5);              // tmp for dt_impl; exclusive of urktmp
       ubase_  .resize(traits_.nbase);  // points to base-state components
       urktmp_ .resize(traits_.nsolve*(traits_.itorder+1)+1); // RK stepping work space
       urhstmp_.resize(szrhstmp());     // work space for RHS
@@ -876,7 +875,6 @@ void GMConv<TypePack>::init_impl(State &u, State &tmp)
       for ( auto j=0; j<traits_ .nsolve; j++, n++ ) uold_   [j] = utmp_[n];
       for ( auto j=0; j<urktmp_ .size(); j++, n++ ) urktmp_ [j] = utmp_[n];
       for ( auto j=0; j<urhstmp_.size(); j++, n++ ) urhstmp_[j] = utmp_[n];
-      for ( auto j=0; j<dttmp_  .size(); j++      ) dttmp_  [j] = utmp_[uold_.size()+j];
       break;
 /*
     case GSTEPPER_BDFAB:
@@ -1587,7 +1585,7 @@ GINT GMConv<TypePack>::szrhstmp()
   if ( traits_.dofallout && !traits_.dodry ) maxop = MAX(5,maxop);
 
   sum += maxop;
-//sum += 5;        // size for misc tmp space in dudt_impl
+  sum += 6;        // size for misc tmp space in dudt_impl
 
   return sum;
 

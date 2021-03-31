@@ -257,7 +257,6 @@ inline  GINT                szrhstmp();
         State               uevolve_;       // helper array to specify evolved state components
         State               ubase_;         // helper array pointing to base state components
         State               utmp_;          // tmp pool
-        State               dttmp_;         // tmp pool for dt_impl
         State               urhstmp_;       // helper arrays set from utmp
         State               urktmp_;        // helper arrays set from utmp
         State               qi_;            // full mass fraction vector
