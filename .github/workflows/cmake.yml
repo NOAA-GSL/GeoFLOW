@@ -23,8 +23,8 @@ jobs:
 
       # Suspend and get ssh terminal 
       # (comment name above and uncomment 2 lines below)
-#    - name: Setup tmate session
-#      uses: mxschmitt/action-tmate@v3
+    #- name: Setup tmate session
+    #  uses: mxschmitt/action-tmate@v3
       
     - name: Install Required Apps
       # Many components require a newer compiler C++17 or even C++20

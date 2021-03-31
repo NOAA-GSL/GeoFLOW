@@ -44,7 +44,7 @@ set(linked_libraries
 if(${GEOFLOW_USE_MPI})
 	set(LAUNCH_COMMAND "mpirun")  
 	set(LAUNCH_ARGS    "-np")
-	set(LAUNCH_PROCS   "4")
+	set(LAUNCH_PROCS   "2")
 else()
 	set(LAUNCH_COMMAND "")  
 	set(LAUNCH_ARGS    "")
