@@ -98,9 +98,9 @@ GBOOL G0FluxBdy<Types>::update_impl(
 //igbdy      = &traits_.ibdyvol;
 //ilbdy      = &grid_->ilbdy_binned()[traits_.bdyid];
   itype      = GBDY_0FLUX;
-  for ( auto j=0; j<igbdy->size(); j++ ) {
+  for ( auto j=0; j<traits_.ibdyloc.size(); j++ ) {
     iloc = traits_.ibdyloc[j];     // index into bdy arrays
-    ind  = (*igbdy)[iloc];          // index into volume array
+    ind  = (*igbdy)[iloc];         // index into volume array
     idd  = (*idep)[iloc];          // dependent vector component
 
 //if ( ind == 0 ) cout << " G0Flux:: ind=" << ind << endl;
