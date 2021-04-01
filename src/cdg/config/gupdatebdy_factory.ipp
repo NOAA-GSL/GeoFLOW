@@ -206,7 +206,7 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree& ptree, GString &supd
     traits.ibdyloc.resize(traits.ibdyvol.size());
     // Find index of ibdyvol in global bdy vector:
     for ( auto j=0; j<traits.ibdyloc.size(); j++ ) {
-      iloc = j + igbdy_start;;
+      iloc = j + igbdy_start;
       assert(iloc >= 0);
       traits.ibdyloc[j] = iloc;
     }
