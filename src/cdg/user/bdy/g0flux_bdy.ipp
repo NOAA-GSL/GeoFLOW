@@ -75,7 +75,7 @@ GBOOL G0FluxBdy<Types>::update_impl(
    GTVector<GTVector<Ftype>>  *bdyNormals;
 // GTVector<GTVector<Ftype>>  *xnodes;
    GTVector<GINT>             *idep;
-   GTVector<GSIZET>           *igbdy;
+   GTVector<GSIZET>           *igbdy = &grid.igbdy();
 // GTVector<GTVector<GSIZET>> *ilbdy;
 
 
@@ -95,12 +95,12 @@ GBOOL G0FluxBdy<Types>::update_impl(
 //xnodes     = &grid.xNodes();
   bdyNormals = &grid.bdyNormals(); // bdy normal vector
   idep       = &grid.idepComp();   // dependent components
-  igbdy      = &traits_.ibdyvol;
+//igbdy      = &traits_.ibdyvol;
 //ilbdy      = &grid_->ilbdy_binned()[traits_.bdyid];
   itype      = GBDY_0FLUX;
   for ( auto j=0; j<igbdy->size(); j++ ) {
     iloc = traits_.ibdyloc[j];     // index into bdy arrays
-    ind  = (*igbdy)[j];            // index into volume array
+    ind  = (*igbdy)[ind];          // index into volume array
     idd  = (*idep)[iloc];          // dependent vector component
 
 //if ( ind == 0 ) cout << " G0Flux:: ind=" << ind << endl;
