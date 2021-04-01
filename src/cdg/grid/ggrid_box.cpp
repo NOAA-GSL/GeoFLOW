@@ -1078,7 +1078,8 @@ void GGridBox::config_gbdy(const PropertyTree           &ptree,
         igbdyft [j] = GBDY_PERIODIC;
         bperiodic    = bperiodic || bdytype[j] == GBDY_PERIODIC;
       }
-      // May have different uniform bdys for different state comps:
+      // May have different uniform bdys for different state comps;
+      // step through them in order to point to correct bdy indices:
       for ( auto k=0; k<stblock.tbdy.size() && !bperiodic; k++ ) {
         base_ptr = GUpdateBdyFactory<BdyTypePack>::build(ptree, sbdy, *this,  j,
                                             stblock.tbdy[k], stblock.istate[k], stblock.value[k], itmp, igbdy_start);
