@@ -20,14 +20,12 @@ template<typename Types>
 G0FluxBdy<Types>::G0FluxBdy(typename G0FluxBdy<Types>::Traits &traits) :
 UpdateBdyBase<Types>(),
 bcomputed_               (FALSE),
-nstate_                      (0),
 traits_                 (traits)
 {
 
   assert( traits_.istate.size() == GDIM 
        && "Kinetic vector must be specified");
 
-  nstate_ = traits_.istate.size();
 
 } // end of constructor method 
 
@@ -105,20 +103,16 @@ GBOOL G0FluxBdy<Types>::update_impl(
 
 //if ( ind == 0 ) cout << " G0Flux:: ind=" << ind << endl;
 
-    if ( idd >= 0 ) {
-      xn   = (*bdyNormals)[idd][iloc];// n_idd == normal component for dependent vector comp
-      sum  = 0.0;
-      for ( auto k=0; k<nstate_; k++ ) { // for each indep vector component
-        if ( k != idd ) {
-          sum += (*bdyNormals)[k][iloc] * (*u[traits_.istate[k]])[ind];
-        }
+    xn   = (*bdyNormals)[idd][iloc];// n_idd == normal component for dependent vector comp
+    sum  = 0.0;
+    for ( auto k=0; k<traits_.istate.size(); k++ ) { // for each indep vector component
+      if ( k != idd ) {
+        sum += (*bdyNormals)[k][iloc] * (*u[traits_.istate[k]])[ind];
       }
-    
-      // Ensure v.n = 0:
-//    (*u[idd])[ind] = ( sum + (*bdyNormals)[idd][iloc] * (*u[idd])[ind] ) / xn;
-//if ( ind == 0 && sum > 1e-4 ) cout << "G0Flux: u=" << sum/xn << endl;
-      (*u[idd])[ind] = -sum / xn;
     }
+    
+    // Ensure v.n = 0:
+    (*u[idd])[ind] = -sum / xn;
   }
 
   bcomputed_ = TRUE;
