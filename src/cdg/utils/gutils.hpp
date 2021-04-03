@@ -18,14 +18,22 @@
 using namespace geoflow::pdeint;
 using namespace std;
 
-
 struct stBdyBlock {
-  GTVector<GTVector<GINT>>   istate; // vectors of state index vectors
-  GTVector<GTVector<GFTYPE>> value ; // vectors of Dirichlet values
-  GTVector<GBdyType>         tbdy;   // vector of bdy types; one for each istate vector
-  GString                    config_method; // name of bdy node config method
-  GString                    inflow_method; // name of inflow method, if any
+  GBOOL            use_init=FALSE;    // use initialisation method for setting bdy conditions
+  GINT             idir=-1;           // coord direction of bdy surface
+  GINT             bdyid=-1;          // bdy id 
+  GBdyType         tbdy=GBDY_NONE;    // bdy type
+  GFTYPE           xstart=0.0;        // start of sponce surf in idir direction
+  GFTYPE           xmax=0.0;          // max coord in direction idir
+  vector<GINT>     istate;            // vector of state indices
+  vector<GFTYPE>   value;             // vector of Dirichlet values for each istate
+  vector<GFTYPE>   farfield;          // vector of far field bdys for SPONGE bcs for each istate
+  vector<GFTYPE>   falloff;           // vector of fall-off rates for SPONGE bcs for each istate
+  vector<GFTYPE>   diffusion;         // vector of diffusion factors for SPONGE bcs for each istate
+  GString          bdyclass;          // bdy ('uniform', 'mixed')
+  GString          smethod;           // name of method providing bdy values (e.g. for inflow)
 };
+
 
 namespace geoflow
 {
@@ -33,7 +41,9 @@ namespace geoflow
 GBdyType       str2bdytype (const GString &stype);
 GStateCompType str2comptype(const GString &stype);
 GBOOL          file_empty(GString filename);
-void           get_bdy_block(const geoflow::tbox::PropertyTree &sptree, stBdyBlock &stblock);
+GBOOL          get_bdy_block(const geoflow::tbox::PropertyTree &sptree, GString &sbdy, GINT ibc, stBdyBlock &stblock);
+GINT           bdy_block_conform_per(const geoflow::tbox::PropertyTree &sptree);
+
 template<typename T>
 void           append(GTVector<T> &base, GTVector<T> &add);
 template<typename T>
