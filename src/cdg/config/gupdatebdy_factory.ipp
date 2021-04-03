@@ -282,7 +282,7 @@ GINT GUpdateBdyFactory<Types>::bdy_block_conform_per(const geoflow::tbox::Proper
   GString              bdyclass;
   std::vector<GString> stypes;
 
-  bdyclass = sptree.getValue<GString>("base_class"); // required
+  bdyclass = sptree.getValue<GString>("bdy_class"); // required
 
 
 
@@ -349,7 +349,7 @@ GBOOL GUpdateBdyFactory<Types>::get_bdy_block(const geoflow::tbox::PropertyTree 
 
   // Get bdy block data:
   
-  stblock.bdyclass = sptree.getValue<GString>("base_class"); // required
+  stblock.bdyclass = sptree.getValue<GString>("bdy_class"); // required
 
   // Get base bdy condition type:
   stypes = sptree.getArray<GString>("base_type"); // is a vector
@@ -357,7 +357,7 @@ GBOOL GUpdateBdyFactory<Types>::get_bdy_block(const geoflow::tbox::PropertyTree 
 
   // If ibc out of range, return:
   if ( ibc < 0 || ibc >= nbc ) return FALSE; 
-  stblock.tbdy = geoflow::str2bdytype(svec[ibc]); // set bdy type id
+  stblock.tbdy = geoflow::str2bdytype(stypes[ibc]); // set bdy type id
 
   // Get state ids to operate on:
   ivecvec = sptree.getArray2D<GINT>("istate");
@@ -371,7 +371,7 @@ GBOOL GUpdateBdyFactory<Types>::get_bdy_block(const geoflow::tbox::PropertyTree 
   nstate = stblock.istate.size();
   
   // If DIRICHLET bdy, retrieve vector of values for state ids:
-  if ( svec[ibc] == "GBDY_DIRICHLET" ) {
+  if ( stypes[ibc] == "GBDY_DIRICHLET" ) {
     fvecvec = sptree.getArray2D<GFTYPE>("value");
     if ( fvecvec.size() != nbc ) {
       cout << "GUtils::get_bdy_block: DIRICHLET bc is specified; 2d JSON vector of size(base_type) must specify DIRICHLET values for each istate ('[]' is valid for non-DIRICHLET entries)" << endl;
@@ -382,7 +382,7 @@ GBOOL GUpdateBdyFactory<Types>::get_bdy_block(const geoflow::tbox::PropertyTree 
   }
   
   // If INFLOW bdy, retrieve method name, or other data:
-  if ( svec[ibc] == "GBDY_INFLOW" ) {
+  if ( stypes[ibc] == "GBDY_INFLOW" ) {
     bvec = sptree.getArray<GBOOL>("use_init");
     if ( bvec.size() != nbc ) {
       cout << "GUtils::get_bdy_block: INFLOW bc is specified; a vector of size(base_type) must specify Boolean 'use_init' flags for each bc entry in 'base_type' " << endl;
@@ -401,7 +401,7 @@ GBOOL GUpdateBdyFactory<Types>::get_bdy_block(const geoflow::tbox::PropertyTree 
   }
 
   // If SPONGE bdy, retrieve required data:
-  if ( svec[ibc] == "GBDY_SPONGE" ) { 
+  if ( stypes[ibc] == "GBDY_SPONGE" ) { 
     fvecvec = sptree.getArray2D<GFTYPE>("farfield");
     if ( fvecvec.size() != nbc ) {
       cout << "GUtils::get_bdy_block: SPONGE bc is specified; a vector of size(base_type) must specify farfield values for each state group for each bc entry in 'base_type'   ('[]' is valid for non-SPONGE entries)" << endl;
