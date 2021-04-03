@@ -55,7 +55,7 @@ public:
           GTVector<Ftype>  exponent; // fall-off exponent for solution
           GTVector<Ftype>  sigma;    // 'diffusion' factor in sponge layer
           GTVector<Ftype>  rs;       // vector defining sponge surface
-          Ftype            ro;       // outer-most surface (may be nexative)
+          Ftype            ro;       // outer-most surface (may be negative)
         };
 
         GSpongeBdy() = delete; 
