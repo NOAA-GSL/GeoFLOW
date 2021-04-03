@@ -15,14 +15,27 @@
   "IO_implementation" : "gio",
   "terrain_type"      : "none",
   "initstate_boxdrybubble": {
-    "T_pert"     : -15.0,
+    "T_pert"     : -7.5,
     "x_center"   : [0, 3000.0, 1000.0],
     "x_width"    : [4000.0, 2000.0, 2000.0]
   },
+  "eninflow": {
+    "bdy_class"        : "uniform",
+    "base_type"        : ["GBDY_INFLOW"],
+    "istate"           : [[2]],
+    "inflow_method"    : "denfrombase"
+  },
+  "deninflow": {
+    "bdy_class"        : "uniform",
+    "base_type"        : ["GBDY_INFLOW"],
+    "istate"           : [[3]],
+    "inflow_method"    : "enfrombase"
+  },
   "0-flux": {
     "bdy_class"        : "uniform",
-    "base_type"        : ["GBDY_0FLUX"],
-    "istate"           : [[0, 1]]
+    "base_type"        : ["GBDY_0FLUX", "GBDY_INFLOW"],
+    "istate"           : [[0, 1], [2, 3]],
+    "use_init"         : [false, true]
   },
   "pde_mconv": {
     "docoriolis"      : false,

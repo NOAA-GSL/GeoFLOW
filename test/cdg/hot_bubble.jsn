@@ -38,8 +38,9 @@
   },
   "0-flux": {
     "bdy_class"        : "uniform",
-    "base_type"        : ["GBDY_0FLUX"],
-    "istate"           : [[0, 1]]
+    "base_type"        : ["GBDY_0FLUX", "GBDY_INFLOW"],
+    "istate"           : [[0, 1], [2, 3]],
+    "use_init"         : [false, true]
   },
   "pde_mconv": {
     "docoriolis"      : false,
