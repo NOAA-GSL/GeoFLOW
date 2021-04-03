@@ -71,7 +71,6 @@ private:
 
         Traits              traits_;        // Traits structure
         GBOOL               bcomputed_;     // tell us that operation was called
-        GINT                nstate_;        // size of traits_.istate
 
 };
 
