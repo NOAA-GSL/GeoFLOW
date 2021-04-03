@@ -1072,7 +1072,7 @@ void GGridBox::config_gbdy(const PropertyTree           &ptree,
       degbdy.push_back(utmp[k]);
     }
     if ( "uniform" == bdyclass ) { // uniform bdy conditions
-      iret = geoflow::bdy_block_conform_per(bdytree);
+      iret = GUpdateBdyFactory<BdyTypePack>::bdy_block_conform_per(bdytree);
       if ( iret = 1 ) {
         bdytype [j] = GBDY_PERIODIC;
         igbdyft [j] = GBDY_PERIODIC;
@@ -1086,7 +1086,7 @@ void GGridBox::config_gbdy(const PropertyTree           &ptree,
       // May have different uniform bdys for different state comps;
       // step through them in order to point to correct bdy indices:
       k = 0;
-      while ( geoflow::get_bdy_block(ptree, sbdy, k, bcblock) && !bperiodic ) {;
+      while ( GUpdateBdyFactory<BdyTypePack>::get_bdy_block(ptree, sbdy, k, bcblock) && !bperiodic ) {;
         bcblock.bdyid = j;
         base_ptr = GUpdateBdyFactory<BdyTypePack>::build(ptree, sbdy, *this, bcblock, itmp, igbdy_start);
         igbdyft[j] = bcblock.tbdy;

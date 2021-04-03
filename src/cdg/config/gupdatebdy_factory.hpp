@@ -30,7 +30,6 @@ using namespace geoflow;
 using namespace geoflow::tbox;
 using namespace std;
 
-#if 0
 struct stBdyBlock {
   GBOOL            use_init=FALSE;    // use initialisation method for setting bdy conditions
   GINT             idir=-1;           // coord direction of bdy surface
@@ -46,7 +45,6 @@ struct stBdyBlock {
   GString          bdyclass;          // bdy ('uniform', 'mixed')
   GString          smethod;           // name of method providing bdy values (e.g. for inflow)
 };
-#endif
 
 
 template<typename TypePack>
@@ -73,6 +71,10 @@ class GUpdateBdyFactory
 	static UpdateBdyBasePtr build(const PropertyTree &ptree, const GString &sbdy, Grid &grid, stBdyBlock &bcblock, GTVector<GSIZET> &ibdy, GSIZET igbdy_start);
 
 	static UpdateBdyBasePtr  get_bdy_class (const PropertyTree& ptree, Grid &grid, stBdyBlock &bcblock,  GTVector<GSIZET> &ibdy, GSIZET igbdy_start);
+
+        static GBOOL             get_bdy_block(const geoflow::tbox::PropertyTree &sptree, GString &sbdy, GINT ibc, stBdyBlock &stblock);
+
+        static GINT              bdy_block_conform_per(const geoflow::tbox::PropertyTree &sptree);
 
   private:
         static  CallbackPtr       get_inflow_callback(const GString& sname, const GINT id);

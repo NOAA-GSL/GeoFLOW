@@ -991,7 +991,7 @@ void GGridIcos::config_gbdy(const geoflow::tbox::PropertyTree &ptree,
     }
 
     if ( "uniform" == bdyclass ) { // uniform bdy conditions
-      iret = geoflow::bdy_block_conform_per(bdytree);
+      iret = GUpdateBdyFactory<BdyTypePack>::bdy_block_conform_per(bdytree);
       if ( iret = 1 || iret == 2 ) {
         cout << "GGridBox:: config_gbdy: PERIODIC boundary conditions invalid for this grid" << endl;
         assert(FALSE);
@@ -1000,7 +1000,7 @@ void GGridIcos::config_gbdy(const geoflow::tbox::PropertyTree &ptree,
       // May have different uniform bdys for different state comps;
       // step through them in order to point to correct bdy indices:
       k = 0;
-      while ( geoflow::get_bdy_block(bdytree, sbdy, k, bcblock) ) {;
+      while ( GUpdateBdyFactory<BdyTypePack>::get_bdy_block(bdytree, sbdy, k, bcblock) ) {;
         bcblock.bdyid = j;
         base_ptr = GUpdateBdyFactory<BdyTypePack>::build(ptree, sbdy, *this, bcblock, itmp, igbdy_start);
         igbdyft[j] = bcblock.tbdy;
