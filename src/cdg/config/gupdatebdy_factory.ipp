@@ -12,12 +12,9 @@
 // METHOD : build
 // DESC   : Build bdy update object
 // ARGS   : ptree   : main property tree
-//          supdate : string naming bdy update prop tree block 
+//          sbdy    : bdy condition name
 //          grid    : grid object
-//          id      : canonical bdy id
-//          bdytype : bdy type
-//          istate  : state array the method applies to
-//          value   : vector of Dirichlet values
+//          bcblock : stBdyBlock structure
 //          ibdy    : bdy indirection indices into computational volume
 //          igbdy_start:
 //                    where ibdy start in global bdy index list
@@ -26,17 +23,17 @@
 //**********************************************************************************
 template<typename Types>
 typename GUpdateBdyFactory<Types>::UpdateBdyBasePtr
-GUpdateBdyFactory<Types>::build(const PropertyTree& ptree, GString &supdate, Grid &grid, const GINT id, GBdyType bdytype, GTVector<GINT> &istate, GTVector<GFTYPE> &value, GTVector<GSIZET> &ibdy, GSIZET igbdy_start)
+GUpdateBdyFactory<Types>::build(const PropertyTree& ptree, const GString &sbdy, Grid &grid, stBdyBlock &bcblock, GTVector<GSIZET> &ibdy, GSIZET igbdy_start)
 {
   GBOOL              bret = FALSE;
   UpdateBdyBasePtr   base_ptr;
 
 
-  if ( "none"         == supdate
-    || ""             == supdate ) {
+  if ( "none"         == sbdy
+    || ""             == sbdy ) {
     using UpdateImpl = NullUpdateBdy<Types>;
 
-    // Allocate update Implementation
+    // Allocate update implementation
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl());
 
     // Set back to base type
@@ -44,12 +41,12 @@ GUpdateBdyFactory<Types>::build(const PropertyTree& ptree, GString &supdate, Gri
     return base_ptr;
   }
 
-  if ( !ptree.isPropertyTree(supdate) ) {
-    cout << "GUpdateBdyFactory<Types>::build: PropertyTree " << supdate << " not found" << endl;
+  if ( !ptree.isPropertyTree(sbdy) ) {
+    cout << "GUpdateBdyFactory<Types>::build: PropertyTree " << sbdy << " not found" << endl;
     assert(FALSE);
   }
 
-  base_ptr = GUpdateBdyFactory<Types>::get_bdy_class(ptree, supdate, grid, id, bdytype, istate, value, ibdy, igbdy_start);
+  base_ptr = GUpdateBdyFactory<Types>::get_bdy_class(ptree, grid, bcblock, ibdy, igbdy_start);
 
   return base_ptr;
 
@@ -104,12 +101,8 @@ GUpdateBdyFactory<Types>::get_inflow_callback(const GString& sname, const GINT i
 // METHOD : get_bdy_class
 // DESC   : get bdy class for specified bdy type
 // ARGS   : ptree   : main prop tree
-//          supdate : update block name
 //          grid    : grid object
-//          id      : canonical bdy id
-//          bdytype : bdy type triggering construction of class
-//          istate  : vector of state ids
-//          value   : vector of Dirichlet values
+//          bcblock : stBdyBlock structure
 //          ibdy    : indirection indices into computational volume, 
 //                    representing the bdy nodes this method applies to
 //          igbdy_start:
@@ -119,33 +112,31 @@ GUpdateBdyFactory<Types>::get_inflow_callback(const GString& sname, const GINT i
 //**********************************************************************************
 template<typename Types>
 typename GUpdateBdyFactory<Types>::UpdateBdyBasePtr
-GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree& ptree, GString &supdate, Grid &grid, const GINT id, const GBdyType bdytype, GTVector<GINT> &istate, GTVector<GFTYPE> &value, GTVector<GSIZET> &ibdy, GSIZET igbdy_start)
+GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree &ptree, Grid &grid, stBdyBlock &bcblock, GTVector<GSIZET> &ibdy, GSIZET igbdy_start)
 {
   GINT               nstate;
+  GBdyType           bdytype = bcblock.tbdy;
   GLONG              iloc;
-  GString            sblock ;
   UpdateBdyBasePtr   base_ptr;
-  GTVector<GSIZET>  *igbdy = &grid.igbdy();
-  PropertyTree       sptree; // update block tree
   
 
-  nstate = istate.size();
+  nstate = bcblock.istate.size();
   
-  sptree = ptree.getPropertyTree(supdate);
 
   if       ( GBDY_DIRICHLET == bdytype ) {
     using UpdateImpl = GDirichletBdy<Types>;
     typename GDirichletBdy<Types>::Traits traits;
 
-    traits.istate.resize(nstate); traits.istate = istate;
-    traits.value .resize(nstate); traits.value  = value;
-    traits.bdyid = id;
-    traits.ibdyvol = ibdy;
-    if ( sptree.isValue<GBOOL>("compute_once") ) {
-      traits.compute_once = sptree.getValue<GBOOL>("compute_once");
-    }
+    traits.istate.resize(bcblock.istate.size()) ; 
+    traits.ibdyvol.resize(ibdy.size()); 
+  
+    traits.bdyid       = bcblock.bdyid;
+    traits.istate      = bcblock.istate;
+    traits.ibdyvol     = ibdy;
+    traits.value .resize(bcblock.value.size())  ; 
+    traits.value       = bcblock.value;;
 
-    // Allocate update Implementation
+    // Allocate update implementation
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
 
     // Set back to base type
@@ -156,53 +147,47 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree& ptree, GString &supd
     using UpdateImpl = GInflowBdy<Types>;
     typename GInflowBdy<Types>::Traits traits;
 
-    traits.istate.resize(nstate); traits.istate = istate;
-    traits.bdyid = id;
-    traits.ibdyvol = ibdy;
-    if ( sptree.isValue<GBOOL>("compute_once") ) {
-      traits.compute_once = sptree.getValue<GBOOL>("compute_once");
-    }
-    assert( sptree.isValue<GBOOL>("use_init") && "use_init boolean missing");
-    traits.use_init = sptree.getValue<GBOOL>("use_init");
-    if ( !traits.use_init ) {
-      assert( sptree.isValue<GString>("inflow_method") 
-           && "inflow_method required if use_init==FALSE" ); 
-      sblock = sptree.getValue<GString>("inflow_method");
-      traits.callback = GUpdateBdyFactory<Types>::get_inflow_callback(sblock, id);
+    traits.istate.resize(bcblock.istate.size()) ; 
+    traits.ibdyvol.resize(ibdy.size()); 
+  
+    traits.bdyid       = bcblock.bdyid;
+    traits.istate      = bcblock.istate;
+    traits.ibdyvol     = ibdy;
+    if ( !bcblock.use_init ) {
+      traits.callback = GUpdateBdyFactory<Types>::get_inflow_callback(bcblock.smethod, bcblock.bdyid);
     }
     traits.ptree = ptree;
-    // Allocate update Implementation
+    // Allocate update implementation
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
 
     // Set back to base type
     base_ptr = update_impl;
     return base_ptr;
   }
+#if 0
   else if ( GBDY_NOSLIP == bdytype ) {
     using UpdateImpl = GNoSlipBdy<Types>;
     typename GNoSlipBdy<Types>::Traits traits;
 
-    traits.istate.resize(nstate); traits.istate = istate;
-    traits.bdyid  = id;
-    traits.ibdyvol = ibdy;
-    if ( sptree.isValue<GBOOL>("compute_once") ) {
-      traits.compute_once = sptree.getValue<GBOOL>("compute_once");
-    }
-    
-    // Allocate update Implementation
+    // Allocate update implementation
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
 
     // Set back to base type
     base_ptr = update_impl;
     return base_ptr;
   }
+#endif
   else if ( GBDY_0FLUX == bdytype ) {
     using UpdateImpl = G0FluxBdy<Types>;
     typename G0FluxBdy<Types>::Traits traits;
 
-    traits.istate.resize(nstate); traits.istate = istate;
-    traits.bdyid  = id;
-    traits.ibdyvol.resize(ibdy.size()); traits.ibdyvol = ibdy;
+    traits.istate.resize(bcblock.istate.size()) ; 
+    traits.ibdyvol.resize(ibdy.size()); 
+  
+    traits.bdyid       = bcblock.bdyid;
+    traits.istate      = bcblock.istate;
+    traits.ibdyvol     = ibdy;
+
     traits.ibdyloc.resize(traits.ibdyvol.size());
     // Find index of ibdyvol in global bdy vector:
     for ( auto j=0; j<traits.ibdyloc.size(); j++ ) {
@@ -210,11 +195,8 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree& ptree, GString &supd
       assert(iloc >= 0);
       traits.ibdyloc[j] = iloc;
     }
-    if ( sptree.isValue<GBOOL>("compute_once") ) {
-      traits.compute_once = sptree.getValue<GBOOL>("compute_once");
-    }
     
-    // Allocate update Implementation
+    // Allocate update implementation
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
 
     // Set back to base type
@@ -226,14 +208,14 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree& ptree, GString &supd
     using UpdateImpl = GOutflowBdy<Types>;
     typename GOutflowBdy<Types>::Traits traits;
 
-    traits.istate.resize(nstate); traits.istate = istate;
-    traits.bdyid  = id;
-    traits.ibdyvol = ibdy;
-    if ( sptree.isValue<GBOOL>("compute_once") ) {
-      traits.compute_once = sptree.getValue<GBOOL>("compute_once");
-    }
+    traits.istate.resize(bcblock.istate.size()) ; 
+    traits.ibdyvol.resize(ibdy.size()); 
+  
+    traits.bdyid       = bcblock.bdyid;
+    traits.istate      = bcblock.istate;
+    traits.ibdyvol     = ibdy;
     
-    // Allocate update Implementation
+    // Allocate update implementation
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
 
     // Set back to base type
@@ -244,33 +226,25 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree& ptree, GString &supd
     using UpdateImpl = GSpongeBdy<Types>;
     typename GSpongeBdy<Types>::Traits traits;
 
-    traits.istate.resize(nstate); traits.istate = istate;
-    traits.bdyid  = id;
-    traits.ibdyvol = ibdy;
-    if ( sptree.isValue<GBOOL>("compute_once") ) {
-      traits.compute_once = sptree.getValue<GBOOL>("compute_once");
-    }
+    traits.istate.resize(bcblock.istate.size()) ; 
+    traits.ibdyvol.resize(ibdy.size()); 
+  
+    traits.bdyid       = bcblock.bdyid;
+    traits.istate      = bcblock.istate;
+    traits.ibdyvol     = ibdy;
+    traits.idir     = bcblock.idir;
+    traits.rs       = bcblock.xstart;
+    traits.ro       = bcblock.xmax;
 
-    assert(sptree.isArray<Ftype>("farfield") && "farfield array missing");
-    traits.idir = sptree.getValue<Ftype>("farfield");
-    assert(sptree.isArray<Ftype>("exponent") && "exponent array missing");
-    traits.idir = sptree.getValue<Ftype>("exponent");
-    assert(sptree.isArray<Ftype>("sigma0") && "sigma0 array missing");
-    traits.idir = sptree.getValue<Ftype>("sigma0");
-    assert(sptree.isArray<Ftype>("xstart") && "xstart array missing");
-    traits.idir = sptree.getValue<Ftype>("xstart");
+    traits.farfield.resize(bcblock.farfield.size());
+    traits.exponent.resize(bcblock.falloff .size());
+    traits.sigma   .resize(bcblock.diffusion.size());
+
+    traits.farfield = bcblock.farfield;
+    traits.exponent = bcblock.falloff;
+    traits.sigma    = bcblock.diffusion;
     
-    GTVector<Ftype> xmin, xmax;
-    geoflow::coord_dims(ptree, xmin, xmax);// get coord min/max from ptree
-
-    assert(sptree.isValue<GINT>("idir") && "idir value missing");
-    traits.idir = sptree.getValue<GINT>("idir");
-    assert(traits.idir >= 1 && traits.idir <= xmax.size()); // validate idir
-
-    if ( traits.idir < 0 ) traits.ro = xmin[abs(traits.idir)-1];
-    else                   traits.ro = xmax[abs(traits.idir)-1];
-
-    // Allocate update Implementation
+    // Allocate update implementation
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
 
     // Set back to base type

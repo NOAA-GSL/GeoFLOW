@@ -22,12 +22,32 @@
 #include "gns_inflow_user.hpp"
 #include "gutils.hpp"
 #include "gspecbdy_user.hpp"
+#include "ginitstate_factory.hpp"
 #include "pdeint/null_update_bdy.hpp"
 #include "tbox/property_tree.hpp"
 
 using namespace geoflow;
 using namespace geoflow::tbox;
 using namespace std;
+
+#if 0
+struct stBdyBlock {
+  GBOOL            use_init=FALSE;    // use initialisation method for setting bdy conditions
+  GINT             idir=-1;           // coord direction of bdy surface
+  GINT             bdyid=-1;          // bdy id 
+  GBdyType         tbdy=GBDY_NONE;    // bdy type
+  GFTYPE           xstart=0.0;        // start of sponce surf in idir direction
+  GFTYPE           xmax=0.0;          // max coord in direction idir
+  vector<GINT>     istate;            // vector of state indices
+  vector<GFTYPE>   value;             // vector of Dirichlet values for each istate
+  vector<GFTYPE>   farfield;          // vector of far field bdys for SPONGE bcs for each istate
+  vector<GFTYPE>   falloff;           // vector of fall-off rates for SPONGE bcs for each istate
+  vector<GFTYPE>   diffusion;         // vector of diffusion factors for SPONGE bcs for each istate
+  GString          bdyclass;          // bdy ('uniform', 'mixed')
+  GString          smethod;           // name of method providing bdy values (e.g. for inflow)
+};
+#endif
+
 
 template<typename TypePack>
 class GUpdateBdyFactory
@@ -50,9 +70,9 @@ class GUpdateBdyFactory
                                 State      &ub)>;
 
 
-	static UpdateBdyBasePtr build(const PropertyTree& sptree, GString &supdate, Grid &grid, const GINT id, GBdyType bdytype, GTVector<GINT> &istate, GTVector<GFTYPE> &value, GTVector<GSIZET> &ibdy, GSIZET igbdy_start);
+	static UpdateBdyBasePtr build(const PropertyTree &ptree, const GString &sbdy, Grid &grid, stBdyBlock &bcblock, GTVector<GSIZET> &ibdy, GSIZET igbdy_start);
 
-	static UpdateBdyBasePtr  get_bdy_class (const PropertyTree& ptree, GString &supdate, Grid &grid, const GINT id, const GBdyType bdytype, GTVector<GINT> &istate, GTVector<GFTYPE> &value, GTVector<GSIZET> &ibdy, GSIZET igbdy_start);
+	static UpdateBdyBasePtr  get_bdy_class (const PropertyTree& ptree, Grid &grid, stBdyBlock &bcblock,  GTVector<GSIZET> &ibdy, GSIZET igbdy_start);
 
   private:
         static  CallbackPtr       get_inflow_callback(const GString& sname, const GINT id);
