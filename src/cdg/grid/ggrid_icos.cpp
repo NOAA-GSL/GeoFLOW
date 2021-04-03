@@ -905,6 +905,7 @@ void GGridIcos::config_gbdy(const geoflow::tbox::PropertyTree &ptree,
   // Cycle over all geometric boundaries, and configure:
 
   GBOOL              bret;
+  GINT               iret, k;
   GSIZET             igbdy_start, nind;
   GTVector<GUINT>    utmp;
   GTVector<GSIZET>   ikeep, itmp;
@@ -914,7 +915,7 @@ void GGridIcos::config_gbdy(const geoflow::tbox::PropertyTree &ptree,
   GString            gname, sbdy, bdyclass;
   PropertyTree       bdytree, gridptree;
   UpdateBasePtr      base_ptr;
-  stBdyBlock         stblock;
+  stBdyBlock         bcblock;
 
 
   bdyNormals_.resizem(GDIM);
@@ -989,36 +990,27 @@ void GGridIcos::config_gbdy(const geoflow::tbox::PropertyTree &ptree,
       degbdy[nind++] = igbdyf[j][i];
     }
 
-    geoflow::get_bdy_block(bdytree, stblock);
     if ( "uniform" == bdyclass ) { // uniform bdy conditions
-      assert(!stblock.tbdy.contains(GBDY_PERIODIC) && "Invalid boundary condition");
-      // May have different uniform bdys for different state comps:
-      for ( auto k=0; k<stblock.tbdy.size(); k++ ) { 
-        base_ptr = GUpdateBdyFactory<BdyTypePack>::build(ptree, sbdy, *this,  j, 
-                                            stblock.tbdy[k], stblock.istate[k], stblock.value[k], itmp, igbdy_start);
-        if ( stblock.tbdy[k] != GBDY_NONE ) igbdyft[j] = stblock.tbdy[k];
+      iret = geoflow::bdy_block_conform_per(bdytree);
+      if ( iret = 1 || iret == 2 ) {
+        cout << "GGridBox:: config_gbdy: PERIODIC boundary conditions invalid for this grid" << endl;
+        assert(FALSE);
+      }
+ 
+      // May have different uniform bdys for different state comps;
+      // step through them in order to point to correct bdy indices:
+      k = 0;
+      while ( geoflow::get_bdy_block(bdytree, sbdy, k, bcblock) ) {;
+        bcblock.bdyid = j;
+        base_ptr = GUpdateBdyFactory<BdyTypePack>::build(ptree, sbdy, *this, bcblock, itmp, igbdy_start);
+        igbdyft[j] = bcblock.tbdy;
         bdy_update_list_[j].push_back(base_ptr);
+        k++;
       }
     }
     else if ( "mixed" == bdyclass ) { // mixed bdy conditions
-      assert( bdytree.isArray<GString>("bdy_blocks") && "No bdy_blocks specified"); 
-      svec = bdytree.getArray<GString>("bdy_blocks");
-      for ( auto i=0; i<svec.size(); i++ ) {
-        bdytree = ptree.getPropertyTree(svec[i]);
-        geoflow::get_bdy_block(bdytree, stblock);
-        assert(!stblock.tbdy.contains(GBDY_PERIODIC) && "Invalid boundary condition");
-        GSpecBdyFactory::dospec(bdytree, *this, j, itmp);
-        for ( auto k=0; k<svec.size(); k++ ) { // for each sub-block
-          base_ptr = GUpdateBdyFactory<BdyTypePack>::build(ptree, svec[k], *this, j, 
-                                              stblock.tbdy[k], stblock.istate[k], stblock.value[k], itmp, igbdy_start);
-          
-          for ( auto m=0; m<itmp.size(); m++ ) {
-            if ( igbdyf[j].contains(itmp[m]) ) igbdyft[j][m] = stblock.tbdy[k];
-          }
-          if ( stblock.tbdy[k] != GBDY_NONE ) igbdyft[j] = stblock.tbdy[k];
-          bdy_update_list_[j].push_back(base_ptr);
-        }
-      } 
+      cout << "GGridBox:: config_gbdy: 'mixed' bdy_class is not available"<< endl;
+      assert(FALSE);
     }
     else {
       assert(FALSE && "Invalid bdy_class");

@@ -788,7 +788,7 @@ void GGridBox::periodize()
       periodicids_ [n] = id;       
       periodicdirs_[n] = 0;
       for( auto i=0; i<xNodes_.size(); i++ ) { // for x, y, z dirs
-        if ( FUZZYEQ(P1_[i],xNodes_[i][id],eps_) ) { // right/top-mostblock.tbdy[k];i coord will change
+        if ( FUZZYEQ(P1_[i],xNodes_[i][id],eps_) ) { // right/top-most block.tbdy[k];i coord will change
           periodicdirs_[n] |= 1U << i;  // position right-most direction bit  
         }
       }
@@ -997,6 +997,7 @@ void GGridBox::config_gbdy(const PropertyTree           &ptree,
 
   // Cycle over all geometric boundaries, and configure:
   GBOOL              bret, bperiodic=FALSE;
+  GINT               iret, k;
   GSIZET             igbdy_start, nind;
   GTVector<GBOOL>    buniform(2*GDIM);
   GTVector<GBdyType> bdytype(2*GDIM);
@@ -1007,7 +1008,7 @@ void GGridBox::config_gbdy(const PropertyTree           &ptree,
                      svec;
   GString            gname, sbdy, bdyclass;
   PropertyTree       bdytree, gridptree;
-  stBdyBlock         stblock;
+  stBdyBlock         bcblock;
   UpdateBasePtr      base_ptr;
 
   assert(minnodedist_ > 0.0);
@@ -1071,42 +1072,31 @@ void GGridBox::config_gbdy(const PropertyTree           &ptree,
       degbdy.push_back(utmp[k]);
     }
     if ( "uniform" == bdyclass ) { // uniform bdy conditions
-      geoflow::get_bdy_block(bdytree, stblock);
-      if ( stblock.tbdy.contains(GBDY_PERIODIC) ) {
-        assert(stblock.tbdy.onlycontains(GBDY_PERIODIC) && "All variables must be GBDY_PERIODIC");
+      iret = geoflow::bdy_block_conform_per(bdytree);
+      if ( iret = 1 ) {
         bdytype [j] = GBDY_PERIODIC;
         igbdyft [j] = GBDY_PERIODIC;
         bperiodic    = bperiodic || bdytype[j] == GBDY_PERIODIC;
       }
+      else if ( iret = 2 ) {
+        cout << "GGridBox:: config_gbdy: Attempt to specify PERIODIC boundary failed" << endl;
+        assert(FALSE);
+      }
+
       // May have different uniform bdys for different state comps;
       // step through them in order to point to correct bdy indices:
-      for ( auto k=0; k<stblock.tbdy.size() && !bperiodic; k++ ) {
-        base_ptr = GUpdateBdyFactory<BdyTypePack>::build(ptree, sbdy, *this,  j,
-                                            stblock.tbdy[k], stblock.istate[k], stblock.value[k], itmp, igbdy_start);
-        igbdyft[j] = stblock.tbdy[k];
+      k = 0;
+      while ( geoflow::get_bdy_block(ptree, sbdy, k, bcblock) && !bperiodic ) {;
+        bcblock.bdyid = j;
+        base_ptr = GUpdateBdyFactory<BdyTypePack>::build(ptree, sbdy, *this, bcblock, itmp, igbdy_start);
+        igbdyft[j] = bcblock.tbdy;
         bdy_update_list_[j].push_back(base_ptr);
-      }
+        k++;
+      } 
     }
     else if ( "mixed" == bdyclass ) { // mixed bdy conditions
-      assert( bdytree.isArray<GString>("bdy_blocks") && "no bdy_blocks specified");
-      svec = bdytree.getArray<GString>("bdy_blocks");
-      for ( auto i=0; i<svec.size(); i++ ) { // loop over bdy blocks
-        assert( ptree.isPropertyTree(svec[i]) && "no component bdy_blocks specified");
-        bdytree = ptree.getPropertyTree(svec[i]);
-        geoflow::get_bdy_block(bdytree, stblock);
-        assert(!stblock.tbdy.contains(GBDY_PERIODIC) && "GBDY_PERIODIC bdys must be uniform");
-        GSpecBdyFactory::dospec(bdytree, *this, j, itmp);
-        for ( auto k=0; k<svec.size(); k++ ) { // for each sub-block
-          base_ptr = GUpdateBdyFactory<BdyTypePack>::build(ptree, svec[k], *this,  j,
-                                              stblock.tbdy[k], stblock.istate[k], stblock.value[k], itmp, igbdy_start);
-
-          for ( auto m=0; m<itmp.size(); m++ ) {
-            if ( igbdyf[j].contains(itmp[m]) ) igbdyft[j][m] = stblock.tbdy[k];
-          }
-          if ( stblock.tbdy[k] != GBDY_NONE ) igbdyft[j] = stblock.tbdy[k];
-          bdy_update_list_[j].push_back(base_ptr);
-        }
-      }
+      cout << "GGridBox:: config_gbdy: 'mixed' bdy_class is not available"<< endl;
+      assert(FALSE);
     }
     else {
       assert(FALSE && "Invalid bdy_class");
