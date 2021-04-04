@@ -153,7 +153,8 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree &ptree, Grid &grid, s
     traits.bdyid       = bcblock.bdyid;
     traits.istate      = bcblock.istate;
     traits.ibdyvol     = ibdy;
-    if ( !bcblock.use_init ) {
+    traits.use_init    = bcblock.use_init;
+    if ( !traits.use_init ) {
       traits.callback = GUpdateBdyFactory<Types>::get_inflow_callback(bcblock.smethod, bcblock.bdyid);
     }
     traits.ptree = ptree;
@@ -382,13 +383,20 @@ GBOOL GUpdateBdyFactory<Types>::get_bdy_block(const geoflow::tbox::PropertyTree 
   }
   
   // If INFLOW bdy, retrieve method name, or other data:
-  if ( stypes[ibc] == "GBDY_INFLOW" ) {
+  else if ( stypes[ibc] == "GBDY_INFLOW" ) {
     bvec = sptree.getArray<GBOOL>("use_init");
     if ( bvec.size() != nbc ) {
       cout << "GUtils::get_bdy_block: INFLOW bc is specified; a vector of size(base_type) must specify Boolean 'use_init' flags for each bc entry in 'base_type' " << endl;
       assert(FALSE); 
     }
     stblock.use_init= bvec[ibc];
+
+    bvec = sptree.getArray<GBOOL>("compute_once");
+    if ( bvec.size() != nbc ) {
+      cout << "GUtils::get_bdy_block: INFLOW bc is specified; a vector of size(base_type) must specify Boolean 'compute_once' flags for each bc entry in 'base_type' " << endl;
+      assert(FALSE); 
+    }
+    stblock.compute_once = bvec[ibc];
 
     if ( !stblock.use_init ) { // get user method if required
       svec = sptree.getArray<GString>("method");
@@ -398,10 +406,13 @@ GBOOL GUpdateBdyFactory<Types>::get_bdy_block(const geoflow::tbox::PropertyTree 
       }
       stblock.smethod = svec[ibc];
     }
-  }
+  } 
+
+  // Note: the only data required for 0FLUX bdys
+  //       is set above already
 
   // If SPONGE bdy, retrieve required data:
-  if ( stypes[ibc] == "GBDY_SPONGE" ) { 
+  else if ( stypes[ibc] == "GBDY_SPONGE" ) { 
     fvecvec = sptree.getArray2D<GFTYPE>("farfield");
     if ( fvecvec.size() != nbc ) {
       cout << "GUtils::get_bdy_block: SPONGE bc is specified; a vector of size(base_type) must specify farfield values for each state group for each bc entry in 'base_type'   ('[]' is valid for non-SPONGE entries)" << endl;

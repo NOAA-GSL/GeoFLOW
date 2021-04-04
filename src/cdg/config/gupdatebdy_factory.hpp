@@ -32,10 +32,11 @@ using namespace std;
 
 struct stBdyBlock {
   GBOOL            use_init=FALSE;    // use initialisation method for setting bdy conditions
+  GBOOL            compute_once=FALSE;// compute data once (not time-dep)
   GINT             idir=-1;           // coord direction of bdy surface
   GINT             bdyid=-1;          // bdy id 
   GBdyType         tbdy=GBDY_NONE;    // bdy type
-  GFTYPE           xstart=0.0;        // start of sponce surf in idir direction
+  GFTYPE           xstart=0.0;        // start of sponge surf in idir direction
   GFTYPE           xmax=0.0;          // max coord in direction idir
   vector<GINT>     istate;            // vector of state indices
   vector<GFTYPE>   value;             // vector of Dirichlet values for each istate
