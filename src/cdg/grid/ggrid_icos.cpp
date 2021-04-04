@@ -992,7 +992,7 @@ void GGridIcos::config_gbdy(const geoflow::tbox::PropertyTree &ptree,
 
     if ( "uniform" == bdyclass ) { // uniform bdy conditions
       iret = GUpdateBdyFactory<BdyTypePack>::bdy_block_conform_per(bdytree);
-      if ( iret = 1 || iret == 2 ) {
+      if ( iret == 1 || iret == 2 ) {
         cout << "GGridBox:: config_gbdy: PERIODIC boundary conditions invalid for this grid" << endl;
         assert(FALSE);
       }

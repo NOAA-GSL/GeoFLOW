@@ -1073,12 +1073,12 @@ void GGridBox::config_gbdy(const PropertyTree           &ptree,
     }
     if ( "uniform" == bdyclass ) { // uniform bdy conditions
       iret = GUpdateBdyFactory<BdyTypePack>::bdy_block_conform_per(bdytree);
-      if ( iret = 1 ) {
+      if ( iret == 1 ) {
         bdytype [j] = GBDY_PERIODIC;
         igbdyft [j] = GBDY_PERIODIC;
         bperiodic    = bperiodic || bdytype[j] == GBDY_PERIODIC;
       }
-      else if ( iret = 2 ) {
+      else if ( iret == 2 ) {
         cout << "GGridBox:: config_gbdy: Attempt to specify PERIODIC boundary failed" << endl;
         assert(FALSE);
       }
