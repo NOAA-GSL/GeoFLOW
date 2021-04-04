@@ -44,7 +44,6 @@ public:
 
         // GSpongeBdy solver traits:
         struct Traits {
-          GBOOL  compute_once=FALSE; // compjte bdy cond once?
            
           GINT             idir  = GDIM;  
                                      // canonical coord direction definining surfaces
@@ -94,7 +93,6 @@ private:
                               State     &ub);
        
 
-        GBOOL               bcomputed_;     // already computed?
         Traits              traits_;        // Traits structure
 
 };

@@ -19,7 +19,6 @@
 template<typename Types>
 GNoSlipBdy<Types>::GNoSlipBdy(typename GNoSlipBdy<Types>::Traits &traits) :
 UpdateBdyBase<Types>(),
-bcomputed_               (FALSE),
 nstate_                      (0),
 traits_                 (traits)
 {
@@ -72,7 +71,6 @@ GBOOL GNoSlipBdy<Types>::update_impl(
   GSIZET            ind;
   GTVector<GSIZET> *igbdy = &traits_.ibdyvol;
 
-  if ( traits_.compute_once && bcomputed_ ) return TRUE;
 
   for ( auto k=0; k<nstate_; k++ ) { // for each vector component
     for ( auto j=0; j<igbdy->size(); j++ ) { // all bdy points
@@ -82,7 +80,6 @@ GBOOL GNoSlipBdy<Types>::update_impl(
     }
   }
 
-  bcomputed_ = TRUE;
 
   return TRUE;
 

@@ -20,7 +20,6 @@
 template<typename Types>
 GSpongeBdy<Types>::GSpongeBdy(typename GSpongeBdy<Types>::Traits &traits) :
 UpdateBdyBase<Types>(),
-bcomputed_               (FALSE),
 traits_                 (traits)
 {
   // Do some checks:
@@ -74,7 +73,6 @@ GBOOL GSpongeBdy<Types>::update_impl(
    GGridBox   *box    = dynamic_cast<GGridBox*>(&grid);
    GGridIcos  *sphere = dynamic_cast<GGridIcos*>(&grid);
 
-  if ( traits_.compute_once && bcomputed_ ) return TRUE;
 
    if ( box != NULLPTR ) {
      bret = update_cart(grid, stinfo, time, utmp, u, ub);
@@ -175,7 +173,6 @@ GBOOL GSpongeBdy<Types>::update_cart(
     }
   }
 
-  bcomputed_ = TRUE;
 
   return TRUE;
 
@@ -270,7 +267,6 @@ GBOOL GSpongeBdy<Types>::update_sphere (
     }
   }
 
-  bcomputed_ = TRUE;
 
   return TRUE;
 } // end of method update_sphere

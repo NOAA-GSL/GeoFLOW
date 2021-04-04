@@ -42,7 +42,6 @@ public:
 
         // GDirichletBdy solver traits:
         struct Traits {
-          GBOOL    compute_once=FALSE;     // compute bdy condition once?
           GINT             bdyid;    // bdy id
           GTVector<Ftype>  value;    // Diriclet value for each istate 
           GTVector<GINT>   istate;   // state indices to operate on
@@ -70,7 +69,6 @@ private:
 
 
         Traits              traits_;        // Traits structure
-        GBOOL               bcomputed_;     // tell us that operation was called
 
 };
 

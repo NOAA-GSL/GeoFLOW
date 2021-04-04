@@ -79,14 +79,7 @@ protected:
                               State     &ub);
         
 private:
-        GBOOL               update_from_init (
-                              Grid      &grid,
-                              StateInfo &stinfo,
-                              Time      &time,
-                              State     &utmp,
-                              State     &u,
-                              State     &ub);
-        GBOOL               update_from_user (
+        GBOOL               compute_bdy_data (
                               Grid      &grid,
                               StateInfo &stinfo,
                               Time      &time,
@@ -96,9 +89,8 @@ private:
 
 
         Traits              traits_;        // Traits structure
-        GBOOL               bcomputed_;     // tells us that operation was called
-        State               unew_;          // helper vector
-        State               tmpnew_;        // helper vector
+        GBOOL               bcomputed_;     // tells us that bdydata was computed
+        State               bdydata_;       // bdy data arrays
 
 };
 

@@ -18,7 +18,6 @@
 template<typename Types>
 GDirichletBdy<Types>::GDirichletBdy(typename GDirichletBdy<Types>::Traits &traits) :
 UpdateBdyBase<Types>(),
-bcomputed_               (FALSE),
 traits_                 (traits)
 {
 
@@ -69,7 +68,6 @@ GBOOL GDirichletBdy<Types>::update_impl(
 
   GTVector<GSIZET> *igbdy = &traits_.ibdyvol;
 
-  if ( traits_.compute_once && bcomputed_ ) return TRUE;
 
 
   // Set boundary vector to corresp. value:
@@ -86,7 +84,6 @@ GBOOL GDirichletBdy<Types>::update_impl(
       (*ub[idstate])[ind] = traits_.value[k];
     }
   }
-  bcomputed_ = TRUE;
 
   return TRUE;
 

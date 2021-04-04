@@ -19,7 +19,6 @@
 template<typename Types>
 G0FluxBdy<Types>::G0FluxBdy(typename G0FluxBdy<Types>::Traits &traits) :
 UpdateBdyBase<Types>(),
-bcomputed_               (FALSE),
 traits_                 (traits)
 {
 
@@ -76,8 +75,6 @@ GBOOL G0FluxBdy<Types>::update_impl(
 
 
 
-  if ( traits_.compute_once && bcomputed_ ) return TRUE;
-
 
   // Handle 0-Flux bdy conditions. This
   // is computed by solving
@@ -109,8 +106,6 @@ GBOOL G0FluxBdy<Types>::update_impl(
     // Ensure v.n = 0:
     (*u[idd])[ind] = -sum / xn;
   }
-
-  bcomputed_ = TRUE;
 
 
   return TRUE;

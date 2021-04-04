@@ -41,7 +41,6 @@ public:
 
         // GOutflowBdy solver traits:
         struct Traits {
-          GBOOL     compute_once=FALSE; // compute bdy cond once?
           GINT             bdyid;    // bdy id
           GTVector<GINT>   istate;   // state indices to operate on
           GTVector<GSIZET> ibdyvol;  // indir. inidices into comput volume
@@ -66,7 +65,6 @@ protected:
         
 private:
 
-        GBOOL               bcomputed_;     // was computation done?
 
         Traits              traits_;        // Traits structure
 

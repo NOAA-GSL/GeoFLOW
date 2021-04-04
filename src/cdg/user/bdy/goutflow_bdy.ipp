@@ -18,7 +18,6 @@
 template<typename Types>
 GOutflowBdy<Types>::GOutflowBdy(typename GOutflowBdy<Types>::Traits &traits) :
 UpdateBdyBase<Types>(),
-bcomputed_               (FALSE),
 traits_                 (traits)
 {
 
@@ -68,7 +67,6 @@ GBOOL GOutflowBdy<Types>::update_impl(
 
   GTVector<GSIZET> *igbdy = &traits_.ibdyvol;
 
-  if ( traits_.compute_once && bcomputed_ ) return TRUE;
 
   assert( u.size() == stinfo.icomptype.size() && "State info structure invalid");
 
@@ -83,7 +81,6 @@ GBOOL GOutflowBdy<Types>::update_impl(
       (*u[idstate])[ind] = (*u[idstate])[ind];
     }
   }
-  bcomputed_ = TRUE;
 
   return TRUE;
 
