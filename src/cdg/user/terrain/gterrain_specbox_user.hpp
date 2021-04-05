@@ -20,7 +20,7 @@ using namespace geoflow::tbox;
 
 
 template<typename TypePack>
-struct gterrain_specbox
+struct gterrainSpecbox
 {
         using Types      = TypePack;
         using State      = typename Types::State;
