@@ -33,11 +33,12 @@ class GInflowBdy : public UpdateBdyBase<TypePack>
 public:
         using Types      = TypePack;
         using Base       = UpdateBdyBase<Types>;
+        using EqnBase    = EquationBase<TypePack>;
+        using EqnBasePtr = std::shared_ptr<EqnBase>;
         using State      = typename Types::State;
         using Grid       = typename Types::Grid;
         using Ftype      = typename Types::Value;
         using Time       = typename Types::Time;
-        using StateInfo  = typename Types::StateInfo;
 
         static_assert(std::is_same<State,GTVector<GTVector<Ftype>*>>::value,
                "State is of incorrect type");
@@ -53,7 +54,6 @@ public:
           GTVector<GSIZET>     ibdyvol; // indir. inidices into comput volume
 
           std::function<GBOOL(Grid       &grid, 
-                              StateInfo  &stinfo,
                               Time       &time,
                               const GINT  id,
                               State      &utmp,
@@ -71,21 +71,20 @@ public:
 
 protected:
         GBOOL               update_impl (
+                              EqnBsePtr &eqn,
                               Grid      &grid,
-                              StateInfo &stinfo,
                               Time      &time,
                               State     &utmp,
-                              State     &u,
-                              State     &ub);
+                              State     &u);
         
 private:
         GBOOL               compute_bdy_data (
-                              Grid      &grid,
-                              StateInfo &stinfo,
-                              Time      &time,
-                              State     &utmp,
-                              State     &u,
-                              State     &ub);
+                              EqnBasePtr &eqn,
+                              Grid       &grid,
+                              Time       &time,
+                              State      &utmp,
+                              State      &u,
+                              State      &ub);
 
 
         Traits              traits_;        // Traits structure

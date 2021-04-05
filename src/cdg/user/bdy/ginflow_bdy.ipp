@@ -54,22 +54,20 @@ GInflowBdy<Types>::~GInflowBdy()
 // METHOD : update_impl
 // DESC   : Entry method for doing a sponge-layer update
 // ARGS   : 
+//          eqn   : equation implementation
 //          grid  : grid object (necessary?)
-//          stinfo: state info structure
 //          time  : timestep
 //          utmp  : tmp vectors
 //          u     : state vector
-//          ub    : bdy vector
 // RETURNS: none.
 //**********************************************************************************
 template<typename Types>
 GBOOL GInflowBdy<Types>::update_impl(
-                              Grid      &grid,
-                              StateInfo &stinfo,
-                              Time      &time,
-                              State     &utmp,
-                              State     &u,
-                              State     &ub)
+                              EqnBasePtr &eqn,
+                              Grid       &grid,
+                              Time       &time,
+                              State      &utmp,
+                              State      &u)
 {
    GString    serr = "GInflowBdy<Types>::update_impl: ";
    GBOOL      bret;
@@ -101,8 +99,8 @@ GBOOL GInflowBdy<Types>::update_impl(
 // METHOD : compute_bdy_data
 // DESC   : Compute boundary data from state.
 // ARGS   : 
+//          eqn   : equation implementation
 //          grid  : grid object (necessary?)
-//          stinfo: state info structure
 //          time  : timestep
 //          utmp  : tmp vectors
 //          u     : state vector
@@ -111,12 +109,12 @@ GBOOL GInflowBdy<Types>::update_impl(
 //**********************************************************************************
 template<typename Types>
 GBOOL GInflowBdy<Types>::compute_bdy_data(
-                              Grid      &grid,
-                              StateInfo &stinfo,
-                              Time      &time,
-                              State     &utmp,
-                              State     &u,
-                              State     &ub)
+                              EqnBasePtr &eqn,
+                              Grid       &grid,
+                              Time       &time,
+                              State      &utmp,
+                              State      &u,
+                              State      &ub)
 {
    GString    serr = "GInflowBdy<Types>::compute_bdy_data: ";
    GBOOL      bret;

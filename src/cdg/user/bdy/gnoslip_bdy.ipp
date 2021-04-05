@@ -49,6 +49,7 @@ GNoSlipBdy<Types>::~GNoSlipBdy()
 // METHOD : update_impl
 // DESC   : Entry method for hahdling no-slip bdyconditions
 // ARGS   : 
+//          eqn   : eqn pointer
 //          grid  : grid object (necessary?)
 //          stinfo: state info structure
 //          time  : timestep
@@ -59,12 +60,12 @@ GNoSlipBdy<Types>::~GNoSlipBdy()
 //**********************************************************************************
 template<typename Types>
 GBOOL GNoSlipBdy<Types>::update_impl(
-                              Grid      &grid,
-                              StateInfo &stinfo,
-                              Time      &time,
-                              State     &utmp,
-                              State     &u,
-                              State     &ub)
+                              EqnBasePtr &eqn,
+                              Grid       &grid,
+                              StateInfo  &stinfo,
+                              Time       &time,
+                              State      &utmp,
+                              State      &u)
 {
   GString    serr = "GNoSlipBdy<Types>::update_impl: ";
 
@@ -75,7 +76,6 @@ GBOOL GNoSlipBdy<Types>::update_impl(
   for ( auto k=0; k<nstate_; k++ ) { // for each vector component
     for ( auto j=0; j<igbdy->size(); j++ ) { // all bdy points
       ind = (*igbdy)[j]; // index into long vector array
-//    (*ub[k])[ind] = 0.0;
       (*u[k])[ind] = 0.0;
     }
   }

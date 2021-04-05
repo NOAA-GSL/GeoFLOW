@@ -20,7 +20,6 @@ namespace GInflowBdyMethods {
 // DESC   : Place holder template for inflow update methods
 // ARGS   : 
 //          grid  : grid
-//          stinfo: StateInfo
 //          t     : time
 //          id    : canonical bdy id
 //          utmp  : tmp arrays
@@ -28,7 +27,7 @@ namespace GInflowBdyMethods {
 //          ub    : bdy vectors (one for each state element)
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL myinflow(GGrid &grid, StateInfo &stinfo, Time &time, const GINT id, State &utmp, State &u, State &ub)
+GBOOL myinflow(GGrid &grid, Time &time, const GINT id, State &utmp, State &u, State &ub)
 {
 #if 0
   Time             tt = t;

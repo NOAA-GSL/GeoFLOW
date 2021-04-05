@@ -21,14 +21,13 @@ using namespace geoflow::tbox;
 
 typedef GFTYPE                      Time;
 typedef GTVector<GTVector<GFTYPE>*> State;
-typedef GStateInfo                  StateInfo;
 typedef GGrid                       Grid;
 
 
 namespace GInflowBdyMethods
 {
 
-GBOOL myinflow  (Grid &grid, StateInfo &stinfo, Time &time, const GINT id, State &utmp, State &u, State &ub);
+GBOOL myinflow  (Grid &grid, Time &time, const GINT id, State &utmp, State &u, State &ub);
 
 };
 

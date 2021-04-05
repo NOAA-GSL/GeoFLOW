@@ -51,22 +51,20 @@ GSpongeBdy<Types>::~GSpongeBdy()
 // METHOD : update_impl
 // DESC   : Entry method for doing a sponge-layer update
 // ARGS   : 
+//          eqn   : equation implementation
 //          grid  : grid object (necessary?)
-//          stinfo: state info structure
 //          time  : timestep
 //          utmp  : tmp vectors
 //          u     : state vector
-//          ub    : bdy vector
 // RETURNS: none.
 //**********************************************************************************
 template<typename Types>
 GBOOL GSpongeBdy<Types>::update_impl(
-                              Grid      &grid,
-                              StateInfo &stinfo,
-                              Time      &time,
-                              State     &utmp,
-                              State     &u,
-                              State     &ub)
+                              EqnBastPtr &eqn,
+                              Grid       &grid,
+                              Time       &time,
+                              State      &utmp,
+                              State      &u)
 {
    GString    serr = "GSpongeBdy<Types>::update_impl: ";
    GBOOL      bret = FALSE;
@@ -75,10 +73,10 @@ GBOOL GSpongeBdy<Types>::update_impl(
 
 
    if ( box != NULLPTR ) {
-     bret = update_cart(grid, stinfo, time, utmp, u, ub);
+     bret = update_cart(grid, time, utmp, u, ub);
    }
    else if ( sphere != NULLPTR ) {
-     bret = update_sphere(grid, stinfo, time, utmp, u, ub);
+     bret = update_sphere(grid, time, utmp, u, ub);
    }
    else {
      assert(FALSE && "Invalid grid");
@@ -94,22 +92,20 @@ GBOOL GSpongeBdy<Types>::update_impl(
 // METHOD : update_cart
 // DESC   : Method for doing a sponge-layer update on Cartesian grids
 // ARGS   : 
+//          eqn   : equation implementation
 //          grid  : grid object (necessary?)
-//          stinfo: state info structure
 //          time  : timestep
 //          utmp  : tmp vectors
 //          u     : state vector
-//          ub    : bdy vector
 // RETURNS: none.
 //**********************************************************************************
 template<typename Types>
 GBOOL GSpongeBdy<Types>::update_cart(
-                              Grid      &grid,
-                              StateInfo &stinfo,
-                              Time      &time,
-                              State     &utmp,
-                              State     &u,
-                              State     &ub)
+                              EqnBasePtr &eqn,
+                              Grid       &grid,
+                              Time       &time,
+                              State      &utmp,
+                              State      &u)
 {
   GString          serr = "GSpongeBdy<Types>::update_cart: ";
   Time             tt = time;
@@ -137,6 +133,8 @@ GBOOL GSpongeBdy<Types>::update_cart(
 
   sgn = traits_.idir / abs(traits_.idir);
 
+  assert(FALSE);
+
   // Update state due to sponge layer:
   // Note: This is equiavalent to adding a dissipation 
   //       term to the RH of the operator-split equation, s.t.:
@@ -148,28 +146,12 @@ GBOOL GSpongeBdy<Types>::update_cart(
   //       or implicit time stepping methods!
   for ( auto k=0; k<traits_.istate.size(); k++ ) { // for each state component
     idstate = traits_.istate[k];
-    if ( stinfo.icomptype[idstate] == GSC_PRESCRIBED
-      || stinfo.icomptype[idstate] == GSC_NONE ) continue;
     for ( auto j=0; j<u[idstate]->size(); j++ ) { // for all grid points
       rtst = sgn * ( (*xnodes)[abs(traits_.idir-1)][k] - traits_.rs[0] );
       beta = rtst > 0 ? pow(ifact*fabs(rtst),traits_.exponent[k]) : 0.0; // check if in sponge layer
 //    (*u[idstate])[j]  = (1.0-beta)*(*u[idstate])[j] + beta*traits_.farfield[k];
       sig0 = traits_.sigma.size() > 1 ? traits_.sigma[k] : traits_.sigma[0];
       (*u[idstate])[j] -= sig0*beta*( (*u[idstate])[j] - traits_.farfield[k] );
-    }
-  }
-
-  // Set bdy vectors:
-  for ( auto k=0; k<traits_.istate.size(); k++ ) {
-    idstate = traits_.istate[k];
-    if ( stinfo.icomptype[idstate] == GSC_PRESCRIBED
-      || stinfo.icomptype[idstate] == GSC_NONE ) continue;
-    
-    // Set from initialized State vector,
-    for ( auto j=0; j<igbdy->size()
-       && ub[idstate] != NULLPTR; j++ ) {
-      ind = (*igbdy)[j];
-      (*ub[idstate])[j] = traits_.farfield[k];
     }
   }
 
@@ -185,22 +167,20 @@ GBOOL GSpongeBdy<Types>::update_cart(
 // DESC   : Method for doing a sponge-layer update on spherical 
 //          (3d only) grids
 // ARGS   : 
+//          eqn   : equation implementation
 //          grid  : grid object (necessary?)
-//          stinfo: state info structure
 //          time  : timestep
 //          utmp  : tmp vectors
 //          u     : state vector
-//          ub    : bdy vector
 // RETURNS: none.
 //**********************************************************************************
 template<typename Types>
 GBOOL GSpongeBdy<Types>::update_sphere (
-                              Grid      &grid,
-                              StateInfo &stinfo,
-                              Time      &time,
-                              State     &utmp,
-                              State     &u,
-                              State     &ub)
+                              EqnBasePtr &eqn,
+                              Grid       &grid,
+                              Time       &time,
+                              State      &utmp,
+                              State      &u)
 {
   GString          serr = "GSpongeBdy<Types>::update_sphere: ";
   Time             tt = time;
@@ -255,14 +235,10 @@ GBOOL GSpongeBdy<Types>::update_sphere (
   // Set bdy vectors:
   for ( auto k=0; k<traits_.istate.size(); k++ ) {
     idstate = traits_.istate[k];
-    if ( stinfo.icomptype[idstate] == GSC_PRESCRIBED
-      || stinfo.icomptype[idstate] == GSC_NONE ) continue;
 
     // Set from initialized State vector,
-    for ( auto j=0; j<igbdy->size()
-       && ub[idstate] != NULLPTR; j++ ) {
+    for ( auto j=0; j<igbdy->size(); j++ ) {
       ind = (*igbdy)[j];
-//    (*ub[idstate])[j] = traits_.farfield[k];
       (*u[idstate])[ind] = traits_.farfield[k];
     }
   }

@@ -47,22 +47,20 @@ G0FluxBdy<Types>::~G0FluxBdy()
 // METHOD : update_impl
 // DESC   : Entry method for updating 0-Flux bdy conditions
 // ARGS   : 
+//          eqn   : equation implementation
 //          grid  : grid object (necessary?)
-//          stinfo: state info structure
 //          time  : timestep
 //          utmp  : tmp vectors
 //          u     : state vector
-//          ub    : bdy vector
 // RETURNS: none.
 //**********************************************************************************
 template<typename Types>
 GBOOL G0FluxBdy<Types>::update_impl(
-                              Grid      &grid,
-                              StateInfo &stinfo,
-                              Time      &time,
-                              State     &utmp,
-                              State     &u,
-                              State     &ub)
+                              EqnBasePtr &eqn,
+                              Grid       &grid,
+                              Time       &time,
+                              State      &utmp,
+                              State      &u)
 {
    GString    serr = "G0FluxBdy<Types>::update_impl: ";
    GBdyType   itype;

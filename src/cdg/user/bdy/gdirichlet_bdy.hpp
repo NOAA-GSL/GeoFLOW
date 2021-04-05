@@ -29,11 +29,12 @@ class GDirichletBdy : public UpdateBdyBase<TypePack>
 public:
         using Types      = TypePack;
         using Base       = UpdateBdyBase<Types>;
+        using EqnBase    = EquationBase<TypePack>;
+        using EqnBasePtr = std::shared_ptr<EqnBase>;
         using State      = typename Types::State;
         using Grid       = typename Types::Grid;
         using Ftype      = typename Types::Value;
         using Time       = typename Types::Time;
-        using StateInfo  = typename Types::StateInfo;
 
 //      static_assert(std::is_same<State,GTVector<GTVector<GFTYPE>*>>::value,
 //             "State is of incorrect type");
@@ -58,12 +59,11 @@ public:
 
 protected:
         GBOOL               update_impl (
-                              Grid      &grid,
-                              StateInfo &stinfo,
-                              Time      &time,
-                              State     &utmp,
-                              State     &u,
-                              State     &ub);
+                              EqnBasePtr &eqn,
+                              Grid       &grid,
+                              Time       &time,
+                              State      &utmp,
+                              State      &u);
         
 private:
 
