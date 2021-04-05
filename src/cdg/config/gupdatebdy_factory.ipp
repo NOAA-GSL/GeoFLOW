@@ -78,13 +78,12 @@ GUpdateBdyFactory<Types>::get_inflow_callback(const GString& sname, const GINT i
   if      ( "myinflow"     == sname ) {
     callback = 
 
-         [](Grid      &grid,
-          StateInfo &stinfo,
-          Time      &time,
-          const GINT id,
-          State     &utmp,
-          State     &u,
-          State     &ub)->GBOOL{return GInflowBdyMethods::myinflow(grid, stinfo, time, id, utmp, u, ub);}; 
+         [](EqnBsePtr &eqn,
+            Grid      &grid,
+            Time      &time,
+            const GINT id,
+            State     &utmp,
+            State     &u)-> GBOOL{return GInflowBdyMethods::myinflow(eqn, grid, time, id, utmp, u);}; 
 
   }
   else {

@@ -53,20 +53,20 @@ class GUpdateBdyFactory
 {
   public:
         using Types            = TypePack;
+        using EqnBase          = EquationBase<TypePack>;
+        using EqnBasePtr       = std::shared_ptr<EqnBase>;
         using State            = typename Types::State;
-        using StateInfo        = typename Types::StateInfo;
         using Grid             = typename Types::Grid;
-        using Ftype            = typename Types::Value;
+        using Ftype            = typename Types::Ftype;
         using Time             = typename Types::Time;
         using UpdateBdyBasePtr = shared_ptr<UpdateBdyBase<Types>>;
         using CallbackPtr      = std::function<GBOOL(
+                                EqnBasePtr &eqn,
                                 Grid       &grid,
-                                StateInfo  &stinfo,
                                 Time       &time,
                                 const GINT  id,
                                 State      &utmp,
-                                State      &u,
-                                State      &ub)>;
+                                State      &u)>;
 
 
 	static UpdateBdyBasePtr build(const PropertyTree &ptree, const GString &sbdy, Grid &grid, stBdyBlock &bcblock, GTVector<GSIZET> &ibdy, GSIZET igbdy_start);

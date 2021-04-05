@@ -28,7 +28,7 @@ class GSpecTerrainFactory
         using Types         = TypePack;
         using State         = typename Types::State;
         using Grid          = typename Types::Grid;
-        using Value         = typename Types::Value;
+        using Ftype         = typename Types::Ftype;
 
 
 	static GBOOL spec(const PropertyTree& ptree, Grid &grid, State &utmp, State &xb, GBOOL &bterr);
