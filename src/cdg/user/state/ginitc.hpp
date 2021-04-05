@@ -24,13 +24,25 @@ typedef GTVector<GTVector<GFTYPE>*> State;
 
 
 
-namespace ginitc
+template<typename TypePack>
+struct ginitc
 {
+        using Types      = TypePack;
+        using State      = typename Types::State;
+        using StateComp  = typename Types::StateComp;
+        using EqnBase    = EquationBase<Equation>;
+        using EqnBasePtr = std::shared_ptr<EqnBase>;
+        using Grid       = typename Types::Grid;
+        using Time       = typename Types::Time;
+        using Ftype      = typename Types::Ftype;
 
-GBOOL impl_rand      (const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &u);
+
+static GBOOL impl_rand      (const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u);
+
 
 };
 
+#include "initc.ipp"
 
 
 #endif

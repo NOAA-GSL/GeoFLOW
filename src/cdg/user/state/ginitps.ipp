@@ -5,10 +5,8 @@
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
-#include "ginitps.hpp"
 
 
-namespace ginitps {
 
 
 //**********************************************************************************
@@ -17,6 +15,7 @@ namespace ginitps {
 // DESC   : Inititialize velocity with Gaussian-randomized values
 // ARGS   : ptree  : main property tree
 //          sconfig: ptree block name containing variable config
+//          eqn    : equation implementation
 //          grid   : grid object
 //          time   : initialization time
 //          utmp   : tmp arrays
@@ -24,7 +23,8 @@ namespace ginitps {
 //          u      : state to be initialized.
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_rand(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
+template<typename Types>
+GBOOL initps<Types>::impl_rand(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
 {
 
   return FALSE;
@@ -32,4 +32,3 @@ GBOOL impl_rand(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &
 } // end, method impl_rand
 
 
-} // end, ginitps  namespace

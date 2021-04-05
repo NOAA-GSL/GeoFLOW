@@ -5,13 +5,7 @@
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
-#include "ginitv.hpp"
-#include "ggrid_icos.hpp"
-#include "ggrid_box.hpp"
 
-#include <random>
-
-namespace ginitv {
 
 
 //**********************************************************************************
@@ -22,14 +16,15 @@ namespace ginitv {
 //          used with 3D ICOS-based grids.
 // ARGS   : ptree  : main property tree
 //          sconfig: ptree block name containing variable config
+//          eqn    : equation implementation
 //          grid   : grid object
 //          time   : initialization time
 //          utmp   : tmp arrays
-//          ub     : boundary state (also initialized here)
 //          u      : velocity-state to be initialized.
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_abc_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
+template<typename Types>
+GBOOL initv<Types>::impl_abc_box(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u)
 {
 
   GGridBox *box = dynamic_cast<GGridBox*>(&grid);
@@ -107,14 +102,15 @@ GBOOL impl_abc_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Tim
 //          initial conditions for icos grids 2d, 3d. 
 // ARGS   : ptree  : main property tree
 //          sconfig: ptree block name containing variable config
+//          eqn    : equation implementation
 //          grid   : grid object
 //          time   : initialization time
 //          utmp   : tmp arrays
-//          ub     : boundary state (also initialized here)
 //          u      : velocity-state to be initialized.
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_abc_icos(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
+template<typename Types>
+GBOOL initv<Types>::impl_abc_icos(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u)
 {
 
   GGridIcos *icos = dynamic_cast<GGridIcos*>(&grid);
@@ -210,14 +206,15 @@ GBOOL impl_abc_icos(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Ti
 //          scaled by k^p. For box grids, 2d mimicking 1d
 // ARGS   : ptree  : main property tree
 //          sconfig: ptree block name containing variable config
+//          eqn    : equation implementation
 //          grid   : grid object
 //          time   : initialization time
 //          utmp   : tmp arrays
-//          ub     : boundary state (also initialized here)
 //          u      : velocity-state to be initialized.
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_simpsum1d_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
+template<typename Types>
+GBOOL initv<Types>::impl_simpsum1d_box(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u)
 {
   GGridBox *tgrid = dynamic_cast<GGridBox*>(&grid);
   assert(tgrid != NULLPTR && "Box grid required");
@@ -294,14 +291,15 @@ GBOOL impl_simpsum1d_box(const PropertyTree &ptree, GString &sconfig, GGrid &gri
 //          scaled by k^p. For box grids, 2d mimicking 1d
 // ARGS   : ptree  : main property tree
 //          sconfig: ptree block name containing variable config
+//          eqn    : equation implementation
 //          grid   : grid object
 //          time   : initialization time
 //          utmp   : tmp arrays
-//          ub     : boundary state (also initialized here)
 //          u      : velocity-state to be initialized.
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_simpsum_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
+template<typename Types>
+GBOOL initv<Types>::impl_simpsum_box(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn,, GGrid &grid, Time &time, State &utmp, State &u)
 {
   GGridBox *tgrid = dynamic_cast<GGridBox*>(&grid);
   assert(tgrid != NULLPTR && "Box grid required");
@@ -417,14 +415,15 @@ GBOOL impl_simpsum_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
 //          scaled by k^p. For icos grids, 2d and 3d.
 // ARGS   : ptree  : main property tree
 //          sconfig: ptree block name containing variable config
+//          eqn    : equation implementation
 //          grid   : grid object
 //          time   : initialization time
 //          utmp   : tmp arrays
-//          ub     : boundary state (also initialized here)
 //          u      : velocity-state to be initialized.
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_simpsum_icos(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
+template<typename Types>
+GBOOL initv<Types>::impl_simpsum_icos(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u)
 {
 
   GGridIcos *tgrid = dynamic_cast<GGridIcos*>(&grid);
@@ -504,14 +503,15 @@ GBOOL impl_simpsum_icos(const PropertyTree &ptree, GString &sconfig, GGrid &grid
 // DESC   : Inititialize velocity with Gaussian-randomized values
 // ARGS   : ptree  : main property tree
 //          sconfig: ptree block name containing variable config
+//          eqn    : equation implementation
 //          grid   : grid object
 //          time   : initialization time
 //          utmp   : tmp arrays
-//          ub     : boundary state (also initialized here)
 //          u      : velocity state to be initialized.
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_rand(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
+template<typename Types>
+GBOOL initv<Types>::impl_rand(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u)
 {
 
   return FALSE;
@@ -521,4 +521,3 @@ GBOOL impl_rand(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &
 
 
 
-} // end, ginitv  namespace

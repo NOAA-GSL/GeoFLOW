@@ -9,14 +9,7 @@
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
-#include "gmtk.hpp"
-#include "ginitstate_direct_user.hpp"
-#include "ggrid_box.hpp"
-#include "ggrid_icos.hpp"
-#include <random>
 
-
-namespace ginitstate {
 
 
 
@@ -27,14 +20,15 @@ namespace ginitstate {
 //          Dirichlet or periodic boundaries
 // ARGS   : ptree  : main prop tree
 //          sconfig: ptree block name containing variable config
+//          eqn    : equation implementation
 //          grid   : grid
 //          t      : time
 //          utmp   : tmp arrays
-//          ub     : bdy vectors (one for each state element)
 //          u      : current state
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_boxnwaveburgers(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
+template<typename Types>
+GBOOL ginitstate<Types>::impl_boxnwaveburgers(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u)
 {
   GString          serr = "impl_boxnwaveburgers: ";
   GBOOL            bret = TRUE, brot = FALSE;
@@ -170,14 +164,15 @@ GBOOL impl_boxnwaveburgers(const PropertyTree &ptree, GString &sconfig, GGrid &g
 // DESC   : Initialize state for Burgers with N-wave on icos grids
 // ARGS   : ptree  : main prop tree
 //          sconfig: ptree block name containing variable config
+//          eqn    : equation implementation
 //          grid   : grid
 //          t      : time
 //          utmp   : tmp arrays
-//          ub     : bdy vectors (one for each state element)
 //          u      : current state
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_icosnwaveburgers(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
+template<typename Types>
+GBOOL ginitstate<Types>::impl_icosnwaveburgers(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u)
 {
   GString          serr = "impl_icosnwaveburgers: ";
   GBOOL            bret;
@@ -289,14 +284,15 @@ GBOOL impl_icosnwaveburgers(const PropertyTree &ptree, GString &sconfig, GGrid &
 //          Dirichlet boundaries
 // ARGS   : ptree  : main prop tree
 //          sconfig: ptree block name containing variable config
+//          eqn    : equation implementation
 //          grid   : grid
 //          time   : time
 //          utmp   : tmp arrays
-//          ub     : bdy vectors (one for each state element)
 //          u      : current state
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_boxdirgauss(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
+template<typename Types>
+GBOOL ginitstate<Types>::impl_boxdirgauss(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u)
 {
   GString          serr = "impl_boxdirgauss: ";
   GBOOL            bContin;
@@ -388,14 +384,15 @@ cout << "boxpergauss: num=" << (*igbdyt_face)[j].size() << " igbdyt_face[" << j 
 //          periodic boundaries
 // ARGS   : stree  : main prop tree
 //          sconfig: ptree block name containing variable config
+//          eqn    : equation implementation
 //          grid   : grid
 //          t      : time
 //          utmp   : tmp arrays
-//          ub     : bdy vectors (one for each state element)
 //          u      : current state
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_boxpergauss(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
+template<typename Types>
+GBOOL ginitstate<Types>::impl_boxpergauss(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u)
 {
   GString          serr = "impl_boxpergauss: ";
   GBOOL            bContin;
@@ -510,14 +507,15 @@ cout << "boxpergauss: num=" << (*igbdyt_face)[j].size() << " igbdyt_face[" << j 
 //          on a the Cartesian method
 // ARGS   : ptree  : main prop tree
 //          sconfig: ptree block name containing variable config
+//          eqn    : equation implementation
 //          grid   : grid
 //          t      : time
 //          utmp   : tmp arrays
-//          ub     : bdy vectors (one for each state element)
 //          u      : current state
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_icosgauss(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
+template<typename Types>
+GBOOL ginitstate<Types>::impl_icosgauss(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u)
 {
 
   GString             serr = "impl_icosgauss: ";
@@ -637,14 +635,15 @@ GBOOL impl_icosgauss(const PropertyTree &ptree, GString &sconfig, GGrid &grid, T
 //          130:2817.
 // ARGS   : ptree  : main prop tree
 //          sconfig: ptree block name containing variable config
+//          eqn    : equation implementation
 //          grid   : grid
 //          t      : time
 //          utmp   : tmp arrays
-//          ub     : bdy vectors (one for each state element)
 //          u      : current state
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_boxdrybubble(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
+template<typename Types>
+GBOOL ginitstate<Types>::impl_boxdrybubble(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u)
 {
 
   GString             serr = "impl_boxdrybubble: ";
@@ -735,14 +734,15 @@ GBOOL impl_boxdrybubble(const PropertyTree &ptree, GString &sconfig, GGrid &grid
 //          on velocity, and sinusoidal function in theta
 // ARGS   : ptree  : main prop tree
 //          sconfig: ptree block name containing variable config
+//          eqn    : equation implementation
 //          grid   : grid
 //          t      : time
 //          utmp   : tmp arrays
-//          ub     : bdy vectors (one for each state element)
 //          u      : current state
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_icosabcconv(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
+template<typename Types>
+GBOOL ginitstate<Types>::impl_icosabcconv(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u)
 {
 
   GString             serr = "impl_icosabcconv: ";
@@ -847,14 +847,15 @@ GBOOL impl_icosabcconv(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
 // DESC   : Initialize state for GMConv solver with Sod shock tube.
 // ARGS   : ptree  : main prop tree
 //          sconfig: ptree block name containing variable config
+//          eqn    : equation implementation
 //          grid   : grid
 //          t      : time
 //          utmp   : tmp arrays
-//          ub     : bdy vectors (one for each state element)
 //          u      : current state
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_boxsod(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
+template<typename Types>
+GBOOL ginitstate<Types>::impl_boxsod(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u)
 {
 
   GString             serr = "impl_boxsod: ";
@@ -910,4 +911,3 @@ cout << "boxsod: p=" << pj << " d=" << (*d)[j] <<  endl;
 
 
 
-} // end, ginitstate namespace
