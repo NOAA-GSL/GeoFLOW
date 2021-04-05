@@ -28,7 +28,7 @@ class NullObserver : public ObserverBase<EquationType> {
 public:
 	using Interface  = ObserverBase<EquationType>;
 	using State      = typename Interface::State;
-	using StateInfo  = typename Interface::StateInfo;
+        using StateInfo  = typename Interface::StateInfo;
 	using Grid       = typename Interface::Grid;
 	using Time       = typename Interface::Time;
         using Equation   = EquationType;
