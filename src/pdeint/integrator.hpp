@@ -99,12 +99,10 @@ public:
 	 *
 	 * @param[in,out] t  Initial time at start, and final time
 	 * @param[in,out] uf Forcing tendency
-	 * @param[in,out] ub Boundary condition vectors
 	 * @param[in,out] u  Current and final equation state values
 	 */
 	void time_integrate( Time&        t,
                              State&       uf,
-                             State&       ub,
 			     State&       u );
 	/**
 	 * Take as many steps required to progress from time t0 to t1.
@@ -119,14 +117,12 @@ public:
 	 * @param[in]     t1 Final time an completion of time stepping
 	 * @param[in]     dt Recommend time step size
 	 * @param[in,out] uf Forcing tendency
-	 * @param[in,out] ub Boundary condition vectors
 	 * @param[in,out] u  Current and final equation state values
 	 */
 	void time( const Time&  t0,
 		   const Time&  t1,
 		   const Time&  dt,
                    State&       uf,
-                   State&       ub,
 		   State&       u );
 
 	/**
@@ -141,7 +137,6 @@ public:
 	 * @param[in]     dt Recommend time step size
 	 * @param[in]     n  Number of steps to take
 	 * @param[in,out] uf Forcing tendency
-	 * @param[in,out] ub Boundary condition vectors
 	 * @param[in,out] u  Current and final equation state values
 	 * @param[out]    t  Final time resulting from taking n steps
 	 */
@@ -149,7 +144,6 @@ public:
 		    const Time&  dt,
 		    const Size&  n,
                     State&       uf,
-                    State&       ub,
 		    State&       u,
 	    	    Time&        t );
 
@@ -164,12 +158,10 @@ public:
 	 *
 	 * @param[in]     tvec Vector of time points to march through
 	 * @param[in,out] uf Forcing tendency
-	 * @param[in,out] ub Boundary condition vectors
 	 * @param[in,out] u  Current and final equation state values
 	 */
 	void list( const std::vector<Time>& tvec,
                    State&                   uf,
-                   State&                   ub,
 		   State&                   u );
 
         /**
