@@ -18,14 +18,13 @@ namespace ginitb {
 // ARGS   : ptree  : main
 //          sconfig: ptree block name containing variable config
 //          grid   : grid object
-//          stinfo : StateInfo
 //          time   : initialization time
 //          utmp   : tmp arrays
 //          ub     : boundary state (also initialized here)
 //          u      : state to be initialized.
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_rand(const PropertyTree &ptree, GString &sconfig, GGrid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &u)
+GBOOL impl_rand(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &u)
 {
 
   return FALSE;
