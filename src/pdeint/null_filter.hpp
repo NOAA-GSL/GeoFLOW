@@ -29,7 +29,6 @@ public:
         using Interface  = FilterBase<TypePack>;
         using State      = typename Interface::State;
         using StateComp  = typename Interface::StateComp;
-        using StateInfo  = typename Interface::StateInfo;
         using Grid       = typename Interface::Grid;
         using Time       = typename Interface::Time;
 
