@@ -18,16 +18,27 @@
 using namespace geoflow;
 using namespace geoflow::tbox;
 
-typedef GFTYPE                      Time;
-typedef GTVector<GTVector<GFTYPE>*> State;
 
-
-namespace gterrain_specbox
+template<typename TypePack>
+struct gterrain_specbox
 {
+        using Types      = TypePack;
+        using State      = typename Types::State;
+        using StateComp  = typename Types::StateComp;
+        using EqnBase    = EquationBase<Equation>;
+        using EqnBasePtr = std::shared_ptr<EqnBase>;
+        using Grid       = typename Types::Grid;
+        using Time       = typename Types::Time;
+        using Ftype      = typename Types::Ftype;
 
-GBOOL impl_gauss_range     (const PropertyTree& ptree, GString sblk, GGrid &grid,  State &utmp, State &xb);
-GBOOL impl_poly_range      (const PropertyTree& ptree, GString sblk, GGrid &grid,  State &utmp, State &xb);
-GBOOL impl_schar_range     (const PropertyTree& ptree, GString sblk, GGrid &grid,  State &utmp, State &xb);
+static GBOOL impl_gauss_range     (const PropertyTree& ptree, GString sblk, GGrid &grid,  State &utmp, State &xb);
+static GBOOL impl_poly_range      (const PropertyTree& ptree, GString sblk, GGrid &grid,  State &utmp, State &xb);
+static GBOOL impl_schar_range     (const PropertyTree& ptree, GString sblk, GGrid &grid,  State &utmp, State &xb);
+
 };
+
+
+#include "gterrain_specbox_user.ipp"
+
 
 #endif
