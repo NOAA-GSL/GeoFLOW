@@ -26,7 +26,6 @@ class NullUpdateBdy : public UpdateBdyBase<TypePack> {
 public:
         using Types        = TypePack;
 	using State        = typename Types::State;
-	using StateInfo    = typename Types::StateInfo; // May contain time, time index, var name etc
 	using Grid         = typename Types::Grid;
 	using Ftype        = typename Types::Value;
     using Time         = typename Types::Time;
@@ -44,7 +43,6 @@ public:
 	 * @param[in,out] u  Current state values
 	 */
 	bool update (Grid      &grid, 
-                     StateInfo &stinfo, 
                      Time      &time, 
                      State     &utmp, 
                      State     &u, 
@@ -55,7 +53,6 @@ public:
 protected:
 	bool update_impl (
                      Grid      &grid, 
-                     StateInfo &stinfo, 
                      Time      &time, 
                      State     &utmp, 
                      State     &u, 
