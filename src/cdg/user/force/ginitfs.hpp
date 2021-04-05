@@ -32,7 +32,7 @@ struct ginitfs
         using Ftype      = typename Types::Ftype;
 
 
-static GBOOL impl_rand      (const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &uf);
+static GBOOL impl_rand      (const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &uf);
 
 };
 

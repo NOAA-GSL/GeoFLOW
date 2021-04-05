@@ -23,18 +23,25 @@
 using namespace geoflow;
 using namespace geoflow::tbox;
 
-typedef GFTYPE                      Time;
-typedef GTVector<GTVector<GFTYPE>*> State;
 
 
-
-namespace ginitforce
+template<typename TypePack>
+struct ginitforce
 {
+        using Types      = TypePack;
+        using State      = typename Types::State;
+        using StateComp  = typename Types::StateComp;
+        using EqnBase    = EquationBase<Equation>;
+        using EqnBasePtr = std::shared_ptr<EqnBase>;
+        using Grid       = typename Types::Grid;
+        using Time       = typename Types::Time;
+        using Ftype      = typename Types::Ftype;
 
-GBOOL impl_null    (const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &t, State &u, State &uf);
-GBOOL impl_rand    (const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &t, State &u, State &uf);
+static GBOOL impl_null    (const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &t, State &u, State &uf);
+static GBOOL impl_rand    (const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &t, State &u, State &uf);
 
 };
 
+"include "ginitforce_direct_user.ipp"
 
 #endif

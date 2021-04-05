@@ -9,10 +9,8 @@
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
-#include "ginitforce_direct_user.hpp"
 
 
-namespace ginitforce {
 
 
 //**********************************************************************************
@@ -21,13 +19,15 @@ namespace ginitforce {
 // DESC   : Initialize for random force function
 // ARGS   : ptree  : main prop tree
 //          sconfig: ptree block name containing variable config
+//          eqn    : eqnation implementation
 //          grid   : grid object
 //          t      : time
 //          u      : current state
 //          uf    : force vectors (one for each state element)
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL initf_impl_rand(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &t, State &u, State &uf)
+template<typename Types>
+GBOOL ginitforce<Types>::initf_impl_rand(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &t, State &u, State &uf)
 {
 
   assert(FALSE);
@@ -42,4 +42,3 @@ GBOOL initf_impl_rand(const PropertyTree &ptree, GString &sconfig, GGrid &grid, 
 
 
 
-} // end, namespace ginitforce

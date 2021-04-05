@@ -5,11 +5,7 @@
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
-#include "ginitfv.hpp"
-#include "ggrid_icos.hpp"
-#include "ggrid_box.hpp"
 
-namespace ginitfv {
 
 
 //**********************************************************************************
@@ -19,14 +15,15 @@ namespace ginitfv {
 //          initial conditions for box grids, 2d and 3d.
 // ARGS   : ptree  : main property tree
 //          sconfig: ptree block name containing variable config
+//          eqn    : equation implementation
 //          grid   : grid object
 //          time   : initialization time
 //          utmp   : tmp arrays
-//          ub     : boundary state (also initialized here)
 //          uf     : velocity-state to be initialized.
 // RETURNS: TRUE on success; else FALSE
 //**********************************************************************************
-GBOOL impl_abc_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &uf)
+template<typename Types>
+GBOOL ginitfv<Types>::impl_abc_box(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &uf)
 {
 
   GGridBox *box = dynamic_cast<GGridBox*>(&grid);
@@ -105,14 +102,15 @@ GBOOL impl_abc_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Tim
 //          initial conditions for icos grids, 2d, 3d.
 // ARGS   : ptree  : main property tree
 //          sconfig: ptree block name containing variable config
+//          eqn    : equation implementation
 //          grid   : grid object
 //          time   : initialization time
 //          utmp   : tmp arrays
-//          ub     : boundary state (also initialized here)
 //          uf     : velocity-state to be initialized.
 // RETURNS: TRUE on success; else FALSE
 //**********************************************************************************
-GBOOL impl_abc_icos(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &uf)
+template<typename Types>
+GBOOL ginitfv<Types>::impl_abc_icos(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &uf)
 {
 
   GGridIcos *icos = dynamic_cast<GGridIcos*>(&grid);
@@ -203,14 +201,15 @@ GBOOL impl_abc_icos(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Ti
 // DESC   : Inititialize velocity with Gaussian-randomized values
 // ARGS   : ptree  : initial condition property tree
 //          sconfig: ptree block name containing variable config
+//          eqn    : equation implementation
 //          grid   : grid object
 //          time   : initialization time
 //          utmp   : tmp arrays
-//          ub     : boundary state (also initialized here)
 //          uf     : velocity-state to be initialized.
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_rand(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &ub, State &uf)
+template<typename Types>
+GBOOL ginitfv<Types>::impl_rand(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &uf)
 {
 
   return FALSE;
@@ -218,4 +217,3 @@ GBOOL impl_rand(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &
 } // end, method impl_rand
 
 
-} // end, ginitfv  namespace
