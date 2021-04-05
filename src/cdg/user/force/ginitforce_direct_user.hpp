@@ -25,15 +25,14 @@ using namespace geoflow::tbox;
 
 typedef GFTYPE                      Time;
 typedef GTVector<GTVector<GFTYPE>*> State;
-typedef GStateInfo                  StateInfo;
 
 
 
 namespace ginitforce
 {
 
-GBOOL impl_null    (const PropertyTree &ptree, GString &sconfig, GGrid &grid, StateInfo &stinfo,  Time &t, State &u, State &uf);
-GBOOL impl_rand    (const PropertyTree &ptree, GString &sconfig, GGrid &grid, StateInfo &stinfo, Time &t, State &u, State &uf);
+GBOOL impl_null    (const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &t, State &u, State &uf);
+GBOOL impl_rand    (const PropertyTree &ptree, GString &sconfig, GGrid &grid, Time &t, State &u, State &uf);
 
 };
 
