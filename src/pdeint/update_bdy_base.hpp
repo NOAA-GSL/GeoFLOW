@@ -1,5 +1,5 @@
 /*
- * io_base.hpp
+ * update_bdy_base.hpp
  *
  *  Created on: June 25, 2020 
  *      Author: d.rosenberg
@@ -11,6 +11,7 @@
 
 #include <memory>
 #include <vector>
+#include "equation_base.hpp"
 
 namespace geoflow {
 namespace pdeint {
@@ -26,9 +27,10 @@ class UpdateBdyBase {
 public:
         using Types        = TypePack;
 	using State        = typename Types::State;
-	using StateInfo    = typename Types::StateInfo; // May contain time, time index, var name etc
+        using EqnBase      = EquationBase<TypePack>;
+        using EqnBasePtr   = std::shared_ptr<EqnBase>;
 	using Grid         = typename Types::Grid;
-	using Ftype        = typename Types::Value;
+	using Ftype        = typename Types::Ftype;
         using Time         = typename Types::Time;
 	using IBdyVol      = typename Types::IBdyVol;
 	using TBdyVol      = typename Types::TBdyVol;
@@ -62,20 +64,18 @@ public:
 	/**
 	 * Update bdy conditions with state at t
 	 *
+	 * @param[in,out] eqn    : equation pointer
 	 * @param[in,out] grid   : initial time at start, and final time
-	 * @param[in,out] stinfo : StateInfo object
 	 * @param[in,out] time   : current time
 	 * @param[in,out] utmp   : tmp arrays
 	 * @param[in,out] u      : current state array
-	 * @param[in,out] ub     : bdy arrays for each state component
 	 */
-	bool update (Grid      &grid, 
-                     StateInfo &stinfo, 
-                     Time      &time, 
-                     State     &utmp, 
-                     State     &u, 
-                     State     &ub){
-                        return this->update_impl(grid, stinfo, time, utmp, u, ub);
+	bool update (EqnBasePtr &eqn
+                     Grid       &grid, 
+                     Time       &time, 
+                     State      &utmp, 
+                     State      &u, ){ 
+                        return this->update_impl(eqn, grid, stinfo, time, utmp, u);
                      }
 
 protected:
@@ -89,12 +89,11 @@ protected:
 #endif
                      
 	virtual bool update_impl (
-                     Grid      &grid, 
-                     StateInfo &stinfo, 
-                     Time      &time, 
-                     State     &utmp, 
-                     State     &u, 
-                     State     &ub) = 0;
+                     EqnBasePtr &eqn,
+                     Grid       &grid, 
+                     Time       &time, 
+                     State      &utmp, 
+                     State      &u) = 0; 
 
 };
 
