@@ -63,9 +63,9 @@ typename StateCompType = GTVector<GFTYPE>,
 typename StateInfoType = GStateInfo,
 typename GridType      = GGrid,
 typename MassOpType    = GMass,
-typename ValueType     = GFTYPE,
+typename Ftype         = GFTYPE,
 typename DerivType     = StateType,
-typename TimeType      = ValueType,
+typename TimeType      = Ftype,
 typename CompType      = GTVector<GStateCompType>,
 typename JacoType      = StateType,
 typename SizeType      = GSIZET
@@ -76,7 +76,7 @@ struct TypePack {
         using StateInfo  = StateInfoType;
         using Grid       = GridType;
         using Mass       = MassOpType;
-        using Value      = ValueType;
+        using Ftype      = Ftype;
         using Derivative = DerivType;
         using Time       = TimeType;
         using CompDesc   = CompType;
@@ -109,7 +109,6 @@ GINT             irestobs_;    // index in pObservers_ that writes restarts
 Grid            *grid_=NULLPTR;// grid object
 State            u_;           // state array
 State            c_;           // advection velocity, if used
-State            ub_;          // global bdy vector
 State            uf_;          // forcing tendency
 State            utmp_;        // temp array
 GTVector<GFTYPE> nu_(3);       // viscosity
@@ -131,7 +130,7 @@ void update_forcing   (const Time &t, State &u, State &uf);     // forcing vec u
 void steptop_callback (const Time &t, State &u, const Time &dt);// backdoor function
 
 // Public methods:
-void init_state       (const PropertyTree &ptree, GGrid &, EqnBasePtr &pEqn, Time &t, State &utmp, State &u, State &ub);
+void init_state       (const PropertyTree &ptree, GGrid &, EqnBasePtr &pEqn, Time &t, State &utmp, State &u);
 void init_force       (const PropertyTree &ptree, GGrid &, EqnBasePtr &pEqn, Time &t, State &utmp, State &u, State &uf);
 void allocate         (const PropertyTree &ptree);
 void deallocate       ();
@@ -142,7 +141,7 @@ void create_basis_pool(PropertyTree &ptree, BasisBase &gbasis);
 void do_terrain       (const PropertyTree &ptree, GGrid &grid);
 void init_ggfx        (PropertyTree &ptree, GGrid &grid, GGFX<GFTYPE> *&ggfx);
 void gresetart        (PropertyTree &ptree);
-void compare          (const PropertyTree &ptree, GGrid &, EqnBasePtr &pEqn, Time &t, State &utmp, State &ub, State &u);
+void compare          (const PropertyTree &ptree, GGrid &, EqnBasePtr &pEqn, Time &t, State &utmp, State &u);
 void do_restart       (const PropertyTree &ptree, GGrid &, State &u, GTMatrix<GINT>&p,  GSIZET &cycle, Time &t);
 void do_bench         (GString sbench, GSIZET ncyc);
 

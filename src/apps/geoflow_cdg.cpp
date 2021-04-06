@@ -130,7 +130,7 @@ int main(int argc, char **argv) {
     if (itindex == 0) {  // start new run
         icycle = 0;
         t = 0.0;
-        init_state(ptree_, *grid_, pEqn_, t, utmp_, u_, ub_);
+        init_state(ptree_, *grid_, pEqn_, t, utmp_, u_);
     } else {  // restart run
         do_restart(ptree_, *grid_, u_, p, icycle, t);
     }
@@ -143,7 +143,7 @@ int main(int argc, char **argv) {
     GComm::Synch();
     pio::pout << "geoflow: do time stepping..." << std::endl;
 
-    pIntegrator_->time_integrate(t, uf_, ub_, u_);
+    pIntegrator_->time_integrate(t, uf_, u_);
 
     pio::pout << "geoflow: time stepping done." << std::endl;
 
@@ -155,7 +155,7 @@ int main(int argc, char **argv) {
     //***************************************************
     // Compare solution if required:
     //***************************************************
-    compare(ptree_, *grid_, pEqn_, t, utmp_, ub_, u_);
+    compare(ptree_, *grid_, pEqn_, t, utmp_, u_);
 
     //***************************************************
     // Do shutdown, cleaning:
@@ -479,8 +479,6 @@ void allocate(const PropertyTree &ptree) {
     iforced = &pEqn_->iforced();
 
     u_.resize(nstate_);  // state
-    ub_.resize(nstate_);
-    ub_ = NULLPTR;  // bdy state array
     uf_.resize(nstate_);
     uf_ = NULLPTR;        // forcing array
     utmp_.resize(ntmp_);  // tmp array
@@ -510,7 +508,6 @@ void deallocate() {
     for (auto j = 0; j < gbasis_.size(); j++) delete gbasis_[j];
     for (auto j = 0; j < utmp_.size(); j++) delete utmp_[j];
     for (auto j = 0; j < u_.size(); j++) delete u_[j];
-    for (auto j = 0; j < ub_.size(); j++) delete ub_[j];
     for (auto j = 0; j < uf_.size(); j++) delete uf_[j];
 
 }  // end method deallocate
@@ -525,13 +522,12 @@ void deallocate() {
 //         t    : initial time
 //         utmp : vector of tmp vectors
 //         u    : full state vector
-//         ub   : full boundary state vector
 //**********************************************************************************
-void init_state(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &t, State &utmp, State &u, State &ub) {
+void init_state(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &t, State &utmp, State &u) {
     GEOFLOW_TRACE();
     GBOOL bret;
 
-    bret = GInitStateFactory<MyTypes>::init(ptree, grid, peqn->stateinfo(), t, utmp, ub, u);
+    bret = GInitStateFactory<MyTypes>::init(ptree, grid, peqn->stateinfo(), t, utmp, u);
 
     assert(bret && "state initialization failed");
 
@@ -572,7 +568,7 @@ void init_force(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &
 //         utmp : vector of tmp vectors
 //         u    : full state vector
 //**********************************************************************************
-void compare(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &t, State &utmp, State &ub, State &u) {
+void compare(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &t, State &utmp, State &u) {
     GEOFLOW_TRACE();
     GBOOL bret, bvardt;
     GINT myrank, ntasks;
@@ -618,7 +614,7 @@ void compare(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &t, 
     nnorm = 1.0;
 
     tt = t;
-    bret = GInitStateFactory<MyTypes>::init(ptree, grid, peqn->stateinfo(), tt, utmp, ub, ua);
+    bret = GInitStateFactory<MyTypes>::init(ptree, grid, peqn->stateinfo(), tt, utmp, ua);
     assert(bret && "state initialization failed");
     for (GSIZET j = 0; j < nsolve_; j++) {  // local errors
         *utmp[1] = *ua[j];
@@ -635,7 +631,7 @@ void compare(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &t, 
 
     // Compute analytic solution at t:
     tt = t;
-    bret = GInitStateFactory<MyTypes>::init(ptree, grid, peqn->stateinfo(), tt, utmp, ub, ua);
+    bret = GInitStateFactory<MyTypes>::init(ptree, grid, peqn->stateinfo(), tt, utmp, ua);
     assert(bret && "state initialization failed");
 
 #if 0
