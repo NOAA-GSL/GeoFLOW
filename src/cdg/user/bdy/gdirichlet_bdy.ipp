@@ -53,10 +53,11 @@ GDirichletBdy<Types>::~GDirichletBdy()
 //**********************************************************************************
 template<typename Types>
 GBOOL GDirichletBdy<Types>::update_impl(
-                              Grid      &grid,
-                              Time      &time,
-                              State     &utmp,
-                              State     &u)
+                              EqnBasePtr &eqn,
+                              Grid       &grid,
+                              Time       &time,
+                              State      &utmp,
+                              State      &u)
 {
    GString    serr = "GDirichletBdy<Types>::update_impl: ";
    GINT       idstate;

@@ -23,7 +23,7 @@
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
 template<typename Types>
-GBOOL ginitfs<Types>::impl_rand(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &uf)
+GBOOL ginitfs<Types>::impl_rand(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u, State &uf)
 {
 
   return FALSE;

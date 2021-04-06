@@ -23,7 +23,7 @@
 // RETURNS: TRUE on success; else FALSE
 //**********************************************************************************
 template<typename Types>
-GBOOL ginitfv<Types>::impl_abc_box(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &uf)
+GBOOL ginitfv<Types>::impl_abc_box(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u, State &uf)
 {
 
   GGridBox *box = dynamic_cast<GGridBox*>(&grid);
@@ -110,7 +110,7 @@ GBOOL ginitfv<Types>::impl_abc_box(const PropertyTree &ptree, GString &sconfig, 
 // RETURNS: TRUE on success; else FALSE
 //**********************************************************************************
 template<typename Types>
-GBOOL ginitfv<Types>::impl_abc_icos(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &uf)
+GBOOL ginitfv<Types>::impl_abc_icos(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u, State &uf)
 {
 
   GGridIcos *icos = dynamic_cast<GGridIcos*>(&grid);
@@ -209,7 +209,7 @@ GBOOL ginitfv<Types>::impl_abc_icos(const PropertyTree &ptree, GString &sconfig,
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
 template<typename Types>
-GBOOL ginitfv<Types>::impl_rand(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &uf)
+GBOOL ginitfv<Types>::impl_rand(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u, State &uf)
 {
 
   return FALSE;

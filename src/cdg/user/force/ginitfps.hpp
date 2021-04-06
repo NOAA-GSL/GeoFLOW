@@ -26,14 +26,14 @@ struct ginitfps
         using Types      = TypePack;
         using State      = typename Types::State;
         using StateComp  = typename Types::StateComp;
-        using EqnBase    = EquationBase<Equation>;
+        using EqnBase    = EquationBase<Types>;
         using EqnBasePtr = std::shared_ptr<EqnBase>;
         using Grid       = typename Types::Grid;
         using Time       = typename Types::Time;
         using Ftype      = typename Types::Ftype;
 
 
-static GBOOL impl_rand      (const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &uf);
+static GBOOL impl_rand      (const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u, State &uf);
 
 };
 

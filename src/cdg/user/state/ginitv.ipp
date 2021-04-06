@@ -24,7 +24,7 @@
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
 template<typename Types>
-GBOOL initv<Types>::impl_abc_box(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u)
+GBOOL ginitv<Types>::impl_abc_box(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
 {
 
   GGridBox *box = dynamic_cast<GGridBox*>(&grid);
@@ -110,7 +110,7 @@ GBOOL initv<Types>::impl_abc_box(const PropertyTree &ptree, GString &sconfig, Eq
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
 template<typename Types>
-GBOOL initv<Types>::impl_abc_icos(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u)
+GBOOL ginitv<Types>::impl_abc_icos(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
 {
 
   GGridIcos *icos = dynamic_cast<GGridIcos*>(&grid);
@@ -214,7 +214,7 @@ GBOOL initv<Types>::impl_abc_icos(const PropertyTree &ptree, GString &sconfig, E
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
 template<typename Types>
-GBOOL initv<Types>::impl_simpsum1d_box(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u)
+GBOOL ginitv<Types>::impl_simpsum1d_box(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
 {
   GGridBox *tgrid = dynamic_cast<GGridBox*>(&grid);
   assert(tgrid != NULLPTR && "Box grid required");
@@ -299,7 +299,7 @@ GBOOL initv<Types>::impl_simpsum1d_box(const PropertyTree &ptree, GString &sconf
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
 template<typename Types>
-GBOOL initv<Types>::impl_simpsum_box(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn,, GGrid &grid, Time &time, State &utmp, State &u)
+GBOOL ginitv<Types>::impl_simpsum_box(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
 {
   GGridBox *tgrid = dynamic_cast<GGridBox*>(&grid);
   assert(tgrid != NULLPTR && "Box grid required");
@@ -423,7 +423,7 @@ GBOOL initv<Types>::impl_simpsum_box(const PropertyTree &ptree, GString &sconfig
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
 template<typename Types>
-GBOOL initv<Types>::impl_simpsum_icos(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u)
+GBOOL ginitv<Types>::impl_simpsum_icos(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
 {
 
   GGridIcos *tgrid = dynamic_cast<GGridIcos*>(&grid);
@@ -511,7 +511,7 @@ GBOOL initv<Types>::impl_simpsum_icos(const PropertyTree &ptree, GString &sconfi
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
 template<typename Types>
-GBOOL initv<Types>::impl_rand(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u)
+GBOOL ginitv<Types>::impl_rand(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
 {
 
   return FALSE;

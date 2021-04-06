@@ -62,7 +62,7 @@ public:
         using Base       = Interface;
         using State      = typename Interface::State;
         using Grid       = typename Interface::Grid;
-        using Value      = typename Interface::Value;
+        using Ftype      = typename Interface::Ftype;
         using Derivative = typename Interface::Derivative;
         using Time       = typename Interface::Time;
         using CompDesc   = typename Interface::CompDesc;
@@ -111,9 +111,9 @@ public:
                                             
 
 protected:
-        void                step_impl(const Time &t, State &uin, State &uf, State &ub, 
+        void                step_impl(const Time &t, State &uin, State &uf, 
                                       const Time &dt);                    // Take a step
-        void                step_impl(const Time &t, const State &uin, State &uf, State &ub,
+        void                step_impl(const Time &t, const State &uin, State &uf, 
                                       const Time &dt, State &uout);       // Take a step
         void                compute_derived_impl(const State &uin, GString sop, 
                                       State &utmp, State &uout, 
@@ -130,16 +130,15 @@ protected:
         GTVector<GFTYPE>    &get_nu() { return nu_; };                    // Set nu/viscosity
         GBOOL               has_dt_impl() const {return bvariabledt_;}    // Has dynamic dt?
         void                dt_impl(const Time &t, State &u, Time &dt);   // Get dt
-        void                apply_bc_impl(const Time &t, State &u, 
-                                          State &ub);                     // Apply bdy conditions
+        void                apply_bc_impl(const Time &t, State &u);       // Apply bdy conditions
 
 private:
 
-        void                dudt_impl  (const Time &t, const State &u, const State &uf, const State &ub,
+        void                dudt_impl  (const Time &t, const State &u, const State &uf, 
                                         const Time &dt, Derivative &dudt);
-        void                step_exrk  (const Time &t, State &uin, State &uf, State &ub,
+        void                step_exrk  (const Time &t, State &uin, State &uf, 
                                         const Time &dt, State &uout);
-        void                step_multistep(const Time &t, State &uin, State &uf, State &ub,
+        void                step_multistep(const Time &t, State &uin, State &uf, 
                                            const Time &dt);
         void                cycle_keep(State &u);
        

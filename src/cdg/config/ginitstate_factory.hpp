@@ -40,7 +40,7 @@ class GInitStateFactory
 	static GBOOL set_by_direct(const PropertyTree& ptree, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u);
 	static GBOOL set_by_comp  (const PropertyTree& ptree, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u);
 
-        static GBOOL doinitv      (const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn,, Grid &grid, Time &time, State &utmp, State &u);
+        static GBOOL doinitv      (const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u);
         static GBOOL doinitdt     (const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u);
         static GBOOL doinitmfrac  (const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u);
         static GBOOL doinitenergy (const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u);

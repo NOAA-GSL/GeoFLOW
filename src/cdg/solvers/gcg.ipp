@@ -186,7 +186,7 @@ GINT GCG<Types>::solve_impl(Operator& A, const StateComp& b, StateComp& x)
     }
     else {
       beta = rho / rhom;
-      GMTK::saxpby<Value>(*w, beta, *z, 1.0);  // w = beta w +  z
+      GMTK::saxpby<Ftype>(*w, beta, *z, 1.0);  // w = beta w +  z
     }
 
     A.opVec_prod(*w, tmp, *q);          // q = A w
@@ -198,8 +198,8 @@ GINT GCG<Types>::solve_impl(Operator& A, const StateComp& b, StateComp& x)
     alpha = rho /
      (w->gdot(*q, *imult, comm_));      // alpha=rho/w^T imult q
 
-    GMTK::saxpby<Value>( x, 1.0, *w, alpha);   // x = x + alpha w
-    GMTK::saxpby<Value>(*r, 1.0, *q,-alpha);   // r = r - alpha q
+    GMTK::saxpby<Ftype>( x, 1.0, *w, alpha);   // x = x + alpha w
+    GMTK::saxpby<Ftype>(*r, 1.0, *q,-alpha);   // r = r - alpha q
 
     rhom = rho;
 
@@ -307,8 +307,8 @@ GINT GCG<Types>::solve_impl(Operator& A, const StateComp& b, StateComp& x)
     alpha = rho /
      (w->gdot(*q, *imult, comm_));      // alpha=rho/w^T imult q
 
-    GMTK::saxpby<Value>( x, 1.0, *w, alpha);   // x = x + alpha w
-    GMTK::saxpby<Value>(*r, 1.0, *q,-alpha);   // r = r - alpha q
+    GMTK::saxpby<Ftype>( x, 1.0, *w, alpha);   // x = x + alpha w
+    GMTK::saxpby<Ftype>(*r, 1.0, *q,-alpha);   // r = r - alpha q
 
     if ( precond_ != NULLPTR ) {        // z = P^-1 r for z,
       iret = precond_->solve(*r, *z);   // where P^-1 is precond
@@ -324,7 +324,7 @@ GINT GCG<Types>::solve_impl(Operator& A, const StateComp& b, StateComp& x)
     rho  = r->gdot(*z, *imult, comm_);  // rho = r^T imult z
     beta = rho / rhom;
 
-    GMTK::saxpby<Value>(*w, beta, *z, 1.0);    // w = z + beta w
+    GMTK::saxpby<Ftype>(*w, beta, *z, 1.0);    // w = z + beta w
 
     rnorm = compute_norm(*r, tmp);      // residual norm
     residuals_[iter_] = rnorm;

@@ -60,7 +60,7 @@ GSpongeBdy<Types>::~GSpongeBdy()
 //**********************************************************************************
 template<typename Types>
 GBOOL GSpongeBdy<Types>::update_impl(
-                              EqnBastPtr &eqn,
+                              EqnBasePtr &eqn,
                               Grid       &grid,
                               Time       &time,
                               State      &utmp,
@@ -73,10 +73,10 @@ GBOOL GSpongeBdy<Types>::update_impl(
 
 
    if ( box != NULLPTR ) {
-     bret = update_cart(grid, time, utmp, u, ub);
+     bret = update_cart(eqn, grid, time, utmp, u);
    }
    else if ( sphere != NULLPTR ) {
-     bret = update_sphere(grid, time, utmp, u, ub);
+     bret = update_sphere(eqn, grid, time, utmp, u);
    }
    else {
      assert(FALSE && "Invalid grid");

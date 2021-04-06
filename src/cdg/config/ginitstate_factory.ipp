@@ -319,7 +319,7 @@ GBOOL GInitStateFactory<Types>::doinitdt(const PropertyTree &ptree, GString &sco
     bret = TRUE;
   }
   else if ( "random" == sinit ) {
-    bret = ginits::impl_rand(ptree, sconfig, eqn, grid, time, utmp, u);
+    bret = ginits<Types>::impl_rand(ptree, sconfig, eqn, grid, time, utmp, u);
   } 
   else {
     assert(FALSE && "Unknown b-field initialization method");
@@ -362,7 +362,7 @@ GBOOL GInitStateFactory<Types>::doinitmfrac(const PropertyTree &ptree, GString &
     bret = TRUE;
   }
   else if ( "random" == sinit ) {
-    bret = ginits::impl_rand(ptree, sconfig, eqn, grid, time, utmp, u);
+    bret = ginits<Types>::impl_rand(ptree, sconfig, eqn, grid, time, utmp, u);
   } 
   else {
     assert(FALSE && "Unknown b-field initialization method");
@@ -405,7 +405,7 @@ GBOOL GInitStateFactory<Types>::doinitenergy(const PropertyTree &ptree, GString 
     bret = TRUE;
   }
   else if ( "random" == sinit ) {
-    bret = ginits::impl_rand(ptree, sconfig, eqn, grid, time, utmp, u);
+    bret = ginits<Types>::impl_rand(ptree, sconfig, eqn, grid, time, utmp, u);
   } 
   else {
     assert(FALSE && "Unknown b-field initialization method");
@@ -448,7 +448,7 @@ GBOOL GInitStateFactory<Types>::doinittemp(const PropertyTree &ptree, GString &s
     bret = TRUE;
   }
   else if ( "random" == sinit ) {
-    bret = ginits::impl_rand(ptree, sconfig, eqn, grid, time, utmp, u);
+    bret = ginits<Types>::impl_rand(ptree, sconfig, eqn, grid, time, utmp, u);
   } 
   else {
     assert(FALSE && "Unknown b-field initialization method");
@@ -492,7 +492,7 @@ GBOOL GInitStateFactory<Types>::doinitc(const PropertyTree &ptree, GString &scon
     bret = TRUE;
   }
   else if ( "random" == sinit ) {
-    bret = ginitc::impl_rand(ptree, sconfig, eqn, grid, time, utmp, u);
+    bret = ginitc<Types>::impl_rand(ptree, sconfig, eqn, grid, time, utmp, u);
   } 
   else {
     assert(FALSE && "Unknown b-field initialization method");

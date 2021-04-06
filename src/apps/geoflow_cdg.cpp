@@ -527,7 +527,7 @@ void init_state(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &
     GEOFLOW_TRACE();
     GBOOL bret;
 
-    bret = GInitStateFactory<MyTypes>::init(ptree, grid, peqn->stateinfo(), t, utmp, u);
+    bret = GInitStateFactory<MyTypes>::init(ptree, peqn, grid, t, utmp, u);
 
     assert(bret && "state initialization failed");
 
@@ -549,7 +549,7 @@ void init_force(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &
     GEOFLOW_TRACE();
     GBOOL bret;
 
-    bret = GInitForceFactory<MyTypes>::init(ptree, grid, peqn->stateinfo(), t, utmp, u, uf);
+    bret = GInitForceFactory<MyTypes>::init(ptree, peqn, grid, t, utmp, u, uf);
 
     assert(bret && "forcing initialization failed");
 
@@ -614,7 +614,7 @@ void compare(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &t, 
     nnorm = 1.0;
 
     tt = t;
-    bret = GInitStateFactory<MyTypes>::init(ptree, grid, peqn->stateinfo(), tt, utmp, ua);
+    bret = GInitStateFactory<MyTypes>::init(ptree, peqn, grid, tt, utmp, ua);
     assert(bret && "state initialization failed");
     for (GSIZET j = 0; j < nsolve_; j++) {  // local errors
         *utmp[1] = *ua[j];
@@ -631,7 +631,7 @@ void compare(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &t, 
 
     // Compute analytic solution at t:
     tt = t;
-    bret = GInitStateFactory<MyTypes>::init(ptree, grid, peqn->stateinfo(), tt, utmp, ua);
+    bret = GInitStateFactory<MyTypes>::init(ptree, peqn, grid, tt, utmp, ua);
     assert(bret && "state initialization failed");
 
 #if 0

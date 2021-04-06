@@ -38,7 +38,7 @@ public:
                       using State          = typename Types::State;
                       using StateComp      = typename Types::StateComp;
                       using Grid           = typename Types::Grid;
-                      using Value          = typename Types::Value;
+                      using Ftype          = typename Types::Ftype;
                       using ConnectivityOp = typename Types::ConnectivityOp;
                       using Traits         = typename SolverBase::Traits;
 
@@ -51,9 +51,9 @@ public:
                                     "State is of incorrect type");
                       static_assert(std::is_same<StateComp,GTVector<GFTYPE>>::value,
                                     "StateComp is of incorrect type");
-                      static_assert(std::is_same<Value,GFTYPE>::value,
-                                    "Value is of incorrect type");
-                      static_assert(std::is_same<ConnectivityOp,GGFX<Value>>::value,
+                      static_assert(std::is_same<Ftype,GFTYPE>::value,
+                                    "Ftype is of incorrect type");
+                      static_assert(std::is_same<ConnectivityOp,GGFX<Ftype>>::value,
                                     "ConnectivityOp is of incorrect type");
 
 

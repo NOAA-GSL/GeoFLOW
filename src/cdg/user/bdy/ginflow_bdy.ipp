@@ -75,7 +75,7 @@ GBOOL GInflowBdy<Types>::update_impl(
    GSIZET     ind;
 
    // Compute bdy data, if necessary:
-   bret = compute_bdy_data(grid, stinfo, time, utmp, u, bdydata_);
+   bret = compute_bdy_data(eqn, grid, time, utmp, u, bdydata_);
    assert(bret);
    
    // Apply bdy data:
@@ -137,23 +137,27 @@ GBOOL GInflowBdy<Types>::compute_bdy_data(
 
   // Call initialization method with utmp:
    if ( traits_.use_init ) {
-     bret = GInitStateFactory<Types>::init(traits_.ptree, grid, stinfo, time, tmpnew, ub, unew);
+
+     bret = GInitStateFactory<Types>::init(traits_.ptree, eqn, grid, time, tmpnew, unew);
+     for ( auto n=0; n<traits_.istate.size() && bret; n++ ) { 
+       idstate = traits_.istate[n];
+    
+       // Set from initialized State vector, 
+       for ( auto j=0; j<igbdy->size(); j++ ) {
+         ind = (*igbdy)[j];
+         (*ub[n])[j] = (*unew[idstate])[ind];
+       }
+     }
+
    }
    else {
-     bret = traits_.callback(grid, stinfo, time, traits_.bdyid, tmpnew, unew,  ub);
+
+     bret = traits_.callback(eqn, grid, time, traits_.bdyid, tmpnew, unew,  ub);
+
    }
    assert(bret);
 
   // Set boundary vector with initialized state:
-  for ( auto n=0; n<traits_.istate.size() && bret; n++ ) { 
-    idstate = traits_.istate[n];
-    
-    // Set from initialized State vector, 
-    for ( auto j=0; j<igbdy->size(); j++ ) {
-      ind = (*igbdy)[j];
-      (*ub[n])[j] = (*unew[idstate])[ind];
-    }
-  }
   bcomputed_ = true;
 
   return bret;

@@ -106,7 +106,7 @@ public:
         using State      = typename Interface::State;
         using StateComp  = typename Interface::StateComp;
         using Grid       = typename Interface::Grid;
-        using Ftype      = typename Interface::Value;
+        using Ftype      = typename Interface::Ftype;
         using Derivative = typename Interface::Derivative;
         using Time       = typename Interface::Time;
         using CompDesc   = typename Interface::CompDesc;
@@ -193,9 +193,9 @@ inline  void                compute_v    (const State &u, StateComp &di, State &
 inline  void                compute_v    (const State &u, GINT idir, StateComp &di, StateComp &vi);
 
 protected:
-        void                step_impl(const Time &t, State &uin, State &uf, State &ub, 
+        void                step_impl(const Time &t, State &uin, State &uf,  
                                       const Time &dt);                    // Take a step
-        void                step_impl(const Time &t, const State &uin, State &uf, State &ub,
+        void                step_impl(const Time &t, const State &uin, State &uf, 
                                       const Time &dt, State &uout);       // Take a step
         GBOOL               has_dt_impl() const {return traits_.variabledt;}  
         GINT                tmp_size_impl();                              // required tmp size
@@ -212,19 +212,18 @@ protected:
                                       std::vector<GINT> &iuout);          // Compu
 
         void                dt_impl(const Time &t, State &u, Time &dt);   // Get dt
-        void                apply_bc_impl(const Time &t, State &u, 
-                                          State &ub);                     // Apply bdy conditions
+        void                apply_bc_impl(const Time &t, State &u);       // Apply bdy conditions
 private:
 
-        void                dudt_impl  (const Time &t, const State &u, const State &uf, const State &ub,
+        void                dudt_impl  (const Time &t, const State &u, const State &uf, 
                                         const Time &dt, Derivative &dudt);
-        void                dudt_dry   (const Time &t, const State &u, const State &uf, const State &ub,
+        void                dudt_dry   (const Time &t, const State &u, const State &uf, 
                                         const Time &dt, Derivative &dudt);
-        void                dudt_wet   (const Time &t, const State &u, const State &uf, const State &ub,
+        void                dudt_wet   (const Time &t, const State &u, const State &uf, 
                                         const Time &dt, Derivative &dudt);
-        void                step_exrk  (const Time &t, State &uin, State &uf, State &ub,
+        void                step_exrk  (const Time &t, State &uin, State &uf, 
                                         const Time &dt, State &uout);
-        void                step_multistep(const Time &t, State &uin, State &uf, State &ub,
+        void                step_multistep(const Time &t, State &uin, State &uf,
                                            const Time &dt);
         void                cycle_keep   (const State &u);
 inline  void                compute_cv   (const State &u, StateComp &utmp, StateComp &cv);

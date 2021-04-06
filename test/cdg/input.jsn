@@ -15,14 +15,16 @@
   "IO_implementation" : "gio",
   "terrain_type"      : "none",
   "initstate_boxdrybubble": {
-    "T_pert"     : -15.0,
+    "T_pert"     : -7.5,
     "x_center"   : [0, 3000.0, 1000.0],
     "x_width"    : [4000.0, 2000.0, 2000.0]
   },
   "0-flux": {
     "bdy_class"        : "uniform",
-    "base_type"        : ["GBDY_0FLUX"],
-    "istate"           : [[0, 1]]
+    "base_type"        : ["GBDY_0FLUX", "GBDY_INFLOW"],
+    "istate"           : [[0, 1], [2, 3]],
+    "use_init"         : [false, true],
+    "compute_once"     : [false, true]
   },
   "pde_mconv": {
     "docoriolis"      : false,
@@ -53,7 +55,7 @@
     "grid_name" : "grid_box",
     "xyz0"      : [-25600, 0, 0],
     "delxyz"    : [51200.0, 10000.0, 1.0],
-    "num_elems" : [1024, 200, 1],
+    "num_elems" : [128, 25, 1],
     "bdy_x_0"   : "0-flux",
     "bdy_x_1"   : "0-flux",
     "bdy_y_0"   : "0-flux",
@@ -66,12 +68,12 @@
   },
   "stepper_props": {
     "stepping_method"  : "GSTEPPER_EXRK",
-    "time_deriv_order" : 3,
-    "nstage"           : 3,
-    "stab_preserving"  : true,
+    "time_deriv_order" : 2,
+    "nstage"           : 2,
+    "stab_preserving"  : false,
     "extrap_order"     : 2,
     "variable_dt"      : true,
-    "courant"          : 0.025
+    "courant"          : 0.1
   },
   "dissipation_traits": {
     "nu"      : 250.0,
@@ -134,9 +136,9 @@
     "treat_as_1d"        : false
   },
   "time_integration": {
-    "integ_type" : "time",
+    "integ_type" : "cycle",
     "time_end"   : 900.0,
-    "cycle_end"  : 1000,
+    "cycle_end"  : 10,
     "dt"         : 1.0e-2
   }
 

@@ -27,7 +27,7 @@ class UpdateBdyBase {
 public:
         using Types        = TypePack;
 	using State        = typename Types::State;
-        using EqnBase      = EquationBase<TypePack>;
+        using EqnBase      = EquationBase<Types>;
         using EqnBasePtr   = std::shared_ptr<EqnBase>;
 	using Grid         = typename Types::Grid;
 	using Ftype        = typename Types::Ftype;
@@ -70,12 +70,12 @@ public:
 	 * @param[in,out] utmp   : tmp arrays
 	 * @param[in,out] u      : current state array
 	 */
-	bool update (EqnBasePtr &eqn
+	bool update (EqnBasePtr &eqn,
                      Grid       &grid, 
                      Time       &time, 
                      State      &utmp, 
-                     State      &u, ){ 
-                        return this->update_impl(eqn, grid, stinfo, time, utmp, u);
+                     State      &u){ 
+                        return this->update_impl(eqn, grid, time, utmp, u);
                      }
 
 protected:

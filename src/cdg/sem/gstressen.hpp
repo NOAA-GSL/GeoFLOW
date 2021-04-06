@@ -57,7 +57,7 @@ public:
         using StateComp  = typename Interface::StateComp;
         using Grid       = typename Interface::Grid;
         using Mass       = typename Interface::Mass;
-        using Ftype      = typename Interface::Value;
+        using Ftype      = typename Interface::Ftype;
         using Derivative = typename Interface::Derivative;
         using Time       = typename Interface::Time;
         using CompDesc   = typename Interface::CompDesc;

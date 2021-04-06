@@ -132,7 +132,7 @@ public:
 	 * \param[in]     dt    Size of time step to take
 	 * \param[out]    uout  New state of the system of equations at t + dt
 	 */
-	void step(const Time& t, const State& uin, State& uf, , const Time& dt, State& uout){
+	void step(const Time& t, const State& uin, State& uf, const Time& dt, State& uout){
 		this->step_impl(t,uin,uf,dt,uout);
 	}
 
@@ -249,7 +249,7 @@ protected:
 	/**
 	 * Must be provided by implementation
 	 */
-	virtual void step_impl(const Time& t, const State& uin, State& uf, , const Time& dt, State& uout) = 0;
+	virtual void step_impl(const Time& t, const State& uin, State& uf, const Time& dt, State& uout) = 0;
   
 	/**
 	 * Must be provided by implementation

@@ -39,7 +39,7 @@ struct BdyTypePack { // define bdy update typepack
         using StateComp        = GTVector<GFTYPE>;
         using StateInfo        = GStateInfo;
         using Grid             = GGrid;
-        using Value            = GFTYPE;
+        using Ftype            = GFTYPE;
         using Time             = GFTYPE;
         using Derivative       = GTVector<GTVector<GFTYPE>*>;;
         using CompDesc         = GTVector<GStateCompType>;
@@ -55,7 +55,7 @@ struct CGTypePack { // define terrain typepack
         using StateComp        = GTVector<GFTYPE>;
         using StateInfo        = GStateInfo;
         using Grid             = GGrid;
-        using Value            = GFTYPE;
+        using Ftype            = GFTYPE;
         using Time             = GFTYPE;
         using ConnectivityOp   = GGFX<GFTYPE>;
 };
@@ -89,7 +89,7 @@ public:
                              using State          = typename CGTypes::State;
                              using StateComp      = typename CGTypes::StateComp;
                              using Grid           = typename CGTypes::Grid;
-                             using Value          = typename CGTypes::Value;
+                             using Ftype          = typename CGTypes::Ftype;
                              using ConnectivityOp = typename CGTypes::ConnectivityOp;
 
                              GGrid() = delete;

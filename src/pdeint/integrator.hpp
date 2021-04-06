@@ -45,7 +45,7 @@ public:
 	using State        = typename Types::State;
 	using StateInfo    = typename Types::StateInfo;
 	using Grid         = typename Types::Grid;
-	using Value        = typename Types::Value;
+	using Ftype        = typename Types::Ftype;
 	using Derivative   = typename Types::Derivative;
 	using Time         = typename Types::Time;
 	using Jacobian     = typename Types::Jacobian;
@@ -60,8 +60,8 @@ public:
 		IntegType integ_type;
 		size_t    cycle       = 0; 
 		size_t    cycle_end   = 1;
-		Value     cfl_min     = std::numeric_limits<Value>::min();
-		Value     cfl_max     = std::numeric_limits<Value>::max();
+		Ftype     cfl_min     = std::numeric_limits<Ftype>::min();
+		Ftype     cfl_max     = std::numeric_limits<Ftype>::max();
 		Time      dt_min      = std::numeric_limits<Time>::min();
 		Time      dt_max      = std::numeric_limits<Time>::max();   
 		Time      dt          = static_cast<Time>(1.0e-2);

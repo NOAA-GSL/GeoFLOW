@@ -34,9 +34,8 @@ public:
         using EqnBasePtr = std::shared_ptr<EqnBase>;
         using State      = typename Types::State;
         using Grid       = typename Types::Grid;
-        using Ftype      = typename Types::Value;
+        using Ftype      = typename Types::Ftype;
         using Time       = typename Types::Time;
-        using StateInfo  = typename Types::StateInfo;
 
         static_assert(std::is_same<State,GTVector<GTVector<Ftype>*>>::value,
                "State is of incorrect type");
@@ -62,7 +61,6 @@ protected:
         GBOOL               update_impl (
                               EqnBasePtr &eqn,
                               Grid       &grid,
-                              StateInfo  &stinfo,
                               Time       &time,
                               State      &utmp,
                               State      &u);

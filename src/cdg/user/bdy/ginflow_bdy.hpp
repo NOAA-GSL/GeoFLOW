@@ -37,7 +37,7 @@ public:
         using EqnBasePtr = std::shared_ptr<EqnBase>;
         using State      = typename Types::State;
         using Grid       = typename Types::Grid;
-        using Ftype      = typename Types::Value;
+        using Ftype      = typename Types::Ftype;
         using Time       = typename Types::Time;
 
         static_assert(std::is_same<State,GTVector<GTVector<Ftype>*>>::value,
@@ -52,8 +52,10 @@ public:
           GINT                   bdyid; // bdy id
           GTVector<GINT>        istate; // state indices to operate on
           GTVector<GSIZET>     ibdyvol; // indir. inidices into comput volume
+          GString              smethod; // init method if use_init==TRUE
 
-          std::function<GBOOL(Grid       &grid, 
+          std::function<GBOOL(EqnBasePtr &eqn,
+                              Grid       &grid, 
                               Time       &time,
                               const GINT  id,
                               State      &utmp,
@@ -71,7 +73,7 @@ public:
 
 protected:
         GBOOL               update_impl (
-                              EqnBsePtr &eqn,
+                              EqnBasePtr &eqn,
                               Grid      &grid,
                               Time      &time,
                               State     &utmp,

@@ -36,7 +36,7 @@ public:
         using State       = typename Equation::State;
         using StateInfo   = typename Equation::StateInfo;
         using Grid        = typename Equation::Grid;
-        using Value       = typename Equation::Value;
+        using Ftype       = typename Equation::Ftype;
         using Derivative  = typename Equation::Derivative;
         using Time        = typename Equation::Time;
         using CompDesc    = typename Equation::CompDesc;

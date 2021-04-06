@@ -23,7 +23,7 @@
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
 template<typename Types>
-GBOOL inits<Types>::impl_rand(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u)
+GBOOL ginits<Types>::impl_rand(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
 {
 
   return FALSE;

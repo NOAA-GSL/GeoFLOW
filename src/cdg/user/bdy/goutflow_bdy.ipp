@@ -53,18 +53,20 @@ GOutflowBdy<Types>::~GOutflowBdy()
 //**********************************************************************************
 template<typename Types>
 GBOOL GOutflowBdy<Types>::update_impl(
-                              EqnBasetPtr &eqn,
+                              EqnBasePtr  &eqn,
                               Grid        &grid,
                               Time        &time,
                               State       &utmp,
                               State       &u)
 {
    GString    serr = "GOutflowBdy<Types>::update_impl: ";
+#if 0
    GINT       idstate;
    GSIZET     ind;
 
   GTVector<GSIZET> *igbdy = &traits_.ibdyvol;
 
+  assert(FALSE);
 
 
   // Set from State vector, u:
@@ -78,6 +80,9 @@ GBOOL GOutflowBdy<Types>::update_impl(
   }
 
   return TRUE;
+#endif
+  
+  return FALSE;
 
 } // end of method update_impl
 

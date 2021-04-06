@@ -30,7 +30,7 @@ public:
         using StateInfo  = typename Types::StateInfo;
         using Mass       = typename Types::Mass;
 	using Grid       = typename Types::Grid;
-	using Value      = typename Types::Value;
+	using Ftype      = typename Types::Ftype;
 	using Derivative = typename Types::Derivative;
 	using Time       = typename Types::Time;
 	using Jacobian   = typename Types::Jacobian;

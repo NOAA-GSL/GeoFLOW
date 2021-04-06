@@ -32,7 +32,7 @@ public:
 	using State          = typename Types::State;
 	using StateComp      = typename Types::StateComp;
 	using Grid           = typename Types::Grid;
-	using Value          = typename Types::Value;
+	using Ftype          = typename Types::Ftype;
 	using ConnectivityOp = typename Types::ConnectivityOp;
 
         struct Traits {

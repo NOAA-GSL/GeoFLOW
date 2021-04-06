@@ -26,8 +26,8 @@ IntegratorFactory<ET>::build(const tbox::PropertyTree& ptree, const EqnBasePtr& 
         if ( "cycle" == stype ) traits.integ_type = Integrator<ET>::INTEG_CYCLE;
         if ( "time"  == stype ) traits.integ_type = Integrator<ET>::INTEG_TIME;
 	traits.cycle_end  = subtree.getValue<size_t>("cycle_end", 1);
-	traits.dt         = subtree.getValue<Value>("dt",  std::numeric_limits<Time>::lowest() );
-	traits.time_end   = subtree.getValue<Value>("time_end",  std::numeric_limits<Time>::max() );
+	traits.dt         = subtree.getValue<Ftype>("dt",  std::numeric_limits<Time>::lowest() );
+	traits.time_end   = subtree.getValue<Ftype>("time_end",  std::numeric_limits<Time>::max() );
 
 	// Allocate Integrator Implementation
 	IntegratorPtr integrator_ptr(new Integrator<ET>(eqn, mixer, obs, grid, traits));

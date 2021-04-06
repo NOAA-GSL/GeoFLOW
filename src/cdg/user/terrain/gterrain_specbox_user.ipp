@@ -23,7 +23,7 @@
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
 template<typename Types>
-GBOOL gterrainSpecbox<Types>::impl_gauss_range(const PropertyTree &ptree, GString sblk, GGrid &grid, State &utmp, State &xb)
+GBOOL gterrainSpecBox<Types>::impl_gauss_range(const PropertyTree &ptree, GString sblk, Grid &grid, State &utmp, State &xb)
 {
 
   PropertyTree ttree     = ptree.getPropertyTree(sblk);
@@ -113,7 +113,7 @@ cout << "gauss_range: igbdy.size=" << igbdy->size() << " yb_final=" << *xb[1] <<
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
 template<typename Types>
-GBOOL gterrainSpecbox<Types>::impl_poly_range(const PropertyTree &ptree, GString sblk, GGrid &grid, State &utmp, State &xb)
+GBOOL gterrainSpecBox<Types>::impl_poly_range(const PropertyTree &ptree, GString sblk, Grid &grid, State &utmp, State &xb)
 {
 
   PropertyTree ttree     = ptree.getPropertyTree(sblk);
@@ -210,7 +210,7 @@ GBOOL gterrainSpecbox<Types>::impl_poly_range(const PropertyTree &ptree, GString
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
 template<typename Types>
-GBOOL gterrainSpecbox<Types>::impl_schar_range(const PropertyTree &ptree, GString sblk, GGrid &grid, State &utmp, State &xb)
+GBOOL gterrainSpecBox<Types>::impl_schar_range(const PropertyTree &ptree, GString sblk, Grid &grid, State &utmp, State &xb)
 {
 
 

@@ -9,7 +9,6 @@
 #if !defined(_GINITFORCE_COMP_H)
 #define _GINITFORCE_COMP_H
 
-#include "ginitfb.hpp"
 #include "ginitfps.hpp"
 #include "ginitfs.hpp"
 #include "ginitfv.hpp"

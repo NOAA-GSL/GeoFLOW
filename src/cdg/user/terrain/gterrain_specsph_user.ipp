@@ -22,7 +22,7 @@
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
 template<typename Types>
-GBOOL gterrainSpecsph<Types>::impl_gauss_range(const PropertyTree &ptree, GString sblk, GGrid &grid, State &utmp, State &xb)
+GBOOL gterrainSpecSph<Types>::impl_gauss_range(const PropertyTree &ptree, GString sblk, Grid &grid, State &utmp, State &xb)
 {
 
   assert(FALSE && "Under construction");
@@ -76,7 +76,7 @@ GBOOL gterrainSpecsph<Types>::impl_gauss_range(const PropertyTree &ptree, GStrin
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
 template<typename Types>
-GBOOL gterrainSpecsph<Types>::impl_poly_range(const PropertyTree &ptree, GString sblk, GGrid &grid, State &utmp, State &xb)
+GBOOL gterrainSpecSph<Types>::impl_poly_range(const PropertyTree &ptree, GString sblk, Grid &grid, State &utmp, State &xb)
 {
 
   assert(FALSE && "Under construction");

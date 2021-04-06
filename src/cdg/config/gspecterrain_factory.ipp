@@ -76,13 +76,13 @@ GBOOL GSpecTerrainFactory<Types>::spec_box(const PropertyTree& ptree, Grid &grid
 
   sname = blktree.getValue<GString>("name");
   if      ( "boxgauss_range"   == sname ) {
-    bret = gterrain_specbox::impl_gauss_range   (ptree, stype, grid, utmp, xb);
+    bret = gterrainSpecBox<Types>::impl_gauss_range   (ptree, stype, grid, utmp, xb);
   }
   else if ( "boxpoly_range"    == sname ) {
-    bret = gterrain_specbox::impl_poly_range    (ptree, stype, grid, utmp, xb);
+    bret = gterrainSpecBox<Types>::impl_poly_range    (ptree, stype, grid, utmp, xb);
   }
   else if ( "boxschar_range"   == sname ) {
-    bret = gterrain_specbox::impl_schar_range   (ptree, stype, grid, utmp, xb);
+    bret = gterrainSpecBox<Types>::impl_schar_range   (ptree, stype, grid, utmp, xb);
   }
   else                                        {
     assert(FALSE && "Terrain specification method unknown");
@@ -115,10 +115,10 @@ GBOOL GSpecTerrainFactory<Types>::spec_sphere(const PropertyTree& ptree, Grid &g
   sname = blktree.getValue<GString>("name");
 
   if      ( "sphgauss_range"   == sname ) {
-    bret = gterrain_specsph::impl_gauss_range   (ptree, stype, grid, utmp, xb);
+    bret = gterrainSpecSph<Types>::impl_gauss_range   (ptree, stype, grid, utmp, xb);
   }
   else if ( "sphpoly_range"    == sname ) {
-    bret = gterrain_specsph::impl_poly_range    (ptree, stype, grid, utmp, xb);
+    bret = gterrainSpecSph<Types>::impl_poly_range    (ptree, stype, grid, utmp, xb);
   }
   else                                        {
     assert(FALSE && "Terrain specification method unknown");

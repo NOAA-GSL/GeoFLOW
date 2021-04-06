@@ -51,7 +51,6 @@ GNoSlipBdy<Types>::~GNoSlipBdy()
 // ARGS   : 
 //          eqn   : eqn pointer
 //          grid  : grid object (necessary?)
-//          stinfo: state info structure
 //          time  : timestep
 //          utmp  : tmp vectors
 //          u     : state vector
@@ -62,7 +61,6 @@ template<typename Types>
 GBOOL GNoSlipBdy<Types>::update_impl(
                               EqnBasePtr &eqn,
                               Grid       &grid,
-                              StateInfo  &stinfo,
                               Time       &time,
                               State      &utmp,
                               State      &u)

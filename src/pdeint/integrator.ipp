@@ -25,7 +25,6 @@ Integrator<ET>::Integrator(const EqnBasePtr&   equation,
 template<typename ET>
 void Integrator<ET>::time_integrate( Time&       t,
                                                State&      uf,
-                                               State&      ub,
 		                               State&      u ){
 	ASSERT(nullptr != eqn_ptr_);
 	ASSERT(nullptr != obs_ptr_);
@@ -38,7 +37,6 @@ void Integrator<ET>::time_integrate( Time&       t,
                , traits_.dt
                , n
                , uf
-               , ub
                , u
                , t);
         } 
@@ -47,7 +45,6 @@ void Integrator<ET>::time_integrate( Time&       t,
                , traits_.time_end
                , traits_.dt
                , uf
-               , ub
                , u);
           t = traits_.time_end;
         }
@@ -60,7 +57,6 @@ void Integrator<ET>::time( const Time& t0,
 		                     const Time& t1,
 		                     const Time& dt,
 		                     State&      uf,
-		                     State&      ub,
 		                     State&      u ){
 	ASSERT(nullptr != eqn_ptr_);
 	ASSERT(nullptr != mixer_ptr_);
@@ -83,7 +79,7 @@ void Integrator<ET>::time( const Time& t0,
 		  (*this->obs_ptr_)[j]->observe(t,dt_eff,u,uf);
  
 		// Take Step
-		this->eqn_ptr_->step(t, u, uf, ub, dt_eff);
+		this->eqn_ptr_->step(t, u, uf, dt_eff);
 		t += dt_eff;
 
                 ++cycle_;
@@ -107,7 +103,6 @@ void Integrator<ET>::steps( const Time&  t0,
 		                      const Time&  dt,
 			              const Size&  n,
 		                      State&       uf,
-		                      State&       ub,
 		                      State&       u,
 			              Time&        t ){
 	ASSERT(nullptr != eqn_ptr_);
@@ -130,7 +125,7 @@ void Integrator<ET>::steps( const Time&  t0,
 		  (*this->obs_ptr_)[j]->observe(t,dt_eff,u,uf);
 
 		// Take Step
-		this->eqn_ptr_->step(t, u, uf, ub, dt_eff);
+		this->eqn_ptr_->step(t, u, uf, dt_eff);
 		t += dt_eff;
 
                 // Call mixer to upate forcing:
@@ -147,7 +142,6 @@ void Integrator<ET>::steps( const Time&  t0,
 template<typename ET>
 void Integrator<ET>::list( const std::vector<Time>& tlist,
 		                     State&                   uf,
-		                     State&                   ub,
 	                             State&                   u ){
 	ASSERT(nullptr != eqn_ptr_);
 	ASSERT(nullptr != obs_ptr_);
@@ -158,7 +152,7 @@ void Integrator<ET>::list( const std::vector<Time>& tlist,
 		Time dt = tlist[i+1] - tlist[i];
 
 		// Step till next time
-		this->time(tlist[i],tlist[i+1],dt,uf,ub,u);
+		this->time(tlist[i],tlist[i+1],dt,uf,u);
 	}
 
 }

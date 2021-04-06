@@ -43,28 +43,25 @@ public:
 
         void               step(const Time &t, const State &uin,
                                 State &uf,
-                                State &ub,
                                 const Time &dt, State &tmp,
                                 State &uout);
 
         void               step(const Time &t, State &uin, 
                                 State &uf,
-                                State &ub,
                                 const Time &dt, State &tmp);
 
         void               setRHSfunction(std::function<void(
                                           const Time &t, 
                                           const State &uin,
                                           const State &uf,
-                                          const State &ub,
                                           const Time &dt, 
                                           State &dudt)> callback)
                                           { rhs_callback_ = callback; 
                                             bRHS_ = TRUE; }           // RHS callback, required
 
         void               set_apply_bdy_callback(
-                           std::function<void(const Time &t, State &u,
-                                         State &ub)> callback)
+                           std::function<void(const Time &t, State &u
+                                             )> callback)
                                          { bdy_apply_callback_ = callback;
                                            bapplybc_ = TRUE; }        // set bdy-application callback
         void                set_ggfx(GGFX<GFTYPE> *ggfx)
@@ -75,38 +72,35 @@ public:
 private:
 // Private methods:
         void               resize(GINT nstate);              // resize member data 
-        void               step_b(const Time &t, const State &uin,
-                                  State &uf, State &ub,
+        void               step_b(const Time &t, const State &uin, State &uf,
                                   const Time &dt, State &tmp,
                                   State &uout);
 
-        void               step_b(const Time &t, State &uin, 
-                                  State &uf, State &ub,
+        void               step_b(const Time &t, State &uin, State &uf, 
                                   const Time &dt, State &tmp);  // Butcher-form
 
-        void               step_ssp(const Time &t, const State &uin,
-                                    State &uf, State &ub,
+        void               step_ssp(const Time &t, const State &uin, State &uf, 
                                     const Time &dt, State &tmp,
                                     State &uout);                 // SSP-form
         void               step_ssp22(const Time &t, const State &uin,
-                                    State &uf, State &ub,
+                                    State &uf, 
                                     const Time &dt, State &tmp,
                                     State &uout);                 // SSP-form
         void               step_ssp33(const Time &t, const State &uin,
-                                    State &uf, State &ub,
+                                    State &uf, 
                                     const Time &dt, State &tmp,
                                     State &uout);                 // SSP-form
         void               step_ssp34(const Time &t, const State &uin,
-                                    State &uf, State &ub,
+                                    State &uf, 
                                     const Time &dt, State &tmp,
                                     State &uout);                 // SSP-form
 
         void               step_ssp(const Time &t, State &uin, 
-                                    State &uf, State &ub,
+                                    State &uf, 
                                     const Time &dt, State &tmp);
 
         void               step_euler(const Time &t, const State &uin, 
-                                      State &uf, State &ub,
+                                      State &uf, 
                                       const Time &dt, State &uout);
 
 // Private data:
@@ -122,11 +116,10 @@ private:
         std::function<void(const Time &t,                    
                            const State  &uin,
                            const State  &uf,
-                           const State  &ub,
                            const Time &dt, 
                            State &dudt)>
                            rhs_callback_;                   // RHS callback function
-        std::function<void(const Time &t, State &u, State &ub)>
+        std::function<void(const Time &t, State &u)>
                            bdy_apply_callback_;             // bdy apply callback
 
 };

@@ -57,7 +57,7 @@ GUpdateBdyFactory<Types>::build(const PropertyTree& ptree, const GString &sbdy, 
 //**********************************************************************************
 // METHOD : get_inflow_callback
 // DESC   : Gets CallbackPtr corresponding to sname arg for inflow conditions.
-//          the function are gottne from the gns_inflow_user.* namespace
+//          the function are gottne from the ginflow_user.* struct
 //          collection of methods, which the user may modify.
 // ARGS   : sname : inflow function name
 //          id    : canonical bdy id
@@ -78,12 +78,13 @@ GUpdateBdyFactory<Types>::get_inflow_callback(const GString& sname, const GINT i
   if      ( "myinflow"     == sname ) {
     callback = 
 
-         [](EqnBsePtr &eqn,
-            Grid      &grid,
-            Time      &time,
+         [](EqnBasePtr &eqn,
+            Grid       &grid,
+            Time       &time,
             const GINT id,
-            State     &utmp,
-            State     &u)-> GBOOL{return GInflowBdyMethods::myinflow(eqn, grid, time, id, utmp, u);}; 
+            State      &u,
+            State      &utmp,
+            State      &ub)-> GBOOL{return GInflowUser<Types>::myinflow(eqn, grid, time, id, u, utmp, ub);}; 
 
   }
   else {
@@ -153,7 +154,10 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree &ptree, Grid &grid, s
     traits.istate      = bcblock.istate;
     traits.ibdyvol     = ibdy;
     traits.use_init    = bcblock.use_init;
-    if ( !traits.use_init ) {
+    if ( traits.use_init ) {
+      traits.smethod = ptree.getValue<GString>("initstate_block");
+    }
+    else {
       traits.callback = GUpdateBdyFactory<Types>::get_inflow_callback(bcblock.smethod, bcblock.bdyid);
     }
     traits.ptree = ptree;

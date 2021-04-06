@@ -19,7 +19,7 @@
 #include "gnoslip_bdy.hpp"
 #include "goutflow_bdy.hpp"
 #include "gsponge_bdy.hpp"
-#include "gns_inflow_user.hpp"
+#include "ginflow_user.hpp"
 #include "gutils.hpp"
 #include "gspecbdy_user.hpp"
 #include "ginitstate_factory.hpp"
@@ -53,9 +53,9 @@ class GUpdateBdyFactory
 {
   public:
         using Types            = TypePack;
+        using State            = typename Types::State;
         using EqnBase          = EquationBase<TypePack>;
         using EqnBasePtr       = std::shared_ptr<EqnBase>;
-        using State            = typename Types::State;
         using Grid             = typename Types::Grid;
         using Ftype            = typename Types::Ftype;
         using Time             = typename Types::Time;
@@ -65,8 +65,9 @@ class GUpdateBdyFactory
                                 Grid       &grid,
                                 Time       &time,
                                 const GINT  id,
+                                State      &u,
                                 State      &utmp,
-                                State      &u)>;
+                                State      &ub)>;
 
 
 	static UpdateBdyBasePtr build(const PropertyTree &ptree, const GString &sbdy, Grid &grid, stBdyBlock &bcblock, GTVector<GSIZET> &ibdy, GSIZET igbdy_start);

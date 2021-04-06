@@ -90,7 +90,6 @@ GExRKStepper<T>::~GExRKStepper()
 // ARGUMENTS  : t    : time, t^n, for state, uin=u^n
 //              uin  : initial (entry) state, u^n
 //              uf   : forcing tendency
-//              ub   : bdy tendency
 //              dt   : time step
 //              tmp  : tmp space. Must have at least NState*(M+1)+1 vectors,
 //                     where NState is the number of state vectors.
@@ -99,16 +98,16 @@ GExRKStepper<T>::~GExRKStepper()
 // RETURNS    : none.
 //**********************************************************************************
 template<typename T>
-void GExRKStepper<T>::step(const Time &t, const State &uin, State &uf, State &ub,  
+void GExRKStepper<T>::step(const Time &t, const State &uin, State &uf,
                            const Time &dt, State &tmp, State &uout)
 {
 
   assert(bRHS_  && "(1) RHS callback not set");
   if ( bSSP_ ) {
-    step_ssp(t, uin, uf, ub, dt, tmp, uout);
+    step_ssp(t, uin, uf, dt, tmp, uout);
   }
   else {
-    step_b(t, uin, uf, ub, dt, tmp, uout);
+    step_b(t, uin, uf, dt, tmp, uout);
   }
 
 } // end, method step(1)
@@ -131,15 +130,15 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &uf, State &ub
 // RETURNS    : none.
 //**********************************************************************************
 template<typename T>
-void GExRKStepper<T>::step(const Time &t, State &uin, State &uf, State &ub,  
+void GExRKStepper<T>::step(const Time &t, State &uin, State &uf, 
                            const Time &dt, State &tmp)
 {
   assert(bRHS_  && "(2) RHS callback not set");
   if ( bSSP_ ) {
-    step_ssp(t, uin, uf, ub, dt, tmp);
+    step_ssp(t, uin, uf, dt, tmp);
   }
   else {
-    step_b(t, uin, uf, ub, dt, tmp);
+    step_b(t, uin, uf, dt, tmp);
   }
 
 } // end, method step(2)
@@ -163,7 +162,6 @@ void GExRKStepper<T>::step(const Time &t, State &uin, State &uf, State &ub,
 // ARGUMENTS  : t    : time, t^n, for state, uin=u^n
 //              uin  : initial (entry) state, u^n
 //              uf   : forcing tendency
-//              ub   : bdy tendency
 //              dt   : time step
 //              tmp  : tmp space. Must have at least NState*(M+1)+1 vectors,
 //                     where NState is the number of state vectors.
@@ -172,7 +170,7 @@ void GExRKStepper<T>::step(const Time &t, State &uin, State &uf, State &ub,
 // RETURNS    : none.
 //**********************************************************************************
 template<typename T>
-void GExRKStepper<T>::step_b(const Time &t, const State &uin, State &uf, State &ub,  
+void GExRKStepper<T>::step_b(const Time &t, const State &uin, State &uf, 
                            const Time &dt, State &tmp, State &uout)
 {
 
@@ -212,7 +210,7 @@ void GExRKStepper<T>::step_b(const Time &t, const State &uin, State &uf, State &
         GMTK::saxpby(*isum,  1.0, *K_[j][0], (*beta)(m,j)*h);
     *u[0]  = (*uin[0]); *u[0] += (*isum); // no copy const. called
     
-    rhs_callback_( tt, u, uf, ub, h, K_[m] ); // k_m at stage m
+    rhs_callback_( tt, u, uf, h, K_[m] ); // k_m at stage m
 
     // x^n+1 = x^n + h Sum_i=1^m c_i K_i, so
     // accumulate the sum in uout here: 
@@ -243,7 +241,6 @@ void GExRKStepper<T>::step_b(const Time &t, const State &uin, State &uf, State &
 // ARGUMENTS  : t    : time, t^n, for state, uin=u^n
 //              uin  : initial (entry) state, u^n
 //              uf   : forcing tendency
-//              ub   : bdy tendency
 //              dt   : time step
 //              tmp  : tmp space. Must have at least NState*(M+1)+1 vectors,
 //                     where NState is the number of state vectors.
@@ -252,7 +249,7 @@ void GExRKStepper<T>::step_b(const Time &t, const State &uin, State &uf, State &
 // RETURNS    : none.
 //**********************************************************************************
 template<typename T>
-void GExRKStepper<T>::step_b(const Time &t, const State &uin, State &uf, State &ub,  
+void GExRKStepper<T>::step_b(const Time &t, const State &uin, State &uf, 
                            const Time &dt, State &tmp, State &uout)
 {
 
@@ -284,7 +281,7 @@ void GExRKStepper<T>::step_b(const Time &t, const State &uin, State &uf, State &
   }
 
   tt = t ;
-  if ( bapplybc_  ) bdy_apply_callback_ (tt, uout, ub); 
+  if ( bapplybc_  ) bdy_apply_callback_ (tt, uout); 
  
   for ( m=0; m<nstage_-1; m++ ) { // cycle thru stages minus 1
     // Compute k_m:
@@ -298,8 +295,8 @@ void GExRKStepper<T>::step_b(const Time &t, const State &uin, State &uf, State &
      *u[n]  = (*uin[n]); *u[n] += (*isum); // no copy const. called
     }
     if ( grid_!=NULLPTR ) GMTK::constrain2sphere(*grid_, u);
-    if ( bapplybc_ ) bdy_apply_callback_ (tt, u, ub); 
-    rhs_callback_( tt, u, uf, ub, h, K_[m] ); // k_m at stage m
+    if ( bapplybc_ ) bdy_apply_callback_ (tt, u); 
+    rhs_callback_( tt, u, uf, h, K_[m] ); // k_m at stage m
 
     // x^n+1 = x^n + h Sum_i=1^m c_i K_i, so
     // accumulate the sum in uout here: 
@@ -311,7 +308,7 @@ void GExRKStepper<T>::step_b(const Time &t, const State &uin, State &uf, State &
       *uout[n] += *isum; // += h * c_m * k_m
     }
     if ( grid_ != NULLPTR  ) GMTK::constrain2sphere(*grid_, uout);
-    if ( bapplybc_  ) bdy_apply_callback_ (tt, uout, ub); 
+    if ( bapplybc_  ) bdy_apply_callback_ (tt, uout); 
   } // end, m-loop over stages
 
 
@@ -323,8 +320,8 @@ void GExRKStepper<T>::step_b(const Time &t, const State &uin, State &uf, State &
      *u[n]  = (*uin[n]); *u[n] += (*isum); // no copy const. called
    }
    if ( grid_ != NULLPTR  ) GMTK::constrain2sphere(*grid_, u);
-   if ( bapplybc_  ) bdy_apply_callback_ (tt, u, ub); 
-   rhs_callback_( tt, u, uf, ub, h, K_[0]); // k_M at stage M
+   if ( bapplybc_  ) bdy_apply_callback_ (tt, u); 
+   rhs_callback_( tt, u, uf, h, K_[0]); // k_M at stage M
 
    for ( n=0; ggfx_!=NULLPTR && n<nstate; n++ ) { // for each state member, uout
      ggfx_->doOp(*K_[0][n], GGFX<GFTYPE>::Smooth());
@@ -336,14 +333,14 @@ void GExRKStepper<T>::step_b(const Time &t, const State &uin, State &uf, State &
     *isum     = (*K_[0][n]); *isum *= ( (*c)[nstage_-1]*h );
     *uout[n] += *isum; // += h * c_M * k_M
    }
-   if ( bapplybc_  ) bdy_apply_callback_ (tt, uout, ub); 
+   if ( bapplybc_  ) bdy_apply_callback_ (tt, uout); 
    if ( grid_ != NULLPTR  ) GMTK::constrain2sphere(*grid_, uout);
 
    for ( n=0; ggfx_!=NULLPTR && n<nstate; n++ ) { // for each state member, uout
      ggfx_->doOp(*uout[n], GGFX<GFTYPE>::Smooth());
    }
 
-   if ( bapplybc_  ) bdy_apply_callback_ (tt, uout, ub); 
+   if ( bapplybc_  ) bdy_apply_callback_ (tt, uout); 
   
 } // end of method step_b (1)
 
@@ -372,7 +369,7 @@ void GExRKStepper<T>::step_b(const Time &t, const State &uin, State &uf, State &
 // RETURNS    : none.
 //**********************************************************************************
 template<typename T>
-void GExRKStepper<T>::step_b(const Time &t, State &uin, State &uf, State &ub,  
+void GExRKStepper<T>::step_b(const Time &t, State &uin, State &uf, 
                            const Time &dt, State &tmp)
 {
 
@@ -414,13 +411,13 @@ void GExRKStepper<T>::step_b(const Time &t, State &uin, State &uf, State &ub,
      *u[n]  = (*uin[n]) + (*isum);
     }
 
-    if ( bapplybc_  ) bdy_apply_callback_ (tt, u, ub); 
+    if ( bapplybc_  ) bdy_apply_callback_ (tt, u); 
     if ( ggfx_ != NULLPTR ) {
       for ( n=0; n<nstate; n++ ) { // for each state member, u
         ggfx_->doOp(*u[n], GGFX<GFTYPE>::Smooth());
       }
     }
-    rhs_callback_( tt, u, uf, ub, h, K_[m] ); // k_m at stage m
+    rhs_callback_( tt, u, uf, h, K_[m] ); // k_m at stage m
 
     // x^n+1 = x^n + h Sum_i=1^m c_i K_i, so
     // accumulate the sum in uout here: 
@@ -436,20 +433,20 @@ void GExRKStepper<T>::step_b(const Time &t, State &uin, State &uf, State &ub,
      *u[n] = (*uin[n]) + (*isum);
       if ( ggfx_ != NULLPTR ) ggfx_->doOp(*u[n], GGFX<GFTYPE>::Smooth());
    }
-   if ( bapplybc_  ) bdy_apply_callback_ (tt, u, ub); 
-   rhs_callback_( tt, u, uf, ub, h, K_[0]); // k_M at stage M
+   if ( bapplybc_  ) bdy_apply_callback_ (tt, u); 
+   rhs_callback_( tt, u, uf, h, K_[0]); // k_M at stage M
 
    for ( n=0; n<nstate; n++ ) { // for each state member, u
     *uout[n] += (*K_[0][n])*( (*c)[nstage_-1]*h ); // += h * c_M * k_M
    }
 
-   if ( bapplybc_  ) bdy_apply_callback_ (tt, uout, ub); 
+   if ( bapplybc_  ) bdy_apply_callback_ (tt, uout); 
    if ( ggfx_ != NULLPTR ) {
      for ( n=0; n<nstate; n++ ) { // for each state member, uouyt
        ggfx_->doOp(*uout[n], GGFX<GFTYPE>::Smooth());
      }
    }
-   if ( bapplybc_  ) bdy_apply_callback_ (tt, uout, ub); 
+   if ( bapplybc_  ) bdy_apply_callback_ (tt, uout); 
 
   // deep copy tmp space to uin for return:
   for ( j=0; j<nstate; j++ ) {
@@ -491,7 +488,6 @@ void GExRKStepper<T>::resize(GINT nstate)
 // ARGUMENTS  : t    : time, t^n, for state, uin=u^n
 //              uin  : initial (entry) state, u^n
 //              uf   : forcing tendency
-//              ub   : bdy tendency
 //              dt   : time step
 //              tmp  : tmp space. Must have at least NState*(M+1)+1 vectors,
 //                     where NState is the number of state vectors.
@@ -500,17 +496,17 @@ void GExRKStepper<T>::resize(GINT nstate)
 // RETURNS    : none.
 //**********************************************************************************
 template<typename T>
-void GExRKStepper<T>::step_ssp(const Time &t, const State &uin, State &uf, State &ub,  
+void GExRKStepper<T>::step_ssp(const Time &t, const State &uin, State &uf, 
                            const Time &dt, State &tmp, State &uout)
 {
   if      ( norder_ == 2 && nstage_ == 2 ) {
-    step_ssp22(t, uin, uf, ub, dt, tmp, uout);
+    step_ssp22(t, uin, uf, dt, tmp, uout);
   }
   else if ( norder_ == 3 && nstage_ == 3 ) {
-    step_ssp33(t, uin, uf, ub, dt, tmp, uout);
+    step_ssp33(t, uin, uf, dt, tmp, uout);
   }
   else if ( norder_ == 3 && nstage_ == 4 ) {
-    step_ssp34(t, uin, uf, ub, dt, tmp, uout);
+    step_ssp34(t, uin, uf, dt, tmp, uout);
   }
   else {
     assert(FALSE);
@@ -530,7 +526,6 @@ void GExRKStepper<T>::step_ssp(const Time &t, const State &uin, State &uf, State
 // ARGUMENTS  : t    : time, t^n, for state, uin=u^n
 //              uin  : initial (entry) state, u^n
 //              uf   : forcing tendency
-//              ub   : bdy tendency
 //              dt   : time step
 //              tmp  : tmp space. Must have at least NState*(M+1)+1 vectors,
 //                     where NState is the number of state vectors.
@@ -539,7 +534,7 @@ void GExRKStepper<T>::step_ssp(const Time &t, const State &uin, State &uf, State
 // RETURNS    : none.
 //**********************************************************************************
 template<typename T>
-void GExRKStepper<T>::step_ssp34(const Time &t, const State &uin, State &uf, State &ub,  
+void GExRKStepper<T>::step_ssp34(const Time &t, const State &uin, State &uf, 
                            const Time &dt, State &tmp, State &uout)
 {
 
@@ -561,11 +556,11 @@ void GExRKStepper<T>::step_ssp34(const Time &t, const State &uin, State &uf, Sta
   // Stage 1:
   tt  = t;
   dtt = dt;
-  step_euler(tt, uin, uf, ub, dtt, K_[0]);   
+  step_euler(tt, uin, uf, dtt, K_[0]);   
   for ( i=0; i<nstate; i++ )  {
     GMTK::saxpby(*K_[0][i],  0.5, *uin[i], 0.5);
   }
-  if ( bapplybc_  ) bdy_apply_callback_ (tt, K_[0], ub); 
+  if ( bapplybc_  ) bdy_apply_callback_ (tt, K_[0]); 
   if ( grid_ != NULLPTR  ) GMTK::constrain2sphere(*grid_, K_[0]);
   for ( i=0; i<nstate; i++ )  {
     if ( ggfx_ != NULLPTR ) {
@@ -576,11 +571,11 @@ void GExRKStepper<T>::step_ssp34(const Time &t, const State &uin, State &uf, Sta
   // Stage 2:
   tt  = t + 0.5*dt;
   dtt = dt;
-  step_euler(tt, K_[0], uf, ub, dtt, K_[1]);   
+  step_euler(tt, K_[0], uf, dtt, K_[1]);   
   for ( i=0; i<nstate; i++ )  {
     GMTK::saxpby(*K_[1][i],  0.5, *K_[0][i], 0.5);
   }
-  if ( bapplybc_  ) bdy_apply_callback_ (tt, K_[1], ub); 
+  if ( bapplybc_  ) bdy_apply_callback_ (tt, K_[1]); 
   if ( grid_ != NULLPTR  ) GMTK::constrain2sphere(*grid_, K_[1]);
   for ( i=0; i<nstate; i++ )  {
     if ( ggfx_ != NULLPTR ) {
@@ -591,12 +586,12 @@ void GExRKStepper<T>::step_ssp34(const Time &t, const State &uin, State &uf, Sta
   // Stage 3:
   tt  = t + dt;
   dtt = dt;
-  step_euler(tt, K_[1], uf, ub, dtt, K_[2]);   
+  step_euler(tt, K_[1], uf, dtt, K_[2]);   
   for ( i=0; i<nstate; i++ )  {
     GMTK::saxpby(*K_[2][i],  1.0/6.0, *K_[1][i], 1.0/6.0);
     GMTK::saxpby(*K_[2][i],  1.0, *uin[i], 2.0/3.0);
   }
-  if ( bapplybc_  ) bdy_apply_callback_ (tt, K_[2], ub); 
+  if ( bapplybc_  ) bdy_apply_callback_ (tt, K_[2]); 
   if ( grid_ != NULLPTR  ) GMTK::constrain2sphere(*grid_, K_[2]);
   for ( i=0; i<nstate; i++ )  {
     if ( ggfx_ != NULLPTR ) {
@@ -607,11 +602,11 @@ void GExRKStepper<T>::step_ssp34(const Time &t, const State &uin, State &uf, Sta
   // Stage 4:
   tt  = t + 0.5*dt;
   dtt = dt;
-  step_euler(tt, K_[2], uf, ub, dtt, uout);   
+  step_euler(tt, K_[2], uf, dtt, uout);   
   for ( i=0; i<nstate; i++ )  {
     GMTK::saxpby(*uout[i],  0.5, *K_[2][i], 0.5);
   }
-  if ( bapplybc_  ) bdy_apply_callback_ (tt, uout, ub); 
+  if ( bapplybc_  ) bdy_apply_callback_ (tt, uout); 
   if ( grid_ != NULLPTR  ) GMTK::constrain2sphere(*grid_, uout);
   for ( i=0; i<nstate; i++ )  {
     if ( ggfx_ != NULLPTR ) {
@@ -633,7 +628,6 @@ void GExRKStepper<T>::step_ssp34(const Time &t, const State &uin, State &uf, Sta
 // ARGUMENTS  : t    : time, t^n, for state, uin=u^n
 //              uin  : initial (entry) state, u^n
 //              uf   : forcing tendency
-//              ub   : bdy tendency
 //              dt   : time step
 //              tmp  : tmp space. Must have at least NState*(M+1)+1 vectors,
 //                     where NState is the number of state vectors.
@@ -642,7 +636,7 @@ void GExRKStepper<T>::step_ssp34(const Time &t, const State &uin, State &uf, Sta
 // RETURNS    : none.
 //**********************************************************************************
 template<typename T>
-void GExRKStepper<T>::step_ssp33(const Time &t, const State &uin, State &uf, State &ub,  
+void GExRKStepper<T>::step_ssp33(const Time &t, const State &uin, State &uf, 
                            const Time &dt, State &tmp, State &uout)
 {
 
@@ -664,8 +658,8 @@ void GExRKStepper<T>::step_ssp33(const Time &t, const State &uin, State &uf, Sta
   //   u(1)  = u^n + dt L(u^n);
   tt  = t;
   dtt = dt;
-  step_euler(tt, uin, uf, ub, dtt, K_[0]);   
-  if ( bapplybc_  ) bdy_apply_callback_ (tt, K_[0], ub); 
+  step_euler(tt, uin, uf, dtt, K_[0]);   
+  if ( bapplybc_  ) bdy_apply_callback_ (tt, K_[0]); 
   if ( grid_ != NULLPTR  ) GMTK::constrain2sphere(*grid_, K_[0]);
   for ( i=0; i<nstate; i++ )  {
     if ( ggfx_ != NULLPTR ) {
@@ -676,11 +670,11 @@ void GExRKStepper<T>::step_ssp33(const Time &t, const State &uin, State &uf, Sta
   // Stage 2:
   tt  = t;
   dtt = dt;
-  step_euler(tt, K_[0], uf, ub, dtt, K_[1]);   
+  step_euler(tt, K_[0], uf, dtt, K_[1]);   
   for ( i=0; i<nstate; i++ )  {
     GMTK::saxpby(*K_[1][i],  0.25, *uin[i], 0.75);
   }
-  if ( bapplybc_  ) bdy_apply_callback_ (tt, K_[1], ub); 
+  if ( bapplybc_  ) bdy_apply_callback_ (tt, K_[1]); 
   if ( grid_ != NULLPTR  ) GMTK::constrain2sphere(*grid_, K_[1]);
   for ( i=0; i<nstate; i++ )  {
     if ( ggfx_ != NULLPTR ) {
@@ -691,11 +685,11 @@ void GExRKStepper<T>::step_ssp33(const Time &t, const State &uin, State &uf, Sta
   // Stage 3:
   tt  = t;
   dtt = dt;
-  step_euler(tt, K_[1], uf, ub, dtt, uout);   
+  step_euler(tt, K_[1], uf, dtt, uout);   
   for ( i=0; i<nstate; i++ )  {
     GMTK::saxpby(*uout[i],  2.0/3.0, *uin[i], 1.0/3.0);
   }
-  if ( bapplybc_  ) bdy_apply_callback_ (tt, uout, ub); 
+  if ( bapplybc_  ) bdy_apply_callback_ (tt, uout); 
   if ( grid_ != NULLPTR  ) GMTK::constrain2sphere(*grid_, uout);
   for ( i=0; i<nstate; i++ )  {
     if ( ggfx_ != NULLPTR ) {
@@ -717,7 +711,6 @@ void GExRKStepper<T>::step_ssp33(const Time &t, const State &uin, State &uf, Sta
 // ARGUMENTS  : t    : time, t^n, for state, uin=u^n
 //              uin  : initial (entry) state, u^n
 //              uf   : forcing tendency
-//              ub   : bdy tendency
 //              dt   : time step
 //              tmp  : tmp space. Must have at least NState*(M+1)+1 vectors,
 //                     where NState is the number of state vectors.
@@ -726,7 +719,7 @@ void GExRKStepper<T>::step_ssp33(const Time &t, const State &uin, State &uf, Sta
 // RETURNS    : none.
 //**********************************************************************************
 template<typename T>
-void GExRKStepper<T>::step_ssp22(const Time &t, const State &uin, State &uf, State &ub,  
+void GExRKStepper<T>::step_ssp22(const Time &t, const State &uin, State &uf, 
                            const Time &dt, State &tmp, State &uout)
 {
 
@@ -748,8 +741,8 @@ void GExRKStepper<T>::step_ssp22(const Time &t, const State &uin, State &uf, Sta
   //   u(1)  = u^n + dt L(u^n);
   tt  = t;
   dtt = dt;
-  step_euler(tt, uin, uf, ub, dtt, K_[0]);   
-  if ( bapplybc_  ) bdy_apply_callback_ (tt, K_[0], ub); 
+  step_euler(tt, uin, uf, dtt, K_[0]);   
+  if ( bapplybc_  ) bdy_apply_callback_ (tt, K_[0]); 
   if ( grid_ != NULLPTR  ) GMTK::constrain2sphere(*grid_,K_[0]);
   for ( i=0; i<nstate; i++ )  {
     if ( ggfx_ != NULLPTR ) {
@@ -760,11 +753,11 @@ void GExRKStepper<T>::step_ssp22(const Time &t, const State &uin, State &uf, Sta
   // Stage 2:
   tt  = t;
   dtt = dt;
-  step_euler(tt, K_[0], uf, ub, dtt, uout);   
+  step_euler(tt, K_[0], uf, dtt, uout);   
   for ( i=0; i<nstate; i++ )  {
     GMTK::saxpby(*uout[i],  0.5, *uin[i], 0.5);
   }
-  if ( bapplybc_  ) bdy_apply_callback_ (tt, uout, ub); 
+  if ( bapplybc_  ) bdy_apply_callback_ (tt, uout); 
   if ( grid_ != NULLPTR  ) GMTK::constrain2sphere(*grid_, uout);
   for ( i=0; i<nstate; i++ )  {
     if ( ggfx_ != NULLPTR ) {
@@ -792,7 +785,7 @@ void GExRKStepper<T>::step_ssp22(const Time &t, const State &uin, State &uf, Sta
 // RETURNS    : none.
 //**********************************************************************************
 template<typename T>
-void GExRKStepper<T>::step_ssp(const Time &t, State &uin, State &uf, State &ub,  
+void GExRKStepper<T>::step_ssp(const Time &t, State &uin, State &uf, 
                            const Time &dt, State &tmp)
 {
 
@@ -811,19 +804,18 @@ void GExRKStepper<T>::step_ssp(const Time &t, State &uin, State &uf, State &ub,
 // ARGUMENTS  : t    : time, t^n, for state, uin=u^n
 //              uin  : initial (entry) state, u^n
 //              uf   : forcing tendency
-//              ub   : bdy tendency
 //              dt   : time step
 //              uout : updated state, at t^n+1
 //               
 // RETURNS    : none.
 //**********************************************************************************
 template<typename T>
-void GExRKStepper<T>::step_euler(const Time &t, const State &uin, State &uf, State &ub,  
+void GExRKStepper<T>::step_euler(const Time &t, const State &uin, State &uf, 
                            const Time &dt, State &uout)
 {
   assert(bRHS_  && "RHS callback not set");
 
-  rhs_callback_( t, uin, uf, ub, dt, uout ); 
+  rhs_callback_( t, uin, uf, dt, uout ); 
   for ( auto i=0; i<uout.size(); i++ ) {
     GMTK::saxpby(*uout[i],  dt, *uin[i], 1.0);
   }

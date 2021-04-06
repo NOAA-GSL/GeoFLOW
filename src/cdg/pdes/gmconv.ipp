@@ -204,19 +204,18 @@ void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
 // ARGS   : t   : time
 //          u   : state. 
 //          uf  : forcing tendency state vector
-//          ub  : bdy state vector
 //          dt  : time step
 //          dudt: accelerations, returned
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GMConv<TypePack>::dudt_impl(const Time &t, const State &u, const State &uf,  const State &ub, const Time &dt, Derivative &dudt)
+void GMConv<TypePack>::dudt_impl(const Time &t, const State &u, const State &uf,   const Time &dt, Derivative &dudt)
 {
   if ( traits_.dodry ) {
-    dudt_dry(t, u, uf, ub, dt, dudt);
+    dudt_dry(t, u, uf, dt, dudt);
   }
   else {
-    dudt_wet(t, u, uf, ub, dt, dudt);
+    dudt_wet(t, u, uf, dt, dudt);
   }
 }
 
@@ -228,13 +227,12 @@ void GMConv<TypePack>::dudt_impl(const Time &t, const State &u, const State &uf,
 // ARGS   : t   : time
 //          u   : state. 
 //          uf  : forcing tendency state vector
-//          ub  : bdy state vector
 //          dt  : time step
 //          dudt: accelerations, returned
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf,  const State &ub, const Time &dt, Derivative &dudt)
+void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, const Time &dt, Derivative &dudt)
 {
   assert(!traits_.bconserved &&
          "conservation not yet supported"); 
@@ -363,13 +361,12 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
 // ARGS   : t   : time
 //          u   : state. 
 //          uf  : forcing tendency state vector
-//          ub  : bdy state vector
 //          dt  : time step
 //          dudt: accelerations, returned
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GMConv<TypePack>::dudt_wet(const Time &t, const State &u, const State &uf,  const State &ub, const Time &dt, Derivative &dudt)
+void GMConv<TypePack>::dudt_wet(const Time &t, const State &u, const State &uf,  const Time &dt, Derivative &dudt)
 {
   assert(!traits_.bconserved &&
          "conservation not yet supported"); 
@@ -584,12 +581,11 @@ void GMConv<TypePack>::dudt_wet(const Time &t, const State &u, const State &uf, 
 // ARGS   : t   : time
 //          uin : input state, modified on output with update
 //          uf  : force-tendency vector
-//          ub  : bdy vector
 //          dt  : time step
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GMConv<TypePack>::step_impl(const Time &t, State &uin, State &uf, State &ub, const Time &dt)
+void GMConv<TypePack>::step_impl(const Time &t, State &uin, State &uf, const Time &dt)
 {
 
   GBOOL bret;
@@ -604,7 +600,7 @@ void GMConv<TypePack>::step_impl(const Time &t, State &uin, State &uf, State &ub
   }
 
   // Set bdy conditions:
-  apply_bc_impl(t, uin, ub);
+  apply_bc_impl(t, uin);
 
   // Set evolved state vars from input state.
   // These are not deep copies:
@@ -616,11 +612,11 @@ void GMConv<TypePack>::step_impl(const Time &t, State &uin, State &uf, State &ub
     case GSTEPPER_EXRK:
       istage_ = 0;
       for ( auto j=0; j<uold_.size(); j++ ) *uold_[j] = *uevolve_[j];
-      step_exrk(t, uold_, uf, ub, dt, uevolve_);
+      step_exrk(t, uold_, uf, dt, uevolve_);
       break;
     case GSTEPPER_BDFAB:
     case GSTEPPER_BDFEXT:
-      step_multistep(t, uevolve_, uf, ub, dt);
+      step_multistep(t, uevolve_, uf, dt);
       break;
   }
 
@@ -634,7 +630,7 @@ void GMConv<TypePack>::step_impl(const Time &t, State &uin, State &uf, State &ub
   }
 #endif
 
-  apply_bc_impl(t, uin, ub);
+  apply_bc_impl(t, uin);
 
   // Check solution for NaN and Inf:
   bret = TRUE;
@@ -654,13 +650,12 @@ void GMConv<TypePack>::step_impl(const Time &t, State &uin, State &uf, State &ub
 // DESC   : Step implementation method entry point
 // ARGS   : t   : time
 //          uin : input state, modified on output with update
-//          ub  : bdy vector
 //          dt  : time step
 //          uout: output state
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GMConv<TypePack>::step_impl(const Time &t, const State &uin, State &uf,  State &ub, const Time &dt, State &uout)
+void GMConv<TypePack>::step_impl(const Time &t, const State &uin, State &uf,  const Time &dt, State &uout)
 {
   assert(FALSE && "step_impl(2) not available");
 
@@ -678,12 +673,11 @@ void GMConv<TypePack>::step_impl(const Time &t, const State &uin, State &uf,  St
 // ARGS   : t   : time
 //          u   : state
 //          uf  : force tendency vector
-//          ub  : bdy vector
 //          dt  : time step
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GMConv<TypePack>::step_multistep(const Time &t, State &uin, State &uf, State &ub, const Time &dt)
+void GMConv<TypePack>::step_multistep(const Time &t, State &uin, State &uf, const Time &dt)
 {
   assert(FALSE && "Multistep methods not yet available");
   
@@ -697,18 +691,17 @@ void GMConv<TypePack>::step_multistep(const Time &t, State &uin, State &uf, Stat
 // ARGS   : t   : time
 //          uin : input state; must not be modified
 //          uf  : force tendency vector
-//          ub  : bdy vector
 //          dt  : time step
 //          uout: output/updated state
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GMConv<TypePack>::step_exrk(const Time &t, State &uin, State &uf, State &ub, const Time &dt, State &uout)
+void GMConv<TypePack>::step_exrk(const Time &t, State &uin, State &uf, const Time &dt, State &uout)
 {
   assert(gexrk_ != NULLPTR && "GExRK operator not instantiated");
 
   // GExRK stepper steps entire state over one dt:
-  gexrk_->step(t, uin, uf, ub, dt, urktmp_, uout);
+  gexrk_->step(t, uin, uf, dt, urktmp_, uout);
 
 //GMTK::constrain2sphere(*grid_, uout);
 
@@ -833,22 +826,20 @@ void GMConv<TypePack>::init_impl(State &u, State &tmp)
   std::function<void(const Time &t,                    // RHS callback function
                      const State  &uin,
                      const State  &uf,
-                     const State  &ub,
                      const Time   &dt,
                      State &dudt)> rhs
                   = [this](const Time &t,           
                      const State  &uin, 
                      const State  &uf, 
-                     const State  &ub, 
                      const Time   &dt,
-                     State &dudt){dudt_impl(t, uin, uf, ub, dt, dudt);}; 
+                     State &dudt){dudt_impl(t, uin, uf, dt, dudt);}; 
 
   std::function<void(const Time &t,                    // Bdy apply callback function
-                     State  &uin, 
-                     State &ub)> applybc 
+                     State  &uin 
+                     )> applybc 
                   = [this](const Time &t,              
-                     State  &uin, 
-                     State &ub){apply_bc_impl(t, uin, ub);}; 
+                     State  &uin
+                     ){apply_bc_impl(t, uin);}; 
 
   // Configure time stepping:
   GExRKStepper<GFTYPE>::Traits rktraits;
@@ -1056,13 +1047,14 @@ void GMConv<TypePack>::set_nu(GTVector<Ftype> &nu)
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : apply_bc_impl
-// DESC   : Apply global domain boundary conditions, ub
+// DESC   : Apply global domain boundary conditions
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GMConv<TypePack>::apply_bc_impl(const Time &t, State &u, State &ub)
+void GMConv<TypePack>::apply_bc_impl(const Time &t, State &u)
 {
   Time ttime = t;
+  std::shared_ptr<GMConv<TypePack>> pthis(this);
 
   BdyUpdateList *updatelist = &grid_->bdy_update_list();;
 
@@ -1070,7 +1062,7 @@ void GMConv<TypePack>::apply_bc_impl(const Time &t, State &u, State &ub)
   // Update bdy values if required to:
   for ( auto k=0; k<updatelist->size(); k++ ) { // foreach grid bdy
     for ( auto j=0; j<(*updatelist)[j].size(); j++ ) { // each update method
-      (*updatelist)[k][j]->update(*grid_, this->stateinfo(), ttime, utmp_, u, ub);
+      (*updatelist)[k][j]->update(pthis, *grid_, ttime, utmp_, u);
     }
   }
 } // end of method apply_bc_impl

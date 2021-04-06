@@ -19,11 +19,12 @@
 //          grid   : grid object
 //          time   : initialization time
 //          utmp   : tmp arrays
+//          u      : state array
 //          uf     : state to be initialized.
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
 template<typename Types>
-GBOOL ginitfps<Types>::impl_rand(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &uf)
+GBOOL ginitfps<Types>::impl_rand(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u, State &uf)
 {
 
   return FALSE;

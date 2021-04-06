@@ -29,7 +29,6 @@ using namespace geoflow;
 using namespace geoflow::tbox;
 
 
-class GGrid;
 
 
 template<typename TypePack>
@@ -38,21 +37,20 @@ struct ginitstate
         using Types      = TypePack;
         using State      = typename Types::State;
         using StateComp  = typename Types::StateComp;
-        using EqnBase    = EquationBase<Equation>;
+        using EqnBase    = EquationBase<Types>;
         using EqnBasePtr = std::shared_ptr<EqnBase>;
         using Grid       = typename Types::Grid;
         using Time       = typename Types::Time;
         using Ftype      = typename Types::Ftype;
 
-static GBOOL impl_boxnwaveburgers      (const PropertyTree& ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u);
-static GBOOL impl_icosnwaveburgers     (const PropertyTree& ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u);
-static GBOOL impl_boxdirgauss          (const PropertyTree& ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u);
-static GBOOL impl_boxpergauss          (const PropertyTree& ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u);
-static GBOOL impl_icosgauss            (const PropertyTree& ptree, GString &sconfig, GGrid &grid, Time &time, State &utmp, State &u);
-static GBOOL impl_boxdrybubble         (const PropertyTree& ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u);
-static GBOOL impl_boxsod               (const PropertyTree& ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u);
-static GBOOL impl_icosabcconv          (const PropertyTree& ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u);
-static GBOOL impl_boxdirgauss          (const PropertyTree& ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u);
+static GBOOL impl_boxnwaveburgers      (const PropertyTree& ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u);
+static GBOOL impl_icosnwaveburgers     (const PropertyTree& ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u);
+static GBOOL impl_boxdirgauss          (const PropertyTree& ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u);
+static GBOOL impl_boxpergauss          (const PropertyTree& ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u);
+static GBOOL impl_icosgauss            (const PropertyTree& ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u);
+static GBOOL impl_boxdrybubble         (const PropertyTree& ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u);
+static GBOOL impl_boxsod               (const PropertyTree& ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u);
+static GBOOL impl_icosabcconv          (const PropertyTree& ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u);
 
 
 };

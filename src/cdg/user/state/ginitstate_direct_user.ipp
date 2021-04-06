@@ -28,7 +28,7 @@
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
 template<typename Types>
-GBOOL ginitstate<Types>::impl_boxnwaveburgers(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u)
+GBOOL ginitstate<Types>::impl_boxnwaveburgers(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
 {
   GString          serr = "impl_boxnwaveburgers: ";
   GBOOL            bret = TRUE, brot = FALSE;
@@ -172,7 +172,7 @@ GBOOL ginitstate<Types>::impl_boxnwaveburgers(const PropertyTree &ptree, GString
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
 template<typename Types>
-GBOOL ginitstate<Types>::impl_icosnwaveburgers(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u)
+GBOOL ginitstate<Types>::impl_icosnwaveburgers(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
 {
   GString          serr = "impl_icosnwaveburgers: ";
   GBOOL            bret;
@@ -292,7 +292,7 @@ GBOOL ginitstate<Types>::impl_icosnwaveburgers(const PropertyTree &ptree, GStrin
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
 template<typename Types>
-GBOOL ginitstate<Types>::impl_boxdirgauss(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u)
+GBOOL ginitstate<Types>::impl_boxdirgauss(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
 {
   GString          serr = "impl_boxdirgauss: ";
   GBOOL            bContin;
@@ -392,7 +392,7 @@ cout << "boxpergauss: num=" << (*igbdyt_face)[j].size() << " igbdyt_face[" << j 
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
 template<typename Types>
-GBOOL ginitstate<Types>::impl_boxpergauss(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u)
+GBOOL ginitstate<Types>::impl_boxpergauss(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
 {
   GString          serr = "impl_boxpergauss: ";
   GBOOL            bContin;
@@ -515,7 +515,7 @@ cout << "boxpergauss: num=" << (*igbdyt_face)[j].size() << " igbdyt_face[" << j 
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
 template<typename Types>
-GBOOL ginitstate<Types>::impl_icosgauss(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u)
+GBOOL ginitstate<Types>::impl_icosgauss(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
 {
 
   GString             serr = "impl_icosgauss: ";
@@ -643,7 +643,7 @@ GBOOL ginitstate<Types>::impl_icosgauss(const PropertyTree &ptree, GString &scon
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
 template<typename Types>
-GBOOL ginitstate<Types>::impl_boxdrybubble(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u)
+GBOOL ginitstate<Types>::impl_boxdrybubble(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
 {
 
   GString             serr = "impl_boxdrybubble: ";
@@ -742,7 +742,7 @@ GBOOL ginitstate<Types>::impl_boxdrybubble(const PropertyTree &ptree, GString &s
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
 template<typename Types>
-GBOOL ginitstate<Types>::impl_icosabcconv(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u)
+GBOOL ginitstate<Types>::impl_icosabcconv(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
 {
 
   GString             serr = "impl_icosabcconv: ";
@@ -855,7 +855,7 @@ GBOOL ginitstate<Types>::impl_icosabcconv(const PropertyTree &ptree, GString &sc
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
 template<typename Types>
-GBOOL ginitstate<Types>::impl_boxsod(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u)
+GBOOL ginitstate<Types>::impl_boxsod(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
 {
 
   GString             serr = "impl_boxsod: ";

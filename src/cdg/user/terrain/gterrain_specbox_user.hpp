@@ -20,20 +20,20 @@ using namespace geoflow::tbox;
 
 
 template<typename TypePack>
-struct gterrainSpecbox
+struct gterrainSpecBox
 {
         using Types      = TypePack;
         using State      = typename Types::State;
         using StateComp  = typename Types::StateComp;
-        using EqnBase    = EquationBase<Equation>;
+        using EqnBase    = EquationBase<Types>;
         using EqnBasePtr = std::shared_ptr<EqnBase>;
         using Grid       = typename Types::Grid;
         using Time       = typename Types::Time;
         using Ftype      = typename Types::Ftype;
 
-static GBOOL impl_gauss_range     (const PropertyTree& ptree, GString sblk, GGrid &grid,  State &utmp, State &xb);
-static GBOOL impl_poly_range      (const PropertyTree& ptree, GString sblk, GGrid &grid,  State &utmp, State &xb);
-static GBOOL impl_schar_range     (const PropertyTree& ptree, GString sblk, GGrid &grid,  State &utmp, State &xb);
+static GBOOL impl_gauss_range     (const PropertyTree& ptree, GString sblk, Grid &grid,  State &utmp, State &xb);
+static GBOOL impl_poly_range      (const PropertyTree& ptree, GString sblk, Grid &grid,  State &utmp, State &xb);
+static GBOOL impl_schar_range     (const PropertyTree& ptree, GString sblk, Grid &grid,  State &utmp, State &xb);
 
 };
 

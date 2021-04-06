@@ -31,11 +31,11 @@ class GSpongeBdy : public UpdateBdyBase<TypePack>
 public:
         using Types      = TypePack;
         using Base       = UpdateBdyBase<Types>;
-        using EqnBase    = EquationBase<TypePack>;
+        using EqnBase    = EquationBase<Types>;
         using EqnBasePtr = std::shared_ptr<EqnBase>;
         using State      = typename Types::State;
         using Grid       = typename Types::Grid;
-        using Ftype      = typename Types::Value;
+        using Ftype      = typename Types::Ftype;
         using Time       = typename Types::Time;
 
         static_assert(std::is_same<State,GTVector<GTVector<Ftype>*>>::value,

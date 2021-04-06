@@ -194,12 +194,11 @@ void GBurgers<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
 //               (linear) velocity components that are not
 //               updated.
 //          uf : forcing tendency state vector
-//          ub : bdy state vector
 //          dt : time step
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const State &uf,  const State &ub, const Time &dt, Derivative &dudt)
+void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const State &uf,  const Time &dt, Derivative &dudt)
 {
   assert(!bconserved_ &&
          "conservation not yet supported"); 
@@ -267,12 +266,11 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const State &u
 //                single evolved state variable:
 //                     uin = [u_evolve, c1, c2, c3]
 //          uf  : force-tendency vector
-//          ub  : bdy vector
 //          dt  : time step
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GBurgers<TypePack>::step_impl(const Time &t, State &uin, State &uf, State &ub, const Time &dt)
+void GBurgers<TypePack>::step_impl(const Time &t, State &uin, State &uf, const Time &dt)
 {
 	GEOFLOW_TRACE();
   GBOOL bret;
@@ -315,11 +313,11 @@ void GBurgers<TypePack>::step_impl(const Time &t, State &uin, State &uf, State &
   switch ( isteptype_ ) {
     case GSTEPPER_EXRK:
       for ( auto j=0; j<uold_.size(); j++ ) *uold_[j] = *uevolve_[j];
-      step_exrk(t, uold_, uf, ub, dt, uevolve_);
+      step_exrk(t, uold_, uf, dt, uevolve_);
       break;
     case GSTEPPER_BDFAB:
     case GSTEPPER_BDFEXT:
-      step_multistep(t, uevolve_, uf, ub, dt);
+      step_multistep(t, uevolve_, uf, dt);
       break;
   }
 
@@ -342,13 +340,12 @@ void GBurgers<TypePack>::step_impl(const Time &t, State &uin, State &uf, State &
 //                If doing pure advection, this state contains the *unevolved*
 //                advection velocities, which must be separated from the 
 //                single evolved state variable.
-//          ub  : bdy vector
 //          dt  : time step
 //          uout: output state
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GBurgers<TypePack>::step_impl(const Time &t, const State &uin, State &uf,  State &ub, const Time &dt, State &uout)
+void GBurgers<TypePack>::step_impl(const Time &t, const State &uin, State &uf,  const Time &dt, State &uout)
 {
 	GEOFLOW_TRACE();
   assert(FALSE && "step_impl(2) not available");
@@ -367,12 +364,11 @@ void GBurgers<TypePack>::step_impl(const Time &t, const State &uin, State &uf,  
 // ARGS   : t   : time
 //          u   : state
 //          uf  : force tendency vector
-//          ub  : bdy vector
 //          dt  : time step
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GBurgers<TypePack>::step_multistep(const Time &t, State &uin, State &uf, State &ub, const Time &dt)
+void GBurgers<TypePack>::step_multistep(const Time &t, State &uin, State &uf, const Time &dt)
 {
 	GEOFLOW_TRACE();
   assert(FALSE && "Multistep methods not yet available");
@@ -387,13 +383,12 @@ void GBurgers<TypePack>::step_multistep(const Time &t, State &uin, State &uf, St
 // ARGS   : t   : time
 //          uin : input state; must not be modified
 //          uf  : force tendency vector
-//          ub  : bdy vector
 //          dt  : time step
 //          uout: output/updated state
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GBurgers<TypePack>::step_exrk(const Time &t, State &uin, State &uf, State &ub, const Time &dt, State &uout)
+void GBurgers<TypePack>::step_exrk(const Time &t, State &uin, State &uf, const Time &dt, State &uout)
 {
 	GEOFLOW_TRACE();
   assert(gexrk_ != NULLPTR && "GExRK operator not instantiated");
@@ -403,7 +398,7 @@ void GBurgers<TypePack>::step_exrk(const Time &t, State &uin, State &uf, State &
   // for each u
 
   // GExRK stepper steps entire state over one dt:
-  gexrk_->step(t, uin, uf, ub, dt, urktmp_, uout);
+  gexrk_->step(t, uin, uf, dt, urktmp_, uout);
 
   GMTK::constrain2sphere(*grid_, uout);
 
@@ -463,22 +458,20 @@ void GBurgers<TypePack>::init_impl(State &u, State &tmp)
   std::function<void(const Time &t,                    // RHS callback function
                      const State  &uin,
                      const State  &uf,
-                     const State  &ub,
                      const Time &dt,
                      State &dudt)> rhs
                   = [this](const Time &t,           
                      const State  &uin, 
                      const State  &uf, 
-                     const State  &ub, 
                      const Time &dt,
-                     State &dudt){dudt_impl(t, uin, uf, ub, dt, dudt);}; 
+                     State &dudt){dudt_impl(t, uin, uf, dt, dudt);}; 
 
   std::function<void(const Time &t,                    // Bdy apply callback function
-                     State  &uin, 
-                     State &ub)> applybc 
+                     State  &uin 
+                     )> applybc 
                   = [this](const Time &t,              
-                     State  &uin, 
-                     State &ub){apply_bc_impl(t, uin, ub);}; 
+                     State  &uin
+                     ){apply_bc_impl(t, uin);}; 
 
   GExRKStepper<GFTYPE>::Traits rktraits;
   switch ( isteptype_ ) {
@@ -632,14 +625,15 @@ void GBurgers<TypePack>::set_nu(GTVector<GFTYPE> &nu)
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : apply_bc_impl
-// DESC   : Apply global domain boundary conditions, ub
+// DESC   : Apply global domain boundary conditions
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GBurgers<TypePack>::apply_bc_impl(const Time &t, State &u, State &ub)
+void GBurgers<TypePack>::apply_bc_impl(const Time &t, State &u)
 {
 	GEOFLOW_TRACE();
   Time ttime = t;
+  std::shared_ptr<GBurgers<TypePack>> pthis(this);
 
   BdyUpdateList *updatelist = &grid_->bdy_update_list();;
 
@@ -647,7 +641,7 @@ void GBurgers<TypePack>::apply_bc_impl(const Time &t, State &u, State &ub)
   // Update bdy values if required to:
   for ( auto k=0; k<updatelist->size(); k++ ) { // foreach grid bdy
     for ( auto j=0; j<(*updatelist)[j].size(); j++ ) { // each update method
-      (*updatelist)[k][j]->update(*grid_, this->stateinfo_, ttime, utmp_, u, ub);
+      (*updatelist)[k][j]->update(pthis, *grid_, ttime, utmp_, u);
     }
   }
 
