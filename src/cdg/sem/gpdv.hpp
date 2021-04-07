@@ -2,9 +2,8 @@
 // Module       : gpdv.hpp
 // Date         : 11/11/18 (DLR)
 // Description  : Represents the SEM discretization of the 'pdV' operator:
-//                p Div u. This is a nonlinear operator, so should not derive 
-//                from GLinOp. This operator requires that grid consist of
-//                elements of only one type.
+//                p Div u. This is a nonlinear operator, and requires that 
+//                grid consist of elements of only one type.
 // Copyright    : Copyright 2018. Colorado State University. All rights reserved.
 // Derived From : none
 //==================================================================================
