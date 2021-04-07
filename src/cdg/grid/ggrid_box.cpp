@@ -37,7 +37,8 @@ using namespace std;
 //          comm   : communicator
 // RETURNS: none
 //**********************************************************************************
-GGridBox::GGridBox(const geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GC_COMM &comm)
+template<typename Types>
+GGridBox<Types>::GGridBox(const geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GC_COMM &comm)
 :          GGrid(ptree, b, comm),
 ndim_                     (GDIM),
 gdd_                   (NULLPTR),
@@ -133,7 +134,8 @@ lshapefcn_             (NULLPTR)
 // ARGS   : none
 // RETURNS: none
 //**********************************************************************************
-GGridBox::~GGridBox()
+template<typename Types>
+GGridBox<Types>::~GGridBox()
 {
   GEOFLOW_TRACE();
   if ( lshapefcn_ != NULLPTR ) delete lshapefcn_;
@@ -169,7 +171,8 @@ std::ostream &operator<<(std::ostream &str, GGridBox &e)
 // ARGS   : GDD_base pointer
 // RETURNS: none
 //**********************************************************************************
-void GGridBox::set_partitioner(GDD_base<GFTYPE> *gdd)
+template<typename Types>
+void GGridBox<Types>::set_partitioner(GDD_base<GFTYPE> *gdd)
 {
   GEOFLOW_TRACE();
 
@@ -185,7 +188,8 @@ void GGridBox::set_partitioner(GDD_base<GFTYPE> *gdd)
 // ARGS   : none.
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::init2d()
+template<typename Types>
+void GGridBox<Types>::init2d()
 {
   GEOFLOW_TRACE();
 
@@ -201,7 +205,8 @@ void GGridBox::init2d()
 // ARGS   : none.
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::init3d()
+template<typename Types>
+void GGridBox<Types>::init3d()
 {
   GEOFLOW_TRACE();
 
@@ -218,7 +223,8 @@ void GGridBox::init3d()
 // ARGS   : none.
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::do_elems()
+template<typename Types>
+void GGridBox<Types>::do_elems()
 {
   GEOFLOW_TRACE();
   if ( ndim_ == 2 ) do_elems2d();
@@ -237,7 +243,8 @@ void GGridBox::do_elems()
 //                  for each node point
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::do_elems(GTMatrix<GINT> &p,
+template<typename Types>
+void GGridBox<Types>::do_elems(GTMatrix<GINT> &p,
                         GTVector<GTVector<GFTYPE>> &xnodes)
 {
   GEOFLOW_TRACE();
@@ -261,13 +268,14 @@ void GGridBox::do_elems(GTMatrix<GINT> &p,
 //          rank: MPI rank or partition id
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::do_elems2d()
+template<typename Types>
+void GGridBox<Types>::do_elems2d()
 {
   GEOFLOW_TRACE();
   assert(gbasis_.size()>0 && "Must set basis first");
   assert(ndim_ == 2 && "Dimension must be 2");
 
-  GString                      serr = "GGridBox::do_elems2d (1): ";
+  GString                      serr = "GGridBox<Types>::do_elems2d (1): ";
   GTPoint<GFTYPE>              cent;
   GTVector<GINT>               iind;
   GTVector<GINT>               I(3);
@@ -373,13 +381,14 @@ void GGridBox::do_elems2d()
 // ARGS   : 
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::do_elems3d()
+template<typename Types>
+void GGridBox<Types>::do_elems3d()
 {
   GEOFLOW_TRACE();
   assert(gbasis_.size()>0 && "Must set basis first");
   assert(ndim_ == 3 && "Dimension must be 3");
 
-  GString                      serr = "GGridBox::do_elems3d (1): ";
+  GString                      serr = "GGridBox<Types>::do_elems3d (1): ";
   GTPoint<GFTYPE>              cent;
   GTVector<GINT>               iind;
   GTVector<GINT>               I(3);
@@ -483,14 +492,15 @@ void GGridBox::do_elems3d()
 //                   for each node point
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::do_elems2d(GTMatrix<GINT> &p,
+template<typename Types>
+void GGridBox<Types>::do_elems2d(GTMatrix<GINT> &p,
                           GTVector<GTVector<GFTYPE>> &gxnodes)
 {
   GEOFLOW_TRACE();
   assert(gbasis_.size()>0 && "Must set basis pool first");
   assert(ndim_ == 2 && "Dimension must be 2");
 
-  GString                      serr = "GGridBox::do_elems2d (2): ";
+  GString                      serr = "GGridBox<Types>::do_elems2d (2): ";
   GTPoint<GFTYPE>              cent;
   GTVector<GINT>               I(3);
   GTVector<GINT>              *bdy_ind;
@@ -596,14 +606,15 @@ void GGridBox::do_elems2d(GTMatrix<GINT> &p,
 //                   for each node point
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::do_elems3d(GTMatrix<GINT> &p,
+template<typename Types>
+void GGridBox<Types>::do_elems3d(GTMatrix<GINT> &p,
                           GTVector<GTVector<GFTYPE>> &gxnodes)
 {
   GEOFLOW_TRACE();
   assert(gbasis_.size()>0 && "Must set basis pool first");
   assert(ndim_ == 3 && "Dimension must be 3");
 
-  GString                      serr = "GGridBox::do_elems3d (2): ";
+  GString                      serr = "GGridBox<Types>::do_elems3d (2): ";
   GTPoint<GFTYPE>              cent;
   GTVector<GINT>               iind;
   GTVector<GINT>               I(3);
@@ -714,10 +725,11 @@ void GGridBox::do_elems3d(GTMatrix<GINT> &p,
 // ARGS   : filename: filename to print to
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::print(const GString &filename)
+template<typename Types>
+void GGridBox<Types>::print(const GString &filename)
 {
   GEOFLOW_TRACE();
-  GString serr = "GGridBox::print: ";
+  GString serr = "GGridBox<Types>::print: ";
   std::ofstream ios;
 
   GFTYPE x, y, z;
@@ -756,7 +768,8 @@ void GGridBox::print(const GString &filename)
 // ARGS   : none
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::periodize()
+template<typename Types>
+void GGridBox<Types>::periodize()
 {
   GEOFLOW_TRACE();
   assert(bInitialized_ && "Object not initialized");
@@ -815,7 +828,8 @@ void GGridBox::periodize()
 // ARGS   : none
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::unperiodize()
+template<typename Types>
+void GGridBox<Types>::unperiodize()
 {
   GEOFLOW_TRACE();
   // Use data from 'periodize' method to unset change in
@@ -852,7 +866,8 @@ void GGridBox::unperiodize()
 // ARGS   : none.
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::find_rank_subdomain()
+template<typename Types>
+void GGridBox<Types>::find_rank_subdomain()
 {
   GEOFLOW_TRACE();
   GSIZET          n=0, nglobal, nperrank, nthisrank, ntot, nxy;
@@ -985,7 +1000,8 @@ else {
 //          degbdy  : 'node descriptor' for each point in igdby
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::config_gbdy(const PropertyTree           &ptree, 
+template<typename Types>
+void GGridBox<Types>::config_gbdy(const PropertyTree           &ptree, 
                            GBOOL                         bterrain,
                            GTVector<GTVector<GSIZET>>   &igbdyf, 
                            GTVector<GTVector<GBdyType>> &igbdyft,
@@ -1072,30 +1088,30 @@ void GGridBox::config_gbdy(const PropertyTree           &ptree,
       degbdy.push_back(utmp[k]);
     }
     if ( "uniform" == bdyclass ) { // uniform bdy conditions
-      iret = GUpdateBdyFactory<BdyTypePack>::bdy_block_conform_per(bdytree);
+      iret = GUpdateBdyFactory<TypePack<>>::bdy_block_conform_per(bdytree);
       if ( iret == 1 ) {
         bdytype [j] = GBDY_PERIODIC;
         igbdyft [j] = GBDY_PERIODIC;
         bperiodic    = bperiodic || bdytype[j] == GBDY_PERIODIC;
       }
       else if ( iret == 2 ) {
-        cout << "GGridBox:: config_gbdy: Attempt to specify PERIODIC boundary failed" << endl;
+        cout << "GGridBox<Types>:: config_gbdy: Attempt to specify PERIODIC boundary failed" << endl;
         assert(FALSE);
       }
 
       // May have different uniform bdys for different state comps;
       // step through them in order to point to correct bdy indices:
       k = 0;
-      while ( GUpdateBdyFactory<BdyTypePack>::get_bdy_block(ptree, sbdy, k, bcblock) && !bperiodic ) {;
+      while ( GUpdateBdyFactory<TypePack<>>::get_bdy_block(ptree, sbdy, k, bcblock) && !bperiodic ) {;
         bcblock.bdyid = j;
-        base_ptr = GUpdateBdyFactory<BdyTypePack>::build(ptree, sbdy, *this, bcblock, itmp, igbdy_start);
+        base_ptr = GUpdateBdyFactory<TypePack<>>::build(ptree, sbdy, *this, bcblock, itmp, igbdy_start);
         igbdyft[j] = bcblock.tbdy;
         bdy_update_list_[j].push_back(base_ptr);
         k++;
       } 
     }
     else if ( "mixed" == bdyclass ) { // mixed bdy conditions
-      cout << "GGridBox:: config_gbdy: 'mixed' bdy_class is not available"<< endl;
+      cout << "GGridBox<Types>:: config_gbdy: 'mixed' bdy_class is not available"<< endl;
       assert(FALSE);
     }
     else {
@@ -1145,7 +1161,8 @@ delete [] ind;
 // ARGS   : pt : point to check
 // RETURNS: TRUE on yes, else FALSE
 //**********************************************************************************
-GBOOL GGridBox::is_global_vertex(GTPoint<GFTYPE> &pt)
+template<typename Types>
+GBOOL GGridBox<Types>::is_global_vertex(GTPoint<GFTYPE> &pt)
 {
   GEOFLOW_TRACE();
   GBOOL           bret = FALSE;
@@ -1168,7 +1185,8 @@ GBOOL GGridBox::is_global_vertex(GTPoint<GFTYPE> &pt)
 //          pt   : point to check
 // RETURNS: TRUE on yes, else FALSE
 //**********************************************************************************
-GBOOL GGridBox::on_global_edge(GINT iface, GTPoint<GFTYPE> &pt)
+template<typename Types>
+GBOOL GGridBox<Types>::on_global_edge(GINT iface, GTPoint<GFTYPE> &pt)
 {
   GEOFLOW_TRACE();
   assert( iface >=0 && iface <=5 && "Invalid face ID specification");
@@ -1234,7 +1252,8 @@ GBOOL GGridBox::on_global_edge(GINT iface, GTPoint<GFTYPE> &pt)
 //                     component index whose normal component is nonzero)
 // RETURNS: none
 //**********************************************************************************
-void GGridBox::do_gbdy_normals(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+template<typename Types>
+void GGridBox<Types>::do_gbdy_normals(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
                                const GTVector<GSIZET>           &igbdy,
                                const GTVector<GUINT>            &debdy,
                                GTVector<GTVector<GFTYPE>>       &normals,
@@ -1292,7 +1311,8 @@ void GGridBox::do_gbdy_normals(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
 //                    must be computed prior to entry.
 // RETURNS: none
 //**********************************************************************************
-void GGridBox::do_gbdy_normals2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+template<typename Types>
+void GGridBox<Types>::do_gbdy_normals2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
                                  const GTVector<GSIZET>           &igbdy,
                                  const GTVector<GUINT>            &debdy,
                                  GTVector<GTVector<GFTYPE>>       &normals,
@@ -1322,7 +1342,7 @@ void GGridBox::do_gbdy_normals2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
        for ( auto i=0; i<normals.size(); i++ ) normals[i][j] = 0.0; 
        normals[ip][j] = xm;
        idepComp   [j] = ip; // dependent component
-//cout << "GGridBox::do_gbdy_normals: ib=" << ib << " ihost=" << id << " iperp=" << ip << " xm=" << xm << endl;
+//cout << "GGridBox<Types>::do_gbdy_normals: ib=" << ib << " ihost=" << id << " iperp=" << ip << " xm=" << xm << endl;
      }
    }
    else if ( this->gtype_ == GE_DEFORMED ) {
@@ -1390,7 +1410,8 @@ void GGridBox::do_gbdy_normals2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
 //                     component index whose normal component is nonzero)
 // RETURNS: none
 //**********************************************************************************
-void GGridBox::do_gbdy_normals3d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+template<typename Types>
+void GGridBox<Types>::do_gbdy_normals3d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
                                  const GTVector<GSIZET>           &igbdy,
                                  const GTVector<GUINT>            &debdy,
                                  GTVector<GTVector<GFTYPE>>       &normals,
@@ -1456,7 +1477,8 @@ void GGridBox::do_gbdy_normals3d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
 //          ibdy     : array of indices into xNodes that comprise this boundary
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::find_gbdy_ind(GINT bdyid, GBOOL bunique, 
+template<typename Types>
+void GGridBox<Types>::find_gbdy_ind(GINT bdyid, GBOOL bunique, 
                              GTVector<GSIZET> &ikeep,
                              GTVector<GSIZET> &ibdy,
                              GTVector<GUINT>  &debdy) 
@@ -1489,7 +1511,8 @@ void GGridBox::find_gbdy_ind(GINT bdyid, GBOOL bunique,
 //          ibdy     : array of indices into xNodes that comprise this boundary
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::find_gbdy_ind2d(GINT bdyid, GBOOL bunique, 
+template<typename Types>
+void GGridBox<Types>::find_gbdy_ind2d(GINT bdyid, GBOOL bunique, 
                                GTVector<GSIZET> &ikeep,
                                GTVector<GSIZET> &ibdy,
                                GTVector<GUINT>  &debdy) 
@@ -1615,7 +1638,8 @@ void GGridBox::find_gbdy_ind2d(GINT bdyid, GBOOL bunique,
 //          ibdy     : array of indices into xNodes that comprise this boundary
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::find_gbdy_ind3d(GINT bdyid, GBOOL bunique, 
+template<typename Types>
+void GGridBox<Types>::find_gbdy_ind3d(GINT bdyid, GBOOL bunique, 
                                GTVector<GSIZET> &ikeep,
                                GTVector<GSIZET> &ibdy,
                                GTVector<GUINT>  &debdy) 
@@ -1772,7 +1796,8 @@ void GGridBox::find_gbdy_ind3d(GINT bdyid, GBOOL bunique,
 //          normals   : vector of normal components
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::elem_face_data(GTMatrix<GTVector<GFTYPE>> &dXdXi,
+template<typename Types>
+void GGridBox<Types>::elem_face_data(GTMatrix<GTVector<GFTYPE>> &dXdXi,
                               GTVector<GSIZET>                 &gieface,
                               GTVector<GFTYPE>                 &face_mass,
                               GTVector<GTVector<GFTYPE>>       &normals)
@@ -1802,7 +1827,8 @@ void GGridBox::elem_face_data(GTMatrix<GTVector<GFTYPE>> &dXdXi,
 //          normals   : vector of normal components at each elem bdy node
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::elem_face_data2d(GTMatrix<GTVector<GFTYPE>>       &dXdXi,
+template<typename Types>
+void GGridBox<Types>::elem_face_data2d(GTMatrix<GTVector<GFTYPE>>       &dXdXi,
                                 GTVector<GSIZET>                 &gieface,
                                 GTVector<GFTYPE>                 &face_mass,
                                 GTVector<GTVector<GFTYPE>>       &normals)
@@ -1910,7 +1936,8 @@ void GGridBox::elem_face_data2d(GTMatrix<GTVector<GFTYPE>>       &dXdXi,
 //          normals   : vector of normal components at each elem bdy node
 // RETURNS: none.
 //**********************************************************************************
-void GGridBox::elem_face_data3d(GTMatrix<GTVector<GFTYPE>>       &dXdXi,
+template<typename Types>
+void GGridBox<Types>::elem_face_data3d(GTMatrix<GTVector<GFTYPE>>       &dXdXi,
                                 GTVector<GSIZET>                 &gieface,
                                 GTVector<GFTYPE>                 &face_mass,
                                 GTVector<GTVector<GFTYPE>>       &normals)

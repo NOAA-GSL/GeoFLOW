@@ -37,7 +37,8 @@ using namespace std;
 //          comm  : communicator
 // RETURNS: none
 //**********************************************************************************
-GGridIcos::GGridIcos(const geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GC_COMM &comm)
+template<typename Types> 
+GGridIcos<Types>::GGridIcos(const geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GC_COMM &comm)
 :                 GGrid(ptree, b, comm),
 ilevel_                             (0),
 nrows_                              (0),
@@ -94,7 +95,8 @@ lshapefcn_                    (NULLPTR)
 // ARGS   : none
 // RETURNS: none
 //**********************************************************************************
-GGridIcos::~GGridIcos()
+template<typename Types> 
+GGridIcos<Types>::~GGridIcos()
 {
 	GEOFLOW_TRACE();
   if ( lshapefcn_ != NULLPTR ) delete lshapefcn_;
@@ -132,7 +134,8 @@ std::ostream &operator<<(std::ostream &str, GGridIcos &e)
 // ARGS   : GDD_base pointer
 // RETURNS: none
 //**********************************************************************************
-void GGridIcos::set_partitioner(GDD_base<GTICOS> *gdd)
+template<typename Types> 
+void GGridIcos<Types>::set_partitioner(GDD_base<GTICOS> *gdd)
 {
 
   gdd_ = gdd;
@@ -147,7 +150,8 @@ void GGridIcos::set_partitioner(GDD_base<GTICOS> *gdd)
 // ARGS   : none.
 // RETURNS: none.
 //**********************************************************************************
-void GGridIcos::init2d()
+template<typename Types> 
+void GGridIcos<Types>::init2d()
 {
 	GEOFLOW_TRACE();
   GString serr = "GridIcos::init2d: ";
@@ -239,7 +243,8 @@ fv0_(11,0) = -0.276393202250021; fv0_(11,1) = -0.850650808352040; fv0_(11,2) = -
 // ARGS   : none.
 // RETURNS: none.
 //**********************************************************************************
-void GGridIcos::init3d()
+template<typename Types> 
+void GGridIcos<Types>::init3d()
 {
 	GEOFLOW_TRACE();
   GString serr = "GridIcos::init3d: ";
@@ -259,7 +264,8 @@ void GGridIcos::init3d()
 // ARGS   : none.
 // RETURNS: none.
 //**********************************************************************************
-void GGridIcos::lagrefine()
+template<typename Types> 
+void GGridIcos<Types>::lagrefine()
 {
 	GEOFLOW_TRACE();
   GString serr = "GridIcos::lagrefine: ";
@@ -344,7 +350,8 @@ void GGridIcos::lagrefine()
 //          rank: MPI rank or partition id
 // RETURNS: none.
 //**********************************************************************************
-void GGridIcos::do_elems()
+template<typename Types> 
+void GGridIcos<Types>::do_elems()
 {
   GEOFLOW_TRACE();
   if ( ndim_ == 2 ) do_elems2d(irank_);
@@ -363,7 +370,8 @@ void GGridIcos::do_elems()
 //                  for each node point
 // RETURNS: none.
 //**********************************************************************************
-void GGridIcos::do_elems(GTMatrix<GINT> &p,
+template<typename Types> 
+void GGridIcos<Types>::do_elems(GTMatrix<GINT> &p,
                         GTVector<GTVector<GFTYPE>> &xnodes)
 {
   GEOFLOW_TRACE();
@@ -381,7 +389,8 @@ void GGridIcos::do_elems(GTMatrix<GINT> &p,
 //          irank: MPI rank or partition id
 // RETURNS: none.
 //**********************************************************************************
-void GGridIcos::do_elems2d(GINT irank)
+template<typename Types> 
+void GGridIcos<Types>::do_elems2d(GINT irank)
 {
 	GEOFLOW_TRACE();
   GString           serr = "GridIcos::do_elems2d (1): ";
@@ -525,7 +534,8 @@ void GGridIcos::do_elems2d(GINT irank)
 //          irank: MPI rank or partition id
 // RETURNS: none.
 //**********************************************************************************
-void GGridIcos::do_elems3d(GINT irank)
+template<typename Types> 
+void GGridIcos<Types>::do_elems3d(GINT irank)
 {
 	GEOFLOW_TRACE();
   GString           serr = "GridIcos::do_elems3d (1): ";
@@ -700,7 +710,8 @@ void GGridIcos::do_elems3d(GINT irank)
 //          gxnodes: vector of GDIM vectors containing Cartesian coords of elements
 // RETURNS: none.
 //**********************************************************************************
-void GGridIcos::do_elems2d(GTMatrix<GINT> &p,
+template<typename Types> 
+void GGridIcos<Types>::do_elems2d(GTMatrix<GINT> &p,
                            GTVector<GTVector<GFTYPE>> &gxnodes)
 {
 	GEOFLOW_TRACE();
@@ -769,7 +780,8 @@ void GGridIcos::do_elems2d(GTMatrix<GINT> &p,
 //          gxnodes: vector of GDIM vectors containing Cartesian coords of elements
 // RETURNS: none.
 //**********************************************************************************
-void GGridIcos::do_elems3d(GTMatrix<GINT> &p,
+template<typename Types> 
+void GGridIcos<Types>::do_elems3d(GTMatrix<GINT> &p,
                            GTVector<GTVector<GFTYPE>> &gxnodes)
 {
 	GEOFLOW_TRACE();
@@ -840,7 +852,8 @@ void GGridIcos::do_elems3d(GTMatrix<GINT> &p,
 //                    lat-long where appropriate
 // RETURNS: none.
 //**********************************************************************************
-void GGridIcos::print(const GString &filename, GCOORDSYST icoord)
+template<typename Types> 
+void GGridIcos<Types>::print(const GString &filename, GCOORDSYST icoord)
 {
   GEOFLOW_TRACE();
   GString serr = "GridIcos::print: ";
@@ -894,7 +907,8 @@ void GGridIcos::print(const GString &filename, GCOORDSYST icoord)
 //          degbdy  : 'node descriptor' for each point in igdby
 // RETURNS: none.
 //**********************************************************************************
-void GGridIcos::config_gbdy(const geoflow::tbox::PropertyTree &ptree, 
+template<typename Types> 
+void GGridIcos<Types>::config_gbdy(const geoflow::tbox::PropertyTree &ptree, 
                             GBOOL                         bterrain,
                             GTVector<GTVector<GSIZET>>   &igbdyf, 
                             GTVector<GTVector<GBdyType>> &igbdyft,
@@ -946,13 +960,13 @@ void GGridIcos::config_gbdy(const geoflow::tbox::PropertyTree &ptree,
   bdynames[1] = "bdy_outer";
 
   if ( !ptree.isValue<GString>("grid_type") ) {
-    cout << "GGridIcos::config_gbdy: grid_type not set" << endl;
+    cout << "GGridIcos<Types>::config_gbdy: grid_type not set" << endl;
     assert(FALSE);
   }
   gname     = ptree.getValue<GString>("grid_type");
 
   if ( !ptree.isPropertyTree(gname) ) {
-    cout << "GGridIcos::config_gbdy: grid_type block " << gname << " not found" << endl;
+    cout << "GGridIcos<Types>::config_gbdy: grid_type block " << gname << " not found" << endl;
     assert(FALSE);
   }
   gridptree = ptree.getPropertyTree(gname);
@@ -991,25 +1005,25 @@ void GGridIcos::config_gbdy(const geoflow::tbox::PropertyTree &ptree,
     }
 
     if ( "uniform" == bdyclass ) { // uniform bdy conditions
-      iret = GUpdateBdyFactory<BdyTypePack>::bdy_block_conform_per(bdytree);
+      iret = GUpdateBdyFactory<TypePack<>>::bdy_block_conform_per(bdytree);
       if ( iret == 1 || iret == 2 ) {
-        cout << "GGridBox:: config_gbdy: PERIODIC boundary conditions invalid for this grid" << endl;
+        cout << "GGridIcos<Types>:: config_gbdy: PERIODIC boundary conditions invalid for this grid" << endl;
         assert(FALSE);
       }
  
       // May have different uniform bdys for different state comps;
       // step through them in order to point to correct bdy indices:
       k = 0;
-      while ( GUpdateBdyFactory<BdyTypePack>::get_bdy_block(bdytree, sbdy, k, bcblock) ) {;
+      while ( GUpdateBdyFactory<TypePack<>>::get_bdy_block(bdytree, sbdy, k, bcblock) ) {;
         bcblock.bdyid = j;
-        base_ptr = GUpdateBdyFactory<BdyTypePack>::build(ptree, sbdy, *this, bcblock, itmp, igbdy_start);
+        base_ptr = GUpdateBdyFactory<TypePack<>>::build(ptree, sbdy, *this, bcblock, itmp, igbdy_start);
         igbdyft[j] = bcblock.tbdy;
         bdy_update_list_[j].push_back(base_ptr);
         k++;
       }
     }
     else if ( "mixed" == bdyclass ) { // mixed bdy conditions
-      cout << "GGridBox:: config_gbdy: 'mixed' bdy_class is not available"<< endl;
+      cout << "GGridIcos<Types>:: config_gbdy: 'mixed' bdy_class is not available"<< endl;
       assert(FALSE);
     }
     else {
@@ -1037,7 +1051,8 @@ void GGridIcos::config_gbdy(const geoflow::tbox::PropertyTree &ptree,
 //          ibdy     : array of indices into xNodes that comprise this boundary
 // RETURNS: none.
 //**********************************************************************************
-void GGridIcos::find_gbdy_ind3d(GFTYPE radius,
+template<typename Types> 
+void GGridIcos<Types>::find_gbdy_ind3d(GFTYPE radius,
                                 GTVector<GSIZET> &ibdy,
                                 GTVector<GUINT>  &debdy) 
 {
@@ -1112,7 +1127,8 @@ void GGridIcos::find_gbdy_ind3d(GFTYPE radius,
 //          normals   : vector of normal components
 // RETURNS: none
 //**********************************************************************************
-void GGridIcos::elem_face_data(GTMatrix<GTVector<GFTYPE>>       &dXdXi,
+template<typename Types> 
+void GGridIcos<Types>::elem_face_data(GTMatrix<GTVector<GFTYPE>>       &dXdXi,
                                GTVector<GSIZET>                 &gieface,
                                GTVector<GFTYPE>                 &face_mass,
                                GTVector<GTVector<GFTYPE>>       &normals)
@@ -1143,7 +1159,8 @@ void GGridIcos::elem_face_data(GTMatrix<GTVector<GFTYPE>>       &dXdXi,
 //          normals   : vector of normal components at each elem bdy node
 // RETURNS: none
 //**********************************************************************************
-void GGridIcos::elem_face_data2d(GTMatrix<GTVector<GFTYPE>>      &dXdXi,
+template<typename Types> 
+void GGridIcos<Types>::elem_face_data2d(GTMatrix<GTVector<GFTYPE>>      &dXdXi,
                                 GTVector<GSIZET>                 &gieface,
                                 GTVector<GFTYPE>                 &face_mass,
                                 GTVector<GTVector<GFTYPE>>       &normals)
@@ -1223,7 +1240,8 @@ void GGridIcos::elem_face_data2d(GTMatrix<GTVector<GFTYPE>>      &dXdXi,
 //          normals   : vector of normal components at each elem bdy node
 // RETURNS: none
 //**********************************************************************************
-void GGridIcos::elem_face_data3d(GTMatrix<GTVector<GFTYPE>>       &dXdXi,
+template<typename Types> 
+void GGridIcos<Types>::elem_face_data3d(GTMatrix<GTVector<GFTYPE>>       &dXdXi,
                                  GTVector<GSIZET>                 &gieface,
                                  GTVector<GFTYPE>                 &face_mass,
                                  GTVector<GTVector<GFTYPE>>       &normals)
@@ -1309,7 +1327,8 @@ void GGridIcos::elem_face_data3d(GTMatrix<GTVector<GFTYPE>>       &dXdXi,
 
 // RETURNS: none
 //**********************************************************************************
-void GGridIcos::do_gbdy_normals(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+template<typename Types> 
+void GGridIcos<Types>::do_gbdy_normals(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
                                 const GTVector<GSIZET>           &igbdy,
                                 const GTVector<GUINT>            &debdy,
                                 GTVector<GTVector<GFTYPE>>       &normals,
@@ -1359,7 +1378,8 @@ void GGridIcos::do_gbdy_normals(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
 
 // RETURNS: none
 //**********************************************************************************
-void GGridIcos::do_gbdy_normals3d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+template<typename Types> 
+void GGridIcos<Types>::do_gbdy_normals3d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
                                   const GTVector<GSIZET>           &igbdy,
                                   const GTVector<GUINT>            &debdy,
                                   GTVector<GTVector<GFTYPE>>       &normals,

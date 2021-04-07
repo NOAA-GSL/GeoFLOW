@@ -19,8 +19,8 @@
 //          comm     : communicator
 // RETURNS: GGrid object ptr
 //**********************************************************************************
-template<typename TypePack>
-GGrid *GGridFactory<TypePack>::build(const geoflow::tbox::PropertyTree& ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis, IOBasePtr pIO, ObsTraits &obstraits, GC_COMM &comm)
+template<typename Types>
+GGrid<Types> *GGridFactory<Types>::build(const geoflow::tbox::PropertyTree& ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis, IOBasePtr pIO, ObsTraits &obstraits, GC_COMM &comm)
 {
 	GEOFLOW_TRACE();
   GSIZET  itindex = ptree.getValue<GSIZET>   ("restart_index", 0);
@@ -47,11 +47,11 @@ GGrid *GGridFactory<TypePack>::build(const geoflow::tbox::PropertyTree& ptree, G
     // constant:
     if      ( "grid_icos"   == gname   // 2d or 3d Icos grid
         ||    "grid_sphere" == gname ) {
-      grid = new GGridIcos(ptree, gbasis, comm);
+      grid = new GGridIcos<Types>(ptree, gbasis, comm);
       grid->grid_init();
     }
     else if ( "grid_box"    ==  gname ) { // 2d or 3d Cart grid
-      grid = new GGridBox(ptree, gbasis, comm);
+      grid = new GGridBox<Types>(ptree, gbasis, comm);
       grid->grid_init();
 
     }
@@ -68,11 +68,11 @@ GGrid *GGridFactory<TypePack>::build(const geoflow::tbox::PropertyTree& ptree, G
     read_grid(ptree, p, xnodes, pIO, obstraits, comm);
     if      ( "grid_icos"   == gname   // 2d or 3d Icos grid
         ||    "grid_sphere" == gname ) {
-      grid = new GGridIcos(ptree, gbasis, comm);
+      grid = new GGridIcos<Types>(ptree, gbasis, comm);
       grid->grid_init(p, xnodes);
     }
     else if ( "grid_box"    ==  gname) { // 2d or 3d Cart grid
-      grid = new GGridBox(ptree, gbasis, comm);
+      grid = new GGridBox<Types>(ptree, gbasis, comm);
       grid->grid_init(p, xnodes);
     }
     else {
@@ -100,8 +100,8 @@ GGrid *GGridFactory<TypePack>::build(const geoflow::tbox::PropertyTree& ptree, G
 //          comm     : communicator
 // RETURNS: GGrid object ptr
 //**********************************************************************************
-template<typename TypePack>
-void GGridFactory<TypePack>::read_grid(const geoflow::tbox::PropertyTree& ptree, GTMatrix<GINT> &p, 
+template<typename Types>
+void GGridFactory<Types>::read_grid(const geoflow::tbox::PropertyTree& ptree, GTMatrix<GINT> &p, 
                          GTVector<GTVector<GFTYPE>> &xnodes, IOBasePtr pIO, ObsTraits &obstraits, GC_COMM &comm)
 {
 	GEOFLOW_TRACE();
