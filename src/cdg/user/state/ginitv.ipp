@@ -88,7 +88,7 @@ GBOOL ginitv<Types>::impl_abc_box(const PropertyTree &ptree, GString &sconfig, E
 
 #endif
 
-  GMTK::normalizeL2(grid, u, utmp, E0);
+  GMTK::normalizeL2<Grid,GFTYPE>(grid, u, utmp, E0);
 
   return TRUE;
 
@@ -170,7 +170,7 @@ GBOOL ginitv<Types>::impl_abc_icos(const PropertyTree &ptree, GString &sconfig, 
 #endif
     }
   }
-  GMTK::vsphere2cart(grid, usph, GVECTYPE_PHYS, u);
+  GMTK::vsphere2cart<Grid,GFTYPE>(grid, usph, GVECTYPE_PHYS, u);
   
 #elif defined(_G_IS3D)
 
@@ -189,8 +189,8 @@ GBOOL ginitv<Types>::impl_abc_icos(const PropertyTree &ptree, GString &sconfig, 
 
 #endif
  
-  GMTK::constrain2sphere(grid, u);
-  GMTK::normalizeL2(grid, u, utmp, E0);
+  GMTK::constrain2sphere<Grid,GFTYPE>(grid, u);
+  GMTK::normalizeL2<Grid,GFTYPE>(grid, u, utmp, E0);
 
 
   return TRUE;
@@ -275,7 +275,7 @@ GBOOL ginitv<Types>::impl_simpsum1d_box(const PropertyTree &ptree, GString &scon
   assert(FALSE && "method intended for 2d mimicking 1d only");
 #endif
 
-  GMTK::normalizeL2(grid, u, utmp, E0);
+  GMTK::normalizeL2<Grid,GFTYPE>(grid, u, utmp, E0);
 
   delete distribution;
 
@@ -399,7 +399,7 @@ GBOOL ginitv<Types>::impl_simpsum_box(const PropertyTree &ptree, GString &sconfi
 #endif
 
 
-  GMTK::normalizeL2(grid, u, utmp, E0);
+  GMTK::normalizeL2<Grid,GFTYPE>(grid, u, utmp, E0);
 
   delete distribution;
 
@@ -484,10 +484,10 @@ GBOOL ginitv<Types>::impl_simpsum_icos(const PropertyTree &ptree, GString &sconf
     } // end, j-loop
   } // end, k loop
   
-  GMTK::vsphere2cart(grid, usph, GVECTYPE_PHYS, u);
+  GMTK::vsphere2cart<Grid,GFTYPE>(grid, usph, GVECTYPE_PHYS, u);
 
-  GMTK::constrain2sphere(grid, u);
-  GMTK::normalizeL2(grid, u, utmp, E0);
+  GMTK::constrain2sphere<Grid,GFTYPE>(grid, u);
+  GMTK::normalizeL2<Grid,GFTYPE>(grid, u, utmp, E0);
 
   delete distribution;
 

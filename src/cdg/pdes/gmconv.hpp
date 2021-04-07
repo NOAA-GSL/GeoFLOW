@@ -116,11 +116,11 @@ public:
         using FilterBasePtr = std::shared_ptr<FilterBase<Types>>;
         using FilterList    = std::vector<FilterBasePtr>;
 
-        static_assert(std::is_same<State,GTVector<GTVector<GFTYPE>*>>::value,
+        static_assert(std::is_same<State,GTVector<GTVector<Ftype>*>>::value,
                "State is of incorrect type");
-        static_assert(std::is_same<StateComp,GTVector<GFTYPE>>::value,
+        static_assert(std::is_same<StateComp,GTVector<Ftype>>::value,
                "StatCompe is of incorrect type");
-        static_assert(std::is_same<Derivative,GTVector<GTVector<GFTYPE>*>>::value,
+        static_assert(std::is_same<Derivative,GTVector<GTVector<Ftype>*>>::value,
                "Derivative is of incorrect type");
         static_assert(std::is_same<Grid,GGrid>::value,
                "Grid is of incorrect type");
@@ -151,13 +151,13 @@ public:
           GINT            nstage      = 2;      // no. stages for time integ.
           GINT            inorder     = 2;      // formal nonlin. extrap order
           GStepperType    isteptype   = GSTEPPER_EXRK;
-          GFTYPE          Ts_base     = 300.0;  // base state surf temp (K)
-          GFTYPE          P0_base     = 1000.0; // base state ref pressure (mb)
-          GFTYPE          courant     = 0.5;    // Courant factor
-          GFTYPE          nu          = 0.0;    // shear viscosity constant
-          GFTYPE          eta         = 0.0;    // energy-shear visc constant
-          GFTYPE          zeta        = 0.0;    // mom bulk viscosity constant
-          GFTYPE          lambda      = 0.0;    // energy bulk shear visc const
+          Ftype          Ts_base     = 300.0;  // base state surf temp (K)
+          Ftype          P0_base     = 1000.0; // base state ref pressure (mb)
+          Ftype          courant     = 0.5;    // Courant factor
+          Ftype          nu          = 0.0;    // shear viscosity constant
+          Ftype          eta         = 0.0;    // energy-shear visc constant
+          Ftype          zeta        = 0.0;    // mom bulk viscosity constant
+          Ftype          lambda      = 0.0;    // energy bulk shear visc const
           GTVector<GINT>  iforced;              // state comps to force
           GTVector<Ftype> omega;                // rotation rate vector
           GString         ssteptype;            // stepping method
@@ -251,9 +251,9 @@ inline  GINT                szrhstmp();
         GINT                nc_;            // number momentum components
         GSIZET              icycle_;        // internal cycle number
         GStepperType        isteptype_;     // stepper type
-        GTVector<GFTYPE>    tcoeffs_;       // coeffs for time deriv
-        GTVector<GFTYPE>    acoeffs_;       // coeffs for NL adv term
-        GTVector<GFTYPE>    dthist_;        // coeffs for NL adv term
+        GTVector<Ftype>     tcoeffs_;       // coeffs for time deriv
+        GTVector<Ftype>     acoeffs_;       // coeffs for NL adv term
+        GTVector<Ftype>     dthist_;        // coeffs for NL adv term
         State               uold_;          // helper arrays set from utmp
         State               uevolve_;       // helper array to specify evolved state components
         State               ubase_;         // helper array pointing to base state components
@@ -275,12 +275,12 @@ inline  GINT                szrhstmp();
         GTVector<State>     ukeep_;         // state at prev. time levels
         GTVector<GString>
                             valid_types_;   // valid stepping methods supported
-        GTVector<GFTYPE>    nu_   ;         // KE dissipoation
-        GTVector<GFTYPE>    eta_;           // internal energy dissipoation
-        GTVector<GFTYPE>    maxbyelem_ ;    // element-based maxima for dt
+        GTVector<Ftype>     nu_   ;         // KE dissipoation
+        GTVector<Ftype>     eta_;           // internal energy dissipoation
+        GTVector<Ftype>     maxbyelem_ ;    // element-based maxima for dt
         std::vector<GINT>   stdiforced_;    // traits_.iforced as a std::vector
         GGrid              *grid_;          // GGrid object
-        GExRKStepper<GFTYPE>
+        GExRKStepper<Ftype>
                            *gexrk_;         // ExRK stepper, if needed
         GMass              *gmass_;         // mass op
         GMass              *gimass_;        // inverse mass op
@@ -292,7 +292,7 @@ inline  GINT                szrhstmp();
 //      GFlux              *gflux_;         // flux op
         GDivOp<TypePack>   *gdiv_;          // volumetric divergence op
         GC_COMM             comm_;          // communicator
-        GGFX<GFTYPE>       *ggfx_;          // gather-scatter operator
+        GGFX<Ftype>        *ggfx_;          // gather-scatter operator
         GMConv<TypePack>::Traits 
                             traits_;        // traits structure
 

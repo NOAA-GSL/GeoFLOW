@@ -163,7 +163,7 @@ void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
 
   
    // Compute max(v^2 + c^2) for each element:
-   GMTK::maxbyelem<Ftype>(*grid_, *tmp1, maxbyelem_);
+   GMTK::maxbyelem<Grid,Ftype>(*grid_, *tmp1, maxbyelem_);
 
    // Estimate viscous timescale:
    dtvisc = std::numeric_limits<Ftype>::max();
@@ -322,7 +322,7 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
 
 #if 0
     if ( traits_.docoriolis ) {
-      GMTK::cross_prod_s(traits_.omega, s_, j+1, *tmp1);
+      GMTK::cross_prod_s<Ftype>(traits_.omega, s_, j+1, *tmp1);
      *tmp1 *= *Mass;             
       GMTK::saxpby<Ftype>(*dudt[j], 1.0, *tmp1, 2.0);  // += 2 Omega X (rhoT v) M J
     }
@@ -482,11 +482,11 @@ void GMConv<TypePack>::dudt_wet(const Time &t, const State &u, const State &uf, 
  *dudt[ENERGY] -= *tmp1;                           // -= [mu u^i s^{ij}],j
 
   if ( traits_.dofallout || !traits_.dodry ) {
-    GMTK::paxy(*tmp1, *rhoT, CVL, *T);             // tmp1 = C_liq rhoT T
+    GMTK::paxy<Ftype>(*tmp1, *rhoT, CVL, *T);             // tmp1 = C_liq rhoT T
     compute_falloutsrc(*tmp1, qliq_, tvliq_, -1.0, stmp, *Ltot);
                                                    // liquid fallout src
    *dudt[ENERGY] += *Ltot;                         // += L_liq
-    GMTK::paxy(*tmp1, *rhoT, CVI, *T);             // tmp1 = C_ice rhoT T
+    GMTK::paxy<Ftype>(*tmp1, *rhoT, CVI, *T);             // tmp1 = C_ice rhoT T
     compute_falloutsrc(*tmp1, qice_, tvice_, -1.0, stmp, *Ltot); 
                                                    // ice fallout src
    *dudt[ENERGY] += *Ltot;                         // += L_ice
@@ -542,7 +542,7 @@ void GMConv<TypePack>::dudt_wet(const Time &t, const State &u, const State &uf, 
    *dudt[j] -= *tmp1;                                 // -= [mu s^{ij}],j
 
     if ( traits_.docoriolis ) {
-      GMTK::cross_prod_s(traits_.omega, s_, j+1, *tmp1);
+      GMTK::cross_prod_s<Ftype>(traits_.omega, s_, j+1, *tmp1);
      *tmp1 *= *Mass;             
       GMTK::saxpby<Ftype>(*dudt[j], 1.0, *tmp1, 2.0);  // += 2 Omega X (rhoT v) M J
     }
@@ -703,7 +703,7 @@ void GMConv<TypePack>::step_exrk(const Time &t, State &uin, State &uf, const Tim
   // GExRK stepper steps entire state over one dt:
   gexrk_->step(t, uin, uf, dt, urktmp_, uout);
 
-//GMTK::constrain2sphere(*grid_, uout);
+//GMTK::constrain2sphere<Grid,Ftype>(*grid_, uout);
 
 } // end of method step_exrk
 
@@ -842,7 +842,7 @@ void GMConv<TypePack>::init_impl(State &u, State &tmp)
                      ){apply_bc_impl(t, uin);}; 
 
   // Configure time stepping:
-  GExRKStepper<GFTYPE>::Traits rktraits;
+  GExRKStepper<Grid,Ftype>::Traits rktraits;
   switch ( traits_.isteptype ) {
     case GSTEPPER_EXRK:
       rktraits.bSSP   = traits_.bSSP;
@@ -1710,7 +1710,7 @@ void GMConv<TypePack>::compute_derived_impl(const State &u, GString sop,
   else if ( "den"      == sop ) { // density (total)
     assert(uout .size() >= 1   && "Incorrect no. output components");
     if ( traits_.usebase ) {
-      GMTK::saxpby(*uout[0], *u[DENSITY], 1.0, *u[BASESTATE], 1.0); 
+      GMTK::saxpby<Ftype>(*uout[0], *u[DENSITY], 1.0, *u[BASESTATE], 1.0); 
     }
     else {
       *uout[0] = *u[DENSITY];  // state is dden already
@@ -1749,7 +1749,7 @@ void GMConv<TypePack>::compute_derived_impl(const State &u, GString sop,
    *utmp[1] = *u[DENSITY];
     utmp[1]->rpow(-1);
     compute_v(u, *utmp[1], v_);
-    GMTK::domathop(*grid_, v_, "vmag", utmp, uout, iuout);
+    GMTK::domathop<Grid,Ftype>(*grid_, v_, "vmag", utmp, uout, iuout);
     uout[0]->pointProd(*u[DENSITY]);
    *uout[0] *= 0.5;
   }

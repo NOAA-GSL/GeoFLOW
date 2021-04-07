@@ -261,8 +261,8 @@ GBOOL ginitstate<Types>::impl_icosnwaveburgers(const PropertyTree &ptree, GStrin
     } // end, coord j-loop 
   } // end, ilump-loop
 
-//GMTK::vsphere2cart(grid, usph, GVECTYPE_PHYS, u);
-  GMTK::constrain2sphere(grid, u);
+//GMTK::vsphere2cart<Grid,GFTYPE>(grid, usph, GVECTYPE_PHYS, u);
+  GMTK::constrain2sphere<Grid,GFTYPE>(grid, u);
 
   bret = TRUE;
   for ( j=0; j<GDIM+1; j++ ) {
@@ -590,7 +590,7 @@ GBOOL ginitstate<Types>::impl_icosgauss(const PropertyTree &ptree, GString &scon
     (*utmp[0])[j] = -c0 * sin(lon) * sin(alpha);
     (*utmp[1])[j] =  c0 * ( cos(lat) * cos(alpha) - sin(lat)*cos(lon)*sin(alpha) );
   }
-  GMTK::vsphere2cart(grid, utmp, GVECTYPE_PHYS, c);
+  GMTK::vsphere2cart<Grid,GFTYPE>(grid, utmp, GVECTYPE_PHYS, c);
 
   *u[0] = 0.0;
   for ( auto k=0; k<nlumps; k++ ) {
@@ -831,7 +831,7 @@ GBOOL ginitstate<Types>::impl_icosabcconv(const PropertyTree &ptree, GString &sc
 
   // Convert from 2d surface to 3d Cartesian 
   // momentum densities:
-  GMTK::vsphere2cart(grid, vh, GVECTYPE_PHYS, u);
+  GMTK::vsphere2cart<Grid,GFTYPE>(grid, vh, GVECTYPE_PHYS, u);
   for ( auto j=0; j<3; j++ ) *u[j] *=  *d;
 
   if ( distribution != NULLPTR ) delete distribution;

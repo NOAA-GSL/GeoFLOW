@@ -17,7 +17,7 @@
 
 #include <functional>
 
-template <typename T>
+template <typename Grid, typename T>
 class GExRKStepper
 {
 typedef GTVector<GTVector<T>*> State;
@@ -32,7 +32,7 @@ public:
           GINT            nstage      = 2;      // no. stages
         };
                            GExRKStepper() = delete;
-                           GExRKStepper(Traits &traits, GGrid &grid);
+                           GExRKStepper(Traits &traits, Grid &grid);
                            GExRKStepper(Traits &traits);
                           ~GExRKStepper();
                            GExRKStepper(const GExRKStepper &a) = default;
@@ -111,7 +111,7 @@ private:
         GINT               nstage_;                          // no stages (not nec. 'order'!)
         GButcherRK<T>      butcher_;                         // Butcher tableau
         GTVector<State>    K_;                               // RK stage update vectors
-        GGrid             *grid_;                            // grid object
+        Grid              *grid_;                            // grid object
         GGFX<GFTYPE>      *ggfx_;                            // geom-free exchange op
         std::function<void(const Time &t,                    
                            const State  &uin,

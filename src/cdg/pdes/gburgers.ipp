@@ -49,7 +49,7 @@ grid_                    (&grid),
 ggfx_         (&grid.get_ggfx()),
 steptop_callback_      (NULLPTR)
 {
-  static_assert(std::is_same<State,GTVector<GTVector<GFTYPE>*>>::value,
+  static_assert(std::is_same<State,GTVector<GTVector<Ftype>*>>::value,
                 "State is of incorrect type"); 
   assert(!(doheat_ && bpureadv_) && "Invalid PDE configuration");
   GEOFLOW_TRACE();
@@ -134,15 +134,15 @@ void GBurgers<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
    GString    serr = "GBurgers<TypePack>::dt_impl: ";
    GINT       pmax;
    GSIZET     ibeg, iend;
-   GFTYPE     dtmin, dt1, umax;
-   GFTYPE     drmin  = grid_->minlength();
+   Ftype     dtmin, dt1, umax;
+   Ftype     drmin  = grid_->minlength();
    GElemList *gelems = &grid_->elems();
-   GTVector<GNBasis<GCTYPE,GFTYPE>*> *gbasis;
+   GTVector<GNBasis<GCTYPE,Ftype>*> *gbasis;
 
    // This is an estimate. The minimum length on each element,
    // computed in GGrid object is divided by the maximum of
    // the state variable on each element:
-   dtmin = std::numeric_limits<GFTYPE>::max();
+   dtmin = std::numeric_limits<Ftype>::max();
 
    if ( bpureadv_ ) { // pure (linear) advection
      for ( auto k=1; k<u.size(); k++ ) { // each advecting u
@@ -173,7 +173,7 @@ void GBurgers<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
      }
    }
 
-   GComm::Allreduce(&dtmin, &dt1, 1, T2GCDatatype<GFTYPE>() , GC_OP_MIN, comm_);
+   GComm::Allreduce(&dtmin, &dt1, 1, T2GCDatatype<Ftype>() , GC_OP_MIN, comm_);
 
    // Limit any timestep-to-timestep increae to 10%:
    dt = MIN(dt1*courant_, 1.1*dt);
@@ -238,7 +238,7 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const State &u
     GEOFLOW_TRACE_STOP();
 
     ghelm_->opVec_prod(*u[0], uoptmp_, *urhstmp_[0]);  // apply diffusion
-    GMTK::saxpby<GFTYPE>(*urhstmp_[0], -1.0, *dudt[0], -1.0);
+    GMTK::saxpby<Ftype>(*urhstmp_[0], -1.0, *dudt[0], -1.0);
     gimass_->opVec_prod(*urhstmp_[0], uoptmp_, *dudt[0]); // apply M^-1
     if ( bforced_ && uf[0] != NULLPTR ) *dudt[0] += *uf[0];
   }
@@ -246,7 +246,7 @@ void GBurgers<TypePack>::dudt_impl(const Time &t, const State &u, const State &u
     for ( auto k=0; k<GDIM; k++ ) {
       gadvect_->apply(*u[k], u, uoptmp_, *dudt[k]);     // apply advection
       ghelm_->opVec_prod(*u[k], uoptmp_, *urhstmp_[0]); // apply diffusion
-      GMTK::saxpby<GFTYPE>(*urhstmp_[0], -1.0, *dudt[k], -1.0);
+      GMTK::saxpby<Ftype>(*urhstmp_[0], -1.0, *dudt[k], -1.0);
       gimass_->opVec_prod(*urhstmp_[0], uoptmp_, *dudt[k]); // apply M^-1
       if ( bforced_ && uf[k] != NULLPTR ) *dudt[k] += *uf[k];
     }
@@ -400,7 +400,7 @@ void GBurgers<TypePack>::step_exrk(const Time &t, State &uin, State &uf, const T
   // GExRK stepper steps entire state over one dt:
   gexrk_->step(t, uin, uf, dt, urktmp_, uout);
 
-  GMTK::constrain2sphere(*grid_, uout);
+  GMTK::constrain2sphere<Grid,Ftype>(*grid_, uout);
 
 } // end of method step_exrk
 
@@ -437,8 +437,8 @@ void GBurgers<TypePack>::init_impl(State &u, State &tmp)
   }
 
   // Find multistep/multistage time stepping coefficients:
-  GMultilevel_coeffs_base<GFTYPE> *tcoeff_obj=NULLPTR; // time deriv coeffs
-  GMultilevel_coeffs_base<GFTYPE> *acoeff_obj=NULLPTR; // adv op. coeffs
+  GMultilevel_coeffs_base<Ftype> *tcoeff_obj=NULLPTR; // time deriv coeffs
+  GMultilevel_coeffs_base<Ftype> *acoeff_obj=NULLPTR; // adv op. coeffs
 
   // If doing pure advection, set advection 
   // components from input state vector, so
@@ -473,13 +473,13 @@ void GBurgers<TypePack>::init_impl(State &u, State &tmp)
                      State  &uin
                      ){apply_bc_impl(t, uin);}; 
 
-  GExRKStepper<GFTYPE>::Traits rktraits;
+  GExRKStepper<Grid,Ftype>::Traits rktraits;
   switch ( isteptype_ ) {
     case GSTEPPER_EXRK:
       rktraits.bSSP   = bSSP_;
       rktraits.norder = itorder_;
       rktraits.nstage = itorder_;
-      gexrk_ = new GExRKStepper<GFTYPE>(rktraits, *grid_);
+      gexrk_ = new GExRKStepper<Ftype>(rktraits, *grid_);
       gexrk_->setRHSfunction(rhs);
       gexrk_->set_apply_bdy_callback(applybc);
       gexrk_->set_ggfx(ggfx_);
@@ -500,8 +500,8 @@ void GBurgers<TypePack>::init_impl(State &u, State &tmp)
       break;
     case GSTEPPER_BDFAB:
       dthist_.resize(MAX(itorder_,inorder_));
-      tcoeff_obj = new G_BDF<GFTYPE>(itorder_, dthist_);
-      acoeff_obj = new G_AB<GFTYPE> (inorder_, dthist_);
+      tcoeff_obj = new G_BDF<Ftype>(itorder_, dthist_);
+      acoeff_obj = new G_AB<Ftype> (inorder_, dthist_);
       tcoeffs_.resize(tcoeff_obj->getCoeffs().size());
       acoeffs_.resize(acoeff_obj->getCoeffs().size());
       tcoeffs_ = tcoeff_obj->getCoeffs(); 
@@ -512,8 +512,8 @@ void GBurgers<TypePack>::init_impl(State &u, State &tmp)
       break;
     case GSTEPPER_BDFEXT:
       dthist_.resize(MAX(itorder_,inorder_));
-      tcoeff_obj = new G_BDF<GFTYPE>(itorder_, dthist_);
-      acoeff_obj = new G_EXT<GFTYPE>(inorder_, dthist_);
+      tcoeff_obj = new G_BDF<Ftype>(itorder_, dthist_);
+      acoeff_obj = new G_EXT<Ftype>(inorder_, dthist_);
       tcoeffs_.resize(tcoeff_obj->getCoeffs().size());
       acoeffs_.resize(acoeff_obj->getCoeffs().size());
       tcoeffs_ = tcoeff_obj->getCoeffs(); 
@@ -566,7 +566,7 @@ void GBurgers<TypePack>::init_impl(State &u, State &tmp)
     ukeep_ .resize(itorder_);
     for ( auto i=0; i<itorder_-1; i++ ) { // for each time level
       ukeep_[i].resize(nsolve);
-      for ( auto j=0; j<nsolve; j++ ) ukeep_[i][j] = new GTVector<GFTYPE>(grid_->ndof());
+      for ( auto j=0; j<nsolve; j++ ) ukeep_[i][j] = new GTVector<Ftype>(grid_->ndof());
     }
   }
 
@@ -610,7 +610,7 @@ void GBurgers<TypePack>::cycle_keep(State &u)
 // RETURNS: none.
 //**********************************************************************************
 template<typename TypePack>
-void GBurgers<TypePack>::set_nu(GTVector<GFTYPE> &nu)
+void GBurgers<TypePack>::set_nu(GTVector<Ftype> &nu)
 {
 	GEOFLOW_TRACE();
   assert(ghelm_ != NULLPTR && "Init must be called first");

@@ -82,10 +82,10 @@ void GBoydFilter<TypePack>::apply_impl(const Time &t, StateComp &u, State &utmp,
     F [0] = (*gelems)[e]->gbasis(0)->getFilterMat();
     F [1] = (*gelems)[e]->gbasis(1)->getFilterMat(TRUE);
 #if defined(_G_IS2D)
-    GMTK::D2_X_D1(*F[0], *F[1], u, tmp, uo);
+    GMTK::D2_X_D1<GFTYPE>(*F[0], *F[1], u, tmp, uo);
 #elif defined(_G_IS3D)
     F [2] = (*gelems)[e]->gbasis(2)->getFilterMat(TRUE);
-    GMTK::D3_X_D2_X_D1(*F[0], *F[1], *F[2],  u, tmp, uo);
+    GMTK::D3_X_D2_X_D1<GFTYPE>(*F[0], *F[1], *F[2],  u, tmp, uo);
 #endif
   }
   u .range_reset(); 

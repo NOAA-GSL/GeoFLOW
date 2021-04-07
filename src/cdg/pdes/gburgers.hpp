@@ -8,7 +8,7 @@
 //                remove the nonlinear terms so as to solve only the heat equation.
 //
 //                The State variable must always be of specific type
-//                   GTVector<GTVector<GFTYPE>*>, but the elements rep-
+//                   GTVector<GTVector<Ftype>*>, but the elements rep-
 //                resent different things depending on whether
 //                the equation is doing nonlinear advection, heat only, or 
 //                pure linear advection. If solving with nonlinear advection 
@@ -76,9 +76,9 @@ public:
         using FilterList    = std::vector<FilterBasePtr>;
 
 
-        static_assert(std::is_same<State,GTVector<GTVector<GFTYPE>*>>::value,
+        static_assert(std::is_same<State,GTVector<GTVector<Ftype>*>>::value,
                "State is of incorrect type");
-        static_assert(std::is_same<Derivative,GTVector<GTVector<GFTYPE>*>>::value,
+        static_assert(std::is_same<Derivative,GTVector<GTVector<Ftype>*>>::value,
                "Derivative is of incorrect type");
         static_assert(std::is_same<Grid,GGrid>::value,
                "Grid is of incorrect type");
@@ -97,8 +97,8 @@ public:
           GINT           itorder     = 2;
           GINT           nstage      = 2;
           GINT           inorder     = 2;
-          GFTYPE         courant     = 0.5;
-          GFTYPE         nu          = 0.0;
+          Ftype         courant     = 0.5;
+          Ftype         nu          = 0.0;
           GTVector<GINT> iforced;
           GString        ssteptype;
         };
@@ -134,7 +134,7 @@ protected:
                             {return stdiforced_;}
 
         void                init_impl(State &u, State &tmppool);          // initialize 
-        GTVector<GFTYPE>    &get_nu() { return nu_; };                    // Set nu/viscosity
+        GTVector<Ftype>    &get_nu() { return nu_; };                    // Set nu/viscosity
         GBOOL               has_dt_impl() const {return bvariabledt_;}    // Has dynamic dt?
         void                dt_impl(const Time &t, State &u, Time &dt);   // Get dt
         void                apply_bc_impl(const Time &t, State &u);       // Apply bdy conditions
@@ -163,11 +163,11 @@ private:
         GINT                itorder_;       // time deriv order
         GINT                inorder_;       // nonlin term order
         GINT                nstage_;        // no. stages in time deriv RK
-        GFTYPE              courant_;       // Courant number if dt varies
-        GTVector<GFTYPE>    tcoeffs_;       // coeffs for time deriv
-        GTVector<GFTYPE>    acoeffs_;       // coeffs for NL adv term
-        GTVector<GFTYPE>    dthist_;        // coeffs for NL adv term
-        GTVector<GTVector<GFTYPE>*>  
+        Ftype               courant_;       // Courant number if dt varies
+        GTVector<Ftype>     tcoeffs_;       // coeffs for time deriv
+        GTVector<Ftype>     acoeffs_;       // coeffs for NL adv term
+        GTVector<Ftype>     dthist_;        // coeffs for NL adv term
+        GTVector<GTVector<Ftype>*>  
                             uevolve_;       // helper array to specify evolved sstate components
         State               utmp_;
         State               uold_;          // helper arrays set from utmp
@@ -178,10 +178,10 @@ private:
         GTVector<State>     ukeep_;         // state at prev. time levels
         GTVector<GString>
                             valid_types_;   // valid stepping methods supported
-        GTVector<GFTYPE>    nu_   ;         // dissipoation
+        GTVector<Ftype>     nu_   ;         // dissipoation
         std::vector<GINT>   stdiforced_;    // std::verctor for traits_.iforced
         GGrid              *grid_;          // GGrid object
-        GExRKStepper<GFTYPE>
+        GExRKStepper<Grid,Ftype>
                            *gexrk_;         // ExRK stepper, if needed
         GMass              *gmass_;         // mass op
         GMass              *gimass_;        // inverse mass op
@@ -190,7 +190,7 @@ private:
         GpdV<TypePack>     *gpdv_;          // pdV op
 //      GFlux              *gflux_;         // flux op
         GC_COMM             comm_;          // communicator
-        GGFX<GFTYPE>       *ggfx_;          // gather-scatter operator
+        GGFX<Ftype>        *ggfx_;          // gather-scatter operator
         GBurgers<TypePack>::Traits         
                             traits_;        // solver traits
 
