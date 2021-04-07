@@ -5,10 +5,8 @@
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
-#include "gspecbdy_user.hpp"
 
 
-namespace gspecbdy {
 
 
 
@@ -23,7 +21,8 @@ namespace gspecbdy {
 //          ibdy   : indirection array into state indicating global bdy, returned
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_my_mixed_bdy(const PropertyTree &sptree, GGrid &grid, const GINT id, GTVector<GSIZET> &ibdy)
+template<typename Types>
+GBOOL gepecbdy<Types>::impl_my_mixed_bdy(const PropertyTree &sptree, Grid &grid, const GINT id, GTVector<GSIZET> &ibdy)
 {
   GBdyType btype = geoflow::str2bdytype(sptree.getValue<GString>("base_type", "GBDY_NONE"));
 
@@ -33,4 +32,3 @@ GBOOL impl_my_mixed_bdy(const PropertyTree &sptree, GGrid &grid, const GINT id, 
 } // end, method impl_my_mixed_bdy
 
 
-} // end, gspecbdy namespace
