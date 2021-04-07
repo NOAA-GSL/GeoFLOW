@@ -251,7 +251,7 @@ class GInterp {
 #include <boost/numeric/ublas/vector_expression.hpp>
 #include <boost/numeric/ublas/vector_proxy.hpp>
 #include <cassert>
-    namespace ublas = boost::numeric::ublas;
+namespace ublas = boost::numeric::ublas;
 
     namespace detail {
 

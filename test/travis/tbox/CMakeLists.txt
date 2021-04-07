@@ -12,7 +12,8 @@ set(test_tbox_files
         morton.cpp
 		mpixx.cpp
         property_tree.cpp
-        range.cpp
+		range.cpp
+		rbf_interpolation.cpp
         tbox_main.cpp
         zip.cpp
 )
