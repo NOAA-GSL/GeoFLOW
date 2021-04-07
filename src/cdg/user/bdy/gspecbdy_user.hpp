@@ -13,6 +13,7 @@
 #include "ggrid.hpp"
 #include "gutils.hpp"
 #include "tbox/property_tree.hpp"
+#include "pdeint/equation_base.hpp"
 
 
 using namespace geoflow;
