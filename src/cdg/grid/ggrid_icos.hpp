@@ -47,8 +47,6 @@
 enum GICOSPTYPE      {GICOS_BASE, GICOS_ELEMENTAL}; 
 enum GCOORDSYST      {GICOS_CART, GICOS_LATLONG}; 
 
-typedef GTMatrix<Ftype> GFTMatrix;
-typedef Ftype GTICOS;
 
 using namespace geoflow;
 using namespace geoflow::pdeint;
@@ -87,6 +85,9 @@ public:
                              using UpdateBase    = UpdateBdyBase<Types>;
                              using UpdateBasePtr = std::shared_ptr<UpdateBase>;
                              using BdyUpdateList = GTVector<GTVector<UpdateBasePtr>>;
+
+                             typedef GTMatrix<Ftype> GFTMatrix;
+                             typedef Ftype GTICOS;
 
         // ICOS & sphere grid traits:
         struct Traits {
