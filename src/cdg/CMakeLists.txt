@@ -40,20 +40,15 @@ target_sources(cdg
         ${GHOME}/blas/qmxmp.F
         ${GHOME}/blas/dmxmp.F
         ${GHOME}/blas/fmxmp.F
-        ${GHOME}/blas/gmtk.cpp
         ${GHOME}/blas/gcblas.cpp
         
         ${GHOME}/comm/gcomm.cpp 
         
-        ${GHOME}/grid/ggrid.cpp
-        ${GHOME}/grid/ggrid_icos.cpp
-        ${GHOME}/grid/ggrid_box.cpp
-        
         ${GHOME}/config/gspecbdy_factory.cpp 
         
         ${GHOME}/sem/gelem_base.cpp
-        ${GHOME}/sem/gmass.cpp
-        ${GHOME}/sem/ghelmholtz.cpp
+#       ${GHOME}/sem/gmass.cpp
+#       ${GHOME}/sem/ghelmholtz.cpp
         
         
         ${GHOME}/utils/gbitblock.cpp 
