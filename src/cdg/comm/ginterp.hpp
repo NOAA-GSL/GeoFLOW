@@ -24,6 +24,7 @@
 #include "tbox/pio.hpp"
 #include "tbox/spatial.hpp"
 #include "tbox/tracer.hpp"
+#include "tbox/interpolation/rbf.hpp"
 
 namespace detail_extractor {
 template <typename PairType>
@@ -243,223 +244,18 @@ class GInterp {
         GEOFLOW_TRACE_STOP();
     }
 
-#include <boost/numeric/ublas/matrix.hpp>
-#include <boost/numeric/ublas/matrix_expression.hpp>
-#include <boost/numeric/ublas/matrix_proxy.hpp>
-#include <boost/numeric/ublas/triangular.hpp>
-#include <boost/numeric/ublas/vector.hpp>
-#include <boost/numeric/ublas/vector_expression.hpp>
-#include <boost/numeric/ublas/vector_proxy.hpp>
-#include <cassert>
-namespace ublas = boost::numeric::ublas;
-
-    namespace detail {
-
-    template <typename Point>
-    typename Point::value_type
-    Radius(const Point& a, const Point& b) {
-        using value_type = typename Point::value_type;
-        value_type rad = 0;
-        for (auto i = 0; i < a.size(); ++i) {
-            rad += (a[i] - b[i]) * (a[i] - b[i]);
-        }
-        return std::sqrt(rad);
-    }
-
-    /** \brief decompose the symmetric positive definit matrix A into product L L^T.
-     *
-     * \param MATRIX type of input matrix 
-     * \param TRIA type of lower triangular output matrix
-     * \param A square symmetric positive definite input matrix (only the lower triangle is accessed)
-     * \param L lower triangular output matrix 
-     * \return nonzero if decompositon fails (the value ist 1 + the numer of the failing row)
-     */
-    template <class MATRIX, class TRIA>
-    size_t cholesky_decompose(const MATRIX& A, TRIA& L) {
-        using namespace ublas;
-
-        typedef typename MATRIX::value_type T;
-
-        assert(A.size1() == A.size2());
-        assert(A.size1() == L.size1());
-        assert(A.size2() == L.size2());
-
-        const size_t n = A.size1();
-
-        for (size_t k = 0; k < n; k++) {
-            double qL_kk = A(k, k) - inner_prod(project(row(L, k), range(0, k)),
-                                                project(row(L, k), range(0, k)));
-
-            if (qL_kk <= 0) {
-                return 1 + k;
-            } else {
-                double L_kk = sqrt(qL_kk);
-                L(k, k) = L_kk;
-
-                matrix_column<TRIA> cLk(L, k);
-                project(cLk, range(k + 1, n)) = (project(column(A, k), range(k + 1, n)) - prod(project(L, range(k + 1, n), range(0, k)),
-                                                                                               project(row(L, k), range(0, k)))) /
-                                                L_kk;
-            }
-        }
-        return 0;
-    }
-
-    /** \brief decompose the symmetric positive definit matrix A into product L L^T.
-     *
-     * \param MATRIX type of matrix A
-     * \param A input: square symmetric positive definite matrix (only the lower triangle is accessed)
-     * \param A output: the lower triangle of A is replaced by the cholesky factor
-     * \return nonzero if decompositon fails (the value ist 1 + the numer of the failing row)
-     */
-    template <class MATRIX>
-    size_t cholesky_decompose(MATRIX& A) {
-        using namespace ublas;
-
-        typedef typename MATRIX::value_type T;
-
-        const MATRIX& A_c(A);
-
-        const size_t n = A.size1();
-
-        for (size_t k = 0; k < n; k++) {
-            double qL_kk = A_c(k, k) - inner_prod(project(row(A_c, k), range(0, k)),
-                                                  project(row(A_c, k), range(0, k)));
-
-            if (qL_kk <= 0) {
-                return 1 + k;
-            } else {
-                double L_kk = sqrt(qL_kk);
-
-                matrix_column<MATRIX> cLk(A, k);
-                project(cLk, range(k + 1, n)) = (project(column(A_c, k), range(k + 1, n)) - prod(project(A_c, range(k + 1, n), range(0, k)),
-                                                                                                 project(row(A_c, k), range(0, k)))) /
-                                                L_kk;
-                A(k, k) = L_kk;
-            }
-        }
-        return 0;
-    }
-
-    /** \brief decompose the symmetric positive definit matrix A into product L L^T.
-     *
-     * \param MATRIX type of matrix A
-     * \param A input: square symmetric positive definite matrix (only the lower triangle is accessed)
-     * \param A output: the lower triangle of A is replaced by the cholesky factor
-     * \return nonzero if decompositon fails (the value ist 1 + the numer of the failing row)
-     */
-    template <class MATRIX>
-    size_t incomplete_cholesky_decompose(MATRIX& A) {
-        using namespace ublas;
-
-        typedef typename MATRIX::value_type T;
-
-        // read access to a const matrix is faster
-        const MATRIX& A_c(A);
-
-        const size_t n = A.size1();
-
-        for (size_t k = 0; k < n; k++) {
-            double qL_kk = A_c(k, k) - inner_prod(project(row(A_c, k), range(0, k)),
-                                                  project(row(A_c, k), range(0, k)));
-
-            if (qL_kk <= 0) {
-                return 1 + k;
-            } else {
-                double L_kk = sqrt(qL_kk);
-
-                // aktualisieren
-                for (size_t i = k + 1; i < A.size1(); ++i) {
-                    T* Aik = A.find_element(i, k);
-
-                    if (Aik != 0) {
-                        *Aik = (*Aik - inner_prod(project(row(A_c, k), range(0, k)),
-                                                  project(row(A_c, i), range(0, k)))) /
-                               L_kk;
-                    }
-                }
-
-                A(k, k) = L_kk;
-            }
-        }
-
-        return 0;
-    }
-
-    /** \brief solve system L L^T x = b inplace
-     *
-     * \param L a triangular matrix
-     * \param x input: right hand side b; output: solution x
-     */
-    template <class TRIA, class VEC>
-    void
-    cholesky_solve(const TRIA& L, VEC& x, ublas::lower) {
-        using namespace ublas;
-        //   ::inplace_solve(L, x, lower_tag(), typename TRIA::orientation_category () );
-        inplace_solve(L, x, lower_tag());
-        inplace_solve(trans(L), x, upper_tag());
-    }
-
-    }  // namespace detail
-
-
-
 
     template <typename T>
     template <typename Coordinates, typename Solutions>
     void
     GInterp<T>::serial_interp_(const Coordinates& search_location, const Solutions& search_value, const Coordinates& target_coords, Solutions& target_value) {
-        const auto num_sources = search_location.size();
-        const auto num_dimensions = search_location[0].size();
+        using namespace geoflow::tbox;
+        rbf::Interpolator<value_type> interpolator(rbf::kernel::Gaussian<value_type>);
+        interpolator.setData(search_location, search_value);
+        interpolator.computeWeights();
+
         const auto num_variables = 1;
-
-        // Get epsilon scaling parameter
-        value_type avg_distance = 0;
-        for (auto i = 0; i < num_sources; ++i) {
-            avg_distance += detail::Radius(target_coords[0], search_location[i]);
-        }
-        avg_distance /= num_sources;
-        value_type epsilon = 1.0 / avg_distance;
-
-        ublas::matrix<value_type> weights(num_sources, num_variables);
-        ublas::matrix<value_type> A(num_sources, num_sources);
-        ublas::matrix<value_type> L(num_sources, num_sources);
-        ublas::vector<value_type> Afs(num_sources);
-        ublas::vector<value_type> soln(num_variables);
-
-        // Copy solution into Matrix
-        for (auto i = 0; i < num_sources; ++i) {
-            for (auto j = 0; j < num_variables; ++j) {
-                weights(i, j) = search_value[i];
-            }
-        }
-
-        // Build RBF
-        for (auto i = 0; i < num_sources; ++i) {
-            for (auto j = 0; j < num_sources; ++j) {
-                auto rad = detail::Radius(search_location[i], search_location[j]);
-                A(i, j) = std::exp(-epsilon * rad * epsilon * rad);
-            }
-        }
-
-        // Factor Matrix A
-        size_t res = detail::cholesky_decompose(A, L);
-
-        // Solve weight for each variable
         for (auto i = 0; i < num_variables; ++i) {
-            ublas::matrix_column<ublas::matrix<value_type>> mc(weights, i);
-            detail::cholesky_solve(L, mc, ublas::lower());
-        }
-
-        // Build Afs Matrix
-        for (auto i = 0; i < num_sources; ++i) {
-            auto rad = detail::Radius(target_coords[0], search_location[i]);
-            Afs(i) = std::exp(-epsilon * rad * epsilon * rad);
-        }
-
-        // Copy solution out
-        soln = ublas::prod(ublas::trans(Afs), weights);
-        for (auto i = 0; i < num_variables; ++i) {
-            target_value[i] = soln(i);
+            target_value[i] = interpolator.calcValue(target_coords[i]);
         }
     }

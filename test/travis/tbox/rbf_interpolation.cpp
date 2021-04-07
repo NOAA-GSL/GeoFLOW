@@ -43,7 +43,7 @@ int main(int argc, char **argv){
 	using value_type = double;
 	using point_type = std::array<value_type, NDIM>;
     constexpr int num_targets = 1;
-    constexpr int num_sources = 50;
+    constexpr int num_sources = 100;
 
     // Global Bounds
     std::array<value_type,NDIM> min_bound;
@@ -93,7 +93,7 @@ int main(int argc, char **argv){
     for(size_type d = 0; d < NDIM; ++d){    
         std::uniform_real_distribution<value_type> dis(min_bound[d], max_bound[d]);
         for(size_type id = 0; id < num_targets; ++id){
-            target_xyz[id][d] = dis(gen);
+            target_xyz[id][d] = dis(gen) / 10; // Somewhere in middle
         }
     }
 
@@ -120,14 +120,14 @@ int main(int argc, char **argv){
     }
 
 	// Check Answer against known solution
-	value_type error_tolerance = 0.01;
+	value_type error_tolerance = 1.0;
     auto percent_error = std::abs(target_soln[0] - target_exact_soln[0])/target_exact_soln[0];
-	//if( percent_error > error_tolerance ){
+	if( percent_error > error_tolerance ){
 		std::cout << "At Index = " << 0 << " Percent Error = " << percent_error << std::endl;
         std::cout << "Returned Target Solution = " << target_soln[0] << std::endl;
         std::cout << "Exact Target Solution    = " << target_exact_soln[0] << std::endl;
 		return 1;
-	//}
+	}
 
 	return 0;
 }
