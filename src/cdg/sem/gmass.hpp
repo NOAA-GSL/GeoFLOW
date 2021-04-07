@@ -11,11 +11,16 @@
 #include "gtvector.hpp"
 #include "gnbasis.hpp"
 #include "ggrid.hpp"
+#include "gmass.hpp"
+#include "gtmatrix.hpp"
+#include "gmtk.hpp"
 #include "pdeint/equation_base.hpp"
 
 
+
+
 template<typename TypePack>
-class GMass: 
+class GMass
 {
 
 public:
