@@ -28,8 +28,8 @@
 //                where
 //                    s_{ij} =  u_i,j.
 //               
-//                For the energy, this operator is nonlinear, 
-//                so it should not derive from GLinOp. 
+//                For the energy, this operator is nonlinear, so
+//                is not a linear operator
 //
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none
