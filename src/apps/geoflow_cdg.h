@@ -61,7 +61,6 @@ template< // Complete typepack
 typename StateType     = GTVector<GTVector<GFTYPE>*>,
 typename StateCompType = GTVector<GFTYPE>,
 typename StateInfoType = GStateInfo,
-typename MassOpType    = GMass,
 typename FloatType     = GFTYPE,
 typename DerivType     = StateType,
 typename TimeType      = FloatType,
@@ -76,7 +75,7 @@ struct MyTypePack {
         using StateComp  = StateCompType;
         using Grid       = GGrid<MyTypePack>;
         using StateInfo  = StateInfoType;
-        using Mass       = MassOpType;
+        using Mass       = GMass<MyTypePack>;
         using Ftype      = FloatType;
         using Derivative = DerivType;
         using Time       = TimeType;
