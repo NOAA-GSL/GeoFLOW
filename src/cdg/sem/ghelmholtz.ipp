@@ -16,14 +16,7 @@
 // Derived From : GLinOp
 //==================================================================================
 
-#include <cstdlib>
-#include <memory>
-#include <cmath>
-#include "ghelmholtz.hpp"
-#include "gtmatrix.hpp"
-#include "gmtk.hpp"
 
-using namespace std;
 
 //**********************************************************************************
 //**********************************************************************************
@@ -32,8 +25,8 @@ using namespace std;
 // ARGS   : none
 // RETURNS: none
 //**********************************************************************************
-GHelmholtz::GHelmholtz(GGrid &grid)
-: GLinOp(grid),
+template<typename Types>
+GHelmholtz<Types>::GHelmholtz(Grid &grid)
 buse_metric_   (TRUE),
 bown_p_        (TRUE),
 bown_q_       (FALSE),
@@ -55,7 +48,8 @@ q_          (NULLPTR)
 // ARGS   : none
 // RETURNS: none
 //**********************************************************************************
-GHelmholtz::~GHelmholtz()
+template<typename Types>
+GHelmholtz<Types>::~GHelmholtz()
 {
   for ( GSIZET j=0; j<G_.size(2); j++ ) {
     for ( GSIZET i=j; i<G_.size(1); i++ ) {
@@ -78,9 +72,10 @@ GHelmholtz::~GHelmholtz()
 //             
 // RETURNS:  none
 //**********************************************************************************
-void GHelmholtz::opVec_prod(GTVector<GFTYPE> &u, 
-                            GTVector<GTVector<GFTYPE>*> &utmp,
-                            GTVector<GFTYPE> &uo)
+template<typename Types>
+void GHelmholtz<Types>::opVec_prod(StateComp  &u, 
+                                   State      &utmp,
+                                   State      &uo)
 {
   assert(bInitialized_ && "Operator not initialized");
     
@@ -109,9 +104,10 @@ void GHelmholtz::opVec_prod(GTVector<GFTYPE> &u,
 //             
 // RETURNS:  none
 //**********************************************************************************
-void GHelmholtz::def_prod(GTVector<GFTYPE> &u, 
-                          GTVector<GTVector<GFTYPE>*> &utmp,
-                          GTVector<GFTYPE> &uo)
+template<typename Types>
+void GHelmholtz<Types>::def_prod(StateComp  &u, 
+                                 State      &utmp,
+                                 StateComp  &uo)
 {
   assert( utmp.size() >= GDIM+3
        && "Insufficient temp space specified");
@@ -206,14 +202,15 @@ void GHelmholtz::def_prod(GTVector<GFTYPE> &u,
 //             
 // RETURNS:  none
 //**********************************************************************************
-void GHelmholtz::embed_prod(GTVector<GFTYPE> &u, 
-                            GTVector<GTVector<GFTYPE>*> &utmp,
-                            GTVector<GFTYPE> &uo)
+template<typename Types>
+void GHelmholtz<Types>::embed_prod(StateComp &u, 
+                                   State     &utmp,
+                                   StateComp &uo)
 {
   assert( GDIM == 2 && utmp.size() >= 2*GDIM+1
        && "Insufficient temp space specified");
 
-  GString serr = "GHelmholtz::embed_prod: ";
+  GString serr = "GHelmholtz<Types>::embed_prod: ";
   GTVector<GTVector<GFTYPE>*> gdu(GDIM);
   GMass     *massop = &grid_->massop();                     
   GElemList *gelems=&grid_->elems();
@@ -307,9 +304,10 @@ void GHelmholtz::embed_prod(GTVector<GFTYPE> &u,
 //             
 // RETURNS:  none
 //**********************************************************************************
-void GHelmholtz::reg_prod(GTVector<GFTYPE> &u, 
-                          GTVector<GTVector<GFTYPE>*> &utmp,
-                          GTVector<GFTYPE> &uo)
+template<typename Types>
+void GHelmholtz<Types>::reg_prod(StateComp   &u, 
+                                 State       &utmp,
+                                 StateComp   &uo)
 {
 
   assert( utmp.size() >= GDIM
@@ -387,7 +385,8 @@ void GHelmholtz::reg_prod(GTVector<GFTYPE> &u,
 // ARGS   : none
 // RETURNS: none
 //**********************************************************************************
-void GHelmholtz::init()
+template<typename Types>
+void GHelmholtz<Types>::init()
 {
   assert(grid_->ntype().multiplicity(0) == GE_MAX-1 
         && "Only a single element type allowed on grid");
@@ -412,7 +411,8 @@ void GHelmholtz::init()
 // ARGS   : none
 // RETURNS: none
 //**********************************************************************************
-void GHelmholtz::def_init()
+template<typename Types>
+void GHelmholtz<Types>::def_init()
 {
 
   if ( grid_->itype(GE_2DEMBEDDED).size() == 0 
@@ -526,7 +526,8 @@ void GHelmholtz::def_init()
 // ARGS   : none
 // RETURNS: none
 //**********************************************************************************
-void GHelmholtz::reg_init()
+template<typename Types>
+void GHelmholtz<Types>::reg_init()
 {
   if ( grid_->gtype() != GE_REGULAR ) return; 
 
@@ -585,7 +586,8 @@ void GHelmholtz::reg_init()
 //             
 // RETURNS:  none
 //**********************************************************************************
-void GHelmholtz::set_Lap_scalar(GTVector<GFTYPE> &p)
+template<typename Types>
+void GHelmholtz<Types>::set_Lap_scalar(GTVector<GFTYPE> &p)
 {
   assert(p.size() == 1 || p.size() >= grid_->ndof() 
        && "Viscosity parameter of insufficient size");
@@ -607,7 +609,8 @@ void GHelmholtz::set_Lap_scalar(GTVector<GFTYPE> &p)
 //             
 // RETURNS:  none
 //**********************************************************************************
-void GHelmholtz::set_mass_scalar(GTVector<GFTYPE> &q)
+template<typename Types>
+void GHelmholtz<Types>::set_mass_scalar(GTVector<GFTYPE> &q)
 {
   assert(q.size() >= grid_->ndof() 
        && "Mass parameter of insufficient size");
