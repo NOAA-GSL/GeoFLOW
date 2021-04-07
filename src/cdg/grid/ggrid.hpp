@@ -21,7 +21,6 @@
 #include "gcomm.hpp"
 #include "ggfx.hpp"
 #include "glinop.hpp"
-#include "ghelmholtz.hpp"
 #include "gcblas.hpp"
 #include "pdeint/update_bdy_base.hpp"
 #include "pdeint/lin_solver_base.hpp"
