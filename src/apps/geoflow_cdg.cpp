@@ -831,8 +831,8 @@ void init_ggfx(PropertyTree &ptree, Grid &grid, GGFX<GFTYPE> *&ggfx) {
     GEOFLOW_TRACE();
 
     // Periodize coords if needed
-    if (typeid(grid) == typeid(GGridBox)) {
-        static_cast<GGridBox *>(&grid)->periodize();
+    if (typeid(grid) == typeid(GGridBox<Types>)) {
+        static_cast<GGridBox<Types> *>(&grid)->periodize();
     }
 
     const auto ndof = grid_->ndof();
@@ -844,8 +844,8 @@ void init_ggfx(PropertyTree &ptree, Grid &grid, GGFX<GFTYPE> *&ggfx) {
     }
 
     // Unperiodize nodes now that connectivity map is generated
-    if (typeid(grid) == typeid(GGridBox)) {
-        static_cast<GGridBox *>(&grid)->unperiodize();
+    if (typeid(grid) == typeid(GGridBox<Types>)) {
+        static_cast<GGridBox<Types> *>(&grid)->unperiodize();
     }
 
     // Create GGFX

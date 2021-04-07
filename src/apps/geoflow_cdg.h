@@ -74,7 +74,7 @@ struct MyTypePack {
         using EqnBasePtr = std::shared_ptr<EqnBase>;   // Equation Base ptr
         using State      = StateType;
         using StateComp  = StateCompType;
-        using Grid       = GGrid;
+        using Grid       = GGrid<MyTypePack>;
         using StateInfo  = StateInfoType;
         using Mass       = MassOpType;
         using Ftype      = FloatType;
