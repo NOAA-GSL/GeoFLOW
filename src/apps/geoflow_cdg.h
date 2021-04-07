@@ -61,7 +61,6 @@ template< // Complete typepack
 typename StateType     = GTVector<GTVector<GFTYPE>*>,
 typename StateCompType = GTVector<GFTYPE>,
 typename StateInfoType = GStateInfo,
-typename GridType      = GGrid,
 typename MassOpType    = GMass,
 typename FloatType     = GFTYPE,
 typename DerivType     = StateType,
@@ -70,27 +69,33 @@ typename CompType      = GTVector<GStateCompType>,
 typename JacoType      = StateType,
 typename SizeType      = GSIZET
 >
-struct TypePack {
+struct MyTypePack {
+        using EqnBase    = EquationBase<MyTypePack>;   // Equation Base type
+        using EqnBasePtr = std::shared_ptr<EqnBase>;   // Equation Base ptr
         using State      = StateType;
         using StateComp  = StateCompType;
+        using Grid       = GGrid;
         using StateInfo  = StateInfoType;
-        using Grid       = GridType;
         using Mass       = MassOpType;
         using Ftype      = FloatType;
         using Derivative = DerivType;
         using Time       = TimeType;
         using CompDesc   = CompType;
         using Jacobian   = JacoType;
+        using IBdyVol    = GTVector<GSIZET>;
+        using TBdyVol    = GTVector<GBdyType>;
         using Size       = SizeType;
+        using FilterBasePtr = std::shared_ptr<FilterBase<MyTypePack>>;
+        using FilterList    = std::vector<FilterBasePtr>;
 };
 using StateInfo     = GStateInfo;
-using MyTypes       = TypePack<>;           // Define grid types used
-using Grid          = GGrid;           
-using EqnBase       = EquationBase<MyTypes>;    // Equation Base type
-using EqnBasePtr    = std::shared_ptr<EqnBase>;   // Equation Base ptr
-using IOBaseType    = IOBase<MyTypes>;          // IO Base type
+using MyTypes       = MyTypePack<>;               // Define grid types used
+using EqnBase       = typename MyTypes::EqnBase;           
+using EqnBasePtr    = typename MyTypes::EqnBasePtr;
+using Grid          = typename MyTypes::Grid;           
+using IOBaseType    = IOBase<MyTypes>;            // IO Base type
 using IOBasePtr     = std::shared_ptr<IOBaseType>;// IO Base ptr
-using MixBase       = MixerBase<MyTypes>;       // Stirring/mixing Base type
+using MixBase       = MixerBase<MyTypes>;         // Stirring/mixing Base type
 using MixBasePtr    = std::shared_ptr<MixBase>;   // Stirring/mixing Base ptr
 using IntegratorBase= Integrator<MyTypes>;        // Integrator
 using IntegratorPtr = std::shared_ptr<IntegratorBase>; // Integrator ptr
@@ -130,19 +135,19 @@ void update_forcing   (const Time &t, State &u, State &uf);     // forcing vec u
 void steptop_callback (const Time &t, State &u, const Time &dt);// backdoor function
 
 // Public methods:
-void init_state       (const PropertyTree &ptree, GGrid &, EqnBasePtr &pEqn, Time &t, State &utmp, State &u);
-void init_force       (const PropertyTree &ptree, GGrid &, EqnBasePtr &pEqn, Time &t, State &utmp, State &u, State &uf);
+void init_state       (const PropertyTree &ptree, Grid &, EqnBasePtr &pEqn, Time &t, State &utmp, State &u);
+void init_force       (const PropertyTree &ptree, Grid &, EqnBasePtr &pEqn, Time &t, State &utmp, State &u, State &uf);
 void allocate         (const PropertyTree &ptree);
 void deallocate       ();
 void create_observers (EqnBasePtr &eqn_ptr, PropertyTree &ptree, GSIZET icycle, Time time, std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers);
 void create_equation  (const PropertyTree &ptree, EqnBasePtr &pEqn);
 void create_mixer     (PropertyTree &ptree, MixBasePtr &pMixer);
 void create_basis_pool(PropertyTree &ptree, BasisBase &gbasis);
-void do_terrain       (const PropertyTree &ptree, GGrid &grid);
-void init_ggfx        (PropertyTree &ptree, GGrid &grid, GGFX<GFTYPE> *&ggfx);
+void do_terrain       (const PropertyTree &ptree, Grid &grid);
+void init_ggfx        (PropertyTree &ptree, Grid &grid, GGFX<GFTYPE> *&ggfx);
 void gresetart        (PropertyTree &ptree);
-void compare          (const PropertyTree &ptree, GGrid &, EqnBasePtr &pEqn, Time &t, State &utmp, State &u);
-void do_restart       (const PropertyTree &ptree, GGrid &, State &u, GTMatrix<GINT>&p,  GSIZET &cycle, Time &t);
+void compare          (const PropertyTree &ptree, Grid &, EqnBasePtr &pEqn, Time &t, State &utmp, State &u);
+void do_restart       (const PropertyTree &ptree, Grid &, State &u, GTMatrix<GINT>&p,  GSIZET &cycle, Time &t);
 void do_bench         (GString sbench, GSIZET ncyc);
 
 //#include "init_pde.h"

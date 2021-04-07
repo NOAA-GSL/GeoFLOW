@@ -45,6 +45,34 @@ using namespace std;
 class GGridIcos : public GGrid
 {
 public:
+
+                             using Types          = TypePack;
+                             using EqnBase        = EquationBase<Types>;      // Equation Base type
+                             using EqnBasePtr     = std::shared_ptr<EqnBase>; // Equation Base ptr
+                             using State          = typename Types::State;
+                             using StateComp      = typename Types::StateComp;
+                             using Grid           = typename Types::Grid;
+                             using StateInfo      = typename Types::StateInfo;
+                             using Mass           = typename Types::Mass;
+                             using Ftype          = typename Types::Ftype;
+                             using Derivative     = typename Types::Derivative;
+                             using Time           = typename Types::Time;
+                             using CompDesc       = typename Types::CompDesc;
+                             using Jacobian       = typename Types::Jacobian;
+                             using IBdyVol        = GTVector<GSIZET>;
+                             using TBdyVol        = GTVector<GBdyType>;
+                             using Size           = typename Types::Size;
+                             using GElemList      = GTVector<GElem_base*>;
+
+                             using CGTypes        = CGTypePack;
+                             using Operator       = typename CGTypes::Operator;
+                             using Preconditioner = typename CGTypes::Preconditioner;
+                             using ConnectivityOp = typename CGTypes::ConnectivityOp;
+
+                             using UpdateBase    = UpdateBdyBase<Types>;
+                             using UpdateBasePtr = std::shared_ptr<UpdateBase>;
+                             using BdyUpdateList = GTVector<GTVector<UpdateBasePtr>>;
+
         // ICOS & sphere grid traits:
         struct Traits {
           GINT                ilevel;     // refine level if doing 2D ICOS
@@ -216,6 +244,5 @@ friend  std::ostream&       operator<<(std::ostream&, GGridIcos &);         // O
 
 };
 
-#include "ggrid_icos.ipp"
 
 #endif

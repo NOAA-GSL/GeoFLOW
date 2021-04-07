@@ -634,6 +634,7 @@ void GBurgers<TypePack>::apply_bc_impl(const Time &t, State &u)
 	GEOFLOW_TRACE();
   Time ttime = t;
   std::shared_ptr<GBurgers<TypePack>> pthis(this);
+  EqnBasePtr peqn = pthis;;
 
   BdyUpdateList *updatelist = &grid_->bdy_update_list();;
 
@@ -641,7 +642,7 @@ void GBurgers<TypePack>::apply_bc_impl(const Time &t, State &u)
   // Update bdy values if required to:
   for ( auto k=0; k<updatelist->size(); k++ ) { // foreach grid bdy
     for ( auto j=0; j<(*updatelist)[j].size(); j++ ) { // each update method
-      (*updatelist)[k][j]->update(pthis, *grid_, ttime, utmp_, u);
+      (*updatelist)[k][j]->update(peqn, *grid_, ttime, utmp_, u);
     }
   }
 

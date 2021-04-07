@@ -54,20 +54,27 @@
 using namespace geoflow::pdeint;
 using namespace std;
 
+
+
+
 template<typename TypePack>
 class GBurgers : public EquationBase<TypePack>
 {
 public:
-        using Interface  = EquationBase<TypePack>;
-        using Base       = Interface;
-        using State      = typename Interface::State;
-        using Grid       = typename Interface::Grid;
-        using Ftype      = typename Interface::Ftype;
-        using Derivative = typename Interface::Derivative;
-        using Time       = typename Interface::Time;
-        using CompDesc   = typename Interface::CompDesc;
-        using Jacobian   = typename Interface::Jacobian;
-        using Size       = typename Interface::Size;
+        using Types      = TypePack;
+        using EqnBase    = EquationBase<Types>;
+        using EqnBasePtr = std::shared_ptr<EqnBase>;
+        using State      = typename Types::State;
+        using Grid       = typename Types::Grid;
+        using Ftype      = typename Types::Ftype;
+        using Derivative = typename Types::Derivative;
+        using Time       = typename Types::Time;
+        using CompDesc   = typename Types::CompDesc;
+        using Jacobian   = typename Types::Jacobian;
+        using Size       = typename Types::Size;
+        using FilterBasePtr = std::shared_ptr<FilterBase<Types>>;
+        using FilterList    = std::vector<FilterBasePtr>;
+
 
         static_assert(std::is_same<State,GTVector<GTVector<GFTYPE>*>>::value,
                "State is of incorrect type");

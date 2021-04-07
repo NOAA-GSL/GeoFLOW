@@ -34,6 +34,29 @@ using namespace std;
 
 class GMass;
 
+struct TypePack { // define main typepack
+        using EqnBase        = EquationBase<TypePack>;      // Equation Base type
+        using EqnBasePtr     = std::shared_ptr<EqnBase>; // Equation Base ptr
+        using State          = GTVector<GTVector<GFTYPE>*>;
+        using StateComp      = GTVector<GFTYPE>;
+        using Grid           = GGrid;
+        using StateInfo      = GStateInfo;
+        using Mass           = GMass;
+        using Ftype          = GFTYPE;
+        using Derivative     = State;
+        using Time           = Ftype;
+        using CompDesc       = GTVector<GStateCompType>;
+        using Jacobian       = State;
+        using IBdyVol        = GTVector<GSIZET>;
+        using TBdyVol        = GTVector<GBdyType>;
+        using Size           = GSIZET;
+        using GElemList      = GTVector<GElem_base*>;
+        using UpdateBase     = UpdateBdyBase<TypePack>;
+        using UpdateBasePtr  = std::shared_ptr<UpdateBase>;
+        using BdyUpdateList  = GTVector<GTVector<UpdateBasePtr>>;
+};
+
+
 struct CGTypePack { // define terrain typepack
         using Types            = CGTypePack;
         using Operator         = class GHelmholtz;
@@ -47,36 +70,39 @@ struct CGTypePack { // define terrain typepack
         using ConnectivityOp   = GGFX<GFTYPE>;
 };
 
+using GElemList      = typename TypePack::GElemList;
+using UpdateBase     = typename TypePack::UpdateBase;
+using UpdateBasePtr  = typename TypePack::UpdateBasePtr;
+using BdyUpdateList  = typename TypePack::BdyUpdateList;
 
 typedef GTVector<GTVector<GTVector<GSIZET>>>   BinnedBdyIndex;
 typedef GTVector<GTVector<GTVector<GBdyType>>> BinnedBdyType;
 
 
-template<typename TypePack>
 class GGrid 
 {
 public:
                              enum GDerivType {GDV_VARP=0, GDV_CONSTP}; 
 
                              using Types          = TypePack;
-                             using EqnBase        = EquationBase<Types>;      // Equation Base type
-                             using EqnBasePtr     = std::shared_ptr<EqnBase>; // Equation Base ptr
+                             using EqnBase        = typename Types::EqnBase;
+                             using EqnBasePtr     = typename Types::EqnBasePtr;
                              using State          = typename Types::State;
                              using StateComp      = typename Types::StateComp;
                              using Grid           = typename Types::Grid;
                              using StateInfo      = typename Types::StateInfo;
                              using Mass           = typename Types::Mass;
                              using Ftype          = typename Types::Ftype;
+                             using Size           = typename Types::Size;
                              using Derivative     = typename Types::Derivative;
                              using Time           = typename Types::Time;
-                             using CompDesc       = typename Types::CompType;
+                             using CompDesc       = typename Types::CompDesc;
                              using Jacobian       = typename Types::Jacobian;
                              using IBdyVol        = GTVector<GSIZET>;
                              using TBdyVol        = GTVector<GBdyType>;
-                             using Size           = typename Types::Size;
                              using GElemList      = GTVector<GElem_base*>;
 
-                             using CGTypes        = typename CGTypePack<>;
+                             using CGTypes        = CGTypePack;
                              using Operator       = typename CGTypes::Operator;
                              using Preconditioner = typename CGTypes::Preconditioner;
                              using ConnectivityOp = typename CGTypes::ConnectivityOp;
@@ -313,6 +339,5 @@ virtual void                 elem_face_data(
         GTVector<GINT>              testty_;
 };
 
-#include "ggrid.ipp"
 
 #endif

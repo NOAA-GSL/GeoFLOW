@@ -38,7 +38,7 @@ public:
 	using CompDesc   = typename Types::CompDesc;
 	using Size       = typename Types::Size;
         using FilterBasePtr = std::shared_ptr<FilterBase<Types>>;
-	using FilterList    = std::vector<FilterBasePtr>;
+        using FilterList    = std::vector<FilterBasePtr>;
 
 
 /*

@@ -233,7 +233,7 @@ void create_mixer(PropertyTree &ptree, MixBasePtr &pMixer) {
 //**********************************************************************************
 // METHOD: create_observers
 // DESC  : Create IO object and observer list from main ptree.
-// ARGS  : grid      : GGrid object
+// ARGS  : grid      : Grid object
 //         icycle    : initial icycle
 //         time      : initial time
 //         pObservers: observer list, returned
@@ -523,7 +523,7 @@ void deallocate() {
 //         utmp : vector of tmp vectors
 //         u    : full state vector
 //**********************************************************************************
-void init_state(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &t, State &utmp, State &u) {
+void init_state(const PropertyTree &ptree, Grid &grid, EqnBasePtr &peqn, Time &t, State &utmp, State &u) {
     GEOFLOW_TRACE();
     GBOOL bret;
 
@@ -545,7 +545,7 @@ void init_state(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &
 //         u   : full state vector
 //         uf  : full boundary state vector
 //**********************************************************************************
-void init_force(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &t, State &utmp, State &u, State &uf) {
+void init_force(const PropertyTree &ptree, Grid &grid, EqnBasePtr &peqn, Time &t, State &utmp, State &u, State &uf) {
     GEOFLOW_TRACE();
     GBOOL bret;
 
@@ -568,7 +568,7 @@ void init_force(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &
 //         utmp : vector of tmp vectors
 //         u    : full state vector
 //**********************************************************************************
-void compare(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &t, State &utmp, State &u) {
+void compare(const PropertyTree &ptree, Grid &grid, EqnBasePtr &peqn, Time &t, State &utmp, State &u) {
     GEOFLOW_TRACE();
     GBOOL bret, bvardt;
     GINT myrank, ntasks;
@@ -753,7 +753,7 @@ void compare(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &t, 
 //          grid : grid object
 // RETURNS: none.
 //**********************************************************************************
-void do_terrain(const PropertyTree &ptree, GGrid &grid) {
+void do_terrain(const PropertyTree &ptree, Grid &grid) {
     GEOFLOW_TRACE();
     GBOOL bret, bterr;
     GINT iret, nc;
@@ -794,7 +794,7 @@ void do_terrain(const PropertyTree &ptree, GGrid &grid) {
 //          t    : time from restart
 // RETURNS: none.
 //**********************************************************************************
-void do_restart(const PropertyTree &ptree, GGrid &, State &u,
+void do_restart(const PropertyTree &ptree, Grid &, State &u,
                 GTMatrix<GINT> &p, GSIZET &cycle, Time &t) {
     GEOFLOW_TRACE();
     assert(pIO_ != NULLPTR && "IO operator not set!");
@@ -827,7 +827,7 @@ void do_restart(const PropertyTree &ptree, GGrid &, State &u,
 
 }  // end of method do_restart
 
-void init_ggfx(PropertyTree &ptree, GGrid &grid, GGFX<GFTYPE> *&ggfx) {
+void init_ggfx(PropertyTree &ptree, Grid &grid, GGFX<GFTYPE> *&ggfx) {
     GEOFLOW_TRACE();
 
     // Periodize coords if needed

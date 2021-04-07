@@ -37,8 +37,8 @@ using namespace std;
 //          comm : communicator
 // RETURNS: none
 //**********************************************************************************
-template<typename Types>
-GGrid<Types>::GGrid(const geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GC_COMM &comm)
+
+GGrid::GGrid(const geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GC_COMM &comm)
 :
 bInitialized_                   (FALSE),
 bapplybc_                       (FALSE),
@@ -75,8 +75,8 @@ bdy_apply_callback_           (NULLPTR)
 // ARGS   : none
 // RETURNS: none
 //**********************************************************************************
-template<typename Types>
-GGrid<Types>::~GGrid()
+
+GGrid::~GGrid()
 {
        GEOFLOW_TRACE();
 
@@ -106,8 +106,8 @@ GGrid<Types>::~GGrid()
 // ARGS   : none.
 // RETURNS: none.
 //**********************************************************************************
-template<typename Types>
-void GGrid<Types>::do_typing()
+
+void GGrid::do_typing()
 {
        GEOFLOW_TRACE();
 
@@ -141,8 +141,8 @@ void GGrid<Types>::do_typing()
 //          bdof     : print internal dof too?
 // RETURNS: none.
 //**********************************************************************************
-template<typename Types>
-void GGrid<Types>::print(GString filename, GBOOL bdof)
+
+void GGrid::print(GString filename, GBOOL bdof)
 {
        GEOFLOW_TRACE();
   GString serr = "GridIcos::print: ";
@@ -243,8 +243,8 @@ std::ostream &operator<<(std::ostream &str, GGrid &e)
 // ARGS   : none
 // RETURNS: GSIZET number local dof
 //**********************************************************************************
-template<typename Types>
-GSIZET GGrid<Types>::ndof()
+
+GSIZET GGrid::ndof()
 {
        GEOFLOW_TRACE();
    assert(gelems_.size() > 0 && "Elements not set");
@@ -263,8 +263,8 @@ GSIZET GGrid<Types>::ndof()
 // ARGS   : none
 // RETURNS: GSIZET number surface/face  dof
 //**********************************************************************************
-template<typename Types>
-GSIZET GGrid<Types>::nfacedof()
+
+GSIZET GGrid::nfacedof()
 {
        GEOFLOW_TRACE();
    return gieface_.size();
@@ -280,8 +280,8 @@ GSIZET GGrid<Types>::nfacedof()
 // ARGS   : none
 // RETURNS: GSIZET number surface dof
 //**********************************************************************************
-template<typename Types>
-GSIZET GGrid<Types>::nbdydof()
+
+GSIZET GGrid::nbdydof()
 {
        GEOFLOW_TRACE();
    return igbdy_.size();;
@@ -296,8 +296,8 @@ GSIZET GGrid<Types>::nbdydof()
 //               filled if non-NULL
 // RETURNS: GFTYPE separation
 //**********************************************************************************
-template<typename Types>
-GFTYPE GGrid<Types>::minlength(GTVector<GFTYPE> *dx)
+
+GFTYPE GGrid::minlength(GTVector<GFTYPE> *dx)
 {
        GEOFLOW_TRACE();
    assert(gelems_.size() > 0 && "Elements not set");
@@ -348,8 +348,8 @@ GFTYPE GGrid<Types>::minlength(GTVector<GFTYPE> *dx)
 //               filled if non-NULL
 // RETURNS: GFTYPE length
 //**********************************************************************************
-template<typename Types>
-GFTYPE GGrid<Types>::maxlength(GTVector<GFTYPE> *dx)
+
+GFTYPE GGrid::maxlength(GTVector<GFTYPE> *dx)
 {
        GEOFLOW_TRACE();
    assert(gelems_.size() > 0 && "Elements not set");
@@ -397,8 +397,8 @@ GFTYPE GGrid<Types>::maxlength(GTVector<GFTYPE> *dx)
 // ARGS   : none
 // RETURNS: GFTYPE length
 //**********************************************************************************
-template<typename Types>
-GFTYPE GGrid<Types>::avglength()
+
+GFTYPE GGrid::avglength()
 {
        GEOFLOW_TRACE();
    assert(gelems_.size() > 0 && "Elements not set");
@@ -453,8 +453,8 @@ GFTYPE GGrid<Types>::avglength()
 // ARGS   : none
 // RETURNS: none
 //**********************************************************************************
-template<typename Types>
-void GGrid<Types>::grid_init()
+
+void GGrid::grid_init()
 {
 
        GEOFLOW_TRACE();
@@ -538,8 +538,8 @@ void GGrid<Types>::grid_init()
 // ARGS   : none
 // RETURNS: none
 //**********************************************************************************
-template<typename Types>
-void GGrid<Types>::grid_init(GTMatrix<GINT> &p,
+
+void GGrid::grid_init(GTMatrix<GINT> &p,
                       GTVector<GTVector<GFTYPE>> &xnodes)
 {
        GEOFLOW_TRACE();
@@ -602,8 +602,8 @@ void GGrid<Types>::grid_init(GTMatrix<GINT> &p,
 // ARGS   : none
 // RETURNS: none
 //**********************************************************************************
-template<typename Types>
-void GGrid<Types>::def_geom_init()
+
+void GGrid::def_geom_init()
 {
        GEOFLOW_TRACE();
 
@@ -612,7 +612,7 @@ void GGrid<Types>::def_geom_init()
        || gtype_ == GE_DEFORMED && "Invalid element type");
 
 
-   GString serr = "GGrid<Types>::def_geom_init: ";
+   GString serr = "GGrid::def_geom_init: ";
    GSIZET nxy = gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
    GTVector<GTVector<GFTYPE>> *xe;
 
@@ -695,8 +695,8 @@ void GGrid<Types>::def_geom_init()
 // ARGS   : none
 // RETURNS: none
 //**********************************************************************************
-template<typename Types>
-void GGrid<Types>::reg_geom_init()
+
+void GGrid::reg_geom_init()
 {
        GEOFLOW_TRACE();
    assert(gelems_.size() > 0 && "Elements not set");
@@ -796,8 +796,8 @@ void GGrid<Types>::reg_geom_init()
 // ARGS   : none.
 // RETURNS: none.
 //**********************************************************************************
-template<typename Types>
-void GGrid<Types>::do_face_data()
+
+void GGrid::do_face_data()
 {
        GEOFLOW_TRACE();
 
@@ -822,8 +822,8 @@ void GGrid<Types>::do_face_data()
 // ARGS   : none
 // RETURNS: none
 //**********************************************************************************
-template<typename Types>
-void GGrid<Types>::globalize_coords()
+
+void GGrid::globalize_coords()
 {
        GEOFLOW_TRACE();
    GString serr = "GridIcos::globalize_coords: ";
@@ -860,8 +860,8 @@ void GGrid<Types>::globalize_coords()
 // ARGS   : none
 // RETURNS: GTMatrix<GTVector<GFTYPE>> &
 //**********************************************************************************
-template<typename Types>
-GTMatrix<GTVector<GFTYPE>> &GGrid<Types>::dXidX()
+
+GTMatrix<GTVector<GFTYPE>> &GGrid::dXidX()
 {
        GEOFLOW_TRACE();
    assert(bInitialized_ && "Object not inititaized");
@@ -877,8 +877,8 @@ GTMatrix<GTVector<GFTYPE>> &GGrid<Types>::dXidX()
 // ARGS   : i,j : matrix element indices
 // RETURNS: GTVector<GFTYPE> &
 //**********************************************************************************
-template<typename Types>
-GTVector<GFTYPE> &GGrid<Types>::dXidX(GSIZET i, GSIZET j)
+
+GTVector<GFTYPE> &GGrid::dXidX(GSIZET i, GSIZET j)
 {
        GEOFLOW_TRACE();
    assert(bInitialized_ && "Object not inititaized");
@@ -894,8 +894,8 @@ GTVector<GFTYPE> &GGrid<Types>::dXidX(GSIZET i, GSIZET j)
 // ARGS   : none
 // RETURNS: GTVector<GFTYPE> &
 //**********************************************************************************
-template<typename Types>
-GMass &GGrid<Types>::massop()
+
+GMass &GGrid::massop()
 {
        GEOFLOW_TRACE();
    assert(bInitialized_ && "Object not inititaized");
@@ -911,8 +911,8 @@ GMass &GGrid<Types>::massop()
 // ARGS   : none
 // RETURNS: GTVector<GFTYPE> &
 //**********************************************************************************
-template<typename Types>
-GMass &GGrid<Types>::imassop()
+
+GMass &GGrid::imassop()
 {
        GEOFLOW_TRACE();
    assert(bInitialized_ && "Object not inititaized");
@@ -929,8 +929,8 @@ GMass &GGrid<Types>::imassop()
 // ARGS   : none
 // RETURNS: GTVector<GFTYPE> &
 //**********************************************************************************
-template<typename Types>
-GTVector<GFTYPE> &GGrid<Types>::Jac()
+
+GTVector<GFTYPE> &GGrid::Jac()
 {
        GEOFLOW_TRACE();
    assert(bInitialized_ && "Object not inititaized");
@@ -946,8 +946,8 @@ GTVector<GFTYPE> &GGrid<Types>::Jac()
 // ARGS   : none
 // RETURNS: GTVector<GFTYPE> &
 //**********************************************************************************
-template<typename Types>
-GTVector<GFTYPE> &GGrid<Types>::faceJac()
+
+GTVector<GFTYPE> &GGrid::faceJac()
 {
        GEOFLOW_TRACE();
    assert(bInitialized_ && "Object not inititaized");
@@ -965,8 +965,8 @@ GTVector<GFTYPE> &GGrid<Types>::faceJac()
 // ARGS   : none
 // RETURNS: minimum nodal dist over entire grid
 //**********************************************************************************
-template<typename Types>
-GFTYPE GGrid<Types>::find_min_dist()
+
+GFTYPE GGrid::find_min_dist()
 {
        GEOFLOW_TRACE();
   assert(gelems_.size() > 0 && "Elements not set");
@@ -1014,8 +1014,8 @@ GFTYPE GGrid<Types>::find_min_dist()
 // ARGS   : dx  : array of smallest nodal distance for each element
 // RETURNS: none
 //**********************************************************************************
-template<typename Types>
-void GGrid<Types>::find_min_dist(GTVector<GFTYPE> &dx)
+
+void GGrid::find_min_dist(GTVector<GFTYPE> &dx)
 {
        GEOFLOW_TRACE();
   assert(gelems_.size() > 0 && "Elements not set");
@@ -1065,8 +1065,8 @@ void GGrid<Types>::find_min_dist(GTVector<GFTYPE> &dx)
 //          blocal:  do global reduction?
 // RETURNS: GFTYPE integral
 //**********************************************************************************
-template<typename Types>
-GFTYPE GGrid<Types>::integrate(GTVector<GFTYPE> &u, GTVector<GFTYPE> &tmp, GBOOL bglobal)
+
+GFTYPE GGrid::integrate(GTVector<GFTYPE> &u, GTVector<GFTYPE> &tmp, GBOOL bglobal)
 {
        GEOFLOW_TRACE();
   assert(bInitialized_ && "Object not inititaized");
@@ -1151,8 +1151,8 @@ GFTYPE GGrid<Types>::integrate(GTVector<GFTYPE> &u, GTVector<GFTYPE> &tmp, GBOOL
 //          du  : derivtive, returned
 // RETURNS: none.
 //**********************************************************************************
-template<typename Types>
-void GGrid<Types>::deriv(GTVector<GFTYPE> &u, GINT idir, GTVector<GFTYPE> &utmp, 
+
+void GGrid::deriv(GTVector<GFTYPE> &u, GINT idir, GTVector<GFTYPE> &utmp, 
                   GTVector<GFTYPE> &du)
 {
        GEOFLOW_TRACE();
@@ -1195,8 +1195,8 @@ void GGrid<Types>::deriv(GTVector<GFTYPE> &u, GINT idir, GTVector<GFTYPE> &utmp,
 //          du     : derivtive, returned
 // RETURNS: none.
 //**********************************************************************************
-template<typename Types>
-void GGrid<Types>::wderiv(GTVector<GFTYPE> &u, GINT idir, GBOOL dotrans, 
+
+void GGrid::wderiv(GTVector<GFTYPE> &u, GINT idir, GBOOL dotrans, 
                    GTVector<GFTYPE> &utmp, GTVector<GFTYPE> &du)
 {
   GEOFLOW_TRACE();
@@ -1272,8 +1272,8 @@ GTVector<GFTYPE> t1(ndof());
 //          du    : derivtive, returned
 // RETURNS: none.
 //**********************************************************************************
-template<typename Types>
-void GGrid<Types>::wderiv(GTVector<GFTYPE> &u, GINT idir, GBOOL bwghts, GTVector<GFTYPE> &utmp, 
+
+void GGrid::wderiv(GTVector<GFTYPE> &u, GINT idir, GBOOL bwghts, GTVector<GFTYPE> &utmp, 
                    GTVector<GFTYPE> &du)
 {
   GEOFLOW_TRACE();
@@ -1320,8 +1320,8 @@ void GGrid<Types>::wderiv(GTVector<GFTYPE> &u, GINT idir, GBOOL bwghts, GTVector
 // ARGS   : none
 // RETURNS: none.
 //**********************************************************************************
-template<typename Types>
-void GGrid<Types>::init_local_face_info()
+
+void GGrid::init_local_face_info()
 {
   GEOFLOW_TRACE();
   GBOOL                        bret;
@@ -1398,8 +1398,8 @@ void GGrid<Types>::init_local_face_info()
 // ARGS   : bterrain: tells us if we're doing terrain (TRUE) or not (FALSE)
 // RETURNS: none.
 //**********************************************************************************
-template<typename Types>
-void GGrid<Types>::init_bc_info(GBOOL bterrain)
+
+void GGrid::init_bc_info(GBOOL bterrain)
 {
        GEOFLOW_TRACE();
   GSIZET   nind;
@@ -1474,8 +1474,8 @@ void GGrid<Types>::init_bc_info(GBOOL bterrain)
 //          utmp: tmp array pool
 // RETURNS: none.
 //**********************************************************************************
-template<typename Types>
-void GGrid<Types>::add_terrain(const State &xb, State &utmp)
+
+void GGrid::add_terrain(const State &xb, State &utmp)
 {
        GEOFLOW_TRACE();
    assert(gtype_ == GE_2DEMBEDDED
@@ -1502,14 +1502,14 @@ void GGrid<Types>::add_terrain(const State &xb, State &utmp)
   // Solve Nabla^2 (Xnew + Xb - XNodes) = 0 
   // for new (homgogeneous) grid solution, Xnew, 
   // given terrain, Xb, and // 'base' grid, XNodes:
-  GEOFLOW_TRACE_START("GGrid<Types>::add_terrain: Solve");
+  GEOFLOW_TRACE_START("GGrid::add_terrain: Solve");
   for ( auto j=0; j<xNodes_.size(); j++ ) {
    *b  = 0.0;
    *x0 = 0.0; // first guess
     cg.solve(H, *b, *xb[j], *x0);
-//  cout << "GGrid<Types>::add_terrain: xb_new[" << j << "]=" << *x0 << endl;
+//  cout << "GGrid::add_terrain: xb_new[" << j << "]=" << *x0 << endl;
     xNodes_[j] = *x0;             // Reset XNodes = x0
-//GPP(comm_,"GGrid<Types>::add_terrain: new_xNodes[" << j << "]=" << xNodes_[j]);
+//GPP(comm_,"GGrid::add_terrain: new_xNodes[" << j << "]=" << xNodes_[j]);
   }
   GEOFLOW_TRACE_STOP();
  
@@ -1556,8 +1556,8 @@ void GGrid<Types>::add_terrain(const State &xb, State &utmp)
 //          u    : Locally expressed field to smooth
 // RETURNS: none.
 //************************************************************************************
-template<typename Types>
-void GGrid<Types>::smooth(GTVector<GFTYPE> &tmp, GTVector<GFTYPE> &u)
+
+void GGrid::smooth(GTVector<GFTYPE> &tmp, GTVector<GFTYPE> &u)
 {
   GEOFLOW_TRACE();
 
@@ -1595,8 +1595,8 @@ void GGrid<Types>::smooth(GTVector<GFTYPE> &tmp, GTVector<GFTYPE> &u)
 //             
 // RETURNS:  none
 //**********************************************************************************
-template<typename Types>
-void GGrid<Types>::compute_grefderivW(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
+
+void GGrid::compute_grefderivW(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
                                GINT idir, GBOOL dotrans, GTVector<GFTYPE> &du)
 {
        GEOFLOW_TRACE();
@@ -1730,8 +1730,8 @@ void GGrid<Types>::compute_grefderivW(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etm
 //             
 // RETURNS:  none
 //**********************************************************************************
-template<typename Types>
-void GGrid<Types>::compute_grefderivsW(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
+
+void GGrid::compute_grefderivsW(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
                                 GBOOL dotrans, GTVector<GTVector<GFTYPE>*> &du)
 {
        GEOFLOW_TRACE();
@@ -1835,8 +1835,8 @@ void GGrid<Types>::compute_grefderivsW(GTVector<GFTYPE> &u, GTVector<GFTYPE> &et
 //             
 // RETURNS:  none
 //**********************************************************************************
-template<typename Types>
-void GGrid<Types>::compute_grefdiv(GTVector<GTVector<GFTYPE>*> &u, GTVector<GFTYPE> &etmp,
+
+void GGrid::compute_grefdiv(GTVector<GTVector<GFTYPE>*> &u, GTVector<GFTYPE> &etmp,
                             GBOOL dotrans, GTVector<GFTYPE> &divu)
 {
        GEOFLOW_TRACE();
@@ -1942,8 +1942,8 @@ void GGrid<Types>::compute_grefdiv(GTVector<GTVector<GFTYPE>*> &u, GTVector<GFTY
 //             
 // RETURNS:  none
 //**********************************************************************************
-template<typename Types>
-void GGrid<Types>::compute_grefderivs(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
+
+void GGrid::compute_grefderivs(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
                                GBOOL dotrans, GTVector<GTVector<GFTYPE>*> &du)
 {
 	GEOFLOW_TRACE();
@@ -2034,8 +2034,8 @@ void GGrid<Types>::compute_grefderivs(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etm
 //             
 // RETURNS:  none
 //**********************************************************************************
-template<typename Types>
-void GGrid<Types>::compute_grefderiv(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
+
+void GGrid::compute_grefderiv(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
                               GINT idir, GBOOL dotrans, GTVector<GFTYPE> &du)
 {
 	GEOFLOW_TRACE();
@@ -2082,8 +2082,8 @@ void GGrid<Types>::compute_grefderiv(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp
 //             
 // RETURNS:  none
 //**********************************************************************************
-template<typename Types>
-void GGrid<Types>::grefderiv_varp(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
+
+void GGrid::grefderiv_varp(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
                              GINT idir, GBOOL dotrans, GTVector<GFTYPE> &du)
 {
 	GEOFLOW_TRACE();
@@ -2201,8 +2201,8 @@ void GGrid<Types>::grefderiv_varp(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
 //             
 // RETURNS:  none
 //**********************************************************************************
-template<typename Types>
-void GGrid<Types>::grefderiv_constp(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
+
+void GGrid::grefderiv_constp(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
                             GINT idir, GBOOL dotrans, GTVector<GFTYPE> &du)
 {
 	GEOFLOW_TRACE();
@@ -2264,8 +2264,8 @@ void GGrid<Types>::grefderiv_constp(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
 // ARGS   : none. 
 // RETURNS: TRUE if p is const; else FALSE
 //**********************************************************************************
-template<typename Types>
-GBOOL GGrid<Types>::ispconst()
+
+GBOOL GGrid::ispconst()
 {
 	GEOFLOW_TRACE();
   GBOOL       bconst;
@@ -2295,8 +2295,8 @@ GBOOL GGrid<Types>::ispconst()
 // ARGS   : GDerivType flag
 // RETURNS: none.
 //**********************************************************************************
-template<typename Types>
-void GGrid<Types>::set_derivtype(GDerivType gt)
+
+void GGrid::set_derivtype(GDerivType gt)
 {
 	GEOFLOW_TRACE();
   if ( !bpconst_ ) {

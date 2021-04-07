@@ -25,6 +25,7 @@ template<typename TypePack>
 class UpdateBdyBase {
 
 public:
+#if 0
         using Types        = TypePack;
 	using State        = typename Types::State;
         using EqnBase      = EquationBase<Types>;
@@ -34,7 +35,25 @@ public:
         using Time         = typename Types::Time;
 	using IBdyVol      = typename Types::IBdyVol;
 	using TBdyVol      = typename Types::TBdyVol;
+#endif
 
+        using Types      = TypePack;
+        using State      = typename Types::State;
+        using StateComp  = typename Types::StateComp;
+        using StateInfo  = typename Types::StateInfo;
+        using Grid       = typename Types::Grid;
+        using Mass       = typename Types::Mass;
+        using Ftype      = typename Types::Ftype;
+        using Derivative = typename Types::Derivative;
+        using Time       = typename Types::Time;
+        using CompDesc   = typename Types::CompDesc;
+        using Jacobian   = typename Types::Jacobian;
+	using IBdyVol    = typename Types::IBdyVol;
+	using TBdyVol    = typename Types::TBdyVol;
+        using Size       = typename Types::Size;
+
+        using EqnBase    = typename Types::EqnBase;
+        using EqnBasePtr = typename Types::EqnBasePtr;
       
 	UpdateBdyBase() = default;
 	UpdateBdyBase(const UpdateBdyBase& I) = default;
