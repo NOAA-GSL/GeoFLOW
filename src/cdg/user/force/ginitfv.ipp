@@ -87,7 +87,7 @@ GBOOL ginitfv<Types>::impl_abc_box(const PropertyTree &ptree, GString &sconfig, 
 
 #endif
 
-  GMTK::normalizeL2<GFTYPE>(grid, uf, utmp, E0);
+  GMTK::normalizeL2<Grid,GFTYPE>(grid, uf, utmp, E0);
 
   return TRUE;
 
@@ -165,7 +165,7 @@ GBOOL ginitfv<Types>::impl_abc_icos(const PropertyTree &ptree, GString &sconfig,
       (*usph[0])[j] += -A*k*sin(k*alat) / pow(k,p);  // long
     }
   }
-  GMTK::vsphere2cart(grid, usph, GVECTYPE_PHYS, uf);
+  GMTK::vsphere2cart<Grid,GFTYPE>(grid, usph, GVECTYPE_PHYS, uf);
 
 #elif defined(_G_IS3D)
 
@@ -185,8 +185,8 @@ GBOOL ginitfv<Types>::impl_abc_icos(const PropertyTree &ptree, GString &sconfig,
 
 #endif
 
-  GMTK::constrain2sphere(grid, uf);
-  GMTK::normalizeL2<GFTYPE>(grid, uf, utmp, E0);
+  GMTK::constrain2sphere<Grid,GFTYPE>(grid, uf);
+  GMTK::normalizeL2<Grid,GFTYPE>(grid, uf, utmp, E0);
 
   return TRUE;
 
