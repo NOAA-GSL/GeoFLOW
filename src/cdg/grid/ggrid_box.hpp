@@ -12,6 +12,10 @@
 
 #include "gtypes.h"
 #include <functional>
+#include <cstdlib>
+#include <memory>
+#include <cmath>
+#include <bitset>
 #include "gtvector.hpp"
 #include "gtmatrix.hpp"
 #include "gnbasis.hpp"
@@ -21,13 +25,25 @@
 #include "gshapefcn_linear.hpp"
 #include "polygon.h"
 #include "gtpoint.hpp"
+#include "gcomm.hpp"
+#include "gspecbdy_factory.hpp"
+#include "ginitstate_factory.hpp"
+#include "gupdatebdy_factory.hpp"
+#include "gutils.hpp"
+#include "tbox/mpixx.hpp"
+#include "tbox/global_manager.hpp"
+
 
 typedef GTMatrix<GFTYPE> GFTMatrix;
 
+using namespace geoflow;
 using namespace geoflow::pdeint;
+using namespace geoflow::tbox;
 using namespace std;
 
-class GGridBox : public GGrid
+
+template<typename TypePack>
+class GGridBox : public GGrid<TypePack>
 {
 
 public:
@@ -182,5 +198,8 @@ private:
 
 
 };
+
+
+#include "ggrid_box.ipp"
 
 #endif

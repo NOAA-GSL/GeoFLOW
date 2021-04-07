@@ -20,7 +20,7 @@
 // RETURNS: GGrid object ptr
 //**********************************************************************************
 template<typename Types>
-GGrid *GGridFactory<Types>::build(const geoflow::tbox::PropertyTree& ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis, IOBasePtr pIO, ObsTraits &obstraits, GC_COMM &comm)
+GGrid<Types> *GGridFactory<Types>::build(const geoflow::tbox::PropertyTree& ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis, IOBasePtr pIO, ObsTraits &obstraits, GC_COMM &comm)
 {
 	GEOFLOW_TRACE();
   GSIZET  itindex = ptree.getValue<GSIZET>   ("restart_index", 0);

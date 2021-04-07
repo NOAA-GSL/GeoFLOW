@@ -15,6 +15,9 @@
 
 #include "gtypes.h"
 #include <functional>
+#include <cstdlib>
+#include <memory>
+#include <cmath>
 #include "gtvector.hpp"
 #include "gtmatrix.hpp"
 #include "gnbasis.hpp"
@@ -24,6 +27,14 @@
 #include "gshapefcn_embed.hpp"
 #include "polygon.h"
 #include "ggrid.hpp"
+//#include "omp.h"  // Are we calling API functions ?
+#include "gspecbdy_factory.hpp"
+#include "ginitstate_factory.hpp"
+#include "gupdatebdy_factory.hpp"
+#include "gtpoint.hpp"
+#include "gutils.hpp"
+#include "tbox/tracer.hpp"
+
 
 
 // GICOS_BASE refers to the refined, projected triangular
@@ -36,13 +47,17 @@
 enum GICOSPTYPE      {GICOS_BASE, GICOS_ELEMENTAL}; 
 enum GCOORDSYST      {GICOS_CART, GICOS_LATLONG}; 
 
-typedef GTMatrix<GFTYPE> GFTMatrix;
-typedef GFTYPE GTICOS;
+typedef GTMatrix<Ftype> GFTMatrix;
+typedef Ftype GTICOS;
 
+using namespace geoflow;
 using namespace geoflow::pdeint;
+using namespace geoflow::tbox;
 using namespace std;
 
-class GGridIcos : public GGrid
+
+template<typename TypePack>
+class GGridIcos : public GGrid<TypePack>
 {
 public:
 
@@ -76,19 +91,19 @@ public:
         // ICOS & sphere grid traits:
         struct Traits {
           GINT                ilevel;     // refine level if doing 2D ICOS
-          GFTYPE              radiusi;    // inner radius (or just radius if doing ICOS)
-          GFTYPE              radiuso;    // outer radius if doing 3D
+          Ftype               radiusi;    // inner radius (or just radius if doing ICOS)
+          Ftype               radiuso;    // outer radius if doing 3D
           GTVector<GBdyType>  bdyTypes  ; // global bdy types (inner outer surf in 3D only)
         };
 
-                            GGridIcos(const geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GC_COMM &comm);
+                            GGridIcos(const geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,Ftype>*> &b, GC_COMM &comm);
 #if 0
 #endif
                            ~GGridIcos();
 
         void                do_elems();                                   // compute grid for irank
         void                do_elems(GTMatrix<GINT> &p,
-                              GTVector<GTVector<GFTYPE>> &xnodes);        // compute elems from restart data)
+                              GTVector<GTVector<Ftype>> &xnodes);        // compute elems from restart data)
 
         void                set_partitioner(GDD_base<GTICOS> *d);         // set and use GDD object
         GTVector<GTriangle<GTICOS>> 
@@ -104,10 +119,10 @@ public:
                             GTVector<GSIZET>             &igbdy,
                             GTVector<GUINT>              &degbdy);        // configure domain/global bdy
         void                elem_gbdy_data(
-                              const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+                              const GTMatrix<GTVector<Ftype>> &dXdXi,
                               GTVector<GSIZET>                 &igeface,
-                              GTVector<GFTYPE>                 &face_mass,
-                              GTVector<GTVector<GFTYPE>>       &normals);  // compute faces data
+                              GTVector<Ftype>                 &face_mass,
+                              GTVector<GTVector<Ftype>>       &normals);  // compute faces data
 
 
 friend  std::ostream&       operator<<(std::ostream&, GGridIcos &);         // Output stream operator
@@ -178,52 +193,52 @@ friend  std::ostream&       operator<<(std::ostream&, GGridIcos &);         // O
          void               do_elems2d(GINT rank);              // do 2d grid
          void               do_elems3d(GINT rank);              // do 3d grid
          void               do_elems2d(GTMatrix<GINT> &p,
-                              GTVector<GTVector<GFTYPE>> &xnodes); // do 2d grid restart
+                              GTVector<GTVector<Ftype>> &xnodes); // do 2d grid restart
          void               do_elems3d(GTMatrix<GINT> &p,
-                              GTVector<GTVector<GFTYPE>> &xnodes); // do 3d grid restart
+                              GTVector<GTVector<Ftype>> &xnodes); // do 3d grid restart
          void               config_gbdy(const geoflow::tbox::PropertyTree &ptree,
                             GTVector<GTVector<GSIZET>>   &igbdyf,
                             GTVector<GTVector<GBdyType>> &igbdyt,
                             GTVector<GSIZET>             &igbdy);  // configure bdy
-         void               find_gbdy_ind3d(GFTYPE radius,
+         void               find_gbdy_ind3d(Ftype radius,
                                GTVector<GSIZET> &igbdy,
                                GTVector<GUINT>  &debdy);                    // 
         void                elem_face_data(
-                              GTMatrix<GTVector<GFTYPE>>       &dXdXi,
-                              GTVector<GSIZET>                 &gieface,
-                              GTVector<GFTYPE>                 &face_mass,
-                              GTVector<GTVector<GFTYPE>>       &normals); // compute elem face data entry point
+                              GTMatrix<GTVector<Ftype>>       &dXdXi,
+                              GTVector<GSIZET>                &gieface,
+                              GTVector<Ftype>                 &face_mass,
+                              GTVector<GTVector<Ftype>>       &normals); // compute elem face data entry point
         void                elem_face_data2d(
-                              GTMatrix<GTVector<GFTYPE>>       &dXdXi,
-                              GTVector<GSIZET>                 &gieface,
-                              GTVector<GFTYPE>                 &face_mass,
-                              GTVector<GTVector<GFTYPE>>       &normals); // compute 2d elem face data
+                              GTMatrix<GTVector<Ftype>>       &dXdXi,
+                              GTVector<GSIZET>                &gieface,
+                              GTVector<Ftype>                 &face_mass,
+                              GTVector<GTVector<Ftype>>       &normals); // compute 2d elem face data
         void                elem_face_data3d(
-                              GTMatrix<GTVector<GFTYPE>>       &dXdXi,
-                              GTVector<GSIZET>                 &gieface,
-                              GTVector<GFTYPE>                 &face_mass,
-                              GTVector<GTVector<GFTYPE>>       &normals); // compute 3d elem face data
+                              GTMatrix<GTVector<Ftype>>       &dXdXi,
+                              GTVector<GSIZET>                &gieface,
+                              GTVector<Ftype>                 &face_mass,
+                              GTVector<GTVector<Ftype>>       &normals); // compute 3d elem face data
 
          void               do_gbdy_normals(
-                               const GTMatrix<GTVector<GFTYPE>> &dXdXi,
-                               const GTVector<GSIZET>           &igbdy,
-                               const GTVector<GUINT>            &debdy,
-                               GTVector<GTVector<GFTYPE>>       &normals,
-                               GTVector<GINT>                   &depComp);
+                               const GTMatrix<GTVector<Ftype>> &dXdXi,
+                               const GTVector<GSIZET>          &igbdy,
+                               const GTVector<GUINT>           &debdy,
+                               GTVector<GTVector<Ftype>>       &normals,
+                               GTVector<GINT>                  &depComp);
          void               do_gbdy_normals3d(
-                               const GTMatrix<GTVector<GFTYPE>> &dXdXi,
-                               const GTVector<GSIZET>           &igbdy,
-                               const GTVector<GUINT>            &debdy,
-                               GTVector<GTVector<GFTYPE>>       &normals,
-                               GTVector<GINT>                   &depComp);
+                               const GTMatrix<GTVector<Ftype>> &dXdXi,
+                               const GTVector<GSIZET>          &igbdy,
+                               const GTVector<GUINT>           &debdy,
+                               GTVector<GTVector<Ftype>>       &normals,
+                               GTVector<GINT>                  &depComp);
 
          GString            sreftype_;      // subdivision/refinement type
          GINT               ilevel_;        // refinement level (>= 0)
          GINT               nrows_;         // # rows in refine level ilevel
          GINT               ndim_;          // grid dimensionality (2 or 3)
          GSIZET             nradelem_;      // # radial elements
-         GFTYPE             radiusi_;       // inner radius
-         GFTYPE             radiuso_;       // outer radius (=radiusi in 2d)
+         Ftype              radiusi_;       // inner radius
+         Ftype              radiuso_;       // outer radius (=radiusi in 2d)
          GDD_base<GTICOS>  *gdd_;           // domain decomposition/partitioning object
          GShapeFcn_linear<GTICOS>
                            *lshapefcn_;     // linear shape func to compute 2d coords
@@ -235,7 +250,7 @@ friend  std::ostream&       operator<<(std::ostream&, GGridIcos &);         // O
                             ftcentroids_ ;  // centroids of finest triangles/faces/ or hexes
          GTVector<GTriangle<GTICOS>>     
                              tbase_;        // array of base triangles
-         GTVector<GNBasis<GCTYPE,GFTYPE>*> 
+         GTVector<GNBasis<GCTYPE,Ftype>*> 
                              gbasis_;       // directional bases
          GTVector<GHex<GTICOS>>  
                              hmesh_;        // list of vertices for each 3d (hex) element
@@ -244,5 +259,7 @@ friend  std::ostream&       operator<<(std::ostream&, GGridIcos &);         // O
 
 };
 
+
+#include "ggrid_icos.ipp"
 
 #endif
