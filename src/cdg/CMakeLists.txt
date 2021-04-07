@@ -44,10 +44,7 @@ target_sources(cdg
         
         ${GHOME}/comm/gcomm.cpp 
         
-        ${GHOME}/config/gspecbdy_factory.cpp 
-        
         ${GHOME}/sem/gelem_base.cpp
-#       ${GHOME}/sem/gmass.cpp
 #       ${GHOME}/sem/ghelmholtz.cpp
         
         
