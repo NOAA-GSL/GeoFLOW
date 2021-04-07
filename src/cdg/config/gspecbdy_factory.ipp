@@ -5,7 +5,6 @@
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
-#include "gspecbdy_factory.hpp"
 
 
 
@@ -14,12 +13,13 @@
 // METHOD : dospec
 // DESC   : Do bdy specification (ids and types)
 // ARGS   : sptree: specification property tree; not main prop tree
-//          grid  : GGrid object
+//          grid  : Grid object
 //          id    : can serve as boundary id (which canonical bdy)
 //          ibdy  : indirection array into state indicating global bdy
 // RETURNS: none.
 //**********************************************************************************
-GBOOL GSpecBdyFactory::dospec(const geoflow::tbox::PropertyTree& sptree, GGrid &grid, const GINT id, GTVector<GSIZET> &ibdy)
+template<typename Types>
+GBOOL GSpecBdyFactory<Types>::dospec(const geoflow::tbox::PropertyTree& sptree, Grid &grid, const GINT id, GTVector<GSIZET> &ibdy)
 {
   GBOOL         bret    = FALSE;
   GSIZET        nbdy;
