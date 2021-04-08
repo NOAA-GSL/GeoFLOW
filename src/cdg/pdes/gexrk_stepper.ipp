@@ -302,7 +302,7 @@ void GExRKStepper<Grid,T>::step_b(const Time &t, const State &uin, State &uf,
     // accumulate the sum in uout here: 
     for ( n=0; n<nstate; n++ ) { // for each state member, u
       if ( ggfx_ != NULLPTR ) {
-        ggfx_->doOp(*K_[m][n], GGFX<Ftype>::Smooth());
+        ggfx_->doOp(*K_[m][n], typename GGFX<Ftype>::Smooth());
       }
       *isum     = (*K_[m][n]); *isum *= ( (*c)[m]*h );
       *uout[n] += *isum; // += h * c_m * k_m
@@ -324,7 +324,7 @@ void GExRKStepper<Grid,T>::step_b(const Time &t, const State &uin, State &uf,
    rhs_callback_( tt, u, uf, h, K_[0]); // k_M at stage M
 
    for ( n=0; ggfx_!=NULLPTR && n<nstate; n++ ) { // for each state member, uout
-     ggfx_->doOp(*K_[0][n], GGFX<Ftype>::Smooth());
+     ggfx_->doOp(*K_[0][n], typename GGFX<Ftype>::Smooth());
    }
 
    // Compute final output state, and set its bcs and
@@ -337,7 +337,7 @@ void GExRKStepper<Grid,T>::step_b(const Time &t, const State &uin, State &uf,
    if ( grid_ != NULLPTR  ) GMTK::constrain2sphere<Grid,T>(*grid_, uout);
 
    for ( n=0; ggfx_!=NULLPTR && n<nstate; n++ ) { // for each state member, uout
-     ggfx_->doOp(*uout[n], GGFX<Ftype>::Smooth());
+     ggfx_->doOp(*uout[n], typename GGFX<Ftype>::Smooth());
    }
 
    if ( bapplybc_  ) bdy_apply_callback_ (tt, uout); 
@@ -414,7 +414,7 @@ void GExRKStepper<Grid,T>::step_b(const Time &t, State &uin, State &uf,
     if ( bapplybc_  ) bdy_apply_callback_ (tt, u); 
     if ( ggfx_ != NULLPTR ) {
       for ( n=0; n<nstate; n++ ) { // for each state member, u
-        ggfx_->doOp(*u[n], GGFX<Ftype>::Smooth());
+        ggfx_->doOp(*u[n], typename GGFX<Ftype>::Smooth());
       }
     }
     rhs_callback_( tt, u, uf, h, K_[m] ); // k_m at stage m
@@ -431,7 +431,7 @@ void GExRKStepper<Grid,T>::step_b(const Time &t, State &uin, State &uf,
    for ( n=0; n<nstate; n++ ) { // for each state member, u
      for ( j=0,*isum=0.0; j<nstage_-1; j++ ) *isum += (*K_[j][n]) * ( (*beta)(nstage_-1,j)*h );
      *u[n] = (*uin[n]) + (*isum);
-      if ( ggfx_ != NULLPTR ) ggfx_->doOp(*u[n], GGFX<Ftype>::Smooth());
+      if ( ggfx_ != NULLPTR ) ggfx_->doOp(*u[n], typename GGFX<Ftype>::Smooth());
    }
    if ( bapplybc_  ) bdy_apply_callback_ (tt, u); 
    rhs_callback_( tt, u, uf, h, K_[0]); // k_M at stage M
@@ -443,7 +443,7 @@ void GExRKStepper<Grid,T>::step_b(const Time &t, State &uin, State &uf,
    if ( bapplybc_  ) bdy_apply_callback_ (tt, uout); 
    if ( ggfx_ != NULLPTR ) {
      for ( n=0; n<nstate; n++ ) { // for each state member, uouyt
-       ggfx_->doOp(*uout[n], GGFX<Ftype>::Smooth());
+       ggfx_->doOp(*uout[n], typename GGFX<Ftype>::Smooth());
      }
    }
    if ( bapplybc_  ) bdy_apply_callback_ (tt, uout); 
@@ -564,7 +564,7 @@ void GExRKStepper<Grid,T>::step_ssp34(const Time &t, const State &uin, State &uf
   if ( grid_ != NULLPTR  ) GMTK::constrain2sphere<Grid,T>(*grid_, K_[0]);
   for ( i=0; i<nstate; i++ )  {
     if ( ggfx_ != NULLPTR ) {
-      ggfx_->doOp(*K_[0][i], GGFX<Ftype>::Smooth());
+      ggfx_->doOp(*K_[0][i], typename GGFX<Ftype>::Smooth());
     }
   }
  
@@ -579,7 +579,7 @@ void GExRKStepper<Grid,T>::step_ssp34(const Time &t, const State &uin, State &uf
   if ( grid_ != NULLPTR  ) GMTK::constrain2sphere<Grid,T>(*grid_, K_[1]);
   for ( i=0; i<nstate; i++ )  {
     if ( ggfx_ != NULLPTR ) {
-      ggfx_->doOp(*K_[1][i], GGFX<Ftype>::Smooth());
+      ggfx_->doOp(*K_[1][i], typename GGFX<Ftype>::Smooth());
     }
   }
  
@@ -595,7 +595,7 @@ void GExRKStepper<Grid,T>::step_ssp34(const Time &t, const State &uin, State &uf
   if ( grid_ != NULLPTR  ) GMTK::constrain2sphere<Grid,T>(*grid_, K_[2]);
   for ( i=0; i<nstate; i++ )  {
     if ( ggfx_ != NULLPTR ) {
-      ggfx_->doOp(*K_[2][i], GGFX<Ftype>::Smooth());
+      ggfx_->doOp(*K_[2][i], typename GGFX<Ftype>::Smooth());
     }
   }
 
@@ -610,7 +610,7 @@ void GExRKStepper<Grid,T>::step_ssp34(const Time &t, const State &uin, State &uf
   if ( grid_ != NULLPTR  ) GMTK::constrain2sphere<Grid,T>(*grid_, uout);
   for ( i=0; i<nstate; i++ )  {
     if ( ggfx_ != NULLPTR ) {
-      ggfx_->doOp(*uout[i], GGFX<Ftype>::Smooth());
+      ggfx_->doOp(*uout[i], typename GGFX<Ftype>::Smooth());
     }
   }
   
@@ -663,7 +663,7 @@ void GExRKStepper<Grid,T>::step_ssp33(const Time &t, const State &uin, State &uf
   if ( grid_ != NULLPTR  ) GMTK::constrain2sphere<Grid,T>(*grid_, K_[0]);
   for ( i=0; i<nstate; i++ )  {
     if ( ggfx_ != NULLPTR ) {
-      ggfx_->doOp(*K_[0][i], GGFX<Ftype>::Smooth());
+      ggfx_->doOp(*K_[0][i], typename GGFX<Ftype>::Smooth());
     }
   }
  
@@ -678,7 +678,7 @@ void GExRKStepper<Grid,T>::step_ssp33(const Time &t, const State &uin, State &uf
   if ( grid_ != NULLPTR  ) GMTK::constrain2sphere<Grid,T>(*grid_, K_[1]);
   for ( i=0; i<nstate; i++ )  {
     if ( ggfx_ != NULLPTR ) {
-      ggfx_->doOp(*K_[1][i], GGFX<Ftype>::Smooth());
+      ggfx_->doOp(*K_[1][i], typename GGFX<Ftype>::Smooth());
     }
   }
  
@@ -693,7 +693,7 @@ void GExRKStepper<Grid,T>::step_ssp33(const Time &t, const State &uin, State &uf
   if ( grid_ != NULLPTR  ) GMTK::constrain2sphere<Grid,T>(*grid_, uout);
   for ( i=0; i<nstate; i++ )  {
     if ( ggfx_ != NULLPTR ) {
-      ggfx_->doOp(*uout[i], GGFX<Ftype>::Smooth());
+      ggfx_->doOp(*uout[i], typename GGFX<Ftype>::Smooth());
     }
   }
 
@@ -746,7 +746,7 @@ void GExRKStepper<Grid,T>::step_ssp22(const Time &t, const State &uin, State &uf
   if ( grid_ != NULLPTR  ) GMTK::constrain2sphere<Grid,T>(*grid_,K_[0]);
   for ( i=0; i<nstate; i++ )  {
     if ( ggfx_ != NULLPTR ) {
-      ggfx_->doOp(*K_[0][i], GGFX<Ftype>::Smooth());
+      ggfx_->doOp(*K_[0][i], typename GGFX<Ftype>::Smooth());
     }
   }
  
@@ -761,7 +761,7 @@ void GExRKStepper<Grid,T>::step_ssp22(const Time &t, const State &uin, State &uf
   if ( grid_ != NULLPTR  ) GMTK::constrain2sphere<Grid,T>(*grid_, uout);
   for ( i=0; i<nstate; i++ )  {
     if ( ggfx_ != NULLPTR ) {
-      ggfx_->doOp(*uout[i], GGFX<Ftype>::Smooth());
+      ggfx_->doOp(*uout[i], typename GGFX<Ftype>::Smooth());
     }
   }
  
