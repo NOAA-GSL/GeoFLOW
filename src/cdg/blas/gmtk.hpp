@@ -195,36 +195,51 @@ namespace GMTK
   template<typename Grid, typename T>
   void    grad(Grid &grid, GTVector<T> &u, const GINT idir, 
                GTVector<GTVector<T>*> &tmp, GTVector<T> &grad);
+
   template<typename Grid, typename T>
   void    curl(Grid &grid, const GTVector<GTVector<T>*> &u, const GINT idir, 
                GTVector<GTVector<T>*> &tmp, GTVector<T> &curl);
 
+
   template<typename Grid, typename T>
   void    constrain2sphere(Grid &grid, const GTVector<GTVector<T>*> &v, GTVector<GTVector<T>*    > &Pv);
+
   template<typename Grid, typename T>
   void    constrain2sphere(Grid &grid, GTVector<GTVector<T>*> &v);
+
   template<typename Grid, typename T>
   void    vsphere2cart(Grid &grid, const GTVector<GTVector<T>*> &vsph, GVectorType vtype, GTVector<GTVector<T>*> &vcart);
+
   template<typename Grid, typename T>
   void    vcart2sphere(Grid &grid, const GTVector<GTVector<T>*> &vcart, GVectorType vtype, GTVector<GTVector<T>*> &vsph);
+
   template<typename T>
   void    cart2latlon(const GTVector<GTVector<T>*> &vcart, GTVector<GTVector<T>*> &latlon);
+
   template<typename T>
   void    rcart2sphere(const GTVector<GTVector<T>*> &vcart, GTVector<GTVector<T>*> &rlatlon);
+
   template<typename T>
   void    zero(GTVector<T> &v);
+
   template<typename T>
   void    zero(GTVector<GTVector<T>*> &v);
+
   template<typename T>
   void    zero(GTVector<GTVector<T>> &v);
+
   template<typename Grid, typename T>
   GDOUBLE energy(Grid &grid, const GTVector<GTVector<T>*> &u, GTVector<GTVector<T>*> &tmp, GBOOL isglobal, GBOOL ismax=FALSE);
+
   template<typename Grid, typename T>
   GDOUBLE enstrophy(Grid &grid, const GTVector<GTVector<T>*> &u, GTVector<GTVector<T>*> &tmp, GBOOL isglobal, GBOOL ismax=FALSE);
+
   template<typename Grid, typename T>
   GDOUBLE helicity(Grid &grid, const GTVector<GTVector<T>*> &u, GTVector<GTVector<T>*> &tmp, GBOOL isglobal, GBOOL ismax=FALSE);
+
   template<typename Grid, typename T>
   GDOUBLE relhelicity(Grid &grid, const GTVector<GTVector<T>*> &u, GTVector<GTVector<T>*> &tmp, GBOOL isglobal, GBOOL ismax=FALSE);
+
   template<typename Grid, typename T>
   GDOUBLE energyinj(Grid &grid, const GTVector<GTVector<T>*> &u, const GTVector<GTVector<T>*> &uf, GTVector<GTVector<T>*> &tmp, GBOOL isglobal, GBOOL ismax=FALSE);
   template<typename Grid, typename T>

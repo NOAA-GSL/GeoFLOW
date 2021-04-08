@@ -3321,10 +3321,10 @@ phi   = atan2(y,x);
 //                    of same length as u
 //          isglobal: do global reduction
 //          ismax   : do max norm, instead of L2
-// RETURNS: T energy
+// RETURNS: GDOUBLE energy
 //**********************************************************************************
 template<typename Grid, typename T>
-T energy(Grid &grid, const GTVector<GTVector<T>*> & u, GTVector<GTVector<T>*> &tmp, GBOOL isglobal, GBOOL ismax)
+GDOUBLE energy(Grid &grid, const GTVector<GTVector<T>*> & u, GTVector<GTVector<T>*> &tmp, GBOOL isglobal, GBOOL ismax)
 {
     GEOFLOW_TRACE();
 GDOUBLE                     ener, local;
@@ -3369,10 +3369,10 @@ return static_cast<T>(ener);
 //          isglobal: do global reduction
 //          ismax   : if TRUE, then compute max of integrand, and return, 
 //                    instead of computing mean
-// RETURNS: T enstrophy
+// RETURNS: GDOUBLE enstrophy
 //**********************************************************************************
 template<typename Grid, typename T>
-T enstrophy(Grid &grid, const GTVector<GTVector<T>*> & u, GTVector<GTVector<T>*> &tmp, GBOOL isglobal, GBOOL ismax)
+GDOUBLE enstrophy(Grid &grid, const GTVector<GTVector<T>*> & u, GTVector<GTVector<T>*> &tmp, GBOOL isglobal, GBOOL ismax)
 {
     GEOFLOW_TRACE();
 assert(tmp.size() >= 4 && "Insufficient temp space");
@@ -3435,10 +3435,10 @@ return static_cast<T>(enst);
 //          isglobal: do global reduction
 //          ismax   : if TRUE, then compute abs max of integrand, and return, 
 //                    instead of computing mean
-// RETURNS: T helicity
+// RETURNS: GDOUBLE helicity
 //**********************************************************************************
 template<typename Grid, typename T>
-T helicity(Grid &grid, const GTVector<GTVector<T>*> & u, GTVector<GTVector<T>*> &tmp, GBOOL isglobal, GBOOL ismax)
+GDOUBLE helicity(Grid &grid, const GTVector<GTVector<T>*> & u, GTVector<GTVector<T>*> &tmp, GBOOL isglobal, GBOOL ismax)
 {
     GEOFLOW_TRACE();
 assert(tmp.size() >= 4 && "Insufficient temp space");
@@ -3495,10 +3495,10 @@ return static_cast<T>(hel);
 //          isglobal: do global reduction
 //          ismax   : if TRUE, then compute abs max of integrand, and return, 
 //                    instead of computing mean
-// RETURNS: T helicity
+// RETURNS: GDOUBLE  helicity
 //**********************************************************************************
 template<typename Grid, typename T>
-T relhelicity(Grid &grid, const GTVector<GTVector<T>*> & u, GTVector<GTVector<T>*> &tmp, GBOOL isglobal, GBOOL ismax)
+GDOUBLE relhelicity(Grid &grid, const GTVector<GTVector<T>*> & u, GTVector<GTVector<T>*> &tmp, GBOOL isglobal, GBOOL ismax)
 {
     GEOFLOW_TRACE();
 assert(tmp.size() >= 5 && "Insufficient temp space");
@@ -3604,7 +3604,7 @@ return static_cast<T>(rhel);
 // RETURNS: T energy injection rate
 //**********************************************************************************
 template<typename Grid, typename T>
-T energyinj(Grid &grid, const GTVector<GTVector<T>*> &u,  const GTVector<GTVector<T>*> &uf, GTVector<GTVector<T>*> &tmp, GBOOL isglobal, GBOOL ismax)
+GDOUBLE energyinj(Grid &grid, const GTVector<GTVector<T>*> &u,  const GTVector<GTVector<T>*> &uf, GTVector<GTVector<T>*> &tmp, GBOOL isglobal, GBOOL ismax)
 {
   GEOFLOW_TRACE();
 if ( uf.size() == 0 ) return 0.0;
