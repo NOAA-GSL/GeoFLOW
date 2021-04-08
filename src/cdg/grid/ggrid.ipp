@@ -1559,7 +1559,7 @@ void GGrid<Types>::smooth(GTVector<Ftype> &tmp, GTVector<Ftype> &u)
 
   u.pointProd(*(this->massop().data()));
   tmp = *(this->imassop().data());
-  this->ggfx_->doOp(tmp, GGFX<Ftype>::Smooth());  // DSS(mass_local)
+  this->ggfx_->doOp(tmp, typename GGFX<Ftype>::Smooth());  // DSS(mass_local)
 
   u.pointProd(tmp);      // M_assembled u M_L
 
