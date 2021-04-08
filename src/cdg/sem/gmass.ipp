@@ -75,7 +75,7 @@ void GMass<Types>::init()
 
 
   if ( bdoinverse_ ) {
-    grid_->get_ggfx().doOp(mass_, GGFX<Ftype>::Smooth());
+    grid_->get_ggfx().doOp(mass_, typename GGFX<Ftype>::Smooth());
     for ( auto j=0; j<mass_.size(); j++ ) {
       mass_[j] = 1.0 / mass_[j];
     }
