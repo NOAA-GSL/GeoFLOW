@@ -41,6 +41,7 @@ target_sources(cdg
         ${GHOME}/blas/dmxmp.F
         ${GHOME}/blas/fmxmp.F
         ${GHOME}/blas/gcblas.cpp
+        ${GHOME}/blas/gmtk.cpp
         
         ${GHOME}/comm/gcomm.cpp 
         
