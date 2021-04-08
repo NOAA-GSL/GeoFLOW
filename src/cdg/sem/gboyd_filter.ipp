@@ -71,7 +71,7 @@ void GBoydFilter<TypePack>::apply_impl(const Time &t, StateComp &u, State &utmp,
   GSIZET           ibeg, iend; // beg, end indices in global array
   GTVector<Ftype>  tmp;
   GTMatrix<Ftype> *F[GDIM];
-  GElemList       *gelems=&grid_->elems();
+  typename TypePack::GElemList       *gelems=&grid_->elems();
 
   if ( !bInit_ ) init();
 
@@ -133,7 +133,7 @@ void GBoydFilter<TypePack>::init()
   Ftype            a, b, xi, xf0, xN;
   GTMatrix<Ftype> *F, *FT, *iL, *L, Lambda;
   GTMatrix<Ftype> tmp;
-  GElemList       *gelems=&grid_->elems();
+  typename TypePack::GElemList       *gelems=&grid_->elems();
 
   // Build the filter matrix, F, and store within 
   // each basis object for later use:

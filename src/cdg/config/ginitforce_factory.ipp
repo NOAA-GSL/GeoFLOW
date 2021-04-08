@@ -203,14 +203,14 @@ GBOOL GInitForceFactory<Types>::doinitfv(const PropertyTree &ptree, GString &sco
 {
   GBOOL             bret    = TRUE;
   GString           sinit;
-  GGridIcos<Types> *icos;
-  GGridBoa<Types>  *box;
+  GridIcos         *icos;
+  GridBox          *box;
   PropertyTree      vtree = ptree.getPropertyTree(sconfig);
 
   sinit = vtree.getValue<GString>("name");
 
-  icos = dynamic_cast<GGridIcos<Types>*>(&grid);
-  box  = dynamic_cast<GGridBox<Types>*> (&grid);
+  icos = dynamic_cast<GridIcos*>(&grid);
+  box  = dynamic_cast<GridBox*> (&grid);
   if      ( "null"   == sinit
        ||   ""             == sinit ) {     // set to 0
     for ( GINT i=0; i<uf.size(); i++ ) *uf[i] = 0.0;

@@ -22,8 +22,8 @@ GBOOL GSpecTerrainFactory<Types>::spec(const PropertyTree& ptree, Grid &grid, St
 {
   GBOOL            bret = FALSE;
   GString          stype;  
-  GGridBox<Types> *box = dynamic_cast<GGridBox<Types>*>(&grid);
-  GGridIcos<Types>*icos= dynamic_cast<GGridIco<Types>s*>(&grid);
+  GridBox         *box = dynamic_cast<GridBox*>(&grid);
+  GridIcos        *icos= dynamic_cast<GridIcos*>(&grid);
 
 
   // Get type of initialization: by-name or by-block:

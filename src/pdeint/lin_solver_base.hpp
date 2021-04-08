@@ -28,7 +28,7 @@ public:
         //       static str2normtype method!
         using Types          = TypePack;
 	using Operator       = typename Types::Operator;
-	using Preconditioner = typename Types::Operator;
+	using Preconditioner = typename Types::Preconditioner;
 	using State          = typename Types::State;
 	using StateComp      = typename Types::StateComp;
 	using Grid           = typename Types::Grid;

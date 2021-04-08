@@ -33,7 +33,7 @@ class GHelmholtz
 {
 
 public:
-        using Types      = EquationBase<TypePack>;
+        using Types      = TypePack;
         using State      = typename Types::State;
         using StateComp  = typename Types::StateComp;
         using Grid       = typename Types::Grid;

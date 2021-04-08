@@ -35,10 +35,8 @@ lshapefcn_             (NULLPTR)
   this->irank_  = GComm::WorldRank(this->comm_);
   this->nprocs_ = GComm::WorldSize(this->comm_);
 
-  GINT    inorm;
   GString gname   = ptree.getValue<GString>("grid_type");
   GString tname   = ptree.getValue<GString>("terrain_type","");
-  GString snorm;
   assert(gname == "grid_box");
   geoflow::tbox::PropertyTree gridptree = ptree.getPropertyTree(gname);
 
@@ -67,10 +65,6 @@ lshapefcn_             (NULLPTR)
   for ( auto j=0; j<GDIM; j++ ) P0_[j] = spt[j];
   spt = gridptree.getArray<Ftype>("delxyz");
   sne = gridptree.getArray<int>("num_elems");
-  this->cgtraits_.maxit = gridptree.getValue<GDOUBLE>("maxit", 128);
-  this->cgtraits_.tol   = gridptree.getValue<GDOUBLE>("tol", 1.0e-8);
-  snorm                 = gridptree.getValue<GString>("norm_type","GCG_NORM_INF");
-  this->cgtraits_.normtype = LinSolverBase<Types>::str2normtype(snorm);
 
   // compute global bdy range, and global vertices:
   for ( auto j=0; j<GDIM; j++ ) dP_[j] = spt[j];
@@ -1517,7 +1511,8 @@ void GGridBox<Types>::find_gbdy_ind2d(GINT bdyid, GBOOL bunique,
   GTPoint<Ftype>   xp;
   GTVector<GTPoint<Ftype>>
                     v(2);
-  GVVFtype         *xlnodes;
+  GTVector<GTVector<Ftype>>
+                    *xlnodes;
   
   nkeep = ikeep.size();
 
@@ -1643,7 +1638,8 @@ void GGridBox<Types>::find_gbdy_ind3d(GINT bdyid, GBOOL bunique,
   GTPoint<Ftype>   xp;
   GTVector<GTPoint<Ftype>>
                     e(2), v(4);
-  GVVFtype         *xlnodes;
+  GTVector<GTVector<Ftype>>
+                   *xlnodes;
   
   nkeep = ikeep.size();
 

@@ -43,6 +43,17 @@ bdy_apply_callback_           (NULLPTR)
 {
        GEOFLOW_TRACE();
 
+  GString snorm;
+  GString gname          = ptree.getValue<GString>("grid_type");
+  GString tname          = ptree.getValue<GString>("terrain_type","");
+  PropertyTree gridptree = ptree.getPropertyTree(gname);
+
+  // Get solver traits for terrain:
+  cgtraits_.maxit = gridptree.getValue<GDOUBLE>("maxit");
+  cgtraits_.tol   = gridptree.getValue<GDOUBLE>("tol");
+  snorm           = gridptree.getValue<GString>("norm_type");
+  cgtraits_.normtype = LinSolverBase<CGTypePack>::str2normtype(snorm);
+
   cudat_.nstreams = ptree.getValue<GINT>("nstreams",1);
   cudat_.nstreams = MAX(cudat_.nstreams,1);
 
@@ -486,7 +497,7 @@ void GGrid<Types>::grid_init()
 
   bInitialized_ = TRUE;
 
-  mass_ = new GMass(*this);
+  mass_ = new Mass(*this);
   
 
   // Compute (global) grid volume:
@@ -899,7 +910,7 @@ typename Types::Mass &GGrid<Types>::imassop()
 {
        GEOFLOW_TRACE();
    assert(bInitialized_ && "Object not inititaized");
-   if ( imass_ == NULLPTR ) imass_ = new GMass(*this, TRUE);
+   if ( imass_ == NULLPTR ) imass_ = new Mass(*this, TRUE);
    return *imass_;
 
 } // end of method imassop
@@ -1476,8 +1487,8 @@ void GGrid<Types>::add_terrain(const State &xb, State &utmp)
   assert(ggfx_ != NULLPTR && "GGFX not set");
 
   // Construct solver and weak Laplacian operator:
-  GCG<Types>        cg(cgtraits_, *this, *ggfx_, tmp);
-  GHelmholtz<Types>  H(*this);
+  GCG<CGTypePack>   cg(cgtraits_, *this, *ggfx_, tmp);
+  TerrainOp         H(*this);
 
   H.use_metric(TRUE); // do Laplacian in real space
 

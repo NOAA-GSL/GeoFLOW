@@ -11,6 +11,7 @@
 #include "gcomm.hpp"
 #include "gtvector.hpp"
 #include "gnbasis.hpp"
+#include "ggrid.hpp"
 #include "ggrid_box.hpp"
 #include "ggrid_icos.hpp"
 #include "pdeint/update_bdy_base.hpp"
@@ -27,7 +28,7 @@ class GGridFactory
 {
   public:
 
-        using Types       = EquationBase<TypePack>;;
+        using Types       = TypePack;
         using State       = typename Types::State;
         using StateInfo   = typename Types::StateInfo;
         using Time        = typename Types::Time;
@@ -39,10 +40,9 @@ class GGridFactory
 
 
 
-	static GGrid  *build(const geoflow::tbox::PropertyTree& ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis, IOBasePtr pIO, ObsTraits &obstraits, GC_COMM &comm);
+	static GGrid<Types>  *build(const geoflow::tbox::PropertyTree& ptree, GTVector<GNBasis<GCTYPE,Ftype>*> gbasis, IOBasePtr pIO, ObsTraits &obstraits, GC_COMM &comm);
 
-
-        static void   read_grid(const geoflow::tbox::PropertyTree& ptree, GTMatrix<GINT> &p, GTVector<GTVector<GFTYPE>> &xnodes, IOBasePtr pIO, ObsTraits &obstraits, GC_COMM &comm);
+        static void   read_grid(const geoflow::tbox::PropertyTree& ptree, GTMatrix<GINT> &p, GTVector<GTVector<Ftype>> &xnodes, IOBasePtr pIO, ObsTraits &obstraits, GC_COMM &comm);
 
 
 }; // class GGridFactory

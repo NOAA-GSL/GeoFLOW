@@ -48,8 +48,6 @@ public:
                "State is of incorrect type");
         static_assert(std::is_same<Derivative,GTVector<GTVector<GFTYPE>*>>::value,
                "Derivative is of incorrect type");
-        static_assert(std::is_same<Grid,GGrid>::value,
-               "Grid is of incorrect type");
 
                            GIOObserver() = delete;
                            GIOObserver(EqnBasePtr &equation, Grid &grid, const IOBasePtr &io_ptr,

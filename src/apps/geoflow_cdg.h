@@ -34,6 +34,7 @@
 //#include "ggrid.hpp"
 //#include "ggrid_box.hpp"
 //#include "ggrid_icos.hpp"
+#include "ghelmholtz.hpp"
 #include "ggrid_factory.hpp"
 #include "ginitstate_factory.hpp"
 #include "ginitforce_factory.hpp"
@@ -82,14 +83,20 @@ struct MyTypePack {
         using IBdyVol    = GTVector<GSIZET>;
         using TBdyVol    = GTVector<GBdyType>;
         using Size       = SizeType;
-        using FilterBasePtr = std::shared_ptr<FilterBase<MyTypePack>>;
-        using FilterList    = std::vector<FilterBasePtr>;
+        using Operator   = GHelmholtz<MyTypePack>;
+        using GElemList  = GTVector<GElem_base*>; 
+        using Preconditioner = GHelmholtz<MyTypePack>;
+        using ConnectivityOp = GGFX<Ftype>;
+        using FilterBasePtr  = std::shared_ptr<FilterBase<MyTypePack>>;
+        using FilterList     = std::vector<FilterBasePtr>;
 };
 using StateInfo     = GStateInfo;
 using MyTypes       = MyTypePack<>;               // Define grid types used
 using EqnBase       = typename MyTypes::EqnBase;           
 using EqnBasePtr    = typename MyTypes::EqnBasePtr;
 using Grid          = typename MyTypes::Grid;           
+using Ftype         = typename MyTypes::Ftype;
+using Time          = typename MyTypes::Time;
 using IOBaseType    = IOBase<MyTypes>;            // IO Base type
 using IOBasePtr     = std::shared_ptr<IOBaseType>;// IO Base ptr
 using MixBase       = MixerBase<MyTypes>;         // Stirring/mixing Base type

@@ -37,7 +37,6 @@ lshapefcn_                    (NULLPTR)
   GEOFLOW_TRACE();
   assert(b.size() == GDIM && "Basis has incorrect dimensionality");
   
-  GString snorm;
   GString gname   = ptree.getValue<GString>("grid_type");
   assert(gname == "grid_icos" || gname == "grid_sphere");
   geoflow::tbox::PropertyTree gridptree = ptree.getPropertyTree(gname);
@@ -47,10 +46,6 @@ lshapefcn_                    (NULLPTR)
   lshapefcn_ = new GShapeFcn_linear<GTICOS>(2);
   ilevel_  = gridptree.getValue<GINT>("ilevel");
   sreftype_= gridptree.getValue<GString>("refine_type","GICOS_LAGRANGIAN");
-  this->cgtraits_.maxit = gridptree.getValue<GDOUBLE>("maxit");
-  this->cgtraits_.tol   = gridptree.getValue<GDOUBLE>("tol");
-  snorm                 = gridptree.getValue<GString>("norm_type");
-  this->cgtraits_.normtype = LinSolverBase<Types>::str2normtype(snorm);
 
   
   if ( ndim_ == 2 ) {
@@ -1054,7 +1049,8 @@ void GGridIcos<Types>::find_gbdy_ind3d(Ftype radius,
   GTVector<GSIZET>  ind, itmp;
   GTVector<GSIZET>  fi;
   GTVector<Ftype>   r;
-  GVVFType         *xlnodes;
+  GTVector<GTVector<Ftype>>
+                   *xlnodes;
   
   ntmp  = this->xNodes_[0].size() + pow(2,GDIM) + (GDIM > 2 ? 2*GDIM : 0);
   itmp.resize(ntmp);

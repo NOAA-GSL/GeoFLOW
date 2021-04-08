@@ -21,6 +21,7 @@ class GExRKStepper
 {
          using State     = typename Grid::State;
          using StateComp = typename Grid::StateComp;
+         using Ftype     = typename Grid::Ftype;
          using Time      = typename Grid::Time;
 
 public:
@@ -63,7 +64,7 @@ public:
                                              )> callback)
                                          { bdy_apply_callback_ = callback;
                                            bapplybc_ = TRUE; }        // set bdy-application callback
-        void                set_ggfx(GGFX<GFTYPE> *ggfx)
+        void                set_ggfx(GGFX<Ftype> *ggfx)
                             {ggfx_ = ggfx;}                           // set geom-free exchange op
 
 
@@ -111,7 +112,7 @@ private:
         GButcherRK<T>      butcher_;                         // Butcher tableau
         GTVector<State>    K_;                               // RK stage update vectors
         Grid              *grid_;                            // grid object
-        GGFX<GFTYPE>      *ggfx_;                            // geom-free exchange op
+        GGFX<Ftype>       *ggfx_;                            // geom-free exchange op
         std::function<void(const Time &t,                    
                            const State  &uin,
                            const State  &uf,

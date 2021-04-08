@@ -20,7 +20,7 @@
 // RETURNS: GGrid object ptr
 //**********************************************************************************
 template<typename Types>
-GGrid *GGridFactory<Types>::build(const geoflow::tbox::PropertyTree& ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis, IOBasePtr pIO, ObsTraits &obstraits, GC_COMM &comm)
+GGrid<Types> *GGridFactory<Types>::build(const geoflow::tbox::PropertyTree& ptree, GTVector<GNBasis<GCTYPE,Ftype>*> gbasis, IOBasePtr pIO, ObsTraits &obstraits, GC_COMM &comm)
 {
 	GEOFLOW_TRACE();
   GSIZET  itindex = ptree.getValue<GSIZET>   ("restart_index", 0);
@@ -28,9 +28,9 @@ GGrid *GGridFactory<Types>::build(const geoflow::tbox::PropertyTree& ptree, GTVe
   GString gname   = ptree.getValue<GString>("grid_type", sdef);
   sdef            = "constant";
   GString ptype   = ptree.getValue<GString>("exp_order_type", sdef);
-  GGrid   *grid;
+  GGrid<Types>   *grid;
   GTMatrix<GINT> p;
-  GTVector<GTVector<GFTYPE>> xnodes;
+  GTVector<GTVector<Ftype>> xnodes;
 
 
 
@@ -103,13 +103,13 @@ GGrid *GGridFactory<Types>::build(const geoflow::tbox::PropertyTree& ptree, GTVe
 //**********************************************************************************
 template<typename Types>
 void GGridFactory<Types>::read_grid(const geoflow::tbox::PropertyTree& ptree, GTMatrix<GINT> &p, 
-                         GTVector<GTVector<GFTYPE>> &xnodes, IOBasePtr pIO, ObsTraits &obstraits, GC_COMM &comm)
+                         GTVector<GTVector<Ftype>> &xnodes, IOBasePtr pIO, ObsTraits &obstraits, GC_COMM &comm)
 {
 	GEOFLOW_TRACE();
   GINT                        nc=GDIM;
   GElemType                   igtype;
   GString                     sgtype;
-  GTVector<GTVector<GFTYPE>*> u;
+  GTVector<GTVector<Ftype>*>  u;
   StateInfo                   stateinfo;
 
   assert(pIO != nullptr && "IO object not set!");

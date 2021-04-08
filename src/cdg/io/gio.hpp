@@ -21,10 +21,11 @@ class GIO : public IOBase<TypePack>
 {
 
 public:
-        using Types       = EquationBase<TypePack>;
+        using Types       = TypePack;
         using IOBaseType  = IOBase<TypePack>;
         using IOBasePtr   = std::shared_ptr<IOBaseType>;
         using State       = typename Types::State;
+        using StateComp   = typename Types::StateComp;
         using Grid        = typename Types::Grid;
         using Ftype       = typename Types::Ftype;
         using Time        = typename Types::Time;

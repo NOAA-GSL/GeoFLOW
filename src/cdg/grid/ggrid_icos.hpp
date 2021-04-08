@@ -41,18 +41,9 @@ public:
                              enum GCOORDSYST      {GICOS_CART, GICOS_LATLONG}; 
 
                              using Types          = TypePack;
-                             using EqnBase        = typename Types::EqnBase;
-                             using EqnBasePtr     = typename Types::EqnBasePtr;
-                             using State          = typename Types::State;
-                             using StateComp      = typename Types::StateComp;
 //                           using Grid           = typename Types::Grid;
                              using Mass           = typename Types::Mass;
                              using Ftype          = typename Types::Ftype;
-                             using Size           = typename Types::Size;
-                             using Derivative     = typename Types::Derivative;
-                             using Time           = typename Types::Time;
-                             using CompDesc       = typename Types::CompDesc;
-                             using Jacobian       = typename Types::Jacobian;
                              using IBdyVol        = typename Types::IBdyVol;
                              using TBdyVol        = typename Types::TBdyVol;
                              using GElemList      = typename Types::GElemList;
@@ -61,9 +52,9 @@ public:
                              using Preconditioner = typename Types::Preconditioner;
                              using ConnectivityOp = typename Types::ConnectivityOp;
 
-                             using UpdateBase     = typename Types::UpdateBase;
-                             using UpdateBasePtr  = typename Types::UpdateBasePtr;
-                             using BdyUpdateList  = typename Types::BdyUpdateList;
+                             using UpdateBase     = UpdateBdyBase<Types>;
+                             using UpdateBasePtr  = std::shared_ptr<UpdateBase>;
+                             using BdyUpdateList  = GTVector<GTVector<UpdateBasePtr>>;
 
                              typedef GTMatrix<Ftype> GFTMatrix;
                              typedef Ftype GTICOS;

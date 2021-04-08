@@ -27,6 +27,7 @@
 #include "gutils.hpp"
 #include "gcg.hpp"
 #include "gmtk.hpp"
+#include "glinop_base.hpp"
 
 #include "polygon.h"
 #include "gshapefcn_linear.hpp"
@@ -46,11 +47,21 @@ using namespace geoflow::pdeint;
 using namespace std;
 
 
+
 template<typename TypePack>
 class GGrid 
 {
 public:
                              enum GDerivType {GDV_VARP=0, GDV_CONSTP}; 
+                             struct CGTypePack { // define terrain typepack
+                                     using Operator         = class GHelmholtz<TypePack>;
+                                     using Preconditioner   = GLinOpBase<TypePack>;
+                                     using State            = typename TypePack::State;
+                                     using StateComp        = typename TypePack::StateComp;
+                                     using Grid             = GGrid<TypePack>;
+                                     using Ftype            = typename TypePack::Ftype;
+                                     using ConnectivityOp   = GGFX<GFTYPE>;
+                             };
 
                              using Types          = TypePack;
                              using EqnBase        = typename Types::EqnBase;
@@ -70,16 +81,16 @@ public:
                              using TBdyVol        = GTVector<GBdyType>;
                              using GElemList      = GTVector<GElem_base*>;
 
-                             using Operator       = class GHelmholtz<Types>;
-                             using Preconditioner = LinSolverBase<Types>;
+                             using TerrainOp      = typename CGTypePack::Operator;
+                             using TerrainPrecond = typename CGTypePack::Preconditioner;
                              using ConnectivityOp = GGFX<Ftype>;
 
-                             using UpdateBase    = UpdateBdyBase<Types>;
-                             using UpdateBasePtr = std::shared_ptr<UpdateBase>;
-                             using BdyUpdateList = GTVector<GTVector<UpdateBasePtr>>;
+                             using UpdateBase     = UpdateBdyBase<Types>;
+                             using UpdateBasePtr  = std::shared_ptr<UpdateBase>;
+                             using BdyUpdateList  = GTVector<GTVector<UpdateBasePtr>>;
 
-typedef GTVector<GTVector<GTVector<GSIZET>>>   BinnedBdyIndex;
-typedef GTVector<GTVector<GTVector<GBdyType>>> BinnedBdyType;
+                             typedef GTVector<GTVector<GTVector<GSIZET>>>   BinnedBdyIndex;
+                             typedef GTVector<GTVector<GTVector<GBdyType>>> BinnedBdyType;
 
                              static_assert(std::is_same<State,GTVector<GTVector<Ftype>*>>::value,
                                "State is of incorrect type");
@@ -308,7 +319,7 @@ virtual void                 elem_face_data(
         GTVector<Ftype>             mask_;             // bdy mask
         PropertyTree                ptree_;            // main prop tree
         GGFX<Ftype>                *ggfx_;             // connectivity operator
-        typename LinSolverBase<Types>::Traits
+        typename LinSolverBase<CGTypePack>::Traits
                                     cgtraits_;         // GCG operator traits
 
         std::function<void(const Time &t, State &u, State &ub)>

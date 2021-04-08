@@ -10,7 +10,6 @@
 #define _GMCONVDIAG_OBS_HPP
 
 #include "gtvector.hpp"
-#include "ggrid.hpp"
 #include "gutils.hpp"
 #include "gmconv.hpp"
 #include "pdeint/equation_base.hpp"
@@ -50,8 +49,6 @@ public:
                "State is of incorrect type");
         static_assert(std::is_same<Derivative,GTVector<GTVector<GFTYPE>*>>::value,
                "Derivative is of incorrect type");
-        static_assert(std::is_same<Grid,GGrid>::value,
-               "Grid is of incorrect type");
 
                            GMConvDiag() = delete;
                            GMConvDiag(EqnBasePtr &equation, Grid &grid, typename ObserverBase<EquationType>::Traits &traits);
@@ -75,7 +72,7 @@ private:
         GFTYPE             time_last_;  // most recent output time
         GString            sidir_;      // directory from which to read
         GString            sodir_;      // directory in which to write
-        GGrid             *grid_;       // grid object
+        Grid              *grid_;       // grid object
         GMConv<EquationType> 
                           *solver_;     // specific equation pointer
 

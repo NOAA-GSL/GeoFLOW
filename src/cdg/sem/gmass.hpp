@@ -9,6 +9,7 @@
 #if !defined(_GMASSOP_HPP)
 #define _GMASSOP_HPP
 #include "gtvector.hpp"
+#include "ggfx.hpp"
 #include "pdeint/equation_base.hpp"
 
 
@@ -22,17 +23,11 @@ class GMass
 
 public:
 
-        using Types      = EquationBase<TypePack>;
+        using Types      = TypePack;
         using State      = typename Types::State;
         using StateComp  = typename Types::StateComp;
         using Grid       = typename Types::Grid;
-        using Mass       = typename Types::Mass;
         using Ftype      = typename Types::Ftype;
-        using Derivative = typename Types::Derivative;
-        using Time       = typename Types::Time;
-        using CompDesc   = typename Types::CompDesc;
-        using Jacobian   = typename Types::Jacobian;
-        using Size       = typename Types::Size;
 
 
                           GMass(Grid &grid, GBOOL doinverse=FALSE);

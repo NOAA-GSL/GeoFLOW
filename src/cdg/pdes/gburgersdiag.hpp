@@ -10,7 +10,6 @@
 #define _GBURGERSDIAG_OBS_HPP
 
 #include "gtvector.hpp"
-#include "ggrid.hpp"
 #include "gutils.hpp"
 #include "pdeint/equation_base.hpp"
 #include "pdeint/observer_base.hpp"
@@ -53,8 +52,6 @@ public:
                "State is of incorrect type");
         static_assert(std::is_same<Derivative,GTVector<GTVector<GFTYPE>*>>::value,
                "Derivative is of incorrect type");
-        static_assert(std::is_same<Grid,GGrid>::value,
-               "Grid is of incorrect type");
 
                            GBurgersDiag() = delete;
                            GBurgersDiag(EqnBasePtr &equation, Grid &grid, typename ObserverBase<EquationType>::Traits &traits);
@@ -82,7 +79,7 @@ private:
         GString            sidir_;      // directory from which to read
         GString            sodir_;      // directory in which to write
         State              ku_;         // vector of pointers to kinetic components
-        GGrid             *grid_;       // grid object
+        Grid              *grid_;       // grid object
 
 };
 
