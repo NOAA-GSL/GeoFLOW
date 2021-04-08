@@ -27,6 +27,7 @@
 #include "gutils.hpp"
 #include "gcg.hpp"
 #include "gmtk.hpp"
+#include "ghelmholtz.hpp"
 #include "glinop_base.hpp"
 
 #include "polygon.h"
