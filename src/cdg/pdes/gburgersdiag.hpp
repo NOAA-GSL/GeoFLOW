@@ -19,8 +19,6 @@
 using namespace geoflow::pdeint;
 using namespace std;
 
-typedef GTVector<GTVector<GFTYPE>*> State;
-typedef GTVector<GFTYPE> StateElem;
 
 
 template<typename EquationType>
@@ -35,23 +33,19 @@ public:
         using StateInfo   = typename Equation::StateInfo;
         using Grid        = typename Equation::Grid;
         using Ftype       = typename Equation::Ftype;
-        using Derivative  = typename Equation::Derivative;
         using Time        = typename Equation::Time;
         using CompDesc    = typename Equation::CompDesc;
-        using Jacobian    = typename Equation::Jacobian;
         using Size        = typename Equation::Size;
         using ObserverBase<EquationType>::utmp_;
-//      using ObserverBase<EquationType>::grid_;
         using ObserverBase<EquationType>::traits_;
+
 
 //      using ObserverBase<EquationType>::ObsType;
 //      using OBS_CYCLE = typename ObserverBase<EquationType>::ObsType::OBS_CYCLE;
 //      using OBS_TIME  = typename ObserverBase<EquationType>::OBS_TIME;
 
-        static_assert(std::is_same<State,GTVector<GTVector<GFTYPE>*>>::value,
+        static_assert(std::is_same<State,GTVector<GTVector<Ftype>*>>::value,
                "State is of incorrect type");
-        static_assert(std::is_same<Derivative,GTVector<GTVector<GFTYPE>*>>::value,
-               "Derivative is of incorrect type");
 
                            GBurgersDiag() = delete;
                            GBurgersDiag(EqnBasePtr &equation, Grid &grid, typename ObserverBase<EquationType>::Traits &traits);
@@ -73,7 +67,7 @@ private:
         GSIZET             cycle_;      // continuously-running cycle
         GSIZET             ocycle_;     // output cycle number
         GTVector<GINT>     ikinetic_;   // stores GSC_KINETIC component types
-        GFTYPE             time_last_;  // most recent output time
+        Ftype              time_last_;  // most recent output time
         GTVector<GINT>     state_index_;// list of state indices to print
         GTVector<GString>  state_names_;// list of names of states to print
         GString            sidir_;      // directory from which to read

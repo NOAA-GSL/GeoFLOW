@@ -36,10 +36,7 @@ public:
         using StateInfo   = typename Equation::StateInfo;
         using Grid        = typename Equation::Grid;
         using Ftype       = typename Equation::Ftype;
-        using Derivative  = typename Equation::Derivative;
         using Time        = typename Equation::Time;
-        using CompDesc    = typename Equation::CompDesc;
-        using Jacobian    = typename Equation::Jacobian;
         using Size        = typename Equation::Size;
         using ObserverBase<EquationType>::utmp_;
         using ObserverBase<EquationType>::traits_;
@@ -47,8 +44,6 @@ public:
 
         static_assert(std::is_same<State,GTVector<GTVector<GFTYPE>*>>::value,
                "State is of incorrect type");
-        static_assert(std::is_same<Derivative,GTVector<GTVector<GFTYPE>*>>::value,
-               "Derivative is of incorrect type");
 
                            GMConvDiag() = delete;
                            GMConvDiag(EqnBasePtr &equation, Grid &grid, typename ObserverBase<EquationType>::Traits &traits);
