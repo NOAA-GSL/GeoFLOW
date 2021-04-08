@@ -56,7 +56,9 @@ class GUpdateBdyFactory
         using Grid             = typename Types::Grid;
         using Ftype            = typename Types::Ftype;
         using Time             = typename Types::Time;
-        using UpdateBdyBasePtr = typename Types::UpdateBdyBasePtr;
+        using BdyBase          = UpdateBdyBase<Types>;
+        using BdyBasePtr       = std::shared_ptr<BdyBase>;
+        using BdyUpdateList    = GTVector<GTVector<BdyBasePtr>>;
         using CallbackPtr      = std::function<GBOOL(
                                 EqnBasePtr &eqn,
                                 Grid       &grid,
@@ -67,9 +69,9 @@ class GUpdateBdyFactory
                                 State      &ub)>;
 
 
-	static UpdateBdyBasePtr build(const PropertyTree &ptree, const GString &sbdy, Grid &grid, stBdyBlock &bcblock, GTVector<GSIZET> &ibdy, GSIZET igbdy_start);
+	static BdyBasePtr build(const PropertyTree &ptree, const GString &sbdy, Grid &grid, stBdyBlock &bcblock, GTVector<GSIZET> &ibdy, GSIZET igbdy_start);
 
-	static UpdateBdyBasePtr  get_bdy_class (const PropertyTree& ptree, Grid &grid, stBdyBlock &bcblock,  GTVector<GSIZET> &ibdy, GSIZET igbdy_start);
+	static BdyBasePtr  get_bdy_class (const PropertyTree& ptree, Grid &grid, stBdyBlock &bcblock,  GTVector<GSIZET> &ibdy, GSIZET igbdy_start);
 
         static GBOOL             get_bdy_block(const geoflow::tbox::PropertyTree &sptree, GString &sbdy, GINT ibc, stBdyBlock &stblock);
 

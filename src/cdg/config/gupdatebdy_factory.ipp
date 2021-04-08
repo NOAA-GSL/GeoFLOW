@@ -22,11 +22,11 @@
 // RETURNS: none.
 //**********************************************************************************
 template<typename Types>
-typename GUpdateBdyFactory<Types>::UpdateBdyBasePtr
+typename GUpdateBdyFactory<Types>::BdyBasePtr
 GUpdateBdyFactory<Types>::build(const PropertyTree& ptree, const GString &sbdy, Grid &grid, stBdyBlock &bcblock, GTVector<GSIZET> &ibdy, GSIZET igbdy_start)
 {
   GBOOL              bret = FALSE;
-  UpdateBdyBasePtr   base_ptr;
+  BdyBasePtr         base_ptr;
 
 
   if ( "none"         == sbdy
@@ -111,13 +111,13 @@ GUpdateBdyFactory<Types>::get_inflow_callback(const GString& sname, const GINT i
 // RETURNS: none.
 //**********************************************************************************
 template<typename Types>
-typename GUpdateBdyFactory<Types>::UpdateBdyBasePtr
+typename GUpdateBdyFactory<Types>::BdyBasePtr
 GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree &ptree, Grid &grid, stBdyBlock &bcblock, GTVector<GSIZET> &ibdy, GSIZET igbdy_start)
 {
   GINT               nstate;
   GBdyType           bdytype = bcblock.tbdy;
   GLONG              iloc;
-  UpdateBdyBasePtr   base_ptr;
+  BdyBasePtr         base_ptr;
   
 
   nstate = bcblock.istate.size();
