@@ -8,6 +8,12 @@
 //==================================================================================
 #include "geoflow_cdg.h"
 
+//#if !defined(_GMTK_GLOBAL_DATA)
+//  #define _GMTK_GLOBAL_DATA
+  GINT szMatCache_ = _G_MAT_CACHE_SIZE;
+  GINT szVecCache_ = _G_VEC_CACHE_SIZE;
+//#endif
+
 
 int main(int argc, char **argv) {
     GEOFLOW_TRACE_INITIALIZE();  // Must be before MPI_Init (thanks GPTL)
