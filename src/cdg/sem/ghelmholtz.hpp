@@ -13,14 +13,14 @@
 //                Note: this operator will fail if the grid contains more 
 //                      than a single element type.
 // Copyright    : Copyright 2018. Colorado State University. All rights reserved.
-// Derived From : GLinOp
+// Derived From : none.
 //==================================================================================
 
 #if !defined(_GHELMHOLTZOP_HPP)
 #define _GHELMHOLTZOP_HPP
 #include "gtvector.hpp"
 #include "gmass.hpp"
-#include "ggrid.hpp"
+#include "gelem_base.hpp"
 #include "pdeint/equation_base.hpp"
 
 
@@ -41,6 +41,14 @@ public:
         using Ftype      = typename Types::Ftype;
         using Derivative = typename Types::Derivative;
         using Size       = typename Types::Size;
+
+        static_assert(std::is_same<State,GTVector<GTVector<Ftype>*>>::value,
+               "State is of incorrect type");
+        static_assert(std::is_same<StateComp,GTVector<Ftype>>::value,
+               "StateComp is of incorrect type");
+        static_assert(std::is_same<Derivative,GTVector<GTVector<Ftype>*>>::value,
+               "Derivative is of incorrect type");
+
 
 
                           GHelmholtz(Grid &grid);
@@ -77,6 +85,7 @@ private:
         void              compute_div(State       &, 
                                       StateComp   &, GBOOL btrans=TRUE); 
 
+        GBOOL                         bInitialized_;  
         GBOOL                         buse_metric_;   // use metric terms?
         GBOOL                         bown_q_;        // does object own q?
         GBOOL                         bown_p_;        // does object own p?

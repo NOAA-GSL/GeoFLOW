@@ -13,27 +13,7 @@
 #if !defined(_GGRID_ICOS_HPP)
 #define _GGRID_ICOS_HPP
 
-#include "gtypes.h"
-#include <functional>
-#include <cstdlib>
-#include <memory>
-#include <cmath>
-#include "gtvector.hpp"
-#include "gtmatrix.hpp"
-#include "gnbasis.hpp"
-#include "gelem_base.hpp"
-#include "gdd_base.hpp"
-#include "gshapefcn_linear.hpp"
-#include "gshapefcn_embed.hpp"
-#include "polygon.h"
 #include "ggrid.hpp"
-//#include "omp.h"  // Are we calling API functions ?
-#include "gspecbdy_factory.hpp"
-#include "ginitstate_factory.hpp"
-#include "gupdatebdy_factory.hpp"
-#include "gtpoint.hpp"
-#include "gutils.hpp"
-#include "tbox/tracer.hpp"
 
 
 
@@ -44,8 +24,6 @@
 // GICOS_CART: print in 3d cartesian coords;
 // GICOS_LATLONG: print in r-theta-phi coords in 3d, and 
 //    theta-phi in 2d
-enum GICOSPTYPE      {GICOS_BASE, GICOS_ELEMENTAL}; 
-enum GCOORDSYST      {GICOS_CART, GICOS_LATLONG}; 
 
 
 using namespace geoflow;
@@ -57,34 +35,35 @@ using namespace std;
 template<typename TypePack>
 class GGridIcos : public GGrid<TypePack>
 {
+
 public:
+                             enum GICOSPTYPE      {GICOS_BASE, GICOS_ELEMENTAL}; 
+                             enum GCOORDSYST      {GICOS_CART, GICOS_LATLONG}; 
 
                              using Types          = TypePack;
-                             using EqnBase        = EquationBase<Types>;      // Equation Base type
-                             using EqnBasePtr     = std::shared_ptr<EqnBase>; // Equation Base ptr
+                             using EqnBase        = typename Types::EqnBase;
+                             using EqnBasePtr     = typename Types::EqnBasePtr;
                              using State          = typename Types::State;
                              using StateComp      = typename Types::StateComp;
-                             using Grid           = typename Types::Grid;
-                             using StateInfo      = typename Types::StateInfo;
+//                           using Grid           = typename Types::Grid;
                              using Mass           = typename Types::Mass;
                              using Ftype          = typename Types::Ftype;
+                             using Size           = typename Types::Size;
                              using Derivative     = typename Types::Derivative;
                              using Time           = typename Types::Time;
                              using CompDesc       = typename Types::CompDesc;
                              using Jacobian       = typename Types::Jacobian;
-                             using IBdyVol        = GTVector<GSIZET>;
-                             using TBdyVol        = GTVector<GBdyType>;
-                             using Size           = typename Types::Size;
-                             using GElemList      = GTVector<GElem_base*>;
+                             using IBdyVol        = typename Types::IBdyVol;
+                             using TBdyVol        = typename Types::TBdyVol;
+                             using GElemList      = typename Types::GElemList;
 
-                             using CGTypes        = CGTypePack;
-                             using Operator       = typename CGTypes::Operator;
-                             using Preconditioner = typename CGTypes::Preconditioner;
-                             using ConnectivityOp = typename CGTypes::ConnectivityOp;
+                             using Operator       = typename Types::Operator;
+                             using Preconditioner = typename Types::Preconditioner;
+                             using ConnectivityOp = typename Types::ConnectivityOp;
 
-                             using UpdateBase    = UpdateBdyBase<Types>;
-                             using UpdateBasePtr = std::shared_ptr<UpdateBase>;
-                             using BdyUpdateList = GTVector<GTVector<UpdateBasePtr>>;
+                             using UpdateBase     = typename Types::UpdateBase;
+                             using UpdateBasePtr  = typename Types::UpdateBasePtr;
+                             using BdyUpdateList  = typename Types::BdyUpdateList;
 
                              typedef GTMatrix<Ftype> GFTMatrix;
                              typedef Ftype GTICOS;
@@ -126,7 +105,7 @@ public:
                               GTVector<GTVector<Ftype>>       &normals);  // compute faces data
 
 
-friend  std::ostream&       operator<<(std::ostream&, GGridIcos &);         // Output stream operator
+//friend  std::ostream&       operator<<(std::ostream&, GGridIcos<Types> &);         // Output stream operator
  
 
   private:
@@ -262,5 +241,7 @@ friend  std::ostream&       operator<<(std::ostream&, GGridIcos &);         // O
 
 
 #include "ggrid_icos.ipp"
+
+
 
 #endif

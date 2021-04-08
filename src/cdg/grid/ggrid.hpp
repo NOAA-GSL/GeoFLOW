@@ -10,74 +10,41 @@
 #if !defined(_GGRID_HPP)
 #define _GGRID_HPP 
 
+
+#include "gtypes.h"
 #include <iostream>
-#include "gstateinfo.hpp"
+#include <memory>
+#include <cmath>
+#include <limits>
+#include <typeinfo>
 #include "gcomm.hpp"
 #include "gtvector.hpp"
 #include "gtmatrix.hpp"
 #include "gnbasis.hpp"
 #include "gelem_base.hpp"
 #include "gdd_base.hpp"
-#include "gcomm.hpp"
-#include "ggfx.hpp"
-#include "glinop.hpp"
 #include "gcblas.hpp"
+#include "gutils.hpp"
+#include "gcg.hpp"
+#include "gmtk.hpp"
+
+#include "polygon.h"
+#include "gshapefcn_linear.hpp"
+#include "gshapefcn_embed.hpp"
+#include "gupdatebdy_factory.hpp"
+
 #include "pdeint/update_bdy_base.hpp"
 #include "pdeint/lin_solver_base.hpp"
+#include "tbox/error_handler.hpp"
+#include "tbox/tracer.hpp"
 #include "tbox/property_tree.hpp"
 
 
+using namespace geoflow;
 using namespace geoflow::tbox;
 using namespace geoflow::pdeint;
 using namespace std;
 
-class GMass;
-
-#if 0
-struct TypePack { // define main typepack
-        using EqnBase        = EquationBase<TypePack>;      // Equation Base type
-        using EqnBasePtr     = std::shared_ptr<EqnBase>; // Equation Base ptr
-        using State          = GTVector<GTVector<GFTYPE>*>;
-        using StateComp      = GTVector<GFTYPE>;
-        using Grid           = GGrid;
-        using StateInfo      = GStateInfo;
-        using Mass           = GMass;
-        using Ftype          = GFTYPE;
-        using Derivative     = State;
-        using Time           = Ftype;
-        using CompDesc       = GTVector<GStateCompType>;
-        using Jacobian       = State;
-        using IBdyVol        = GTVector<GSIZET>;
-        using TBdyVol        = GTVector<GBdyType>;
-        using Size           = GSIZET;
-        using GElemList      = GTVector<GElem_base*>;
-        using UpdateBase     = UpdateBdyBase<TypePack>;
-        using UpdateBasePtr  = std::shared_ptr<UpdateBase>;
-        using BdyUpdateList  = GTVector<GTVector<UpdateBasePtr>>;
-};
-using GElemList      = typename TypePack::GElemList;
-using UpdateBase     = typename TypePack::UpdateBase;
-using UpdateBasePtr  = typename TypePack::UpdateBasePtr;
-using BdyUpdateList  = typename TypePack::BdyUpdateList;
-#endif
-
-
-struct CGTypePack { // define terrain typepack
-        using Types            = CGTypePack;
-        using Operator         = class GHelmholtz;
-        using Preconditioner   = LinSolverBase<Types>;
-        using State            = GTVector<GTVector<GFTYPE>*>;
-        using StateComp        = GTVector<GFTYPE>;
-        using StateInfo        = GStateInfo;
-        using Grid             = GGrid;
-        using Ftype            = GFTYPE;
-        using Time             = GFTYPE;
-        using ConnectivityOp   = GGFX<GFTYPE>;
-};
-
-
-typedef GTVector<GTVector<GTVector<GSIZET>>>   BinnedBdyIndex;
-typedef GTVector<GTVector<GTVector<GBdyType>>> BinnedBdyType;
 
 template<typename TypePack>
 class GGrid 
@@ -90,8 +57,7 @@ public:
                              using EqnBasePtr     = typename Types::EqnBasePtr;
                              using State          = typename Types::State;
                              using StateComp      = typename Types::StateComp;
-                             using Grid           = typename Types::Grid;
-                             using StateInfo      = typename Types::StateInfo;
+//                           using Grid           = typename Types::Grid;
                              using Mass           = typename Types::Mass;
                              using Ftype          = typename Types::Ftype;
                              using Size           = typename Types::Size;
@@ -99,29 +65,40 @@ public:
                              using Time           = typename Types::Time;
                              using CompDesc       = typename Types::CompDesc;
                              using Jacobian       = typename Types::Jacobian;
+
                              using IBdyVol        = GTVector<GSIZET>;
                              using TBdyVol        = GTVector<GBdyType>;
                              using GElemList      = GTVector<GElem_base*>;
 
-                             using CGTypes        = CGTypePack;
-                             using Operator       = typename CGTypes::Operator;
-                             using Preconditioner = typename CGTypes::Preconditioner;
-                             using ConnectivityOp = typename CGTypes::ConnectivityOp;
+                             using Operator       = class GHelmholtz<Types>;
+                             using Preconditioner = LinSolverBase<Types>;
+                             using ConnectivityOp = GGFX<Ftype>;
 
                              using UpdateBase    = UpdateBdyBase<Types>;
                              using UpdateBasePtr = std::shared_ptr<UpdateBase>;
                              using BdyUpdateList = GTVector<GTVector<UpdateBasePtr>>;
-          
+
+typedef GTVector<GTVector<GTVector<GSIZET>>>   BinnedBdyIndex;
+typedef GTVector<GTVector<GTVector<GBdyType>>> BinnedBdyType;
+
+                             static_assert(std::is_same<State,GTVector<GTVector<Ftype>*>>::value,
+                               "State is of incorrect type");
+                             static_assert(std::is_same<StateComp,GTVector<Ftype>>::value,
+                               "StateComp is of incorrect type");
+                             static_assert(std::is_same<Derivative,GTVector<GTVector<Ftype>*>>::value,
+                               "Derivative is of incorrect type");
+                             static_assert(std::is_same<Ftype,Ftype>::value,
+                               "Ftype is of incorrect type");
+
 
                              GGrid() = delete;
                              GGrid(const geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,Ftype>*> &b, GC_COMM &comm);
 
 virtual                     ~GGrid();
-//static                     GGrid *build(geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,Ftype>*> &b, GC_COMM comm);
 
 virtual void                 do_elems() = 0;                           // compute grid for irank
 virtual void                 do_elems(GTMatrix<GINT> &p,
-                             GTVector<GTVector<Ftype>> &xnodes) = 0;  // compute grid on restart
+                               GTVector<GTVector<Ftype>> &xnodes) = 0;// compute grid on restart
 //virtual void               set_partitioner(GDD_base<GTICOS> *d) = 0; // set and use GDD object
 
 #if 0
@@ -192,8 +169,8 @@ virtual void                 print(const GString &filename){}          // print 
         GTVector<Ftype>     &xNodes(GSIZET i) { return xNodes_[i]; }  // get all nodes coords (Cart)
                             
 
-        GMass               &massop();                                 // global mass op
-        GMass               &imassop();                                // global inv.mass op
+        Mass                &massop();                                 // global mass op
+        Mass                &imassop();                                // global inv.mass op
         GTVector<Ftype>     &Jac();                                    // global Jacobian
         GTVector<Ftype>
                             &faceJac();                                // global face Jacobian
@@ -251,7 +228,9 @@ virtual void                 print(const GString &filename){}          // print 
          GTVector<GINT>     &testty() { return testty_; }
 
 
-friend  std::ostream&        operator<<(std::ostream&, GGrid &);       // Output stream operator
+#if 0
+friend  std::ostream&        operator<<(std::ostream&, Grid &);       // Output stream operator
+#endif
  
 
 protected:
@@ -310,8 +289,8 @@ virtual void                 elem_face_data(
         GTMatrix<GTVector<Ftype>>   dXidX_;            // matrix Rij = dXi^j/dX^i, global
         GTMatrix<GTVector<Ftype>>   dXdXi_;            // matrix Bij = dX^j/dXi^i, global, used for constructing normals
         GTVector<GTVector<Ftype>>   xNodes_;           // Cart coords of all node points
-        GMass                      *mass_;             // mass operator
-        GMass                      *imass_;            // inverse of mass operator
+        Mass                       *mass_;             // mass operator
+        Mass                       *imass_;            // inverse of mass operator
         GTVector<Ftype>             Jac_;              // interior Jacobian, global
         GTVector<Ftype>             faceJac_;          // face Jacobians, global
         GTVector<Ftype>             faceMass_;         // elem face mass * Jacobians
@@ -329,7 +308,7 @@ virtual void                 elem_face_data(
         GTVector<Ftype>             mask_;             // bdy mask
         PropertyTree                ptree_;            // main prop tree
         GGFX<Ftype>                *ggfx_;             // connectivity operator
-        LinSolverBase<CGTypes>::Traits
+        typename LinSolverBase<Types>::Traits
                                     cgtraits_;         // GCG operator traits
 
         std::function<void(const Time &t, State &u, State &ub)>
@@ -338,9 +317,11 @@ virtual void                 elem_face_data(
 
         GTVector<GINT>              testid_;
         GTVector<GINT>              testty_;
+
 };
 
 
 #include "ggrid.ipp"
+
 
 #endif

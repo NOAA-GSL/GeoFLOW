@@ -11,29 +11,25 @@
 #if !defined(_GPDVOP_HPP)
 #define _GPDVOP_HPP
 #include "gtvector.hpp"
-#include "gnbasis.hpp"
-#include "ggrid.hpp"
-#include "gmass.hpp"
-#include "gtmatrix.hpp"
-#include "gmtk.hpp"
 #include "pdeint/equation_base.hpp"
+
+
+using namespace geoflow::pdeint;
+using namespace std;
 
 
 template<typename TypePack>
 class GpdV 
 {
 public:
-        using Interface  = EquationBase<TypePack>;
-        using State      = typename Interface::State;
-        using StateComp  = typename Interface::StateComp;
-        using Grid       = typename Interface::Grid;
-        using Mass       = typename Interface::Mass;
-        using Ftype      = typename Interface::Ftype;
-        using Derivative = typename Interface::Derivative;
-        using Time       = typename Interface::Time;
-        using CompDesc   = typename Interface::CompDesc;
-        using Jacobian   = typename Interface::Jacobian;
-        using Size       = typename Interface::Size;
+        using Types      = EquationBase<TypePack>;
+        using State      = typename Types::State;
+        using StateComp  = typename Types::StateComp;
+        using Grid       = typename Types::Grid;
+        using Mass       = typename Types::Mass;
+        using Ftype      = typename Types::Ftype;
+        using Derivative = typename Types::Derivative;
+        using Size       = typename Types::Size;
 
         static_assert(std::is_same<State,GTVector<GTVector<Ftype>*>>::value,
                "State is of incorrect type");
@@ -41,8 +37,6 @@ public:
                "StateComp is of incorrect type");
         static_assert(std::is_same<Derivative,GTVector<GTVector<Ftype>*>>::value,
                "Derivative is of incorrect type");
-        static_assert(std::is_same<Grid,GGrid>::value,
-               "Grid is of incorrect type");
 
 public:
 

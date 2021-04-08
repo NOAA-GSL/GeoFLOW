@@ -16,7 +16,6 @@
 #include <memory>
 #include <cmath>
 #include "gtvector.hpp"
-#include "ggrid.hpp"
 #include "ggfx.hpp"
 #include "pdeint/update_bdy_base.hpp"
 
@@ -38,8 +37,6 @@ public:
 
         static_assert(std::is_same<State,GTVector<GTVector<Ftype>*>>::value,
                "State is of incorrect type");
-        static_assert(std::is_same<Grid,GGrid>::value,
-               "Grid is of incorrect type");
 
         // GOutflowBdy solver traits:
         struct Traits {

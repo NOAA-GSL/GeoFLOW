@@ -19,8 +19,6 @@
 #include "gutils.hpp"
 #include "gmtk.hpp"
 #include "ginitstate_direct_user.hpp"
-#include "ggrid_box.hpp"
-#include "ggrid_icos.hpp"
 #include <random>
 
 #include "tbox/property_tree.hpp"
@@ -40,6 +38,8 @@ struct ginitstate
         using EqnBase    = EquationBase<Types>;
         using EqnBasePtr = std::shared_ptr<EqnBase>;
         using Grid       = typename Types::Grid;
+        using GridBox    = typename Types::GridBox;
+        using GridIcos   = typename Types::GridIcos;
         using Time       = typename Types::Time;
         using Ftype      = typename Types::Ftype;
 

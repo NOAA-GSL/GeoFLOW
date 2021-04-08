@@ -27,7 +27,7 @@ template<typename Types>
 GBOOL ginitv<Types>::impl_abc_box(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
 {
 
-  GGridBox *box = dynamic_cast<GGridBox*>(&grid);
+  GridBox *box = dynamic_cast<GridBox*>(&grid);
   assert(box != NULLPTR && "Box grid required");
 
   GINT         kdn, kup, p, pdef;
@@ -113,7 +113,7 @@ template<typename Types>
 GBOOL ginitv<Types>::impl_abc_icos(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
 {
 
-  GGridIcos *icos = dynamic_cast<GGridIcos*>(&grid);
+  GridIcos *icos = dynamic_cast<GridIcos*>(&grid);
   assert(icos != NULLPTR && "Icos grid required");
 
   GINT         kdn, kup, p, pdef;
@@ -216,7 +216,7 @@ GBOOL ginitv<Types>::impl_abc_icos(const PropertyTree &ptree, GString &sconfig, 
 template<typename Types>
 GBOOL ginitv<Types>::impl_simpsum1d_box(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
 {
-  GGridBox *tgrid = dynamic_cast<GGridBox*>(&grid);
+  GridBox *tgrid = dynamic_cast<GridBox*>(&grid);
   assert(tgrid != NULLPTR && "Box grid required");
 
   GINT         kdn, kup, pdef;
@@ -301,7 +301,7 @@ GBOOL ginitv<Types>::impl_simpsum1d_box(const PropertyTree &ptree, GString &scon
 template<typename Types>
 GBOOL ginitv<Types>::impl_simpsum_box(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
 {
-  GGridBox *tgrid = dynamic_cast<GGridBox*>(&grid);
+  GridBox *tgrid = dynamic_cast<GridBox*>(&grid);
   assert(tgrid != NULLPTR && "Box grid required");
 
   GINT         kdn, kup, pdef;
@@ -426,7 +426,7 @@ template<typename Types>
 GBOOL ginitv<Types>::impl_simpsum_icos(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
 {
 
-  GGridIcos *tgrid = dynamic_cast<GGridIcos*>(&grid);
+  GridIcos *tgrid = dynamic_cast<GridIcos*>(&grid);
   assert(tgrid != NULLPTR && "Icos grid required");
 
   GINT         kdn, kup, pdef;

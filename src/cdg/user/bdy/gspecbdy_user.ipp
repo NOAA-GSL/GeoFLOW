@@ -22,7 +22,7 @@
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
 template<typename Types>
-GBOOL gepecbdy<Types>::impl_my_mixed_bdy(const PropertyTree &sptree, Grid &grid, const GINT id, GTVector<GSIZET> &ibdy)
+GBOOL gspecbdy<Types>::impl_my_mixed_bdy(const PropertyTree &sptree, Grid &grid, const GINT id, GTVector<GSIZET> &ibdy)
 {
   GBdyType btype = geoflow::str2bdytype(sptree.getValue<GString>("base_type", "GBDY_NONE"));
 

@@ -9,7 +9,6 @@
 #define _GIO_HPP
 
 #include "gtvector.hpp"
-#include "ggrid.hpp"
 #include "pdeint/io_base.hpp"
 #include "tbox/property_tree.hpp"
 #include "tbox/mpixx.hpp"
@@ -22,16 +21,15 @@ class GIO : public IOBase<TypePack>
 {
 
 public:
-        using Interface   = EquationBase<TypePack>;
+        using Types       = EquationBase<TypePack>;
         using IOBaseType  = IOBase<TypePack>;
         using IOBasePtr   = std::shared_ptr<IOBaseType>;
-        using State       = typename Interface::State;
-        using Grid        = typename Interface::Grid;
-        using Ftype       = typename Interface::Ftype;
-        using Time        = typename Interface::Time;
-        using Size        = typename Interface::Size;
-        using StateInfo   = typename Interface::StateInfo; 
-
+        using State       = typename Types::State;
+        using Grid        = typename Types::Grid;
+        using Ftype       = typename Types::Ftype;
+        using Time        = typename Types::Time;
+        using Size        = typename Types::Size;
+        using StateInfo   = typename Types::StateInfo; 
         using Traits      = typename IOBaseType::Traits;
 
         static_assert(std::is_same<Ftype,GFTYPE>::value,

@@ -59,12 +59,11 @@ void GpdV<TypePack>::apply(StateComp &p, State &u, State &utmp, StateComp &po)
   assert( utmp.size() >= 2
        && "Insufficient temp space specified");
 
-  GElemList *gelems=&grid_->elems();
 
 // Must compute:
 //    po = p Div u 
 //
-  GMass *mass = &grid_->massop();
+  Mass *mass = &grid_->massop();
 
   // Compute po += Gj (D^j u_j): 
   grid_->deriv(*u[0], 1, *utmp[0], po );

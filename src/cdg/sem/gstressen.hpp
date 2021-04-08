@@ -39,13 +39,16 @@
 #define _GSTRESSERGYOP_HPP
 #include "gtvector.hpp"
 #include "gnbasis.hpp"
-#include "ggrid.hpp"
 #include "gmass.hpp"
 #include "gtmatrix.hpp"
 #include "gmtk.hpp"
 #include "pdeint/equation_base.hpp"
 
 #undef  DO_COMPRESS_MODES_ONLY
+
+using namespace geoflow::pdeint;
+using namespace std;
+
 
 template<typename TypePack>
 class GStressEnOp
@@ -70,8 +73,6 @@ public:
                "StateComp is of incorrect type");
         static_assert(std::is_same<Derivative,GTVector<GTVector<Ftype>*>>::value,
                "Derivative is of incorrect type");
-        static_assert(std::is_same<Grid,GGrid>::value,
-               "Grid is of incorrect type");
 
         // GStressEn solver traits:
         struct Traits {

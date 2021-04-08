@@ -32,7 +32,7 @@ class GSpecBdyFactory
         using Ftype         = typename Types::Ftype;
         using Time          = typename Types::Ftype;
 
-{
+
   public:
 
 

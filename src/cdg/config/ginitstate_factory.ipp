@@ -236,16 +236,16 @@ GBOOL GInitStateFactory<Types>::set_by_comp(const PropertyTree& ptree, EqnBasePt
 template<typename Types>
 GBOOL GInitStateFactory<Types>::doinitv(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
 {
-  GBOOL           bret  = TRUE;
-  GString         sinit;
-  GGridIcos      *icos;
-  GGridBox       *box;
-  PropertyTree    vtree = ptree.getPropertyTree(sconfig); 
+  GBOOL             bret  = TRUE;
+  GString           sinit;
+  GridIcos         *icos;
+  GridBox          *box;
+  PropertyTree      vtree = ptree.getPropertyTree(sconfig); 
 
   sinit = vtree.getValue<GString>("name");
 
-  icos = dynamic_cast<GGridIcos*>(&grid);
-  box  = dynamic_cast<GGridBox*> (&grid);
+  icos = dynamic_cast<GridIcos*>(&grid);
+  box  = dynamic_cast<GridBox*> (&grid);
   if      ( "null"   == sinit
        ||   ""       == sinit ) {     // set to 0
     for ( GINT i=0; i<u.size(); i++ ) *u[i] = 0.0;

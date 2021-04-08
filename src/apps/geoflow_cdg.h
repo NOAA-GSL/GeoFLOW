@@ -28,26 +28,22 @@
 #include "gllbasis.hpp"
 #include "gmorton_keygen.hpp"
 #include "gburgers.hpp"
-#include "ggrid_box.hpp"
-#include "ggrid_factory.hpp"
-#include "gmass.hpp"
-#include "pdeint/observer_base.hpp"
-#include "pdeint/io_base.hpp"
-#include "gio_observer.hpp"
+#include "gmconv.hpp"
 #include "gio.hpp"
 #include "gstateinfo.hpp"
-#include "pdeint/equation_base.hpp"
-#include "pdeint/equation_factory.hpp"
-#include "pdeint/integrator.hpp"
-#include "pdeint/integrator_factory.hpp"
-#include "pdeint/mixer_factory.hpp"
-#include "pdeint/observer_factory.hpp"
-#include "pdeint/filter_factory.hpp"
-#include "pdeint/null_observer.hpp"
+//#include "ggrid.hpp"
+//#include "ggrid_box.hpp"
+//#include "ggrid_icos.hpp"
+#include "ggrid_factory.hpp"
 #include "ginitstate_factory.hpp"
 #include "ginitforce_factory.hpp"
 #include "gupdatebdy_factory.hpp"
 #include "gspecterrain_factory.hpp"
+#include "pdeint/equation_factory.hpp"
+#include "pdeint/integrator_factory.hpp"
+#include "pdeint/mixer_factory.hpp"
+#include "pdeint/observer_factory.hpp"
+#include "pdeint/filter_factory.hpp"
 #include "tbox/command_line.hpp"
 #include "tbox/pio.hpp"
 #include "tbox/property_tree.hpp"
@@ -74,6 +70,8 @@ struct MyTypePack {
         using State      = StateType;
         using StateComp  = StateCompType;
         using Grid       = GGrid<MyTypePack>;
+        using GridBox    = GGridBox<MyTypePack>;
+        using GridIcos   = GGridIcos<MyTypePack>;
         using StateInfo  = StateInfoType;
         using Mass       = GMass<MyTypePack>;
         using Ftype      = FloatType;

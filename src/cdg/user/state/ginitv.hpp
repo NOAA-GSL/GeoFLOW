@@ -30,6 +30,8 @@ struct ginitv
         using EqnBase    = EquationBase<Types>;
         using EqnBasePtr = std::shared_ptr<EqnBase>;
         using Grid       = typename Types::Grid;
+        using GridBox    = typename Types::GridBox;
+        using GridIcos   = typename Types::GridIcos;
         using Time       = typename Types::Time;
         using Ftype      = typename Types::Ftype;
 

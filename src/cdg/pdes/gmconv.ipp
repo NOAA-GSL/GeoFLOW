@@ -44,7 +44,7 @@ comm_(grid.get_ggfx().getComm()),
 steptop_callback_      (NULLPTR)
 {
 
-  GGridIcos *icos = dynamic_cast<GGridIcos*>(grid_);
+  GridIcos *icos = dynamic_cast<GridIcos*>(grid_);
 
   traits_.iforced.resize(traits.iforced.size());
   traits_ = traits;
@@ -725,7 +725,7 @@ void GMConv<TypePack>::init_impl(State &u, State &tmp)
   GBOOL      bmultilevel = FALSE;
   GSIZET     n;
   GINT       nexcl, nrhstmp;
-  GGridIcos *icos = dynamic_cast<GGridIcos*>(grid_);
+  GridIcos  *icos = dynamic_cast<GridIcos*>(grid_);
   CompDesc  *icomptype = &this->stateinfo().icomptype;
  
   assert(tmp.size() >= this->tmp_size());
@@ -842,13 +842,13 @@ void GMConv<TypePack>::init_impl(State &u, State &tmp)
                      ){apply_bc_impl(t, uin);}; 
 
   // Configure time stepping:
-  GExRKStepper<Grid,Ftype>::Traits rktraits;
+  typename GExRKStepper<Grid,Ftype>::Traits rktraits;
   switch ( traits_.isteptype ) {
     case GSTEPPER_EXRK:
       rktraits.bSSP   = traits_.bSSP;
       rktraits.norder = traits_.itorder;
       rktraits.nstage = traits_.nstage;
-      gexrk_ = new GExRKStepper<Ftype>(rktraits, *grid_);
+      gexrk_ = new GExRKStepper<Grid,Ftype>(rktraits, *grid_);
       gexrk_->setRHSfunction(rhs);
       gexrk_->set_apply_bdy_callback(applybc);
       gexrk_->set_ggfx(ggfx_);
@@ -1057,7 +1057,7 @@ void GMConv<TypePack>::apply_bc_impl(const Time &t, State &u)
   std::shared_ptr<GMConv<TypePack>> pthis(this);
   EqnBasePtr peqn = pthis;;
 
-  BdyUpdateList *updatelist = &grid_->bdy_update_list();;
+  typename Grid::BdyUpdateList *updatelist = &grid_->bdy_update_list();;
 
 
   // Update bdy values if required to:
@@ -1234,8 +1234,8 @@ void GMConv<TypePack>::compute_vpref(StateComp &tvi, State &W)
    GTVector<GTVector<Ftype>> 
              *xnodes = &grid_->xNodes();
 
-   GGridIcos *icos = dynamic_cast<GGridIcos*>(grid_);
-   GGridBox  *box  = dynamic_cast <GGridBox*>(grid_);
+   GridIcos *icos = dynamic_cast<GridIcos*>(grid_);
+   GridBox  *box  = dynamic_cast <GridBox*>(grid_);
 
    assert(W.size() == nc_);
 
@@ -1294,8 +1294,8 @@ void GMConv<TypePack>::compute_vpref(StateComp &tvi, GINT idir, StateComp &W)
    GTVector<GTVector<Ftype>> 
              *xnodes = &grid_->xNodes();
 
-   GGridIcos *icos = dynamic_cast<GGridIcos*>(grid_);
-   GGridBox  *box  = dynamic_cast <GGridBox*>(grid_);
+   GridIcos *icos = dynamic_cast<GridIcos*>(grid_);
+   GridBox  *box  = dynamic_cast <GridBox*>(grid_);
 
    assert(idir > 0 && idir <= nc_);
 
@@ -1489,8 +1489,8 @@ void GMConv<TypePack>::compute_base(State &u)
    if ( !traits_.usebase ) return;
 
 
-   GGridIcos *icos = dynamic_cast<GGridIcos*>(grid_);
-   GGridBox  *box  = dynamic_cast <GGridBox*>(grid_);
+   GridIcos *icos = dynamic_cast<GridIcos*>(grid_);
+   GridBox  *box  = dynamic_cast <GridBox*>(grid_);
 
    dtmp.resize(grid_->ndof());
    ptmp.resize(grid_->ndof());
@@ -1573,7 +1573,7 @@ template<typename TypePack>
 GINT GMConv<TypePack>::szrhstmp()
 {
   GINT       maxop, sum = 0;
-  GGridBox  *box = dynamic_cast <GGridBox*>(grid_);
+  GridBox  *box = dynamic_cast <GridBox*>(grid_);
    
   maxop = MAX(4,nc_+2); // stressen max
   if ( traits_.dofallout && !traits_.dodry ) maxop = MAX(5,maxop);

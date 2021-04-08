@@ -658,7 +658,7 @@ GBOOL ginitstate<Types>::impl_boxdrybubble(const PropertyTree &ptree, GString &s
   sblock                   = ptree.getValue<GString>("pde_name");
   PropertyTree convptree   = ptree.getPropertyTree(sblock);
 
-  GGridBox  *box   = dynamic_cast <GGridBox*>(&grid);
+  GridBox  *box   = dynamic_cast <GridBox*>(&grid);
   assert(box && "Must use a box grid");
 
   GTVector<GTVector<GFTYPE>> *xnodes = &grid.xNodes();
@@ -765,7 +765,7 @@ GBOOL ginitstate<Types>::impl_icosabcconv(const PropertyTree &ptree, GString &sc
   PropertyTree gridptree   = ptree.getPropertyTree(sblock);
 
 
-  GGridIcos  *icos   = dynamic_cast <GGridIcos*>(&grid);
+  GridIcos  *icos   = dynamic_cast <GridIcos*>(&grid);
   assert(icos && "Must use ICOS grid");
 
   nc = grid.gtype() == GE_2DEMBEDDED ? 3 : GDIM;
@@ -867,7 +867,7 @@ GBOOL ginitstate<Types>::impl_boxsod(const PropertyTree &ptree, GString &sconfig
 
   PropertyTree sodptree   = ptree.getPropertyTree(sconfig);
 
-  GGridBox  *box   = dynamic_cast <GGridBox*>(&grid);
+  GridBox  *box   = dynamic_cast <GridBox*>(&grid);
   assert(box && "Must use a box grid");
 
   GTVector<GTVector<GFTYPE>> *xnodes = &grid.xNodes();

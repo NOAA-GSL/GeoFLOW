@@ -17,7 +17,7 @@ using namespace std;
 //          grid  : Grid object
 //**********************************************************************************
 template<typename Grid,typename T>
-GExRKStepper<T>::GExRKStepper(Traits &traits, Grid &grid)
+GExRKStepper<Grid,T>::GExRKStepper(Traits &traits, Grid &grid)
 :
 bRHS_                 (FALSE),
 bapplybc_             (FALSE),
@@ -47,7 +47,7 @@ ggfx_               (NULLPTR)
 //          traits: this::Traits structure 
 //**********************************************************************************
 template<typename Grid,typename T>
-GExRKStepper<T>::GExRKStepper(Traits &traits)
+GExRKStepper<Grid,T>::GExRKStepper(Traits &traits)
 :
 bRHS_                 (FALSE),
 bapplybc_             (FALSE),
@@ -76,7 +76,7 @@ ggfx_               (NULLPTR)
 // ARGS   : 
 //**********************************************************************************
 template<typename Grid,typename T>
-GExRKStepper<T>::~GExRKStepper()
+GExRKStepper<Grid,T>::~GExRKStepper()
 {
 } // end of constructor (1) method
 
@@ -98,7 +98,7 @@ GExRKStepper<T>::~GExRKStepper()
 // RETURNS    : none.
 //**********************************************************************************
 template<typename Grid,typename T>
-void GExRKStepper<T>::step(const Time &t, const State &uin, State &uf,
+void GExRKStepper<Grid,T>::step(const Time &t, const State &uin, State &uf,
                            const Time &dt, State &tmp, State &uout)
 {
 
@@ -130,7 +130,7 @@ void GExRKStepper<T>::step(const Time &t, const State &uin, State &uf,
 // RETURNS    : none.
 //**********************************************************************************
 template<typename Grid,typename T>
-void GExRKStepper<T>::step(const Time &t, State &uin, State &uf, 
+void GExRKStepper<Grid,T>::step(const Time &t, State &uin, State &uf, 
                            const Time &dt, State &tmp)
 {
   assert(bRHS_  && "(2) RHS callback not set");
@@ -170,7 +170,7 @@ void GExRKStepper<T>::step(const Time &t, State &uin, State &uf,
 // RETURNS    : none.
 //**********************************************************************************
 template<typename Grid,typename T>
-void GExRKStepper<T>::step_b(const Time &t, const State &uin, State &uf, 
+void GExRKStepper<Grid,T>::step_b(const Time &t, const State &uin, State &uf, 
                            const Time &dt, State &tmp, State &uout)
 {
 
@@ -249,7 +249,7 @@ void GExRKStepper<T>::step_b(const Time &t, const State &uin, State &uf,
 // RETURNS    : none.
 //**********************************************************************************
 template<typename Grid,typename T>
-void GExRKStepper<T>::step_b(const Time &t, const State &uin, State &uf, 
+void GExRKStepper<Grid,T>::step_b(const Time &t, const State &uin, State &uf, 
                            const Time &dt, State &tmp, State &uout)
 {
 
@@ -369,7 +369,7 @@ void GExRKStepper<T>::step_b(const Time &t, const State &uin, State &uf,
 // RETURNS    : none.
 //**********************************************************************************
 template<typename Grid,typename T>
-void GExRKStepper<T>::step_b(const Time &t, State &uin, State &uf, 
+void GExRKStepper<Grid,T>::step_b(const Time &t, State &uin, State &uf, 
                            const Time &dt, State &tmp)
 {
 
@@ -464,7 +464,7 @@ void GExRKStepper<T>::step_b(const Time &t, State &uin, State &uf,
 // RETURNS    : none.
 //**********************************************************************************
 template<typename Grid,typename T>
-void GExRKStepper<T>::resize(GINT nstate)
+void GExRKStepper<Grid,T>::resize(GINT nstate)
 {
   K_.resize(nstage_);
 
@@ -496,7 +496,7 @@ void GExRKStepper<T>::resize(GINT nstate)
 // RETURNS    : none.
 //**********************************************************************************
 template<typename Grid,typename T>
-void GExRKStepper<T>::step_ssp(const Time &t, const State &uin, State &uf, 
+void GExRKStepper<Grid,T>::step_ssp(const Time &t, const State &uin, State &uf, 
                            const Time &dt, State &tmp, State &uout)
 {
   if      ( norder_ == 2 && nstage_ == 2 ) {
@@ -534,7 +534,7 @@ void GExRKStepper<T>::step_ssp(const Time &t, const State &uin, State &uf,
 // RETURNS    : none.
 //**********************************************************************************
 template<typename Grid,typename T>
-void GExRKStepper<T>::step_ssp34(const Time &t, const State &uin, State &uf, 
+void GExRKStepper<Grid,T>::step_ssp34(const Time &t, const State &uin, State &uf, 
                            const Time &dt, State &tmp, State &uout)
 {
 
@@ -636,7 +636,7 @@ void GExRKStepper<T>::step_ssp34(const Time &t, const State &uin, State &uf,
 // RETURNS    : none.
 //**********************************************************************************
 template<typename Grid,typename T>
-void GExRKStepper<T>::step_ssp33(const Time &t, const State &uin, State &uf, 
+void GExRKStepper<Grid,T>::step_ssp33(const Time &t, const State &uin, State &uf, 
                            const Time &dt, State &tmp, State &uout)
 {
 
@@ -719,7 +719,7 @@ void GExRKStepper<T>::step_ssp33(const Time &t, const State &uin, State &uf,
 // RETURNS    : none.
 //**********************************************************************************
 template<typename Grid,typename T>
-void GExRKStepper<T>::step_ssp22(const Time &t, const State &uin, State &uf, 
+void GExRKStepper<Grid,T>::step_ssp22(const Time &t, const State &uin, State &uf, 
                            const Time &dt, State &tmp, State &uout)
 {
 
@@ -743,7 +743,7 @@ void GExRKStepper<T>::step_ssp22(const Time &t, const State &uin, State &uf,
   dtt = dt;
   step_euler(tt, uin, uf, dtt, K_[0]);   
   if ( bapplybc_  ) bdy_apply_callback_ (tt, K_[0]); 
-  if ( grid_ != NULLPTR  ) GMTK::constrain2spher<Grid,T>(*grid_,K_[0]);
+  if ( grid_ != NULLPTR  ) GMTK::constrain2sphere<Grid,T>(*grid_,K_[0]);
   for ( i=0; i<nstate; i++ )  {
     if ( ggfx_ != NULLPTR ) {
       ggfx_->doOp(*K_[0][i], GGFX<GFTYPE>::Smooth());
@@ -785,7 +785,7 @@ void GExRKStepper<T>::step_ssp22(const Time &t, const State &uin, State &uf,
 // RETURNS    : none.
 //**********************************************************************************
 template<typename Grid,typename T>
-void GExRKStepper<T>::step_ssp(const Time &t, State &uin, State &uf, 
+void GExRKStepper<Grid,T>::step_ssp(const Time &t, State &uin, State &uf, 
                            const Time &dt, State &tmp)
 {
 
@@ -810,7 +810,7 @@ void GExRKStepper<T>::step_ssp(const Time &t, State &uin, State &uf,
 // RETURNS    : none.
 //**********************************************************************************
 template<typename Grid,typename T>
-void GExRKStepper<T>::step_euler(const Time &t, const State &uin, State &uf, 
+void GExRKStepper<Grid,T>::step_euler(const Time &t, const State &uin, State &uf, 
                            const Time &dt, State &uout)
 {
   assert(bRHS_  && "RHS callback not set");

@@ -136,11 +136,11 @@ void GBurgers<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
    GSIZET     ibeg, iend;
    Ftype     dtmin, dt1, umax;
    Ftype     drmin  = grid_->minlength();
-   GElemList *gelems = &grid_->elems();
+   typename Grid::GElemList *gelems = &grid_->elems();
    GTVector<GNBasis<GCTYPE,Ftype>*> *gbasis;
 
    // This is an estimate. The minimum length on each element,
-   // computed in GGrid object is divided by the maximum of
+   // computed in Grid object is divided by the maximum of
    // the state variable on each element:
    dtmin = std::numeric_limits<Ftype>::max();
 
@@ -473,13 +473,13 @@ void GBurgers<TypePack>::init_impl(State &u, State &tmp)
                      State  &uin
                      ){apply_bc_impl(t, uin);}; 
 
-  GExRKStepper<Grid,Ftype>::Traits rktraits;
+  typename GExRKStepper<Grid,Ftype>::Traits rktraits;
   switch ( isteptype_ ) {
     case GSTEPPER_EXRK:
       rktraits.bSSP   = bSSP_;
       rktraits.norder = itorder_;
       rktraits.nstage = itorder_;
-      gexrk_ = new GExRKStepper<Ftype>(rktraits, *grid_);
+      gexrk_ = new GExRKStepper<Grid,Ftype>(rktraits, *grid_);
       gexrk_->setRHSfunction(rhs);
       gexrk_->set_apply_bdy_callback(applybc);
       gexrk_->set_ggfx(ggfx_);
@@ -529,14 +529,14 @@ void GBurgers<TypePack>::init_impl(State &u, State &tmp)
   if ( acoeff_obj != NULLPTR ) delete acoeff_obj;
   
   // Instantiate spatial discretization operators:
-  gmass_   = new GMass(*grid_);
-  ghelm_   = new GHelmholtz(*grid_);
+  gmass_   = new Mass(*grid_);
+  ghelm_   = new GHelmholtz<Types>(*grid_);
 
   ghelm_->set_Lap_scalar(nu_);
 
   
   if ( isteptype_ ==  GSTEPPER_EXRK ) {
-    gimass_ = new GMass(*grid_, TRUE); // create inverse of mass
+    gimass_ = new Mass(*grid_, TRUE); // create inverse of mass
   }
 
   // If doing semi-implicit time stepping; handle viscous term 
@@ -636,7 +636,7 @@ void GBurgers<TypePack>::apply_bc_impl(const Time &t, State &u)
   std::shared_ptr<GBurgers<TypePack>> pthis(this);
   EqnBasePtr peqn = pthis;;
 
-  BdyUpdateList *updatelist = &grid_->bdy_update_list();;
+  typename Grid::BdyUpdateList *updatelist = &grid_->bdy_update_list();;
 
 
   // Update bdy values if required to:

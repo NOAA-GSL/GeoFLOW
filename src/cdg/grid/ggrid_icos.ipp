@@ -12,6 +12,7 @@
 //==================================================================================
 
 
+
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : Constructor method (1)
@@ -23,8 +24,8 @@
 // RETURNS: none
 //**********************************************************************************
 template<typename Types> 
-GGridIcos<Types>::GGridIcos(const geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,Ftype>*> &b, GC_COMM &comm)
-:                 GGrid(ptree, b, comm),
+GGridIcos<Types>::GGridIcos(const geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,typename Types::Ftype>*> &b, GC_COMM &comm)
+:          GGrid<Types>(ptree, b, comm),
 ilevel_                             (0),
 nrows_                              (0),
 ndim_                            (GDIM),
@@ -49,7 +50,7 @@ lshapefcn_                    (NULLPTR)
   this->cgtraits_.maxit = gridptree.getValue<GDOUBLE>("maxit");
   this->cgtraits_.tol   = gridptree.getValue<GDOUBLE>("tol");
   snorm                 = gridptree.getValue<GString>("norm_type");
-  this->cgtraits_.normtype = LinSolverBase<CGTypePack>::str2normtype(snorm);
+  this->cgtraits_.normtype = LinSolverBase<Types>::str2normtype(snorm);
 
   
   if ( ndim_ == 2 ) {
@@ -89,6 +90,7 @@ GGridIcos<Types>::~GGridIcos()
 } // end, destructor
 
 
+#if 0
 //**********************************************************************************
 //**********************************************************************************
 // METHOD :  << operator method (1)
@@ -96,7 +98,8 @@ GGridIcos<Types>::~GGridIcos()
 // ARGS   :
 // RETURNS: ostream &
 //**********************************************************************************
-std::ostream &operator<<(std::ostream &str, GGridIcos &e)
+template<typename Types> 
+std::ostream &operator<<(std::ostream &str, GGridIcos<Types> &e)
 {
   GEOFLOW_TRACE();
   str << " radiusi: " << e.radiusi_;
@@ -110,6 +113,7 @@ std::ostream &operator<<(std::ostream &str, GGridIcos &e)
 
   return str;
 } // end of operator <<
+#endif
 
 
 //**********************************************************************************
@@ -339,8 +343,8 @@ template<typename Types>
 void GGridIcos<Types>::do_elems()
 {
   GEOFLOW_TRACE();
-  if ( ndim_ == 2 ) do_elems2d(irank_);
-  if ( ndim_ == 3 ) do_elems3d(irank_);
+  if ( ndim_ == 2 ) do_elems2d(this->irank_);
+  if ( ndim_ == 3 ) do_elems3d(this->irank_);
 
 } // end, method do_elems (1)
 
@@ -397,7 +401,7 @@ void GGridIcos<Types>::do_elems2d(GINT irank)
 
   assert(gbasis_.size()>0 && "Must set basis first");
 
-  if ( gdd_ == NULLPTR ) gdd_ = new GDD_base<GTICOS>(nprocs_);
+  if ( gdd_ == NULLPTR ) gdd_ = new GDD_base<GTICOS>(this->nprocs_);
 
   // Resize points to appropriate size:
   for ( auto j=0; j<tmesh_.size(); j++ ) tmesh_[j].resize(3);
@@ -502,7 +506,7 @@ void GGridIcos<Types>::do_elems2d(GINT irank)
       icurr += pelem->nnodes();
       fcurr += nfnodes;
 
-      gelems_.push_back(pelem);
+      this->gelems_.push_back(pelem);
 
     } // end of element loop for this triangle
   } // end of triangle base mesh loop
@@ -548,7 +552,7 @@ void GGridIcos<Types>::do_elems3d(GINT irank)
 
   assert(gbasis_.size()>0 && "Must set basis first");
 
-  if ( gdd_ == NULLPTR ) gdd_ = new GDD_base<GTICOS>(nprocs_);
+  if ( gdd_ == NULLPTR ) gdd_ = new GDD_base<GTICOS>(this->nprocs_);
 
   // Resize points to appropriate size:
   for ( auto j=0; j<tmesh_.size(); j++ ) tmesh_[j].resize(3);
@@ -675,7 +679,7 @@ void GGridIcos<Types>::do_elems3d(GINT irank)
         icurr += pelem->nnodes();
         fcurr += nfnodes;
 
-        gelems_.push_back(pelem);
+        this->gelems_.push_back(pelem);
       }
       delete pelem2d;
 
@@ -739,10 +743,10 @@ void GGridIcos<Types>::do_elems2d(GTMatrix<GINT> &p,
     for ( auto j=0; j<GDIM; j++ ) gxnodes[j].range_reset();
 
     pelem->init(*xNodes);
-    gelems_.push_back(pelem);
+    this->gelems_.push_back(pelem);
 
-    assert(nvnodes == gelems_[i]->nnodes() && "Incompatible node count");
-    nfnodes = gelems_[i]->nfnodes();
+    assert(nvnodes == this->gelems_[i]->nnodes() && "Incompatible node count");
+    nfnodes = this->gelems_[i]->nfnodes();
     pelem->igbeg() = icurr;      // beginning global index
     pelem->igend() = icurr+nvnodes-1; // end global index
     pelem->ifbeg() = fcurr;
@@ -810,10 +814,10 @@ void GGridIcos<Types>::do_elems3d(GTMatrix<GINT> &p,
     for ( auto j=0; j<GDIM; j++ ) gxnodes[j].range_reset();
 
     pelem->init(*xNodes);
-    gelems_.push_back(pelem);
+    this->gelems_.push_back(pelem);
 
-    assert(nvnodes == gelems_[i]->nnodes() && "Incompatible node count");
-    nfnodes = gelems_[i]->nfnodes();
+    assert(nvnodes == this->gelems_[i]->nnodes() && "Incompatible node count");
+    nfnodes = this->gelems_[i]->nfnodes();
     pelem->igbeg() = icurr;      // beginning global index
     pelem->igend() = icurr+nvnodes-1; // end global index
     pelem->ifbeg() = fcurr;
@@ -913,11 +917,11 @@ void GGridIcos<Types>::config_gbdy(const geoflow::tbox::PropertyTree &ptree,
   std::vector<GString>  svec;
   GString            gname, sbdy, bdyclass;
   PropertyTree       bdytree, gridptree;
-  UpdateBasePtr      base_ptr;
   stBdyBlock         bcblock;
+  UpdateBasePtr      base_ptr;
 
 
-  bdyNormals_.resizem(GDIM);
+  this->bdyNormals_.resizem(GDIM);
 
   // If doing re-doing with terrain, assume that the incomming 
   // bdy spec (igbdy* and degbdy) is done, and just compute
@@ -927,7 +931,7 @@ void GGridIcos<Types>::config_gbdy(const geoflow::tbox::PropertyTree &ptree,
   //       user has specified these properly
   if  ( bterrain ) {
     for ( auto j=0; j<2*GDIM; j++ ) { // over each canonical bdy
-      do_gbdy_normals(dXdXi_, igbdy, degbdy, bdyNormals_, idepComp_); // all bdy nodes 
+      do_gbdy_normals(this->dXdXi_, igbdy, degbdy, this->bdyNormals_, this->idepComp_); // all bdy nodes 
     }
     return;
   }
@@ -962,7 +966,7 @@ void GGridIcos<Types>::config_gbdy(const geoflow::tbox::PropertyTree &ptree,
   igbdyf.resize(2); // 2 canonical bdys
   igbdyft.resize(2); // 2 canonical bdys
 
-  bdy_update_list_.resize(2);
+  this->bdy_update_list_.resize(2);
  
 
   // Get properties from the main prop tree. 
@@ -990,7 +994,7 @@ void GGridIcos<Types>::config_gbdy(const geoflow::tbox::PropertyTree &ptree,
     }
 
     if ( "uniform" == bdyclass ) { // uniform bdy conditions
-      iret = GUpdateBdyFactory<TypePack>::bdy_block_conform_per(bdytree);
+      iret = GUpdateBdyFactory<Types>::bdy_block_conform_per(bdytree);
       if ( iret == 1 || iret == 2 ) {
         cout << "GGridIcos<Types>:: config_gbdy: PERIODIC boundary conditions invalid for this grid" << endl;
         assert(FALSE);
@@ -999,11 +1003,11 @@ void GGridIcos<Types>::config_gbdy(const geoflow::tbox::PropertyTree &ptree,
       // May have different uniform bdys for different state comps;
       // step through them in order to point to correct bdy indices:
       k = 0;
-      while ( GUpdateBdyFactory<TypePack>::get_bdy_block(bdytree, sbdy, k, bcblock) ) {;
+      while ( GUpdateBdyFactory<Types>::get_bdy_block(bdytree, sbdy, k, bcblock) ) {;
         bcblock.bdyid = j;
-        base_ptr = GUpdateBdyFactory<TypePack>::build(ptree, sbdy, *this, bcblock, itmp, igbdy_start);
+        base_ptr = GUpdateBdyFactory<Types>::build(ptree, sbdy, *this, bcblock, itmp, igbdy_start);
         igbdyft[j] = bcblock.tbdy;
-        bdy_update_list_[j].push_back(base_ptr);
+        this->bdy_update_list_[j].push_back(base_ptr);
         k++;
       }
     }
@@ -1020,7 +1024,7 @@ void GGridIcos<Types>::config_gbdy(const geoflow::tbox::PropertyTree &ptree,
   } // end, canonical bdy loop
 
   // With global list of domain boundaries, compute bdy data:
-  do_gbdy_normals(dXdXi_, igbdy, degbdy, bdyNormals_, idepComp_); 
+  do_gbdy_normals(this->dXdXi_, igbdy, degbdy, this->bdyNormals_, this->idepComp_); 
 
 } // end of method config_gbdy
 
@@ -1052,26 +1056,26 @@ void GGridIcos<Types>::find_gbdy_ind3d(Ftype radius,
   GTVector<Ftype>   r;
   GVVFType         *xlnodes;
   
-  ntmp  = xNodes_[0].size() + pow(2,GDIM) + (GDIM > 2 ? 2*GDIM : 0);
+  ntmp  = this->xNodes_[0].size() + pow(2,GDIM) + (GDIM > 2 ? 2*GDIM : 0);
   itmp.resize(ntmp);
   utmp.resize(ntmp); utmp = 0;
 
-  eps_ = 0.125*minnodedist_;
+  this->eps_ = 0.125*this->minnodedist_;
 
   
   istart = 0;
   nbdy   = 0;
-  for ( auto e=0; e<gelems_.size(); e++ ) { 
-    xlnodes= &gelems_[e]->xNodes();
-    nnodes = gelems_[e]->nnodes();
+  for ( auto e=0; e<this->gelems_.size(); e++ ) { 
+    xlnodes= &this->gelems_[e]->xNodes();
+    nnodes = this->gelems_[e]->nnodes();
     r.resize(nnodes);
     for ( auto j=0; j<nnodes; j++ ) r[j] = sqrt(pow((*xlnodes)[0][j],2)
                                          +      pow((*xlnodes)[1][j],2)
                                          +      pow((*xlnodes)[2][j],2));
-    for ( auto j=0; j<gelems_[e]->nfaces(); j++ ) {
-       face_ind  = &gelems_[e]->face_indices(j);
+    for ( auto j=0; j<this->gelems_[e]->nfaces(); j++ ) {
+       face_ind  = &this->gelems_[e]->face_indices(j);
        geoflow::convert<GINT,GSIZET>(*face_ind, fi);
-       nind      = geoflow::fuzzyeq<Ftype>(r, fi, radius, eps_, ind); // get indices on domain surface
+       nind      = geoflow::fuzzyeq<Ftype>(r, fi, radius, this->eps_, ind); // get indices on domain surface
       // For each index on bdy, set description:
       for ( auto i=0; i<nind; i++ ) { 
         ie      = ind[i] + istart ;
@@ -1166,9 +1170,9 @@ void GGridIcos<Types>::elem_face_data2d(GTMatrix<GTVector<Ftype>> &dXdXi,
    // Get number of elem bdy nodes, and 
    // allocate arrays:
    nbdy = 0;
-   for ( auto e=0; e<gelems_.size(); e++ ) {
-     for ( auto j=0; j<gelems_[e]->nfaces(); j++ ) {
-       nbdy += gelems_[e]->face_indices(j).size();
+   for ( auto e=0; e<this->gelems_.size(); e++ ) {
+     for ( auto j=0; j<this->gelems_[e]->nfaces(); j++ ) {
+       nbdy += this->gelems_[e]->face_indices(j).size();
      }
    }
    gieface  .resize(nbdy);
@@ -1183,10 +1187,10 @@ void GGridIcos<Types>::elem_face_data2d(GTMatrix<GTVector<Ftype>> &dXdXi,
     ||  this->gtype_ == GE_2DEMBEDDED ) {
 
      istart = 0;
-     for ( auto e=0; e<gelems_.size(); e++ ) {
-       for ( auto j=0; j<gelems_[e]->nfaces(); j++ ) { // over all faces
-         face_ind  = &gelems_[e]->face_indices(j);
-         mass      = &gelems_[e]->face_mass();
+     for ( auto e=0; e<this->gelems_.size(); e++ ) {
+       for ( auto j=0; j<this->gelems_[e]->nfaces(); j++ ) { // over all faces
+         face_ind  = &this->gelems_[e]->face_indices(j);
+         mass      = &this->gelems_[e]->face_mass();
          xm = j == 2 || j == 3 ? 1.0 : -1.0;
          for ( auto i=0; i<face_ind->size(); i++ ) { // over elem bdy points
            fi = (*face_ind)[i]; // index into elem data
@@ -1202,7 +1206,7 @@ void GGridIcos<Types>::elem_face_data2d(GTMatrix<GTVector<Ftype>> &dXdXi,
            face_mass [nbdy++] = (*mass)[fi] * jac;
          }
        } // end, elem face loop
-       istart += gelems_[e]->nnodes();
+       istart += this->gelems_[e]->nnodes();
      } // end, elem loop
    }
    else {
@@ -1247,9 +1251,9 @@ void GGridIcos<Types>::elem_face_data3d(GTMatrix<GTVector<Ftype>> &dXdXi,
    // Get number of elem bdy nodes, and 
    // allocate arrays:
    nbdy = 0;
-   for ( auto e=0; e<gelems_.size(); e++ ) {
-     for ( auto j=0; j<gelems_[e]->nfaces(); j++ ) {
-       nbdy += gelems_[e]->face_indices(j).size();
+   for ( auto e=0; e<this->gelems_.size(); e++ ) {
+     for ( auto j=0; j<this->gelems_[e]->nfaces(); j++ ) {
+       nbdy += this->gelems_[e]->face_indices(j).size();
      }
    }
    gieface  .resize(nbdy);
@@ -1264,10 +1268,10 @@ void GGridIcos<Types>::elem_face_data3d(GTMatrix<GTVector<Ftype>> &dXdXi,
     ||  this->gtype_ == GE_2DEMBEDDED ) {
 
      istart = 0;
-     for ( auto e=0; e<gelems_.size(); e++ ) {
-       mass      = &gelems_[e]->face_mass();
-       for ( auto j=0; j<gelems_[e]->nfaces(); j++ ) { // over all faces
-         face_ind  = &gelems_[e]->face_indices(j);
+     for ( auto e=0; e<this->gelems_.size(); e++ ) {
+       mass      = &this->gelems_[e]->face_mass();
+       for ( auto j=0; j<this->gelems_[e]->nfaces(); j++ ) { // over all faces
+         face_ind  = &this->gelems_[e]->face_indices(j);
          xm = j == 0 || j == 1 || j == 5 ? 1.0 : -1.0;
          // Bdy normal is dvec{X} / dxi_xi X dvec{X} / dxi_eta
          for ( auto i=0; i<face_ind->size(); i++ ) { // over elem bdy points
@@ -1286,7 +1290,7 @@ void GGridIcos<Types>::elem_face_data3d(GTMatrix<GTVector<Ftype>> &dXdXi,
            jac = xp.mag();
            face_mass  [nbdy++] = (*mass)[fi] * jac;
          } // end, i-loop
-         istart += gelems_[e]->nnodes();
+         istart += this->gelems_[e]->nnodes();
        } // end, elem loop
      }
    }

@@ -11,11 +11,10 @@
 #include <cassert>
 #include "gtypes.h"
 #include "ggfx.hpp"
-#include "gmass.hpp"
+#include "gtpoint.hpp"
 #include "gmtk.hpp"
 #include "tbox/property_tree.hpp"
 
-using namespace geoflow::pdeint;
 using namespace std;
 
 

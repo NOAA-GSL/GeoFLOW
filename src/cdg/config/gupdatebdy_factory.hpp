@@ -10,9 +10,6 @@
 
 #include "gcomm.hpp"
 #include "gtvector.hpp"
-#include "ggrid.hpp"
-#include "ggrid_box.hpp"
-#include "ggrid_icos.hpp"
 #include "g0flux_bdy.hpp"
 #include "gdirichlet_bdy.hpp"
 #include "ginflow_bdy.hpp"
@@ -54,12 +51,12 @@ class GUpdateBdyFactory
   public:
         using Types            = TypePack;
         using State            = typename Types::State;
-        using EqnBase          = EquationBase<TypePack>;
-        using EqnBasePtr       = std::shared_ptr<EqnBase>;
+        using EqnBase          = typename Types::EqnBase; 
+        using EqnBasePtr       = typename Types::EqnBasePtr; 
         using Grid             = typename Types::Grid;
         using Ftype            = typename Types::Ftype;
         using Time             = typename Types::Time;
-        using UpdateBdyBasePtr = shared_ptr<UpdateBdyBase<Types>>;
+        using UpdateBdyBasePtr = typename Types::UpdateBdyBasePtr;
         using CallbackPtr      = std::function<GBOOL(
                                 EqnBasePtr &eqn,
                                 Grid       &grid,

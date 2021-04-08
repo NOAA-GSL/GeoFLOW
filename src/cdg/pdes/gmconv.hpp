@@ -73,7 +73,6 @@
 #include <cmath>
 #include "gtvector.hpp"
 #include "gdd_base.hpp"
-#include "ggrid.hpp"
 #include "gab.hpp"
 #include "gext.hpp"
 #include "gbdf.hpp"
@@ -86,8 +85,6 @@
 //#include "gflux.hpp"
 #include "gexrk_stepper.hpp"
 #include "gbutcherrk.hpp"
-#include "ggrid_box.hpp"
-#include "ggrid_icos.hpp"
 #include "ggfx.hpp"
 #include "gutils.hpp"
 #include "gmtk.hpp"
@@ -107,7 +104,10 @@ public:
         using State      = typename Types::State;
         using StateComp  = typename Types::StateComp;
         using Grid       = typename Types::Grid;
+        using GridBox    = typename Types::GridBox;
+        using GridIcos   = typename Types::GridIcos;
         using Ftype      = typename Types::Ftype;
+        using Mass       = typename Types::Mass;
         using Derivative = typename Types::Derivative;
         using Time       = typename Types::Time;
         using CompDesc   = typename Types::CompDesc;
@@ -122,8 +122,6 @@ public:
                "StatCompe is of incorrect type");
         static_assert(std::is_same<Derivative,GTVector<GTVector<Ftype>*>>::value,
                "Derivative is of incorrect type");
-        static_assert(std::is_same<Grid,GGrid>::value,
-               "Grid is of incorrect type");
 
         // MConv solver traits:
         struct Traits {
@@ -279,13 +277,14 @@ inline  GINT                szrhstmp();
         GTVector<Ftype>     eta_;           // internal energy dissipoation
         GTVector<Ftype>     maxbyelem_ ;    // element-based maxima for dt
         std::vector<GINT>   stdiforced_;    // traits_.iforced as a std::vector
-        GGrid              *grid_;          // GGrid object
-        GExRKStepper<Ftype>
+        Grid               *grid_;          // Grid object
+        GExRKStepper<Grid,Ftype>
                            *gexrk_;         // ExRK stepper, if needed
-        GMass              *gmass_;         // mass op
-        GMass              *gimass_;        // inverse mass op
+        Mass               *gmass_;         // mass op
+        Mass               *gimass_;        // inverse mass op
         GAdvect<TypePack>  *gadvect_;       // advection op
-        GHelmholtz         *ghelm_;         // Helmholz and Laplacian op
+        GHelmholtz<TypePack>         
+                           *ghelm_;         // Helmholz and Laplacian op
         GStressEnOp<TypePack>
                            *gstressen_;     // viscous stress-energy
         GpdV<TypePack>     *gpdv_;          // pdV op

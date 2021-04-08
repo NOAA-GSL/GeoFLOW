@@ -22,8 +22,8 @@
 // RETURNS: none
 //**********************************************************************************
 template<typename Types>
-GGridBox<Types>::GGridBox(const geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GC_COMM &comm)
-:          GGrid(ptree, b, comm),
+GGridBox<Types>::GGridBox(const geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,Ftype>*> &b, GC_COMM &comm)
+:   GGrid<Types>(ptree, b, comm),
 ndim_                     (GDIM),
 gdd_                   (NULLPTR),
 lshapefcn_             (NULLPTR)
@@ -32,8 +32,8 @@ lshapefcn_             (NULLPTR)
   assert((b.size() == GDIM ) 
         && "Basis has incorrect dimensionalilty");
 
-  irank_  = GComm::WorldRank(comm_);
-  nprocs_ = GComm::WorldSize(comm_);
+  this->irank_  = GComm::WorldRank(this->comm_);
+  this->nprocs_ = GComm::WorldSize(this->comm_);
 
   GINT    inorm;
   GString gname   = ptree.getValue<GString>("grid_type");
@@ -44,7 +44,7 @@ lshapefcn_             (NULLPTR)
 
   // A hack: determine if ptree wants us to compute
   // bdy test data:
-  do_gbdy_test_ = ptree.getValue<GBOOL>("gbdy_test_data",FALSE);
+  this->do_gbdy_test_ = ptree.getValue<GBOOL>("gbdy_test_data",FALSE);
 
   // If terrain is being used, elements may not be
   // GE_REGULAR:
@@ -57,20 +57,20 @@ lshapefcn_             (NULLPTR)
   Lbox_.resize(GDIM);
   ne_.resize(GDIM);
 
-  GTPoint<GFTYPE> gp(ndim_); 
-  std::vector<GFTYPE> spt(3); // tmp array
+  GTPoint<Ftype> gp(ndim_); 
+  std::vector<Ftype> spt(3); // tmp array
   std::vector  <int> sne   ; // tmp array
-  spt = gridptree.getArray<GFTYPE>("xyz0");
+  spt = gridptree.getArray<Ftype>("xyz0");
   P0_.resize(GDIM);
   P1_.resize(GDIM);
   dP_.resize(GDIM);
   for ( auto j=0; j<GDIM; j++ ) P0_[j] = spt[j];
-  spt = gridptree.getArray<GFTYPE>("delxyz");
+  spt = gridptree.getArray<Ftype>("delxyz");
   sne = gridptree.getArray<int>("num_elems");
   this->cgtraits_.maxit = gridptree.getValue<GDOUBLE>("maxit", 128);
   this->cgtraits_.tol   = gridptree.getValue<GDOUBLE>("tol", 1.0e-8);
   snorm                 = gridptree.getValue<GString>("norm_type","GCG_NORM_INF");
-  this->cgtraits_.normtype = LinSolverBase<CGTypePack>::str2normtype(snorm);
+  this->cgtraits_.normtype = LinSolverBase<Types>::str2normtype(snorm);
 
   // compute global bdy range, and global vertices:
   for ( auto j=0; j<GDIM; j++ ) dP_[j] = spt[j];
@@ -100,7 +100,7 @@ lshapefcn_             (NULLPTR)
     ne_  [j] = sne[j];
   }
 
-  lshapefcn_ = new GShapeFcn_linear<GFTYPE>(GDIM);
+  lshapefcn_ = new GShapeFcn_linear<Ftype>(GDIM);
   if ( GDIM == 2 ) {
     init2d();
   }
@@ -127,6 +127,7 @@ GGridBox<Types>::~GGridBox()
 } // end, destructor
 
 
+#if 0
 //**********************************************************************************
 //**********************************************************************************
 // METHOD :  << operator method (1)
@@ -134,7 +135,8 @@ GGridBox<Types>::~GGridBox()
 // ARGS   :
 // RETURNS: ostream &
 //**********************************************************************************
-std::ostream &operator<<(std::ostream &str, GGridBox &e)
+template<typename Types>
+std::ostream &operator<<(std::ostream &str, GGridBox<Types> &e)
 {
   GEOFLOW_TRACE();
   
@@ -146,6 +148,7 @@ std::ostream &operator<<(std::ostream &str, GGridBox &e)
 
   return str;
 } // end of operator <<
+#endif
 
 
 //**********************************************************************************
@@ -156,7 +159,7 @@ std::ostream &operator<<(std::ostream &str, GGridBox &e)
 // RETURNS: none
 //**********************************************************************************
 template<typename Types>
-void GGridBox<Types>::set_partitioner(GDD_base<GFTYPE> *gdd)
+void GGridBox<Types>::set_partitioner(GDD_base<Ftype> *gdd)
 {
   GEOFLOW_TRACE();
 
@@ -229,7 +232,7 @@ void GGridBox<Types>::do_elems()
 //**********************************************************************************
 template<typename Types>
 void GGridBox<Types>::do_elems(GTMatrix<GINT> &p,
-                        GTVector<GTVector<GFTYPE>> &xnodes)
+                        GTVector<GTVector<Ftype>> &xnodes)
 {
   GEOFLOW_TRACE();
   if ( ndim_ == 2 ) do_elems2d(p, xnodes);
@@ -260,25 +263,25 @@ void GGridBox<Types>::do_elems2d()
   assert(ndim_ == 2 && "Dimension must be 2");
 
   GString                      serr = "GGridBox<Types>::do_elems2d (1): ";
-  GTPoint<GFTYPE>              cent;
+  GTPoint<Ftype>              cent;
   GTVector<GINT>               iind;
   GTVector<GINT>               I(3);
   GTVector<GINT>              *bdy_ind;
   GTVector<GBdyType>          *bdy_typ;
   GTVector<GINT>              *face_ind;
-  GTVector<GFTYPE>             Ni;
+  GTVector<Ftype>             Ni;
   GElem_base                  *pelem;
-  GTVector<GTVector<GFTYPE>>  *xNodes;
-  GTVector<GTVector<GFTYPE>*> *xiNodes;
-  GTVector<GTVector<GFTYPE>>   xgtmp(3);
+  GTVector<GTVector<Ftype>>  *xNodes;
+  GTVector<GTVector<Ftype>*> *xiNodes;
+  GTVector<GTVector<Ftype>>   xgtmp(3);
 
 
 #if 0
-  if ( gdd_       == NULLPTR ) gdd_ = new GDD_base(nprocs_);
+  if ( gdd_       == NULLPTR ) gdd_ = new GDD_base(this->nprocs_);
 
   // Get indirection indices to create elements
   // only for this task:
-  gdd_->doDD(ftcentroids_, irank_, iind);
+  gdd_->doDD(ftcentroids_, this->irank_, iind);
 #endif
 
   GSIZET nvnodes;   // no. vol nodes
@@ -313,10 +316,10 @@ void GGridBox<Types>::do_elems2d()
     for ( auto j=0; j<2*ndim_; j++ ) { // cycle over all edges
       cent = pelem->edgeCentroid(j);
       face_ind = NULLPTR;
-      if ( FUZZYEQ(P0_.x2,cent.x2,eps_) ) face_ind = &pelem->edge_indices(0);
-      if ( FUZZYEQ(P1_.x1,cent.x1,eps_) ) face_ind = &pelem->edge_indices(1);
-      if ( FUZZYEQ(P1_.x2,cent.x2,eps_) ) face_ind = &pelem->edge_indices(2);
-      if ( FUZZYEQ(P0_.x1,cent.x1,eps_) ) face_ind = &pelem->edge_indices(3);
+      if ( FUZZYEQ(P0_.x2,cent.x2,this->eps_) ) face_ind = &pelem->edge_indices(0);
+      if ( FUZZYEQ(P1_.x1,cent.x1,this->eps_) ) face_ind = &pelem->edge_indices(1);
+      if ( FUZZYEQ(P1_.x2,cent.x2,this->eps_) ) face_ind = &pelem->edge_indices(2);
+      if ( FUZZYEQ(P0_.x1,cent.x1,this->eps_) ) face_ind = &pelem->edge_indices(3);
       // For now, we don't allow corner nodes to be repeated, 
       // and we'll have to choose the best way to define the 
       // normal vectors at the these nodes:
@@ -345,7 +348,7 @@ void GGridBox<Types>::do_elems2d()
     fcurr += nfnodes;
     bcurr += nbnodes;
 
-    gelems_.push_back(pelem);
+    this->gelems_.push_back(pelem);
   } // end of quad mesh loop
 
 } // end of method do_elems2d (1)
@@ -373,25 +376,25 @@ void GGridBox<Types>::do_elems3d()
   assert(ndim_ == 3 && "Dimension must be 3");
 
   GString                      serr = "GGridBox<Types>::do_elems3d (1): ";
-  GTPoint<GFTYPE>              cent;
+  GTPoint<Ftype>              cent;
   GTVector<GINT>               iind;
   GTVector<GINT>               I(3);
   GTVector<GINT>              *bdy_ind;
   GTVector<GBdyType>          *bdy_typ;
   GTVector<GINT>              *face_ind;
-  GTVector<GFTYPE>             Ni;
+  GTVector<Ftype>             Ni;
   GElem_base                  *pelem;
-  GTVector<GTVector<GFTYPE>>  *xNodes;
-  GTVector<GTVector<GFTYPE>*> *xiNodes;
-  GTVector<GTVector<GFTYPE>>   xgtmp(3);
+  GTVector<GTVector<Ftype>>  *xNodes;
+  GTVector<GTVector<Ftype>*> *xiNodes;
+  GTVector<GTVector<Ftype>>   xgtmp(3);
 
 
 #if 0
-  if ( gdd_       == NULLPTR ) gdd_ = new GDD_base(nprocs_);
+  if ( gdd_       == NULLPTR ) gdd_ = new GDD_base(this->nprocs_);
 
   // Get indirection indices to create elements
   // only for this task:
-  gdd_->doDD(ftcentroids_, irank_, iind);
+  gdd_->doDD(ftcentroids_, this->irank_, iind);
 #endif
 
   GSIZET nvnodes;   // no. vol indices
@@ -427,12 +430,12 @@ void GGridBox<Types>::do_elems3d()
     for ( auto j=0; j<2*ndim_; j++ ) { // cycle over faces
       cent = pelem->faceCentroid(j);
       face_ind = NULLPTR;
-      if ( FUZZYEQ(P0_.x2,cent.x2,eps_) ) face_ind = &pelem->edge_indices(0);
-      if ( FUZZYEQ(P1_.x1,cent.x1,eps_) ) face_ind = &pelem->edge_indices(1);
-      if ( FUZZYEQ(P1_.x2,cent.x2,eps_) ) face_ind = &pelem->edge_indices(2);
-      if ( FUZZYEQ(P0_.x1,cent.x1,eps_) ) face_ind = &pelem->edge_indices(3);
-      if ( FUZZYEQ(P0_.x3,cent.x3,eps_) ) face_ind = &pelem->edge_indices(4);
-      if ( FUZZYEQ(P1_.x3,cent.x3,eps_) ) face_ind = &pelem->edge_indices(5);
+      if ( FUZZYEQ(P0_.x2,cent.x2,this->eps_) ) face_ind = &pelem->edge_indices(0);
+      if ( FUZZYEQ(P1_.x1,cent.x1,this->eps_) ) face_ind = &pelem->edge_indices(1);
+      if ( FUZZYEQ(P1_.x2,cent.x2,this->eps_) ) face_ind = &pelem->edge_indices(2);
+      if ( FUZZYEQ(P0_.x1,cent.x1,this->eps_) ) face_ind = &pelem->edge_indices(3);
+      if ( FUZZYEQ(P0_.x3,cent.x3,this->eps_) ) face_ind = &pelem->edge_indices(4);
+      if ( FUZZYEQ(P1_.x3,cent.x3,this->eps_) ) face_ind = &pelem->edge_indices(5);
 //    face_ind = &pelem->face_indices(0);
       // For now, we don't allow corner nodes to be repeated, 
       // and we'll have to choose the best way to define the 
@@ -446,7 +449,7 @@ void GGridBox<Types>::do_elems3d()
     }
 #endif
 
-    gelems_.push_back(pelem);
+    this->gelems_.push_back(pelem);
 
     nvnodes = pelem->nnodes();
     nfnodes = pelem->nfnodes();
@@ -478,23 +481,23 @@ void GGridBox<Types>::do_elems3d()
 //**********************************************************************************
 template<typename Types>
 void GGridBox<Types>::do_elems2d(GTMatrix<GINT> &p,
-                          GTVector<GTVector<GFTYPE>> &gxnodes)
+                          GTVector<GTVector<Ftype>> &gxnodes)
 {
   GEOFLOW_TRACE();
   assert(gbasis_.size()>0 && "Must set basis pool first");
   assert(ndim_ == 2 && "Dimension must be 2");
 
   GString                      serr = "GGridBox<Types>::do_elems2d (2): ";
-  GTPoint<GFTYPE>              cent;
+  GTPoint<Ftype>              cent;
   GTVector<GINT>               I(3);
   GTVector<GINT>              *bdy_ind;
   GTVector<GBdyType>          *bdy_typ;
   GTVector<GINT>              *face_ind;
   GElem_base                  *pelem;
-  GTVector<GTVector<GFTYPE>>  *xNodes;
-  GTVector<GTVector<GFTYPE>*> *xiNodes;
-  GTVector<GTVector<GFTYPE>>   xgtmp(3);
-  GTVector<GNBasis<GCTYPE,GFTYPE>*>
+  GTVector<GTVector<Ftype>>  *xNodes;
+  GTVector<GTVector<Ftype>*> *xiNodes;
+  GTVector<GTVector<Ftype>>   xgtmp(3);
+  GTVector<GNBasis<GCTYPE,Ftype>*>
                                gb(GDIM);
   GTVector<GINT>               ppool(gbasis_.size());
 
@@ -542,10 +545,10 @@ void GGridBox<Types>::do_elems2d(GTMatrix<GINT> &p,
     for ( auto j=0; j<2*ndim_; j++ ) { // cycle over all edges
       cent = pelem->edgeCentroid(j);
       face_ind = NULLPTR;
-      if ( FUZZYEQ(P0_.x2,cent.x2,eps_) ) face_ind = &pelem->edge_indices(0);
-      if ( FUZZYEQ(P1_.x1,cent.x1,eps_) ) face_ind = &pelem->edge_indices(1);
-      if ( FUZZYEQ(P1_.x2,cent.x2,eps_) ) face_ind = &pelem->edge_indices(2);
-      if ( FUZZYEQ(P0_.x1,cent.x1,eps_) ) face_ind = &pelem->edge_indices(3);
+      if ( FUZZYEQ(P0_.x2,cent.x2,this->eps_) ) face_ind = &pelem->edge_indices(0);
+      if ( FUZZYEQ(P1_.x1,cent.x1,this->eps_) ) face_ind = &pelem->edge_indices(1);
+      if ( FUZZYEQ(P1_.x2,cent.x2,this->eps_) ) face_ind = &pelem->edge_indices(2);
+      if ( FUZZYEQ(P0_.x1,cent.x1,this->eps_) ) face_ind = &pelem->edge_indices(3);
       // For now, we don't allow corner nodes to be repeated, 
       // and we'll have to choose the best way to define the 
       // normal vectors at the 'corner' nodes:
@@ -558,11 +561,11 @@ void GGridBox<Types>::do_elems2d(GTMatrix<GINT> &p,
     }
 #endif
 
-    gelems_.push_back(pelem);
+    this->gelems_.push_back(pelem);
 
     // Find global global interior and bdy start & stop indices represented 
     // locally within element:
-    assert(nvnodes == gelems_[n]->nnodes() && "Incompatible node count");
+    assert(nvnodes == this->gelems_[n]->nnodes() && "Incompatible node count");
     nfnodes = pelem->nfnodes();
     nbnodes = pelem->bdy_indices().size();
     pelem->igbeg() = icurr;           // beg global vol index
@@ -592,25 +595,25 @@ void GGridBox<Types>::do_elems2d(GTMatrix<GINT> &p,
 //**********************************************************************************
 template<typename Types>
 void GGridBox<Types>::do_elems3d(GTMatrix<GINT> &p,
-                          GTVector<GTVector<GFTYPE>> &gxnodes)
+                          GTVector<GTVector<Ftype>> &gxnodes)
 {
   GEOFLOW_TRACE();
   assert(gbasis_.size()>0 && "Must set basis pool first");
   assert(ndim_ == 3 && "Dimension must be 3");
 
   GString                      serr = "GGridBox<Types>::do_elems3d (2): ";
-  GTPoint<GFTYPE>              cent;
+  GTPoint<Ftype>              cent;
   GTVector<GINT>               iind;
   GTVector<GINT>               I(3);
   GTVector<GINT>              *bdy_ind;
   GTVector<GBdyType>          *bdy_typ;
   GTVector<GINT>              *face_ind;
-  GTVector<GFTYPE>             Ni;
+  GTVector<Ftype>             Ni;
   GElem_base                  *pelem;
-  GTVector<GTVector<GFTYPE>>  *xNodes;
-  GTVector<GTVector<GFTYPE>*> *xiNodes;
-  GTVector<GTVector<GFTYPE>>   xgtmp(3);
-  GTVector<GNBasis<GCTYPE,GFTYPE>*>
+  GTVector<GTVector<Ftype>>  *xNodes;
+  GTVector<GTVector<Ftype>*> *xiNodes;
+  GTVector<GTVector<Ftype>>   xgtmp(3);
+  GTVector<GNBasis<GCTYPE,Ftype>*>
                                gb(GDIM);
   GTVector<GINT>               ppool(gbasis_.size());
 
@@ -660,12 +663,12 @@ void GGridBox<Types>::do_elems3d(GTMatrix<GINT> &p,
     for ( auto j=0; j<2*ndim_; j++ ) { // cycle over faces
       cent = pelem->faceCentroid(j);
       face_ind = NULLPTR;
-      if ( FUZZYEQ(P0_.x2,cent.x2,eps_) ) face_ind = &pelem->edge_indices(0);
-      if ( FUZZYEQ(P1_.x1,cent.x1,eps_) ) face_ind = &pelem->edge_indices(1);
-      if ( FUZZYEQ(P1_.x2,cent.x2,eps_) ) face_ind = &pelem->edge_indices(2);
-      if ( FUZZYEQ(P0_.x1,cent.x1,eps_) ) face_ind = &pelem->edge_indices(3);
-      if ( FUZZYEQ(P0_.x3,cent.x3,eps_) ) face_ind = &pelem->edge_indices(4);
-      if ( FUZZYEQ(P1_.x3,cent.x3,eps_) ) face_ind = &pelem->edge_indices(5);
+      if ( FUZZYEQ(P0_.x2,cent.x2,this->eps_) ) face_ind = &pelem->edge_indices(0);
+      if ( FUZZYEQ(P1_.x1,cent.x1,this->eps_) ) face_ind = &pelem->edge_indices(1);
+      if ( FUZZYEQ(P1_.x2,cent.x2,this->eps_) ) face_ind = &pelem->edge_indices(2);
+      if ( FUZZYEQ(P0_.x1,cent.x1,this->eps_) ) face_ind = &pelem->edge_indices(3);
+      if ( FUZZYEQ(P0_.x3,cent.x3,this->eps_) ) face_ind = &pelem->edge_indices(4);
+      if ( FUZZYEQ(P1_.x3,cent.x3,this->eps_) ) face_ind = &pelem->edge_indices(5);
       face_ind = &pelem->face_indices(0);
 
       // For now, we don't allow corner nodes to be repeated, 
@@ -680,9 +683,9 @@ void GGridBox<Types>::do_elems3d(GTMatrix<GINT> &p,
     }
 #endif
 
-    gelems_.push_back(pelem);
+    this->gelems_.push_back(pelem);
 
-    assert(nvnodes == gelems_[i]->nnodes() && "Incompatible node count");
+    assert(nvnodes == this->gelems_[i]->nnodes() && "Incompatible node count");
     nfnodes = pelem->nfnodes();
     nbnodes = pelem->bdy_indices().size();
     pelem->igbeg() = icurr;           // beg global vol index
@@ -716,8 +719,8 @@ void GGridBox<Types>::print(const GString &filename)
   GString serr = "GGridBox<Types>::print: ";
   std::ofstream ios;
 
-  GFTYPE x, y, z;
-  GTPoint<GFTYPE> pt;
+  Ftype x, y, z;
+  GTPoint<Ftype> pt;
 
   ios.open(filename);
   if ( ndim_ == 2 ) {
@@ -759,10 +762,10 @@ void GGridBox<Types>::periodize()
   assert(bInitialized_ && "Object not initialized");
 
   
-  GTVector<GFTYPE>  x(xNodes_.size()); // coord values to set to
+  GTVector<Ftype>  x(this->xNodes_.size()); // coord values to set to
 
-  assert(minnodedist_ > 0.0);
-  eps_ = 0.125*minnodedist_;
+  assert(this->minnodedist_ > 0.0);
+  this->eps_ = 0.125*this->minnodedist_;
 
   periodicids_.clear();
   periodicdirs_.clear();
@@ -772,20 +775,20 @@ void GGridBox<Types>::periodize()
 
   GUINT  bit;
   GSIZET id, n, num=0;
-  for ( auto k=0; k<igbdy_binned_.size(); k++ ) {
-    num += igbdy_binned_[k][GBDY_PERIODIC].size();
+  for ( auto k=0; k<this->igbdy_binned_.size(); k++ ) {
+    num += this->igbdy_binned_[k][GBDY_PERIODIC].size();
   }
   periodicids_ .resize(num);
   periodicdirs_.resize(num);
 
   n = 0;
-  for( auto k=0; k<igbdy_binned_.size(); k++ ) { // for each global face
-    for( auto j=0; j<igbdy_binned_[k][GBDY_PERIODIC].size(); j++, n++ ) { // for each global bdy node
-      id = igbdy_binned_[k][GBDY_PERIODIC][j];
+  for( auto k=0; k<this->igbdy_binned_.size(); k++ ) { // for each global face
+    for( auto j=0; j<this->igbdy_binned_[k][GBDY_PERIODIC].size(); j++, n++ ) { // for each global bdy node
+      id = this->igbdy_binned_[k][GBDY_PERIODIC][j];
       periodicids_ [n] = id;       
       periodicdirs_[n] = 0;
-      for( auto i=0; i<xNodes_.size(); i++ ) { // for x, y, z dirs
-        if ( FUZZYEQ(P1_[i],xNodes_[i][id],eps_) ) { // right/top-most block.tbdy[k];i coord will change
+      for( auto i=0; i<this->xNodes_.size(); i++ ) { // for x, y, z dirs
+        if ( FUZZYEQ(P1_[i],this->xNodes_[i][id],this->eps_) ) { // right/top-most block.tbdy[k];i coord will change
           periodicdirs_[n] |= 1U << i;  // position right-most direction bit  
         }
       }
@@ -795,10 +798,10 @@ void GGridBox<Types>::periodize()
   // Now, cycle through periodic nodes and periodize coordinates:
   for( auto k=0; k<periodicids_.size(); k++ ) { // for each periodic node
     id = periodicids_[k];
-    for( auto i= 0; i<xNodes_.size(); i++ ) { // coord direction
+    for( auto i= 0; i<this->xNodes_.size(); i++ ) { // coord direction
       // Set coord in this direction if corresp bit is set:
       bit = (periodicdirs_[k] >> i) & 1; 
-      if ( bit ) xNodes_[i][id] = x[i];
+      if ( bit ) this->xNodes_[i][id] = x[i];
     }
   }
 
@@ -819,7 +822,7 @@ void GGridBox<Types>::unperiodize()
   // Use data from 'periodize' method to unset change in
   // coordinates:
 
-  GTVector<GFTYPE>  x(xNodes_.size()); // coord values to set to
+  GTVector<Ftype>  x(this->xNodes_.size()); // coord values to set to
 
   // Coords to set to correspond to top-most domain point:
   for( auto k=0; k<x.size(); k++ ) x[k] = P1_[k];
@@ -829,10 +832,10 @@ void GGridBox<Types>::unperiodize()
   GSIZET id;
   for( auto k=0; k<periodicids_.size(); k++ ) { // for each periodic node
     id = periodicids_[k];
-    for( auto i= 0; i<xNodes_.size(); i++ ) { // coord direction
+    for( auto i= 0; i<this->xNodes_.size(); i++ ) { // coord direction
       // Set coord in this direction if corresp bit is set:
       bit = (periodicdirs_[k] >> i) & 1; 
-      if ( bit ) xNodes_[i][id] = x[i];
+      if ( bit ) this->xNodes_[i][id] = x[i];
     }
   }
 
@@ -857,25 +860,25 @@ void GGridBox<Types>::find_rank_subdomain()
   GSIZET          n=0, nglobal, nperrank, nthisrank, ntot, nxy;
   GLONG           beg_lin, end_lin;
   GLONG           ib, ie, jb, je, kb, ke;
-  GTPoint<GFTYPE> v0(ndim_);     // starting sph. point of elem
-  GTPoint<GFTYPE> dv(ndim_);     // delta-point
-  GTPoint<GFTYPE> dx(ndim_);
+  GTPoint<Ftype> v0(ndim_);     // starting sph. point of elem
+  GTPoint<Ftype> dv(ndim_);     // delta-point
+  GTPoint<Ftype> dx(ndim_);
 
   nglobal = 1; // total num elements in global grid
   for( auto k=0; k<ne_.size(); k++ ) nglobal *= ne_[k];
  
-  nperrank = nglobal / nprocs_; // #elems per rank
-  nthisrank = irank_ != nprocs_-1 ? nperrank : nglobal - (nprocs_-1)*nperrank;
+  nperrank = nglobal / this->nprocs_; // #elems per rank
+  nthisrank = this->irank_ != this->nprocs_-1 ? nperrank : nglobal - (this->nprocs_-1)*nperrank;
 
 
  // Get uniform element sizes:
   for( auto k=0; k<ndim_; k++ ) {
-    dx[k] = Lbox_[k] / static_cast<GFTYPE>(ne_[k]);
+    dx[k] = Lbox_[k] / static_cast<Ftype>(ne_[k]);
   }
 
-  if ( do_gbdy_test_ ) {
-    testty_.resize(nthisrank); // elem type
-    testid_.resize(nthisrank);  // id for type
+  if ( this->do_gbdy_test_ ) {
+    this->testty_.resize(nthisrank); // elem type
+    this->testid_.resize(nthisrank);  // id for type
   }
 
   // Compute vertices of all hexes ('cubes')
@@ -883,7 +886,7 @@ void GGridBox<Types>::find_rank_subdomain()
   if ( ndim_ == 2 ) {
 
     qmesh_.resize(nthisrank);
-    beg_lin = nperrank*irank_; end_lin = beg_lin + nthisrank - 1;
+    beg_lin = nperrank*this->irank_; end_lin = beg_lin + nthisrank - 1;
     jb = beg_lin/ne_[0]; je = end_lin/ne_[0];
     for ( auto j=jb; j<=je; j++ ) {
       ib = MAX(beg_lin-static_cast<GLONG>(j*ne_[0]),0); 
@@ -896,42 +899,42 @@ void GGridBox<Types>::find_rank_subdomain()
         dv.x1 = dx.x1 ; dv.x2 = dx.x2;   qmesh_[n].v3 = v0 + dv;
         dv.x1 = 0.0   ; dv.x2 = dx.x2;   qmesh_[n].v4 = v0 + dv;
 
-if ( do_gbdy_test_ ) {
+if ( this->do_gbdy_test_ ) {
 if      ( i == 0        && j == 0        ) {
-  testty_[n] = 0; // corner elem
-  testid_[n] = 0; 
+  this->testty_[n] = 0; // corner elem
+  this->testid_[n] = 0; 
 }
 else if ( i == ne_[0]-1 && j == 0        ) {
-  testty_[n] = 0; // corner elem
-  testid_[n] = 1; 
+  this->testty_[n] = 0; // corner elem
+  this->testid_[n] = 1; 
 }
 else if ( i == ne_[0]-1 && j == ne_[1]-1 ) {
-  testty_[n] = 0; // corner elem
-  testid_[n] = 2; 
+  this->testty_[n] = 0; // corner elem
+  this->testid_[n] = 2; 
 }
 else if ( i == 0        && j == ne_[1]-1 ) {
-  testty_[n] = 0; // corner elem
-  testid_[n] = 3; 
+  this->testty_[n] = 0; // corner elem
+  this->testid_[n] = 3; 
 }
 else if ( j == 0 ) {
-  testty_[n] = 1; // non-corner edge
-  testid_[n] = 0; 
+  this->testty_[n] = 1; // non-corner edge
+  this->testid_[n] = 0; 
 }
 else if ( i == ne_[0]-1 ) {
-  testty_[n] = 1; // non-corner edge elem
-  testid_[n] = 1; 
+  this->testty_[n] = 1; // non-corner edge elem
+  this->testid_[n] = 1; 
 }
 else if ( j == ne_[1]-1 ) {
-  testty_[n] = 1; // non-corner edge elem
-  testid_[n] = 2; 
+  this->testty_[n] = 1; // non-corner edge elem
+  this->testid_[n] = 2; 
 }
 else if ( i == 0 ) {
-  testty_[n] = 1; // non-corner edge elem
-  testid_[n] = 3; 
+  this->testty_[n] = 1; // non-corner edge elem
+  this->testid_[n] = 3; 
 }
 else {
-  testty_[n] = 2; // interior elem
-  testid_[n] = -1; // interior id
+  this->testty_[n] = 2; // interior elem
+  this->testid_[n] = -1; // interior id
 }
 } // end, do_gbdy_test_
         n++;
@@ -941,7 +944,7 @@ else {
   else if ( ndim_ == 3 ) {
     hmesh_.resize(nthisrank);
     nxy = ne_[0] * ne_[1];
-    beg_lin = nperrank*irank_; end_lin = beg_lin + nthisrank - 1;
+    beg_lin = nperrank*this->irank_; end_lin = beg_lin + nthisrank - 1;
     kb = beg_lin/nxy; ke = end_lin/nxy;
     for ( auto k=kb; k<=ke; k++ ) { 
       jb = MAX((beg_lin-static_cast<GLONG>(k*nxy))/ne_[0],0); 
@@ -1011,11 +1014,11 @@ void GGridBox<Types>::config_gbdy(const PropertyTree           &ptree,
   stBdyBlock         bcblock;
   UpdateBasePtr      base_ptr;
 
-  assert(minnodedist_ > 0.0);
-  eps_ = 0.125*minnodedist_;
+  assert(this->minnodedist_ > 0.0);
+  this->eps_ = 0.125*this->minnodedist_;
 
 
-  bdyNormals_.resizem(GDIM);
+  this->bdyNormals_.resizem(GDIM);
 
   // If doing re-doing with terrain, assume that the incomming 
   // bdy spec (igbdy* and degbdy) is done, and just compute
@@ -1025,7 +1028,7 @@ void GGridBox<Types>::config_gbdy(const PropertyTree           &ptree,
   //       user has specified these properly
   if  ( bterrain ) {
     for ( auto j=0; j<2*GDIM; j++ ) { // over each canonical bdy
-      do_gbdy_normals(dXdXi_, igbdy,  degbdy, bdyNormals_, idepComp_); // all bdy nodes 
+      do_gbdy_normals(this->dXdXi_, igbdy,  degbdy, this->bdyNormals_, this->idepComp_); // all bdy nodes 
     }
     return;
   }
@@ -1050,7 +1053,7 @@ void GGridBox<Types>::config_gbdy(const PropertyTree           &ptree,
   igbdyf .resize(2*GDIM);
   igbdyft.resize(2*GDIM);
 
-  bdy_update_list_.resize(2*GDIM);
+  this->bdy_update_list_.resize(2*GDIM);
 
   // Handle uniform, nonuniform bdy conditions:
   // Note: If "uniform" not specified for a boundary, then
@@ -1072,7 +1075,7 @@ void GGridBox<Types>::config_gbdy(const PropertyTree           &ptree,
       degbdy.push_back(utmp[k]);
     }
     if ( "uniform" == bdyclass ) { // uniform bdy conditions
-      iret = GUpdateBdyFactory<TypePack>::bdy_block_conform_per(bdytree);
+      iret = GUpdateBdyFactory<Types>::bdy_block_conform_per(bdytree);
       if ( iret == 1 ) {
         bdytype [j] = GBDY_PERIODIC;
         igbdyft [j] = GBDY_PERIODIC;
@@ -1086,11 +1089,11 @@ void GGridBox<Types>::config_gbdy(const PropertyTree           &ptree,
       // May have different uniform bdys for different state comps;
       // step through them in order to point to correct bdy indices:
       k = 0;
-      while ( GUpdateBdyFactory<TypePack>::get_bdy_block(ptree, sbdy, k, bcblock) && !bperiodic ) {;
+      while ( GUpdateBdyFactory<Types>::get_bdy_block(ptree, sbdy, k, bcblock) && !bperiodic ) {
         bcblock.bdyid = j;
-        base_ptr = GUpdateBdyFactory<TypePack>::build(ptree, sbdy, *this, bcblock, itmp, igbdy_start);
+        base_ptr = GUpdateBdyFactory<Types>::build(ptree, sbdy, *this, bcblock, itmp, igbdy_start);
         igbdyft[j] = bcblock.tbdy;
-        bdy_update_list_[j].push_back(base_ptr);
+        this->bdy_update_list_[j].push_back(base_ptr);
         k++;
       } 
     }
@@ -1108,14 +1111,14 @@ void GGridBox<Types>::config_gbdy(const PropertyTree           &ptree,
 
 
   // With global list of domain boundaries, compute bdy data:
-  do_gbdy_normals(dXdXi_, igbdy, degbdy, bdyNormals_, idepComp_); // all bdy nodes 
+  do_gbdy_normals(this->dXdXi_, igbdy, degbdy, this->bdyNormals_, this->idepComp_); // all bdy nodes 
 #if 0
 GSIZET *ind=NULLPTR;
 nind = 0;
 igbdy.contains(0, ind, nind);
 for ( auto j=0; j<nind; j++ )
 cout << "GridBox::config_gbdy: igbdy[" << j << "]=" << igbdy[ind[j]] 
-<< " n=(" << bdyNormals_[0][ind[j]] << "," << bdyNormals_[1][ind[j]] << ")" << endl;
+<< " n=(" << this->bdyNormals_[0][ind[j]] << "," << this->bdyNormals_[1][ind[j]] << ")" << endl;
 delete [] ind;
 #endif
 
@@ -1146,7 +1149,7 @@ delete [] ind;
 // RETURNS: TRUE on yes, else FALSE
 //**********************************************************************************
 template<typename Types>
-GBOOL GGridBox<Types>::is_global_vertex(GTPoint<GFTYPE> &pt)
+GBOOL GGridBox<Types>::is_global_vertex(GTPoint<Ftype> &pt)
 {
   GEOFLOW_TRACE();
   GBOOL           bret = FALSE;
@@ -1170,7 +1173,7 @@ GBOOL GGridBox<Types>::is_global_vertex(GTPoint<GFTYPE> &pt)
 // RETURNS: TRUE on yes, else FALSE
 //**********************************************************************************
 template<typename Types>
-GBOOL GGridBox<Types>::on_global_edge(GINT iface, GTPoint<GFTYPE> &pt)
+GBOOL GGridBox<Types>::on_global_edge(GINT iface, GTPoint<Ftype> &pt)
 {
   GEOFLOW_TRACE();
   assert( iface >=0 && iface <=5 && "Invalid face ID specification");
@@ -1178,24 +1181,24 @@ GBOOL GGridBox<Types>::on_global_edge(GINT iface, GTPoint<GFTYPE> &pt)
   GBOOL           bret = FALSE;
   GINT            nface=0;
   GTVector<GINT>  face(3); // at most 3 faces that point _can_ belong to
-//GTPoint<GFTYPE> pt(ndim_);
+//GTPoint<Ftype> pt(ndim_);
 
-  assert(minnodedist_ > 0.0);
-  eps_ = 0.125*minnodedist_;
+  assert(this->minnodedist_ > 0.0);
+  this->eps_ = 0.125*this->minnodedist_;
 
   // Find faces point belongs to:
   for ( GINT j=0; j<ndim_; j++ ) {
-    if     ( FUZZYEQ(pt.x1,P0_.x1,eps_) && !face.containsn(0,nface) ) 
+    if     ( FUZZYEQ(pt.x1,P0_.x1,this->eps_) && !face.containsn(0,nface) ) 
       { face[nface] = 0; nface++; }
-    else if( FUZZYEQ(pt.x2,P1_.x2,eps_) && !face.containsn(1,nface) ) 
+    else if( FUZZYEQ(pt.x2,P1_.x2,this->eps_) && !face.containsn(1,nface) ) 
       { face[nface] = 1; nface++; } 
-    else if( FUZZYEQ(pt.x1,P1_.x1,eps_) && !face.containsn(2,nface) ) 
+    else if( FUZZYEQ(pt.x1,P1_.x1,this->eps_) && !face.containsn(2,nface) ) 
       { face[nface] = 2; nface++; }
-    else if( FUZZYEQ(pt.x2,P0_.x2,eps_) && !face.containsn(3,nface) ) 
+    else if( FUZZYEQ(pt.x2,P0_.x2,this->eps_) && !face.containsn(3,nface) ) 
       { face[nface] = 3; nface++; }
-    else if( FUZZYEQ(pt.x3,P0_.x3,eps_) && !face.containsn(4,nface) ) 
+    else if( FUZZYEQ(pt.x3,P0_.x3,this->eps_) && !face.containsn(4,nface) ) 
       { face[nface] = 4; nface++; }
-    else if( FUZZYEQ(pt.x3,P1_.x3,eps_) && !face.containsn(5,nface) ) 
+    else if( FUZZYEQ(pt.x3,P1_.x3,this->eps_) && !face.containsn(5,nface) ) 
       { face[nface] = 5; nface++; }
   }
 
@@ -1237,10 +1240,10 @@ GBOOL GGridBox<Types>::on_global_edge(GINT iface, GTPoint<GFTYPE> &pt)
 // RETURNS: none
 //**********************************************************************************
 template<typename Types>
-void GGridBox<Types>::do_gbdy_normals(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+void GGridBox<Types>::do_gbdy_normals(const GTMatrix<GTVector<Ftype>> &dXdXi,
                                const GTVector<GSIZET>           &igbdy,
                                const GTVector<GUINT>            &debdy,
-                               GTVector<GTVector<GFTYPE>>       &normals,
+                               GTVector<GTVector<Ftype>>       &normals,
                                GTVector<GINT>                   &idepComp)
 {
   GEOFLOW_TRACE();
@@ -1296,20 +1299,20 @@ void GGridBox<Types>::do_gbdy_normals(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
 // RETURNS: none
 //**********************************************************************************
 template<typename Types>
-void GGridBox<Types>::do_gbdy_normals2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+void GGridBox<Types>::do_gbdy_normals2d(const GTMatrix<GTVector<Ftype>> &dXdXi,
                                  const GTVector<GSIZET>           &igbdy,
                                  const GTVector<GUINT>            &debdy,
-                                 GTVector<GTVector<GFTYPE>>       &normals,
+                                 GTVector<GTVector<Ftype>>       &normals,
                                  GTVector<GINT>                   &idepComp)
 {
    GEOFLOW_TRACE();
    GINT            ib, ic, ip;
    GUINT           id;
-   GFTYPE          tiny;
-   GFTYPE          xm;
-   GTPoint<GFTYPE> kp(3), xp(3), p1(3), p2(3);
+   Ftype          tiny;
+   Ftype          xm;
+   GTPoint<Ftype> kp(3), xp(3), p1(3), p2(3);
 
-   tiny  = 100.0*std::numeric_limits<GFTYPE>::epsilon(); 
+   tiny  = 100.0*std::numeric_limits<Ftype>::epsilon(); 
    kp    = 0.0;
    kp[2] = 1.0; // k-vector
 
@@ -1395,10 +1398,10 @@ void GGridBox<Types>::do_gbdy_normals2d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
 // RETURNS: none
 //**********************************************************************************
 template<typename Types>
-void GGridBox<Types>::do_gbdy_normals3d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
+void GGridBox<Types>::do_gbdy_normals3d(const GTMatrix<GTVector<Ftype>> &dXdXi,
                                  const GTVector<GSIZET>           &igbdy,
                                  const GTVector<GUINT>            &debdy,
-                                 GTVector<GTVector<GFTYPE>>       &normals,
+                                 GTVector<GTVector<Ftype>>       &normals,
                                  GTVector<GINT>                   &idepComp)
 {
    GEOFLOW_TRACE();
@@ -1406,10 +1409,10 @@ void GGridBox<Types>::do_gbdy_normals3d(const GTMatrix<GTVector<GFTYPE>> &dXdXi,
    GUINT           id;
    GINT            ixi[6][2] = { {0,2}, {1,2}, {0,2}, 
                                  {1,2}, {0,1}, {0,1} };
-   GFTYPE          tiny;
-   GFTYPE          xm;
-   GTPoint<GFTYPE> xp(3), p1(3), p2(3);
-   tiny  = 100.0*std::numeric_limits<GFTYPE>::epsilon(); 
+   Ftype          tiny;
+   Ftype          xm;
+   GTPoint<Ftype> xp(3), p1(3), p2(3);
+   tiny  = 100.0*std::numeric_limits<Ftype>::epsilon(); 
 
    // Normals depend on element type:
    if ( this->gtype_ == GE_REGULAR ) {
@@ -1511,27 +1514,27 @@ void GGridBox<Types>::find_gbdy_ind2d(GINT bdyid, GBOOL bunique,
   GSIZET            ie, istart, nbdy, nind, nkeep, ntmp, nnodes;
   GTVector<GUINT>   utmp;
   GTVector<GSIZET>  ind, itmp, ktmp;
-  GTPoint<GFTYPE>   xp;
-  GTVector<GTPoint<GFTYPE>>
+  GTPoint<Ftype>   xp;
+  GTVector<GTPoint<Ftype>>
                     v(2);
-  GVVFType         *xlnodes;
+  GVVFtype         *xlnodes;
   
   nkeep = ikeep.size();
 
-  assert(minnodedist_ > 0.0);
-  eps_ = 0.125*minnodedist_;
+  assert(this->minnodedist_ > 0.0);
+  this->eps_ = 0.125*this->minnodedist_;
   
-  ntmp  = bunique ? xNodes_[0].size()
-        : xNodes_[0].size() + pow(2,GDIM) + (GDIM > 2 ? 2*GDIM : 0);
+  ntmp  = bunique ? this->xNodes_[0].size()
+        : this->xNodes_[0].size() + pow(2,GDIM) + (GDIM > 2 ? 2*GDIM : 0);
   itmp.resize(ntmp);
   if ( bunique ) ktmp.resize(ntmp);
   utmp.resize(ntmp); utmp = 0;
 
   for ( auto j=0; j<nkeep; j++ ) ktmp[j] = ikeep[j];
 
-  v[0].setBracket(eps_);
-  v[1].setBracket(eps_);
-  xp  .setBracket(eps_);
+  v[0].setBracket(this->eps_);
+  v[1].setBracket(this->eps_);
+  xp  .setBracket(this->eps_);
   switch ( bdyid ) { // get vertices defining bdy:
     // NOTE: the order of these vertices should
     //       corresp with those in if2v array:
@@ -1558,10 +1561,10 @@ void GGridBox<Types>::find_gbdy_ind2d(GINT bdyid, GBOOL bunique,
    
   istart = 0;
   nbdy   = 0;
-  for ( auto e=0; e<gelems_.size(); e++ ) { 
-    xlnodes= &gelems_[e]->xNodes();
-    nnodes = gelems_[e]->nnodes();
-    nind   = geoflow::in_seg<GFTYPE>(v, *xlnodes, eps_, ind); // get indices on segment
+  for ( auto e=0; e<this->gelems_.size(); e++ ) { 
+    xlnodes= &this->gelems_[e]->xNodes();
+    nnodes = this->gelems_[e]->nnodes();
+    nind   = geoflow::in_seg<Ftype>(v, *xlnodes, this->eps_, ind); // get indices on segment
     // For each index on bdy, set description:
     for ( auto i=0; i<nind; i++ ) { 
       xp.assign(*xlnodes, ind[i]);
@@ -1637,27 +1640,27 @@ void GGridBox<Types>::find_gbdy_ind3d(GINT bdyid, GBOOL bunique,
   GSIZET            ie, istart, nbdy, nind, nind1, nkeep, ntmp, nnodes;
   GTVector<GUINT>   utmp;
   GTVector<GSIZET>  ind, ind1, itmp, ktmp;
-  GTPoint<GFTYPE>   xp;
-  GTVector<GTPoint<GFTYPE>>
+  GTPoint<Ftype>   xp;
+  GTVector<GTPoint<Ftype>>
                     e(2), v(4);
-  GVVFType         *xlnodes;
+  GVVFtype         *xlnodes;
   
   nkeep = ikeep.size();
 
-  assert(minnodedist_ > 0.0);
-  eps_ = 0.125*minnodedist_;
+  assert(this->minnodedist_ > 0.0);
+  this->eps_ = 0.125*this->minnodedist_;
   
-  ntmp  = bunique ? xNodes_[0].size()
-        : xNodes_[0].size() + pow(2,GDIM) + (GDIM > 2 ? 2*GDIM : 0);
+  ntmp  = bunique ? this->xNodes_[0].size()
+        : this->xNodes_[0].size() + pow(2,GDIM) + (GDIM > 2 ? 2*GDIM : 0);
   itmp.resize(ntmp);
   if ( bunique ) ktmp.resize(ntmp);
   utmp.resize(ntmp); utmp = 0;
 
   for ( auto j=0; j<bunique && nkeep; j++ ) ktmp[j] = ikeep[j];
 
-  v[0].setBracket(eps_);
-  v[1].setBracket(eps_);
-  xp  .setBracket(eps_);
+  v[0].setBracket(this->eps_);
+  v[1].setBracket(this->eps_);
+  xp  .setBracket(this->eps_);
   
   switch ( bdyid ) { // get vertices defining bdy:
     // NOTE: the order of these vertices should
@@ -1729,10 +1732,10 @@ void GGridBox<Types>::find_gbdy_ind3d(GINT bdyid, GBOOL bunique,
    
   istart = 0;
   nbdy   = 0;
-  for ( auto e=0; e<gelems_.size(); e++ ) { 
-    xlnodes= &gelems_[e]->xNodes();
-    nnodes = gelems_[e]->nnodes();
-    nind   = geoflow::in_poly<GFTYPE>(v, *xlnodes, eps_, ind); // get indices on domain surface
+  for ( auto e=0; e<this->gelems_.size(); e++ ) { 
+    xlnodes= &this->gelems_[e]->xNodes();
+    nnodes = this->gelems_[e]->nnodes();
+    nind   = geoflow::in_poly<Ftype>(v, *xlnodes, this->eps_, ind); // get indices on domain surface
     // For each index on bdy, set description:
     for ( auto i=0; i<nind; i++ ) { 
       xp.assign(*xlnodes, ind[i]);
@@ -1781,10 +1784,10 @@ void GGridBox<Types>::find_gbdy_ind3d(GINT bdyid, GBOOL bunique,
 // RETURNS: none.
 //**********************************************************************************
 template<typename Types>
-void GGridBox<Types>::elem_face_data(GTMatrix<GTVector<GFTYPE>> &dXdXi,
+void GGridBox<Types>::elem_face_data(GTMatrix<GTVector<Ftype>> &dXdXi,
                               GTVector<GSIZET>                 &gieface,
-                              GTVector<GFTYPE>                 &face_mass,
-                              GTVector<GTVector<GFTYPE>>       &normals)
+                              GTVector<Ftype>                 &face_mass,
+                              GTVector<GTVector<Ftype>>       &normals)
 {
     
 #if defined(_G_IS2D)
@@ -1812,22 +1815,22 @@ void GGridBox<Types>::elem_face_data(GTMatrix<GTVector<GFTYPE>> &dXdXi,
 // RETURNS: none.
 //**********************************************************************************
 template<typename Types>
-void GGridBox<Types>::elem_face_data2d(GTMatrix<GTVector<GFTYPE>>       &dXdXi,
+void GGridBox<Types>::elem_face_data2d(GTMatrix<GTVector<Ftype>>       &dXdXi,
                                 GTVector<GSIZET>                 &gieface,
-                                GTVector<GFTYPE>                 &face_mass,
-                                GTVector<GTVector<GFTYPE>>       &normals)
+                                GTVector<Ftype>                 &face_mass,
+                                GTVector<GTVector<Ftype>>       &normals)
 {
    GEOFLOW_TRACE();
 
    GINT              fi, ib, id, ip;
    GSIZET            istart, nbdy;
-   GFTYPE            tiny;
-   GFTYPE            jac, xm;
-   GTPoint<GFTYPE>   kp(3), xp(3), p1(3), p2(3);
+   Ftype            tiny;
+   Ftype            jac, xm;
+   GTPoint<Ftype>   kp(3), xp(3), p1(3), p2(3);
    GTVector<GINT>   *face_ind;
-   GTVector<GFTYPE> *mass, *pdX;
+   GTVector<Ftype> *mass, *pdX;
 
-   tiny  = 100.0*std::numeric_limits<GFTYPE>::epsilon();
+   tiny  = 100.0*std::numeric_limits<Ftype>::epsilon();
    kp    = 0.0;
    kp[2] = 1.0; // k-vector
 
@@ -1835,9 +1838,9 @@ void GGridBox<Types>::elem_face_data2d(GTMatrix<GTVector<GFTYPE>>       &dXdXi,
    // Get number of elem bdy nodes, and 
    // allocate arrays:
    nbdy = 0;
-   for ( auto e=0; e<gelems_.size(); e++ ) {
-     for ( auto j=0; j<gelems_[e]->nfaces(); j++ ) {
-       nbdy += gelems_[e]->face_indices(j).size();
+   for ( auto e=0; e<this->gelems_.size(); e++ ) {
+     for ( auto j=0; j<this->gelems_[e]->nfaces(); j++ ) {
+       nbdy += this->gelems_[e]->face_indices(j).size();
      }
    }
    gieface.resize(nbdy);
@@ -1853,10 +1856,10 @@ void GGridBox<Types>::elem_face_data2d(GTMatrix<GTVector<GFTYPE>>       &dXdXi,
    if ( this->gtype_ == GE_REGULAR ) {
     
      istart = 0;
-     for ( auto e=0; e<gelems_.size(); e++ ) { // over all elements
-       mass      = &gelems_[e]->face_mass();
-       for ( auto j=0; j<gelems_[e]->nfaces(); j++ ) { // loop over faces
-         face_ind  = &gelems_[e]->face_indices(j);
+     for ( auto e=0; e<this->gelems_.size(); e++ ) { // over all elements
+       mass      = &this->gelems_[e]->face_mass();
+       for ( auto j=0; j<this->gelems_[e]->nfaces(); j++ ) { // loop over faces
+         face_ind  = &this->gelems_[e]->face_indices(j);
          id = j % 2;
          ip = (j+1) % 2; pdX = &dXdXi(id,0);
          xm = j == 1 || j == 2 ? 1.0 : -1.0;
@@ -1869,7 +1872,7 @@ void GGridBox<Types>::elem_face_data2d(GTMatrix<GTVector<GFTYPE>>       &dXdXi,
 //cout << "GBox::elem_face_data2d: nbdy=" << nbdy << " e=" << e << " face=" << j << " nx=" << normals[0][nbdy-1] << " ny=" << normals[1][nbdy-1] << " faceMass=" << face_mass[nbdy-1] << " gie=" << ib << endl;
          }
        } // end, elem face loop
-       istart += gelems_[e]->nnodes();
+       istart += this->gelems_[e]->nnodes();
      } // end, elem loop
 
    }
@@ -1878,10 +1881,10 @@ void GGridBox<Types>::elem_face_data2d(GTMatrix<GTVector<GFTYPE>>       &dXdXi,
      // Bdy normal is hat{k} X dvec{X} / dxi_iedge,
      // for face:
      istart = 0;
-     for ( auto e=0; e<gelems_.size(); e++ ) { // over all elements
-       mass      = &gelems_[e]->face_mass();
-       for ( auto j=0; j<gelems_[e]->nfaces(); j++ ) { 
-         face_ind  = &gelems_[e]->face_indices(j);
+     for ( auto e=0; e<this->gelems_.size(); e++ ) { // over all elements
+       mass      = &this->gelems_[e]->face_mass();
+       for ( auto j=0; j<this->gelems_[e]->nfaces(); j++ ) { 
+         face_ind  = &this->gelems_[e]->face_indices(j);
          id = j % 2;
          xm = j == 1 || j == 2 ? 1.0 : -1.0;
          for ( auto i=0; i<face_ind->size(); i++ ) { // over elem bdy points
@@ -1896,7 +1899,7 @@ void GGridBox<Types>::elem_face_data2d(GTMatrix<GTVector<GFTYPE>>       &dXdXi,
            face_mass [nbdy++] = (*mass)[fi] * jac; 
          }
        } // end, elem face loop
-       istart += gelems_[e]->nnodes();
+       istart += this->gelems_[e]->nnodes();
      } // end, elem loop
 
    }
@@ -1921,10 +1924,10 @@ void GGridBox<Types>::elem_face_data2d(GTMatrix<GTVector<GFTYPE>>       &dXdXi,
 // RETURNS: none.
 //**********************************************************************************
 template<typename Types>
-void GGridBox<Types>::elem_face_data3d(GTMatrix<GTVector<GFTYPE>>       &dXdXi,
+void GGridBox<Types>::elem_face_data3d(GTMatrix<GTVector<Ftype>>       &dXdXi,
                                 GTVector<GSIZET>                 &gieface,
-                                GTVector<GFTYPE>                 &face_mass,
-                                GTVector<GTVector<GFTYPE>>       &normals)
+                                GTVector<Ftype>                 &face_mass,
+                                GTVector<GTVector<Ftype>>       &normals)
 {
    GEOFLOW_TRACE();
 
@@ -1935,13 +1938,13 @@ void GGridBox<Types>::elem_face_data3d(GTMatrix<GTVector<GFTYPE>>       &dXdXi,
    GUINT             if2n[6]    = { 0, 1, 0, 1, 2, 2 };
    GINT              fi, ib, ip;
    GSIZET            istart, nbdy;
-   GFTYPE            tiny;
-   GFTYPE            jac, xm;
-   GTPoint<GFTYPE>   kp(3), xp(3), p1(3), p2(3);
+   Ftype            tiny;
+   Ftype            jac, xm;
+   GTPoint<Ftype>   kp(3), xp(3), p1(3), p2(3);
    GTVector<GINT>   *face_ind;
-   GTVector<GFTYPE> *mass;
+   GTVector<Ftype> *mass;
 
-   tiny  = 100.0*std::numeric_limits<GFTYPE>::epsilon();
+   tiny  = 100.0*std::numeric_limits<Ftype>::epsilon();
    kp    = 0.0;
    kp[2] = 1.0; // k-vector
 
@@ -1949,9 +1952,9 @@ void GGridBox<Types>::elem_face_data3d(GTMatrix<GTVector<GFTYPE>>       &dXdXi,
    // Get number of elem bdy nodes, and 
    // allocate arrays:
    nbdy = 0;
-   for ( auto e=0; e<gelems_.size(); e++ ) {
-     for ( auto j=0; j<gelems_[e]->nfaces(); j++ ) {
-       nbdy += gelems_[e]->face_indices(j).size();
+   for ( auto e=0; e<this->gelems_.size(); e++ ) {
+     for ( auto j=0; j<this->gelems_[e]->nfaces(); j++ ) {
+       nbdy += this->gelems_[e]->face_indices(j).size();
      }
    }
    gieface  .resize(nbdy);
@@ -1966,10 +1969,10 @@ void GGridBox<Types>::elem_face_data3d(GTMatrix<GTVector<GFTYPE>>       &dXdXi,
    if ( this->gtype_ == GE_REGULAR ) {
     
      istart = 0;
-     for ( auto e=0; e<gelems_.size(); e++ ) { // over all elements
-       mass      = &gelems_[e]->face_mass();
-       for ( auto j=0; j<gelems_[e]->nfaces(); j++ ) { 
-         face_ind  = &gelems_[e]->face_indices(j);
+     for ( auto e=0; e<this->gelems_.size(); e++ ) { // over all elements
+       mass      = &this->gelems_[e]->face_mass();
+       for ( auto j=0; j<this->gelems_[e]->nfaces(); j++ ) { 
+         face_ind  = &this->gelems_[e]->face_indices(j);
          ip = if2n[j];
          xm = j < 4 || j == 5 ? 1.0 : -1.0;
          for ( auto i=0; i<face_ind->size(); i++ ) { // over elem bdy points
@@ -1981,7 +1984,7 @@ void GGridBox<Types>::elem_face_data3d(GTMatrix<GTVector<GFTYPE>>       &dXdXi,
            face_mass[nbdy++] = (*mass)[fi] * jac;
          }
        } // end, elem face loop
-       istart += gelems_[e]->nnodes();
+       istart += this->gelems_[e]->nnodes();
      } // end, elem loop
 
    }
@@ -1990,10 +1993,10 @@ void GGridBox<Types>::elem_face_data3d(GTMatrix<GTVector<GFTYPE>>       &dXdXi,
      // Bdy normal is hat{k} X dvec{X} / dxi_iedge,
      // for face:
      istart = 0;
-     for ( auto e=0; e<gelems_.size(); e++ ) { // over all elements
-       mass      = &gelems_[e]->face_mass();
-       for ( auto j=0; j<gelems_[e]->nfaces(); j++ ) { 
-         face_ind  = &gelems_[e]->face_indices(j);
+     for ( auto e=0; e<this->gelems_.size(); e++ ) { // over all elements
+       mass      = &this->gelems_[e]->face_mass();
+       for ( auto j=0; j<this->gelems_[e]->nfaces(); j++ ) { 
+         face_ind  = &this->gelems_[e]->face_indices(j);
          xm = j < 4 || j == 5 ? 1.0 : -1.0;
          for ( auto i=0; i<face_ind->size(); i++ ) { // over elem bdy points
            fi = (*face_ind)[i]; // index into elem data
@@ -2012,7 +2015,7 @@ void GGridBox<Types>::elem_face_data3d(GTMatrix<GTVector<GFTYPE>>       &dXdXi,
            face_mass[nbdy++] = (*mass)[fi] * jac; 
          }
        } // end, elem face loop
-       istart += gelems_[e]->nnodes();
+       istart += this->gelems_[e]->nnodes();
      } // end, elem loop
 
    }

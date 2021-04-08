@@ -11,7 +11,6 @@
 
 #include "gtvector.hpp"
 
-class GGrid;
 
 class GLinOp
 {

@@ -14,9 +14,9 @@
 #include "gtvector.hpp"
 #include "ginitstate_direct_user.hpp"
 #include "ginitstate_comp.h"
-#include "ggrid.hpp"
-#include "ggrid_icos.hpp"
-#include "ggrid_box.hpp"
+//#include "ggrid.hpp"
+//#include "ggrid_icos.hpp"
+//#include "ggrid_box.hpp"
 
 using namespace geoflow::pdeint;
 using namespace std;
@@ -30,6 +30,8 @@ class GInitStateFactory
         using EqnBasePtr    = std::shared_ptr<EqnBase>;
         using State         = typename Types::State;
         using Grid          = typename Types::Grid;
+        using GridBox       = typename Types::GridBox;
+        using GridIcos      = typename Types::GridIcos;
         using CompDesc      = typename Types::CompDesc;
         using Time          = typename Types::Time;
 

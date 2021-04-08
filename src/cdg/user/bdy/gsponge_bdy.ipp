@@ -68,8 +68,8 @@ GBOOL GSpongeBdy<Types>::update_impl(
 {
    GString    serr = "GSpongeBdy<Types>::update_impl: ";
    GBOOL      bret = FALSE;
-   GGridBox<Types>   *box    = dynamic_cast<GGridBox<Types>*>(&grid);
-   GGridIcos<Types>  *sphere = dynamic_cast<GGridIcos<Types>*>(&grid);
+   GridBox   *box    = dynamic_cast<GridBox*>(&grid);
+   GridIcos  *sphere = dynamic_cast<GridIcos*>(&grid);
 
 
    if ( box != NULLPTR ) {

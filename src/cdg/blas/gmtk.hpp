@@ -13,13 +13,12 @@
 #include <limits>
 #include "gtypes.h"
 #include "cff_blas.h"
-#include "gelem_base.hpp"
 
 #include "gtvector.hpp"
 #include "gtmatrix.hpp"
-#include "ggrid.hpp"
-#include "ggrid_box.hpp"
-#include "ggrid_icos.hpp"
+//#include "ggrid.hpp"
+//#include "ggrid_box.hpp"
+//#include "ggrid_icos.hpp"
 #include "gcblas.hpp"
 
 //template<typename T> class GTVector;
@@ -31,6 +30,8 @@
 
 extern GINT szMatCache_;
 extern GINT szVecCache_;
+
+using namespace std;
 
 
 namespace GMTK

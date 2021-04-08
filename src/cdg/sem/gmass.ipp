@@ -15,7 +15,8 @@
 // RETURNS: none
 //**********************************************************************************
 template<typename Types>
-GMass<Types>::GMass(GGrid &grid, GBOOL bdoinverse)
+GMass<Types>::GMass(Grid &grid, GBOOL bdoinverse):
+bInitialized_     (FALSE),
 bdoinverse_  (bdoinverse),
 bmasslumped_       (TRUE)
 {
@@ -78,6 +79,7 @@ void GMass<Types>::init()
       mass_[j] = 1.0 / mass_[j];
     }
   }
+
   bInitialized_ = TRUE;
 
 } // end of method init
@@ -100,7 +102,7 @@ void GMass<Types>::init1d()
   GTVector<GINT> N(GDIM);
   GTVector<GTVector<Ftype>*> W(GDIM);
   GTVector<Ftype> *Jac;
-  GElemList *gelems;
+  typename Grid::GElemList *gelems;
 
   Jac    = &grid_->Jac(); 
   gelems = &grid_->elems(); 
@@ -136,7 +138,7 @@ void GMass<Types>::init2d()
   GTVector<GINT> N(GDIM);
   GTVector<GTVector<Ftype>*> W(GDIM);
   GTVector<Ftype> *Jac;
-  GElemList *gelems;
+  typename Grid::GElemList *gelems;
 
 
   // Fill Fill mass vector with tensor product of weights and
@@ -182,7 +184,7 @@ void GMass<Types>::init3d()
   GTVector<GINT> N(GDIM);
   GTVector<GTVector<Ftype>*> W(GDIM);
   GTVector<Ftype> *Jac;
-  GElemList *gelems;
+  typename Grid::GElemList *gelems;
 
 
   // Fill mass vector with tensor product of weights and
@@ -223,6 +225,7 @@ template<typename Types>
 void GMass<Types>::opVec_prod(GTVector<Ftype> &input, GTVector<GTVector<Ftype>*> &utmp, 
                        GTVector<Ftype> &output)
 {
+  assert(bInitialized_);
 
   mass_.pointProd(input, output);
 

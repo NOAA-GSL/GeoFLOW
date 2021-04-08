@@ -8,21 +8,20 @@
 #if !defined(_GGExRKSTEPPER_HPP)
 #define _GGExRKSTEPPER_HPP
 
+#include <functional>
 #include "gtvector.hpp"
 #include "gtmatrix.hpp"
 #include "gbutcherrk.hpp"
-#include "ggrid.hpp"
 #include "ggfx.hpp"
 #include "gmtk.hpp"
 
-#include <functional>
 
 template <typename Grid, typename T>
 class GExRKStepper
 {
-typedef GTVector<GTVector<T>*> State;
-typedef GTVector<T> StateElem;
-typedef T  Time;
+         using State     = typename Grid::State;
+         using StateComp = typename Grid::StateComp;
+         using Time      = typename Grid::Time;
 
 public:
         // MConv solver traits:

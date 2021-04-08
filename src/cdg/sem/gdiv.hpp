@@ -16,7 +16,6 @@
 #define _GDIVOP_HPP
 #include "gtvector.hpp"
 #include "gnbasis.hpp"
-#include "ggrid.hpp"
 #include "gmass.hpp"
 #include "gtmatrix.hpp"
 #include "gmtk.hpp"
@@ -45,8 +44,6 @@ public:
                "StateComp is of incorrect type");
         static_assert(std::is_same<Derivative,GTVector<GTVector<Ftype>*>>::value,
                "Derivative is of incorrect type");
-        static_assert(std::is_same<Grid,GGrid>::value,
-               "Grid is of incorrect type");
 
         // MConv solver traits:
         struct Traits {

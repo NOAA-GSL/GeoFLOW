@@ -1221,7 +1221,7 @@ void saxpby(GTVector<T> &z, GTVector<T> &x, T a, GTVector<T> &y, T b)
 // RETURNS: none.
 //**********************************************************************************
 template<typename Grid, typename T>
-void normalizeL2(GGrid &grid, GTVector<GTVector<T>*> &u, GTVector<GTVector<T>*> &tmp, T E0)
+void normalizeL2(Grid &grid, GTVector<GTVector<T>*> &u, GTVector<GTVector<T>*> &tmp, T E0)
 {
 	GEOFLOW_TRACE();
   GSIZET  n;
@@ -1322,17 +1322,17 @@ void zero(GTVector<GTVector<T>> &u)
 // METHOD : maxbyelem
 // DESC   : Find max of q on each element, return in max array
 //
-// ARGS   : grid: GGrid object
+// ARGS   : grid: Grid object
 //          q   : field over all elems.
 //          max : max of q on each element. Allocated if necessary.
 // RETURNS: none.
 //**********************************************************************************
 template<typename Grid, typename T>
-void maxbyelem(GGrid &grid, GTVector<T> &q, GTVector<T> &max)
+void maxbyelem(Grid &grid, GTVector<T> &q, GTVector<T> &max)
 {
 	GEOFLOW_TRACE();
   GSIZET     ibeg, iend;
-  GElemList *elems = &grid.elems();
+  typename Grid::GElemList *elems = &grid.elems();
 
   max.resizem(grid.nelems());
 
@@ -1351,17 +1351,17 @@ void maxbyelem(GGrid &grid, GTVector<T> &q, GTVector<T> &max)
 // METHOD : minbyelem
 // DESC   : Find min of q on each element, return in min array
 //
-// ARGS   : grid: GGrid object
+// ARGS   : grid: Grid object
 //          q   : field over all elems.
 //          min : min of q on each element. Allocated if necessary.
 // RETURNS: none.
 //**********************************************************************************
 template<typename Grid, typename T>
-void minbyelem(GGrid &grid, GTVector<T> &q, GTVector<T> &min)
+void minbyelem(Grid &grid, GTVector<T> &q, GTVector<T> &min)
 {
 	GEOFLOW_TRACE();
   GSIZET ibeg, iend;
-  GElemList *elems = &grid.elems();
+  typename Grid::GElemList *elems = &grid.elems();
 
   min.resizem(grid.nelems());
 

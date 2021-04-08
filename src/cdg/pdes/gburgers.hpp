@@ -37,7 +37,6 @@
 #include <cmath>
 #include "gtvector.hpp"
 #include "gdd_base.hpp"
-#include "ggrid.hpp"
 #include "gab.hpp"
 #include "gext.hpp"
 #include "gbdf.hpp"
@@ -45,7 +44,6 @@
 #include "gmass.hpp"
 #include "gadvect.hpp"
 #include "ghelmholtz.hpp"
-//#include "gflux.hpp"
 #include "gexrk_stepper.hpp"
 #include "gbutcherrk.hpp"
 #include "ggfx.hpp"
@@ -53,8 +51,6 @@
 
 using namespace geoflow::pdeint;
 using namespace std;
-
-
 
 
 template<typename TypePack>
@@ -66,7 +62,10 @@ public:
         using EqnBasePtr = std::shared_ptr<EqnBase>;
         using State      = typename Types::State;
         using Grid       = typename Types::Grid;
+        using GridBox    = typename Types::GridBox;
+        using GridIcos   = typename Types::GridIcos;
         using Ftype      = typename Types::Ftype;
+        using Mass       = typename Types::Mass;
         using Derivative = typename Types::Derivative;
         using Time       = typename Types::Time;
         using CompDesc   = typename Types::CompDesc;
@@ -80,8 +79,6 @@ public:
                "State is of incorrect type");
         static_assert(std::is_same<Derivative,GTVector<GTVector<Ftype>*>>::value,
                "Derivative is of incorrect type");
-        static_assert(std::is_same<Grid,GGrid>::value,
-               "Grid is of incorrect type");
 
         // Burgers solver traits:
         struct Traits {
@@ -104,7 +101,7 @@ public:
         };
 
         GBurgers() = delete; 
-        GBurgers(Grid &grid, GBurgers<TypePack>::Traits &traits);
+        GBurgers(Grid &grid, GBurgers<Types>::Traits &traits);
        ~GBurgers();
         GBurgers(const GBurgers &bu) = default;
         GBurgers &operator=(const GBurgers &bu) = default;
@@ -114,7 +111,7 @@ public:
                             std::function<void(const Time &t, State &u, 
                                                const Time &dt)> callback) 
                              { steptop_callback_ = callback; bsteptop_ = TRUE;}
-        GBurgers<TypePack>::Traits &get_traits() { return traits_; }      // Get traits
+        GBurgers<Types>::Traits &get_traits() { return traits_; }      // Get traits
                                             
 
 protected:
@@ -180,18 +177,18 @@ private:
                             valid_types_;   // valid stepping methods supported
         GTVector<Ftype>     nu_   ;         // dissipoation
         std::vector<GINT>   stdiforced_;    // std::verctor for traits_.iforced
-        GGrid              *grid_;          // GGrid object
+        Grid               *grid_;          // Grid object
         GExRKStepper<Grid,Ftype>
                            *gexrk_;         // ExRK stepper, if needed
-        GMass              *gmass_;         // mass op
-        GMass              *gimass_;        // inverse mass op
-        GAdvect<TypePack>  *gadvect_;       // advection op
-        GHelmholtz         *ghelm_;         // Helmholz and Laplacian op
-        GpdV<TypePack>     *gpdv_;          // pdV op
+        Mass               *gmass_;         // mass op
+        Mass               *gimass_;        // inverse mass op
+        GAdvect<Types>     *gadvect_;       // advection op
+        GHelmholtz<Types>  *ghelm_;         // Helmholz and Laplacian op
+        GpdV<Types>        *gpdv_;          // pdV op
 //      GFlux              *gflux_;         // flux op
         GC_COMM             comm_;          // communicator
         GGFX<Ftype>        *ggfx_;          // gather-scatter operator
-        GBurgers<TypePack>::Traits         
+        GBurgers<Types>::Traits         
                             traits_;        // solver traits
 
         std::function<void(const Time &t, State &u, const Time &dt)>

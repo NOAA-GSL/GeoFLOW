@@ -9,14 +9,11 @@
 #if !defined(_GMASSOP_HPP)
 #define _GMASSOP_HPP
 #include "gtvector.hpp"
-#include "gnbasis.hpp"
-#include "ggrid.hpp"
-#include "gmass.hpp"
-#include "gtmatrix.hpp"
-#include "gmtk.hpp"
 #include "pdeint/equation_base.hpp"
 
 
+using namespace geoflow::pdeint;
+using namespace std;
 
 
 template<typename TypePack>
@@ -55,6 +52,7 @@ private:
         void              init3d();
 
 
+        GBOOL             bInitialized_;
         GBOOL             bdoinverse_;
         GBOOL             bmasslumped_;
         GTVector<Ftype>   mass_;

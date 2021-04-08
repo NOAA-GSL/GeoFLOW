@@ -31,13 +31,13 @@ public:
         using EqnBasePtr = std::shared_ptr<EqnBase>;
         using State      = typename Types::State;
         using Grid       = typename Types::Grid;
+        using GridBox    = typename Types::GridBox;
+        using GridIcos   = typename Types::GridIcos;
         using Ftype      = typename Types::Ftype;
         using Time       = typename Types::Time;
 
         static_assert(std::is_same<State,GTVector<GTVector<Ftype>*>>::value,
                "State is of incorrect type");
-        static_assert(std::is_same<Grid,GGrid>::value,
-               "Grid is of incorrect type");
 
 static GBOOL myinflow  (EqnBasePtr &eqn, Grid &grid, Time &time, const GINT id, State &u, State &utmp, State &ub);
 

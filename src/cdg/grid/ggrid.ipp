@@ -7,26 +7,7 @@
 // Copyright    : Copyright 2018. Colorado State University. All rights reserved
 // Derived From : none.
 //==================================================================================
-#include <memory>
-#include <cmath>
-#include <limits>
-#include <typeinfo>
-#include "gtypes.h"
-#include "gelem_base.hpp"
-#include "gmass.hpp"
-#include "gcomm.hpp"
-#include "ggfx.hpp"
-#include "gmtk.hpp"
-#include "ggrid.hpp"
-#include "ggrid_box.hpp"
-#include "ggrid_icos.hpp"
-#include "gutils.hpp"
-#include "gcg.hpp"
-#include "gmtk.hpp"
-#include "tbox/error_handler.hpp"
-#include "tbox/tracer.hpp"
 
-using namespace std;
 
 //**********************************************************************************
 //**********************************************************************************
@@ -222,6 +203,7 @@ void GGrid<Types>::print(GString filename, GBOOL bdof)
 } // end of method print
 
 
+#if 0
 //**********************************************************************************
 //**********************************************************************************
 // METHOD :  << operator method (1)
@@ -234,6 +216,7 @@ std::ostream &operator<<(std::ostream &str, GGrid &e)
        GEOFLOW_TRACE();
   return str;
 } // end of operator <<
+#endif
 
 
 //**********************************************************************************
@@ -297,7 +280,7 @@ GSIZET GGrid<Types>::nbdydof()
 // RETURNS: Ftype separation
 //**********************************************************************************
 template<typename Types>
-Ftype GGrid<Types>::minlength(GTVector<Ftype> *dx)
+typename Types::Ftype GGrid<Types>::minlength(GTVector<Ftype> *dx)
 {
        GEOFLOW_TRACE();
    assert(gelems_.size() > 0 && "Elements not set");
@@ -349,7 +332,7 @@ Ftype GGrid<Types>::minlength(GTVector<Ftype> *dx)
 // RETURNS: Ftype length
 //**********************************************************************************
 template<typename Types>
-Ftype GGrid<Types>::maxlength(GTVector<Ftype> *dx)
+typename Types::Ftype GGrid<Types>::maxlength(GTVector<Ftype> *dx)
 {
        GEOFLOW_TRACE();
    assert(gelems_.size() > 0 && "Elements not set");
@@ -398,7 +381,7 @@ Ftype GGrid<Types>::maxlength(GTVector<Ftype> *dx)
 // RETURNS: Ftype length
 //**********************************************************************************
 template<typename Types>
-Ftype GGrid<Types>::avglength()
+typename Types::Ftype GGrid<Types>::avglength()
 {
        GEOFLOW_TRACE();
    assert(gelems_.size() > 0 && "Elements not set");
@@ -861,7 +844,7 @@ void GGrid<Types>::globalize_coords()
 // RETURNS: GTMatrix<GTVector<Ftype>> &
 //**********************************************************************************
 template<typename Types>
-GTMatrix<GTVector<Ftype>> &GGrid<Types>::dXidX()
+GTMatrix<GTVector<typename Types::Ftype>> &GGrid<Types>::dXidX()
 {
        GEOFLOW_TRACE();
    assert(bInitialized_ && "Object not inititaized");
@@ -878,7 +861,7 @@ GTMatrix<GTVector<Ftype>> &GGrid<Types>::dXidX()
 // RETURNS: GTVector<Ftype> &
 //**********************************************************************************
 template<typename Types>
-GTVector<Ftype> &GGrid<Types>::dXidX(GSIZET i, GSIZET j)
+GTVector<typename Types::Ftype> &GGrid<Types>::dXidX(GSIZET i, GSIZET j)
 {
        GEOFLOW_TRACE();
    assert(bInitialized_ && "Object not inititaized");
@@ -895,7 +878,7 @@ GTVector<Ftype> &GGrid<Types>::dXidX(GSIZET i, GSIZET j)
 // RETURNS: GTVector<Ftype> &
 //**********************************************************************************
 template<typename Types>
-GMass &GGrid<Types>::massop()
+typename Types::Mass &GGrid<Types>::massop()
 {
        GEOFLOW_TRACE();
    assert(bInitialized_ && "Object not inititaized");
@@ -912,7 +895,7 @@ GMass &GGrid<Types>::massop()
 // RETURNS: GTVector<Ftype> &
 //**********************************************************************************
 template<typename Types>
-GMass &GGrid<Types>::imassop()
+typename Types::Mass &GGrid<Types>::imassop()
 {
        GEOFLOW_TRACE();
    assert(bInitialized_ && "Object not inititaized");
@@ -930,7 +913,7 @@ GMass &GGrid<Types>::imassop()
 // RETURNS: GTVector<Ftype> &
 //**********************************************************************************
 template<typename Types>
-GTVector<Ftype> &GGrid<Types>::Jac()
+GTVector<typename Types::Ftype> &GGrid<Types>::Jac()
 {
        GEOFLOW_TRACE();
    assert(bInitialized_ && "Object not inititaized");
@@ -947,7 +930,7 @@ GTVector<Ftype> &GGrid<Types>::Jac()
 // RETURNS: GTVector<Ftype> &
 //**********************************************************************************
 template<typename Types>
-GTVector<Ftype> &GGrid<Types>::faceJac()
+GTVector<typename Types::Ftype> &GGrid<Types>::faceJac()
 {
        GEOFLOW_TRACE();
    assert(bInitialized_ && "Object not inititaized");
@@ -966,7 +949,7 @@ GTVector<Ftype> &GGrid<Types>::faceJac()
 // RETURNS: minimum nodal dist over entire grid
 //**********************************************************************************
 template<typename Types>
-Ftype GGrid<Types>::find_min_dist()
+typename Types::Ftype GGrid<Types>::find_min_dist()
 {
        GEOFLOW_TRACE();
   assert(gelems_.size() > 0 && "Elements not set");
@@ -1066,7 +1049,7 @@ void GGrid<Types>::find_min_dist(GTVector<Ftype> &dx)
 // RETURNS: Ftype integral
 //**********************************************************************************
 template<typename Types>
-Ftype GGrid<Types>::integrate(GTVector<Ftype> &u, GTVector<Ftype> &tmp, GBOOL bglobal)
+typename Types::Ftype GGrid<Types>::integrate(GTVector<Ftype> &u, GTVector<Ftype> &tmp, GBOOL bglobal)
 {
        GEOFLOW_TRACE();
   assert(bInitialized_ && "Object not inititaized");
@@ -1493,8 +1476,8 @@ void GGrid<Types>::add_terrain(const State &xb, State &utmp)
   assert(ggfx_ != NULLPTR && "GGFX not set");
 
   // Construct solver and weak Laplacian operator:
-  GCG<CGTypes>   cg(cgtraits_, *this, *ggfx_, tmp);
-  GHelmholtz     H(*this);
+  GCG<Types>        cg(cgtraits_, *this, *ggfx_, tmp);
+  GHelmholtz<Types>  H(*this);
 
   H.use_metric(TRUE); // do Laplacian in real space
 

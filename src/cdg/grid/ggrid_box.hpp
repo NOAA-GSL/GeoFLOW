@@ -10,31 +10,8 @@
 #if !defined(_GGRID_BOX_HPP)
 #define _GGRID_BOX_HPP
 
-#include "gtypes.h"
-#include <functional>
-#include <cstdlib>
-#include <memory>
-#include <cmath>
-#include <bitset>
-#include "gtvector.hpp"
-#include "gtmatrix.hpp"
-#include "gnbasis.hpp"
-#include "gelem_base.hpp"
-#include "gdd_base.hpp"
 #include "ggrid.hpp"
-#include "gshapefcn_linear.hpp"
-#include "polygon.h"
-#include "gtpoint.hpp"
-#include "gcomm.hpp"
-#include "gspecbdy_factory.hpp"
-#include "ginitstate_factory.hpp"
-#include "gupdatebdy_factory.hpp"
-#include "gutils.hpp"
-#include "tbox/mpixx.hpp"
-#include "tbox/global_manager.hpp"
 
-
-typedef GTMatrix<GFTYPE> GFTMatrix;
 
 using namespace geoflow;
 using namespace geoflow::pdeint;
@@ -49,12 +26,11 @@ class GGridBox : public GGrid<TypePack>
 public:
 
                              using Types          = TypePack;
-                             using EqnBase        = EquationBase<Types>;      // Equation Base type
-                             using EqnBasePtr     = std::shared_ptr<EqnBase>; // Equation Base ptr
+                             using EqnBase        = typename Types::EqnBase;
+                             using EqnBasePtr     = typename Types::EqnBasePtr;
                              using State          = typename Types::State;
                              using StateComp      = typename Types::StateComp;
-                             using Grid           = typename Types::Grid;
-                             using StateInfo      = typename Types::StateInfo;
+//                           using Grid           = typename Types::Grid;
                              using Mass           = typename Types::Mass;
                              using Ftype          = typename Types::Ftype;
                              using Size           = typename Types::Size;
@@ -62,35 +38,35 @@ public:
                              using Time           = typename Types::Time;
                              using CompDesc       = typename Types::CompDesc;
                              using Jacobian       = typename Types::Jacobian;
-                             using IBdyVol        = GTVector<GSIZET>;
-                             using TBdyVol        = GTVector<GBdyType>;
-                             using GElemList      = GTVector<GElem_base*>;
+                             using IBdyVol        = typename Types::IBdyVol;
+                             using TBdyVol        = typename Types::TBdyVol;
+                             using GElemList      = typename Types::GElemList;
 
-                             using CGTypes        = CGTypePack;
-                             using Operator       = typename CGTypes::Operator;
-                             using Preconditioner = typename CGTypes::Preconditioner;
-                             using ConnectivityOp = typename CGTypes::ConnectivityOp;
+                             using Operator       = typename Types::Operator;
+                             using Preconditioner = typename Types::Preconditioner;
+                             using ConnectivityOp = typename Types::ConnectivityOp;
 
-                             using UpdateBase    = UpdateBdyBase<Types>;
-                             using UpdateBasePtr = std::shared_ptr<UpdateBase>;
-                             using BdyUpdateList = GTVector<GTVector<UpdateBasePtr>>;
+                             using UpdateBase     = typename Types::UpdateBase;
+                             using UpdateBasePtr  = typename Types::UpdateBasePtr;
+                             using BdyUpdateList  = typename Types::BdyUpdateList;
+
 
         // Box grid traits:
         struct Traits {
-          GTPoint<GFTYPE>     P0;        // global lower point
-          GTPoint<GFTYPE>     P1;        // global upper point
+          GTPoint<Ftype>      P0;        // global lower point
+          GTPoint<Ftype>      P1;        // global upper point
           GTVector<GBdyType>  bdyTypes;  // global bdy types
         };
 
-                            GGridBox(const geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GC_COMM &comm);
+                            GGridBox(const geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,Ftype>*> &b, GC_COMM &comm);
 
                            ~GGridBox();
 
         void                do_elems();                                      // compute elems
         void                do_elems(GTMatrix<GINT> &p,
-                              GTVector<GTVector<GFTYPE>> &xnodes);           // compute elems from restart data
-        void                set_partitioner(GDD_base<GFTYPE> *d);            // set and use GDD object
-        void                set_basis(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b); // set element basis
+                              GTVector<GTVector<Ftype>> &xnodes);           // compute elems from restart data
+        void                set_partitioner(GDD_base<Ftype> *d);            // set and use GDD object
+        void                set_basis(GTVector<GNBasis<GCTYPE,Ftype>*> &b); // set element basis
         void                periodize();                                     // periodize coords, if allowed
         void                unperiodize();                                   // un-periodize coords, if allow
         void                config_gbdy(const geoflow::tbox::PropertyTree &ptree,
@@ -100,17 +76,19 @@ public:
                               GTVector<GSIZET>             &igbdy,
                               GTVector<GUINT>              &degbdy);         // config bdy
         void                elem_face_data(
-                              GTMatrix<GTVector<GFTYPE>>       &dXdXi,
+                              GTMatrix<GTVector<Ftype>>       &dXdXi,
                               GTVector<GSIZET>                 &gieface,
-                              GTVector<GFTYPE>                 &face_mass,
-                              GTVector<GTVector<GFTYPE>>       &normals);    // compute elem face data
-const    GTPoint<GFTYPE>   &getP0() {return P0_; }                           // get blob bdy point 
-const    GTPoint<GFTYPE>   &getP1() {return P1_; }                           // get blob bdy point 
+                              GTVector<Ftype>                 &face_mass,
+                              GTVector<GTVector<Ftype>>       &normals);    // compute elem face data
+const    GTPoint<Ftype>   &getP0() {return P0_; }                           // get blob bdy point 
+const    GTPoint<Ftype>   &getP1() {return P1_; }                           // get blob bdy point 
 
          void               print(const GString &filename);                  // print grid to file
 
 
-friend  std::ostream&       operator<<(std::ostream&, GGridBox &);           // Output stream operator
+#if 0
+friend  std::ostream&       operator<<(std::ostream&, GGridBox<Types> &);           // Output stream operator
+#endif
  
 
 private:
@@ -121,9 +99,9 @@ private:
          void               do_elems2d();                                   // do 2d grid
          void               do_elems3d();                                   // do 3d grid
          void               do_elems2d(GTMatrix<GINT> &p, 
-                              GTVector<GTVector<GFTYPE>> &xnodes);          // do 2d grid restart
+                              GTVector<GTVector<Ftype>> &xnodes);          // do 2d grid restart
          void               do_elems3d(GTMatrix<GINT> &p, 
-                              GTVector<GTVector<GFTYPE>> &xnodes);          // do 3d grid restart
+                              GTVector<GTVector<Ftype>> &xnodes);          // do 3d grid restart
          void               find_gbdy_ind(GINT bdyid, GBOOL bunique,
                                GTVector<GSIZET> &ikeep,
                                GTVector<GSIZET> &ibdy,
@@ -139,62 +117,62 @@ private:
                                GTVector<GUINT>  &debdy);                    // find glob indices for 3d domain bdy
 
         void                do_gbdy_normals  (
-                               const GTMatrix<GTVector<GFTYPE>> &dXdXi,
-                               const GTVector<GSIZET>           &igbdy,
-                               const GTVector<GUINT>            &degbdy,
-                                     GTVector<GTVector<GFTYPE>> &normals,
-                               GTVector<GINT>                   &idepComp); // compute normals entry point
+                               const GTMatrix<GTVector<Ftype>> &dXdXi,
+                               const GTVector<GSIZET>          &igbdy,
+                               const GTVector<GUINT>           &degbdy,
+                                     GTVector<GTVector<Ftype>> &normals,
+                               GTVector<GINT>                  &idepComp); // compute normals entry point
          void               do_gbdy_normals2d(
-                              const GTMatrix<GTVector<GFTYPE>> &dXdXi,
-                              const GTVector<GSIZET>           &igbdy,
-                              const GTVector<GUINT>            &degbdy,
-                              GTVector<GTVector<GFTYPE>>       &normals,
-                              GTVector<GINT>                   &idepComp);  // compute normals to doimain bdy in 2d
+                              const GTMatrix<GTVector<Ftype>> &dXdXi,
+                              const GTVector<GSIZET>          &igbdy,
+                              const GTVector<GUINT>           &degbdy,
+                              GTVector<GTVector<Ftype>>       &normals,
+                              GTVector<GINT>                  &idepComp);  // compute normals to doimain bdy in 2d
          void               do_gbdy_normals3d(
-                              const GTMatrix<GTVector<GFTYPE>> &dXdXi,
-                              const GTVector<GSIZET>           &igbdy,
-                              const GTVector<GUINT>            &degbdy,
-                              GTVector<GTVector<GFTYPE>>       &normals,
-                              GTVector<GINT>                   &idepComp);       // compute normals to doimain bdy in 3d
+                              const GTMatrix<GTVector<Ftype>> &dXdXi,
+                              const GTVector<GSIZET>          &igbdy,
+                              const GTVector<GUINT>           &degbdy,
+                              GTVector<GTVector<Ftype>>       &normals,
+                              GTVector<GINT>                  &idepComp);       // compute normals to doimain bdy in 3d
         void                find_rank_subdomain();                               // find task's default subdomain
 
         void                elem_face_data2d(
-                              GTMatrix<GTVector<GFTYPE>>       &dXdXi,
-                              GTVector<GSIZET>                 &gieface,
-                              GTVector<GFTYPE>                 &face_mass,
-                              GTVector<GTVector<GFTYPE>>       &normals);          // compute 2d elem face data
+                              GTMatrix<GTVector<Ftype>>       &dXdXi,
+                              GTVector<GSIZET>                &gieface,
+                              GTVector<Ftype>                 &face_mass,
+                              GTVector<GTVector<Ftype>>       &normals);          // compute 2d elem face data
         void                elem_face_data3d(
-                              GTMatrix<GTVector<GFTYPE>>       &dXdXi,
-                              GTVector<GSIZET>                 &gieface,
-                              GTVector<GFTYPE>                 &face_mass,
-                              GTVector<GTVector<GFTYPE>>       &normals);          // compute 3d elem face data
-         GBOOL              is_global_vertex(GTPoint<GFTYPE> &pt);          // pt on global vertex?
-         GBOOL              on_global_edge(GINT iface, GTPoint<GFTYPE> &pt);// pt on global edge?
+                              GTMatrix<GTVector<Ftype>>       &dXdXi,
+                              GTVector<GSIZET>                &gieface,
+                              GTVector<Ftype>                 &face_mass,
+                              GTVector<GTVector<Ftype>>       &normals);          // compute 3d elem face data
+         GBOOL              is_global_vertex(GTPoint<Ftype> &pt);          // pt on global vertex?
+         GBOOL              on_global_edge(GINT iface, GTPoint<Ftype> &pt);// pt on global edge?
 
 
 
          GINT                ndim_;          // grid dimensionality (2 or 3)
-         GDD_base<GFTYPE>    *gdd_;           // domain decomposition/partitioning object
-         GShapeFcn_linear<GFTYPE> 
+         GDD_base<Ftype>    *gdd_;           // domain decomposition/partitioning object
+         GShapeFcn_linear<Ftype> 
                             *lshapefcn_;     // linear shape func to compute 2d coords
-         GTPoint<GFTYPE>     P0_;            // P0 = starting point of box origin
-         GTPoint<GFTYPE>     P1_;            // P1 = diagonally-opposing box point
-         GTPoint<GFTYPE>     dP_;            // box size
-         GTVector<GTPoint<GFTYPE>>
+         GTPoint<Ftype>      P0_;            // P0 = starting point of box origin
+         GTPoint<Ftype>      P1_;            // P1 = diagonally-opposing box point
+         GTPoint<Ftype>      dP_;            // box size
+         GTVector<GTPoint<Ftype>>
                              gverts_;        // global bdy vertices
-         GTVector<GTPoint<GFTYPE>>
+         GTVector<GTPoint<Ftype>>
                              ftcentroids_;   // centroids of finest elements
-         GTVector<GNBasis<GCTYPE,GFTYPE>*> 
+         GTVector<GNBasis<GCTYPE,Ftype>*> 
                              gbasis_;        // directional bases
-         GTVector<GQuad<GFTYPE>> 
+         GTVector<GQuad<Ftype>> 
                              qmesh_;         // list of vertices for each 2d (quad) element
-         GTVector<GHex<GFTYPE>>  
+         GTVector<GHex<Ftype>>  
                              hmesh_;         // list of vertices for each 3d (hex) element
          GTVector<GINT>      ne_;            // # elems in each coord direction in 3d
          GTVector<GBOOL>     bPeriodic_;     // is periodic in x, y, or z?
          GTVector<GSIZET>    periodicids_;   // node ids that were made periodic in 1 or more dirs
          GTVector<GUINT>     periodicdirs_;  // integer with bits 1, 2, 3 set for direction of periodiscity
-         GTVector<GFTYPE>    Lbox_;          // length of box edges (x, y, [and z])
+         GTVector<Ftype>     Lbox_;          // length of box edges (x, y, [and z])
 
 
 };

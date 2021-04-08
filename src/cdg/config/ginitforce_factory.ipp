@@ -20,7 +20,7 @@
 // RETURNS: TRUE on success; else FALSE
 //**********************************************************************************
 template<typename Types>
-GBOOL GInitForceFactory<Types>::init(const PropertyTree& ptree, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u, State &uf)
+GBOOL GInitForceFactory<Types>::init(const PropertyTree& ptree, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u, State &uf)
 {
   GBOOL         bret    = FALSE;
   GBOOL         bforced = ptree.getValue<GBOOL>("use_forcing");
@@ -64,7 +64,7 @@ GBOOL GInitForceFactory<Types>::init(const PropertyTree& ptree, EqnBasePtr &eqn,
 // RETURNS: TRUE on success; else FALSE
 //**********************************************************************************
 template<typename Types>
-GBOOL GInitForceFactory<Types>::set_by_direct(const PropertyTree& ptree, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u, State &uf)
+GBOOL GInitForceFactory<Types>::set_by_direct(const PropertyTree& ptree, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u, State &uf)
 {
   GBOOL         bret    = FALSE;
   GString       sinit   = ptree.getValue<GString>("initforce_block");
@@ -104,7 +104,7 @@ GBOOL GInitForceFactory<Types>::set_by_direct(const PropertyTree& ptree, EqnBase
 // RETURNS: TRUE on success; else FALSE
 //**********************************************************************************
 template<typename Types>
-GBOOL GInitForceFactory<Types>::set_by_comp(const PropertyTree& ptree, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u, State &uf)
+GBOOL GInitForceFactory<Types>::set_by_comp(const PropertyTree& ptree, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u, State &uf)
 {
 
 #if 0
@@ -199,18 +199,18 @@ GBOOL GInitForceFactory<Types>::set_by_comp(const PropertyTree& ptree, EqnBasePt
 // RETURNS: TRUE on success; else FALSE
 //**********************************************************************************
 template<typename Types>
-GBOOL GInitForceFactory<Types>::doinitfv(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u, State &uf)
+GBOOL GInitForceFactory<Types>::doinitfv(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u, State &uf)
 {
-  GBOOL           bret    = TRUE;
-  GString         sinit;
-  GGridIcos      *icos;
-  GGridBox       *box;
-  PropertyTree    vtree = ptree.getPropertyTree(sconfig);
+  GBOOL             bret    = TRUE;
+  GString           sinit;
+  GGridIcos<Types> *icos;
+  GGridBoa<Types>  *box;
+  PropertyTree      vtree = ptree.getPropertyTree(sconfig);
 
   sinit = vtree.getValue<GString>("name");
 
-  icos = dynamic_cast<GGridIcos*>(&grid);
-  box  = dynamic_cast<GGridBox*> (&grid);
+  icos = dynamic_cast<GGridIcos<Types>*>(&grid);
+  box  = dynamic_cast<GGridBox<Types>*> (&grid);
   if      ( "null"   == sinit
        ||   ""             == sinit ) {     // set to 0
     for ( GINT i=0; i<uf.size(); i++ ) *uf[i] = 0.0;
@@ -258,7 +258,7 @@ GBOOL GInitForceFactory<Types>::doinitfv(const PropertyTree &ptree, GString &sco
 // RETURNS: TRUE on success; else FALSE
 //**********************************************************************************
 template<typename Types>
-GBOOL GInitForceFactory<Types>::doinitftemp(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, GGrid &grid, Time &time, State &utmp, State &u, State &uf)
+GBOOL GInitForceFactory<Types>::doinitftemp(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u, State &uf)
 {
   GBOOL           bret    = TRUE;
   GString         sinit;

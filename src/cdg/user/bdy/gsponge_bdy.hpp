@@ -16,9 +16,6 @@
 #include <memory>
 #include <cmath>
 #include "gtvector.hpp"
-#include "ggrid.hpp"
-#include "ggrid_box.hpp"
-#include "ggrid_icos.hpp"
 #include "ggfx.hpp"
 #include "pdeint/update_bdy_base.hpp"
 
@@ -35,13 +32,13 @@ public:
         using EqnBasePtr = std::shared_ptr<EqnBase>;
         using State      = typename Types::State;
         using Grid       = typename Types::Grid;
+        using GridBox    = typename Types::GridBox;
+        using GridIcos   = typename Types::GridIcos;
         using Ftype      = typename Types::Ftype;
         using Time       = typename Types::Time;
 
         static_assert(std::is_same<State,GTVector<GTVector<Ftype>*>>::value,
                "State is of incorrect type");
-        static_assert(std::is_same<Grid,GGrid>::value,
-               "Grid is of incorrect type");
 
         // GSpongeBdy solver traits:
         struct Traits {
