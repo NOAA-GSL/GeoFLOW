@@ -59,67 +59,73 @@ struct stStateInfo {
 };
 
 
-struct MyCGTypes {
-        using Types            = MyCGTypes;
-        using Operator         = class GHelmholtz;
-        using Preconditioner   = LinSolverBase<Types>;
-        using State            = GTVector<GTVector<GFTYPE>*>;
-        using StateComp        = GTVector<GFTYPE>;
-        using Grid             = GGrid;
-        using Value            = GFTYPE;
-        using ConnectivityOp   = GGFX<GFTYPE>;
+
+struct TypePack {
+        using State      = GTVector<GTVector<GFTYPE>*>;
+        using StateComp  = GTVector<GFTYPE>;
+        using StateInfo  = GStateInfo;
+        using Grid       = GGrid<TypePack>;
+        using GridBox    = GGridBox<TypePack>;
+        using GridIcos   = GGridIcos<TypePack>;
+        using Mass       = GMass<TypePack>;
+        using Ftype      = GFTYPE;
+        using Derivative = State;
+        using Time       = Ftype;
+        using CompDesc   = GTVector<GStateCompType>;
+        using Jacobian   = State;
+        using Size       = GSIZET;
+        using EqnBase    = EquationBase<TypePack>;     // Equation Base type
+        using EqnBasePtr = std::shared_ptr<EqnBase>;   // Equation Base ptr
+        using IBdyVol    = GTVector<GSIZET>;
+        using TBdyVol    = GTVector<GBdyType>;
+        using Operator   = GHelmholtz<TypePack>;
+        using GElemList  = GTVector<GElem_base*>;
+        using Preconditioner = GHelmholtz<TypePack>;
+        using ConnectivityOp = GGFX<Ftype>;
+        using FilterBasePtr  = std::shared_ptr<FilterBase<TypePack>>;
+        using FilterList     = std::vector<FilterBasePtr>;
+};
+struct CGTypes {
+    using Operator         = class GHelmholtz<TypePack>;
+    using Preconditioner   = GLinOpBase<TypePack>;
+    using State            = typename TypePack::State;
+    using StateComp        = typename TypePack::StateComp;
+    using Grid             = GGrid<TypePack>;
+    using Ftype            = typename TypePack::Ftype;
+    using ConnectivityOp   = GGFX<GFTYPE>;
 };
 
-
-
-template< // default template arg types
-typename StateType     = GTVector<GTVector<GFTYPE>*>,
-typename StateInfoType = stStateInfo,
-typename GridType      = GGrid,
-typename ValueType     = GFTYPE,
-typename DerivType     = StateType,
-typename TimeType      = ValueType,
-typename CompType      = GTVector<GStateCompType>,
-typename JacoType      = StateType,
-typename SizeType      = GSIZET 
->
-struct EquationTypes {
-        using State      = StateType;
-        using StateInfo  = StateInfoType;
-        using Grid       = GridType;
-        using Value      = ValueType;
-        using Derivative = DerivType;
-        using Time       = TimeType;
-        using CompDesc   = CompType;
-        using Jacobian   = JacoType;
-        using Size       = SizeType;
-};
-using MyTypes       = EquationTypes<>;           // Define types used
-using EqnBase       = EquationBase<MyTypes>;     // Equation Base type
-using EqnBasePtr    = std::shared_ptr<EqnBase>;  // Equation Base ptr
-using IOBaseType    = IOBase<MyTypes>;           // IO Base type
+using Types         = TypePack;                   // Define types used
+using EqnBase       = EquationBase<Types>;        // Equation Base type
+using EqnBasePtr    = std::shared_ptr<EqnBase>;   // Equation Base ptr
+using IOBaseType    = IOBase<Types>;              // IO Base type
 using IOBasePtr     = std::shared_ptr<IOBaseType>;// IO Base ptr
-using Grid          = GGrid;
+using Grid          = TypePack::Grid;
+using Ftype         = TypePack::Ftype;
 
 
-GGrid        *grid_=NULLPTR;
-GC_COMM      comm_=GC_COMM_WORLD ;      // communicator
+Grid         *grid_=NULLPTR;
+GC_COMM       comm_=GC_COMM_WORLD ;      // communicator
+
+GINT szMatCache_ = _G_MAT_CACHE_SIZE;
+GINT szVecCache_ = _G_VEC_CACHE_SIZE;
 
 
-void init_ggfx(PropertyTree &ptree, GGrid &grid, GGFX<GFTYPE> &ggfx);
+
+void init_ggfx(PropertyTree &ptree, Grid &grid, GGFX<Ftype> &ggfx);
 
 int main(int argc, char **argv)
 {
     GString   serr="main: ";
     GINT      errcode, gerrcode, iret;
     IOBasePtr pIO;         // ptr to IOBase operator
-    GTVector<GTVector<GFTYPE>>    *xnodes;
-    LinSolverBase<MyCGTypes>::Traits cgtraits;
+    GTVector<GTVector<Ftype>>    *xnodes;
+    LinSolverBase<CGTypes>::Traits cgtraits;
     GString   snorm;
     std::ifstream itst;
     std::ofstream ios;
 
-    typename ObserverBase<MyTypes>::Traits
+    typename ObserverBase<Types>::Traits
                    binobstraits;
 
 
@@ -142,7 +148,7 @@ int main(int argc, char **argv)
     // Get minimal property tree:
     PropertyTree gtree, ptree; 
     GString sgrid;
-    GTPoint<GFTYPE> P0, P1, dP;
+    GTPoint<Ftype> P0, P1, dP;
     std::vector<GINT> pstd(GDIM);
 
     ptree.load_file("cg_input.jsn");
@@ -150,8 +156,8 @@ int main(int argc, char **argv)
     pstd        = ptree.getArray<GINT>("exp_order");
     gtree       = ptree.getPropertyTree(sgrid);
 
-    std::vector<GFTYPE> xyz0 = gtree.getArray<GFTYPE>("xyz0");
-    std::vector<GFTYPE> dxyz = gtree.getArray<GFTYPE>("delxyz");
+    std::vector<Ftype> xyz0 = gtree.getArray<Ftype>("xyz0");
+    std::vector<Ftype> dxyz = gtree.getArray<Ftype>("delxyz");
     P0  = xyz0;
     P1  = dxyz;
     P1 += P0;
@@ -160,59 +166,59 @@ int main(int argc, char **argv)
         && P0.x2 == 0.0 && P1.x2 == 1.0 );
 
     // Create basis:
-    GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis(GDIM);
+    GTVector<GNBasis<GCTYPE,Ftype>*> gbasis(GDIM);
     for ( GSIZET k=0; k<GDIM; k++ ) {
-      gbasis [k] = new GLLBasis<GCTYPE,GFTYPE>(pstd[k]);
+      gbasis [k] = new GLLBasis<GCTYPE,Ftype>(pstd[k]);
     }
 
     EH_MESSAGE("main: Create grid...");
 
-    ObserverFactory<MyTypes>::get_traits(ptree, "gio_observer", binobstraits);
-    grid_ = GGridFactory<MyTypes>::build(ptree, gbasis, pIO, binobstraits, comm_);
+    ObserverFactory<Types>::get_traits(ptree, "gio_observer", binobstraits);
+    grid_ = GGridFactory<Types>::build(ptree, gbasis, pIO, binobstraits, comm_);
 
     EH_MESSAGE("main: Initialize GGFX operator...");
 
     // Initialize gather/scatter operator:
-    GGFX<GFTYPE>  ggfx;
+    GGFX<Ftype>  ggfx;
     init_ggfx(ptree, *grid_, ggfx);
 
     xnodes = &(grid_->xNodes());
 
-    GTVector<GFTYPE>            f (grid_->ndof());
-    GTVector<GFTYPE>            u (grid_->ndof());
-    GTVector<GFTYPE>            ua(grid_->ndof());
-    GTVector<GFTYPE>            ub(grid_->ndof());
-    GTVector<GFTYPE>           *mass_local = grid_->massop().data();
-    GTVector<GTVector<GFTYPE>*> utmp(10);
+    GTVector<Ftype>            f (grid_->ndof());
+    GTVector<Ftype>            u (grid_->ndof());
+    GTVector<Ftype>            ua(grid_->ndof());
+    GTVector<Ftype>            ub(grid_->ndof());
+    GTVector<Ftype>           *mass_local = grid_->massop().data();
+    GTVector<GTVector<Ftype>*> utmp(10);
 
-    for ( auto j=0; j<utmp.size(); j++ ) utmp[j] = new GTVector<GFTYPE>(grid_->ndof());
+    for ( auto j=0; j<utmp.size(); j++ ) utmp[j] = new GTVector<Ftype>(grid_->ndof());
 
     cgtraits.maxit    = gtree.getValue<GDOUBLE>("maxit");
     cgtraits.tol      = gtree.getValue<GDOUBLE>("tol");
     snorm             = gtree.getValue<GString>("norm_type");
-    cgtraits.normtype = LinSolverBase<MyCGTypes>::str2normtype(snorm);
+    cgtraits.normtype = LinSolverBase<CGTypes>::str2normtype(snorm);
 
     EH_MESSAGE("main: Initialize CG operator...");
 
     // Initialize GCG operator:
-    GSIZET            niter;
-    GFTYPE            eps = 100.0*std::numeric_limits<GFTYPE>::epsilon();
-    GFTYPE            err, resmin, resmax, x, y, z;
-    GTVector<GFTYPE> *resvec;
+    GSIZET           niter;
+    Ftype            eps = 100.0*std::numeric_limits<Ftype>::epsilon();
+    Ftype            err, resmin, resmax, x, y, z;
+    GTVector<Ftype> *resvec;
 
     EH_MESSAGE("main: Create Lap op...");
-    GHelmholtz       L(*grid_); // Laplacian operator
+    GHelmholtz<Types>    L(*grid_); // Laplacian operator
 
     EH_MESSAGE("main: Create CG op...");
 
-    GCG<MyCGTypes>   cg(cgtraits, *grid_, ggfx, utmp);
+    GCG<CGTypes>   cg(cgtraits, *grid_, ggfx, utmp);
 
     EH_MESSAGE("main: Check for SPD...");
 
 //L.use_metric(FALSE);
 
     // Check if operator is SPD:
-    GTMatrix<GFTYPE> Hmat (f.size(),f.size());
+    GTMatrix<Ftype> Hmat (f.size(),f.size());
     f = 0.0;
     for ( auto j=0; j<f.size(); j++ ) {
       f[j] = 1.0;
@@ -313,11 +319,11 @@ int main(int argc, char **argv)
     ios.close();
 
     errcode = err < 1e-12 ? 0 : 2;
-    if ( errcode != 0 || iret != GCG<MyCGTypes>::GCGERR_NONE ) {
+    if ( errcode != 0 || iret != GCG<CGTypes>::GCGERR_NONE ) {
       cout << serr << " Error: err=" << err << " code=" << errcode << endl;
       cout << serr << " residuals=" << *resvec << endl;
     }
-    assert(iret == GCG<MyCGTypes>::GCGERR_NONE  && "Solve failure");
+    assert(iret == GCG<CGTypes>::GCGERR_NONE  && "Solve failure");
 
 
 prerror:
@@ -355,10 +361,10 @@ prerror:
 //         grid    : Grid object
 //         ggfx    : gather/scatter op, GGFX
 //**********************************************************************************
-void init_ggfx(PropertyTree& ptree, GGrid& grid, GGFX<GFTYPE>& ggfx)
+void init_ggfx(PropertyTree& ptree, Grid& grid, GGFX<Ftype>& ggfx)
 {
   const auto ndof = grid_->ndof();
-  std::vector<std::array<GFTYPE,GDIM>> xyz(ndof);
+  std::vector<std::array<Ftype,GDIM>> xyz(ndof);
   for(std::size_t i = 0; i < ndof; i++){
 	  for(std::size_t d = 0; d < GDIM; d++){
 		  xyz[i][d] = grid.xNodes()[d][i];
