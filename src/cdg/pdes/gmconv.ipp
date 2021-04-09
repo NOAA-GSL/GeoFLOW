@@ -133,7 +133,7 @@ void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
   dxmin = &grid_->dxmin();
 
  *rhoT = *u[DENSITY]; 
-  if ( traits_.usebase ) *rhoT += *u[BASESTATE];
+  if ( traits_.usebase ) *rhoT += *ubase_[0];
  *tmp1 = *rhoT; tmp1->rpow(-1.0);
   compute_v(u, *tmp1, v_); 
 
@@ -474,7 +474,7 @@ void GMConv<TypePack>::dudt_wet(const Time &t, const State &u, const State &uf, 
    *p += *tmp1;
   }
 
-  GMTK::saxpby<Ftype>(*tmp1, *e, 1.0, *p, 1.0);     // h = p+e, enthalpy density
+  GMTK::saxpby<Ftype>(*tmp1, *e, 1.0, *p, 1.0);    // h = p+e, enthalpy density
 
   gdiv_->apply(*tmp1, v_, stmp, *dudt[ENERGY]); 
 
@@ -482,22 +482,22 @@ void GMConv<TypePack>::dudt_wet(const Time &t, const State &u, const State &uf, 
  *dudt[ENERGY] -= *tmp1;                           // -= [mu u^i s^{ij}],j
 
   if ( traits_.dofallout || !traits_.dodry ) {
-    GMTK::paxy<Ftype>(*tmp1, *rhoT, CVL, *T);             // tmp1 = C_liq rhoT T
+    GMTK::paxy<Ftype>(*tmp1, *rhoT, CVL, *T);      // tmp1 = C_liq rhoT T
     compute_falloutsrc(*tmp1, qliq_, tvliq_, -1.0, stmp, *Ltot);
                                                    // liquid fallout src
    *dudt[ENERGY] += *Ltot;                         // += L_liq
-    GMTK::paxy<Ftype>(*tmp1, *rhoT, CVI, *T);             // tmp1 = C_ice rhoT T
+    GMTK::paxy<Ftype>(*tmp1, *rhoT, CVI, *T);      // tmp1 = C_ice rhoT T
     compute_falloutsrc(*tmp1, qice_, tvice_, -1.0, stmp, *Ltot); 
                                                    // ice fallout src
    *dudt[ENERGY] += *Ltot;                         // += L_ice
   }
 
-  gadvect_->apply(*p, v_, stmp, *tmp1);             // v.Grad p 
- *dudt[ENERGY] -= *tmp1;                            // -= v . Grad p
+  gadvect_->apply(*p, v_, stmp, *tmp1);            // v.Grad p 
+ *dudt[ENERGY] -= *tmp1;                           // -= v . Grad p
 
   if ( traits_.dograv && traits_.dofallout ) {
     compute_pe(*rhoT, qi_, tvi_, stmp, *tmp1);
-   *dudt[ENERGY] += *tmp1;                          // += Sum_i rhoT q_i g.W_i
+   *dudt[ENERGY] += *tmp1;                         // += Sum_i rhoT q_i g.W_i
   }
 
   GMTK::dot<Ftype>(fv_, v_, *tmp2, *tmp1);
@@ -605,7 +605,6 @@ void GMConv<TypePack>::step_impl(const Time &t, State &uin, State &uf, const Tim
   // Set evolved state vars from input state.
   // These are not deep copies:
   for ( auto j=0; j<traits_.nsolve; j++ ) uevolve_ [j] = uin[j];
-  for ( auto j=0; j<traits_.nbase ; j++ ) ubase_   [j] = uin[BASESTATE+j]; // base state
   
 
   switch ( traits_.isteptype ) {
@@ -723,7 +722,7 @@ void GMConv<TypePack>::init_impl(State &u, State &tmp)
   GString serr = "GMConv<TypePack>::init: ";
 
   GBOOL      bmultilevel = FALSE;
-  GSIZET     n;
+  GSIZET     n, ntmp;
   GINT       nexcl, nrhstmp;
   GridIcos  *icos = dynamic_cast<GridIcos*>(grid_);
   CompDesc  *icomptype = &this->stateinfo().icomptype;
@@ -864,9 +863,11 @@ void GMConv<TypePack>::init_impl(State &u, State &tmp)
       assert(nrhstmp >= szrhstmp() && "Invalid rhstmp array size");
       // Make sure there is no overlap between tmp arrays:
       n = 0;
+      for ( auto j=0; j<traits_ .nbase;  j++, n++ ) ubase_  [j] = utmp_[n];
       for ( auto j=0; j<traits_ .nsolve; j++, n++ ) uold_   [j] = utmp_[n];
       for ( auto j=0; j<urktmp_ .size(); j++, n++ ) urktmp_ [j] = utmp_[n];
       for ( auto j=0; j<urhstmp_.size(); j++, n++ ) urhstmp_[j] = utmp_[n];
+      ntmp = n;
       break;
 /*
     case GSTEPPER_BDFAB:
@@ -966,22 +967,24 @@ void GMConv<TypePack>::init_impl(State &u, State &tmp)
 
   // Set size of mass frac and 
   // misc. helper arrays:
-  nhydro_ = traits_.dodry ? 0 : traits_.nlsector + traits_.nisector + 1;
+  nhydro_ = traits_.dodry ? 0 : traits_.nlsector + traits_.nisector;
   nmoist_ = traits_.dodry ? 0 : nhydro_ + 1;
   nevolve_ = nc_ + 2 + nmoist_;
   this->stateinfo().nevolve = traits_.nsolve;
   this->stateinfo().npresc  = traits_.nstate - traits_.nsolve;
   qi_   .resize(nmoist_);
-  tvi_  .resize(nmoist_);
+  tvi_  .resize(nmoist_);          // all term vel.
   qliq_ .resize(traits_.nlsector);
-  tvliq_.resize(traits_.nlsector);
+  tvliq_.resize(traits_.nlsector); // term vel. of liq
   qice_ .resize(traits_.nisector);
-  tvice_.resize(traits_.nisector);
+  tvice_.resize(traits_.nisector); // term vel. of ice
   fv_   .resize(nc_); 
-  s_   . resize(nc_); 
+  s_    .resize(nc_); 
+
+  assert(nmoist_ == 0 && "Terminal velocity must be figured out!");
+  for ( n=0; n<tvi_.size(); n++ ) tvi_[n] = utmp_[ntmp+n];
 
   qi_   = NULLPTR;
-  tvi_  = NULLPTR;
   qliq_ = NULLPTR;
   tvliq_= NULLPTR;
   qice_ = NULLPTR;
@@ -1507,8 +1510,8 @@ void GMConv<TypePack>::compute_base(State &u)
        ptmp[j]   = traits_.P0_base*pow(T/traits_.Ts_base,CPD/RD);
        dtmp[j]   = ptmp[j] / ( RD * T );
      }
-     *u  [BASESTATE] = dtmp;
-     *u[BASESTATE+1] = ptmp;
+     *ubase_[0] = dtmp;
+     *ubase_[1] = ptmp;
      return;
    }
 
@@ -1521,8 +1524,8 @@ void GMConv<TypePack>::compute_base(State &u)
      ptmp[j]  = traits_.P0_base*pow(T/traits_.Ts_base,CPD/RD);
      dtmp[j]  = ptmp[j] / ( RD * T );
    }
-   *u  [BASESTATE] = dtmp;
-   *u[BASESTATE+1] = ptmp;
+  *ubase_[0] = dtmp;
+  *ubase_[1] = ptmp;
 
 } // end of method compute_base
 
@@ -1543,10 +1546,10 @@ void GMConv<TypePack>::assign_helpers(const State &u, const State &uf)
 
    // Point helper arrays to corresp state components:
    qi_  = NULLPTR;
-   tvi_ = NULLPTR;
+// tvi_ = NULLPTR;
    for ( auto j=0; j<nhydro_; j++ ) { //
      qi_ [j] = u[nc_+3+j]; // set mass frac vector
-     tvi_[j] = u[nc_+3+nhydro_+j]; // set term speed for each qi
+//   tvi_[j] = u[nc_+3+nhydro_+j]; // set term speed for each qi
    }
    for ( auto j=0; j<nc_; j++ ) fv_[j] = uf[j]; // kinetic forcing vector
 
@@ -1555,8 +1558,8 @@ void GMConv<TypePack>::assign_helpers(const State &u, const State &uf)
    for ( auto j=0; j<s_.size(); j++ ) s_    [j] = u[j];
    for ( auto j=0; j<nliq; j++ ) qliq_ [j] = u[nc_+3+j];
    for ( auto j=0; j<nice; j++ ) qice_ [j] = u[nc_+3+nliq+j];
-   for ( auto j=0; j<nliq; j++ ) tvliq_[j] = u[nc_+3+  nliq+nice+j];
-   for ( auto j=0; j<nice; j++ ) tvice_[j] = u[nc_+3+2*nliq+nice+j];
+// for ( auto j=0; j<nliq; j++ ) tvliq_[j] = u[nc_+3+  nliq+nice+j];
+// for ( auto j=0; j<nice; j++ ) tvice_[j] = u[nc_+3+2*nliq+nice+j];
 
 } // end of method assign_helpers
 
@@ -1579,7 +1582,7 @@ GINT GMConv<TypePack>::szrhstmp()
   if ( traits_.dofallout && !traits_.dodry ) maxop = MAX(5,maxop);
 
   sum += maxop;
-  sum += 6;        // size for misc tmp space in dudt_impl
+  sum += 6;              // size for misc tmp space in dudt_impl
 
   return sum;
 
@@ -1599,6 +1602,8 @@ GINT GMConv<TypePack>::tmp_size_impl()
  
   sum += nc_;                                 // for v_ 
   sum += traits_.nlsector || traits_.nisector ? nc_ : 0;  // for W_
+  sum += traits_.nbase;                      // size for base state
+  sum += traits_.nfallout;                   // size for fallout speeds
   sum += traits_.nsolve;                     // old state storage
   sum += traits_.nsolve
        * (traits_.itorder+1)+1;              // RKK storage
@@ -1633,7 +1638,7 @@ void GMConv<TypePack>::compute_derived_impl(const State &u, GString sop,
     assert(utmp .size() >= 2   && "Incorrect no. tmp components");
     compute_cv(u, *utmp[0], *utmp[1]);                      // Cv
    *utmp[0] = *u[DENSITY];
-    if ( traits_.usebase ) *utmp[0] += *u[BASESTATE];       // total density
+    if ( traits_.usebase ) *utmp[0] += *ubase_[0];       // total density
     geoflow::compute_temp<Ftype>(*u[ENERGY], *utmp[0], *utmp[1], *uout[0]);  // temperature
     iuout.resize(1); iuout[0] = 0;
   }
@@ -1642,7 +1647,7 @@ void GMConv<TypePack>::compute_derived_impl(const State &u, GString sop,
     assert(utmp .size() >= 4   && "Incorrect no. tmp components");
     compute_cv(u, *utmp[0], *utmp[1]);                     // Cv
    *utmp[2] = *u[DENSITY];
-    if ( traits_.usebase ) *utmp[2] += *u[BASESTATE];       // total density
+    if ( traits_.usebase ) *utmp[2] += *ubase_[0];       // total density
     geoflow::compute_temp<Ftype>(*u[ENERGY], *utmp[2], *utmp[1], *utmp[3]);  // temperature
     compute_qd(u, *utmp[0]);
     geoflow::compute_p<Ftype>(*utmp[3], *utmp[2], *utmp[0], RD, *uout[0]);
@@ -1658,14 +1663,14 @@ void GMConv<TypePack>::compute_derived_impl(const State &u, GString sop,
     assert(traits_.usebase);
     compute_cv(u, *utmp[0], *utmp[1]);                     // Cv
    *utmp[2] = *u[DENSITY];
-    if ( traits_.usebase ) *utmp[2] += *u[BASESTATE];       // total density
+    if ( traits_.usebase ) *utmp[2] += *ubase_[0];       // total density
     geoflow::compute_temp<Ftype>(*u[ENERGY], *utmp[2], *utmp[1], *utmp[3]);  // temperature
     compute_qd(u, *utmp[0]);
     geoflow::compute_p<Ftype>(*utmp[3], *utmp[2], *utmp[0], RD, *uout[0]);
     if ( !traits_.dodry ) {
       geoflow::compute_p<Ftype>(*utmp[3], *utmp[2], *u[VAPOR], RV, *utmp[0]);
      *uout[0] += *utmp[0];
-     *uout[0] -= *u[BASESTATE+1];       // create fluctuation
+     *uout[0] -= *ubase_[1];       // create fluctuation
     }
     iuout.resize(1); iuout[0] = 0;
   }
@@ -1686,8 +1691,8 @@ void GMConv<TypePack>::compute_derived_impl(const State &u, GString sop,
     if ( traits_.usebase ) { // subtract base potl temp
       // theta_base = P0/(RD *rho_base) (P_base/P0)^(1-R/Cp)
       for ( auto j=0; j<uout[0]->size(); j++ ) {
-        tb = (traits_.P0_base/(RD*(*u[BASESTATE])[j])) 
-           * pow((*u[BASESTATE+1])[j]/traits_.P0_base,1.0+fact1);
+        tb = (traits_.P0_base/(RD*(*ubase_[0])[j])) 
+           * pow((*ubase_[1])[j]/traits_.P0_base,1.0+fact1);
         (*uout[0])[j] -= tb;
       }
     }
@@ -1710,7 +1715,7 @@ void GMConv<TypePack>::compute_derived_impl(const State &u, GString sop,
   else if ( "den"      == sop ) { // density (total)
     assert(uout .size() >= 1   && "Incorrect no. output components");
     if ( traits_.usebase ) {
-      GMTK::saxpby<Ftype>(*uout[0], *u[DENSITY], 1.0, *u[BASESTATE], 1.0); 
+      GMTK::saxpby<Ftype>(*uout[0], *u[DENSITY], 1.0, *ubase_[0], 1.0); 
     }
     else {
       *uout[0] = *u[DENSITY];  // state is dden already
@@ -1735,7 +1740,7 @@ void GMConv<TypePack>::compute_derived_impl(const State &u, GString sop,
     }
     else {
      *utmp[0] = *u[DENSITY];
-      if ( traits_.usebase ) *utmp[0] += *u[BASESTATE];
+      if ( traits_.usebase ) *utmp[0] += *ubase_[0];
       utmp[0]->rpow(-1.0); // 1/d
       for ( auto j=0; j<nc_; j++ ) {
         *uout[j] = *u[j]; *uout[j] *= *utmp[0];

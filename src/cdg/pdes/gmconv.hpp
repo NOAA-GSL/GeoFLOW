@@ -144,6 +144,7 @@ public:
           GINT            nsolve      = GDIM+2; // no. vars to solve for
           GINT            nlsector    = 0;      // no. vars in liq-sector
           GINT            nisector    = 0;      // no. vars in ice-sector
+          GINT            nfallout    = 0;      // no. fallout velocity comps
           GINT            nbase       = 2;      // no. vars in base state (p, d)
           GINT            itorder     = 2;      // formal  time iorder
           GINT            nstage      = 2;      // no. stages for time integ.
@@ -175,28 +176,29 @@ public:
 
         GMConv() = delete; 
         GMConv(Grid &grid, GMConv<TypePack>::Traits &traits);
-       ~GMConv();
+virtual ~GMConv();
         GMConv(const GMConv &bu) = default;
         GMConv &operator=(const GMConv &bu) = default;
 
-        StateComp           &get_nu() { return nu_; };                       // Set nu/viscosity
-        StateComp           &get_eta() { return eta_; };                     // Set nu/viscosity
+        StateComp           &get_nu() { return nu_; };                       // set nu/viscosity
+        StateComp           &get_eta() { return eta_; };                     // set nu/viscosity
+        State               &get_base_state() { return ubase_; }             // get base state
 
         void                set_steptop_callback(
                             std::function<void(const Time &t, State &u, 
                                                const Time &dt)> callback) 
                              { steptop_callback_ = callback; bsteptop_ = TRUE;}
 
-        GMConv<TypePack>::Traits &get_traits() { return traits_; }           // Get traits
+        GMConv<TypePack>::Traits &get_traits() { return traits_; }           // get traits
                                             
 inline  void                compute_v    (const State &u, StateComp &di, State &v);
 inline  void                compute_v    (const State &u, GINT idir, StateComp &di, StateComp &vi);
 
 protected:
         void                step_impl(const Time &t, State &uin, State &uf,  
-                                      const Time &dt);                    // Take a step
+                                      const Time &dt);                    // take a step
         void                step_impl(const Time &t, const State &uin, State &uf, 
-                                      const Time &dt, State &uout);       // Take a step
+                                      const Time &dt, State &uout);       // take a step
         GBOOL               has_dt_impl() const {return traits_.variabledt;}  
         GINT                tmp_size_impl();                              // required tmp size
         GINT                solve_size_impl()                             // required solve size
@@ -205,14 +207,14 @@ protected:
                             {return traits_.nstate;}
         std::vector<GINT>  &iforced_impl()                                // required tmp size
                             {return stdiforced_;}
-        void                init_impl(State &u, State &tmppool);                    // initialize 
-                                                                          // Has dynamic dt?
+        void                init_impl(State &u, State &tmppool);          // initialize 
+                                                                          // has dynamic dt?
         void                compute_derived_impl(const State &uin, GString sop,
                                       State &utmp, State &uout,
-                                      std::vector<GINT> &iuout);          // Compu
+                                      std::vector<GINT> &iuout);          // compu
 
-        void                dt_impl(const Time &t, State &u, Time &dt);   // Get dt
-        void                apply_bc_impl(const Time &t, State &u);       // Apply bdy conditions
+        void                dt_impl(const Time &t, State &u, Time &dt);   // get dt
+        void                apply_bc_impl(const Time &t, State &u);       // apply bdy conditions
 private:
 
         void                dudt_impl  (const Time &t, const State &u, const State &uf, 

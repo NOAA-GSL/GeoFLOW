@@ -102,7 +102,7 @@ public:
 
         GBurgers() = delete; 
         GBurgers(Grid &grid, GBurgers<Types>::Traits &traits);
-       ~GBurgers();
+virtual ~GBurgers();
         GBurgers(const GBurgers &bu) = default;
         GBurgers &operator=(const GBurgers &bu) = default;
 
