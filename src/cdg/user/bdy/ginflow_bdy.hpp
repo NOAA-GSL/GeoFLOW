@@ -73,10 +73,10 @@ public:
 protected:
         GBOOL               update_impl (
                               EqnBasePtr &eqn,
-                              Grid      &grid,
-                              Time      &time,
-                              State     &utmp,
-                              State     &u);
+                              Grid       &grid,
+                              Time       &time,
+                              State      &utmp,
+                              State      &u);
         
 private:
         GBOOL               compute_bdy_data (
