@@ -12,11 +12,12 @@ namespace pdeint {
 
 template<typename ET>
 Integrator<ET>::Integrator(const EqnBasePtr&   equation,
-		                     const MixerBasePtr& mixer,
-		                     const ObsBasePtr&   observer,
-                                     Grid&               grid,
-		                     const Traits&       traits) :
-	cycle_(0), traits_(traits), eqn_ptr_(equation), mixer_ptr_(mixer), obs_ptr_(observer), grid_(&grid) {
+		           const MixerBasePtr& mixer,
+		           const ObsBasePtr&   observer,
+                           Grid&               grid,
+		           const Traits&       traits) :
+	cycle_(0), traits_(traits), eqn_ptr_(equation), 
+        mixer_ptr_(mixer), obs_ptr_(observer), grid_(&grid) {
 	ASSERT(nullptr != eqn_ptr_);
 	ASSERT(nullptr != mixer_ptr_);
 	ASSERT(nullptr != obs_ptr_);
@@ -24,8 +25,8 @@ Integrator<ET>::Integrator(const EqnBasePtr&   equation,
 
 template<typename ET>
 void Integrator<ET>::time_integrate( Time&       t,
-                                               State&      uf,
-		                               State&      u ){
+                                      State&      uf,
+		                      State&      u ){
 	ASSERT(nullptr != eqn_ptr_);
 	ASSERT(nullptr != obs_ptr_);
 	using std::min;
@@ -54,10 +55,10 @@ void Integrator<ET>::time_integrate( Time&       t,
 
 template<typename ET>
 void Integrator<ET>::time( const Time& t0,
-		                     const Time& t1,
-		                     const Time& dt,
-		                     State&      uf,
-		                     State&      u ){
+		           const Time& t1,
+		           const Time& dt,
+		           State&      uf,
+		           State&      u ){
 	ASSERT(nullptr != eqn_ptr_);
 	ASSERT(nullptr != mixer_ptr_);
 	ASSERT(nullptr != obs_ptr_);
@@ -100,11 +101,11 @@ void Integrator<ET>::time( const Time& t0,
 
 template<typename ET>
 void Integrator<ET>::steps( const Time&  t0,
-		                      const Time&  dt,
-			              const Size&  n,
-		                      State&       uf,
-		                      State&       u,
-			              Time&        t ){
+		            const Time&  dt,
+			    const Size&  n,
+		            State&       uf,
+		            State&       u,
+			    Time&        t ){
 	ASSERT(nullptr != eqn_ptr_);
 	ASSERT(nullptr != mixer_ptr_);
 	ASSERT(nullptr != obs_ptr_);
@@ -127,6 +128,10 @@ void Integrator<ET>::steps( const Time&  t0,
 		// Take Step
 		this->eqn_ptr_->step(t, u, uf, dt_eff);
 		t += dt_eff;
+#if 0
+                // Update due to boundary conditions:
+                this->bdy_update(t, u);
+#endif
 
                 // Call mixer to upate forcing:
 		this->mixer_ptr_->mix(t,u, uf);
@@ -141,8 +146,8 @@ void Integrator<ET>::steps( const Time&  t0,
 
 template<typename ET>
 void Integrator<ET>::list( const std::vector<Time>& tlist,
-		                     State&                   uf,
-	                             State&                   u ){
+		           State&                   uf,
+	                   State&                   u ){
 	ASSERT(nullptr != eqn_ptr_);
 	ASSERT(nullptr != obs_ptr_);
 
@@ -156,7 +161,6 @@ void Integrator<ET>::list( const std::vector<Time>& tlist,
 	}
 
 }
-
 
 template<typename ET>
 void Integrator<ET>::init_dt(const Time& t, State& u, Time& dt) const{
@@ -181,6 +185,36 @@ void Integrator<ET>::init_dt(const Time& t, State& u, Time& dt) const{
 	}
 
 }
+
+#if 0
+
+template<typename ET>
+void Integrator<ET>::bdy_update(const Time& t,  State& u) const{
+	using std::max;
+	using std::min;
+
+        Time ttime = t;
+
+	// Get pointer to equation
+	auto eqn_ptr = this->eqn_ptr_; 
+	ASSERT(nullptr != eqn_ptr);
+
+	ASSERT(nullptr != grid_);
+
+	auto bdy_list = &this->grid_->bdy_update_list();; 
+	ASSERT(nullptr != bdy_list );
+
+        for ( auto i=0; i<bdy_list_->size()(; i++ ) { // oover each bdy surf
+            for ( auto j=0; j<bdy_list_->size()(; j++ ) { // each bdy condition
+
+                      (*bdy_ist)[i][j]->update(peqn, *grid_, ttime, u);
+
+            }
+         }
+
+}
+#endif
+
 
 
 } // namespace pdeint

@@ -18,6 +18,7 @@
 #include "tbox/error_handler.hpp"
 
 #include "pdeint/equation_base.hpp"
+//#include "pdeint/grid_base.hpp"
 #include "pdeint/mixer_base.hpp"
 #include "pdeint/observer_base.hpp"
 #include "pdeint/null_observer.hpp"
@@ -44,6 +45,7 @@ public:
         using EqnBasePtr   = std::shared_ptr<EqnBase>;
 	using State        = typename Types::State;
 	using StateInfo    = typename Types::StateInfo;
+//sing GridBase     = GridBase<Types>;
 	using Grid         = typename Types::Grid;
 	using Ftype        = typename Types::Ftype;
 	using Derivative   = typename Types::Derivative;
@@ -188,6 +190,14 @@ protected:
 	 * Used to calculate the limited time step size if required.
 	 */
 	void init_dt(const Time& t, State& u, Time& dt) const;
+
+#if 0
+	/**
+	 * Used to update state due to boundary conditions:
+	 */
+        void bdy_update(const Time& t, State& utmp, State& u) const{
+#endif
+
 
 };
 
