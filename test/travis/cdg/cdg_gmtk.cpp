@@ -21,6 +21,10 @@
     #include "gptl.h"
 #endif
 
+GINT szMatCache_ = _G_MAT_CACHE_SIZE;
+GINT szVecCache_ = _G_VEC_CACHE_SIZE;
+
+
 int main(int argc, char **argv)
 {
     // Initialize comm:
