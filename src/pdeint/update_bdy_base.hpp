@@ -25,17 +25,6 @@ template<typename TypePack>
 class UpdateBdyBase {
 
 public:
-#if 0
-        using Types        = TypePack;
-	using State        = typename Types::State;
-        using EqnBase      = EquationBase<Types>;
-        using EqnBasePtr   = std::shared_ptr<EqnBase>;
-	using Grid         = typename Types::Grid;
-	using Ftype        = typename Types::Ftype;
-        using Time         = typename Types::Time;
-	using IBdyVol      = typename Types::IBdyVol;
-	using TBdyVol      = typename Types::TBdyVol;
-#endif
 
         using Types      = TypePack;
         using State      = typename Types::State;
@@ -51,7 +40,6 @@ public:
 	using IBdyVol    = typename Types::IBdyVol;
 	using TBdyVol    = typename Types::TBdyVol;
         using Size       = typename Types::Size;
-
         using EqnBase    = typename Types::EqnBase;
         using EqnBasePtr = typename Types::EqnBasePtr;
       
@@ -83,7 +71,7 @@ public:
 	/**
 	 * Update bdy conditions with state at t
 	 *
-	 * @param[in,out] eqn    : equation pointer
+	 * @param[in,out] eqn    : equation base (not the shared pointer)
 	 * @param[in,out] grid   : initial time at start, and final time
 	 * @param[in,out] time   : current time
 	 * @param[in,out] utmp   : tmp arrays
