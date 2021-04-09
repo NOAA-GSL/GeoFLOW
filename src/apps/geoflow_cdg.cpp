@@ -479,10 +479,10 @@ void allocate(const PropertyTree &ptree) {
 
     nsolve_ = pEqn_->solve_size();
     nstate_ = pEqn_->state_size();
-    ntmp_ = pEqn_->tmp_size();
+    ntmp_   = pEqn_->tmp_size();
     iforced = &pEqn_->iforced();
     nstate_ = pEqn_->state_size();
-    ntmp_ = pEqn_->tmp_size();
+    ntmp_   = pEqn_->tmp_size();
     iforced = &pEqn_->iforced();
 
     u_.resize(nstate_);  // state
