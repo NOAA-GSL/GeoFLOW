@@ -89,10 +89,9 @@ EquationFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid){
                                     + (!ctraits.dodry ? 1 : 0) // vapor
                                     + ( ctraits.dofallout ? ctraits.nlsector 
                                                         + ctraits.nisector : 0); // q_i
-                ctraits.nstate      =  ctraits.nsolve
-                                    + (ctraits.dofallout ? ctraits.nlsector 
-                                                       + ctraits.nisector : 0)
-                                    + (ctraits.usebase ? 2 : 0);
+                ctraits.nstate      = ctraits.nsolve;
+                ctraits.nfallout    = (ctraits.dofallout ? ctraits.nlsector 
+                                    +  ctraits.nisector + 1 : 0);
                 ctraits.bconserved  = eqn_ptree.getValue<bool>  ("bconserved",false);
                 ctraits.bforced     = eqn_ptree.getValue<bool>  ("use_forcing",false);
                 ctraits.Ts_base     = eqn_ptree.getValue<double>("T_surf"); // K
