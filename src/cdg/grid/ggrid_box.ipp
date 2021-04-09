@@ -753,7 +753,7 @@ template<typename Types>
 void GGridBox<Types>::periodize()
 {
   GEOFLOW_TRACE();
-  assert(bInitialized_ && "Object not initialized");
+  assert(this->bInitialized_ && "Object not initialized");
 
   
   GTVector<Ftype>  x(this->xNodes_.size()); // coord values to set to
