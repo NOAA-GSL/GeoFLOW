@@ -17,6 +17,8 @@
 #include "gtvector.hpp"
 #include "gcomm.hpp"
 #include "gutils.hpp"
+#include "gmconv.hpp"
+#include "gburgers.hpp"
 #include "gmtk.hpp"
 #include "ginitstate_direct_user.hpp"
 #include <random>

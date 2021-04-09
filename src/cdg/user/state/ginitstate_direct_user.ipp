@@ -653,23 +653,41 @@ GBOOL ginitstate<Types>::impl_boxdrybubble(const PropertyTree &ptree, GString &s
   GTVector<GFTYPE>   *db, *d, *e, *pb, *T;
   std::vector<GFTYPE> xc, xr;  
   GString             sblock;
+  typename Types::State
+                     *ubase;
+  GTVector<GTVector<GFTYPE>> 
+                     *xnodes = &grid.xNodes();
+  GMConv<Types>      *ceqn;
 
   PropertyTree inittree    = ptree.getPropertyTree(sconfig);
   sblock                   = ptree.getValue<GString>("pde_name");
   PropertyTree convptree   = ptree.getPropertyTree(sblock);
 
+  assert(ceqn != NULLPTR && "Must initialize for Equation GMConv");
+
+  // Check solver type 
+  // Remember: eqn is a shared_ptr, so must check 
+  //           against its contets
+  
+  ceqn = dynamic_cast<GMConv<Types>*>(eqn.get());
+
+  // Check grid type:
   GridBox  *box   = dynamic_cast <GridBox*>(&grid);
   assert(box && "Must use a box grid");
 
-  GTVector<GTVector<GFTYPE>> *xnodes = &grid.xNodes();
+  // Check state size:
+  assert(u.size() == ceqn->state_size());
 
-  assert(u.size() == GDIM+4);
+  // Get base state:
+  ubase = &ceqn->get_base_state();
 
   T     = utmp[0];  // background temp
-  e     = u  [GDIM];// int. energy density
-  d     = u[GDIM+1];// total density 
-  db    = u[GDIM+2];// background density 
-  pb    = u[GDIM+3];// background pressure, from solver
+  e     = u  [ceqn->ENERGY];// int. energy density
+  d     = u  [ceqn->DENSITY];// density
+  if ( ubase->size() == 2 ) {
+    db    = (*ubase)[0];// background density 
+    pb    = (*ubase)[1];// background pressure
+  }
   nxy   = (*xnodes)[0].size(); // same size for x, y, z
 
   T0    = inittree.getValue<GFTYPE>("T_pert", 15.0);    // temp. perturb. magnitude (K)
@@ -681,10 +699,8 @@ GBOOL ginitstate<Types>::impl_boxdrybubble(const PropertyTree &ptree, GString &s
 
   assert(xc.size() >= GDIM && xr.size() >= GDIM);
 
- *u[0]  = 0.0; // sx
- *u[1]  = 0.0; // sy
- if ( GDIM == 3 ) *u[2]  = 0.0; // sz
- *d     = 0.0;
+  // Initialize momentum:
+  for ( auto j=0; j<ceqn->ENERGY; j++ ) *u[j] = 0.0;
 
   for ( auto j=0; j<nxy; j++ ) { 
     x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; 
@@ -699,13 +715,14 @@ GBOOL ginitstate<Types>::impl_boxdrybubble(const PropertyTree &ptree, GString &s
     // Ts, delT are pot'l temp, 
     (*T) [j]  = (Ts + delT)*exnerb; // T = (theta + dtheta)*exner
     pj        = (*pb)[j]; 
-#if 1
-    (*d) [j]  = pj / ( RD * (*T)[j]  ) - (*db)[j];
-    dj        = (*d)[j] + (*db)[j]; // total density
-#else
-    (*d) [j]  = pj / ( RD * (*T)[j]  );
-    dj        = (*d)[j]; // total density
-#endif
+    if ( ubase->size() == 2 ) {
+      (*d) [j]  = pj / ( RD * (*T)[j]  ) - (*db)[j];
+      dj        = (*d)[j] + (*db)[j]; // total density
+    }
+    else {
+      (*d) [j]  = pj / ( RD * (*T)[j]  );
+      dj        = (*d)[j]; // total density
+   }
     (*e)[j]   = CVD * dj * ( (*T)[j] ); // e = Cv d (T+delT);
 //  (*T) [j]  = (Ts + delT)*exnerb; // T = (theta + dtheta)*exner
 //  (*T) [j]  = (thetab + delT)*exnerb;
