@@ -95,7 +95,7 @@ using namespace geoflow::pdeint;
 using namespace std;
 
 template<typename TypePack>
-class GMConv : public EquationBase<TypePack>
+class GMConv : public EquationBase<TypePack>, std::enable_shared_from_this<GMConv<TypePack>>
 {
 public:
         using Types      = TypePack;
@@ -296,6 +296,8 @@ inline  GINT                szrhstmp();
         GGFX<Ftype>        *ggfx_;          // gather-scatter operator
         GMConv<TypePack>::Traits 
                             traits_;        // traits structure
+        std::shared_ptr<EquationBase<Types>>
+                            pthis_;         // shared pointer to this object
 
         std::function<void(const Time &t, State &u, const Time &dt)>
                            steptop_callback_;

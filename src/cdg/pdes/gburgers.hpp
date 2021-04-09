@@ -54,7 +54,7 @@ using namespace std;
 
 
 template<typename TypePack>
-class GBurgers : public EquationBase<TypePack>
+class GBurgers : public EquationBase<TypePack>, std::enable_shared_from_this<GBurgers<TypePack>>
 {
 public:
         using Types      = TypePack;
@@ -193,6 +193,9 @@ private:
 
         std::function<void(const Time &t, State &u, const Time &dt)>
                            steptop_callback_;
+        std::shared_ptr<EquationBase<Types>>
+                            pthis_;         // shared pointer to this object
+
 
 
 };

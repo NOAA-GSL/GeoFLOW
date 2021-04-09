@@ -66,6 +66,8 @@ steptop_callback_      (NULLPTR)
          && "Must dograv with base state");
   }
 
+  pthis_.reset(this);
+
 } // end of constructor method (1)
 
 
@@ -604,7 +606,9 @@ void GMConv<TypePack>::step_impl(const Time &t, State &uin, State &uf, const Tim
 
   // Set evolved state vars from input state.
   // These are not deep copies:
-  for ( auto j=0; j<traits_.nsolve; j++ ) uevolve_ [j] = uin[j];
+  for ( auto j=0; j<traits_.nsolve; j++ ) {
+    uevolve_ [j] = uin[j];
+  }
   
 
   switch ( traits_.isteptype ) {
@@ -1056,19 +1060,19 @@ void GMConv<TypePack>::set_nu(GTVector<Ftype> &nu)
 template<typename TypePack>
 void GMConv<TypePack>::apply_bc_impl(const Time &t, State &u)
 {
+  return;
+
   Time ttime = t;
-  std::shared_ptr<GMConv<TypePack>> pthis(this);
-  EqnBasePtr peqn = pthis;;
 
   typename Grid::BdyUpdateList *updatelist = &grid_->bdy_update_list();;
-
 
   // Update bdy values if required to:
   for ( auto k=0; k<updatelist->size(); k++ ) { // foreach grid bdy
     for ( auto j=0; j<(*updatelist)[j].size(); j++ ) { // each update method
-      (*updatelist)[k][j]->update(peqn, *grid_, ttime, utmp_, u);
+      (*updatelist)[k][j]->update(pthis_, *grid_, ttime, utmp_, u);
     }
   }
+
 } // end of method apply_bc_impl
 
 
