@@ -120,9 +120,10 @@ void GMConvDiag<EquationType>::do_L2(const Time &t, const Time &dt, const State 
   GBOOL   isreduced= FALSE;
   GBOOL   ismax    = FALSE;
   GINT    nd, ndim = grid_->gtype() == GE_2DEMBEDDED ? 3 : GDIM;
-  GFTYPE absu, absw, eint, ke, mass;
+  GFTYPE  absu, absw, eint, ke, mass;
   GTVector<GFTYPE> *d, *e;
   GTVector<GFTYPE> lmax(3), gmax(3);
+  State   *ubase = &solver_->get_base_state();
   typename GMConv<EquationType>::Traits trsolver;
 
   trsolver = solver_->get_traits();
@@ -138,7 +139,7 @@ void GMConvDiag<EquationType>::do_L2(const Time &t, const Time &dt, const State 
   // Find local integrated mass:
   d = u[solver_->DENSITY];
  *utmp[1] = *d;
-  if ( trsolver.usebase ) *utmp[1] += *u[solver_->BASESTATE];
+  if ( trsolver.usebase ) *utmp[1] += *(*ubase)[0];
   lmax[0] = grid_->integrate(*utmp[1], *utmp[0], FALSE);
 
   // Find kinetic energy density,  <0.5 rho v^2>
@@ -150,7 +151,7 @@ void GMConvDiag<EquationType>::do_L2(const Time &t, const Time &dt, const State 
    *utmp[2] +=  *utmp[1];
   }
  *utmp[1] = *d;
-  if ( trsolver.usebase ) *utmp[1] += *u[solver_->BASESTATE];
+  if ( trsolver.usebase ) *utmp[1] += *(*ubase)[0];
   utmp[2]->apointProd(0.5, *utmp[1]); // d v^2
   lmax[2] = grid_->integrate(*utmp[2], *utmp[0], FALSE);
 
@@ -218,6 +219,7 @@ void GMConvDiag<EquationType>::do_max(const Time &t, const Time &dt, const State
   GFTYPE absu, absw, eint, ke, mass;
   GTVector<GFTYPE> *d, *e;
   GTVector<GFTYPE> lmax(3), gmax(3);
+  State   *ubase = &solver_->get_base_state();
   typename GMConv<EquationType>::Traits trsolver;
 
   trsolver = solver_->get_traits();
@@ -233,7 +235,7 @@ void GMConvDiag<EquationType>::do_max(const Time &t, const Time &dt, const State
   // Find local integrated mass:
   d = u[solver_->DENSITY];
  *utmp[1] = *d;
-  if ( trsolver.usebase ) *utmp[1] += *u[solver_->BASESTATE];
+  if ( trsolver.usebase ) *utmp[1] += *(*ubase)[0];
   lmax[0] = utmp[1]->amax();
 
   // Find kinetic energy density:  0.5 rho v^2
@@ -245,7 +247,7 @@ void GMConvDiag<EquationType>::do_max(const Time &t, const Time &dt, const State
    *utmp[2] +=  *utmp[1];
   }
  *utmp[1] = *d;
-  if ( trsolver.usebase ) *utmp[1] += *u[solver_->BASESTATE];
+  if ( trsolver.usebase ) *utmp[1] += *(*ubase)[0];
   utmp[2]->apointProd(0.5, *utmp[1]);;
   lmax[2] = utmp[2]->amax();
 
