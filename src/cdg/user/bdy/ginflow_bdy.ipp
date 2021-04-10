@@ -75,8 +75,10 @@ GBOOL GInflowBdy<Types>::update_impl(
    GSIZET     ind;
 
    // Compute bdy data, if necessary:
-   bret = compute_bdy_data(eqn, grid, time, utmp, u, bdydata_);
-   assert(bret);
+   if ( !traits_.compute_once || !bcomputed_ ) {
+     bret = compute_bdy_data(eqn, grid, time, utmp, u, bdydata_);
+     assert(bret);
+   }
    
    // Apply bdy data:
    for ( auto n=0; n<traits_.istate.size() && bret; n++ ) { 
@@ -125,7 +127,6 @@ GBOOL GInflowBdy<Types>::compute_bdy_data(
 
    GTVector<GSIZET> *igbdy = &traits_.ibdyvol;
 
-   if ( traits_.compute_once && bcomputed_ ) return TRUE;
 
 
    assert(utmp.size() >= u.size());
