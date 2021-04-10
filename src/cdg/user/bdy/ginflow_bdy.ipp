@@ -144,7 +144,7 @@ GBOOL GInflowBdy<Types>::compute_bdy_data(
       for ( auto n=0; n<traits_.istate.size() && bret; n++ ) { 
         idstate = traits_.istate[n];
      
-        // Set from initialized State vector, 
+        // Set bdy vectors from initialized State vector, 
         for ( auto j=0; j<igbdy->size(); j++ ) {
           ind = (*igbdy)[j];
           (*ub[n])[j] = (*unew[idstate])[ind];
