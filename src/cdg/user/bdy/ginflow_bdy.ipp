@@ -120,47 +120,48 @@ GBOOL GInflowBdy<Types>::compute_bdy_data(
    GBOOL      bret;
    GINT       idstate;
    GSIZET     ind;
+   Ftype      tt = 0.0;
    State      tmpnew, unew;
 
-  GTVector<GSIZET> *igbdy = &traits_.ibdyvol;
+   GTVector<GSIZET> *igbdy = &traits_.ibdyvol;
 
-  if ( traits_.compute_once && bcomputed_ ) return TRUE;
+   if ( traits_.compute_once && bcomputed_ ) return TRUE;
 
 
-  assert(utmp.size() >= u.size());
-  if ( unew.size() < u.size() ) {
-    unew.resize(u.size());
-    tmpnew.resize(utmp.size()-u.size());
-  }
-  for ( auto j=0; j<u.size(); j++ ) unew [j] = utmp[j];
-  for ( auto j=0; j<tmpnew.size(); j++ ) tmpnew[j] = utmp[unew.size()+j];
-
-  // Call initialization method with utmp:
-   if ( traits_.use_init ) {
-
-     bret = GInitStateFactory<Types>::init(traits_.ptree, eqn, grid, time, tmpnew, unew);
-     for ( auto n=0; n<traits_.istate.size() && bret; n++ ) { 
-       idstate = traits_.istate[n];
-    
-       // Set from initialized State vector, 
-       for ( auto j=0; j<igbdy->size(); j++ ) {
-         ind = (*igbdy)[j];
-         (*ub[n])[j] = (*unew[idstate])[ind];
-       }
-     }
-
+   assert(utmp.size() >= u.size());
+   if ( unew.size() < u.size() ) {
+     unew.resize(u.size());
+     tmpnew.resize(utmp.size()-u.size());
    }
-   else {
+   for ( auto j=0; j<u.size(); j++ ) unew [j] = utmp[j];
+   for ( auto j=0; j<tmpnew.size(); j++ ) tmpnew[j] = utmp[unew.size()+j];
+ 
+   // Call initialization method with utmp:
+    if ( traits_.use_init ) {
+ 
+      bret = GInitStateFactory<Types>::init(traits_.ptree, eqn, grid, tt, tmpnew, unew);
+      for ( auto n=0; n<traits_.istate.size() && bret; n++ ) { 
+        idstate = traits_.istate[n];
+     
+        // Set from initialized State vector, 
+        for ( auto j=0; j<igbdy->size(); j++ ) {
+          ind = (*igbdy)[j];
+          (*ub[n])[j] = (*unew[idstate])[ind];
+        }
+      }
+ 
+    }
+    else {
 
-     bret = traits_.callback(eqn, grid, time, traits_.bdyid, tmpnew, unew,  ub);
+      bret = traits_.callback(eqn, grid, time, traits_.bdyid, tmpnew, unew,  ub);
 
-   }
-   assert(bret);
+    }
+    assert(bret);
 
-  // Set boundary vector with initialized state:
-  bcomputed_ = true;
+   // Set boundary vector with initialized state:
+   bcomputed_ = true;
 
-  return bret;
+   return bret;
 
 } // end of method compute_bdy_data
 
