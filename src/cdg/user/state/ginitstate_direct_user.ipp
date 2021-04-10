@@ -670,6 +670,7 @@ GBOOL ginitstate<Types>::impl_boxdrybubble(const PropertyTree &ptree, GString &s
   //           against its contets
   
   ceqn = dynamic_cast<GMConv<Types>*>(eqn.get());
+  assert(ceqn && "Must use GMConv solver");
 
   // Check grid type:
   GridBox  *box   = dynamic_cast <GridBox*>(&grid);
@@ -679,12 +680,15 @@ GBOOL ginitstate<Types>::impl_boxdrybubble(const PropertyTree &ptree, GString &s
   assert(u.size() == ceqn->state_size());
 
   // Get base state:
+  typename GMConv<Types>::Traits traits = ceqn->get_traits();
   ubase = &ceqn->get_base_state();
+  assert( traits.usebase && ubase->size() == 2 );
+   
 
   T     = utmp[0];  // background temp
-  e     = u  [ceqn->ENERGY];// int. energy density
-  d     = u  [ceqn->DENSITY];// density
-  if ( ubase->size() == 2 ) {
+  d     = u  [ceqn->DENSITY]; // density
+  e     = u  [ceqn->ENERGY]; // int. energy density
+  if ( traits.usebase ) {
     db    = (*ubase)[0];// background density 
     pb    = (*ubase)[1];// background pressure
   }
@@ -715,8 +719,8 @@ GBOOL ginitstate<Types>::impl_boxdrybubble(const PropertyTree &ptree, GString &s
     // Ts, delT are pot'l temp, 
     (*T) [j]  = (Ts + delT)*exnerb; // T = (theta + dtheta)*exner
     pj        = (*pb)[j]; 
-    if ( ubase->size() == 2 ) {
-      (*d) [j]  = pj / ( RD * (*T)[j]  ) - (*db)[j];
+    if ( traits.usebase ) { // There is a base-state
+      (*d) [j]  = pj / ( RD * (*T)[j]  ) - (*db)[j];  // fluctuation
       dj        = (*d)[j] + (*db)[j]; // total density
     }
     else {
