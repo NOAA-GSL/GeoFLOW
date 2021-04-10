@@ -147,27 +147,27 @@ GBOOL GInflowBdy<Types>::compute_bdy_data(
      for ( auto j=0; j<utmp_.size(); j++ ) utmp_[j] = new GTVector<Ftype>(u[0]->size());
      ballocated_ = TRUE;
    }
-   for ( auto j=0; j<u.size(); j++ ) unew [j] = utmp[j];
-   for ( auto j=0; j<tmpnew.size(); j++ ) tmpnew[j] = utmp[unew.size()+j];
+// for ( auto j=0; j<u.size(); j++ ) unew [j] = utmp[j];
+// for ( auto j=0; j<tmpnew.size(); j++ ) tmpnew[j] = utmp[unew.size()+j];
  
    // Call initialization method with utmp:
     if ( traits_.use_init ) {
  
-      bret = GInitStateFactory<Types>::init(traits_.ptree, eqn, grid, tt, tmpnew, unew);
+      bret = GInitStateFactory<Types>::init(traits_.ptree, eqn, grid, tt, utmp_, unew_);
       for ( auto n=0; n<traits_.istate.size() && bret; n++ ) { 
         idstate = traits_.istate[n];
      
         // Set bdy vectors from initialized State vector, 
         for ( auto j=0; j<igbdy->size(); j++ ) {
           ind = (*igbdy)[j];
-          (*ub[n])[j] = (*unew[idstate])[ind];
+          (*ub[n])[j] = (*unew_[idstate])[ind];
         }
       }
  
     }
     else {
 
-      bret = traits_.callback(eqn, grid, time, traits_.bdyid, tmpnew, unew,  ub);
+      bret = traits_.callback(eqn, grid, time, traits_.bdyid, utmp_, unew_,  ub);
 
     }
     assert(bret);
