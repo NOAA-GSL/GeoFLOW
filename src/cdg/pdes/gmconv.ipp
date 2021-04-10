@@ -88,6 +88,9 @@ GMConv<TypePack>::~GMConv()
   if ( gpdv_      != NULLPTR ) delete gpdv_;
   if ( gdiv_      != NULLPTR ) delete gdiv_;
   if ( gexrk_     != NULLPTR ) delete gexrk_;
+  for  ( auto j=0; j<ubase_.size(); j++ ) {
+    if ( ubase_[j] != NULLPTR ) delete ubase_[j];
+  }
 
 } // end, destructor
 
@@ -736,6 +739,11 @@ void GMConv<TypePack>::init_impl(State &u, State &tmp)
   v_.resize(nc_); v_ = NULLPTR;
   W_.resize(nc_); W_ = NULLPTR;
 
+  // Create solver-owned arrays for base state:
+  ubase_  .resize(traits_.nbase);  // points to base-state components
+  for ( auto j=0; j<v_.size(); j++ ) {
+    ubase_[j] = new GTVector<Ftype>(grid_->ndof());
+  }
   
   // Set space for state velocity, if needed:
   nexcl = 0;
@@ -859,7 +867,6 @@ void GMConv<TypePack>::init_impl(State &u, State &tmp)
       // we're sure there's no overlap:
       uold_   .resize(traits_.nsolve); // RK-solution at time level n
       uevolve_.resize(traits_.nsolve); // current RK solution
-      ubase_  .resize(traits_.nbase);  // points to base-state components
       urktmp_ .resize(traits_.nsolve*(traits_.itorder+1)+1); // RK stepping work space
       urhstmp_.resize(szrhstmp());     // work space for RHS
       nrhstmp = utmp_.size()-uold_.size()-urktmp_.size();
@@ -867,7 +874,6 @@ void GMConv<TypePack>::init_impl(State &u, State &tmp)
       assert(nrhstmp >= szrhstmp() && "Invalid rhstmp array size");
       // Make sure there is no overlap between tmp arrays:
       n = 0;
-      for ( auto j=0; j<traits_ .nbase;  j++, n++ ) ubase_  [j] = utmp_[n];
       for ( auto j=0; j<traits_ .nsolve; j++, n++ ) uold_   [j] = utmp_[n];
       for ( auto j=0; j<urktmp_ .size(); j++, n++ ) urktmp_ [j] = utmp_[n];
       for ( auto j=0; j<urhstmp_.size(); j++, n++ ) urhstmp_[j] = utmp_[n];
@@ -1060,7 +1066,6 @@ void GMConv<TypePack>::set_nu(GTVector<Ftype> &nu)
 template<typename TypePack>
 void GMConv<TypePack>::apply_bc_impl(const Time &t, State &u)
 {
-  return;
 
   Time ttime = t;
 
@@ -1606,7 +1611,6 @@ GINT GMConv<TypePack>::tmp_size_impl()
  
   sum += nc_;                                 // for v_ 
   sum += traits_.nlsector || traits_.nisector ? nc_ : 0;  // for W_
-  sum += traits_.nbase;                      // size for base state
   sum += traits_.nfallout;                   // size for fallout speeds
   sum += traits_.nsolve;                     // old state storage
   sum += traits_.nsolve
