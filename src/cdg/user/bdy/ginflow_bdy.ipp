@@ -88,7 +88,7 @@ GBOOL GInflowBdy<Types>::update_impl(
    }
    
    // Apply bdy data:
-   for ( auto n=0; n<traits_.istate.size() && bret; n++ ) { 
+   for ( auto n=0; n<traits_.istate.size(); n++ ) { 
      idstate = traits_.istate[n];
     
      // Set bdy values computed above:
