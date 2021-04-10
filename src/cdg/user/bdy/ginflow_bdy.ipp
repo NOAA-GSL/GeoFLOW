@@ -19,6 +19,7 @@ template<typename Types>
 GInflowBdy<Types>::GInflowBdy(typename GInflowBdy<Types>::Traits &traits) :
 UpdateBdyBase<Types>(),
 bcomputed_               (FALSE),
+ballocated_              (FALSE),
 traits_                 (traits)
 {
   // Allocate bdy arrays foreach state component:
@@ -44,6 +45,12 @@ GInflowBdy<Types>::~GInflowBdy()
 
   for ( auto j=0; j<bdydata_.size(); j++ ) {
     if ( bdydata_[j] != NULLPTR ) delete bdydata_[j];
+  }
+  for ( auto j=0; j<unew_.size(); j++ ) {
+    if ( unew_[j] != NULLPTR ) delete unew_[j];
+  }
+  for ( auto j=0; j<utmp_.size(); j++ ) { 
+    if ( utmp_[j] != NULLPTR ) delete utmp_[j];
   }
 
 } // end, destructor
@@ -130,9 +137,15 @@ GBOOL GInflowBdy<Types>::compute_bdy_data(
 
 
    assert(utmp.size() >= u.size());
-   if ( unew.size() < u.size() ) {
-     unew.resize(u.size());
-     tmpnew.resize(utmp.size()-u.size());
+   if (!ballocated_ ) {
+// if ( unew.size() < u.size() ) {
+//   unew.resize(u.size());
+//   tmpnew.resize(utmp.size()-u.size());
+     unew_.resize(u.size());
+     utmp_.resize(4);
+     for ( auto j=0; j<unew_.size(); j++ ) unew_[j] = new GTVector<Ftype>(u[0]->size());
+     for ( auto j=0; j<utmp_.size(); j++ ) utmp_[j] = new GTVector<Ftype>(u[0]->size());
+     ballocated_ = TRUE;
    }
    for ( auto j=0; j<u.size(); j++ ) unew [j] = utmp[j];
    for ( auto j=0; j<tmpnew.size(); j++ ) tmpnew[j] = utmp[unew.size()+j];
@@ -161,6 +174,13 @@ GBOOL GInflowBdy<Types>::compute_bdy_data(
 
    // Set boundary vector with initialized state:
    bcomputed_ = true;
+
+   if ( traits_.compute_once ) {
+     for ( auto j=0; j<unew_.size(); j++ ) delete unew_[j];
+     for ( auto j=0; j<utmp_.size(); j++ ) delete utmp_[j];
+     unew_.clear();
+     utmp_.clear();
+   }
 
    return bret;
 

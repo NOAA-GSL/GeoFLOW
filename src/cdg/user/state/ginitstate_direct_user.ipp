@@ -638,7 +638,7 @@ GBOOL ginitstate<Types>::impl_icosgauss(const PropertyTree &ptree, GString &scon
 //          eqn    : equation implementation
 //          grid   : grid
 //          t      : time
-//          utmp   : tmp arrays
+//          utmp   : tmp arrays; sizee >= 1
 //          u      : current state
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
@@ -678,6 +678,9 @@ GBOOL ginitstate<Types>::impl_boxdrybubble(const PropertyTree &ptree, GString &s
 
   // Check state size:
   assert(u.size() == ceqn->state_size());
+
+  // Check tmp size:
+  assert(utmp.size() >= 1 );
 
   // Get base state:
   typename GMConv<Types>::Traits traits = ceqn->get_traits();
@@ -758,7 +761,7 @@ GBOOL ginitstate<Types>::impl_boxdrybubble(const PropertyTree &ptree, GString &s
 //          eqn    : equation implementation
 //          grid   : grid
 //          t      : time
-//          utmp   : tmp arrays
+//          utmp   : tmp arrays; sizee >= 2
 //          u      : current state
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
@@ -793,6 +796,7 @@ GBOOL ginitstate<Types>::impl_icosabcconv(const PropertyTree &ptree, GString &sc
   GTVector<GTVector<GFTYPE>> *xnodes = &grid.xNodes();
 
   assert(u.size() >= nc+1);
+  assert(utmp.size() >= 2 );
 
   distribution = new normal_distribution<GFTYPE>(0,2.0*PI);
   e     = u  [nc];// int. energy density

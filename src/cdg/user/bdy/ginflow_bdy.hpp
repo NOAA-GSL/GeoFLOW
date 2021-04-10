@@ -90,7 +90,10 @@ private:
 
         Traits              traits_;        // Traits structure
         GBOOL               bcomputed_;     // tells us that bdydata was computed
+        GBOOL               ballocated_;    // tells us that tmp data is alloc. 
         State               bdydata_;       // bdy data arrays
+        State               utmp_;     
+        State               unew_;     
 
 };
 
