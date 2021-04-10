@@ -248,6 +248,7 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
   StateComp *dd, *e, *p, *rhoT, *T; // energy, den, pressure, temperature
   StateComp *Mass=grid_->massop().data();
   StateComp *tmp1, *tmp2;
+  StateComp *mask=&grid_->get_mask();
   State      g(nc_); 
   State      stmp(4);
 
@@ -298,6 +299,7 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
  *dudt[ENERGY] -= *tmp1;                        // -= v . Grad p
 
   gstressen_->apply(*rhoT, v_, stmp, *tmp1);    // [mu u_i s^{ij}],j
+  tmp1->pointProd(*mask);
  *dudt[ENERGY] -= *tmp1;                        // -= [mu u^i s^{ij}],j
 
 
@@ -344,6 +346,7 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
 
     gstressen_->apply(*rhoT, v_, j+1, stmp, 
                                          *tmp1);      // [mu s^{ij}],j
+    tmp1->pointProd(*mask);
    *dudt[j] -= *tmp1;                                 //  -= [mu s^{ij}],j
 
   } // end, momentum loop
@@ -1677,8 +1680,8 @@ void GMConv<TypePack>::compute_derived_impl(const State &u, GString sop,
     if ( !traits_.dodry ) {
       geoflow::compute_p<Ftype>(*utmp[3], *utmp[2], *u[VAPOR], RV, *utmp[0]);
      *uout[0] += *utmp[0];
-     *uout[0] -= *ubase_[1];       // create fluctuation
     }
+   *uout[0] -= *ubase_[1];       // create fluctuation
     iuout.resize(1); iuout[0] = 0;
   }
   else if ( "dptemp"    == sop ) { // potential temp fluctuation
