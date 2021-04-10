@@ -91,7 +91,6 @@ GBOOL G0FluxBdy<Types>::update_impl(
     ind  = traits_.ibdyvol[j];     // index into volume array
     idd  = (*idep)[iloc];          // dependent vector component
 
-//if ( ind == 0 ) cout << " G0Flux:: ind=" << ind << endl;
 
     xn   = (*bdyNormals)[idd][iloc];// n_idd == normal component for dependent vector comp
     sum  = 0.0;
