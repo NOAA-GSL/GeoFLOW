@@ -1066,7 +1066,6 @@ void GMConv<TypePack>::set_nu(GTVector<Ftype> &nu)
 template<typename TypePack>
 void GMConv<TypePack>::apply_bc_impl(const Time &t, State &u)
 {
-
   Time ttime = t;
 
   typename Grid::BdyUpdateList *updatelist = &grid_->bdy_update_list();;
@@ -1074,7 +1073,7 @@ void GMConv<TypePack>::apply_bc_impl(const Time &t, State &u)
   // Update bdy values if required to:
   for ( auto k=0; k<updatelist->size(); k++ ) { // foreach grid bdy
     for ( auto j=0; j<(*updatelist)[j].size(); j++ ) { // each update method
-      (*updatelist)[k][j]->update(pthis_, *grid_, ttime, utmp_, u);
+      (*updatelist)[k][j]->update(pthis_, *grid_, ttime, urhstmp_, u);
     }
   }
 
