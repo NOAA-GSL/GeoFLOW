@@ -150,10 +150,11 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree &ptree, Grid &grid, s
     traits.istate.resize(bcblock.istate.size()) ; 
     traits.ibdyvol.resize(ibdy.size()); 
   
-    traits.bdyid       = bcblock.bdyid;
-    traits.istate      = bcblock.istate;
-    traits.ibdyvol     = ibdy;
-    traits.use_init    = bcblock.use_init;
+    traits.bdyid        = bcblock.bdyid;
+    traits.istate       = bcblock.istate;
+    traits.ibdyvol      = ibdy;
+    traits.use_init     = bcblock.use_init;
+    traits.compute_once = bcblock.compute_once;
     if ( traits.use_init ) {
       traits.smethod = ptree.getValue<GString>("initstate_block");
     }
