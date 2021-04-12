@@ -191,7 +191,6 @@ void GProjectionFilter<TypePack>::init()
     F_  [j] += ( Id * (1.0-traits_.alpha[j]) );
     F_  [j]  .transpose(FT_[j]);
 
-cout << "GProjFilter:: init: F[" << j << "]=" << F_[j] << endl;
   }
 
   bInit_ = TRUE;
