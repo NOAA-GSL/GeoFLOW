@@ -871,6 +871,7 @@ template<typename T, typename TE>
 template<typename T, typename TE>
  void GLLBasis<T,TE>::getXiNodes(GTVector<TE> &ret)
 {
+  ret.resize(Np_+1);
   getXiNodes(ret.data(), ret.size());
 } // end of method getXiNodes (3)
 
