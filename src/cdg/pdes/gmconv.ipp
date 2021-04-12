@@ -407,16 +407,6 @@ void GMConv<TypePack>::dudt_wet(const Time &t, const State &u, const State &uf, 
   tmp1  = urhstmp_[stmp.size()+3];
   tmp2  = urhstmp_[stmp.size()+4];
 
-#if 0
-  // Do filtering, if any:
-  FilterList *fl = &this->get_filter_list();
-  for ( auto j=0; j<fl->size(); j++ ) {
-    if ( (*fl)[j] != NULLPTR ) {
-      (*fl)[j]->apply(t, *u[j], urhstmp_);
-    }
-  }
-#endif
-
 
   // Get total density and inverse: *rhoT  = *u[DENSITY]; 
  *rhoT = *u[DENSITY];
@@ -629,24 +619,25 @@ void GMConv<TypePack>::step_impl(const Time &t, State &uin, State &uf, const Tim
       break;
   }
 
-#if 0
+
   // Do filtering, if any:
   FilterList *fl = &this->get_filter_list();
   for ( auto j=0; j<fl->size(); j++ ) {
     if ( (*fl)[j] != NULLPTR ) {
-      (*fl)[j]->apply(t, *uevolve_[j], urhstmp_);
+      (*fl)[j]->apply(t, uin, urhstmp_);
     }
   }
-#endif
 
   apply_bc_impl(t, uin);
 
   // Check solution for NaN and Inf:
+#if 0
   bret = TRUE;
   for ( auto j=0; j<uevolve_.size() && bret; j++ ) {
-//  bret = bret && uevolve_ [j]->isfinite();
+    bret = bret && uevolve_ [j]->isfinite();
   }
   assert(bret && "Solution not finite");
+#endif
 
   icycle_++;
 
