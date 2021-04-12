@@ -139,8 +139,9 @@ virtual void                 print(const GString &filename){}          // print 
                             &itype() { return itype_; }               // indices for all types
         GTVector<GSIZET>    &itype(GElemType i) { return itype_[i]; } // indices for type i    
         GElemType            gtype() { return gtype_; }               // get unique elem type on grid       
+        GBOOL                ispconst();                              // is order constant?
         void                 deriv(GTVector<Ftype> &u, GINT idir, GTVector<Ftype> &tmp,
-                                   GTVector<Ftype> &du );            // derivative of global vector
+                                   GTVector<Ftype> &du );             // derivative of global vector
         void                 deriv(GTVector<Ftype> &u, GINT idir, GBOOL dotrans, GTVector<Ftype> &tmp,
                                    GTVector<Ftype> &du );            // derivative of global vector
        void                  wderiv(GTVector<Ftype> &q, GINT idir, GBOOL bwghts, 
@@ -251,7 +252,6 @@ protected:
                                               GINT idir, GBOOL dotrans, GTVector<Ftype> &du);
         void                 grefderiv_constp(GTVector<Ftype> &u, GTVector<Ftype> &etmp,
                                               GINT idir, GBOOL dotrans, GTVector<Ftype> &du);
-        GBOOL                ispconst();
 virtual void                 config_gbdy(const PropertyTree &ptree, 
                                GBOOL                         bterrain,
                                GTVector<GTVector<GSIZET>>   &igbdyf, 
