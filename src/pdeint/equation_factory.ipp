@@ -173,18 +173,11 @@ EquationFactory<ET>::config_filters(const PropertyTree& ptree, const std::string
             exit(1);
           }
           fptree  = eqn_ptree.getPropertyTree(fblocklist[j]);
-          icomp   = fptree.getArray<int>("state_index");
           pfilter = FilterFactory<ET>::build(eqn_ptree, fblocklist[j], grid);
 
           // Cycle over specified state indices, and set 
           // filter_list for those indices to this filter:
-          for ( auto i=0; i<icomp.size(); i++ ) {
-            if ( icomp[i] < 0 || icomp[i] >= filter_list.size() ) {
-              cout << "EquationFactory::config_filters: state index " << icomp[i] << " invalid in PropertTree: " << fblocklist[j] << endl;
-              exit(1);
-            }
-            filter_list[icomp[i]] = pfilter;
-          }
+          filter_list[j] = pfilter;
         }
 
 
