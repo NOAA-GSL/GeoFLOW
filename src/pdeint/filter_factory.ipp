@@ -55,10 +55,22 @@ FilterFactory<ET>::build(const tbox::PropertyTree& eqn_ptree, const std::string 
 		std::shared_ptr<FilterImpl> filter_impl(new FilterImpl(traits, grid));
 		// Set back to base type
 		base_ptr = filter_impl;
+        }
+        else if( "projection_filter" == filter_type ) {
+		using FilterImpl = GProjectionFilter<Types>;
+                typename GProjectionFilter<ET>::Traits traits;
+
+	        traits.pdelta = ftree.getArray   <int>("pdelta");
+	        traits.alpha  = ftree.getArray<double>("alpha");
+
+		// Allocate filter Implementation
+		std::shared_ptr<FilterImpl> filter_impl(new FilterImpl(traits, grid));
+		// Set back to base type
+		base_ptr = filter_impl;
 
         }
 	else {
-		EH_ERROR("Requested filter not found: " << filter_type);
+		EH_ERROR("Requested filter type not found: " << filter_type);
 	}
 
 	return base_ptr;
