@@ -32,6 +32,7 @@ GBoydFilter<TypePack>::GBoydFilter(Traits &traits, Grid &grid)
 bInit_               (FALSE),
 ifilter_    (traits.ifilter),
 mufilter_  (traits.mufilter),
+istate_      (traits.istate),
 grid_                (&grid)
 {
   assert(grid_->ntype().multiplicity(0) == GE_MAX-1 
@@ -65,9 +66,10 @@ GBoydFilter<TypePack>::~GBoydFilter()
 // RETURNS:  none
 //**********************************************************************************
 template<typename TypePack>
-void GBoydFilter<TypePack>::apply_impl(const Time &t, StateComp &u, State &utmp, StateComp &uo) 
+void GBoydFilter<TypePack>::apply_impl(const Time &t, State &u, State &utmp, State &uo) 
 {
 
+  GINT             is, nstate;
   GSIZET           ibeg, iend; // beg, end indices in global array
   GTVector<Ftype>  tmp;
   GTMatrix<Ftype> *F[GDIM];
@@ -75,21 +77,27 @@ void GBoydFilter<TypePack>::apply_impl(const Time &t, StateComp &u, State &utmp,
 
   if ( !bInit_ ) init();
 
-  for ( auto e=0; e<gelems->size(); e++ ) {
-    ibeg = (*gelems)[e]->igbeg(); iend = (*gelems)[e]->igend();
-    u .range(ibeg, iend); // restrict global vecs to local range
-    uo.range(ibeg, iend); 
-    F [0] = (*gelems)[e]->gbasis(0)->getFilterMat();
-    F [1] = (*gelems)[e]->gbasis(1)->getFilterMat(TRUE);
+  nstate = istate_.size() == 0 ? u.size() 
+         : istate_.size();
+  for ( auto j=0; j<nstate; j++ ) {
+    is = istate_.size() == 0 ? j
+       : istate_[j];
+    for ( auto e=0; e<gelems->size(); e++ ) {
+      ibeg = (*gelems)[e]->igbeg(); iend = (*gelems)[e]->igend();
+      u[is]->range(ibeg, iend); // restrict global vecs to local range
+      uo[is]->range(ibeg, iend); 
+      F [0] = (*gelems)[e]->gbasis(0)->getFilterMat();
+      F [1] = (*gelems)[e]->gbasis(1)->getFilterMat(TRUE);
 #if defined(_G_IS2D)
-    GMTK::D2_X_D1<GFTYPE>(*F[0], *F[1], u, tmp, uo);
+      GMTK::D2_X_D1<GFTYPE>(*F[0], *F[1], *u[is], tmp, *uo[is]);
 #elif defined(_G_IS3D)
-    F [2] = (*gelems)[e]->gbasis(2)->getFilterMat(TRUE);
-    GMTK::D3_X_D2_X_D1<GFTYPE>(*F[0], *F[1], *F[2],  u, tmp, uo);
+      F [2] = (*gelems)[e]->gbasis(2)->getFilterMat(TRUE);
+      GMTK::D3_X_D2_X_D1<GFTYPE>(*F[0], *F[1], *F[2], *u[is], tmp, *uo[is]);
 #endif
+    }
+    u [is]->range_reset(); 
+    uo[is]->range_reset(); 
   }
-  u .range_reset(); 
-  uo.range_reset(); 
 
 } // end of method apply_impl
 
@@ -106,14 +114,18 @@ void GBoydFilter<TypePack>::apply_impl(const Time &t, StateComp &u, State &utmp,
 // RETURNS:  none
 //**********************************************************************************
 template<typename TypePack>
-void GBoydFilter<TypePack>::apply_impl(const Time &t, StateComp &u, State &utmp) 
+void GBoydFilter<TypePack>::apply_impl(const Time &t, State &u, State &utmp) 
 {
 
-  assert( utmp.size() >= 1
+  assert( utmp.size() >= 2*u.size()
        && "Insufficient temp space provided");
 
-  apply_impl(t, u, utmp, *utmp[utmp.size()-1]); 
-  u = *utmp[utmp.size()-1];
+  State unew(u.size());
+  
+  for ( auto j=0; j<u.size(); j++ ) unew[j] = utmp[u.size()+j];
+  apply_impl(t, u, utmp, unew); 
+
+  for ( auto j=0; j<u.size(); j++ ) *u[j] = *unew[j];
 
 } // end of method apply_impl
 

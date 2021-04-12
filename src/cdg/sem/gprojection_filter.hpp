@@ -53,6 +53,7 @@ public:
 
         // GProjectionFilter traits:
         struct Traits {
+          std::vector<int>    istate;   // state ids to filter
           std::vector<int>    pdelta;   // amount to reduce orig order
           std::vector<double>  alpha;   // filter 'strength'
         };
@@ -65,9 +66,9 @@ public:
 
 protected:
 
-        void              apply_impl(const Time &t, StateComp &u, State  &utmp, 
-                                StateComp &po);
-        void              apply_impl(const Time &t, StateComp &u, State  &utmp); 
+        void              apply_impl(const Time &t, State &u, State  &utmp, 
+                                State &uo);
+        void              apply_impl(const Time &t, State &u, State  &utmp); 
 
 private:
         void              init();

@@ -71,27 +71,35 @@ GProjectionFilter<TypePack>::~GProjectionFilter()
 // RETURNS:  none
 //**********************************************************************************
 template<typename TypePack>
-void GProjectionFilter<TypePack>::apply_impl(const Time &t, StateComp &u, State &utmp, StateComp &uo) 
+void GProjectionFilter<TypePack>::apply_impl(const Time &t, State &u, State &utmp, State &uo) 
 {
 
+  GINT             is, nstate;
   GSIZET           ibeg, iend; // beg, end indices in global array
   GTVector<Ftype>  tmp;
   typename TypePack::GElemList       *gelems=&grid_->elems();
 
   if ( !bInit_ ) init();
 
-  for ( auto e=0; e<gelems->size(); e++ ) {
-    ibeg = (*gelems)[e]->igbeg(); iend = (*gelems)[e]->igend();
-    u .range(ibeg, iend); // restrict global vecs to local range
-    uo.range(ibeg, iend); 
+ nstate = traits_.istate.size() == 0 ? u.size() 
+         : traits_.istate.size();
+  for ( auto j=0; j<nstate; j++ ) {
+    is = traits_.istate.size() == 0 ? j
+       : traits_.istate[j];
+
+    for ( auto e=0; e<gelems->size(); e++ ) {
+      ibeg = (*gelems)[e]->igbeg(); iend = (*gelems)[e]->igend();
+      u [is]->range(ibeg, iend); // restrict global vecs to local range
+      uo[is]->range(ibeg, iend); 
 #if defined(_G_IS2D)
-    GMTK::D2_X_D1<Ftype>(F_[0], FT_[1], u, tmp_, uo);
+      GMTK::D2_X_D1<Ftype>(F_[0], FT_[1], *u[is], tmp_, *uo[is]);
 #elif defined(_G_IS3D)
-    GMTK::D3_X_D2_X_D1<Ftype>(F_[0], FT_[1], FT_[2],  u, tmp_, uo);
+      GMTK::D3_X_D2_X_D1<Ftype>(F_[0], FT_[1], FT_[2],  *u[is], tmp_, *uo[is]);
 #endif
+    }
+    u [is]->range_reset(); 
+    uo[is]->range_reset(); 
   }
-  u .range_reset(); 
-  uo.range_reset(); 
 
 } // end of method apply_impl
 
@@ -108,14 +116,18 @@ void GProjectionFilter<TypePack>::apply_impl(const Time &t, StateComp &u, State 
 // RETURNS:  none
 //**********************************************************************************
 template<typename TypePack>
-void GProjectionFilter<TypePack>::apply_impl(const Time &t, StateComp &u, State &utmp) 
+void GProjectionFilter<TypePack>::apply_impl(const Time &t, State &u, State &utmp) 
 {
-
-  assert( utmp.size() >= 1
+  assert( utmp.size() >= 2*u.size()
        && "Insufficient temp space provided");
 
-  apply_impl(t, u, utmp, *utmp[utmp.size()-1]); 
-  u = *utmp[utmp.size()-1];
+  State unew(u.size());
+
+  for ( auto j=0; j<u.size(); j++ ) unew[j] = utmp[u.size()+j];
+  apply_impl(t, u, utmp, unew);                
+
+  for ( auto j=0; j<u.size(); j++ ) *u[j] = *unew[j];
+
 
 } // end of method apply_impl
 

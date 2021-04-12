@@ -35,24 +35,19 @@ public:
         using State      = typename Interface::State;
         using StateComp  = typename Interface::StateComp;
         using Grid       = typename Interface::Grid;
-        using Mass       = typename Interface::Mass;
         using Ftype      = typename Interface::Ftype;
-        using Derivative = typename Interface::Derivative;
         using Time       = typename Interface::Time;
-        using CompDesc   = typename Interface::CompDesc;
-        using Jacobian   = typename Interface::Jacobian;
         using Size       = typename Interface::Size;
 
         static_assert(std::is_same<State,GTVector<GTVector<Ftype>*>>::value,
                "State is of incorrect type");
         static_assert(std::is_same<StateComp,GTVector<Ftype>>::value,
                "StateComp is of incorrect type");
-        static_assert(std::is_same<Derivative,GTVector<GTVector<Ftype>*>>::value,
-               "Derivative is of incorrect type");
 
         // GBoydFilter traits:
         struct Traits {
-          int    ifilter;    // filter starting mode
+          int      istate;   // state elements to filter
+          int     ifilter;   // filter starting mode
           double mufilter;   // filter trunc amount
         };
 
@@ -64,9 +59,9 @@ public:
 
 protected:
 
-        void              apply_impl(const Time &t, StateComp &u, State  &utmp, 
-                                StateComp &po);
-        void              apply_impl(const Time &t, StateComp &u, State  &utmp); 
+        void              apply_impl(const Time &t, State &u, State  &utmp, 
+                                State &po);
+        void              apply_impl(const Time &t, State &u, State  &utmp); 
 
 private:
         void              init();
@@ -75,6 +70,7 @@ private:
         GINT                          ifilter_;  // filter mode
         Ftype                         mufilter_; // truncation amount 
         GTMatrix<Ftype>               Lambda_;   // mode-weighting matrix
+        std::vector<GINT>             istate_;   // state ids to filter
         Grid                         *grid_;     // grid set on construction
 
 
