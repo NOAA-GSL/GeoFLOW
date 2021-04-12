@@ -21,10 +21,12 @@
 // Derived From : FilterBase
 //==================================================================================
 
-#if !defined(_GBOYDFILTER_HPP)
-#define _GBOYDFILTER_HPP
+#if !defined(_GPROJECTIONFILTER_HPP)
+#define _GPROJECTIONFILTER_HPP
+
+#include "gtypes.h"
 #include "gtvector.hpp"
-#include "gnbasis.hpp"
+#include "gllbasis.hpp"
 #include "gmass.hpp"
 #include "gtmatrix.hpp"
 #include "gmtk.hpp"
@@ -35,28 +37,23 @@ template<typename TypePack>
 class GProjectionFilter : public FilterBase<TypePack>
 {
 public:
-        using Interface  = EquationBase<TypePack>;
-        using State      = typename Interface::State;
-        using StateComp  = typename Interface::StateComp;
-        using Grid       = typename Interface::Grid;
-        using Mass       = typename Interface::Mass;
-        using Ftype      = typename Interface::Ftype;
-        using Derivative = typename Interface::Derivative;
-        using Time       = typename Interface::Time;
-        using CompDesc   = typename Interface::CompDesc;
-        using Jacobian   = typename Interface::Jacobian;
-        using Size       = typename Interface::Size;
+        using Types      = EquationBase<TypePack>;
+        using State      = typename Types::State;
+        using StateComp  = typename Types::StateComp;
+        using Grid       = typename Types::Grid;
+        using Mass       = typename Types::Mass;
+        using Ftype      = typename Types::Ftype;
+        using Time       = typename Types::Time;
+        using Size       = typename Types::Size;
 
         static_assert(std::is_same<State,GTVector<GTVector<Ftype>*>>::value,
                "State is of incorrect type");
         static_assert(std::is_same<StateComp,GTVector<Ftype>>::value,
                "StateComp is of incorrect type");
-        static_assert(std::is_same<Derivative,GTVector<GTVector<Ftype>*>>::value,
-               "Derivative is of incorrect type");
 
         // GProjectionFilter traits:
         struct Traits {
-          std::vector<int>    plower;   // order to interp _to_ usually N-1
+          std::vector<int>    pdelta;   // amount to reduce orig order
           std::vector<double>  alpha;   // filter 'strength'
         };
 
@@ -78,10 +75,9 @@ private:
         GBOOL                        bInit_;   // is filter initialized?
         Traits                       traits_;
         GTVector<Ftype>              tmp_;     // 1-element tmp space
-        GTMatrix<Ftype>              F_(GDIM); // interp matrices
-        GTMatrix<Ftype>              FT_(GDIM);// interp matrices transposes
+        GTVector<GTMatrix<Ftype>>    F_;       // interp matrices
+        GTVector<GTMatrix<Ftype>>    FT_;      // interp matrix transposes
         Grid                        *grid_;    // grid set on construction
-
 
 };
 

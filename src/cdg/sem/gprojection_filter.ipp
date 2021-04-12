@@ -40,8 +40,8 @@ grid_                (&grid)
 
 //assert(grid_->ntype().multiplicity(0) == GE_MAX-1 
 //      && "Only a single element type allowed on grid");
-  assert(grid_->ispconst()); // order must not vary 
-  assert(traits_.plow.size(() >= GDIM && traits_.alpha.size() >= GDIM);
+  assert(grid_->ispconst() ); // order must not vary 
+  assert(traits_.pdelta.size() >= GDIM && traits_.alpha.size() >= GDIM);
 } // end of constructor method (1)
 
 
@@ -85,9 +85,9 @@ void GProjectionFilter<TypePack>::apply_impl(const Time &t, StateComp &u, State 
     u .range(ibeg, iend); // restrict global vecs to local range
     uo.range(ibeg, iend); 
 #if defined(_G_IS2D)
-    GMTK::D2_X_D1<Ftype>(*F_[0], *FT_[1], u, tmp_, uo);
+    GMTK::D2_X_D1<Ftype>(F_[0], FT_[1], u, tmp_, uo);
 #elif defined(_G_IS3D)
-    GMTK::D3_X_D2_X_D1<Ftype>(*F_[0], *FT_[1], *FT_[2],  u, tmp_, uo);
+    GMTK::D3_X_D2_X_D1<Ftype>(F_[0], FT_[1], FT_[2],  u, tmp_, uo);
 #endif
   }
   u .range_reset(); 
@@ -130,46 +130,48 @@ void GProjectionFilter<TypePack>::apply_impl(const Time &t, StateComp &u, State 
 template<typename TypePack>
 void GProjectionFilter<TypePack>::init()
 {
-
   GINT             nnodes;
   Ftype            a, b, xi, xf0, xN;
   GTVector<GINT>   Nhi(GDIM), Nlow(GDIM);
-  GTVector<Ftype>  *xihi, xilow[GDIM];
-  GTVector<GNBasis<GCTYPE,Ftype>*> *bhi, blow(GDIM); 
+  GTVector<Ftype>  xihi, xilow;
+  GTVector<GNBasis<GCTYPE,Ftype>*> *bhi;
+  GTVector<GLLBasis<GCTYPE,Ftype>> blow(GDIM); 
   GTMatrix<Ftype>  Id, Ihi, Ilow, M;
-  typename TypePack::GElemList  *gelems=&grid_->elems();
+  typename TypePack::GElemList    *gelems=&grid_->elems();
 
   // For now, let's assume this filter only works
   // when order is constant among elements.
+
+  F_.resize(GDIM);
+  FT_.resize(GDIM);
 
   // First, compute I_M^N I_N^M;
   bhi   = &(*gelems)[0]->gbasis();
   Nhi   = (*gelems)[0]->size();
   for ( auto j=0; j<GDIM; j++ ) { // allocate matrices
     // Limit new p to be in [pold-1, pold/2]:
-    assert(plow[j] >= 1 && plow[j] < (Nhi[j]-1)/2); 
-    xihi     = &(*bhi)[j].getXiNodes();
-    Nlow[j]  = Nhi[j] - plow[j];
-    blow[j]  .resize(Nlow[j]-1); // create low order bases
-    blow[j]  .getXiNodes(xilow[j]);
-    Ilow     .resize(Nlow[j],Nhi[j]); // interp to low order basis
-    Ihi      .resize(Nhi[j],Nlow[j]); // interp to high order basis
-    F_  [j]  .resize(Nhi[j],Nhi[j]);  // 1d filter matrices
-    FT_ [j]  .resize(Nhi[j],Nhi[j]);  // 1d filter matrix transposes
-    M        .resize(Nhi[j],Nhi[j]);  // tmp matrix
-    Id       .resize(Nhi[j],Nhi[j]); Id.createIdentity()(;
-    (*bhi)[j].evalBasis(xilow[j],Ihi[j]);
-    blow[j].evalBasis(*xihi,Ilow[j]);
+    assert(traits_.pdelta[j] >= 1 && traits_.pdelta[j] < (Nhi[j]-1)/2); 
+    (*bhi)[j]->getXiNodes(xihi);
+    Nlow[j]   = Nhi[j] - traits_.pdelta[j];
+    blow[j]   .resize(Nlow[j]-1);      // create low order bases
+    blow[j]   .getXiNodes(xilow);
+    Ilow      .resize(Nlow[j],Nhi[j]); // interp to low order basis
+    Ihi       .resize(Nhi[j],Nlow[j]); // interp to high order basis
+    F_  [j]   .resize(Nhi[j],Nhi[j]);  // 1d filter matrices
+    FT_ [j]   .resize(Nhi[j],Nhi[j]);  // 1d filter matrix transposes
+    M         .resize(Nhi[j],Nhi[j]);  // tmp matrix
+    Id        .resize(Nhi[j],Nhi[j]); Id.createIdentity();
+    (*bhi)[j]->evalBasis(xilow,Ihi); // create Ihi
+    blow[j].evalBasis(xihi,Ilow);     // create Ilow
 
     // Compute 1d filter matrices: F = alpha Ihi Ilow + (1-alpha) I;
     M        = Ihi * Ilow;
-    F_  [j]  = M * traits_.alpha[j] 
-    F_  [j] += ( Id * (1.0-alpha[j]) );
+    F_  [j]  = M * traits_.alpha[j] ;
+    F_  [j] += ( Id * (1.0-traits_.alpha[j]) );
     F_  [j]  .transpose(FT_[j]);
   }
 
   bInit_ = TRUE;
 
 } // end of method init
-
 
