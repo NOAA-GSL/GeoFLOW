@@ -43,11 +43,11 @@ public:
 
 protected:
 
-	void apply_impl(const Time& /* t */, StateComp& /* u */, State& /* utmp */, StateComp& /* uo */){
+	void apply_impl(const Time& /* t */, State& /* u */, State& /* utmp */, State& /* uo */){
 		// Do nothing ...
 	}
 
-	void apply_impl(const Time& /* t */, StateComp& /* u */, State& /* utmp */){
+	void apply_impl(const Time& /* t */, State& /* u */, State& /* utmp */){
 		// Do nothing ...
 	}
 

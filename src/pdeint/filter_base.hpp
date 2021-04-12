@@ -28,13 +28,9 @@ public:
 	using State      = typename Types::State;
 	using StateComp  = typename Types::StateComp;
         using StateInfo  = typename Types::StateInfo;
-        using Mass       = typename Types::Mass;
 	using Grid       = typename Types::Grid;
 	using Ftype      = typename Types::Ftype;
-	using Derivative = typename Types::Derivative;
 	using Time       = typename Types::Time;
-	using Jacobian   = typename Types::Jacobian;
-	using CompDesc   = typename Types::CompDesc;
 	using Size       = typename Types::Size;
 
 
@@ -53,7 +49,7 @@ public:
 	 * \param[in/out]  utmp  tmp state vectors
 	 * @param[out]     uo    filtered state 
 	 */
-	void apply(const Time &t, StateComp& u, State& utmp, StateComp& uo){
+	void apply(const Time &t, State& u, State& utmp, State& uo){
 		this->apply_impl(t,u,utmp,uo);
 	}
 
@@ -66,7 +62,7 @@ public:
 	 * @param[in,out] u     Is the state of the system of equations
 	 * \param[in]     utmp  tmp state vectors
 	 */
-	void apply(const Time &t, StateComp& u, State& utmp){
+	void apply(const Time &t, State& u, State& utmp){
 		this->apply_impl(t,u,utmp);
 	}
 
@@ -76,8 +72,8 @@ protected:
 	/**
 	 * Must be provided by implementation
 	 */
-	virtual void apply_impl(const Time& t, StateComp& u, State& utmp, StateComp& uo) = 0;
-	virtual void apply_impl(const Time& t, StateComp& u, State& utmp) = 0;
+	virtual void apply_impl(const Time& t, State& u, State& utmp, State& uo) = 0;
+	virtual void apply_impl(const Time& t, State& u, State& utmp) = 0;
 
 };
 
