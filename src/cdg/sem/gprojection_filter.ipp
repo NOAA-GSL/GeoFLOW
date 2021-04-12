@@ -81,9 +81,9 @@ void GProjectionFilter<TypePack>::apply_impl(const Time &t, State &u, State &utm
 
   if ( !bInit_ ) init();
 
- nstate = traits_.istate.size() == 0 ? u.size() 
+  nstate = traits_.istate.size() == 0 ? u.size() 
          : traits_.istate.size();
-  for ( auto j=0; j<nstate; j++ ) {
+  for ( auto j=0; j<nstate; j++ ) { // over required states
     is = traits_.istate.size() == 0 ? j
        : traits_.istate[j];
 
@@ -96,6 +96,7 @@ void GProjectionFilter<TypePack>::apply_impl(const Time &t, State &u, State &utm
 #elif defined(_G_IS3D)
       GMTK::D3_X_D2_X_D1<Ftype>(F_[0], FT_[1], FT_[2],  *u[is], tmp_, *uo[is]);
 #endif
+
     }
     u [is]->range_reset(); 
     uo[is]->range_reset(); 
@@ -118,16 +119,24 @@ void GProjectionFilter<TypePack>::apply_impl(const Time &t, State &u, State &utm
 template<typename TypePack>
 void GProjectionFilter<TypePack>::apply_impl(const Time &t, State &u, State &utmp) 
 {
-  assert( utmp.size() >= 2*u.size()
+  assert( utmp.size() >= u.size()
        && "Insufficient temp space provided");
 
+  GINT  is, nstate;
   State unew(u.size());
+
+  nstate = traits_.istate.size() == 0 ? u.size() 
+         : traits_.istate.size();
 
   for ( auto j=0; j<u.size(); j++ ) unew[j] = utmp[u.size()+j];
   apply_impl(t, u, utmp, unew);                
 
-  for ( auto j=0; j<u.size(); j++ ) *u[j] = *unew[j];
-
+  // Deep copy filtered components back to u:
+  for ( auto j=0; j<nstate; j++ ) {
+     is = traits_.istate.size() == 0 ? j
+        : traits_.istate[j];
+    *u[is] = *unew[is];
+  }
 
 } // end of method apply_impl
 
@@ -173,14 +182,16 @@ void GProjectionFilter<TypePack>::init()
     FT_ [j]   .resize(Nhi[j],Nhi[j]);  // 1d filter matrix transposes
     M         .resize(Nhi[j],Nhi[j]);  // tmp matrix
     Id        .resize(Nhi[j],Nhi[j]); Id.createIdentity();
-    (*bhi)[j]->evalBasis(xilow,Ihi); // create Ihi
-    blow[j].evalBasis(xihi,Ilow);     // create Ilow
+    (*bhi)[j]->evalBasis(xilow,Ilow); // create Ilow
+    blow[j].evalBasis(xihi,Ihi);     // create Ihi
 
     // Compute 1d filter matrices: F = alpha Ihi Ilow + (1-alpha) I;
     M        = Ihi * Ilow;
     F_  [j]  = M * traits_.alpha[j] ;
     F_  [j] += ( Id * (1.0-traits_.alpha[j]) );
     F_  [j]  .transpose(FT_[j]);
+
+cout << "GProjFilter:: init: F[" << j << "]=" << F_[j] << endl;
   }
 
   bInit_ = TRUE;
