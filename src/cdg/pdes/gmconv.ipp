@@ -631,7 +631,7 @@ void GMConv<TypePack>::step_impl(const Time &t, State &uin, State &uf, const Tim
   apply_bc_impl(t, uin);
 
   // Check solution for NaN and Inf:
-#if 0
+#if 1
   bret = TRUE;
   for ( auto j=0; j<uevolve_.size() && bret; j++ ) {
     bret = bret && uevolve_ [j]->isfinite();
