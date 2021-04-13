@@ -1,5 +1,5 @@
 { 
-  "exp_order"         : [4, 4, 8],
+  "exp_order"         : [4, 4, 5],
   "exp_order_type"    : "constant",
   "grid_type"         : "grid_box",
   "pde_name"          : "pde_mconv",
@@ -15,47 +15,55 @@
   "IO_implementation" : "gio",
   "terrain_type"      : "none",
   "initstate_boxdrybubble": {
-    "T_pert"     : -7.5,
+    "T_pert"     : -15,
     "x_center"   : [0, 3000.0, 1000.0],
     "x_width"    : [4000.0, 2000.0, 2000.0]
   },
-  "0-flux": {
+  "test": {
     "bdy_class"        : "uniform",
-    "base_type"        : ["GBDY_0FLUX", "GBDY_INFLOW"],
+    "base_type"        : ["GBDY_0FLUX", "GBDY_DIRICHLET"],
     "istate"           : [[0, 1], [2, 3]],
+    "value"            : [[0, 0], [0, 0]],
     "use_init"         : [false, true],
     "compute_once"     : [false, true]
+  },
+  "0-flux": {
+    "bdy_class"        : "uniform",
+    "base_type"        : ["GBDY_0FLUX"],
+    "istate"           : [[0, 1]],
+    "use_init"         : [false],
+    "compute_once"     : [false]
   },
   "pde_mconv": {
     "docoriolis"      : false,
     "dodry"           : true,
-    "usebase_state"   : true,
+    "usebase_state"   : false,
     "dofallout"       : false,
     "dogravity"       : true,
     "bconserved"      : false,
     "divopcolloc"     : true,
-    "usebdydat"       : false,
-    "Stokeshyp"       : false,
+    "usebdydat"       : true,
+    "Stokeshyp"       : true,
     "bindepdiss"      : false,
     "nliq"            : 0,
     "nice"            : 0,
     "use_forcing"     : false,
-    "forcing_comp"    : [0, 1, 2],
+    "forcing_comp"    : [],
     "T_surf"          : 300.0,
     "P0"              : 1000.0,
-    "filter_list"     : [],
+    "filter_list"     : ["my_filter"],
     "my_filter" : {
-      "filter_type" : "boyd_filter",
-      "ifilter"     : 4,
-      "mufilter"    : 0.05,
-      "state_index" : [0, 1]
+      "filter_type" : "projection_filter",
+      "alpha"       : [0.3, 0.3, 0.3],
+      "pdelta"      : [2, 2, 2],
+      "istate"      : [0, 1, 2, 3]
     }
   },
   "grid_box": {
     "grid_name" : "grid_box",
     "xyz0"      : [-25600, 0, 0],
     "delxyz"    : [51200.0, 10000.0, 1.0],
-    "num_elems" : [128, 25, 1],
+    "num_elems" : [512, 100, 1],
     "bdy_x_0"   : "0-flux",
     "bdy_x_1"   : "0-flux",
     "bdy_y_0"   : "0-flux",
@@ -76,14 +84,14 @@
     "courant"          : 0.1
   },
   "dissipation_traits": {
-    "nu"      : 250.0,
-    "eta"     : 250.0,
-    "zeta"    : 250.0,
-    "lambda"  : 250.0,
+    "nu"      : 75.0,
+    "eta"     : 75.0,
+    "zeta"    : 75.0,
+    "lambda"  : 75.0,
     "nu_type" : "constant"
   },
   "gio": {
-    "ivers"   : 0,
+    "ivers"    : 0,
     "multivar" : false,
     "io_type"  : "collective",
     "wtime"    : 6,
@@ -102,6 +110,10 @@
     "names"       : ["dtheta"],
     "mathop"      : "dptemp"
   },
+  "dpress": {
+    "names"       : ["dp"],
+    "mathop"      : "dpress"
+  },
   "press": {
     "names"       : ["p"],
     "mathop"      : "press"
@@ -109,6 +121,10 @@
   "den": {
     "names"       : ["dtotal"],
     "mathop"      : "den"
+  },
+  "dden": {
+    "names"       : ["dd"],
+    "mathop"      : "dden"
   },
   "vel": {
     "names"       : ["v1","v2"],
@@ -126,7 +142,7 @@
     "agg_state_name"     : "u",
     "agg_grid_name "     : "grid",
     "derived_quantities"       : [],
-    "state_derived_quantities" : ["temp","press","vel","ptemp","dptemp","den"]
+    "state_derived_quantities" : ["temp","press","vel","ptemp","dpress","dptemp","den","dden"]
   },
   "gmconv_diag": {
     "observer_name"      : "gmconv_diag",
@@ -136,8 +152,8 @@
     "treat_as_1d"        : false
   },
   "time_integration": {
-    "integ_type" : "cycle",
-    "time_end"   : 900.0,
+    "integ_type" : "time",
+    "time_end"   : 900.5,
     "cycle_end"  : 10,
     "dt"         : 1.0e-2
   }
