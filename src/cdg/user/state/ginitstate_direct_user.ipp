@@ -685,16 +685,17 @@ GBOOL ginitstate<Types>::impl_boxdrybubble(const PropertyTree &ptree, GString &s
   // Get base state:
   typename GMConv<Types>::Traits traits = ceqn->get_traits();
   ubase = &ceqn->get_base_state();
-  assert( traits.usebase && ubase->size() == 2 );
+//assert( traits.usebase && ubase->size() == 2 );
+  assert( ubase->size() == 2 );
    
 
   T     = utmp[0];  // background temp
   d     = u  [ceqn->DENSITY]; // density
   e     = u  [ceqn->ENERGY]; // int. energy density
-  if ( traits.usebase ) {
+//if ( traits.usebase ) {
     db    = (*ubase)[0];// background density 
     pb    = (*ubase)[1];// background pressure
-  }
+//}
   nxy   = (*xnodes)[0].size(); // same size for x, y, z
 
   T0    = inittree.getValue<GFTYPE>("T_pert", 15.0);    // temp. perturb. magnitude (K)
