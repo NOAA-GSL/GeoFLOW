@@ -57,11 +57,13 @@ GDivOp<TypePack>::~GDivOp()
 //          u   : input vector field
 //          utmp: array of tmp arrays. 3 arrays required.
 //          div : output (result) 
+//          ivec: if d is a vector component, specifies which component. 
+//                Default is -1 (meaning, a complete scalar).
 //             
 // RETURNS:  none
 //**********************************************************************************
 template<typename TypePack>
-void GDivOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp &div) 
+void GDivOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp &div, GINT ivec) 
 {
 
   assert( utmp.size() >= 3
@@ -74,6 +76,8 @@ void GDivOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp &div
   GTVector<GTVector<Ftype>> *normals = &grid_->faceNormals(); 
   StateComp                 *mass    =  grid_->massop().data();
   StateComp                 *bmass   = &grid_->faceMass();
+
+  typename Grid::BinnedBdyIndex *igb = &grid_->igbdy_binned();
 
 
   if ( !traits_.docollocation ) {
@@ -100,9 +104,21 @@ void GDivOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp &div
     // div = MJ d/dx_j ( d u_j ):
     d.pointProd(*u[0], *utmp[1]);
     grid_->deriv(*utmp[1], 1, *utmp[0], div);
+#if defined(DO_NEUMANN)
+if ( ivec == -1 || ivec == 2 ) {
+GMTK::zero<Ftype>(div,(*igb)[1][GBDY_0FLUX]);
+GMTK::zero<Ftype>(div,(*igb)[3][GBDY_0FLUX]);
+}
+#endif
     for ( auto j=1; j<nxy; j++ ) { 
        d.pointProd(*u[j], *utmp[1]);
        grid_->deriv(*utmp[1], j+1, *utmp[0], *utmp[2]);
+#if defined(DO_NEUMANN)
+if ( ivec == -1 || ivec == 1 ) {
+GMTK::zero<Ftype>(*utmp[2],(*igb)[0][GBDY_0FLUX]);
+GMTK::zero<Ftype>(*utmp[2],(*igb)[2][GBDY_0FLUX]);
+}
+#endif
        div += *utmp[2];
     }
     div *= *(massop_->data());
@@ -124,11 +140,13 @@ void GDivOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp &div
 // ARGS   : u   : input vector field
 //          utmp: array of tmp arrays. 2 arrays required.
 //          div : output (result) 
+//          ivec: if d is a vector component, specifies which component. 
+//                Default is -1 (meaning, a complete scalar).
 //             
 // RETURNS:  none
 //**********************************************************************************
 template<typename TypePack>
-void GDivOp<TypePack>::apply(State &u, State &utmp, StateComp &div) 
+void GDivOp<TypePack>::apply(State &u, State &utmp, StateComp &div, GINT ivec) 
 {
 
   assert( utmp.size() >= 2

@@ -22,6 +22,8 @@
 #include "pdeint/equation_base.hpp"
 
 
+#define DO_NEUMANN
+
 template<typename TypePack>
 class GDivOp
 {
@@ -56,9 +58,9 @@ public:
                          ~GDivOp();
 
         void              apply(StateComp &d, State &u, State  &utmp, 
-                                StateComp &div);                             // stress op evaluation in idir
+                                StateComp &div, GINT ivec=-1);                       // stress op evaluation in idir
         void              apply(State &u, State  &utmp,  
-                                StateComp &div);                             // stress-energy op evaluation
+                                StateComp &div, GINT ivec=-1);                       // stress-energy op evaluation
 
 
 private:

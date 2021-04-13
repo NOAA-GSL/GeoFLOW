@@ -17,10 +17,12 @@
 #include "gtvector.hpp"
 #include "gnbasis.hpp"
 #include "gmass.hpp"
+#include "gmtk.hpp"
 
 
 using namespace std;
 
+#define DO_NEUMANN
 
 template<typename TypePack>
 class GAdvect
