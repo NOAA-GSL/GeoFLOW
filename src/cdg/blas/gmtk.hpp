@@ -223,6 +223,9 @@ namespace GMTK
   void    zero(GTVector<T> &v);
 
   template<typename T>
+  void    zero(GTVector<T> &v, GTVector<GSIZET) &iv);
+
+  template<typename T>
   void    zero(GTVector<GTVector<T>*> &v);
 
   template<typename T>

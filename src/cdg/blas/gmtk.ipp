@@ -1267,6 +1267,31 @@ void zero(GTVector<T> &u)
 //**********************************************************************************
 // METHOD : zero (2)
 // DESC   :
+//          Set values u(iu) = 0.0
+//
+// ARGS   :
+//          u    : field
+//          iu   : indirection indices
+// RETURNS: none.
+//**********************************************************************************
+template<typename T>
+void zero(GTVector<T> &u, GTVector<GSIZET> &iu)
+{
+	GEOFLOW_TRACE();
+  T tiny=std::numeric_limits<T>::epsilon();
+
+  for ( auto j=0; j<iu.size(); j++ ) {
+    u[iu[j]] = 0.0;
+  }
+
+
+} // end of method zero (2)
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : zero (3)
+// DESC   :
 //          Set values < std::numeric_limits<>::epsilon()
 //          identically to 0
 //
@@ -1287,12 +1312,12 @@ void zero(GTVector<GTVector<T>*> &u)
   }
 
 
-} // end of method zero (2)
+} // end of method zero (3)
 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : zero (3)
+// METHOD : zero (4)
 // DESC   :
 //          Set values < std::numeric_limits<>::epsilon()
 //          identically to 0
@@ -1314,7 +1339,7 @@ void zero(GTVector<GTVector<T>> &u)
   }
 
 
-} // end of method zero (2)
+} // end of method zero (4)
 
 
 //**********************************************************************************
