@@ -1278,7 +1278,6 @@ template<typename T>
 void zero(GTVector<T> &u, GTVector<GSIZET> &iu)
 {
 	GEOFLOW_TRACE();
-  T tiny=std::numeric_limits<T>::epsilon();
 
   for ( auto j=0; j<iu.size(); j++ ) {
     u[iu[j]] = 0.0;
