@@ -252,6 +252,10 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
   State      g(nc_); 
   State      stmp(4);
 
+  typename Grid::BinnedBdyIndex *igb = &grid_->igbdy_binned();
+
+
+
   // NOTE:
   // Make sure that, in init(), Helmholtz op is using only
   // weak Laplacian (q * mass term isn't being used), or there will 
@@ -321,9 +325,18 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
   }
   for ( auto j=0; j<s_.size(); j++ ) { // for each component
 
-    gdiv_->apply(*s_[j], v_, stmp, *dudt[j]); 
+    gdiv_->apply(*s_[j], v_, stmp, *dudt[j], j+1); 
 
     grid_->deriv(*p, j+1, *tmp2, *tmp1);              // Grad p'
+#if defined(DO_NEUMANN)
+if ( j==0) {
+GMTK::zero<Ftype>(*tmp1,(*igb)[1][GBDY_0FLUX]);
+GMTK::zero<Ftype>(*tmp1,(*igb)[3][GBDY_0FLUX]);
+} else {
+GMTK::zero<Ftype>(*tmp1,(*igb)[0][GBDY_0FLUX]);
+GMTK::zero<Ftype>(*tmp1,(*igb)[2][GBDY_0FLUX]);
+}
+#endif
    *tmp1 *= *Mass;                                    // M Grad p' 
    *dudt[j] += *tmp1;                                 // += Grad p'
 
@@ -633,8 +646,8 @@ void GMConv<TypePack>::step_impl(const Time &t, State &uin, State &uf, const Tim
   // Check solution for NaN and Inf:
 #if 1
   bret = TRUE;
-  for ( auto j=0; j<uevolve_.size() && bret; j++ ) {
-    bret = bret && uevolve_ [j]->isfinite();
+  for ( auto j=0; j<uin.size() && bret; j++ ) {
+    bret = bret && uin [j]->isfinite();
   }
   assert(bret && "Solution not finite");
 #endif
@@ -734,8 +747,9 @@ void GMConv<TypePack>::init_impl(State &u, State &tmp)
   W_.resize(nc_); W_ = NULLPTR;
 
   // Create solver-owned arrays for base state:
+  traits_.nbase = 2;
   ubase_  .resize(traits_.nbase);  // points to base-state components
-  for ( auto j=0; j<v_.size(); j++ ) {
+  for ( auto j=0; j<traits_.nbase; j++ ) {
     ubase_[j] = new GTVector<Ftype>(grid_->ndof());
   }
   
@@ -1491,7 +1505,9 @@ void GMConv<TypePack>::compute_base(State &u)
    GTVector<GTVector<Ftype>> 
              *xnodes = &grid_->xNodes();
 
+#if 0
    if ( !traits_.usebase ) return;
+#endif
 
 
    GridIcos *icos = dynamic_cast<GridIcos*>(grid_);
@@ -1661,7 +1677,6 @@ void GMConv<TypePack>::compute_derived_impl(const State &u, GString sop,
   else if ( "dpress"   == sop ) { // pressure fluctuation 
     assert(uout .size() >= 1   && "Incorrect no. output components");
     assert(utmp .size() >= 4   && "Incorrect no. tmp components");
-    assert(traits_.usebase);
     compute_cv(u, *utmp[0], *utmp[1]);                     // Cv
    *utmp[2] = *u[DENSITY];
     if ( traits_.usebase ) *utmp[2] += *ubase_[0];       // total density
@@ -1678,7 +1693,6 @@ void GMConv<TypePack>::compute_derived_impl(const State &u, GString sop,
   else if ( "dptemp"    == sop ) { // potential temp fluctuation
     assert(uout .size() >= 1   && "Incorrect no. output components");
     assert(utmp .size() >= 4   && "Incorrect no. tmp components");
-    assert(traits_.usebase);
     tu[0] = utmp[3];
     this->compute_derived_impl(u, "press", utmp, uout, iuout);
     this->compute_derived_impl(u, "temp" , utmp, tu  , iuout);
@@ -1689,15 +1703,14 @@ void GMConv<TypePack>::compute_derived_impl(const State &u, GString sop,
     for ( auto j=0; j<uout[0]->size(); j++ ) {
       (*uout[0])[j] = (*tu[0])[j] * pow(fact2*(*uout[0])[j], fact1);
     }
-    if ( traits_.usebase ) { // subtract base potl temp
-      // theta_base = P0/(RD *rho_base) (P_base/P0)^(1-R/Cp)
-      for ( auto j=0; j<uout[0]->size(); j++ ) {
-        tb = (traits_.P0_base/(RD*(*ubase_[0])[j])) 
-           * pow((*ubase_[1])[j]/traits_.P0_base,1.0+fact1);
-        (*uout[0])[j] -= tb;
-      }
+    // theta_base = P0/(RD *rho_base) (P_base/P0)^(R/Cp)
+    for ( auto j=0; j<uout[0]->size(); j++ ) {
+//    tb = (traits_.P0_base/(RD*(*ubase_[0])[j])) 
+      tb = (traits_.Ts_base)
+         * pow(fact2*(*ubase_[1])[j],fact1);
+      (*uout[0])[j] -= tb;
     }
-
+    ggfx_->doOp(*uout[0], typename GGFX<Ftype>::Smooth());
   }
   else if ( "ptemp"    == sop ) { // potential temp
     assert(uout .size() >= 1   && "Incorrect no. output components");
@@ -1725,8 +1738,13 @@ void GMConv<TypePack>::compute_derived_impl(const State &u, GString sop,
   }
   else if ( "dden"      == sop ) { // density fluctuation
     assert(uout .size() >= 1   && "Incorrect no. output components");
-    assert(traits_.usebase);
-   *uout[0] = *u[DENSITY];
+//  assert(traits_.usebase);
+    if ( traits_.usebase ) {
+     *uout[0] = *u[DENSITY];
+    }
+    else {
+      GMTK::saxpby<Ftype>(*uout[0], *u[DENSITY], 1.0, *ubase_[0], -1.0); 
+    }
     iuout.resize(1); iuout[0] = 0;
   }
   else if ( "vel"      == sop ) { // x-velocity
