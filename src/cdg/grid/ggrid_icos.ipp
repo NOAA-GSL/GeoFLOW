@@ -1329,7 +1329,7 @@ void GGridIcos<Types>::do_gbdy_normals(const GTMatrix<GTVector<Ftype>> &dXdXi,
     idepComp.resize(nbdy);
     for ( auto j=0; j<normals.size(); j++ ) normals[j].resize(nbdy);
 
-    do_gbdy_normals3d(dXdXi, igbdy, debdy, dXdXi, normals, idepComp);
+    do_gbdy_normals3d(dXdXi, igbdy, debdy, normals, idepComp);
 
   #else
     #error "Invalid problem dimensionality"
