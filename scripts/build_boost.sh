@@ -1,11 +1,7 @@
 #!/bin/bash
 #
-# Script to build Boost library on Travis platform
-#
-# ?? Why not just build it through the .travis.yml file ??
-# Because the YAML markup language will not allow :
-# to be used since they are special character within
-# the language.  So we call this script instead.
+# Script to build Boost library when cannot be installed using a
+# pre-built repository.
 #
 
 wget https://dl.bintray.com/boostorg/release/1.72.0/source/boost_1_72_0.tar.gz
