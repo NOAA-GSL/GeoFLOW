@@ -12,5 +12,5 @@ add_subdirectory(sandbox/tbox)
 #
 # Add Travis Testing
 #
-add_subdirectory(travis/cdg)
-add_subdirectory(travis/tbox)
+add_subdirectory(actions/cdg)
+add_subdirectory(actions/tbox)
