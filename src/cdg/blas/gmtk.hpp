@@ -103,19 +103,19 @@ namespace GMTK
   void I3_X_I2_X_D1(GTMatrix<T> &D1, GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET N3, GTVector<T> &y);
 
   template<typename T>
-  void I3_X_I2_X_D1(GTMatrix<T> &D1, GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET N3, GSIZET Ne, GTVector<T> &y);
+  void I3_X_I2_X_D1(GTMatrix<T> &D1, GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET N3, GSIZET Ne, GCBLAS::cuMatBlockDat &cudat, GTVector<T> &y);
 
   template<typename T>
   void I3_X_D2_X_I1(GTMatrix<T> &D2T, GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET N3, GTVector<T> &y);
 
   template<typename T>
-  void I3_X_D2_X_I1(GTMatrix<T> &D2T, GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET N3, GSIZET Ne, GTVector<T> &y);
+  void I3_X_D2_X_I1(GTMatrix<T> &D2T, GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET N3, GSIZET Ne, GCBLAS::cuMatBlockDat &cudat, GTVector<T> &y);
 
   template<typename T>
   void D3_X_I2_X_I1(GTMatrix<T> &D3T, GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET N3, GTVector<T> &y);
 
   template<typename T>
-  void D3_X_I2_X_I1(GTMatrix<T> &D3T, GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET N3, GSIZET Ne, GTVector<T> &y);
+  void D3_X_I2_X_I1(GTMatrix<T> &D3T, GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET N3, GSIZET Ne, GCBLAS::cuMatBlockDat &cudat, GTVector<T> &y);
 
   template<typename T>
   void matvec_prod(GTVector<T> &vret, const GTMatrix<T> &A, const GTVector<T> &b);

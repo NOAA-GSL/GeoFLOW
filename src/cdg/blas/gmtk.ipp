@@ -2047,13 +2047,14 @@ void I3_X_I2_X_D1(GTMatrix<T> &D1, GTVector<T> &u,
 //          N1-N3   : coord dimensions of u, y 'elements', if interpreted 
 //                    as matrix dimensions
 //          Ne      : number of 'elements' in u, y
-//          y   : return vector result of size >= N1 * N2 * N3
+//          cudat   : cuMatBlockDat structure data
+//          y       : return vector result of size >= N1 * N2 * N3
 // RETURNS: none
 //**********************************************************************************
 template<typename T>
 void I3_X_I2_X_D1(GTMatrix<T> &D1, GTVector<T> &u,
                   GSIZET N1, GSIZET N2, GSIZET N3, GSIZET Ne,
-                  GTVector<T> &y)
+                  GCBLAS::cuMatBlockDat &cudat, GTVector<T> &y)
 {
 	GEOFLOW_TRACE();
   GSIZET  ND1, ND2, NYZ, NN, Nu;
@@ -2146,13 +2147,14 @@ void I3_X_D2_X_I1(GTMatrix<T> &D2T, GTVector<T> &u,
 //          N1-N3   : coord dimensions of u, y 'elements', if interpreted 
 //                    as matrix dimensions
 //          Ne      : number of 'elements' in u, y
-//          y   : return vector result of size >= N1 * N2 * N3 * Ne
+//          cudat   : cuMatBlockDat structure data
+//          y       : return vector result of size >= N1 * N2 * N3 * Ne
 // RETURNS: none
 //**********************************************************************************
 template<typename T>
 void I3_X_D2_X_I1(GTMatrix<T> &D2T, GTVector<T> &u, 
                   GSIZET N1, GSIZET N2, GSIZET N3, GSIZET Ne,
-                  GTVector<T> &y)
+                  GCBLAS::cuMatBlockDat &cudat, GTVector<T> &y)
 {
 	GEOFLOW_TRACE();
   GSIZET  ND1, ND2, NXY, NN, Nu;
@@ -2250,13 +2252,14 @@ void D3_X_I2_X_I1(GTMatrix<T> &D3T, GTVector<T> &u,
 //          N1-N3   : coord dimensions of u, y 'elements', if interpreted 
 //                    as matrix dimensions
 //          Ne      : number of 'elements' in u, y
-//          y   : return vector result of size >= N1 * N2 * N3
+//          cudat   : cuMatBlockDat structure data
+//          y       : return vector result of size >= N1 * N2 * N3
 // RETURNS: none
 //**********************************************************************************
 template<typename T>
 void D3_X_I2_X_I1(GTMatrix<T> &D3T, GTVector<T> &u,
                   GSIZET N1, GSIZET N2, GSIZET N3, GSIZET Ne,
-                  GTVector<T> &y)
+                  GCBLAS::cuMatBlockDat &cudat, GTVector<T> &y)
 {
 	GEOFLOW_TRACE();
   GSIZET  ND1, ND2, NXY, NN, Nu;
