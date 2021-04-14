@@ -92,6 +92,8 @@ template <class T> class GTVector
     void               set(T b);
     
     void               set(T *b, GSIZET n);
+
+    void               floor(T b);
     // Device//accelerator data methods:
     void updatehost();
     void updatedev();

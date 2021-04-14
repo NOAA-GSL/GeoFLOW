@@ -899,6 +899,28 @@ void GTVector<T>::set(T *a, GSIZET n)
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD : floor
+// DESC   : Set values < floor to specified floor:
+//               element = MAX(element, floor)
+// ARGS   : T-type 
+// RETURNS: none.
+//**********************************************************************************
+template<class T> 
+void GTVector<T>::floor(T a)
+{ 
+  GEOFLOW_TRACE();
+  for ( auto j=gindex_.beg(); j<=gindex_.end(); j+=gindex_.stride() ) {
+    data_[j] = MAX(data_[j],a);
+  }
+
+  #if defined(_G_AUTO_UPDATE_DEV)
+  updatedev();
+  #endif
+} // end of method floor
+
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD : updatehost
 // DESC   : Update data from device to host
 // ARGS   : none.
