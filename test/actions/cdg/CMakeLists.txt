@@ -78,8 +78,8 @@ ENDFOREACH(test_src)
 
 # Install test data
 install(
-	DIRECTORY "${MY_PROJECT_TSTDIR}/travis/cdg/data/"
-	DESTINATION "${MY_INSTALL_TSTDIR}/travis/cdg"  
+	DIRECTORY "${MY_PROJECT_TSTDIR}/actions/cdg/data/"
+	DESTINATION "${MY_INSTALL_TSTDIR}/actions/cdg"  
 	FILES_MATCHING 
 	PATTERN "*"
 )
