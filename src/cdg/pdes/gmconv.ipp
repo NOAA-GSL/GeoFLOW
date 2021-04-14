@@ -1705,12 +1705,11 @@ void GMConv<TypePack>::compute_derived_impl(const State &u, GString sop,
     }
     // theta_base = P0/(RD *rho_base) (P_base/P0)^(R/Cp)
     for ( auto j=0; j<uout[0]->size(); j++ ) {
-//    tb = (traits_.P0_base/(RD*(*ubase_[0])[j])) 
-      tb = (traits_.Ts_base)
+      tb = ((*ubase_[1])[j]/(RD*(*ubase_[0])[j])) 
          * pow(fact2*(*ubase_[1])[j],fact1);
       (*uout[0])[j] -= tb;
     }
-    ggfx_->doOp(*uout[0], typename GGFX<Ftype>::Smooth());
+//  ggfx_->doOp(*uout[0], typename GGFX<Ftype>::Smooth());
   }
   else if ( "ptemp"    == sop ) { // potential temp
     assert(uout .size() >= 1   && "Incorrect no. output components");
