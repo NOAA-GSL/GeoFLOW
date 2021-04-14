@@ -731,7 +731,7 @@ GBOOL ginitstate<Types>::impl_boxdrybubble(const PropertyTree &ptree, GString &s
       (*d) [j]  = pj / ( RD * (*T)[j]  );
       dj        = (*d)[j]; // total density
    }
-    (*e)[j]   = CVD * dj * ( (*T)[j] ); // e = Cv d (T+delT);
+    (*e)[j]   = CVD * dj * ( (*T)[j] ); // e = Cv d T;
 //  (*T) [j]  = (Ts + delT)*exnerb; // T = (theta + dtheta)*exner
 //  (*T) [j]  = (thetab + delT)*exnerb;
 //  (*d) [j]  = pj / ( RD * (*T)[j] )  - (*db)[j];
