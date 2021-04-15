@@ -22,7 +22,7 @@
 #include "pdeint/equation_base.hpp"
 
 
-#define DO_NEUMANN
+#undef DO_NEUMANN
 
 template<typename TypePack>
 class GDivOp

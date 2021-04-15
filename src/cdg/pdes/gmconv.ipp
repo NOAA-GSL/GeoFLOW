@@ -311,7 +311,7 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
   // Total density RHS:
   // *************************************************************
 
-  gdiv_->apply(*rhoT, v_, stmp, *dudt[DENSITY]); 
+  gdiv_->apply(*rhoT, v_, stmp, *dudt[DENSITY], -1); 
 
 
   // *************************************************************

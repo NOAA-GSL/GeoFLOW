@@ -22,7 +22,7 @@
 
 using namespace std;
 
-#define DO_NEUMANN
+#undef DO_NEUMANN
 
 template<typename TypePack>
 class GAdvect
