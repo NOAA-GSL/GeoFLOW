@@ -998,7 +998,7 @@ void GGridIcos<Types>::config_gbdy(const geoflow::tbox::PropertyTree &ptree,
       // May have different uniform bdys for different state comps;
       // step through them in order to point to correct bdy indices:
       k = 0;
-      while ( GUpdateBdyFactory<Types>::get_bdy_block(bdytree, sbdy, k, bcblock) ) {;
+      while ( GUpdateBdyFactory<Types>::get_bdy_block(ptree, sbdy, k, bcblock) ) {;
         bcblock.bdyid = j;
         base_ptr = GUpdateBdyFactory<Types>::build(ptree, sbdy, *this, bcblock, itmp, igbdy_start);
         igbdyft[j] = bcblock.tbdy;
@@ -1285,10 +1285,10 @@ void GGridIcos<Types>::elem_face_data3d(GTMatrix<GTVector<Ftype>> &dXdXi,
            for ( auto k=0; k<normals.size(); k++ ) normals[k][nbdy] = xp[k];
            jac = xp.mag();
            face_mass  [nbdy++] = (*mass)[fi] * jac;
-         } // end, i-loop
-         istart += this->gelems_[e]->nnodes();
-       } // end, elem loop
-     }
+         } // end, bdy points loop, i
+       } // end, elem face loop, j
+       istart += this->gelems_[e]->nnodes();
+     } // end, elem loop, e
    }
    else {
      assert(FALSE && "Invalid grid type");
