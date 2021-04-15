@@ -1194,7 +1194,7 @@ void GMConv<TypePack>::compute_v(const State &u, StateComp &dinv, State &v)
    
    for ( auto j=0; j<v.size(); j++ ) {
      *v[j]  = *u[j];  // deep copy
-     *v[j] *= dinb[j];  // divide by density
+     *v[j] *= dinv[j];  // divide by density
    }
 
 } // end of method compute_v (1)
