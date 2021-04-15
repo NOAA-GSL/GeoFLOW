@@ -42,6 +42,10 @@ grid_                (&grid)
 //      && "Only a single element type allowed on grid");
   assert(grid_->ispconst() ); // order must not vary 
   assert(traits_.pdelta.size() >= GDIM && traits_.alpha.size() >= GDIM);
+  auto amax = max_element(std::begin(traits_.alpha), std::end(traits_.alpha)); 
+  auto amin = min_element(std::begin(traits_.alpha), std::end(traits_.alpha)); 
+  assert(amin >= 0.0 && amax <= 1.0);
+
 } // end of constructor method (1)
 
 
@@ -182,8 +186,8 @@ void GProjectionFilter<TypePack>::init()
     FT_ [j]   .resize(Nhi[j],Nhi[j]);  // 1d filter matrix transposes
     M         .resize(Nhi[j],Nhi[j]);  // tmp matrix
     Id        .resize(Nhi[j],Nhi[j]); Id.createIdentity();
-    (*bhi)[j]->evalBasis(xilow,Ilow); // create Ilow
-    blow[j].evalBasis(xihi,Ihi);     // create Ihi
+    (*bhi)[j]->evalBasis(xilow,Ilow);  // create Ilow
+    blow[j].evalBasis(xihi,Ihi);       // create Ihi
 
     // Compute 1d filter matrices: F = alpha Ihi Ilow + (1-alpha) I;
     M        = Ihi * Ilow;
