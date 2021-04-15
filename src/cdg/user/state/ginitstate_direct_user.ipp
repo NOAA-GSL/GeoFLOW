@@ -777,7 +777,7 @@ GBOOL ginitstate<Types>::impl_icosabcconv(const PropertyTree &ptree, GString &sc
   GFTYPE              exner, p, pi2, P0, T0;
   GTVector<GFTYPE>   *d, *e;
   GTVector<GTVector<GFTYPE>*>
-                      vh(2);
+                      vh(GDIM);
   GString             sblock;
   std::default_random_engine        generator;
   std::normal_distribution<GFTYPE> *distribution=NULLPTR;
@@ -797,7 +797,7 @@ GBOOL ginitstate<Types>::impl_icosabcconv(const PropertyTree &ptree, GString &sc
   GTVector<GTVector<GFTYPE>> *xnodes = &grid.xNodes();
 
   assert(u.size() >= nc+1);
-  assert(utmp.size() >= 2 );
+  assert(utmp.size() >= GDIM );
 
   distribution = new normal_distribution<GFTYPE>(0,2.0*PI);
   e     = u  [nc];// int. energy density
@@ -824,6 +824,10 @@ GBOOL ginitstate<Types>::impl_icosabcconv(const PropertyTree &ptree, GString &sc
 
   vh[0] = utmp[0];
   vh[1] = utmp[1];
+  if ( GDIM > 2 ) { 
+    vh[2] = utmp[2];
+   *vh[2] = 0.0;
+  }
 
  *u[0]  = 0.0; // sx
  *u[1]  = 0.0; // sy
