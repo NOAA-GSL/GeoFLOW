@@ -73,7 +73,7 @@
     "forcing_comp"    : [0, 1, 2],
     "T_surf"          : 300.0,
     "P0"              : 1000.0,
-    "filter_list"     : ["my_filter"],
+    "filter_list"     : [],
     "my_filter" : {
       "filter_type" : "boyd_filter",
       "ifilter"     : 4,
