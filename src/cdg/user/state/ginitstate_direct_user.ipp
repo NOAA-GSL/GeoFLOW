@@ -834,17 +834,20 @@ GBOOL ginitstate<Types>::impl_icosabcconv(const PropertyTree &ptree, GString &sc
  *u[2]  = 0.0; // sz
  *d     = 0.0;
 
+  r     = ri;
+
+
   // Initialize each variable:
-  for ( auto k=kdn; k<kup; k++ ) { // sum over wavemodes
-    alpha =  hphase*(r - ri)*(*distribution)(generator);
+  for ( auto k=kdn; k<=kup; k++ ) { // sum over wavemodes
     for ( auto j=0; j<nxy; j++ ) {
       x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
       r   = sqrt(x*x + y*y + z*z);
       lat = asin(z/r);
       lon = atan2(y,x);
-      (*d)   [j] +=  fabs( B*cos(pi2*y+alpha) + C*sin(pi2*z+alpha) ) / pow(k,poly) + 0.001;
+      alpha =  hphase*(r - ri)*(*distribution)(generator);
       pi2         = 2.0*PI*k;
-      fact         = exp(-32.0*lat*lat/(PI*PI));
+      (*d)   [j] +=  fabs( B*cos(pi2*y+alpha) + C*sin(pi2*z+alpha) ) / pow(k,poly) + 0.001;
+      fact        = exp(-32.0*lat*lat/(PI*PI));
 #if 0
       (*u[0])[j] +=  ( B*cos(k*lon) + C*sin(k*lat) ) / pow(k,poly);
       (*u[1])[j] +=  ( A*sin(k*lon) + C*cos(k*lat) ) / pow(k,poly);
