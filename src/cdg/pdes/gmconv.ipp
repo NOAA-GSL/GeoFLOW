@@ -286,7 +286,6 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
   // change the sign and divide by Mass at the end....
 
   p     = urhstmp_[stmp.size()+1]; // holds pressure
-  T     = urhstmp_[stmp.size()+4]; // holds temperature
   e     = u[ENERGY];               // current internal energy density
 
   // *************************************************************
@@ -297,7 +296,7 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
   geoflow::compute_p<Ftype>(*e, *tmp1, RD, *tmp2, *p);    // partial pressure for dry air
 
   GMTK::saxpby<Ftype>(*tmp1, *e, 1.0, *p, 1.0); // h = p+e, enthalpy density
-  gdiv_->apply(*tmp1, v_, stmp, *dudt[ENERGY]); // Div(h v) 
+  gdiv_->apply(*tmp1, v_, stmp, *dudt[ENERGY], -2); // Div(h v) 
 
   gadvect_->apply(*p, v_, stmp, *tmp1);         // v.Grad p 
  *dudt[ENERGY] -= *tmp1;                        // -= v . Grad p
@@ -311,7 +310,7 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
   // Total density RHS:
   // *************************************************************
 
-  gdiv_->apply(*rhoT, v_, stmp, *dudt[DENSITY], -1); 
+  gdiv_->apply(*rhoT, v_, stmp, *dudt[DENSITY], -2); 
 
 
   // *************************************************************
@@ -1172,12 +1171,12 @@ void GMConv<TypePack>::compute_qd(const State &u, StateComp &qd)
 //             v_i = s_i/ d
 //          where v_i is the member data array, d  is (total) density 
 // ARGS   : u    : state
-//          id   : 1/denstiy
+//          dinv : 1/denstiy
 //          v    : velocity state; components may change on exit
 // RETURNS: none. Member data, v_, is set here
 //**********************************************************************************
 template<typename TypePack>
-void GMConv<TypePack>::compute_v(const State &u, StateComp &id, State &v)
+void GMConv<TypePack>::compute_v(const State &u, StateComp &dinv, State &v)
 {
    GString    serr = "GMConv<TypePack>::compute_v(1): ";
 
@@ -1195,7 +1194,7 @@ void GMConv<TypePack>::compute_v(const State &u, StateComp &id, State &v)
    
    for ( auto j=0; j<v.size(); j++ ) {
      *v[j]  = *u[j];  // deep copy
-     *v[j] *= id[j];  // divide by density
+     *v[j] *= dinb[j];  // divide by density
    }
 
 } // end of method compute_v (1)
