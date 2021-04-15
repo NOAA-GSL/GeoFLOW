@@ -293,7 +293,7 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
   // Energy equation RHS:
   // *************************************************************
   compute_cv(u, *tmp1, *tmp2);                            // Cv
-  compute_qd  (u, *tmp1);                                 // dry mass ratio
+  compute_qd(u, *tmp1);                                   // dry mass ratio
   geoflow::compute_p<Ftype>(*e, *tmp1, RD, *tmp2, *p);    // partial pressure for dry air
 
   GMTK::saxpby<Ftype>(*tmp1, *e, 1.0, *p, 1.0); // h = p+e, enthalpy density
@@ -924,7 +924,7 @@ void GMConv<TypePack>::init_impl(State &u, State &tmp)
 //ghelm_      = new GHelmholtz(*grid_);
   
   typename GStressEnOp<TypePack>::Traits trstress;
-  trstress.type       = GStressEnOp<TypePack>::GSTRESS_FULL;
+  trstress.type       = GStressEnOp<TypePack>::GSTRESS_REDUCED;
   trstress.full_colloc= TRUE;
   trstress.Stokes_hyp = traits_.Stokeshyp;
   trstress.indep_diss = traits_.bindepdiss;
