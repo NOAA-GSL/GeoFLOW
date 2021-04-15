@@ -655,7 +655,7 @@ void GGridIcos<Types>::do_elems3d(GINT irank)
         r0       = radiusi_ + e*rdelta;
         for ( auto m=0; m<pelem->size(2); m++ ) { // for each radial node
           for ( auto n=0; n<nxy; n++ ) { // find sph coords for each horizontal node
-            (*xNodes)[0][n+m*nxy] =  0.5*rdelta*((*xiNodesr)[m] + 1.0);
+            (*xNodes)[0][n+m*nxy] =  r0 + 0.5*rdelta*((*xiNodesr)[m] + 1.0);
             (*xNodes)[1][n+m*nxy] =  xgtmp[1][n];
             (*xNodes)[2][n+m*nxy] =  xgtmp[2][n];
           }
@@ -1371,6 +1371,8 @@ void GGridIcos<Types>::do_gbdy_normals3d(const GTMatrix<GTVector<Ftype>> &dXdXi,
                                   GTVector<GINT>                         &idepComp)
 {
   GEOFLOW_TRACE();
+  GINT           ixi[6][2] = { {0,2}, {1,2}, {0,2},
+                               {1,2}, {0,1}, {0,1} };
   GSIZET         ib, ic, ip;
   GUINT          id;
   Ftype          tiny;
@@ -1386,14 +1388,14 @@ void GGridIcos<Types>::do_gbdy_normals3d(const GTMatrix<GTVector<Ftype>> &dXdXi,
        id = GET_NDHOST(debdy[j]); // host face id
        xm = id == 1 || id == 2 || id == 5 ? 1.0 : -1.0;
        for ( auto i=0; i<dXdXi.size(2); i++ ) { // over _X_
-         p1[i] = dXdXi(0,i)[ib]; // d_X_/dxi
-         p2[i] = dXdXi(1,i)[ib]; // d_X_/deta
+         p1[i] = dXdXi(ixi[id][0],i)[ib]; // d_X_/dxi
+         p2[i] = dXdXi(ixi[id][1],i)[ib]; // d_X_/deta
        }
        p1.cross(p2, xp);   // xp = p1 X p2
        xp *= xm;
        xp.unit();
        for ( ic=0; ic<xp.dim(); ic++ ) if ( fabs(xp[ic]) > tiny ) break;
-       assert(ic >= GDIM); // no normal components > 0
+       assert(ic < GDIM); // no normal components > 0
        for ( auto i=0; i<normals.size(); i++ ) normals[i][j] = xp[i];
        idepComp[j] = ic;  // dependent component
      }
@@ -1424,8 +1426,8 @@ void GGridIcos<Types>::project2sphere(GTVector<GTriangle<T>> &tmesh, T rad)
   T          r, xlat, xlong;
   GTPoint<T> v;
 
-  for ( GSIZET i=0; i<tmesh_.size(); i++ ) { // loop over all triangles in tmesh
-    for ( GSIZET j=0; j<3; j++ ) { // guaranteed to have 3 points each
+  for ( auto i=0; i<tmesh_.size(); i++ ) { // loop over all triangles in tmesh
+    for ( auto j=0; j<3; j++ ) { // guaranteed to have 3 points each
       v = *tmesh[i].v[j];
       r = v.norm();
       xlat  = asin(v.x3/r);
@@ -1460,7 +1462,7 @@ void GGridIcos<Types>::project2sphere(GTVector<GTPoint<T>> &plist, T rad)
   T          r, xlat, xlong;
   GTPoint<T> v;
 
-  for ( GSIZET i=0; i<plist.size(); i++ ) { // loop over all points
+  for ( auto i=0; i<plist.size(); i++ ) { // loop over all points
     v = plist[i];
     r = v.norm();
     xlat  = asin(v.x3/r);
@@ -1493,7 +1495,7 @@ void GGridIcos<Types>::project2sphere(GTVector<GTVector<T>> &plist, T rad)
 
   T r, xlat, xlong, x, y, z;
 
-  for ( GSIZET i=0; i<plist[0].size(); i++ ) { // loop over all points
+  for ( auto i=0; i<plist[0].size(); i++ ) { // loop over all points
     x = plist[0][i]; y = plist[1][i]; z = plist[2][i];
     r = sqrt(x*x + y*y + z*z);
     xlat  = asin(z/r);
@@ -1524,7 +1526,7 @@ void GGridIcos<Types>::spherical2xyz(GTVector<GTPoint<T>*> &plist)
 
   T r, xlat, xlong;
 
-  for ( GSIZET i=0; i<plist.size(); i++ ) { // loop over all points
+  for ( auto i=0; i<plist.size(); i++ ) { // loop over all points
     r = plist[i]->x1; xlat = plist[i]->x2; xlong = plist[i]->x3;
     plist[i]->x1 = r*cos(xlat)*cos(xlong);
     plist[i]->x2 = r*cos(xlat)*sin(xlong);
@@ -1551,7 +1553,7 @@ void GGridIcos<Types>::spherical2xyz(GTVector<GTPoint<T>> &plist)
 
   T r, xlat, xlong;
 
-  for ( GSIZET i=0; i<plist.size(); i++ ) { // loop over all points
+  for ( auto i=0; i<plist.size(); i++ ) { // loop over all points
     r = plist[i].x1; xlat = plist[i].x2; xlong = plist[i].x3;
     plist[i].x1 = r*cos(xlat)*cos(xlong);
     plist[i].x2 = r*cos(xlat)*sin(xlong);
@@ -1579,7 +1581,7 @@ void GGridIcos<Types>::spherical2xyz(GTVector<GTVector<T>> &plist)
 
   T r, xlat, xlong;
 
-  for ( GSIZET i=0; i<plist[0].size(); i++ ) { // loop over all points
+  for ( auto i=0; i<plist[0].size(); i++ ) { // loop over all points
     r = plist[0][i]; xlat = plist[1][i]; xlong = plist[2][i];
     plist[0][i] = r*cos(xlat)*cos(xlong);
     plist[1][i] = r*cos(xlat)*sin(xlong);
@@ -1606,7 +1608,7 @@ void GGridIcos<Types>::xyz2spherical(GTVector<GTPoint<T>*> &plist)
 
   T r, x, y, z;
 
-  for ( GSIZET i=0; i<plist.size(); i++ ) { // loop over all points
+  for ( auto i=0; i<plist.size(); i++ ) { // loop over all points
    x = plist[i]->x1; y = plist[i]->x2; z = plist[i]->x3;
    r = sqrt(x*x + y*y + z*z);
    plist[i]->x1 = r;
@@ -1635,13 +1637,13 @@ void GGridIcos<Types>::xyz2spherical(GTVector<GTVector<T>> &plist)
 
   T r, x, y, z;
 
-  for ( GSIZET i=0; i<plist.size(); i++ ) { // loop over all points
-   x = plist[i][0]; y = plist[i][1]; z = plist[i][2];
+  for ( auto i=0; i<plist[0].size(); i++ ) { // loop over all points
+   x = plist[0][i]; y = plist[1][i]; z = plist[2][i];
    r = sqrt(x*x + y*y + z*z);
-   plist[i][0] = r;
-   plist[i][1] = asin(z/r);
-   plist[i][2] = atan2(y,x);
-   plist[i][2] = plist[i][2] < 0.0 ? 2.0*PI+plist[i][2] : plist[i][2];
+   plist[0][i] = r;
+   plist[1][i] = asin(z/r);
+   plist[2][i] = atan2(y,x);
+   plist[2][i] = plist[2][i] < 0.0 ? 2.0*PI+plist[2][i] : plist[2][i];
   }
 
 } // end of method xyz2spherical (2)
@@ -1664,7 +1666,7 @@ void GGridIcos<Types>::xyz2spherical(GTVector<GTPoint<T>> &plist)
 
   T r, x, y, z;
 
-  for ( GSIZET i=0; i<plist.size(); i++ ) { // loop over all points
+  for ( auto i=0; i<plist.size(); i++ ) { // loop over all points
    x = plist[i].x1; y = plist[i].x2; z = plist[i].x3;
    r = sqrt(x*x + y*y + z*z);
    plist[i].x1 = r;
@@ -1713,7 +1715,7 @@ void GGridIcos<Types>::cart2gnomonic(GTVector<GTPoint<T>> &clist, T rad, T xlatc
   T xlatp, xlongp;
   T den, r, xlat, xlong;
   T eps = 10.0*std::numeric_limits<GFTYPE>::epsilon();
-  for ( GSIZET i=0; i<clist.size(); i++ ) { // loop over all points
+  for ( auto i=0; i<clist.size(); i++ ) { // loop over all points
     r      = clist[i].norm();
     xlat   = asin(clist[i].x3/r);
     xlong  = atan2(clist[i].x2,clist[i].x1);
@@ -1776,7 +1778,7 @@ void GGridIcos<Types>::gnomonic2cart(GTVector<GTVector<T>> &glist, T rad, T xlat
   T X, Y;
   T beta, rho, sign, x, xlat, xlong, y;
   T eps = 10.0*std::numeric_limits<GFTYPE>::epsilon();
-  for ( GSIZET i=0; i<glist[0].size(); i++ ) { // loop over all points
+  for ( auto i=0; i<glist[0].size(); i++ ) { // loop over all points
     x      = glist[0][i];
     y      = glist[1][i];
 
@@ -1842,7 +1844,7 @@ void GGridIcos<Types>::gnomonic2cart(GTVector<GTPoint<T>> &glist, T rad, T xlatc
   T X, Y;
   T beta, rho, sign, x, xlat, xlong, y;
   T eps = 10.0*std::numeric_limits<GFTYPE>::epsilon();
-  for ( GSIZET i=0; i<clist.size(); i++ ) { // loop over all points
+  for ( auto i=0; i<clist.size(); i++ ) { // loop over all points
     x      = glist[i][0];
     y      = glist[i][1];
 
@@ -2034,7 +2036,7 @@ void GGridIcos<Types>::interleave(GTVector<GTPoint<T>> &R0, GTVector<GTPoint<T>>
   GString serr = "GridIcos::interleave: ";
 
   // Interlaeave R0 and R1:
-  for ( GSIZET j=0; j<Rz.size(); j++ ) {
+  for ( auto j=0; j<Rz.size(); j++ ) {
     if ( j%2 == 0 ) Rz   [j] = R1[j/2];
     else            Rz   [j] = R0[(j-1)/2];
   }
@@ -2077,7 +2079,7 @@ void GGridIcos<Types>::lagvert(GTPoint<T>&a, GTPoint<T> &b, GTPoint<T> &c,
 
   // Compute R vertices based on refinement indices:
   fact = I > 0 ? 1.0/static_cast<T>(I) : 1.0;
-  for ( GSIZET j=0; j<I+1; j++ ) {
+  for ( auto j=0; j<I+1; j++ ) {
     xJ = static_cast<T>(j);
     R[j] = rL + (rR - rL)*(xJ*fact);
   }
@@ -2111,7 +2113,7 @@ void GGridIcos<Types>::order_latlong2d(GTVector<GTPoint<T>> &verts)
   xyz2spherical<T>(sverts); // convert verts to latlon
 
   // Isolate lat, lon:
-  for ( GSIZET j=0; j<4; j++ ) {
+  for ( auto j=0; j<4; j++ ) {
     lat[j] = sverts[j].x2;
     lon[j] = sverts[j].x3;
   }
@@ -2121,7 +2123,7 @@ void GGridIcos<Types>::order_latlong2d(GTVector<GTPoint<T>> &verts)
 
   // Check vertices near 0-2pi axis:
   if ( fabs(lon[isortlon[0]] - lon[isortlon[3]]) < PI ) {
-    for ( GSIZET j=0; j<4; j++ ) {
+    for ( auto j=0; j<4; j++ ) {
       if ( lon[j] > 1.5*PI && lon[j] <=2.0*PI ) lon[j] -= 2.0*PI;
     }
   }
@@ -2178,11 +2180,11 @@ void GGridIcos<Types>::order_triangles(GTVector<GTriangle<T>> &tmesh)
 
   iup_.resize(tmesh.size());
   iup_ = 0;
-  for ( GSIZET i=0; i<tmesh.size(); i++ ) {
-    for ( GSIZET j=0; j<3; j++ ) cverts[j] = *tmesh[i].v[j];
+  for ( auto i=0; i<tmesh.size(); i++ ) {
+    for ( auto j=0; j<3; j++ ) cverts[j] = *tmesh[i].v[j];
     sverts = cverts;
     xyz2spherical<T>(sverts); // convert verts to latlon
-    for ( GSIZET j=0; j<3; j++ ) {
+    for ( auto j=0; j<3; j++ ) {
       lat[j] = sverts[j].x2;
       lon[j] = sverts[j].x3;
     }
@@ -2191,7 +2193,7 @@ void GGridIcos<Types>::order_triangles(GTVector<GTriangle<T>> &tmesh)
     // Check vertices near 0-2pi axis; if triangle
     // spans it, subtract 2pi to make longitude negative:
     if ( fabs(lon[isortlon[0]] - lon[isortlon[2]]) < PI ) {
-      for ( GSIZET j=0; j<3; j++ ) {
+      for ( auto j=0; j<3; j++ ) {
         if ( lon[j] > 1.5*PI && lon[j] <= 2.0*PI ) lon[j] -= 2.0*PI;
       }
     }
