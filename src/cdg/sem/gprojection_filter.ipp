@@ -171,7 +171,7 @@ void GProjectionFilter<TypePack>::init()
   Nhi   = (*gelems)[0]->size();
   for ( auto j=0; j<GDIM; j++ ) { // allocate matrices
     // Limit new p to be in [pold-1, pold/2]:
-    assert(traits_.pdelta[j] >= 1 && traits_.pdelta[j] < (Nhi[j]-1)/2); 
+    assert(traits_.pdelta[j] >= 1 && traits_.pdelta[j] <= (Nhi[j]-1)/2); 
     (*bhi)[j]->getXiNodes(xihi);
     Nlow[j]   = Nhi[j] - traits_.pdelta[j];
     blow[j]   .resize(Nlow[j]-1);      // create low order bases
