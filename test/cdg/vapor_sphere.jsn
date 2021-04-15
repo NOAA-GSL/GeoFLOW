@@ -55,7 +55,7 @@
   "0-flux": {
     "bdy_class"        : "uniform",
     "base_type"        : ["GBDY_0FLUX"],
-    "istate"           : [[0, 1]]
+    "istate"           : [[0, 1, 2]]
   },
   "pde_mconv": {
     "docoriolis"      : false,
@@ -160,8 +160,8 @@
     "derived_quantities"       : [],
     "state_derived_quantities" : ["temp","press","vel","dptemp","ptemp","den","ke"]
   },
-  "burgers_diag": {
-    "observer_name"      : "burgers_diag",
+  "gmconv_diag": {
+    "observer_name"      : "gmconv_diag",
     "idir"               : ".",
     "odir"               : ".",
     "interval_freq_fact" : 100.0,
