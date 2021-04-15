@@ -263,9 +263,8 @@ void GExRKStepper<Grid,T>::step_b(const Time &t, const State &uin, State &uf,
   State u(nstate);   // tmp pointers of full state size
 
   resize(nstate);    // check if we need to resize K_
-  
-  h = dt ; 
 
+  h = dt ; 
 
   // Set temp space, initialize iteration:
   for ( n=0; n<nstate; n++ ) {
