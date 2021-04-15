@@ -34,14 +34,14 @@
     "norm_type"   : "GCG_NORM_INF"
   },
   "grid_sphere" : {
-    "grid_name"       : "grid_sphere",
+    "grid_name"       : "grid_icos",
     "ilevel"          : 1,
     "refine_type"     : "GICOS_BISECTION",
     "radiusi"         : 6378e3,
     "radiuso"         : 6395e3,
     "num_radial_elems": 1,
-    "bdy_inner"       : "my_dirichlet",
-    "bdy_outer"       : "my_dirichlet",
+    "bdy_inner"       : "0-flux",
+    "bdy_outer"       : "0-flux",
     "maxit"           : 128,
     "tol"             : 1.0e-8,
     "norm_type"       : "GCG_NORM_INF"
@@ -171,7 +171,7 @@
     "integ_type" : "cycle",
     "time_end"   : 2001.0,
     "cycle_end"  : 10,
-    "dt"         : 0.000000175
+    "dt"         : 0.0000175
   }
 
 }
