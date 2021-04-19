@@ -1060,8 +1060,8 @@ void GGridIcos<Types>::find_gbdy_ind3d(Ftype radius,
   GTVector<GTVector<Ftype>>
                    *xlnodes;
   
-  ntmp  = nnsurf_ + nesurf_*(gbasis_[0]->getOrder()+1)
-                  + nesurf_*(gbasis_[1]->getOrder()+1);
+  ntmp  = nnsurf_ + 2*nesurf_*(gbasis_[0]->getOrder()+1)
+                  + 2*nesurf_*(gbasis_[1]->getOrder()+1);
   itmp.reserve(ntmp);
   utmp.reserve(ntmp); 
 
