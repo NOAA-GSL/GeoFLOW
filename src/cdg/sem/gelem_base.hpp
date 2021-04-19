@@ -187,7 +187,7 @@ virtual void                get_indirect2d(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b,
 virtual void                get_indirect3d(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GVVInt &vert_ind,
                                           GVVInt &edge_ind, GVVInt &face_ind, GVFType &face_mass, GVVUInt &face_desc);
         void                Jac(GMVFType &rij, GTVector<GFTYPE> &jac, GBOOL &pChk, GINT *ind, GINT nind);
-virtual void                Jac_embed(GMVFType &G, GTVector<GFTYPE> &jac, GBOOL &pChk, GINT *pind, GINT nind);
+//virtual void                Jac_embed(GMVFType &G, GTVector<GFTYPE> &jac, GBOOL &pChk, GINT *pind, GINT nind);
         void                inv(GMVFType &G, GMVFType &iG);
 /*
         void                set_faceNormal2d(GTMatrix<GTVector<GFTYPE>> &rij, GTVector<GINT> &iind, GTVector<GTVector<GFTYPE>> &bdyNormal);
