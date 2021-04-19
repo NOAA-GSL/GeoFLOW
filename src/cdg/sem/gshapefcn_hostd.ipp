@@ -387,7 +387,7 @@ void GShapeFcn_hostd<T>::dNdXi_3d(GTVector<GINT> &ishape, GINT jder,
 
   for ( auto j=0; j<xi.size(); j++ ) {
     d_[j].resize(xi[j]->size());
-    if ( j == jder ) {
+    if ( j == (jder-1) ) {
       this->gbasis_[j]->evalDBasis(ishape[j], *xi[j], d_[j]);
     }
     else {
