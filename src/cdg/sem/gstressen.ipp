@@ -345,6 +345,7 @@ void GStressEnOp<TypePack>::mom_update_full_cons(StateComp &d, State &u, GINT id
   GTVector<GSIZET>          *ieface  = &grid_->gieface() ;
   GTVector<GTVector<Ftype>> *normals = &grid_->faceNormals();
   StateComp                 *bmass   = &grid_->faceMass();
+  typename Grid::BinnedBdyIndex *igb = &grid_->igbdy_binned();
 
   assert( idir > 0 && idir <= nxy );
 
@@ -363,6 +364,16 @@ void GStressEnOp<TypePack>::mom_update_full_cons(StateComp &d, State &u, GINT id
     // Point-multiply by mu before taking 'divergence':
     utmp[1]->pointProd(d);
     utmp[1]->pointProd(*nu_);
+#if defined(GEOFLOW_USE_NEUMANN_HACK)
+if ( idir == 1 && j == 1 ){
+GMTK::zero<Ftype>(*u[idir-1],(*igb)[1][GBDY_0FLUX]);
+GMTK::zero<Ftype>(*u[idir-1],(*igb)[3][GBDY_0FLUX]);
+}
+else if ( idir == 2 && j == 0 ){
+GMTK::zero<Ftype>(*u[idir-1],(*igb)[0][GBDY_0FLUX]);
+GMTK::zero<Ftype>(*u[idir-1],(*igb)[2][GBDY_0FLUX]);
+}
+#endif
     grid_->wderiv(*utmp[1]  , j+1, TRUE, *utmp[0], *utmp[2]);
     so -= *utmp[2];
 
@@ -379,6 +390,16 @@ void GStressEnOp<TypePack>::mom_update_full_cons(StateComp &d, State &u, GINT id
     // Point-multiply by mu before taking 'divergence':
     utmp[1]->pointProd(d);
     utmp[1]->pointProd(*nu_);
+#if defined(GEOFLOW_USE_NEUMANN_HACK)
+if ( j == 0 && idir == 1 ){
+GMTK::zero<Ftype>(*u[idir-1],(*igb)[1][GBDY_0FLUX]);
+GMTK::zero<Ftype>(*u[idir-1],(*igb)[3][GBDY_0FLUX]);
+}
+else if ( j == 1 && idir == 0 ){
+GMTK::zero<Ftype>(*u[idir-1],(*igb)[0][GBDY_0FLUX]);
+GMTK::zero<Ftype>(*u[idir-1],(*igb)[2][GBDY_0FLUX]);
+}
+#endif
     grid_->wderiv(*utmp[1]  , j+1, TRUE, *utmp[0], *utmp[2]);
     so -= *utmp[2];
 
@@ -585,8 +606,10 @@ void GStressEnOp<TypePack>::mom_update_reduced(StateComp &d, State &u, GINT idir
 
   GBOOL      usebdy = grid_->usebdydata();
   GINT       nxy = grid_->gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
+  typename Grid::BinnedBdyIndex *igb = &grid_->igbdy_binned();
 
   assert( idir > 0 && idir <= nxy );
+
 
 
   // so_idir = d D^{j} [nu Dj u_idir) ]:
@@ -598,12 +621,22 @@ void GStressEnOp<TypePack>::mom_update_reduced(StateComp &d, State &u, GINT idir
   for ( auto j=0; j<nxy; j++ ) { 
     grid_->deriv(*u[idir-1], j+1, *utmp[0], *utmp[1]);
     // Point-multiply by nu before taking 'divergence':
-//  utmp[1]->pointProd(d);
+#if defined(GEOFLOW_USE_NEUMANN_HACK)
+if ( j == 0 && idir == 2 ){
+GMTK::zero<Ftype>(*u[idir-1],(*igb)[1][GBDY_0FLUX]);
+GMTK::zero<Ftype>(*u[idir-1],(*igb)[3][GBDY_0FLUX]);
+}
+else if ( j == 1 && idir == 1 ){
+GMTK::zero<Ftype>(*u[idir-1],(*igb)[0][GBDY_0FLUX]);
+GMTK::zero<Ftype>(*u[idir-1],(*igb)[2][GBDY_0FLUX]);
+}
+#endif
+    utmp[1]->pointProd(d);
     utmp[1]->pointProd(*nu_);
     grid_->deriv(*utmp[1], j+1, *utmp[0], *utmp[2]);
     so += *utmp[2];
   }
-  so.pointProd(d);
+//so.pointProd(d);
 
 
 } // end of method mom_update_reduced
