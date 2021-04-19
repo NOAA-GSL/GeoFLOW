@@ -328,7 +328,7 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
     gdiv_->apply(*s_[j], v_, stmp, *dudt[j], j+1); 
 
     grid_->deriv(*p, j+1, *tmp2, *tmp1);              // Grad p'
-#if defined(DO_NEUMANN)
+#if defined(GEOFLOW_USE_NEUMANN_HACK)
 if ( j==0) {
 GMTK::zero<Ftype>(*tmp1,(*igb)[1][GBDY_0FLUX]);
 GMTK::zero<Ftype>(*tmp1,(*igb)[3][GBDY_0FLUX]);
@@ -353,7 +353,7 @@ GMTK::zero<Ftype>(*tmp1,(*igb)[2][GBDY_0FLUX]);
       compute_vpref(*tmp1, j+1, *tmp2);               // compute grav component
       tmp2->pointProd(*dd);
      *tmp2 *= *Mass;             
-#if 0 //defined(DO_NEUMANN)
+#if 0 // defined(GEOFLOW_USE_NEUMANN_HACK)
        tmp2->constProd(0.0, (*igb)[0][GBDY_0FLUX].data(),
                             (*igb)[0][GBDY_0FLUX].size());
 #endif
