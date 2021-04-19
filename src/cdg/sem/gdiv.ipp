@@ -104,7 +104,7 @@ void GDivOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp &div
     // div = MJ d/dx_j ( d u_j ):
     d.pointProd(*u[0], *utmp[1]);
     grid_->deriv(*utmp[1], 1, *utmp[0], div);
-#if defined(DO_NEUMANN)
+#if defined(GEOFLOW_USE_NEUMANN_HACK)
 if ( ivec == -1 || ivec == 2 ) {
 GMTK::zero<Ftype>(div,(*igb)[1][GBDY_0FLUX]);
 GMTK::zero<Ftype>(div,(*igb)[3][GBDY_0FLUX]);
@@ -113,7 +113,7 @@ GMTK::zero<Ftype>(div,(*igb)[3][GBDY_0FLUX]);
     for ( auto j=1; j<nxy; j++ ) { 
        d.pointProd(*u[j], *utmp[1]);
        grid_->deriv(*utmp[1], j+1, *utmp[0], *utmp[2]);
-#if defined(DO_NEUMANN)
+#if defined(GEOFLOW_USE_NEUMANN_HACK)
 if ( ivec == -1 || ivec == 1 ) {
 GMTK::zero<Ftype>(*utmp[2],(*igb)[0][GBDY_0FLUX]);
 GMTK::zero<Ftype>(*utmp[2],(*igb)[2][GBDY_0FLUX]);
