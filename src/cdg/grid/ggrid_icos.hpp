@@ -207,6 +207,8 @@ public:
          GINT               ilevel_;        // refinement level (>= 0)
          GINT               nrows_;         // # rows in refine level ilevel
          GINT               ndim_;          // grid dimensionality (2 or 3)
+         GSIZET             nesurf_;        // # surface elements
+         GSIZET             nnsurf_;        // # surface nodes
          GSIZET             nradelem_;      // # radial elements
          Ftype              radiusi_;       // inner radius
          Ftype              radiuso_;       // outer radius (=radiusi in 2d)
