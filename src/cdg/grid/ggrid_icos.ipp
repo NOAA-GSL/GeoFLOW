@@ -29,6 +29,8 @@ GGridIcos<Types>::GGridIcos(const geoflow::tbox::PropertyTree &ptree, GTVector<G
 ilevel_                             (0),
 nrows_                              (0),
 ndim_                            (GDIM),
+nesurf_                            (0),
+nnsurf_                            (0),
 radiusi_                          (0.0),
 radiuso_                          (0.0), // don't need this one in 2d
 gdd_                          (NULLPTR),
@@ -584,6 +586,11 @@ void GGridIcos<Types>::do_elems3d(GINT irank)
   GSIZET icurr = 0; // current global index
   GSIZET fcurr = 0; // current global face index
 
+  // Set a couple of useful variables 
+  nesurf_ = 3*iind.size(); // # elems in horiztonal
+  nnsurf_ = nesurf_ * (gbasis_[0]->getOrder()+1)
+                    * (gbasis_[1]->getOrder()+1); // # nodes on surface
+
   // For each triangle in base mesh owned by this rank...
   for ( auto n=0; n<iind.size(); n++ ) { 
     i = iind[n];
@@ -1043,7 +1050,8 @@ void GGridIcos<Types>::find_gbdy_ind3d(Ftype radius,
   GEOFLOW_TRACE();
 
   GBOOL             bexist, bglobale, bglobalv;
-  GSIZET            ie, istart, nbdy, nind, ntmp, nnodes;
+  GUINT             iuint;
+  GSIZET            ie, isizet, istart, nbdy, nind, ntmp, nnodes;
   GTVector<GUINT>   utmp;
   GTVector<GINT>   *face_ind;
   GTVector<GSIZET>  ind, itmp;
@@ -1052,11 +1060,12 @@ void GGridIcos<Types>::find_gbdy_ind3d(Ftype radius,
   GTVector<GTVector<Ftype>>
                    *xlnodes;
   
-  ntmp  = this->xNodes_[0].size() + pow(2,GDIM) + (GDIM > 2 ? 2*GDIM : 0);
-  itmp.resize(ntmp);
-  utmp.resize(ntmp); utmp = 0;
+  ntmp  = nnsurf_ + nesurf_*(gbasis_[0]->getOrder()+1)
+                  + nesurf_*(gbasis_[1]->getOrder()+1);
+  itmp.reserve(ntmp);
+  utmp.reserve(ntmp); 
 
-  this->eps_ = 0.125*this->minnodedist_;
+  this->eps_ = 1.0e-4*this->minnodedist_;
 
   
   istart = 0;
@@ -1076,8 +1085,10 @@ void GGridIcos<Types>::find_gbdy_ind3d(Ftype radius,
       for ( auto i=0; i<nind; i++ ) { 
         ie      = ind[i] + istart ;
         // Set node host face: 
-        SET_ND(utmp[nbdy], 0, GElem_base::FACE, (GUINT)j );
-        itmp [nbdy] = ie; // 'global' index 
+        isizet = 0;
+        SET_ND(isizet, 0, GElem_base::FACE, (GUINT)j );
+        itmp.push_back(ie); // 'global' index 
+        utmp.push_back(isizet); // corresp. 'descriptor'
         nbdy++; 
       } // end, element's glob bdy
     } // end, j-loop
