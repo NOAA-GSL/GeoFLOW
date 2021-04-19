@@ -171,7 +171,7 @@ void compute_temp(const GTVector<T> &e, const GTVector<T> &d, const GTVector<T> 
 //          d: total density
 //          q: mass fraction
 //          R: gas constant
-//          p: pressure fluctuation field returned
+//          p: pressure field returned
 // RETURNS: none.
 //**********************************************************************************
 template<typename T>
@@ -198,7 +198,7 @@ void compute_p(const GTVector<T> &Temp, const GTVector<T> &d, const GTVector<T> 
 //          q : mass fraction
 //          R : gas constant
 //          cv: (total) specific heat at const. volume
-//          p : pressure fluctuation field returned
+//          p : pressure field returned
 // RETURNS: none.
 //**********************************************************************************
 template<typename T>

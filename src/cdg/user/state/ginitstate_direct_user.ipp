@@ -628,10 +628,9 @@ GBOOL ginitstate<Types>::impl_icosgauss(const PropertyTree &ptree, GString &scon
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : impl_boxdrybubble
-// DESC   : Initialize state for GMConv solver with cold/dry bubble
-//          on box grids. Taken from Straka et al. 1993, Int. J. Num. 
-//          Meth. Fluids 17:1, and from Bryan & Fritsch 2002 MWR
+// METHOD : impl_boxdrywarmbubble
+// DESC   : Initialize state for GMConv solver with warm/dry bubble
+//          on box grids.  Taken from Bryan & Fritsch 2002 MWR
 //          130:2817.
 // ARGS   : ptree  : main prop tree
 //          sconfig: ptree block name containing variable config
@@ -643,13 +642,14 @@ GBOOL ginitstate<Types>::impl_icosgauss(const PropertyTree &ptree, GString &scon
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
 template<typename Types>
-GBOOL ginitstate<Types>::impl_boxdrybubble(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
+GBOOL ginitstate<Types>::impl_boxdrywarmbubble(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
 {
 
   GString             serr = "impl_boxdrybubble: ";
   GSIZET              nxy;
   GFTYPE              x, y, z, r;
-  GFTYPE              delT, dj, exnerb, exner, L, P0, pj, thetab, T0, Ts;
+  GFTYPE              delT, dj, exnerb, exner, L;
+  GFTYPE              P0, pj, thetab, T0, Tb, Ts;
   GTVector<GFTYPE>   *db, *d, *e, *pb, *T;
   std::vector<GFTYPE> xc, xr;  
   GString             sblock;
@@ -692,10 +692,8 @@ GBOOL ginitstate<Types>::impl_boxdrybubble(const PropertyTree &ptree, GString &s
   T     = utmp[0];  // background temp
   d     = u  [ceqn->DENSITY]; // density
   e     = u  [ceqn->ENERGY]; // int. energy density
-//if ( traits.usebase ) {
-    db    = (*ubase)[0];// background density 
-    pb    = (*ubase)[1];// background pressure
-//}
+  db    = (*ubase)[0];// background density 
+  pb    = (*ubase)[1];// background pressure
   nxy   = (*xnodes)[0].size(); // same size for x, y, z
 
   T0    = inittree.getValue<GFTYPE>("T_pert", 15.0);    // temp. perturb. magnitude (K)
@@ -717,7 +715,7 @@ GBOOL ginitstate<Types>::impl_boxdrybubble(const PropertyTree &ptree, GString &s
     L         = pow((x-xc[0])/xr[0],2) + pow((y-xc[1])/xr[1],2);
     L        += GDIM == 3 ? pow((z-xc[2])/xr[2],2) : 0.0;
     L         = sqrt(L);
-    exnerb    = pow((*pb)[j]/P0, RD/CPD);
+//  exnerb    = pow((*pb)[j]/P0, RD/CPD);
     delT      = L <= 1.0 ? 2.0*T0*pow(cos(0.5*PI*L),2.0) : 0.0;
 #if 1
     // Ts, delT are pot'l temp, 
@@ -731,7 +729,138 @@ GBOOL ginitstate<Types>::impl_boxdrybubble(const PropertyTree &ptree, GString &s
       (*d) [j]  = pj / ( RD * (*T)[j]  );
       dj        = (*d)[j]; // total density
    }
-    (*e)[j]   = CVD * dj * ( (*T)[j] ); // e = Cv d T;
+    (*e)[j]   = CVD * dj * ( (*T)[j] ); // e = Cv d T
+
+//  (*T) [j]  = (Ts + delT)*exnerb; // T = (theta + dtheta)*exner
+//  (*T) [j]  = (thetab + delT)*exnerb;
+//  (*d) [j]  = pj / ( RD * (*T)[j] )  - (*db)[j];
+//  (*e)[j]   = CVD * dj * (thetab+delT)*(exnerb); // e = Cv d (theta+dtheta) * exner;
+
+#else
+    // Check that hydrostatic state is maintained:
+    (*d) [j]   = 0.0;
+    (*T) [j]   = Ts*exnerb; // T = (theta + dtheta)*exner
+    (*e) [j]   = CVD * (*db)[j] * ( (*T)[j] ); // e = Cv d (T);
+#endif
+
+  }
+
+  return TRUE;
+
+} // end of method impl_boxdrywarmbubble
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : impl_boxdrybubble
+// DESC   : Initialize state for GMConv solver with cold/dry bubble
+//          on box grids. Taken from Straka et al. 1993, Int. J. Num. 
+//          Meth. Fluids 17:1, and from Bryan & Fritsch 2002 MWR
+//          130:2817.
+// ARGS   : ptree  : main prop tree
+//          sconfig: ptree block name containing variable config
+//          eqn    : equation implementation
+//          grid   : grid
+//          t      : time
+//          utmp   : tmp arrays; sizee >= 1
+//          u      : current state
+// RETURNS: TRUE on success; else FALSE 
+//**********************************************************************************
+template<typename Types>
+GBOOL ginitstate<Types>::impl_boxdrybubble(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
+{
+
+  GString             serr = "impl_boxdrybubble: ";
+  GSIZET              nxy;
+  GFTYPE              x, y, z, r;
+  GFTYPE              delT, dj, exnerb, exner, L;
+  GFTYPE              P0, pj, thetab, T0, Tb, Ts;
+  GTVector<GFTYPE>   *db, *d, *e, *pb, *T;
+  std::vector<GFTYPE> xc, xr;  
+  GString             sblock;
+  typename Types::State
+                     *ubase;
+  GTVector<GTVector<GFTYPE>> 
+                     *xnodes = &grid.xNodes();
+  GMConv<Types>      *ceqn;
+
+  PropertyTree inittree    = ptree.getPropertyTree(sconfig);
+  sblock                   = ptree.getValue<GString>("pde_name");
+  PropertyTree convptree   = ptree.getPropertyTree(sblock);
+
+  assert(ceqn != NULLPTR && "Must initialize for Equation GMConv");
+
+  // Check solver type 
+  // Remember: eqn is a shared_ptr, so must check 
+  //           against its contets
+  
+  ceqn = dynamic_cast<GMConv<Types>*>(eqn.get());
+  assert(ceqn && "Must use GMConv solver");
+
+  // Check grid type:
+  GridBox  *box   = dynamic_cast <GridBox*>(&grid);
+  assert(box && "Must use a box grid");
+
+  // Check state size:
+  assert(u.size() == ceqn->state_size());
+
+  // Check tmp size:
+  assert(utmp.size() >= 1 );
+
+  // Get base state:
+  typename GMConv<Types>::Traits traits = ceqn->get_traits();
+  ubase = &ceqn->get_base_state();
+//assert( traits.usebase && ubase->size() == 2 );
+  assert( ubase->size() == 2 );
+   
+
+  T     = utmp[0];  // background temp
+  d     = u  [ceqn->DENSITY]; // density
+  e     = u  [ceqn->ENERGY]; // int. energy density
+  db    = (*ubase)[0];// background density 
+  pb    = (*ubase)[1];// background pressure
+  nxy   = (*xnodes)[0].size(); // same size for x, y, z
+
+  T0    = inittree.getValue<GFTYPE>("T_pert", 15.0);    // temp. perturb. magnitude (K)
+  xc    = inittree.getArray<GFTYPE>("x_center");        // center location
+  xr    = inittree.getArray<GFTYPE>("x_width");         // bubble width
+  P0    = convptree.getValue<GFTYPE>("P0");              // ref pressure (mb or hPa)
+  P0   *= 100.0;                                         // convert to Pa
+  Ts    = convptree.getValue<GFTYPE>("T_surf");          // surf temp
+
+  assert(xc.size() >= GDIM && xr.size() >= GDIM);
+
+  // Initialize momentum:
+  for ( auto j=0; j<ceqn->ENERGY; j++ ) *u[j] = 0.0;
+
+  for ( auto j=0; j<nxy; j++ ) { 
+    x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; 
+    if ( GDIM == 3 ) z = (*xnodes)[2][j];
+    r = GDIM == 3 ? z : y;
+    L         = pow((x-xc[0])/xr[0],2) + pow((y-xc[1])/xr[1],2);
+    L        += GDIM == 3 ? pow((z-xc[2])/xr[2],2) : 0.0;
+    L         = sqrt(L);
+//  exnerb    = pow((*pb)[j]/P0, RD/CPD);
+    delT      = L <= 1.0 ? 2.0*T0*pow(cos(0.5*PI*L),2.0) : 0.0;
+#if 1
+    // Ts, delT are pot'l temp, 
+    Tb        = Ts - r*GG/CPD; // background temp
+//  (*T) [j]  = (Ts + delT)*exnerb; // T = (theta + dtheta)*exner
+    (*T) [j]  = Tb + delT;
+    (*pb)[j]  = P0*pow(Tb/Ts,CPD/RD);
+    (*db) [j] = (*pb)[j] / ( RD * Tb ); // density base state
+    pj        = (*pb)[j]; 
+    if ( traits.usebase ) { // There is a base-state
+      (*d) [j]  = pj / ( RD * (*T)[j]  ) - (*db)[j];  // fluctuation
+      dj        = (*d)[j] + (*db)[j]; // total density
+    }
+    else {
+      (*d) [j]  = pj / ( RD * (*T)[j]  );
+      dj        = (*d)[j]; // total density
+   }
+//  (*e)[j]   = CVD * dj * ( (*T)[j] ); // e = Cv d T
+    (*e)[j]   = CVD * pj / RD; // e = Cv * p / R
+
 //  (*T) [j]  = (Ts + delT)*exnerb; // T = (theta + dtheta)*exner
 //  (*T) [j]  = (thetab + delT)*exnerb;
 //  (*d) [j]  = pj / ( RD * (*T)[j] )  - (*db)[j];

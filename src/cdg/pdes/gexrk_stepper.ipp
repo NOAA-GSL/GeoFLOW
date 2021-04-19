@@ -317,11 +317,12 @@ void GExRKStepper<Grid,T>::step_b(const Time &t, const State &uin, State &uf,
      for ( j=0,*isum=0.0; j<nstage_-1; j++ ) 
        GMTK::saxpby<T>(*isum,  1.0, *K_[j][n], (*beta)(nstage_-1,j)*h);
      *u[n]  = (*uin[n]); *u[n] += (*isum); // no copy const. called
+     ggfx_->doOp(*u[n], typename GGFX<Ftype>::Smooth());
    }
    if ( grid_ != NULLPTR  ) GMTK::constrain2sphere<Grid,T>(*grid_, u);
+
    if ( bapplybc_  ) bdy_apply_callback_ (tt, u); 
    rhs_callback_( tt, u, uf, h, K_[0]); // k_M at stage M
-
    for ( n=0; ggfx_!=NULLPTR && n<nstate; n++ ) { // for each state member, uout
      ggfx_->doOp(*K_[0][n], typename GGFX<Ftype>::Smooth());
    }
@@ -331,15 +332,11 @@ void GExRKStepper<Grid,T>::step_b(const Time &t, const State &uin, State &uf,
    for ( n=0; n<nstate; n++ ) { // for each state member, u
     *isum     = (*K_[0][n]); *isum *= ( (*c)[nstage_-1]*h );
     *uout[n] += *isum; // += h * c_M * k_M
-   }
-   if ( bapplybc_  ) bdy_apply_callback_ (tt, uout); 
-   if ( grid_ != NULLPTR  ) GMTK::constrain2sphere<Grid,T>(*grid_, uout);
-
-   for ( n=0; ggfx_!=NULLPTR && n<nstate; n++ ) { // for each state member, uout
      ggfx_->doOp(*uout[n], typename GGFX<Ftype>::Smooth());
    }
-
+   if ( grid_ != NULLPTR  ) GMTK::constrain2sphere<Grid,T>(*grid_, uout);
    if ( bapplybc_  ) bdy_apply_callback_ (tt, uout); 
+
   
 } // end of method step_b (1)
 

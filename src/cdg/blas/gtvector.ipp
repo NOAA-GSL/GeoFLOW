@@ -1775,8 +1775,8 @@ GTVector<T>::apointProd(const T a, const GTVector<T> &obj )
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : constProd
-// DESC   : multiply this by constant, return
+// METHOD : constProd (1)
+// DESC   : multiply this by constant, return in ret vector
 // ARGS   : b  : T-type constant 
 //          ret: GTVector & ret vector
 // RETURNS: GTVector & 
@@ -1795,6 +1795,29 @@ GTVector<T>::constProd(const T b, GTVector<T> &ret)
   }
 
 } // end, pointProd
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : constProd (2)
+// DESC   : multiply this by constant, at specified indices
+// ARGS   : b  : T-type constant 
+//          iv : indirection indices at which to do product
+//          nv : number of indices in iv
+// RETURNS: GTVector & 
+//**********************************************************************************
+template<class T>
+void
+GTVector<T>::constProd(const T b, GSIZET *iv, GSIZET nv) 
+{
+  GEOFLOW_TRACE();
+  ASSERT(iv != NULLPTR);
+
+  for ( auto j=0; j<nv; j++ ) {
+    this->data_[iv[j]] *= b;
+  }
+
+} // end, pointProd (2)
 
 
 //**********************************************************************************

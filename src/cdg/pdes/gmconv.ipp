@@ -249,7 +249,6 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
   StateComp *Mass=grid_->massop().data();
   StateComp *tmp1, *tmp2;
   StateComp *mask=&grid_->get_mask();
-  State      g(nc_); 
   State      stmp(4);
 
   typename Grid::BinnedBdyIndex *igb = &grid_->igbdy_binned();
@@ -301,9 +300,11 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
   gadvect_->apply(*p, v_, stmp, *tmp1);         // v.Grad p 
  *dudt[ENERGY] -= *tmp1;                        // -= v . Grad p
 
+#if 0
   gstressen_->apply(*rhoT, v_, stmp, *tmp1);    // [mu u_i s^{ij}],j
   tmp1->pointProd(*mask);
  *dudt[ENERGY] -= *tmp1;                        // -= [mu u^i s^{ij}],j
+#endif
 
 
   // *************************************************************
@@ -352,8 +353,11 @@ GMTK::zero<Ftype>(*tmp1,(*igb)[2][GBDY_0FLUX]);
       compute_vpref(*tmp1, j+1, *tmp2);               // compute grav component
       tmp2->pointProd(*dd);
      *tmp2 *= *Mass;             
+#if 0 //defined(DO_NEUMANN)
+       tmp2->constProd(0.0, (*igb)[0][GBDY_0FLUX].data(),
+                            (*igb)[0][GBDY_0FLUX].size());
+#endif
      *dudt[j] -= *tmp2;                               // -= rho' vec{g} M J
-
     }
 
     gstressen_->apply(*rhoT, v_, j+1, stmp, 
@@ -488,8 +492,10 @@ void GMConv<TypePack>::dudt_wet(const Time &t, const State &u, const State &uf, 
 
   gdiv_->apply(*tmp1, v_, stmp, *dudt[ENERGY]); 
 
+#if 0
   gstressen_->apply(*rhoT, v_, stmp, *tmp1);       // [mu u_i s^{ij}],j
  *dudt[ENERGY] -= *tmp1;                           // -= [mu u^i s^{ij}],j
+#endif
 
   if ( traits_.dofallout || !traits_.dodry ) {
     GMTK::paxy<Ftype>(*tmp1, *rhoT, CVL, *T);      // tmp1 = C_liq rhoT T
