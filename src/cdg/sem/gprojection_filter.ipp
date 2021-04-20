@@ -41,9 +41,9 @@ grid_                (&grid)
 //assert(grid_->ntype().multiplicity(0) == GE_MAX-1 
 //      && "Only a single element type allowed on grid");
   assert(grid_->ispconst() ); // order must not vary 
-  assert(traits_.pdelta.size() >= GDIM && traits_.alpha.size() >= GDIM);
-  auto emax = *max_element(std::begin(traits_.alpha), std::end(traits_.alpha)); 
-  auto emin = *min_element(std::begin(traits_.alpha), std::end(traits_.alpha)); 
+  assert(traits_.pdelta.size() >= GDIM && traits_.strength.size() >= GDIM);
+  auto emax = *max_element(std::begin(traits_.strength), std::end(traits_.strength)); 
+  auto emin = *min_element(std::begin(traits_.strength), std::end(traits_.strength)); 
   assert(emin >= 0 && emax <= 1);
 
 } // end of constructor method (1)
@@ -191,8 +191,8 @@ void GProjectionFilter<TypePack>::init()
 
     // Compute 1d filter matrices: F = alpha Ihi Ilow + (1-alpha) I;
     M        = Ihi * Ilow;
-    F_  [j]  = M * traits_.alpha[j] ;
-    F_  [j] += ( Id * (1.0-traits_.alpha[j]) );
+    F_  [j]  = M * traits_.strength[j] ;
+    F_  [j] += ( Id * (1.0-traits_.strength[j]) );
     F_  [j]  .transpose(FT_[j]);
 
   }

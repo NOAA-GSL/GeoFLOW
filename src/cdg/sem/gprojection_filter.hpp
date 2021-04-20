@@ -53,9 +53,9 @@ public:
 
         // GProjectionFilter traits:
         struct Traits {
-          std::vector<int>    istate;   // state ids to filter
-          std::vector<int>    pdelta;   // amount to reduce orig order
-          std::vector<double>  alpha;   // filter 'strength'
+          std::vector<int>       istate; // state ids to filter
+          std::vector<int>       pdelta; // amount to reduce orig order
+          std::vector<double>  strength; // filter 'strength'
         };
 
 

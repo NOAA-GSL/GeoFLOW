@@ -60,9 +60,9 @@ FilterFactory<ET>::build(const tbox::PropertyTree& eqn_ptree, const std::string 
 		using FilterImpl = GProjectionFilter<Types>;
                 typename GProjectionFilter<ET>::Traits traits;
 
-	        traits.istate = ftree.getArray   <int>("istate");
-	        traits.pdelta = ftree.getArray   <int>("pdelta");
-	        traits.alpha  = ftree.getArray<double>("alpha");
+	        traits.istate    = ftree.getArray   <int>("istate");
+	        traits.pdelta    = ftree.getArray   <int>("pdelta");
+	        traits.strength  = ftree.getArray<double>("strength");
 
 		// Allocate filter Implementation
 		std::shared_ptr<FilterImpl> filter_impl(new FilterImpl(traits, grid));
