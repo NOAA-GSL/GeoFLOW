@@ -40,8 +40,8 @@
     "radiusi"         : 6378e3,
     "radiuso"         : 6395e3,
     "num_radial_elems": 1,
-    "bdy_inner"       : "0-flux",
-    "bdy_outer"       : "0-flux",
+    "bdy_inner"       : "my_diriclet",
+    "bdy_outer"       : "my_diriclet",
     "maxit"           : 128,
     "tol"             : 1.0e-8,
     "norm_type"       : "GCG_NORM_INF"
@@ -49,8 +49,8 @@
   "my_diriclet": {
     "bdy_class"       : "uniform",
     "base_type"       : ["GBDY_DIRICHLET"],
-    "istate"          : [[0, 1, 2, 3]],
-    "value"           : [[0.0, 0.0, 0.0, 0.0]]
+    "istate"          : [[0, 1, 2, 3, 4]],
+    "value"           : [[0.0, 0.0, 0.0, 0.0, 0.0]]
   },
   "0-flux": {
     "bdy_class"        : "uniform",
@@ -75,10 +75,10 @@
     "P0"              : 1000.0,
     "filter_list"     : [],
     "my_filter" : {
-      "filter_type" : "boyd_filter",
-      "ifilter"     : 4,
-      "mufilter"    : 0.05,
-      "state_index" : [0, 1, 2]
+      "filter_type" : "projection_filter",
+      "alpha"       : [0.3, 0.3, 0.3],
+      "pdelta"      : [1, 1, 1],
+      "istate"      : [0, 1, 2, 3, 4]
     }
   },
   "grid_box": {
@@ -99,9 +99,11 @@
   "stepper_props": {
     "stepping_method"  : "GSTEPPER_EXRK",
     "time_deriv_order" : 4,
+    "nstage"           : 4,
+    "stab_preserving"  : false,
     "extrap_order"     : 2,
-    "variable_dt"      : false,
-    "courant"          : 0.5 
+    "variable_dt"      : true,
+    "courant"          : 0.1
   },
   "dissipation_traits": {
     "nu"      : 200.0,
