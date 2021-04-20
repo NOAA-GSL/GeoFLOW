@@ -12,7 +12,7 @@
 //                polynomial. Then define
 //                    P_N^M = I_M^N I_N^M.
 //                The filter is then defined in 1d as
-//                    F = alpha Pi_N^M + 1-alpha) I_N^N
+//                    F = alpha Pi_N^M + (1-alpha) I_N^N
 //                where
 //                    I_N^N 
 //                is the Nth-order identify matrix. Filter, F, is then 
