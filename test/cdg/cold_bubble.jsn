@@ -1,5 +1,5 @@
 { 
-  "exp_order"         : [4, 4, 5],
+  "exp_order"         : [5, 5, 5],
   "exp_order_type"    : "constant",
   "grid_type"         : "grid_box",
   "pde_name"          : "pde_mconv",
@@ -54,7 +54,7 @@
     "filter_list"     : ["my_filter"],
     "my_filter" : {
       "filter_type" : "projection_filter",
-      "alpha"       : [0.3, 0.3, 0.3],
+      "alpha"       : [0.6, 0.6, 0.6],
       "pdelta"      : [2, 2, 2],
       "istate"      : [0, 1, 2, 3]
     }
@@ -114,6 +114,10 @@
     "names"       : ["dp"],
     "mathop"      : "dpress"
   },
+  "de": {
+    "names"       : ["de"],
+    "mathop"      : "de"
+  },
   "press": {
     "names"       : ["p"],
     "mathop"      : "press"
@@ -142,7 +146,7 @@
     "agg_state_name"     : "u",
     "agg_grid_name "     : "grid",
     "derived_quantities"       : [],
-    "state_derived_quantities" : ["temp","press","vel","ptemp","dpress","dptemp","den","dden"]
+    "state_derived_quantities" : ["temp","press","vel","ptemp","de","dpress","dptemp","den","dden"]
   },
   "gmconv_diag": {
     "observer_name"      : "gmconv_diag",
