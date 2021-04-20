@@ -1,5 +1,5 @@
 { 
-  "exp_order"         : [4, 4, 5],
+  "exp_order"         : [6, 6, 6],
   "exp_order_type"    : "constant",
   "grid_type"         : "grid_box",
   "pde_name"          : "pde_mconv",
@@ -54,16 +54,16 @@
     "filter_list"     : ["my_filter"],
     "my_filter" : {
       "filter_type" : "projection_filter",
-      "alpha"       : [0.3, 0.3, 0.3],
-      "pdelta"      : [2, 2, 2],
+      "strength"    : [0.05, 0.05, 0.05],
+      "pdelta"      : [3, 3, 3],
       "istate"      : [0, 1, 2, 3]
     }
   },
   "grid_box": {
     "grid_name" : "grid_box",
-    "xyz0"      : [-25600, 0, 0],
-    "delxyz"    : [51200, 10000, 1.0],
-    "num_elems" : [256, 50, 1],
+    "xyz0"      : [0, 0, 0],
+    "delxyz"    : [25600, 10000, 1.0],
+    "num_elems" : [128, 25, 1],
     "bdy_x_0"   : "0-flux",
     "bdy_x_1"   : "0-flux",
     "bdy_y_0"   : "0-flux",
@@ -76,18 +76,18 @@
   },
   "stepper_props": {
     "stepping_method"  : "GSTEPPER_EXRK",
-    "time_deriv_order" : 4,
-    "nstage"           : 4,
+    "time_deriv_order" : 2,
+    "nstage"           : 2,
     "stab_preserving"  : false,
     "extrap_order"     : 2,
     "variable_dt"      : true,
     "courant"          : 0.1
   },
   "dissipation_traits": {
-    "nu"      : 75.0,
-    "eta"     : 75.0,
-    "zeta"    : 75.0,
-    "lambda"  : 75.0,
+    "nu"      : 100.0,
+    "eta"     : 100.0,
+    "zeta"    : 100.0,
+    "lambda"  : 100.0,
     "nu_type" : "constant"
   },
   "gio": {
@@ -113,6 +113,10 @@
   "dpress": {
     "names"       : ["dp"],
     "mathop"      : "dpress"
+  },
+  "de": {
+    "names"       : ["de"],
+    "mathop"      : "de"
   },
   "press": {
     "names"       : ["p"],
@@ -142,7 +146,7 @@
     "agg_state_name"     : "u",
     "agg_grid_name "     : "grid",
     "derived_quantities"       : [],
-    "state_derived_quantities" : ["temp","press","vel","ptemp","dpress","dptemp","den","dden"]
+    "state_derived_quantities" : ["temp","press","vel","ptemp","de","dpress","dptemp","den","dden"]
   },
   "gmconv_diag": {
     "observer_name"      : "gmconv_diag",
