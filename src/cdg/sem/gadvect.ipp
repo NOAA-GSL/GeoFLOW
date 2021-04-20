@@ -69,7 +69,7 @@ void GAdvect<TypePack>::apply(StateComp &p, const State &u, State &utmp, StateCo
 
   if ( u[0] != NULLPTR ) {
     grid_->deriv(p, 1, *utmp[0], po);
-#if defined(GEOFLOW_USE_NEUMANN_HACK)
+#if 0 // defined(GEOFLOW_USE_NEUMANN_HACK)
 GMTK::zero<Ftype>(po,(*igb)[1][GBDY_0FLUX]);
 GMTK::zero<Ftype>(po,(*igb)[3][GBDY_0FLUX]);
 #endif
@@ -81,7 +81,7 @@ GMTK::zero<Ftype>(po,(*igb)[3][GBDY_0FLUX]);
   for ( auto j=1; j<u.size(); j++ ) { 
     if ( u[j] == NULLPTR ) continue;
     grid_->deriv(p, j+1, *utmp[1], *utmp[0]);
-#if defined(GEOFLOW_USE_NEUMANN_HACK)
+#if 0 // defined(GEOFLOW_USE_NEUMANN_HACK)
 GMTK::zero<Ftype>(*utmp[0],(*igb)[0][GBDY_0FLUX]);
 GMTK::zero<Ftype>(*utmp[0],(*igb)[2][GBDY_0FLUX]);
 #endif
