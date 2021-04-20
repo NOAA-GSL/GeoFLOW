@@ -87,6 +87,16 @@ void GDivOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp &div
     for ( auto j=0; j<nxy; j++ ) { 
        d.pointProd(*u[j], *utmp[1]);
        grid_->wderiv(*utmp[1], j+1, TRUE, *utmp[0], *utmp[2]);
+#if defined(GEOFLOW_USE_NEUMANN_HACK)
+if ( ivec == -1 || ivec == 2 ) {
+GMTK::zero<Ftype>(div,(*igb)[1][GBDY_0FLUX]);
+GMTK::zero<Ftype>(div,(*igb)[3][GBDY_0FLUX]);
+}
+else if ( ivec == -1 || ivec == 1 ) {
+GMTK::zero<Ftype>(*utmp[2],(*igb)[0][GBDY_0FLUX]);
+GMTK::zero<Ftype>(*utmp[2],(*igb)[2][GBDY_0FLUX]);
+}
+#endif
        div -= *utmp[2];
 
       // Global bdy terms:
