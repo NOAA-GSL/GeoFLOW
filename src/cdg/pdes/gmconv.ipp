@@ -1679,6 +1679,17 @@ void GMConv<TypePack>::compute_derived_impl(const State &u, GString sop,
     }
     iuout.resize(1); iuout[0] = 0;
   }
+  else if ( "de"   == sop ) { // pressure fluctuation 
+    assert(uout .size() >= 1   && "Incorrect no. output components");
+    assert(utmp .size() >= 3   && "Incorrect no. tmp components");
+    compute_cv(u, *utmp[0], *utmp[1]);                     // Cv
+   *utmp[2]  = *ubase_[1];       // base pressure
+   *utmp[1] *= 1.0/RD;           // Cv/RD
+   *utmp[2] *= *utmp[1];         // e_base = p_base * Cv / R
+   *uout[0]  = *u[ENERGY];
+   *uout[0] -= *utmp[2];         // create fluctuation, de
+    iuout.resize(1); iuout[0] = 0;
+  }
   else if ( "dpress"   == sop ) { // pressure fluctuation 
     assert(uout .size() >= 1   && "Incorrect no. output components");
     assert(utmp .size() >= 4   && "Incorrect no. tmp components");
