@@ -164,9 +164,9 @@ void GBoydFilter<TypePack>::init()
       F  = (*gelems)[e]->gbasis(k)->getFilterMat(); // storage for filter
       FT = (*gelems)[e]->gbasis(k)->getFilterMat(TRUE); // transpose 
       nnodes = (*gelems)[e]->gbasis(k)->getOrder()+1;
-      ifilter = nnodes - traits_.pdelta[k];
+      ifilter = nnodes - traits_.pdelta[k] - 1;
 //    xf0 = ifilter;
-      assert(ifilter > 0 && ifilter <= nnodes);
+      assert(ifilter > 0 && ifilter < nnodes);
       xN = nnodes;
       Lambda.resize(nnodes,nnodes); Lambda = 0.0;
       tmp   .resize(nnodes,nnodes);
