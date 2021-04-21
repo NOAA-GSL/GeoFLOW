@@ -145,7 +145,6 @@ void GBoydFilter<TypePack>::init()
 {
 
   GINT             ifilter, nnodes;
-  Ftype            a, b, xi, xf0, xN;
   GTVector<GNBasis<GCTYPE,Ftype>*>
                    ipool;
   GTMatrix<Ftype> *F, *FT, *iL, *L, Lambda;
@@ -169,30 +168,20 @@ void GBoydFilter<TypePack>::init()
       if ( ipool.contains((*gelems)[e]->gbasis(k)) ) continue;
       ipool.push_back((*gelems)[e]->gbasis(k));
       ifilter = nnodes - traits_.pdelta[k] - 1;
-//    xf0 = ifilter;
       assert(ifilter > 0 && ifilter < nnodes);
-      xN = nnodes;
       Lambda.resize(nnodes,nnodes); Lambda = 0.0;
       tmp   .resize(nnodes,nnodes);
       
       L      = (*gelems)[e]->gbasis(k)->getLegTransform();
       iL     = (*gelems)[e]->gbasis(k)->getiLegTransform();
 
-#if 0
-      a      = (traits_.strength[k]-1.0)/( (xN-xf0)*(xN-xf0) - 1.0 );
-      b      = ( (xN-xf0)*(xN-xf0) - traits_.strength[k])/ ( (xN-xf0)*(xN-xf0) - 1.0 );
-#endif
-      for ( auto i=0; i<nnodes; i++ ) { // build weight matix, Lambda
-        xi = i;
+      for ( auto i=0; i<nnodes; i++ ) { // build weight matrix, Lambda
         Lambda(i,i) = 1.0;
         if ( i > ifilter ) {
 cout << " ..................... i=" << i << " ifilter=" << ifilter << endl;
-          Lambda(i,i) = traits_.strength[k]
-                      * pow( ( (Ftype)(i-ifilter) / ( (Ftype)(nnodes-ifilter) ) ), 2.0);
+          Lambda(i,i) = traits_.strength[k] 
+                      * ( 1.0 -  pow( fabs( (Ftype)(i-ifilter) / ( (Ftype)(nnodes-ifilter) ) ), 1.0) ) 
                       + 1 - traits_.strength[k];
-//        Lambda(i,i) = (mufilter_ - 1.0)
-//                    * pow( ( (Ftype)(i-ifilter) / ( (Ftype)(nnodes-ifilter) ) ), 2.0) + 1.0;
-//        Lambda(i,i) = a*(xi-xf0)*(xi-xf0) + b;
         }
       } // end, node/mode loop 
       tmp = Lambda * (*iL);
