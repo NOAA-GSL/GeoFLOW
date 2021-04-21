@@ -53,9 +53,9 @@
     "P0"              : 1000.0,
     "filter_list"     : ["my_filter"],
     "my_filter" : {
-      "filter_type" : "projection_filter",
+      "filter_type" : "boyd_filter",
       "strength"    : [0.05, 0.05, 0.05],
-      "pdelta"      : [3, 3, 3],
+      "pdelta"      : [1, 1, 1],
       "istate"      : [0, 1, 2, 3]
     }
   },
