@@ -74,7 +74,6 @@ void GBoydFilter<TypePack>::apply_impl(const Time &t, State &u, State &utmp, Sta
 
   GINT             is, nstate;
   GSIZET           ibeg, iend; // beg, end indices in global array
-  GTVector<Ftype>  tmp;
   GTMatrix<Ftype> *F[GDIM];
   typename TypePack::GElemList       *gelems=&grid_->elems();
 
@@ -92,10 +91,10 @@ void GBoydFilter<TypePack>::apply_impl(const Time &t, State &u, State &utmp, Sta
       F [0] = (*gelems)[e]->gbasis(0)->getFilterMat();
       F [1] = (*gelems)[e]->gbasis(1)->getFilterMat(TRUE);
 #if defined(_G_IS2D)
-      GMTK::D2_X_D1<GFTYPE>(*F[0], *F[1], *u[is], tmp, *uo[is]);
+      GMTK::D2_X_D1<GFTYPE>(*F[0], *F[1], *u[is], tmp_, *uo[is]);
 #elif defined(_G_IS3D)
       F [2] = (*gelems)[e]->gbasis(2)->getFilterMat(TRUE);
-      GMTK::D3_X_D2_X_D1<GFTYPE>(*F[0], *F[1], *F[2], *u[is], tmp, *uo[is]);
+      GMTK::D3_X_D2_X_D1<GFTYPE>(*F[0], *F[1], *F[2], *u[is], tmp_, *uo[is]);
 #endif
     }
     u [is]->range_reset(); 
@@ -178,7 +177,7 @@ void GBoydFilter<TypePack>::init()
       for ( auto i=0; i<nnodes; i++ ) { // build weight matrix, Lambda
         Lambda(i,i) = 1.0;
         if ( i > ifilter ) {
-cout << " ..................... i=" << i << " ifilter=" << ifilter << endl;
+//cout << " ..................... i=" << i << " ifilter=" << ifilter << endl;
           Lambda(i,i) = traits_.strength[k] 
                       * ( 1.0 -  pow( fabs( (Ftype)(i-ifilter) / ( (Ftype)(nnodes-ifilter) ) ), 1.0) ) 
                       + 1 - traits_.strength[k];
@@ -187,7 +186,7 @@ cout << " ..................... i=" << i << " ifilter=" << ifilter << endl;
       tmp = Lambda * (*iL);
      *F   = (*L) * tmp;
       F   ->transpose(*FT);
-cout << "F=" << *F << endl;
+//cout << "F=" << *F << endl;
     } // end, k-loop
   } // end, element loop
 

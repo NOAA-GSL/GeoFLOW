@@ -67,6 +67,8 @@ private:
         void              init();
 
         GBOOL                         bInit_;    // is filter initialized?
+        GTVector<Ftype>               tmp_;      // tensor prod tmp spacec
+
         GTMatrix<Ftype>               Lambda_;   // mode-weighting matrix
         Traits                        traits_;
         Grid                         *grid_;     // grid set on construction
