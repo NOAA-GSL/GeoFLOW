@@ -41,7 +41,7 @@
     "dofallout"       : false,
     "dogravity"       : true,
     "bconserved"      : false,
-    "divopcolloc"     : true,
+    "divopcolloc"     : false,
     "usebdydat"       : true,
     "Stokeshyp"       : true,
     "bindepdiss"      : false,
@@ -51,11 +51,17 @@
     "forcing_comp"    : [],
     "T_surf"          : 300.0,
     "P0"              : 1000.0,
-    "filter_list"     : ["my_filter"],
-    "my_filter" : {
+    "filter_list"     : ["boyd_filter"],
+    "boyd_filter" : {
       "filter_type" : "boyd_filter",
-      "strength"    : [0.05, 0.05, 0.05],
+      "strength"    : [1e-3, 1e-3, 1e-3],
       "pdelta"      : [1, 1, 1],
+      "istate"      : [0, 1, 2, 3]
+    },
+    "proj_filter" : {
+      "filter_type" : "projection_filter",
+      "strength"    : [0.9 , 0.9, 0.9],
+      "pdelta"      : [2, 2, 2],
       "istate"      : [0, 1, 2, 3]
     }
   },
@@ -84,10 +90,10 @@
     "courant"          : 0.1
   },
   "dissipation_traits": {
-    "nu"      : 100.0,
-    "eta"     : 100.0,
-    "zeta"    : 100.0,
-    "lambda"  : 100.0,
+    "nu"      : 75.0,
+    "eta"     : 75.0,
+    "zeta"    : 75.0,
+    "lambda"  : 75.0,
     "nu_type" : "constant"
   },
   "gio": {
@@ -139,7 +145,7 @@
     "idir"               : "outs",
     "odir"               : "outs",
     "cadence_type"       : "time",
-    "cycle_interval"     : 50,
+    "cycle_interval"     : 1,
     "time_interval"      : 5.0,
     "state_names"        : ["s1", "s2", "e", "d"],
     "grid_names"         : ["xgrid", "ygrid", "zgrid"],
