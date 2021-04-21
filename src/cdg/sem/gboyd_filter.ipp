@@ -189,6 +189,7 @@ void GBoydFilter<TypePack>::init()
 cout << " ..................... i=" << i << " ifilter=" << ifilter << endl;
           Lambda(i,i) = traits_.strength[k]
                       * pow( ( (Ftype)(i-ifilter) / ( (Ftype)(nnodes-ifilter) ) ), 2.0);
+                      + 1 - traits_.strength[k];
 //        Lambda(i,i) = (mufilter_ - 1.0)
 //                    * pow( ( (Ftype)(i-ifilter) / ( (Ftype)(nnodes-ifilter) ) ), 2.0) + 1.0;
 //        Lambda(i,i) = a*(xi-xf0)*(xi-xf0) + b;
