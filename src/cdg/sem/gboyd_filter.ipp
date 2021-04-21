@@ -176,11 +176,16 @@ void GBoydFilter<TypePack>::init()
 
       for ( auto i=0; i<nnodes; i++ ) { // build weight matrix, Lambda
         Lambda(i,i) = 1.0;
-        if ( i > ifilter ) {
+        if ( i >= ifilter ) {
 //cout << " ..................... i=" << i << " ifilter=" << ifilter << endl;
+#if 1
           Lambda(i,i) = traits_.strength[k] 
                       * ( 1.0 -  pow( fabs( (Ftype)(i-ifilter) / ( (Ftype)(nnodes-ifilter) ) ), 1.0) ) 
                       + 1 - traits_.strength[k];
+#else
+          Lambda(i,i) = traits_.strength[k] 
+                      * pow( fabs( (Ftype)(i-ifilter) / ( (Ftype)(nnodes-ifilter) ) ), 2.0); 
+#endif
         }
       } // end, node/mode loop 
       tmp = Lambda * (*iL);

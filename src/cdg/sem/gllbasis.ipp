@@ -779,7 +779,8 @@ GBOOL GLLBasis<T,TE>::computeLegendreMatrix()
 //************************************************************************************
 // METHOD : computeLegTransform
 // DESC   : Computes Legendre transform matrix that
-//          enables conversion to modal space. 
+//          enables conversion to modal space. Taken
+//          from Giraldo & Rosmond, MWR 132:133 ((2004).
 // ARGS   : ifilter: reference mode number 
 // RETURNS: TRUE on success; else FALSE 
 //************************************************************************************
@@ -793,12 +794,12 @@ GBOOL GLLBasis<T,TE>::computeLegTransform(GINT ifilter)
 
   for ( i=0; i<Np_+1; i++ ) {
     for ( j=0; j<Np_+1; j++ ) {
-      if ( j < ifilter ) {
+//    if ( j < ifilter ) {
         LegTransform_(i,j) = evalBasis(j,xiNodes_[i]);
-      }
-      else {
-        LegTransform_(i,j) = evalBasis(j,xiNodes_[i]) - evalBasis(j-ifilter,xiNodes_[i]);
-      }
+//    }
+//    else {
+//      LegTransform_(i,j) = evalBasis(j,xiNodes_[i]) - evalBasis(j-ifilter,xiNodes_[i]);
+//    }
     }
   }
   LegTransform_.inverse(iLegTransform_);  
