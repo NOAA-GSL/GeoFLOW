@@ -138,8 +138,8 @@
     "observer_name"      : "gio_observer",
     "idir"               : "outs",
     "odir"               : "outs",
-    "cadence_type"       : "cycle",
-    "cycle_interval"     : 1,
+    "cadence_type"       : "time",
+    "cycle_interval"     : 50,
     "time_interval"      : 5.0,
     "state_names"        : ["s1", "s2", "e", "d"],
     "grid_names"         : ["xgrid", "ygrid", "zgrid"],
@@ -156,7 +156,7 @@
     "treat_as_1d"        : false
   },
   "time_integration": {
-    "integ_type" : "cycle",
+    "integ_type" : "time",
     "time_end"   : 900.5,
     "cycle_end"  : 10,
     "dt"         : 1.0e-2
