@@ -146,6 +146,7 @@ void GBoydFilter<TypePack>::init()
 
   GINT             ifilter, nnodes;
   Ftype            a, b, xi, xf0, xN;
+  GTVector<GINT>   ipool;
   GTMatrix<Ftype> *F, *FT, *iL, *L, Lambda;
   GTMatrix<Ftype> tmp;
   typename TypePack::GElemList       *gelems=&grid_->elems();
@@ -164,6 +165,8 @@ void GBoydFilter<TypePack>::init()
       F  = (*gelems)[e]->gbasis(k)->getFilterMat(); // storage for filter
       FT = (*gelems)[e]->gbasis(k)->getFilterMat(TRUE); // transpose 
       nnodes = (*gelems)[e]->gbasis(k)->getOrder()+1;
+      if ( ipool.contains(nnodes-1) ) continue;
+      ipool.push_back(nnodes-1);
       ifilter = nnodes - traits_.pdelta[k] - 1;
 //    xf0 = ifilter;
       assert(ifilter > 0 && ifilter < nnodes);
