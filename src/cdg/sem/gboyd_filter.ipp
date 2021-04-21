@@ -185,7 +185,8 @@ void GBoydFilter<TypePack>::init()
       for ( auto i=0; i<nnodes; i++ ) { // build weight matix, Lambda
         xi = i;
         Lambda(i,i) = 1.0;
-        if ( i >= ifilter ) {
+        if ( i > ifilter ) {
+cout << " ..................... i=" << i << " ifilter=" << ifilter << endl;
           Lambda(i,i) = traits_.strength[k]
                       * pow( ( (Ftype)(i-ifilter) / ( (Ftype)(nnodes-ifilter) ) ), 2.0);
 //        Lambda(i,i) = (mufilter_ - 1.0)
@@ -196,6 +197,7 @@ void GBoydFilter<TypePack>::init()
       tmp = Lambda * (*iL);
      *F   = (*L) * tmp;
       F   ->transpose(*FT);
+cout << "F=" << *F << endl;
     } // end, k-loop
   } // end, element loop
 
