@@ -788,14 +788,13 @@ GBOOL ginitstate<Types>::impl_boxdrybubble(const PropertyTree &ptree, GString &s
   sblock                   = ptree.getValue<GString>("pde_name");
   PropertyTree convptree   = ptree.getPropertyTree(sblock);
 
-  assert(ceqn != NULLPTR && "Must initialize for Equation GMConv");
 
   // Check solver type 
   // Remember: eqn is a shared_ptr, so must check 
   //           against its contets
   
   ceqn = dynamic_cast<GMConv<Types>*>(eqn.get());
-  assert(ceqn && "Must use GMConv solver");
+  assert(ceqn != NULLPTR && "Must initialize for Equation GMConv");
 
   // Check grid type:
   GridBox  *box   = dynamic_cast <GridBox*>(&grid);
