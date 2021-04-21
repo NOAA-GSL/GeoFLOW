@@ -46,9 +46,9 @@ public:
 
         // GBoydFilter traits:
         struct Traits {
-          int      istate;   // state elements to filter
-          int     ifilter;   // filter starting mode
-          double mufilter;   // filter trunc amount
+          std::vector<GINT>             istate ;    // state ids to filter
+          std::vector<GINT>             pdelta;     // starting mode to filter
+          std::vector<double>           strength;   // filter strength
         };
 
 
@@ -67,10 +67,8 @@ private:
         void              init();
 
         GBOOL                         bInit_;    // is filter initialized?
-        GINT                          ifilter_;  // filter mode
-        Ftype                         mufilter_; // truncation amount 
         GTMatrix<Ftype>               Lambda_;   // mode-weighting matrix
-        std::vector<GINT>             istate_;   // state ids to filter
+        Traits                        traits_;
         Grid                         *grid_;     // grid set on construction
 
 

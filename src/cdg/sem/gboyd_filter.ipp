@@ -30,13 +30,16 @@ template<typename TypePack>
 GBoydFilter<TypePack>::GBoydFilter(Traits &traits, Grid &grid)
 :
 bInit_               (FALSE),
-ifilter_    (traits.ifilter),
-mufilter_  (traits.mufilter),
-istate_      (traits.istate),
+traits_              (traits),
 grid_                (&grid)
 {
   assert(grid_->ntype().multiplicity(0) == GE_MAX-1 
         && "Only a single element type allowed on grid");
+  assert(traits_.pdelta.size() >= GDIM && traits_.strength.size() >= GDIM);
+  auto emax = *max_element(std::begin(traits_.strength), std::end(traits_.strength));
+  auto emin = *min_element(std::begin(traits_.strength), std::end(traits_.strength));
+  assert(emin >= 0 && emax <= 1);
+
 } // end of constructor method (1)
 
 
@@ -77,11 +80,11 @@ void GBoydFilter<TypePack>::apply_impl(const Time &t, State &u, State &utmp, Sta
 
   if ( !bInit_ ) init();
 
-  nstate = istate_.size() == 0 ? u.size() 
-         : istate_.size();
+  nstate = traits_.istate.size() == 0 ? u.size() 
+         : traits_.istate.size();
   for ( auto j=0; j<nstate; j++ ) {
-    is = istate_.size() == 0 ? j
-       : istate_[j];
+    is = traits_.istate.size() == 0 ? j
+       : traits_.istate[j];
     for ( auto e=0; e<gelems->size(); e++ ) {
       ibeg = (*gelems)[e]->igbeg(); iend = (*gelems)[e]->igend();
       u[is]->range(ibeg, iend); // restrict global vecs to local range
@@ -141,7 +144,7 @@ template<typename TypePack>
 void GBoydFilter<TypePack>::init()
 {
 
-  GINT             nnodes;
+  GINT             ifilter, nnodes;
   Ftype            a, b, xi, xf0, xN;
   GTMatrix<Ftype> *F, *FT, *iL, *L, Lambda;
   GTMatrix<Ftype> tmp;
@@ -155,13 +158,15 @@ void GBoydFilter<TypePack>::init()
   //   Lambda = 1 if i< ifilter
   //            mu [(i-ifilter)/(N - ifilter)]^2, i>= ifilter
 
-  xf0 = ifilter_;
   for ( auto e=0; e<gelems->size(); e++ ) {
     for ( auto k=0; k<GDIM; k++ ) {
 //    (*gelems)[e]->gbasis(k)->computeLegTransform(ifilter_); 
       F  = (*gelems)[e]->gbasis(k)->getFilterMat(); // storage for filter
       FT = (*gelems)[e]->gbasis(k)->getFilterMat(TRUE); // transpose 
       nnodes = (*gelems)[e]->gbasis(k)->getOrder()+1;
+      ifilter = nnodes - traits_.pdelta[k];
+//    xf0 = ifilter;
+      assert(ifilter > 0 && ifilter <= nnodes);
       xN = nnodes;
       Lambda.resize(nnodes,nnodes); Lambda = 0.0;
       tmp   .resize(nnodes,nnodes);
@@ -169,20 +174,19 @@ void GBoydFilter<TypePack>::init()
       L      = (*gelems)[e]->gbasis(k)->getLegTransform();
       iL     = (*gelems)[e]->gbasis(k)->getiLegTransform();
 
-      a      = (mufilter_-1.0)/( (xN-xf0)*(xN-xf0) - 1.0 );
-      b      = ( (xN-xf0)*(xN-xf0) - mufilter_ )/ ( (xN-xf0)*(xN-xf0) - 1.0 );
+#if 0
+      a      = (traits_.strength[k]-1.0)/( (xN-xf0)*(xN-xf0) - 1.0 );
+      b      = ( (xN-xf0)*(xN-xf0) - traits_.strength[k])/ ( (xN-xf0)*(xN-xf0) - 1.0 );
+#endif
       for ( auto i=0; i<nnodes; i++ ) { // build weight matix, Lambda
         xi = i;
         Lambda(i,i) = 1.0;
-        if ( i >= ifilter_ ) {
-#if 0
-          Lambda(i,i) = mufilter_
-                      * pow( ( (Ftype)(i-ifilter_) / ( (Ftype)(nnodes-ifilter_) ) ), 2.0);
-#else
+        if ( i >= ifilter ) {
+          Lambda(i,i) = traits_.strength[k]
+                      * pow( ( (Ftype)(i-ifilter) / ( (Ftype)(nnodes-ifilter) ) ), 2.0);
 //        Lambda(i,i) = (mufilter_ - 1.0)
-//                    * pow( ( (Ftype)(i-ifilter_) / ( (Ftype)(nnodes-ifilter_) ) ), 2.0) + 1.0;
-          Lambda(i,i) = a*(xi-xf0)*(xi-xf0) + b;
-#endif
+//                    * pow( ( (Ftype)(i-ifilter) / ( (Ftype)(nnodes-ifilter) ) ), 2.0) + 1.0;
+//        Lambda(i,i) = a*(xi-xf0)*(xi-xf0) + b;
         }
       } // end, node/mode loop 
       tmp = Lambda * (*iL);
