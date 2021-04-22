@@ -79,6 +79,7 @@ void GBoydFilter<TypePack>::apply_impl(const Time &t, State &u, State &utmp, Sta
 
   if ( !bInit_ ) init();
 
+
   nstate = traits_.istate.size() == 0 ? u.size() 
          : traits_.istate.size();
   for ( auto j=0; j<nstate; j++ ) {
@@ -146,7 +147,8 @@ void GBoydFilter<TypePack>::init()
   GINT             ifilter, nnodes;
   GTVector<GNBasis<GCTYPE,Ftype>*>
                    ipool;
-  GTMatrix<Ftype> *F, *FT, *iL, *L, Lambda;
+  GTMatrix<Ftype> *F, *FT, Lambda;
+  GTMatrix<Ftype> *iL, *L;
   GTMatrix<Ftype> tmp;
   typename TypePack::GElemList       *gelems=&grid_->elems();
 
@@ -171,8 +173,9 @@ void GBoydFilter<TypePack>::init()
       Lambda.resize(nnodes,nnodes); Lambda = 0.0;
       tmp   .resize(nnodes,nnodes);
       
-      L      = (*gelems)[e]->gbasis(k)->getLegTransform();
-      iL     = (*gelems)[e]->gbasis(k)->getiLegTransform();
+      L  = (*gelems)[e]->gbasis(k)->getLegTransform();
+      iL = (*gelems)[e]->gbasis(k)->getiLegTransform();
+//cout << "L = " << *L << endl;
 
       for ( auto i=0; i<nnodes; i++ ) { // build weight matrix, Lambda
         Lambda(i,i) = 1.0;
