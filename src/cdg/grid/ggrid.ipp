@@ -2353,7 +2353,9 @@ void GGrid<Types>::init_qdealias()
     IQPdealias_ [k].resize(pqdealias_[k]+1, N[k]);
     IQPdealiasT_[k].resize(N[k],pqdealias_[k]+1);
     gelems_[0]->gbasis(k)->evalBasis(qxi,IQPdealias_[k]);
+    IQPdealias_[k].transpose(IQPdealiasT_[k]);
   }
+
 
   qdN_.resize(1);
   // Compute dealias tensor prod weight matrix (diagnonal:
@@ -2440,7 +2442,7 @@ void GGrid<Types>::dealias(StateComp &v1, StateComp &v2, StateComp &prod)
     ibeg  = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
     iqbeg = e*qdN_[0]; iqend = iqbeg + qdN_[0] - 1;
     // Restrict global data to local scope:
-    v1      .range   (ibeg,iend); v2       .range  (ibeg,iend);
+    v1       .range  (ibeg,iend); v2       .range  (ibeg,iend);
     qdtmp_[0].range(iqbeg,iqend); qdtmp_[1].range(iqbeg,iqend);
 #if defined(_G_IS2D)
     GMTK::D2_X_D1<Ftype>(IQPdealias_[0], IQPdealiasT_[1], v1, tptmp_, qdtmp_[0]);
@@ -2453,10 +2455,10 @@ void GGrid<Types>::dealias(StateComp &v1, StateComp &v2, StateComp &prod)
   v1.range_reset(); v2.range_reset();
   qdtmp_[0].range_reset(); qdtmp_[1].range_reset();
 
-  // Compute pointProd ovver-sampled terms:
+  // Compute pointProd of over-sampled terms:
   qdtmp_[0].pointProd(qdtmp_[1]);
 
-  // Do a Galerkin projection back to original space:
+  // Do a "Galerkin projection" back to original space:
   //    p_prod =  pW^-1 IQPdealiasT qW  qProd:
   qdtmp_[0].pointProd(qW_); // qW * qProd
 
