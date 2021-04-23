@@ -60,11 +60,11 @@ bdy_apply_callback_           (NULLPTR)
   cudat_.nstreams = MAX(cudat_.nstreams,1);
   
   
-  doQDealias_ = FALSE;
+  doQDealias_ = ptree.getValue<GBOOL>("do_dealiasing");
+  assert( doQDealias_ && ptree.keyExists("qdealias_order") );
   if ( ptree.keyExists("qdealias_order") ) {
      pqdealias_      = ptree.getArray<GINT>("qdealias_order");
      assert( pqdealias_.size() >= GDIM );
-     doQDealias_     = TRUE;
   }
   if ( !doQDealias_ ) EH::displayWarning("Quadratic dealiasing will not be done!");
 
