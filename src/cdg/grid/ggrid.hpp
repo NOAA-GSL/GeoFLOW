@@ -21,6 +21,7 @@
 #include "gtvector.hpp"
 #include "gtmatrix.hpp"
 #include "gnbasis.hpp"
+#include "gllbasis.hpp"
 #include "gelem_base.hpp"
 #include "gdd_base.hpp"
 #include "gcblas.hpp"
@@ -140,6 +141,8 @@ virtual void                 print(const GString &filename){}          // print 
         GTVector<GSIZET>    &itype(GElemType i) { return itype_[i]; } // indices for type i    
         GElemType            gtype() { return gtype_; }               // get unique elem type on grid       
         GBOOL                ispconst();                              // is order constant?
+        void                 dealias(StateComp &v1, StateComp &v2, GFLOAT qfactor,
+                                     State &qtmp, StateComp &prod);   // dealias for quadratic nonlinearity
         void                 deriv(GTVector<Ftype> &u, GINT idir, GTVector<Ftype> &tmp,
                                    GTVector<Ftype> &du );             // derivative of global vector
         void                 deriv(GTVector<Ftype> &u, GINT idir, GBOOL dotrans, GTVector<Ftype> &tmp,
@@ -269,6 +272,7 @@ virtual void                 elem_face_data(
 //      void                        init_local_face_info();            // get local face info
         void                        globalize_coords();                // create global coord vecs from elems
         void                        init_bc_info(GBOOL bterrain=FALSE);// configure bdys
+        void                        init_qdealias();                   // create quadratic dealias data
         void                        def_geom_init();                   // iniitialze deformed elems
         void                        reg_geom_init();                   // initialize regular elems
         void                        do_face_data();                    // compute normals to elem faces 
@@ -281,7 +285,10 @@ virtual void                 elem_face_data(
         GBOOL                       bpconst_;          // is p const among elems?
         GBOOL                       usebdydat_;        // flag to set to use bdy data
         GBOOL                       do_gbdy_test_;     // create data required to test gbdys?
+        GBOOL                       bInitQDealias_;    // quadratic dealias data initialized?
+        GBOOL                       doQDealias_;       // do quadratic dealiasing?
         GINT                        nstreams_;         // no. CUDA streams
+        
         GDerivType                  gderivtype_;       // ref. deriv method type
 
         GElemType                   gtype_;            // element types comprising grid
@@ -318,6 +325,14 @@ virtual void                 elem_face_data(
         BdyUpdateList               bdy_update_list_;
                                                        // bdy update class list
         GTVector<Ftype>             mask_;             // bdy mask
+        GTVector<GTMatrix<Ftype>>   IQPdealias_;       // 1d quadratic dealias interp mats P->Q
+        GTVector<GTMatrix<Ftype>>   IQPdealiasT_;      // transp of 1d quadratic dealias interp mats 
+        GTVector<GINT>              qdN_;              // # nodes in each elem for quadratic dealiasing
+        GTVector<Ftype>             iWp_;              // inv. of p-based weights (no JAc) for dealiasing
+        GTVector<Ftype>             qW_;               // quadratic dealias weights
+        std::vector<GINT>           pqdealias_;        // order of quadratic dealias basis in each direction
+        GTVector<Ftype>             tptmp_;            // tensor product tmp space
+        GTVector<GTVector<Ftype>>   qdtmp_;            // quadratic dealias tmp space
         PropertyTree                ptree_;            // main prop tree
         GGFX<Ftype>                *ggfx_;             // connectivity operator
         typename LinSolverBase<CGTypePack>::Traits
