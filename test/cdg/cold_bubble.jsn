@@ -1,6 +1,7 @@
 { 
   "exp_order"         : [6, 6, 6],
   "exp_order_type"    : "constant",
+  "qdealias_order"    : [10, 10, 10],
   "grid_type"         : "grid_box",
   "pde_name"          : "pde_mconv",
   "initstate_block"   : "initstate_boxdrybubble",
@@ -51,7 +52,7 @@
     "forcing_comp"    : [],
     "T_surf"          : 300.0,
     "P0"              : 1000.0,
-    "filter_list"     : ["boyd_filter"],
+    "filter_list"     : [],
     "boyd_filter" : {
       "filter_type" : "boyd_filter",
       "strength"    : [1e-3, 1e-3, 1e-3],
