@@ -2465,7 +2465,7 @@ void GGrid<Types>::dealias(StateComp &v1, StateComp &v2, StateComp &prod)
     ibeg  = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
     iqbeg = e*qdN_[0]; iqend = iqbeg + qdN_[0] - 1;
     // Restrict global data to local scope:
-    prod.range   (ibeg,iend); 
+    prod.range       (ibeg,iend); 
     qdtmp_[0].range(iqbeg,iqend); 
 #if defined(_G_IS2D)
     GMTK::D2_X_D1<Ftype>(IQPdealiasT_[0], IQPdealias_[1], qdtmp_[0], tptmp_, prod);
