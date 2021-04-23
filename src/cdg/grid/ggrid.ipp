@@ -2399,8 +2399,6 @@ void GGrid<Types>::init_qdealias()
     iWp_[j] = (*pjac)[j] * (*pimass)[j]; // 1/p-Weights
   }
 
-cout << "qW=" << qW_ << endl;
-cout << "ipW=" << iWp_ << endl;
   // Allocate quadratic dealising tmp space:
   qdtmp_.resize(2);
   for ( auto j=0; j<qdtmp_.size(); j++ ) qdtmp_[j].resize(qW_.size());
