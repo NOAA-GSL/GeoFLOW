@@ -48,7 +48,7 @@ GDivOp<TypePack>::~GDivOp()
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : apply (1)
-// DESC   : Compute application of this operator to scalar
+// DESC   : Compute application of this now nonlinear operator to scalar
 //          field:
 //            div = Div (d \vec{v})
 //          Remember, normally, this discretization would be multiplied by
@@ -85,7 +85,7 @@ void GDivOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp &div
     //     + bdy terms:
     div  = 0.0;
     for ( auto j=0; j<nxy; j++ ) { 
-       d.pointProd(*u[j], *utmp[1]);
+       grid_->dealias(d, *u[j], *utmp[1]);
        grid_->wderiv(*utmp[1], j+1, TRUE, *utmp[0], *utmp[2]);
 #if defined(GEOFLOW_USE_NEUMANN_HACK)
 if ( ivec == -1 || ivec == 2 ) {
@@ -112,7 +112,8 @@ GMTK::zero<Ftype>(*utmp[2],(*igb)[2][GBDY_0FLUX]);
 
     // Do collocation form:
     // div = MJ d/dx_j ( d u_j ):
-    d.pointProd(*u[0], *utmp[1]);
+//  d.pointProd(*u[0], *utmp[1]);
+    grid_->dealias(d, *u[0], *utmp[1]);
     grid_->deriv(*utmp[1], 1, *utmp[0], div);
 #if defined(GEOFLOW_USE_NEUMANN_HACK)
 if ( ivec == -1 || ivec == 2 ) {
@@ -121,7 +122,7 @@ GMTK::zero<Ftype>(div,(*igb)[3][GBDY_0FLUX]);
 }
 #endif
     for ( auto j=1; j<nxy; j++ ) { 
-       d.pointProd(*u[j], *utmp[1]);
+       grid_->dealias(d, *u[j], *utmp[1]);
        grid_->deriv(*utmp[1], j+1, *utmp[0], *utmp[2]);
 #if defined(GEOFLOW_USE_NEUMANN_HACK)
 if ( ivec == -1 || ivec == 1 ) {
