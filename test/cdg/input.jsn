@@ -52,7 +52,7 @@
     "forcing_comp"    : [],
     "T_surf"          : 300.0,
     "P0"              : 1000.0,
-    "filter_list"     : ["boyd_filter"],
+    "filter_list"     : ["proj_filter"],
     "boyd_filter" : {
       "filter_type" : "boyd_filter",
       "strength"    : [1e-3, 1e-3, 1e-3],
@@ -61,7 +61,7 @@
     },
     "proj_filter" : {
       "filter_type" : "projection_filter",
-      "strength"    : [0.9 , 0.9, 0.9],
+      "strength"    : [0.05 , 0.05, 0.05],
       "pdelta"      : [2, 2, 2],
       "istate"      : [0, 1, 2, 3]
     }
