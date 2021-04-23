@@ -2412,22 +2412,18 @@ void GGrid<Types>::init_qdealias()
 // DESC   : Do dealiasing for quadratic nonlinearity, v1 * v2
 // ARGS   : v1      : first variable in product
 //          v2      : second vairable in product
-//          qfactor : factor by which to multiply current (constant)
-//                    directional expansion orders
-//          qtmp    : tmp array pack; each component is number of elements
-//                    X qfactor^d X Prod_i=1^d (p_i+1), d is problem 
-//                    dimensionality, and p_i are the expansion orders
-//                    in each direction
 //          prod    : dealiased product of v1 * v2
 // RETURNS: none.
 //**********************************************************************************
 template<typename Types>
-void GGrid<Types>::dealias(StateComp &v1, StateComp &v2, GFLOAT qfactor,
-                           State &qtmp, StateComp &prod)
+void GGrid<Types>::dealias(StateComp &v1, StateComp &v2, StateComp &prod)
 {
 	GEOFLOW_TRACE();
 
-  if ( !doQDealias_ ) return; // nothing to do
+  if ( !doQDealias_ ) {  // multiply w/o dealiasing
+    prod = v1; prod.pointProd(v2);
+    return;
+  }
 
   if ( !bInitQDealias_ ) init_qdealias();
 

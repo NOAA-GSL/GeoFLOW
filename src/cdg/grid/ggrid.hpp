@@ -141,8 +141,8 @@ virtual void                 print(const GString &filename){}          // print 
         GTVector<GSIZET>    &itype(GElemType i) { return itype_[i]; } // indices for type i    
         GElemType            gtype() { return gtype_; }               // get unique elem type on grid       
         GBOOL                ispconst();                              // is order constant?
-        void                 dealias(StateComp &v1, StateComp &v2, GFLOAT qfactor,
-                                     State &qtmp, StateComp &prod);   // dealias for quadratic nonlinearity
+        void                 dealias(StateComp &v1, StateComp &v2, 
+                                     StateComp &prod);                // dealias for quadratic nonlinearity
         void                 deriv(GTVector<Ftype> &u, GINT idir, GTVector<Ftype> &tmp,
                                    GTVector<Ftype> &du );             // derivative of global vector
         void                 deriv(GTVector<Ftype> &u, GINT idir, GBOOL dotrans, GTVector<Ftype> &tmp,
