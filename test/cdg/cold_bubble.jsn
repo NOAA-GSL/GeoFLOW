@@ -1,7 +1,7 @@
 { 
   "exp_order"         : [6, 6, 6],
   "exp_order_type"    : "constant",
-  "qdealias_order"    : [10, 10, 10],
+  "qdealias_order"    : [7, 7, 7],
   "grid_type"         : "grid_box",
   "pde_name"          : "pde_mconv",
   "initstate_block"   : "initstate_boxdrybubble",
@@ -52,7 +52,7 @@
     "forcing_comp"    : [],
     "T_surf"          : 300.0,
     "P0"              : 1000.0,
-    "filter_list"     : [],
+    "filter_list"     : ["proj_filter"],
     "boyd_filter" : {
       "filter_type" : "boyd_filter",
       "strength"    : [1e-3, 1e-3, 1e-3],
@@ -61,7 +61,7 @@
     },
     "proj_filter" : {
       "filter_type" : "projection_filter",
-      "strength"    : [0.9 , 0.9, 0.9],
+      "strength"    : [0.05 , 0.05, 0.05],
       "pdelta"      : [2, 2, 2],
       "istate"      : [0, 1, 2, 3]
     }
@@ -145,7 +145,7 @@
     "observer_name"      : "gio_observer",
     "idir"               : "outs",
     "odir"               : "outs",
-    "cadence_type"       : "time",
+    "cadence_type"       : "cycle",
     "cycle_interval"     : 1,
     "time_interval"      : 5.0,
     "state_names"        : ["s1", "s2", "e", "d"],
@@ -163,7 +163,7 @@
     "treat_as_1d"        : false
   },
   "time_integration": {
-    "integ_type" : "time",
+    "integ_type" : "cycle",
     "time_end"   : 900.5,
     "cycle_end"  : 10,
     "dt"         : 1.0e-2
