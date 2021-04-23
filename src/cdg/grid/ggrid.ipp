@@ -2363,7 +2363,7 @@ void GGrid<Types>::init_qdealias()
   qdN_[0] = (pqdealias_[0]+1)*(pqdealias_[1]+1); // # nodes 
   qW_.resize(nelems*qdN_[0]);
   for ( auto e=0; e<gelems_.size(); e++ ) {
-    istart = e * pqdealias_[0]*pqdealias_[1];
+    istart = e * qdN_[0];
     n = 0;
     for ( auto j=0; j<pqdealias_[1]; j++ ) {
       for ( auto i=0; i<pqdealias_[0]; i++ ) {
@@ -2376,7 +2376,7 @@ void GGrid<Types>::init_qdealias()
   qdN_[0] = (pqdealias_[0]+1)*(pqdealias_[1]+1)*(pqdealias_[2]+1); // # nodes
   qW_.resize(nelems*qdN_[0]);
   for ( auto e=0; e<gelems_.size(); e++ ) {
-    istart = e * pqdealias_[0]*pqdealias_[1]*pqdealias_[2];
+    istart = e * qdN_[0];
     n = 0;
     for ( auto k=0; k<pqdealias_[2]; k++ ) {
       for ( auto j=0; j<pqdealias_[1]; j++ ) {
@@ -2399,6 +2399,8 @@ void GGrid<Types>::init_qdealias()
     iWp_[j] = (*pjac)[j] * (*pimass)[j]; // 1/p-Weights
   }
 
+cout << "qW=" << qW_ << endl;
+cout << "ipW=" << iWp_ << endl;
   // Allocate quadratic dealising tmp space:
   qdtmp_.resize(2);
   for ( auto j=0; j<qdtmp_.size(); j++ ) qdtmp_[j].resize(qW_.size());
