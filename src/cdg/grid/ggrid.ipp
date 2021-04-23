@@ -2358,8 +2358,8 @@ void GGrid<Types>::init_qdealias()
   qdN_.resize(1);
   // Compute dealias tensor prod weight matrix (diagnonal:
 #if defined(_G_IS2D)
-  qW_.resize(nelems*pqdealias_[0]*pqdealias_[1]);
-  qdN_[0] = pqdealias_[0]*pqdealias_[1];
+  qdN_[0] = (pqdealias_[0]+1)*(pqdealias_[1]+1); // # nodes 
+  qW_.resize(nelems*qdN_[0]);
   for ( auto e=0; e<gelems_.size(); e++ ) {
     istart = e * pqdealias_[0]*pqdealias_[1];
     n = 0;
@@ -2371,8 +2371,8 @@ void GGrid<Types>::init_qdealias()
     }
   }
 #elif defined(_G_IS3D)
-  qW_.resize(nelems*pqdealias_[0]*pqdealias_[1]*pqdealias_[2]);
-  qdN_[0] = pqdealias_[0]*pqdealias_[1]*pqdealias_[2];
+  qdN_[0] = (pqdealias_[0]+1)*(pqdealias_[1]+1)*(pqdealias_[2]+1); // # nodes
+  qW_.resize(nelems*qdN_[0]);
   for ( auto e=0; e<gelems_.size(); e++ ) {
     istart = e * pqdealias_[0]*pqdealias_[1]*pqdealias_[2];
     n = 0;
