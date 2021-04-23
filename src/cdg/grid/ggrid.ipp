@@ -61,8 +61,7 @@ bdy_apply_callback_           (NULLPTR)
   
   
   doQDealias_ = ptree.getValue<GBOOL>("do_dealiasing");
-  assert( doQDealias_ && ptree.keyExists("qdealias_order") );
-  if ( ptree.keyExists("qdealias_order") ) {
+  if ( doQDealias_ &&  ptree.keyExists("qdealias_order") ) {
      pqdealias_      = ptree.getArray<GINT>("qdealias_order");
      assert( pqdealias_.size() >= GDIM );
   }
@@ -2331,7 +2330,7 @@ void GGrid<Types>::init_qdealias()
     assert( FALSE ); 
   }
 
-  GSIZET                       istart, n;
+  GSIZET                       n;
   GSIZET                       nelems = gelems_.size();
   GTVector<GINT>               N(GDIM);
   GTVector<Ftype>              qxi; 
@@ -2346,7 +2345,7 @@ void GGrid<Types>::init_qdealias()
   for ( auto k=0; k<GDIM; k++ ) {
     W[k] = gelems_[0]->gbasis(k)->getWeights();
     N[k] = gelems_[0]->size(k);
-    assert( pqdealias_[k] >= N[k] );
+    assert( pqdealias_[k] >= N[k]-1 );
     dbasis[k].resize(pqdealias_[k]);
     dbasis[k].getXiNodes(qxi);
     qW1d       [k] = dbasis[k].getWeights();
@@ -2362,12 +2361,10 @@ void GGrid<Types>::init_qdealias()
 #if defined(_G_IS2D)
   qdN_[0] = (pqdealias_[0]+1)*(pqdealias_[1]+1); // # nodes 
   qW_.resize(nelems*qdN_[0]);
-  for ( auto e=0; e<gelems_.size(); e++ ) {
-    istart = e * qdN_[0];
-    n = 0;
-    for ( auto j=0; j<pqdealias_[1]; j++ ) {
-      for ( auto i=0; i<pqdealias_[0]; i++ ) {
-        qW_[istart+n] = (*qW1d[0])[i] * (*qW1d[1])[j];
+  for ( auto e=0, n=0; e<gelems_.size(); e++ ) {
+    for ( auto j=0; j<pqdealias_[1]+1; j++ ) {
+      for ( auto i=0; i<pqdealias_[0]+1; i++ ) {
+        qW_[n] = (*qW1d[0])[i] * (*qW1d[1])[j];
         n++;
       }
     }
@@ -2375,13 +2372,11 @@ void GGrid<Types>::init_qdealias()
 #elif defined(_G_IS3D)
   qdN_[0] = (pqdealias_[0]+1)*(pqdealias_[1]+1)*(pqdealias_[2]+1); // # nodes
   qW_.resize(nelems*qdN_[0]);
-  for ( auto e=0; e<gelems_.size(); e++ ) {
-    istart = e * qdN_[0];
-    n = 0;
-    for ( auto k=0; k<pqdealias_[2]; k++ ) {
-      for ( auto j=0; j<pqdealias_[1]; j++ ) {
-        for ( auto i=0; i<pqdealias_[0]; i++ ) {
-          qW_[istart+n] = (*qW1d[0])[i] * (*qW1d[1])[j] (*qW1d[2])[k];
+  for ( auto e=0, n=0; e<gelems_.size(); e++ ) {
+    for ( auto k=0; k<pqdealias_[2]+1; k++ ) {
+      for ( auto j=0; j<pqdealias_[1]+1; j++ ) {
+        for ( auto i=0; i<pqdealias_[0]+1; i++ ) {
+          qW_[n] = (*qW1d[0])[i] * (*qW1d[1])[j] (*qW1d[2])[k];
           n++;
         }
       }
@@ -2434,7 +2429,6 @@ void GGrid<Types>::dealias(StateComp &v1, StateComp &v2, StateComp &prod)
     assert( FALSE ); 
   }
 
-  GSIZET istart, n;
   GSIZET ibeg, iend, iqbeg, iqend;
   
   // First, compute IQPdealias * (v1, v2):
@@ -2448,8 +2442,8 @@ void GGrid<Types>::dealias(StateComp &v1, StateComp &v2, StateComp &prod)
     GMTK::D2_X_D1<Ftype>(IQPdealias_[0], IQPdealiasT_[1], v1, tptmp_, qdtmp_[0]);
     GMTK::D2_X_D1<Ftype>(IQPdealias_[0], IQPdealiasT_[1], v2, tptmp_, qdtmp_[1]);
 #elif defined(_G_IS3D)
-    GMTK::D3_X_D2_X_D1<Ftype>(IQPdealias_[0], IQPdealiasT_[1], IQPdealiasT_[2],  v1, tmp_, qdtmp_[0]);
-    GMTK::D3_X_D2_X_D1<Ftype>(IQPdealias_[0], IQPdealiasT_[1], IQPdealiasT_[2],  v2, tmp_, qdtmp_[1]);
+    GMTK::D3_X_D2_X_D1<Ftype>(IQPdealias_[0], IQPdealiasT_[1], IQPdealiasT_[2], v1, tmp_, qdtmp_[0]);
+    GMTK::D3_X_D2_X_D1<Ftype>(IQPdealias_[0], IQPdealiasT_[1], IQPdealiasT_[2], v2, tmp_, qdtmp_[1]);
 #endif
   } // end, element loop
   v1.range_reset(); v2.range_reset();
@@ -2481,7 +2475,5 @@ void GGrid<Types>::dealias(StateComp &v1, StateComp &v2, StateComp &prod)
   prod.pointProd(iWp_); // apply pW^-1
 
 } // end of method dealias
-
-
 
 
