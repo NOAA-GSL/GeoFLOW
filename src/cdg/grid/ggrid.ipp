@@ -2348,7 +2348,7 @@ void GGrid<Types>::init_qdealias()
     assert( pqdealias_[k] >= N[k]-1 );
     dbasis[k].resize(pqdealias_[k]);
     dbasis[k].getXiNodes(qxi);
-    qW1d       [k] = dbasis[k].getWeights();
+    qW1d        [k] = dbasis[k].getWeights();
     IQPdealias_ [k].resize(pqdealias_[k]+1, N[k]);
     IQPdealiasT_[k].resize(N[k],pqdealias_[k]+1);
     gelems_[0]->gbasis(k)->evalBasis(qxi,IQPdealias_[k]);
@@ -2391,7 +2391,7 @@ void GGrid<Types>::init_qdealias()
   StateComp *pimass =  this->imassop().data();
   iWp_.resize(pimass->size());
   for ( auto j=0; j<pimass->size(); j++ ) {
-    iWp_[j] = (*pjac)[j] * (*pimass)[j]; // 1/p-Weights
+    iWp_[j] = (*pjac)[j] * (*pimass)[j]; // 1/p-Weights: divide out Jac
   }
 
   // Allocate quadratic dealising tmp space:
@@ -2466,7 +2466,7 @@ void GGrid<Types>::dealias(StateComp &v1, StateComp &v2, StateComp &prod)
 #if defined(_G_IS2D)
     GMTK::D2_X_D1<Ftype>(IQPdealiasT_[0], IQPdealias_[1], qdtmp_[0], tptmp_, prod);
 #elif defined(_G_IS3D)
-    GMTK::D3_X_D2_X_D1<Ftype>(IQPdealiasT_[0], IQPdealias_[1], IQPdealias_[2],  qdtmp_[0], tmp_, prod);
+    GMTK::D3_X_D2_X_D1<Ftype>(IQPdealiasT_[0], IQPdealias_[1], IQPdealias_[2], qdtmp_[0], tmp_, prod);
 #endif
   } // end, element loop
   prod.range_reset();
