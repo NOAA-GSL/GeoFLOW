@@ -645,7 +645,7 @@ template<typename Types>
 GBOOL ginitstate<Types>::impl_boxdrywarmbubble(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
 {
 
-  GString             serr = "impl_boxdrybubble: ";
+  GString             serr = "impl_boxdrywarmbubble: ";
   GSIZET              nxy;
   GFTYPE              x, y, z, r;
   GFTYPE              delT, dj, exnerb, exner, L;
@@ -773,7 +773,7 @@ GBOOL ginitstate<Types>::impl_boxdrybubble(const PropertyTree &ptree, GString &s
   GString             serr = "impl_boxdrybubble: ";
   GSIZET              nxy;
   GFTYPE              x, y, z, r;
-  GFTYPE              delT, dj, exnerb, exner, L;
+  GFTYPE              deld, delp, delT, dj, exnerb, exner, L;
   GFTYPE              P0, pj, thetab, T0, Tb, Ts;
   GTVector<GFTYPE>   *db, *d, *e, *pb, *T;
   std::vector<GFTYPE> xc, xr;  
@@ -849,16 +849,20 @@ GBOOL ginitstate<Types>::impl_boxdrybubble(const PropertyTree &ptree, GString &s
     (*pb)[j]  = P0*pow(Tb/Ts,CPD/RD);
     (*db) [j] = (*pb)[j] / ( RD * Tb ); // density base state
     pj        = (*pb)[j]; 
+    deld      = -pj*delT/(RD*Tb*Tb);
+    delp      = (*db)[j]*RD*delT + deld*RD*Tb;
     if ( traits.usebase ) { // There is a base-state
-      (*d) [j]  = pj / ( RD * (*T)[j]  ) - (*db)[j];  // fluctuation
+//    (*d) [j]  = pj / ( RD * (*T)[j]  ) - (*db)[j];  // fluctuation
+      (*d) [j]  = deld;  // fluctuation
       dj        = (*d)[j] + (*db)[j]; // total density
     }
     else {
-      (*d) [j]  = pj / ( RD * (*T)[j]  );
+//    (*d) [j]  = pj / ( RD * (*T)[j]  );
+      (*d) [j]  = (*db)[j] + deld;
       dj        = (*d)[j]; // total density
    }
-    (*e)[j]   = CVD * dj * ( (*T)[j] ); // e = Cv d T
-//  (*e)[j]   = CVD * pj / RD; // e = Cv * p / R
+//  (*e)[j]   = CVD * dj * ( (*T)[j] ); // e = Cv d T
+    (*e)[j]   = CVD * (pj + delp) / RD; // e = Cv * p / R
 
 
 //  (*T) [j]  = (Ts + delT)*exnerb; // T = (theta + dtheta)*exner
