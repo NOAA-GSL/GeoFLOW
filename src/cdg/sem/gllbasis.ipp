@@ -804,7 +804,11 @@ GBOOL GLLBasis<T,TE>::computeLegTransform(GINT ifilter)
         LegTransform_(i,j) = LegMatrix_(i,j);
       }
       else {
+#if 1
         LegTransform_(i,j) = LegMatrix_(i,j) - LegMatrix_(i,j-ifilter);
+#else
+        LegTransform_(i,j) = LegMatrix_(i,j);
+#endif
       }
     }
   }
