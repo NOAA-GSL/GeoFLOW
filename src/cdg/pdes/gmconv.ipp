@@ -300,9 +300,9 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
   gadvect_->apply(*p, v_, stmp, *tmp1);         // v.Grad p 
  *dudt[ENERGY] -= *tmp1;                        // -= v . Grad p
 
-#if 0
+#if 1
   gstressen_->apply(*rhoT, v_, stmp, *tmp1);    // [mu u_i s^{ij}],j
-  tmp1->pointProd(*mask);
+//tmp1->pointProd(*mask);
  *dudt[ENERGY] -= *tmp1;                        // -= [mu u^i s^{ij}],j
 #endif
 
@@ -354,15 +354,16 @@ GMTK::zero<Ftype>(*tmp1,(*igb)[2][GBDY_0FLUX]);
       tmp2->pointProd(*dd);
      *tmp2 *= *Mass;             
 #if 0 // defined(GEOFLOW_USE_NEUMANN_HACK)
-       tmp2->constProd(0.0, (*igb)[0][GBDY_0FLUX].data(),
-                            (*igb)[0][GBDY_0FLUX].size());
+tmp2->constProd(-1.0, (*igb)[0][GBDY_0FLUX].data(),
+                      (*igb)[0][GBDY_0FLUX].size());
 #endif
      *dudt[j] -= *tmp2;                               // -= rho' vec{g} M J
     }
 
     gstressen_->apply(*rhoT, v_, j+1, stmp, 
                                          *tmp1);      // [mu s^{ij}],j
-    tmp1->pointProd(*mask);
+//cout << "GMCONV::stress_mom: max=" << tmp1->max() << " min=" << tmp1->min() << endl;
+//  tmp1->pointProd(*mask);
    *dudt[j] -= *tmp1;                                 //  -= [mu s^{ij}],j
 
   } // end, momentum loop
@@ -1607,6 +1608,7 @@ GINT GMConv<TypePack>::szrhstmp()
   sum += maxop;
   sum += 6;              // size for misc tmp space in dudt_impl
 
+
   return sum;
 
 } //end szrhstmp
@@ -1662,6 +1664,24 @@ void GMConv<TypePack>::compute_derived_impl(const State &u, GString sop,
    *utmp[0] = *u[DENSITY];
     if ( traits_.usebase ) *utmp[0] += *ubase_[0];       // total density
     geoflow::compute_temp<Ftype>(*u[ENERGY], *utmp[0], *utmp[1], *uout[0]);  // temperature
+    iuout.resize(1); iuout[0] = 0;
+  }
+  else if ( "cs"    == sop ) { // sound speed
+    assert(uout .size() >= 1   && "Incorrect no. output components");
+    assert(utmp .size() >= 4   && "Incorrect no. tmp components");
+    compute_cv(u, *utmp[0], *utmp[1]);                     // Cv
+   *utmp[2] = *u[DENSITY];
+    if ( traits_.usebase ) *utmp[2] += *ubase_[0];       // total density
+    geoflow::compute_temp<Ftype>(*u[ENERGY], *utmp[2], *utmp[1], *utmp[3]);  // temperature
+    compute_qd(u, *utmp[0]);
+    geoflow::compute_p<Ftype>(*utmp[3], *utmp[2], *utmp[0], RD, *uout[0]);
+    if ( !traits_.dodry ) {
+      geoflow::compute_p<Ftype>(*utmp[3], *utmp[2], *u[VAPOR], RV, *utmp[0]);
+     *uout[0] += *utmp[0];
+    }
+    utmp[2]->rpow(-1.0);
+    uout[0]->pointProd(*utmp[2]);
+    uout[0]->rpow(0.5);
     iuout.resize(1); iuout[0] = 0;
   }
   else if ( "press"    == sop ) { // pressure (total)
