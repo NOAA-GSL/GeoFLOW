@@ -1,8 +1,8 @@
 { 
   "exp_order"         : [6, 6, 6],
   "exp_order_type"    : "constant",
+  "do_dealiasing"     : false,
   "qdealias_order"    : [7, 7, 7],
-  "do_dealiasing"     : true,
   "grid_type"         : "grid_box",
   "pde_name"          : "pde_mconv",
   "initstate_block"   : "initstate_boxdrybubble",
