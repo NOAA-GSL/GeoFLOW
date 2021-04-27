@@ -53,7 +53,7 @@
     "forcing_comp"    : [],
     "T_surf"          : 300.0,
     "P0"              : 1000.0,
-    "filter_list"     : ["proj_filter"],
+    "filter_list"     : [],
     "boyd_filter" : {
       "filter_type" : "boyd_filter",
       "strength"    : [1e-3, 1e-3, 1e-3],
