@@ -103,7 +103,7 @@ GBOOL G0FluxBdy<Types>::update_impl(
     (*u[idd])[ind] = GET_NDTYPE(traits_.ibdydsc[iloc]) 
                   == GElem_base::VERTEX ? 0.0 :
                      // Ensure v.n = 0:
-                     (*u[idd])[ind] = -sum / xn;
+                     -sum / xn;
   }
 
 
