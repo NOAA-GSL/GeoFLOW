@@ -118,6 +118,10 @@
     "names"       : ["dtheta"],
     "mathop"      : "dptemp"
   },
+  "cs": {
+    "names"       : ["cs"],
+    "mathop"      : "cs"
+  },
   "dpress": {
     "names"       : ["dp"],
     "mathop"      : "dpress"
@@ -154,7 +158,7 @@
     "agg_state_name"     : "u",
     "agg_grid_name "     : "grid",
     "derived_quantities"       : [],
-    "state_derived_quantities" : ["temp","press","vel","ptemp","de","dpress","dptemp","den","dden"]
+    "state_derived_quantities" : ["temp","press","vel","cs","ptemp","de","dpress","dptemp","den","dden"]
   },
   "gmconv_diag": {
     "observer_name"      : "gmconv_diag",
