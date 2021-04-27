@@ -45,6 +45,7 @@ public:
           GTVector<GINT>   istate;   // state indices to operate on
           GTVector<GSIZET> ibdyvol;  // indir. inidices into comput volume
           GTVector<GSIZET> ibdyloc;  // inidices of ubdyvol in global bdy array, grid->igbdy
+          GTVector<GUINT>  ibdydsc;  // bdy descriptor
         };
 
         G0FluxBdy() = delete; 
