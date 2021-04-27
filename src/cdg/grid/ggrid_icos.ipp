@@ -1007,7 +1007,7 @@ void GGridIcos<Types>::config_gbdy(const geoflow::tbox::PropertyTree &ptree,
       k = 0;
       while ( GUpdateBdyFactory<Types>::get_bdy_block(ptree, sbdy, k, bcblock) ) {;
         bcblock.bdyid = j;
-        base_ptr = GUpdateBdyFactory<Types>::build(ptree, sbdy, *this, bcblock, itmp, igbdy_start);
+        base_ptr = GUpdateBdyFactory<Types>::build(ptree, sbdy, *this, bcblock, itmp, utmp, igbdy_start);
         igbdyft[j] = bcblock.tbdy;
         this->bdy_update_list_[j].push_back(base_ptr);
         k++;
