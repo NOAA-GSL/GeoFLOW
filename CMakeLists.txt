@@ -213,9 +213,16 @@ endforeach()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
-	add_compile_options("-Wno-unknown-pragmas")
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  # using Clang
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  # using GCC
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+   add_compile_options("-Wno-unknown-pragmas")
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+  # using Visual Studio C++
 endif()
+
 
 #---------------------------------------------------------------------
 # Check Platform Support
