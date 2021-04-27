@@ -23,7 +23,7 @@
 //**********************************************************************************
 template<typename Types>
 typename GUpdateBdyFactory<Types>::BdyBasePtr
-GUpdateBdyFactory<Types>::build(const PropertyTree& ptree, const GString &sbdy, Grid &grid, stBdyBlock &bcblock, GTVector<GSIZET> &ibdy, GSIZET igbdy_start)
+GUpdateBdyFactory<Types>::build(const PropertyTree& ptree, const GString &sbdy, Grid &grid, stBdyBlock &bcblock, GTVector<GSIZET> &ibdy, GTVector<GUINT> &dbdy, GSIZET igbdy_start)
 {
   GBOOL              bret = FALSE;
   BdyBasePtr         base_ptr;
@@ -46,7 +46,7 @@ GUpdateBdyFactory<Types>::build(const PropertyTree& ptree, const GString &sbdy, 
     assert(FALSE);
   }
 
-  base_ptr = GUpdateBdyFactory<Types>::get_bdy_class(ptree, grid, bcblock, ibdy, igbdy_start);
+  base_ptr = GUpdateBdyFactory<Types>::get_bdy_class(ptree, grid, bcblock, ibdy, dbdy, igbdy_start);
 
   return base_ptr;
 
@@ -105,6 +105,7 @@ GUpdateBdyFactory<Types>::get_inflow_callback(const GString& sname, const GINT i
 //          bcblock : stBdyBlock structure
 //          ibdy    : indirection indices into computational volume, 
 //                    representing the bdy nodes this method applies to
+//          dbdy    : bdy node descriptors
 //          igbdy_start:
 //                    where ibdy start in global bdy index list
 //                   
@@ -112,7 +113,7 @@ GUpdateBdyFactory<Types>::get_inflow_callback(const GString& sname, const GINT i
 //**********************************************************************************
 template<typename Types>
 typename GUpdateBdyFactory<Types>::BdyBasePtr
-GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree &ptree, Grid &grid, stBdyBlock &bcblock, GTVector<GSIZET> &ibdy, GSIZET igbdy_start)
+GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree &ptree, Grid &grid, stBdyBlock &bcblock, GTVector<GSIZET> &ibdy, GTVector<GUINT> &dbdy, GSIZET igbdy_start)
 {
   GINT               nstate;
   GBdyType           bdytype = bcblock.tbdy;
@@ -192,6 +193,7 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree &ptree, Grid &grid, s
     traits.bdyid       = bcblock.bdyid;
     traits.istate      = bcblock.istate;
     traits.ibdyvol     = ibdy;
+    traits.ibdydsc     = dbdy;
 
     traits.ibdyloc.resize(traits.ibdyvol.size());
     // Find index of ibdyvol in global bdy vector:

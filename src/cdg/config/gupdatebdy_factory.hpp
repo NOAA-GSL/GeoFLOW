@@ -69,9 +69,9 @@ class GUpdateBdyFactory
                                 State      &ub)>;
 
 
-	static BdyBasePtr build(const PropertyTree &ptree, const GString &sbdy, Grid &grid, stBdyBlock &bcblock, GTVector<GSIZET> &ibdy, GSIZET igbdy_start);
+	static BdyBasePtr build(const PropertyTree &ptree, const GString &sbdy, Grid &grid, stBdyBlock &bcblock, GTVector<GSIZET> &ibdy, GTVector<GUINT> &dbdy, GSIZET igbdy_start);
 
-	static BdyBasePtr  get_bdy_class (const PropertyTree& ptree, Grid &grid, stBdyBlock &bcblock,  GTVector<GSIZET> &ibdy, GSIZET igbdy_start);
+	static BdyBasePtr  get_bdy_class (const PropertyTree& ptree, Grid &grid, stBdyBlock &bcblock,  GTVector<GSIZET> &ibdy, GTVector<GUINT> &dbdy, GSIZET igbdy_start);
 
         static GBOOL             get_bdy_block(const geoflow::tbox::PropertyTree &sptree, GString &sbdy, GINT ibc, stBdyBlock &stblock);
 
