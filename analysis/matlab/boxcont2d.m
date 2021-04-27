@@ -129,7 +129,7 @@ for itask = 0:ntasks-1
   end
 
 if 1
-   I = find(u > 450 & u < 496);
+   I = find(u > 0.95*umax & u <= umax);
    for j=1:numel(I)
      sprintf('(%f, %f); u=%f',x{1}(I(j)), x{2}(I(j)), u(I(j)) )
    end
