@@ -17,11 +17,14 @@
 #include <numeric>
 #include <ostream>
 
+#include "tbox/math.hpp"
+
 namespace tbox {
 namespace spatial {
 namespace bound {
 
 namespace detail {
+	using ::geoflow::tbox::math::ipow;
 
 /**
  * Constant to calculate the volume of a sphere in N dimensions
@@ -50,39 +53,39 @@ struct sphere_multipler<3> {
 };
 template<>
 struct sphere_multipler<4> {
-	static constexpr long double value = std::pow(M_PI,2)/2;
+	static constexpr long double value = ipow(M_PI,2)/2;
 };
 template<>
 struct sphere_multipler<5> {
-	static constexpr long double value = 8*std::pow(M_PI,2)/15;
+	static constexpr long double value = 8*ipow(M_PI,2)/15;
 };
 template<>
 struct sphere_multipler<6> {
-	static constexpr long double value = std::pow(M_PI,3)/6;
+	static constexpr long double value = ipow(M_PI,3)/6;
 };
 template<>
 struct sphere_multipler<7> {
-	static constexpr long double value = 16*std::pow(M_PI,3)/105;
+	static constexpr long double value = 16*ipow(M_PI,3)/105;
 };
 template<>
 struct sphere_multipler<8> {
-	static constexpr long double value = std::pow(M_PI,4)/24;
+	static constexpr long double value = ipow(M_PI,4)/24;
 };
 template<>
 struct sphere_multipler<9> {
-	static constexpr long double value = 32*std::pow(M_PI,4)/945;
+	static constexpr long double value = 32*ipow(M_PI,4)/945;
 };
 template<>
 struct sphere_multipler<10> {
-	static constexpr long double value = std::pow(M_PI,5)/120;
+	static constexpr long double value = ipow(M_PI,5)/120;
 };
 template<>
 struct sphere_multipler<11> {
-	static constexpr long double value = 64*std::pow(M_PI,5)/10395;
+	static constexpr long double value = 64*ipow(M_PI,5)/10395;
 };
 template<>
 struct sphere_multipler<12> {
-	static constexpr long double value = std::pow(M_PI,6)/720;
+	static constexpr long double value = ipow(M_PI,6)/720;
 };
 
 
