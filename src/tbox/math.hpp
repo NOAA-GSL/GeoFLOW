@@ -4,6 +4,8 @@
  *  Created on: April 27, 2021
  *      Author: bflynt
  */
+#pragma once
+
 namespace geoflow {
 namespace tbox {
 namespace math {
