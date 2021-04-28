@@ -95,15 +95,18 @@ GBOOL G0FluxBdy<Types>::update_impl(
     xn   = (*bdyNormals)[idd][iloc];// n_idd == normal component for dependent vector comp
     sum  = 0.0;
     for ( auto k=0; k<traits_.istate.size(); k++ ) { // for each indep vector component
-      if ( k != idd ) {
-        sum += (*bdyNormals)[k][iloc] * (*u[traits_.istate[k]])[ind];
+        sum += traits_.istate[k] != idd 
+             ? (*bdyNormals)[k][iloc] * (*u[traits_.istate[k]])[ind]
+             : 0.0;
+    }
+    (*u[idd])[ind] = -sum / xn; // Ensure v.n = 0:
+   
+    if ( GET_NDTYPE(traits_.ibdydsc[iloc]) == GElem_base::VERTEX ) {
+      for ( auto k=0; k<traits_.istate.size(); k++ ) { 
+        (*u[traits_.istate[k]])[ind] = 0.0;
       }
     }
-    
-    (*u[idd])[ind] = GET_NDTYPE(traits_.ibdydsc[iloc]) 
-                  == GElem_base::VERTEX ? 0.0 :
-                     // Ensure v.n = 0:
-                     -sum / xn;
+
   }
 
 
