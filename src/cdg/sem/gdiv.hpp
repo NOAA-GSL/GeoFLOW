@@ -27,17 +27,17 @@ template<typename TypePack>
 class GDivOp
 {
 public:
-        using Interface  = EquationBase<TypePack>;
-        using State      = typename Interface::State;
-        using StateComp  = typename Interface::StateComp;
-        using Grid       = typename Interface::Grid;
-        using Mass       = typename Interface::Mass;
-        using Ftype      = typename Interface::Ftype;
-        using Derivative = typename Interface::Derivative;
-        using Time       = typename Interface::Time;
-        using CompDesc   = typename Interface::CompDesc;
-        using Jacobian   = typename Interface::Jacobian;
-        using Size       = typename Interface::Size;
+        using Types      = EquationBase<TypePack>;
+        using State      = typename Types::State;
+        using StateComp  = typename Types::StateComp;
+        using Grid       = typename Types::Grid;
+        using Mass       = typename Types::Mass;
+        using Ftype      = typename Types::Ftype;
+        using Derivative = typename Types::Derivative;
+        using Time       = typename Types::Time;
+        using CompDesc   = typename Types::CompDesc;
+        using Jacobian   = typename Types::Jacobian;
+        using Size       = typename Types::Size;
 
         static_assert(std::is_same<State,GTVector<GTVector<Ftype>*>>::value,
                "State is of incorrect type");
@@ -57,14 +57,15 @@ public:
                          ~GDivOp();
 
         void              apply(StateComp &d, State &u, State  &utmp, 
-                                StateComp &div, GINT ivec=-1);                       // stress op evaluation in idir
+                                StateComp &div, GINT ivec=-2);                       // stress op evaluation in idir
         void              apply(State &u, State  &utmp,  
-                                StateComp &div, GINT ivec=-1);                       // stress-energy op evaluation
+                                StateComp &div, GINT ivec=-2);                       // stress-energy op evaluation
 
 
 private:
         Traits                        traits_;    // traits structure
         Mass                         *massop_;    // mass matrix, required
+        GAdvect<Types>               *gadvect_;   // advection operator
         Grid                         *grid_;      // grid set on construction
 
 };
