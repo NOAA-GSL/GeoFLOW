@@ -53,7 +53,7 @@ public:
                          ~GAdvect();
 
         void              apply(StateComp  &p, const State &u, 
-                                State &utmp, StateComp &po);                       // Operator-field evaluation
+                                State &utmp, StateComp &po, GINT ivec=-2);                       // Operator-field evaluation
         void              init();                                            // must call after all 'sets'
 
 private:
