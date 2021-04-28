@@ -673,12 +673,12 @@ GMTK::zero<Ftype>(*utmp[1],(*igb)[0][GBDY_0FLUX]);
 GMTK::zero<Ftype>(*utmp[1],(*igb)[2][GBDY_0FLUX]);
 }
 #endif
-//  utmp[1]->pointProd(d);
+    utmp[1]->pointProd(d);
     utmp[1]->pointProd(*nu_);
     grid_->deriv(*utmp[1], j+1, *utmp[0], *utmp[2]);
     so += *utmp[2];
   }
-  so.pointProd(d);
+//so.pointProd(d);
 
 
 } // end of method mom_update_reduced
@@ -733,12 +733,12 @@ GMTK::zero<Ftype>(*utmp[2],(*igb)[2][GBDY_0FLUX]);
        *utmp[1] += *utmp[2];
     }
     // Point-multiply by eta before taking 'divergence':
-//  utmp[1]->pointProd(d);
+    utmp[1]->pointProd(d);
     utmp[1]->pointProd(*eta_);
     grid_->deriv(*utmp[1], j+1, *utmp[0], *utmp[2]);
     eo += *utmp[2];
   }
-  eo.pointProd(d);
+//eo.pointProd(d);
 
 } // end of method energy_update_reduced
 
