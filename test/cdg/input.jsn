@@ -1,8 +1,8 @@
 { 
-  "exp_order"         : [6, 6, 6],
+  "exp_order"         : [4, 4, 6],
   "exp_order_type"    : "constant",
   "do_dealiasing"     : false,
-  "qdealias_order"    : [7, 7, 7],
+  "qdealias_order"    : [6, 6, 8],
   "grid_type"         : "grid_box",
   "pde_name"          : "pde_mconv",
   "initstate_block"   : "initstate_boxdrybubble",
@@ -63,15 +63,15 @@
     "proj_filter" : {
       "filter_type" : "projection_filter",
       "strength"    : [0.05 , 0.05, 0.05],
-      "pdelta"      : [2, 2, 2],
+      "pdelta"      : [1, 1, 1],
       "istate"      : [0, 1, 2, 3]
     }
   },
   "grid_box": {
     "grid_name" : "grid_box",
-    "xyz0"      : [-25600, 0, 0],
-    "delxyz"    : [51200, 10000, 1.0],
-    "num_elems" : [256, 50, 1],
+    "xyz0"      : [0, 0, 0],
+    "delxyz"    : [25600, 10000, 1.0],
+    "num_elems" : [128, 25, 1],
     "bdy_x_0"   : "0-flux",
     "bdy_x_1"   : "0-flux",
     "bdy_y_0"   : "0-flux",
@@ -89,7 +89,7 @@
     "stab_preserving"  : false,
     "extrap_order"     : 2,
     "variable_dt"      : true,
-    "courant"          : 0.1
+    "courant"          : 0.02
   },
   "dissipation_traits": {
     "nu"      : 75.0,
@@ -152,7 +152,7 @@
     "odir"               : "outs",
     "cadence_type"       : "time",
     "cycle_interval"     : 1,
-    "time_interval"      : 0.1,
+    "time_interval"      : 5.0,
     "state_names"        : ["s1", "s2", "e", "d"],
     "grid_names"         : ["xgrid", "ygrid", "zgrid"],
     "agg_state_name"     : "u",
@@ -171,7 +171,7 @@
     "integ_type" : "time",
     "time_end"   : 900.5,
     "cycle_end"  : 10,
-    "dt"         : 1.0e-2
+    "dt"         : 1.25e-3
   }
 
 }
