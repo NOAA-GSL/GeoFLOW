@@ -120,6 +120,7 @@ for itask = 0:ntasks-1
   end
   [u dim nelems porder gtype icycle time mvar] = rgeoflow(fname, isz, 'ieee-le');
 
+
  umax = max(u);
  umin = min(u);
  
@@ -129,18 +130,20 @@ for itask = 0:ntasks-1
   end
 
 if 1
-   I = find(u > 0.95*umax & u <= umax);
+   aumax = max(abs(umax),abs(umin));
+   aumin = min(abs(umax),abs(umin));
+   I = find(abs(u) > 0.95*aumax & abs(u) <= aumax);
    for j=1:numel(I)
      sprintf('(%f, %f); u=%f',x{1}(I(j)), x{2}(I(j)), u(I(j)) )
    end
 end
 
   xorig = [x{1}(:) x{2}(:)];
-  [xd, II]  = unique(xorig,'rows');
+  [xd, IA, IC]  = unique(xorig,'rows');
   clear x ;
   [x z] = deal(xd(:,1), xd(:,2));
   clear xd xorig;
-  U = u(II);
+  U = u(IA);
   clear u;
 
   dx = diff(x);
