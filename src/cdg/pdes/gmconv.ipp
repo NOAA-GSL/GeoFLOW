@@ -256,12 +256,6 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
   GTVector<GTVector<Ftype>> *xnodes = &grid_->xNodes();
   Ftype tiny = 100.0*std::numeric_limits<Ftype>::epsilon();
 
-  // NOTE:
-  // Make sure that, in init(), Helmholtz op is using only
-  // weak Laplacian (q * mass term isn't being used), or there will 
-  // be problems. This is required for explicit schemes, for
-  // which this method is called.
-
   assert( !traits_.bconserved ); // don't allow conservative form yet
 
   assign_helpers(u, uf);
