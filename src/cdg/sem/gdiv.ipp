@@ -118,7 +118,7 @@ GMTK::zero<Ftype>(*utmp[2],(*igb)[2][GBDY_0FLUX]);
 //  d.pointProd(*u[0], *utmp[1]);
     grid_->dealias(d, *u[0], *utmp[1]);
     grid_->deriv(*utmp[1], 1, *utmp[0], div);
-#if defined(GEOFLOW_USE_NEUMANN_HACK)
+#if 0 // defined(GEOFLOW_USE_NEUMANN_HACK)
 if ( ivec == -1 || ivec == 2 ) {
 GMTK::zero<Ftype>(div,(*igb)[1][GBDY_0FLUX]);
 GMTK::zero<Ftype>(div,(*igb)[3][GBDY_0FLUX]);
@@ -127,7 +127,7 @@ GMTK::zero<Ftype>(div,(*igb)[3][GBDY_0FLUX]);
     for ( auto j=1; j<nxy; j++ ) { 
        grid_->dealias(d, *u[j], *utmp[1]);
        grid_->deriv(*utmp[1], j+1, *utmp[0], *utmp[2]);
-#if  defined(GEOFLOW_USE_NEUMANN_HACK)
+#if 0 //defined(GEOFLOW_USE_NEUMANN_HACK)
 if ( ivec == -1 || ivec == 1 ) {
 GMTK::zero<Ftype>(*utmp[2],(*igb)[0][GBDY_0FLUX]);
 GMTK::zero<Ftype>(*utmp[2],(*igb)[2][GBDY_0FLUX]);
@@ -147,8 +147,8 @@ GMTK::zero<Ftype>(*utmp[2],(*igb)[2][GBDY_0FLUX]);
        *utmp[2] += *utmp[1];
     }
     utmp[2]->pointProd(d);
+    utmp[2]->pointProd(*(massop_->data()));
     div += *utmp[2];
-    div.pointProd(*(massop_->data()));
 #endif
 
   }
