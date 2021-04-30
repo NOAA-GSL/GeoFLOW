@@ -18,6 +18,7 @@ template<typename TypePack>
 GMConv<TypePack>::GMConv(Grid &grid, GMConv<TypePack>::Traits &traits) :
 EquationBase<TypePack>(),
 bInit_                   (FALSE),
+binit_stag_              (FALSE),
 bforced_                 (FALSE),
 bsteptop_                (FALSE),
 bvterm_                  (FALSE),
@@ -288,6 +289,8 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
   compute_cv(u, *tmp1, *tmp2);                            // Cv
   compute_qd(u, *tmp1);                                   // dry mass ratio
   geoflow::compute_p<Ftype>(*e, *tmp1, RD, *tmp2, *p);    // partial pressure for dry air
+
+set_stagnation(*rhoT, v_, urhstmp_, *p, *e);
 
   GMTK::saxpby<Ftype>(*tmp1, *e, 1.0, *p, 1.0);     // h = p+e, enthalpy density
   gdiv_->apply(*tmp1, v_, stmp, *dudt[ENERGY], -1); // Div(h v) 
@@ -1813,3 +1816,80 @@ void GMConv<TypePack>::compute_derived_impl(const State &u, GString sop,
 
 } // end of method compute_derived_impl
 
+
+//**********************************************************************************
+//**********************************************************************************
+template<typename TypePack>
+void GMConv<TypePack>::set_stagnation(StateComp &d, State &v, State &utmp, StateComp &p, StateComp &e)
+{
+  GSIZET         istg, iups;
+  State          localtmp(1);
+  std::vector<GINT> iuout(1);
+  GTVector<GTVector<Ftype>> *xnodes = &grid_->xNodes();
+ 
+  localtmp[0] = utmp[utmp.size()-1];
+
+  if ( !binit_stag_ ) init_stagnation();
+
+  GMTK::domathop<Grid,Ftype>(*grid_, v, "vmag", localtmp, utmp, iuout);
+ *utmp[0] *= 0.5;  // 0.5 v^2
+
+  // From Bernoulli eqn:
+  //   1/2 rho v^2 + p + gz = cst, so
+  for ( auto j=0; j<istag_.size(); j++ ) {
+    istg = istag_[j];
+    iups = iupstream_[j];
+    p[istg] = ( d[iups]*(*utmp[0])[iups] 
+            +   d[iups]
+            +   GG*( (*xnodes)[1][iups] - (*xnodes)[1][istg] ) );
+      
+    e[istg] = CVD * p[istg] / RD;
+  }
+
+}
+
+
+//**********************************************************************************
+//**********************************************************************************
+template<typename TypePack>
+void GMConv<TypePack>::init_stagnation()
+{
+//  GSIZET istag_;
+//  GSIZET iupstream_;
+  GSIZET           istart, istg, iups;
+  GTPoint<Ftype>   xstag(3);
+  GTVector<GINT>   iuout(1);
+  GTVector<GSIZET> ielem;
+  GTVector<GSIZET> iloc;
+  GTVector<GElem_base*> *gelems=&grid_->elems();
+  GTVector<GSIZET> *igbdy=&grid_->igbdy();
+  GTVector<GTVector<Ftype>> *xnodes = &grid_->xNodes();
+  GTVector<GTVector<Ftype>> *normals= &grid_->bdyNormals();
+  Ftype      eps = 100.0*std::numeric_limits<Ftype>::epsilon();
+ 
+
+  xstag.x1 = 0.0;
+  xstag.x2 = 0.0;
+
+  // Find stagnation point index:
+  GSIZET ibeg, iend; // beg, end indices for global arrays
+  istart = 0;
+  for ( auto e=0; e<gelems->size(); e++ ) {
+    ibeg  = (*gelems)[e]->igbeg(); iend  = (*gelems)[e]->igend();
+    for ( auto j=0; j<xnodes->size(); j++ ) (*xnodes)[j].range(ibeg, iend);
+    for ( auto j=0; j<(*xnodes)[0].size(); j++ ) {
+      if ( FUZZYEQ(xstag.x1,(*xnodes)[0][j],eps) 
+        && FUZZYEQ(xstag.x2,(*xnodes)[1][j],eps) ) {
+        istg = j + istart;
+        iups = istg + (*gelems)[e]->size(0);
+        istag_.push_back(istg);
+        iupstream_.push_back(iups);
+//      ielem .push_back(e);  // set elem index
+      }
+    }
+    istart += (*gelems)[e]->nnodes();
+  }
+  for ( auto j=0; j<xnodes->size(); j++ ) (*xnodes)[j].range_reset();
+
+  binit_stag_ = TRUE;
+}

@@ -240,7 +240,14 @@ inline  void                assign_helpers(const State &u, const State &uf);
 inline  void                compute_pe   (StateComp &rhoT, State &qi, State &tvi, State &utmp, StateComp      &r);
         void                compute_base  (State &u);
 inline  GINT                szrhstmp();
+
+void init_stagnation();
+void set_stagnation(StateComp &d, State &v, State &utmp, StateComp &p, StateComp &e);
+GBOOL            binit_stag_;
+GTVector<GSIZET> istag_;
+GTVector<GSIZET> iupstream_;
  
+
 
         GBOOL               bInit_;         // object initialized?
         GBOOL               bforced_;       // use forcing vectors
