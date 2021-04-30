@@ -290,7 +290,7 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
   compute_qd(u, *tmp1);                                   // dry mass ratio
   geoflow::compute_p<Ftype>(*e, *tmp1, RD, *tmp2, *p);    // partial pressure for dry air
 
-set_stagnation(*rhoT, v_, urhstmp_, *p, *e);
+//set_stagnation(*rhoT, v_, urhstmp_, *p, *e);
 
   GMTK::saxpby<Ftype>(*tmp1, *e, 1.0, *p, 1.0);     // h = p+e, enthalpy density
   gdiv_->apply(*tmp1, v_, stmp, *dudt[ENERGY], -1); // Div(h v) 
