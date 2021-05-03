@@ -292,11 +292,19 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
 
 //set_stagnation(*rhoT, v_, urhstmp_, *p, *e);
 
-  GMTK::saxpby<Ftype>(*tmp1, *e, 1.0, *p, 1.0);     // h = p+e, enthalpy density
-  gdiv_->apply(*tmp1, v_, stmp, *dudt[ENERGY], -1); // Div(h v) 
+//GMTK::saxpby<Ftype>(*tmp1, *e, 1.0, *p, 1.0);     // h = p+e, enthalpy density
+//gdiv_->apply(*tmp1, v_, stmp, *dudt[ENERGY], -1); // Div(h v) 
+  gdiv_->apply(*e, v_, stmp, *dudt[ENERGY], -1);    // Div(e v) 
 
+#if 0
   gadvect_->apply(*p, v_, stmp, *tmp1, -1);     // v.Grad p 
  *dudt[ENERGY] -= *tmp1;                        // -= v . Grad p
+#else
+  GMTK::div(*grid_, v_, urhstmp_, *tmp1);
+  *tmp1 *= *p;                                  // p Div v
+  *tmp1 *= *Mass;                               // M Grad p' 
+ *dudt[ENERGY] += *tmp1;                        // += v . Grad p
+#endif
 
 #if 1
   gstressen_->apply(*rhoT, v_, stmp, *tmp1);    // [mu u_i s^{ij}],j
