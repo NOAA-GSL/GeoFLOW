@@ -294,7 +294,7 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
 
 //GMTK::saxpby<Ftype>(*tmp1, *e, 1.0, *p, 1.0);     // h = p+e, enthalpy density
 //gdiv_->apply(*tmp1, v_, stmp, *dudt[ENERGY], -1); // Div(h v) 
-  gdiv_->apply(*e, v_, stmp, *dudt[ENERGY], -1);    // Div(e v) 
+  gdiv_->apply(*e, v_, stmp, *dudt[ENERGY], -2);    // Div(e v) 
 
 #if 0
   gadvect_->apply(*p, v_, stmp, *tmp1, -1);     // v.Grad p 
@@ -317,7 +317,7 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
   // Total density RHS:
   // *************************************************************
 
-  gdiv_->apply(*rhoT, v_, stmp, *dudt[DENSITY], -1); 
+  gdiv_->apply(*rhoT, v_, stmp, *dudt[DENSITY], -2); 
 
 
   // *************************************************************
@@ -331,7 +331,7 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
   }
   for ( auto j=0; j<s_.size(); j++ ) { // for each component
 
-    gdiv_->apply(*s_[j], v_, stmp, *dudt[j], j+1 );
+    gdiv_->apply(*s_[j], v_, stmp, *dudt[j], -2); //j+1 );
 
     grid_->deriv(*p, j+1, *tmp2, *tmp1);              // Grad p'
 #if defined(GEOFLOW_USE_NEUMANN_HACK)
