@@ -2725,6 +2725,33 @@ void dot(GTVector<GTVector<T>*> &x, GTVector<GTVector<T>*> &y, GTVector<T> &tmp,
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD : div
+// DESC   : Compute divergence. This is the 'strong'divergence, so 
+//          mass matrrix is not included.
+//          
+// ARGS   : grid : grid
+//          u    : input vector field. 
+//          tmp  : tmp vector; must be of at least length 2.
+//          div  : result
+// RETURNS: none.
+//**********************************************************************************
+template<typename Grid, typename T>
+void div(Grid &grid, const GTVector<GTVector<T>*> &u, 
+         GTVector<GTVector<T>*> &tmp, GTVector<T> &div)
+{
+  GEOFLOW_TRACE();
+
+  grid.deriv(*u[0], 1, *tmp[0], div);
+  for ( auto j=1; j<u.size(); j++ ) {
+    grid.deriv(*u[j], j+1, *tmp[0], *tmp[0]);
+    div += *tmp[0];
+  }
+
+} // end of method div
+
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD : curl 
 // DESC   : Compute curl component, idir, of input vector field
 //          

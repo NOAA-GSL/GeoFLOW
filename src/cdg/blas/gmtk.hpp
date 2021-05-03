@@ -193,6 +193,10 @@ namespace GMTK
   void    D3_X_Dg2_X_Dg1     (GTVector<T> &Dg1, GTVector<T> &Dg2, GTMatrix<T> &D3T, GTVector<T> &x, GTVector<T> &tmp, GTVector<T> &y);
 
   template<typename Grid, typename T>
+  void    div(Grid &grid, const GTVector<GTVector<T>*> &u, 
+              GTVector<GTVector<T>*> &tmp, GTVector<T> &div);
+
+  template<typename Grid, typename T>
   void    grad(Grid &grid, GTVector<T> &u, const GINT idir, 
                GTVector<GTVector<T>*> &tmp, GTVector<T> &grad);
 
