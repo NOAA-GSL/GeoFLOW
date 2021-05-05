@@ -21,8 +21,9 @@
 #include <boost/serialization/utility.hpp>
 
 #include "tbox/assert.hpp"
-#include "tbox/spatial.hpp"
+#include "tbox/math.hpp"
 #include "tbox/pio.hpp"
+#include "tbox/spatial.hpp"
 #include "tbox/tracer.hpp"
 
 #include <array>
@@ -112,7 +113,7 @@ private:
 	using rank_type  = int;
 	using size_type  = std::size_t;
 	using value_type = ValueType;
-	static constexpr size_type MAX_DUPLICATES = std::pow(2,GDIM);
+	static constexpr size_type MAX_DUPLICATES = ::geoflow::tbox::math::ipow(2,GDIM);
 
 	std::map<rank_type, std::set<size_type>>                      send_map_; // [Rank][1:Nsend] = Local Index
 	std::map<rank_type, std::map<size_type, std::set<size_type>>> recv_map_; // [Rank][1:Nrecv][1:Nshare] = Local Index
