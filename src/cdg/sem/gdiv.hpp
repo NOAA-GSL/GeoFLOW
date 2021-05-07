@@ -16,29 +16,28 @@
 #define _GDIVOP_HPP
 #include "gtvector.hpp"
 #include "gnbasis.hpp"
-#include "ggrid.hpp"
 #include "gmass.hpp"
 #include "gtmatrix.hpp"
 #include "gmtk.hpp"
 #include "pdeint/equation_base.hpp"
 
-#define DO_BDY
+
 
 template<typename TypePack>
 class GDivOp
 {
 public:
-        using Interface  = EquationBase<TypePack>;
-        using State      = typename Interface::State;
-        using StateComp  = typename Interface::StateComp;
-        using Grid       = typename Interface::Grid;
-        using Mass       = typename Interface::Mass;
-        using Ftype      = typename Interface::Value;
-        using Derivative = typename Interface::Derivative;
-        using Time       = typename Interface::Time;
-        using CompDesc   = typename Interface::CompDesc;
-        using Jacobian   = typename Interface::Jacobian;
-        using Size       = typename Interface::Size;
+        using Types      = EquationBase<TypePack>;
+        using State      = typename Types::State;
+        using StateComp  = typename Types::StateComp;
+        using Grid       = typename Types::Grid;
+        using Mass       = typename Types::Mass;
+        using Ftype      = typename Types::Ftype;
+        using Derivative = typename Types::Derivative;
+        using Time       = typename Types::Time;
+        using CompDesc   = typename Types::CompDesc;
+        using Jacobian   = typename Types::Jacobian;
+        using Size       = typename Types::Size;
 
         static_assert(std::is_same<State,GTVector<GTVector<Ftype>*>>::value,
                "State is of incorrect type");
@@ -46,8 +45,6 @@ public:
                "StateComp is of incorrect type");
         static_assert(std::is_same<Derivative,GTVector<GTVector<Ftype>*>>::value,
                "Derivative is of incorrect type");
-        static_assert(std::is_same<Grid,GGrid>::value,
-               "Grid is of incorrect type");
 
         // MConv solver traits:
         struct Traits {
@@ -60,14 +57,15 @@ public:
                          ~GDivOp();
 
         void              apply(StateComp &d, State &u, State  &utmp, 
-                                StateComp &div);                             // stress op evaluation in idir
+                                StateComp &div, GINT ivec=-2);                       // stress op evaluation in idir
         void              apply(State &u, State  &utmp,  
-                                StateComp &div);                             // stress-energy op evaluation
+                                StateComp &div, GINT ivec=-2);                       // stress-energy op evaluation
 
 
 private:
         Traits                        traits_;    // traits structure
         Mass                         *massop_;    // mass matrix, required
+        GAdvect<Types>               *gadvect_;   // advection operator
         Grid                         *grid_;      // grid set on construction
 
 };

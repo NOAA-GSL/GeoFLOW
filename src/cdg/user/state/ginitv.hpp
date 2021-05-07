@@ -19,29 +19,41 @@
 using namespace geoflow;
 using namespace geoflow::tbox;
 
-typedef GFTYPE                      Time;
-typedef GTVector<GTVector<GFTYPE>*> State;
-typedef GStateInfo                  StateInfo;
 
 
-
-namespace ginitv
+template<typename TypePack>
+struct ginitv
 {
+        using Types      = TypePack;
+        using State      = typename Types::State;
+        using StateComp  = typename Types::StateComp;
+        using EqnBase    = EquationBase<Types>;
+        using EqnBasePtr = std::shared_ptr<EqnBase>;
+        using Grid       = typename Types::Grid;
+        using GridBox    = typename Types::GridBox;
+        using GridIcos   = typename Types::GridIcos;
+        using Time       = typename Types::Time;
+        using Ftype      = typename Types::Ftype;
 
-GBOOL impl_rand         (const PropertyTree &ptree, GString &sconfig, GGrid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &u);
 
-GBOOL impl_abc_box      (const PropertyTree &ptree, GString &sconfig, GGrid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &u);
 
-GBOOL impl_abc_icos     (const PropertyTree &ptree, GString &sconfig, GGrid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &u);
+static GBOOL impl_rand         (const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u);
 
-GBOOL impl_simpsum1d_box(const PropertyTree &ptree, GString &sconfig, GGrid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &u);
+static GBOOL impl_abc_box      (const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u);
 
-GBOOL impl_simpsum_box  (const PropertyTree &ptree, GString &sconfig, GGrid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &u);
+static GBOOL impl_abc_icos     (const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u);
 
-GBOOL impl_simpsum_icos (const PropertyTree &ptree, GString &sconfig, GGrid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &u);
+static GBOOL impl_simpsum1d_box(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u);
+
+static GBOOL impl_simpsum_box  (const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u);
+
+static GBOOL impl_simpsum_icos (const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u);
+
 
 };
 
+
+#include "ginitv.ipp"
 
 
 #endif

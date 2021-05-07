@@ -17,7 +17,6 @@
 #include <memory>
 #include <cmath>
 #include "gtvector.hpp"
-#include "ggrid.hpp"
 #include "ggfx.hpp"
 #include "ginitstate_factory.hpp"
 #include "pdeint/update_bdy_base.hpp"
@@ -33,16 +32,17 @@ class GInflowBdy : public UpdateBdyBase<TypePack>
 public:
         using Types      = TypePack;
         using Base       = UpdateBdyBase<Types>;
+        using EqnBase    = EquationBase<TypePack>;
+        using EqnBasePtr = std::shared_ptr<EqnBase>;
         using State      = typename Types::State;
         using Grid       = typename Types::Grid;
-        using Ftype      = typename Types::Value;
+        using GridBox    = typename Types::GridBox;
+        using GridIcos   = typename Types::GridIcos;
+        using Ftype      = typename Types::Ftype;
         using Time       = typename Types::Time;
-        using StateInfo  = typename Types::StateInfo;
 
         static_assert(std::is_same<State,GTVector<GTVector<Ftype>*>>::value,
                "State is of incorrect type");
-        static_assert(std::is_same<Grid,GGrid>::value,
-               "Grid is of incorrect type");
 
         // GInflowBdy solver traits:
         struct Traits {
@@ -51,9 +51,10 @@ public:
           GINT                   bdyid; // bdy id
           GTVector<GINT>        istate; // state indices to operate on
           GTVector<GSIZET>     ibdyvol; // indir. inidices into comput volume
+          GString              smethod; // init method if use_init==TRUE
 
-          std::function<GBOOL(Grid       &grid, 
-                              StateInfo  &stinfo,
+          std::function<GBOOL(EqnBasePtr &eqn,
+                              Grid       &grid, 
                               Time       &time,
                               const GINT  id,
                               State      &utmp,
@@ -71,34 +72,28 @@ public:
 
 protected:
         GBOOL               update_impl (
-                              Grid      &grid,
-                              StateInfo &stinfo,
-                              Time      &time,
-                              State     &utmp,
-                              State     &u,
-                              State     &ub);
+                              EqnBasePtr &eqn,
+                              Grid       &grid,
+                              Time       &time,
+                              State      &utmp,
+                              State      &u);
         
 private:
-        GBOOL               update_from_init (
-                              Grid      &grid,
-                              StateInfo &stinfo,
-                              Time      &time,
-                              State     &utmp,
-                              State     &u,
-                              State     &ub);
-        GBOOL               update_from_user (
-                              Grid      &grid,
-                              StateInfo &stinfo,
-                              Time      &time,
-                              State     &utmp,
-                              State     &u,
-                              State     &ub);
+        GBOOL               compute_bdy_data (
+                              EqnBasePtr &eqn,
+                              Grid       &grid,
+                              Time       &time,
+                              State      &utmp,
+                              State      &u,
+                              State      &ub);
 
 
         Traits              traits_;        // Traits structure
-        GBOOL               bcomputed_;     // tells us that operation was called
-        State               unew_;          // helper vector
-        State               tmpnew_;        // helper vector
+        GBOOL               bcomputed_;     // tells us that bdydata was computed
+        GBOOL               ballocated_;    // tells us that tmp data is alloc. 
+        State               bdydata_;       // bdy data arrays
+        State               utmp_;     
+        State               unew_;     
 
 };
 

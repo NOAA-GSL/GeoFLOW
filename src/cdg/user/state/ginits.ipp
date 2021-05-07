@@ -1,14 +1,12 @@
 //==================================================================================
-// Module       : ginitfps.hpp
+// Module       : ginits.cpp
 // Date         : 7/16/19 (DLR)
-// Description  : Passive scalar forcing inititial condition implementations 
+// Description  : Scalar inititial condition implementations 
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
-#include "ginitfps.hpp"
 
 
-namespace ginitfps {
 
 
 //**********************************************************************************
@@ -17,15 +15,15 @@ namespace ginitfps {
 // DESC   : Inititialize velocity with Gaussian-randomized values
 // ARGS   : ptree  : initial condition property tree
 //          sconfig: ptree block name containing variable config
+//          eqn    : equation implementation
 //          grid   : grid object
-//          stinfo : StateInfo
 //          time   : initialization time
 //          utmp   : tmp arrays
-//          ub     : boundary state (also initialized here)
-//          uf     : state to be initialized.
+//          u      : state to be initialized.
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_rand(const PropertyTree &ptree, GString &sconfig, GGrid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &uf)
+template<typename Types>
+GBOOL ginits<Types>::impl_rand(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
 {
 
   return FALSE;
@@ -33,4 +31,3 @@ GBOOL impl_rand(const PropertyTree &ptree, GString &sconfig, GGrid &grid, StateI
 } // end, method impl_rand
 
 
-} // end, ginitfps  namespace

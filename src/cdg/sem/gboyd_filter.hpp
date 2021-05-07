@@ -21,7 +21,6 @@
 #define _GBOYDFILTER_HPP
 #include "gtvector.hpp"
 #include "gnbasis.hpp"
-#include "ggrid.hpp"
 #include "gmass.hpp"
 #include "gtmatrix.hpp"
 #include "gmtk.hpp"
@@ -36,27 +35,20 @@ public:
         using State      = typename Interface::State;
         using StateComp  = typename Interface::StateComp;
         using Grid       = typename Interface::Grid;
-        using Mass       = typename Interface::Mass;
-        using Ftype      = typename Interface::Value;
-        using Derivative = typename Interface::Derivative;
+        using Ftype      = typename Interface::Ftype;
         using Time       = typename Interface::Time;
-        using CompDesc   = typename Interface::CompDesc;
-        using Jacobian   = typename Interface::Jacobian;
         using Size       = typename Interface::Size;
 
-        static_assert(std::is_same<State,GTVector<GTVector<Value>*>>::value,
+        static_assert(std::is_same<State,GTVector<GTVector<Ftype>*>>::value,
                "State is of incorrect type");
-        static_assert(std::is_same<StateComp,GTVector<Value>>::value,
+        static_assert(std::is_same<StateComp,GTVector<Ftype>>::value,
                "StateComp is of incorrect type");
-        static_assert(std::is_same<Derivative,GTVector<GTVector<Value>*>>::value,
-               "Derivative is of incorrect type");
-        static_assert(std::is_same<Grid,GGrid>::value,
-               "Grid is of incorrect type");
 
         // GBoydFilter traits:
         struct Traits {
-          int    ifilter;    // filter starting mode
-          double mufilter;   // filter trunc amount
+          std::vector<GINT>             istate ;    // state ids to filter
+          std::vector<GINT>             pdelta;     // starting mode to filter
+          std::vector<double>           strength;   // filter strength
         };
 
 
@@ -67,17 +59,18 @@ public:
 
 protected:
 
-        void              apply_impl(const Time &t, StateComp &u, State  &utmp, 
-                                StateComp &po);
-        void              apply_impl(const Time &t, StateComp &u, State  &utmp); 
+        void              apply_impl(const Time &t, State &u, State  &utmp, 
+                                State &po);
+        void              apply_impl(const Time &t, State &u, State  &utmp); 
 
 private:
         void              init();
 
         GBOOL                         bInit_;    // is filter initialized?
-        GINT                          ifilter_;  // filter mode
-        Ftype                         mufilter_; // truncation amount 
+        GTVector<Ftype>               tmp_;      // tensor prod tmp spacec
+
         GTMatrix<Ftype>               Lambda_;   // mode-weighting matrix
+        Traits                        traits_;
         Grid                         *grid_;     // grid set on construction
 
 

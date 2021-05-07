@@ -51,50 +51,61 @@ struct stStateInfo {
   GString     odir;              // output directory
 };
 
-template< // default template arg types
-typename StateType     = GTVector<GTVector<GFTYPE>*>,
-typename StateInfoType = stStateInfo,
-typename GridType      = GGrid,
-typename ValueType     = GFTYPE,
-typename DerivType     = StateType,
-typename TimeType      = ValueType,
-typename CompType      = GTVector<GStateCompType>,
-typename JacoType      = StateType,
-typename SizeType      = GSIZET 
->
-struct EquationTypes {
-        using State      = StateType;
-        using StateInfo  = StateInfoType;
-        using Grid       = GridType;
-        using Value      = ValueType;
-        using Derivative = DerivType;
-        using Time       = TimeType;
-        using CompDesc   = CompType;
-        using Jacobian   = JacoType;
-        using Size       = SizeType;
+struct TypePack {
+        using State      = GTVector<GTVector<GFTYPE>*>;
+        using StateComp  = GTVector<GFTYPE>;
+        using StateInfo  = GStateInfo;
+        using Grid       = GGrid<TypePack>;
+        using GridBox    = GGridBox<TypePack>;
+        using GridIcos   = GGridIcos<TypePack>;
+        using Mass       = GMass<TypePack>;
+        using Ftype      = GFTYPE;
+        using Derivative = State;
+        using Time       = Ftype;
+        using CompDesc   = GTVector<GStateCompType>;
+        using Jacobian   = State;
+        using Size       = GSIZET;
+        using EqnBase    = EquationBase<TypePack>;     // Equation Base type
+        using EqnBasePtr = std::shared_ptr<EqnBase>;   // Equation Base ptr
+        using IBdyVol    = GTVector<GSIZET>;
+        using TBdyVol    = GTVector<GBdyType>;
+        using Operator   = GHelmholtz<TypePack>;
+        using GElemList  = GTVector<GElem_base*>;
+        using Preconditioner = GHelmholtz<TypePack>;
+        using ConnectivityOp = GGFX<Ftype>;
+        using FilterBasePtr  = std::shared_ptr<FilterBase<TypePack>>;
+        using FilterList     = std::vector<FilterBasePtr>;
+
 };
-using MyTypes       = EquationTypes<>;           // Define types used
-using EqnBase       = EquationBase<MyTypes>;     // Equation Base type
-using EqnBasePtr    = std::shared_ptr<EqnBase>;  // Equation Base ptr
-using IOBaseType    = IOBase<MyTypes>;           // IO Base type
+using Types         = TypePack;                   // Define types used
+using EqnBase       = TypePack::EqnBase;          // Equation Base type
+using EqnBasePtr    = TypePack::EqnBasePtr;       // Equation Base ptr
+using IOBaseType    = IOBase<Types>;              // IO Base type
 using IOBasePtr     = std::shared_ptr<IOBaseType>;// IO Base ptr
-using Grid          = GGrid;
+using Grid          = TypePack::Grid;
+using Mass          = TypePack::Mass;
+using Ftype         = TypePack::Ftype;
+using Time          = TypePack::Time;
 
 
-GGrid       *grid_;
+Grid        *grid_;
 GC_COMM      comm_=GC_COMM_WORLD ;      // communicator
 
-void init_ggfx(PropertyTree &ptree, Grid &grid, GGFX<GFTYPE> &ggfx);
+GINT szMatCache_ = _G_MAT_CACHE_SIZE;
+GINT szVecCache_ = _G_VEC_CACHE_SIZE;
+
+
+void init_ggfx(PropertyTree &ptree, Grid &grid, GGFX<Ftype> &ggfx);
 
 
 int main(int argc, char **argv)
 {
     GString   serr ="main: ";
     GINT      errcode, gerrcode;
-    GFTYPE    err, radiusi;
+    Ftype     err, radiusi;
     IOBasePtr pIO;         // ptr to IOBase operator
 
-    typename ObserverBase<MyTypes>::Traits
+    typename ObserverBase<Types>::Traits
                    binobstraits;
 
     EH_MESSAGE("main: Starting...");
@@ -131,53 +142,53 @@ int main(int argc, char **argv)
 
     assert(sgrid == "grid_icos" && "Must use ICOS grid for now");
 
-    radiusi = gtree.getValue<GFTYPE>("radius",1.0);
+    radiusi = gtree.getValue<Ftype>("radius",1.0);
 
     // Create basis:
-    GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis(GDIM);
+    GTVector<GNBasis<GCTYPE,Ftype>*> gbasis(GDIM);
     for ( GSIZET k=0; k<GDIM; k++ ) {
-      gbasis [k] = new GLLBasis<GCTYPE,GFTYPE>(pstd[k]);
+      gbasis [k] = new GLLBasis<GCTYPE,Ftype>(pstd[k]);
     }
 
     EH_MESSAGE("main: Generate grid...");
 
-    ObserverFactory<MyTypes>::get_traits(ptree, "gio_observer", binobstraits);
-    grid_ = GGridFactory<MyTypes>::build(ptree, gbasis, pIO, binobstraits, comm_);
+    ObserverFactory<Types>::get_traits(ptree, "gio_observer", binobstraits);
+    grid_ = GGridFactory<Types>::build(ptree, gbasis, pIO, binobstraits, comm_);
 
     EH_MESSAGE("main: Initialize gather-scatter...");
 
     // Initialize gather/scatter operator:
-    GGFX<GFTYPE> ggfx;
+    GGFX<Ftype> ggfx;
     init_ggfx(ptree, *grid_, ggfx);
 
     // Test some of the coord transformation methods:
-    GFTYPE xlat, xlatc, xlong, xlongc;
-    GFTYPE eps = std::numeric_limits<GFTYPE>::epsilon();
+    Ftype xlat, xlatc, xlong, xlongc;
+    Ftype eps = std::numeric_limits<Ftype>::epsilon();
 
-    GTVector<GFTYPE> f(grid_->ndof());
-    GTVector<GFTYPE> g(grid_->ndof());
+    GTVector<Ftype> f(grid_->ndof());
+    GTVector<Ftype> g(grid_->ndof());
 
-    GTVector<GFTYPE> imult_ref(grid_->ndof());
-    GTVector<GFTYPE> *imult = &imult_ref;
+    GTVector<Ftype> imult_ref(grid_->ndof());
+    GTVector<Ftype> *imult = &imult_ref;
     ggfx.get_imult(imult_ref);
 
-//  GTVector<GFTYPE> *jac = &(grid_->Jac());
-    GTVector<GTVector<GFTYPE>*> utmp(1);
-    GMass massop(*grid_,FALSE);
+//  GTVector<Ftype> *jac = &(grid_->Jac());
+    GTVector<GTVector<Ftype>*> utmp(1);
+    Mass massop(*grid_,FALSE);
 
     f = 1.0;
 
     EH_MESSAGE("main: Compute integral...");
 
-    GFTYPE integral;
-    GFTYPE gintegral;
+    Ftype integral;
+    Ftype gintegral;
 
 #if 0
     massop.opVec_prod(f,utmp,g);
     std::cout << "main: mass_prod_sum=" << g.sum() << std::endl;
   
     integral = g.sum();
-    GComm::Allreduce(&integral, &gintegral, 1, T2GCDatatype<GFTYPE>() , GC_OP_SUM, comm_);
+    GComm::Allreduce(&integral, &gintegral, 1, T2GCDatatype<Ftype>() , GC_OP_SUM, comm_);
 #else
     gintegral = grid_->integrate(f, g);
 #endif
@@ -203,7 +214,7 @@ int main(int argc, char **argv)
     GComm::Allreduce(lsz.data(), gsz.data(), 2, T2GCDatatype<GSIZET>() , GC_OP_SUM, comm_);
 
 
-    GFTYPE aintegral;
+    Ftype aintegral;
     #if defined(_G_IS2D)
     aintegral = 4.0*PI*pow(radiusi,2.0);
     #elif defined(_G_IS3D)
@@ -259,10 +270,10 @@ int main(int argc, char **argv)
 //         grid    : Grid object
 //         ggfx    : gather/scatter op, GGFX
 //**********************************************************************************
-void init_ggfx(PropertyTree& ptree, GGrid& grid, GGFX<GFTYPE>& ggfx)
+void init_ggfx(PropertyTree& ptree, Grid& grid, GGFX<Ftype>& ggfx)
 {
   const auto ndof = grid_->ndof();
-  std::vector<std::array<GFTYPE,GDIM>> xyz(ndof);
+  std::vector<std::array<Ftype,GDIM>> xyz(ndof);
   for(std::size_t i = 0; i < ndof; i++){
 	  for(std::size_t d = 0; d < GDIM; d++){
 		  xyz[i][d] = grid.xNodes()[d][i];

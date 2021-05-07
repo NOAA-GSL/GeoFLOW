@@ -1,26 +1,8 @@
 //==================================================================================
 // Module       : gstress.hpp
 // Date         : 09/05/20 (DLR)
-// Description  : Represents the SEM discretization of the full viscous
-//                stress-energy operator. The effect of the viscous stress in the 
-//                momentum eqution is
-//                    F_i = [2  mu s_{ij}],j + (zeta Div u delta_{ij}),j,
-//                where
-//                    s_{ij} = (u_j,i + u_i,j)/2 - 1/2d Div u delta_{ij}, and
-//                d is the problem dimension. The viscous stress-energy for the 
-//                energy equation is
-//                    [2 kappa u_i s_{ij}],j - [lambda u_i Div u delta_{ij}],j
-//                where u_i is the velocity, and mu, the (shear) viscosity, zeta is
-//                the 'bulk' viscosity. Strictly speaking, kappa=mu, and lambda=zeta,
-//                but we allow these to be set independently for now. Repeated
-//                indices are summed here.  mu, zeta, kappa, lambda, may vary
-//                in space or be constant. Currently, the so-called Stokes 
-//                approximation is used by default s.t.
-//                      (zeta -  mu/d) = -2/3 mu, and
-//                      (lambda -  kappa/d ) = -2/3 kappa.
+// Description  : 
 //               
-//                For the energy, this operator is nonlinear, 
-//                so it should not derive from GLinOp. 
 //                      
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none
@@ -40,42 +22,38 @@ GStressEnOp<TypePack>::GStressEnOp(Traits &traits, Grid &grid)
 traits_               (traits),
 grid_                  (&grid),
 massop_       (&grid.massop()),
-mu_                  (NULLPTR),
+nu_                  (NULLPTR),
 zeta_                (NULLPTR),
-kappa_               (NULLPTR),
+eta_               (NULLPTR),
 lambda_              (NULLPTR)
 {
   assert(grid_->ntype().multiplicity(0) == GE_MAX-1 
         && "Only a single element type allowed on grid");
   
-  if ( traits_.indep_diss) {
-    assert(traits_.mu.size() > 0 && traits_.kappa.size()  > 0);
-    if  ( traits_.Stokes_hyp ) {
-      traits_.zeta.resize(traits_.mu.size());
-      traits_.lambda.resize(traits_.kappa.size());
-      traits_.zeta  = traits_.mu   ; traits_.zeta   *= -2.0/3.0;
-      traits_.lambda= traits_.kappa; traits_.lambda *= -2.0/3.0;
-    } else {
-      assert(traits_.zeta.size() > 0 && traits_.lambda.size()  > 0);
-      traits_.zeta   -= (traits_.mu * (1.0/GDIM));
-      traits_.lambda -= (traits_.kappa * (1.0/GDIM));
-    }
-    mu_     = &traits_.mu;
+  if  ( traits_.Stokes_hyp ) {
+    assert(traits_.nu.size() > 0);
+    traits_.zeta  .resize(traits_.nu.size());
+    traits_.zeta  = traits_.nu  ; traits_.zeta   *= -2.0/GDIM;
+    nu_     = &traits_.nu;
     zeta_   = &traits_.zeta;
-    kappa_  = &traits_.kappa;
+    eta_    = &traits_.nu;
+    lambda_ = &traits_.zeta;
+  }
+  else if ( traits_.indep_diss ) {// mom & en visocisities spec independently
+    assert(traits_.nu .size() > 0 && traits_.zeta  .size() > 0 );
+    assert(traits_.eta.size() > 0 && traits_.lambda.size() > 0 );
+    nu_     = &traits_.nu;
+    zeta_   = &traits_.zeta;
+    eta_    = &traits_.eta;
     lambda_ = &traits_.lambda;
-  } else { // kappa, lambda depend only on mu, zeta:
-    assert(traits_.mu.size() > 0 );
-    if  ( traits_.Stokes_hyp ) {
-      traits_.zeta.resize(traits_.mu.size());
-      traits_.zeta = traits_.mu; traits_.zeta *= -2.0/3.0;
-    } else {
-      assert(traits_.zeta.size() > 0 );
-      traits_.zeta   -= (traits_.mu * (1.0/GDIM));
-    }
-    mu_     = &traits_.mu;
+  } 
+  else { // energy coeffs same as for mom
+    assert(traits_.nu.size() > 0 && traits_.zeta.size() > 0 );
+    // From Eyink 2018 PRX 8:011022:
+    traits_.zeta -= traits_.nu * (1.0/static_cast<Ftype>(GDIM));    
+    nu_     = &traits_.nu;
     zeta_   = &traits_.zeta;
-    kappa_  = &traits_.mu;
+    eta_    = &traits_.nu;
     lambda_ = &traits_.zeta;
   }
 
@@ -99,31 +77,317 @@ GStressEnOp<TypePack>::~GStressEnOp()
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : apply (1)
-// DESC   : Compute application of this operator to input momentum vector:
+// DESC   : Compute application of this operator to input velocity vector:
 //            so_i = [ mu (u_j,i + u_i,j) ] + zeta Div u delta_ij],j
+//          or
+//            so_i = [ mu (u_j,i ],j
+//          where
+//            mu = d nu,
+//          and traits select the operator used.
+//           
 // ARGS   : d   : density
 //          u   : input vector field
 //          idir: which momentum component we're computing for
-//          utmp: array of tmp arrays
+//          utmp: array of tmp arrays. At least 3 required.
 //          so  : output (result) vector component, idir
 //             
 // RETURNS:  none
 //**********************************************************************************
 template<typename TypePack>
-void GStressEnOp<TypePack>::apply(StateComp &d, State &u, GINT idir, State &utmp, StateComp &so) 
+void GStressEnOp<TypePack>::apply(StateComp &d, State &u, GINT idir, State &utmp, StateComp &so)
+{
+
+  if      ( GSTRESS_FULL    == traits_.type ) {
+    if ( traits_.full_colloc )
+      mom_update_full_coll(d, u, idir, utmp, so);
+    else
+      mom_update_full_cons(d, u, idir, utmp, so);
+  }
+  else if ( GSTRESS_REDUCED == traits_.type ) {
+    mom_update_reduced(d, u, idir, utmp, so); // only a colloc method
+  }
+  else {
+    assert(FALSE);
+  }
+
+} // enbd, apply (1) (momementum)  
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : apply (2)
+// DESC   : Compute application of this operator to input energy:
+//            eo = [ eta  u_i (Del_i u_j + Del_j u_i)],j 
+//               + [ lambda u_i (Div u delta_ij) ],j 
+//            eta  = d eta; lambda = d zeta'
+//          or
+//            eo = [ eta  u_i ( Del_j u_i)],j 
+//            eta  = d eta; 
+//          and traits select the operator used.
+//
+// ARGS   : d   : density
+//          u   : input vector field
+//          utmp: array of tmp arrays. At least 4 required.
+//          eo  : output (result) vector component, idir
+//             
+// RETURNS:  none
+//**********************************************************************************
+template<typename TypePack>
+void GStressEnOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp &eo) 
+{
+
+  if      ( GSTRESS_FULL    == traits_.type ) {
+    if ( traits_.full_colloc )
+      energy_update_full_coll(d, u, utmp, eo);
+    else
+      energy_update_full_coll(d, u, utmp, eo);
+  }
+  else if ( GSTRESS_REDUCED == traits_.type ) {
+    energy_update_reduced(d, u, utmp, eo); // only a colloc version
+  }
+  else {
+    assert(FALSE);
+  }
+
+} // enbd, apply (2) (energy)  
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : mom_update_full_coll
+// DESC   : Compute application of this operator to input momentum vector:
+//            so_i = [ mu (u_j,i + u_i,j) ] + zeta Div u delta_ij],j
+//            mu = d nu; zeta = d zeta',
+//          where nu and zeta' are the kinemtic quantities. This is version
+//          is based on a 'collocation' discretization of the divergence.
+//          
+// ARGS   : d   : density
+//          u   : input vector field
+//          idir: which momentum component we're computing for
+//          utmp: array of tmp arrays. At least 3 required.
+//          so  : output (result) vector component, idir
+//             
+// RETURNS:  none
+//**********************************************************************************
+template<typename TypePack>
+void GStressEnOp<TypePack>::mom_update_full_coll(StateComp &d, State &u, GINT idir, State &utmp, StateComp &so) 
 {
 
   assert( utmp.size() >= 4
        && "Insufficient temp space specified");
 
+  GBOOL      usebdy = grid_->usebdydata();
+  GINT       nxy = grid_->gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
+  typename Grid::BinnedBdyIndex *igb = &grid_->igbdy_binned();
+
+  assert( idir > 0 && idir <= nxy );
+
+  // so = D^{j} [mu d [D_i u_j + Dj u_i) + Dk zeta d u_k delta_ij ]:
+  // Below, i = idir:
+
+  // Do D^{j} [mu (D_i u_j) ] terms:
+  so = 0.0;
+  for ( auto j=0; j<nxy; j++ ) { 
+    grid_->deriv(*u[j], idir, *utmp[0], *utmp[1]);
+#if defined(GEOFLOW_USE_NEUMANN_HACK)
+if ( idir == 1 && j == 1 ){
+GMTK::zero<Ftype>(*utmp[1],(*igb)[1][GBDY_0FLUX]);
+GMTK::zero<Ftype>(*utmp[1],(*igb)[3][GBDY_0FLUX]);
+}
+else if ( idir == 2 && j == 0 ){
+GMTK::zero<Ftype>(*utmp[1],(*igb)[0][GBDY_0FLUX]);
+GMTK::zero<Ftype>(*utmp[1],(*igb)[2][GBDY_0FLUX]);
+}
+#endif
+    // Point-multiply by mu before taking 'divergence':
+    utmp[1]->pointProd(d);
+    utmp[1]->pointProd(*nu_);
+    grid_->deriv(*utmp[1]  , j+1, *utmp[0], *utmp[2]);
+    so += *utmp[2];
+  }
+
+  // Do D^{j} [mu d (D_j u_i) ] terms:
+  for ( auto j=0; j<nxy; j++ ) { 
+    grid_->deriv(*u[idir-1], j+1, *utmp[0], *utmp[1]);
+#if defined(GEOFLOW_USE_NEUMANN_HACK)
+if ( idir == 2 && j == 0 ){
+GMTK::zero<Ftype>(*utmp[1],(*igb)[1][GBDY_0FLUX]);
+GMTK::zero<Ftype>(*utmp[1],(*igb)[3][GBDY_0FLUX]);
+}
+else if ( idir == 1 && j == 1 ){
+GMTK::zero<Ftype>(*utmp[1],(*igb)[0][GBDY_0FLUX]);
+GMTK::zero<Ftype>(*utmp[1],(*igb)[2][GBDY_0FLUX]);
+}
+#endif
+    // Point-multiply by mu before taking 'divergence':
+    utmp[1]->pointProd(d);
+    utmp[1]->pointProd(*nu_);
+    grid_->deriv(*utmp[1]  , j+1, *utmp[0], *utmp[2]);
+    so += *utmp[2];
+  }
+
+  // Compute dilitation term:
+  //   D^{j} (zeta d (Div u) delta_ij):
+  grid_->deriv(*u[0]  , 1, *utmp[0], *utmp[1]); // store Div in utmp[1]]
+  for ( auto j=1; j<nxy; j++ ) { 
+    grid_->deriv(*u[j]  , j+1, *utmp[0], *utmp[2]); 
+    *utmp[1] += *utmp[2];
+  }
+
+  utmp[1]->pointProd(d);
+  utmp[1]->pointProd(*zeta_);  // zeta Div u
+
+  grid_->deriv(*utmp[1], idir, *utmp[0], *utmp[2]);
+  so += *utmp[2];
+ 
+} // end of method mom_update_full_coll
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : energy_update_full_coll
+// DESC   : Compute application of this operator to input energy:
+//            eo = [ eta  u_i (Del_i u_j + Del_j u_i)],j 
+//               + [ lambda u_i (Div u delta_ij) ],j 
+//            eta  = d eta; lambda = d lambda'
+//          where eta and lambda' are the kinematic quantities This is version
+//          is based on a 'collocation' discretization of the divergence.
+// ARGS   : d   : density
+//          u   : input vector field
+//          utmp: array of tmp arrays. At least 4 required.
+//          eo  : output (result) vector component, idir
+//             
+// RETURNS:  none
+//**********************************************************************************
+template<typename TypePack>
+void GStressEnOp<TypePack>::energy_update_full_coll(StateComp &d, State &u, State &utmp, StateComp &eo) 
+{
+
+  assert( utmp.size() >= 4
+       && "Insufficient temp space specified");
+
+  GBOOL      usebdy = grid_->usebdydata();
+  GINT       nxy = grid_->gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
+  GTVector<GSIZET>          *ieface  = &grid_->gieface() ;
+  GTVector<GTVector<Ftype>> *normals = &grid_->faceNormals();
+  StateComp                 *bmass   = &grid_->faceMass();
+  typename Grid::BinnedBdyIndex *igb = &grid_->igbdy_binned();
+
+  // eo = D^{j} [ eta d  u^i [D_i u_j + Dj u_i) 
+  //    + lambda d u^i (Dk u^k) delta_ij ]
+
+  // D^{j} [ eta d u^i (D_i u_j) ] terms:
+  eo = 0.0;
+  for ( auto j=0; j<nxy; j++ ) { 
+   *utmp[1] = 0.0;
+    for ( auto i=0; i<nxy; i++ ) {
+       grid_->deriv(*u[j], i+1, *utmp[0], *utmp[2]);
+#if defined(GEOFLOW_USE_NEUMANN_HACK)
+if ( i == 0 && j == 1 ){
+GMTK::zero<Ftype>(*utmp[2],(*igb)[1][GBDY_0FLUX]);
+GMTK::zero<Ftype>(*utmp[2],(*igb)[3][GBDY_0FLUX]);
+}
+else if ( i == 1 && j == 0 ){
+GMTK::zero<Ftype>(*utmp[2],(*igb)[0][GBDY_0FLUX]);
+GMTK::zero<Ftype>(*utmp[2],(*igb)[2][GBDY_0FLUX]);
+}
+#endif
+       utmp[2]->pointProd(*u[i]);
+      *utmp[1] += *utmp[2];
+    }
+    // Point-multiply by eta before taking 'divergence':
+    utmp[1]->pointProd(d);
+    utmp[1]->pointProd(*eta_);
+    grid_->deriv(*utmp[1], j+1, *utmp[0], *utmp[2]);
+    eo += *utmp[2];
+  }
+
+  // = D^{j} [ eta d u^i (D_j u_i) ] terms:
+  for ( auto j=0; j<nxy; j++ ) { 
+   *utmp[1] = 0.0;
+    for ( auto i=0; i<nxy; i++ ) {
+       grid_->deriv(*u[i], j+1, *utmp[0], *utmp[2]);
+#if defined(GEOFLOW_USE_NEUMANN_HACK)
+if ( i == 1 && j == 0 ){
+GMTK::zero<Ftype>(*utmp[2],(*igb)[1][GBDY_0FLUX]);
+GMTK::zero<Ftype>(*utmp[2],(*igb)[3][GBDY_0FLUX]);
+}
+else if ( i == 0 && j == 1 ){
+GMTK::zero<Ftype>(*utmp[2],(*igb)[0][GBDY_0FLUX]);
+GMTK::zero<Ftype>(*utmp[2],(*igb)[2][GBDY_0FLUX]);
+}
+#endif
+       utmp[2]->pointProd(*u[i]);
+       *utmp[1] += *utmp[2];
+    }
+    // Point-multiply by eta before taking 'divergence':
+    utmp[1]->pointProd(d);
+    utmp[1]->pointProd(*eta_);
+    grid_->deriv(*utmp[1], j+1, *utmp[0], *utmp[2]);
+    eo += *utmp[2];
+  }
+
+  // Compute dilitation term:
+  //   = D^{j} (lambda d (Div u) delta_ij):
+  //   ... First, compute Div u:
+  // (NOTE: we'll use MTK to compute Div u eventually):
+
+  // eo = [ eta  d u_i (Del_i u_j + Del_j u_i)],j 
+  //    + [ lambda d u_i (Div u delta_ij) ],j 
+
+  grid_->deriv(*u[0]  , 1, *utmp[0], *utmp[1]); // store Div in utmp[1]]
+  for ( auto j=1; j<nxy; j++ ) { 
+    grid_->deriv(*u[j], j+1, *utmp[0], *utmp[2]); 
+    *utmp[1] += *utmp[2];
+  }
+
+  utmp[1]->pointProd(d);
+  utmp[1]->pointProd(*lambda_);
+
+  // Now compute
+  //  = D^{j} [lambda d u^i (Div u) delta_ij]:
+  for ( auto j=0; j<nxy; j++ ) { 
+    u[j]->pointProd(*utmp[1],*utmp[2]); 
+    grid_->deriv(*utmp[2], j+1, *utmp[0], *utmp[3]); 
+    eo += *utmp[3];
+  }
+
+} // end of method energy_update_full_coll
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : mom_update_full_cons 
+// DESC   : Compute application of this operator to input momentum vector:
+//            so_i = [ mu (u_j,i + u_i,j) ] + zeta Div u delta_ij],j
+//            mu = d nu; zeta = d zeta',
+//          where nu and zeta' are the kinemtic quantities. This is version
+//          is based on a 'conservative' discretization of the divergence.
+//          
+// ARGS   : d   : density
+//          u   : input vector field
+//          idir: which momentum component we're computing for
+//          utmp: array of tmp arrays. At least 3 required.
+//          so  : output (result) vector component, idir
+//             
+// RETURNS:  none
+//**********************************************************************************
+template<typename TypePack>
+void GStressEnOp<TypePack>::mom_update_full_cons(StateComp &d, State &u, GINT idir, State &utmp, StateComp &so) 
+{
+
+  assert( utmp.size() >= 4
+       && "Insufficient temp space specified");
+
+  GBOOL      usebdy = grid_->usebdydata();
   GINT       nxy = grid_->gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
   GINT                       isgn;
   GSIZET                     k;
   Ftype                      fsgn;
-  GTVector<GSIZET>          *igbdy   = &grid_->igbdy() ;
-  GTVector<GTVector<Ftype>> *normals = &grid_->bdyNormals();
-  StateComp                 *mass    =  grid_->massop().data();
-  StateComp                 *bmass   = &grid_->bdyMass();
+  GTVector<GSIZET>          *ieface  = &grid_->gieface() ;
+  GTVector<GTVector<Ftype>> *normals = &grid_->faceNormals();
+  StateComp                 *bmass   = &grid_->faceMass();
+  typename Grid::BinnedBdyIndex *igb = &grid_->igbdy_binned();
 
   assert( idir > 0 && idir <= nxy );
 
@@ -131,7 +395,7 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, GINT idir, State &utmp
   tfact_.resizem(u[0]->size());
 #endif
 
-  // so = -D^{T,j} [mu [D_i u_j + Dj u_i) + Dk zeta u_k delta_ij ]:
+  // so = -D^{T,j} [mu d [D_i u_j + Dj u_i) + Dk zeta d u_k delta_ij ]:
   //    + bdy surface terms:
   // Below, i = idir:
 
@@ -141,39 +405,55 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, GINT idir, State &utmp
     grid_->deriv(*u[j], idir, *utmp[0], *utmp[1]);
     // Point-multiply by mu before taking 'divergence':
     utmp[1]->pointProd(d);
-    utmp[1]->pointProd(*mu_);
+    utmp[1]->pointProd(*nu_);
+#if 0 // defined(GEOFLOW_USE_NEUMANN_HACK)
+if ( idir == 1 && j == 1 ){
+GMTK::zero<Ftype>(*u[idir-1],(*igb)[1][GBDY_0FLUX]);
+GMTK::zero<Ftype>(*u[idir-1],(*igb)[3][GBDY_0FLUX]);
+}
+else if ( idir == 2 && j == 0 ){
+GMTK::zero<Ftype>(*u[idir-1],(*igb)[0][GBDY_0FLUX]);
+GMTK::zero<Ftype>(*u[idir-1],(*igb)[2][GBDY_0FLUX]);
+}
+#endif
     grid_->wderiv(*utmp[1]  , j+1, TRUE, *utmp[0], *utmp[2]);
     so -= *utmp[2];
 
-#if defined(DO_BDY)
     // Compute bdy terms for this component, j:
-    for ( auto b=0; b<igbdy->size(); b++ ) {
-      k = (*igbdy)[b];
+    for ( auto b=0; usebdy && b<ieface->size(); b++ ) {
+      k = (*ieface)[b];
       so[k] += (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
     }
-#endif
   }
 
-  // Do -D^{T,j} [mu (D_j u_i) ] terms:
+  // Do -D^{T,j} [mu d (D_j u_i) ] terms:
   for ( auto j=0; j<nxy; j++ ) { 
     grid_->deriv(*u[idir-1], j+1, *utmp[0], *utmp[1]);
     // Point-multiply by mu before taking 'divergence':
     utmp[1]->pointProd(d);
-    utmp[1]->pointProd(*mu_);
+    utmp[1]->pointProd(*nu_);
+#if 0 // defined(GEOFLOW_USE_NEUMANN_HACK)
+if ( j == 0 && idir == 1 ){
+GMTK::zero<Ftype>(*u[idir-1],(*igb)[1][GBDY_0FLUX]);
+GMTK::zero<Ftype>(*u[idir-1],(*igb)[3][GBDY_0FLUX]);
+}
+else if ( j == 1 && idir == 0 ){
+GMTK::zero<Ftype>(*u[idir-1],(*igb)[0][GBDY_0FLUX]);
+GMTK::zero<Ftype>(*u[idir-1],(*igb)[2][GBDY_0FLUX]);
+}
+#endif
     grid_->wderiv(*utmp[1]  , j+1, TRUE, *utmp[0], *utmp[2]);
     so -= *utmp[2];
 
-#if defined(DO_BDY)
     // Compute surface terms for this component, j:
-    for ( auto b=0; b<igbdy->size(); b++ ) {
-      k = (*igbdy)[b];
+    for ( auto b=0; usebdy && b<ieface->size(); b++ ) {
+      k = (*ieface)[b];
       so[k] += (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
     }
-#endif
   }
 
   // Compute dilitation term:
-  //   -D^{T,j} (zeta (Div u) delta_ij):
+  //   -D^{T,j} (zeta d (Div u) delta_ij):
   grid_->deriv(*u[0]  , 1, *utmp[0], *utmp[1]); // store Div in utmp[1]]
   for ( auto j=1; j<nxy; j++ ) { 
     grid_->deriv(*u[j]  , j+1, *utmp[0], *utmp[2]); 
@@ -197,63 +477,62 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, GINT idir, State &utmp
 #endif
   so -= *utmp[2];
  
-#if defined(DO_BDY)
   // Compute surface terms for
-  //  Integral zeta (Div u) delta_ij.n^j dV:
+  //  Integral zeta d (Div u) delta_ij.n^j dV:
   // Use kernel above, for i=idir:
-  for ( auto b=0; b<igbdy->size(); b++ ) {
-    k = (*igbdy)[b];
+  for ( auto b=0; usebdy && b<ieface->size(); b++ ) {
+    k = (*ieface)[b];
   #if defined(DO_COMPRESS_MODES_ONLY)
     so[k] += (*utmp[1])[k]*tfact_[k] * (*normals)[idir-1][b] * (*bmass)[b];
   #else
     so[k] += (*utmp[1])[k] * (*normals)[idir-1][b] * (*bmass)[b];
   #endif
   }
-#endif 
 
-
-
-} // end of method apply (1)
+} // end of method mom_update_full_cons
 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : apply (2)
+// METHOD : energy_update_full_cons
 // DESC   : Compute application of this operator to input energy:
-//            eo = [ kappa  u_i (Del_i u_j + Del_j u_i)],j 
+//            eo = [ eta  u_i (Del_i u_j + Del_j u_i)],j 
 //               + [ lambda u_i (Div u delta_ij) ],j 
+//            eta  = d eta; lambda = d lambda'
+//          where eta and lambda' are the kinematic quantities This is version
+//          is based on a 'conservative' discretization of the divergence.
 // ARGS   : d   : density
 //          u   : input vector field
-//          utmp: array of tmp arrays
+//          utmp: array of tmp arrays. At least 4 required.
 //          eo  : output (result) vector component, idir
 //             
 // RETURNS:  none
 //**********************************************************************************
 template<typename TypePack>
-void GStressEnOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp &eo) 
+void GStressEnOp<TypePack>::energy_update_full_cons(StateComp &d, State &u, State &utmp, StateComp &eo) 
 {
 
   assert( utmp.size() >= 4
        && "Insufficient temp space specified");
 
+  GBOOL      usebdy = grid_->usebdydata();
   GINT       nxy = grid_->gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
   Ftype                      isgn;
   GSIZET                     k;
   Ftype                      fsgn;
-  GTVector<GSIZET>          *igbdy   = &grid_->igbdy() ;
-  GTVector<GTVector<Ftype>> *normals = &grid_->bdyNormals();
-  StateComp                 *mass    =  grid_->massop().data();
-  StateComp                 *bmass   = &grid_->bdyMass();
+  GTVector<GSIZET>          *ieface  = &grid_->gieface() ;
+  GTVector<GTVector<Ftype>> *normals = &grid_->faceNormals();
+  StateComp                 *bmass   = &grid_->faceMass();
 
 #if defined(DO_COMPRESS_MODES_ONLY)
   tfact_.resizem(u[0]->size());
 #endif
 
-  // eo -= D^{T,j} [ kappa u^i [D_i u_j + Dj u_i) 
-  //    + lambda u^i (Dk u^k) delta_ij ]
+  // eo -= D^{T,j} [ eta d  u^i [D_i u_j + Dj u_i) 
+  //    + lambda d u^i (Dk u^k) delta_ij ]
   //    + surface terms:
 
-  // - D^{T,j} [ kappa u^i (D_i u_j) ] terms:
+  // - D^{T,j} [ eta d u^i (D_i u_j) ] terms:
   eo = 0.0;
   for ( auto j=0; j<nxy; j++ ) { 
    *utmp[1] = 0.0;
@@ -262,22 +541,20 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp
        utmp[2]->pointProd(*u[i]);
       *utmp[1] += *utmp[2];
     }
-    // Point-multiply by kappa before taking 'divergence':
+    // Point-multiply by eta before taking 'divergence':
     utmp[1]->pointProd(d);
-    utmp[1]->pointProd(*kappa_);
+    utmp[1]->pointProd(*eta_);
     grid_->wderiv(*utmp[1], j+1, TRUE, *utmp[0], *utmp[2]);
     eo -= *utmp[2];
 
-#if defined(DO_BDY)
     // Do the surface terms for jth component of normal:
-    for ( auto b=0; b<igbdy->size(); b++ ) {
-      k = (*igbdy)[b];
+    for ( auto b=0; usebdy && b<ieface->size(); b++ ) {
+      k = (*ieface)[b];
       eo[k] += (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
     }
-#endif
   }
 
-  // -= D^{T,j} [ kappa u^i (D_j u_i) ] terms:
+  // -= D^{T,j} [ eta d u^i (D_j u_i) ] terms:
   for ( auto j=0; j<nxy; j++ ) { 
    *utmp[1] = 0.0;
     for ( auto i=0; i<nxy; i++ ) {
@@ -285,28 +562,26 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp
        utmp[2]->pointProd(*u[i]);
        *utmp[1] += *utmp[2];
     }
-    // Point-multiply by kappa before taking 'divergence':
+    // Point-multiply by eta before taking 'divergence':
     utmp[1]->pointProd(d);
-    utmp[1]->pointProd(*kappa_);
+    utmp[1]->pointProd(*eta_);
     grid_->wderiv(*utmp[1], j+1, TRUE, *utmp[0], *utmp[2]);
     eo -= *utmp[2];
 
-#if defined(DO_BDY)
     // Do the surface terms for jth component of normal:
-    for ( auto b=0; b<igbdy->size(); b++ ) {
-      k = (*igbdy)[b];
+    for ( auto b=0; usebdy && b<ieface->size(); b++ ) {
+      k = (*ieface)[b];
       eo[k] += (*utmp[1])[k] * (*normals)[j][b] * (*bmass)[b];
     }
-#endif
   }
 
   // Compute dilitation term:
-  //   -= D^{T,j} (lambda (Div u) delta_ij):
+  //   -= D^{T,j} (lambda d (Div u) delta_ij):
   //   ... First, compute Div u:
   // (NOTE: we'll use MTK to compute Div u eventually):
 
-  // eo = [ kappa  u_i (Del_i u_j + Del_j u_i)],j 
-  //    + [ lambda u_i (Div u delta_ij) ],j 
+  // eo = [ eta  d u_i (Del_i u_j + Del_j u_i)],j 
+  //    + [ lambda d u_i (Div u delta_ij) ],j 
 
   grid_->deriv(*u[0]  , 1, *utmp[0], *utmp[1]); // store Div in utmp[1]]
   for ( auto j=1; j<nxy; j++ ) { 
@@ -326,7 +601,7 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp
 #endif
 
   // Now compute
-  //  -= D^{T,j} [lambda u^i (Div u) delta_ij]:
+  //  -= D^{T,j} [lambda d u^i (Div u) delta_ij]:
   for ( auto j=0; j<nxy; j++ ) { 
     u[j]->pointProd(*utmp[1],*utmp[2]); 
     grid_->wderiv(*utmp[2], j+1, TRUE, *utmp[0], *utmp[3]); 
@@ -335,19 +610,136 @@ void GStressEnOp<TypePack>::apply(StateComp &d, State &u, State &utmp, StateComp
 #endif
     eo -= *utmp[3];
 
-#if defined(DO_BDY)
     // Do the surface terms for jth component of normal:
-    for ( auto b=0; b<igbdy->size(); b++ ) {
-      k = (*igbdy)[b];
+    for ( auto b=0; usebdy && b<ieface->size(); b++ ) {
+      k = (*ieface)[b];
     #if defined(DO_COMPRESS_MODES_ONLY)
       eo[k] += (*utmp[2])[k]*tfact_[k] * (*normals)[j][b] * (*bmass)[b];
     #else
       eo[k] += (*utmp[2])[k] * (*normals)[j][b] * (*bmass)[b];
     #endif
     }
-#endif
   }
 
-} // end of method apply (2)
+} // end of method energy_update_full_cons
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : mom_update_reduced
+// DESC   : Compute application of this operator to input momentum vector:
+//            so_i = d [nu u_i,j ],j
+//          where mu = nu d, and nu is the kinematic viscosity. This 
+//          operator uses 'collocation' discretization only.
+// ARGS   : d   : density
+//          u   : input vector field
+//          idir: which momentum component we're computing for
+//          utmp: array of tmp arrays. At least 3 required.
+//          so  : output (result) vector component, idir
+//             
+// RETURNS:  none
+//**********************************************************************************
+template<typename TypePack>
+void GStressEnOp<TypePack>::mom_update_reduced(StateComp &d, State &u, GINT idir, State &utmp, StateComp &so) 
+{
+
+  assert( utmp.size() >= 4
+       && "Insufficient temp space specified");
+
+  GBOOL      usebdy = grid_->usebdydata();
+  GINT       nxy = grid_->gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
+  typename Grid::BinnedBdyIndex *igb = &grid_->igbdy_binned();
+
+  assert( idir > 0 && idir <= nxy );
+
+
+
+  // so_idir = d D^{j} [nu Dj u_idir) ]:
+  // Below, i = idir:
+
+  so = 0.0;
+
+  // Do D^{j} [nu d (D_j u_i) ] terms:
+  for ( auto j=0; j<nxy; j++ ) { 
+    grid_->deriv(*u[idir-1], j+1, *utmp[0], *utmp[1]);
+    // Point-multiply by nu before taking 'divergence':
+#if defined(GEOFLOW_USE_NEUMANN_HACK)
+if ( idir == 2 && j == 0 ){
+GMTK::zero<Ftype>(*utmp[1],(*igb)[1][GBDY_0FLUX]);
+GMTK::zero<Ftype>(*utmp[1],(*igb)[3][GBDY_0FLUX]);
+}
+else if ( idir == 1 && j == 1 ){
+GMTK::zero<Ftype>(*utmp[1],(*igb)[0][GBDY_0FLUX]);
+GMTK::zero<Ftype>(*utmp[1],(*igb)[2][GBDY_0FLUX]);
+}
+#endif
+    utmp[1]->pointProd(d);
+    utmp[1]->pointProd(*nu_);
+    grid_->deriv(*utmp[1], j+1, *utmp[0], *utmp[2]);
+    so += *utmp[2];
+  }
+//so.pointProd(d);
+
+
+} // end of method mom_update_reduced
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : energy_update_reduced
+// DESC   : Compute application of this operator to input energy:
+//            eo = [ eta  u_i  Del_j u_i],j 
+//          where
+//            eta  = d eta, and eta is the kinematic viscosity. This
+//          operator uses 'collocation' discretization only.
+// ARGS   : d   : density
+//          u   : input vector field
+//          utmp: array of tmp arrays. At least 4 required.
+//          eo  : output (result) vector component, idir
+//             
+// RETURNS:  none
+//**********************************************************************************
+template<typename TypePack>
+void GStressEnOp<TypePack>::energy_update_reduced(StateComp &d, State &u, State &utmp, StateComp &eo) 
+{
+
+  assert( utmp.size() >= 4
+       && "Insufficient temp space specified");
+
+  GBOOL      usebdy = grid_->usebdydata();
+  GINT       nxy = grid_->gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
+  typename Grid::BinnedBdyIndex *igb = &grid_->igbdy_binned();
+
+  // eo = d D^{j} [ eta u^i Dj u_i] 
+
+  eo = 0.0;
+
+  // = D^{j} [ eta d u^i (D_j u_i) ] terms:
+  for ( auto j=0; j<nxy; j++ ) { 
+   *utmp[1] = 0.0;
+    for ( auto i=0; i<nxy; i++ ) {
+       grid_->deriv(*u[i], j+1, *utmp[0], *utmp[2]);
+#if defined(GEOFLOW_USE_NEUMANN_HACK)
+if ( i == 1 && j == 0 ){
+GMTK::zero<Ftype>(*utmp[2],(*igb)[1][GBDY_0FLUX]);
+GMTK::zero<Ftype>(*utmp[2],(*igb)[3][GBDY_0FLUX]);
+}
+else if ( i == 0 && j == 1 ){
+GMTK::zero<Ftype>(*utmp[2],(*igb)[0][GBDY_0FLUX]);
+GMTK::zero<Ftype>(*utmp[2],(*igb)[2][GBDY_0FLUX]);
+}
+#endif
+       utmp[2]->pointProd(*u[i]);
+       *utmp[1] += *utmp[2];
+    }
+    // Point-multiply by eta before taking 'divergence':
+    utmp[1]->pointProd(d);
+    utmp[1]->pointProd(*eta_);
+    grid_->deriv(*utmp[1], j+1, *utmp[0], *utmp[2]);
+    eo += *utmp[2];
+  }
+//eo.pointProd(d);
+
+} // end of method energy_update_reduced
 
 

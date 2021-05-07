@@ -16,9 +16,6 @@
 #include <memory>
 #include <cmath>
 #include "gtvector.hpp"
-#include "ggrid.hpp"
-#include "ggrid_box.hpp"
-#include "ggrid_icos.hpp"
 #include "ggfx.hpp"
 #include "pdeint/update_bdy_base.hpp"
 
@@ -31,20 +28,20 @@ class GSpongeBdy : public UpdateBdyBase<TypePack>
 public:
         using Types      = TypePack;
         using Base       = UpdateBdyBase<Types>;
+        using EqnBase    = EquationBase<Types>;
+        using EqnBasePtr = std::shared_ptr<EqnBase>;
         using State      = typename Types::State;
         using Grid       = typename Types::Grid;
-        using Ftype      = typename Types::Value;
+        using GridBox    = typename Types::GridBox;
+        using GridIcos   = typename Types::GridIcos;
+        using Ftype      = typename Types::Ftype;
         using Time       = typename Types::Time;
-        using StateInfo  = typename Types::StateInfo;
 
         static_assert(std::is_same<State,GTVector<GTVector<Ftype>*>>::value,
                "State is of incorrect type");
-        static_assert(std::is_same<Grid,GGrid>::value,
-               "Grid is of incorrect type");
 
         // GSpongeBdy solver traits:
         struct Traits {
-          GBOOL  compute_once=FALSE; // compjte bdy cond once?
            
           GINT             idir  = GDIM;  
                                      // canonical coord direction definining surfaces
@@ -55,7 +52,7 @@ public:
           GTVector<Ftype>  exponent; // fall-off exponent for solution
           GTVector<Ftype>  sigma;    // 'diffusion' factor in sponge layer
           GTVector<Ftype>  rs;       // vector defining sponge surface
-          Ftype            ro;       // outer-most surface (may be nexative)
+          Ftype            ro;       // outer-most surface (may be negative)
         };
 
         GSpongeBdy() = delete; 
@@ -67,34 +64,30 @@ public:
 
 protected:
         GBOOL               update_impl (
-                              Grid      &grid,
-                              StateInfo &stinfo,
-                              Time      &time,
-                              State     &utmp,
-                              State     &u,
-                              State     &ub);
+                              EqnBasePtr &eqn,
+                              Grid       &grid,
+                              Time       &time,
+                              State      &utmp,
+                              State      &u);
         
 private:
 
 //      void                init(GSpongeBdy::Traits &);                     // initialize 
         GBOOL               update_cart (
-                              Grid      &grid,
-                              StateInfo &stinfo,
-                              Time      &time,
-                              State     &utmp,
-                              State     &u,
-                              State     &ub);
+                              EqnBasePtr &eqn,
+                              Grid       &grid,
+                              Time       &time,
+                              State      &utmp,
+                              State      &u);
 
         GBOOL               update_sphere(
-                              Grid      &grid,
-                              StateInfo &stinfo,
-                              Time      &time,
-                              State     &utmp,
-                              State     &u,
-                              State     &ub);
+                              EqnBasePtr &eqn,
+                              Grid       &grid,
+                              Time       &time,
+                              State      &utmp,
+                              State      &u);
        
 
-        GBOOL               bcomputed_;     // already computed?
         Traits              traits_;        // Traits structure
 
 };

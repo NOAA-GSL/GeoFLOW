@@ -73,7 +73,6 @@
 #include <cmath>
 #include "gtvector.hpp"
 #include "gdd_base.hpp"
-#include "ggrid.hpp"
 #include "gab.hpp"
 #include "gext.hpp"
 #include "gbdf.hpp"
@@ -86,42 +85,45 @@
 //#include "gflux.hpp"
 #include "gexrk_stepper.hpp"
 #include "gbutcherrk.hpp"
-#include "ggrid_box.hpp"
-#include "ggrid_icos.hpp"
 #include "ggfx.hpp"
 #include "gutils.hpp"
 #include "gmtk.hpp"
 #include "pdeint/equation_base.hpp"
 
 
+
+
 using namespace geoflow::pdeint;
 using namespace std;
 
 template<typename TypePack>
-class GMConv : public EquationBase<TypePack>
+class GMConv : public EquationBase<TypePack>, std::enable_shared_from_this<GMConv<TypePack>>
 {
 public:
-        using Interface  = EquationBase<TypePack>;
-        using Base       = Interface;
-        using State      = typename Interface::State;
-        using StateComp  = typename Interface::StateComp;
-        using Grid       = typename Interface::Grid;
-        using Ftype      = typename Interface::Value;
-        using Derivative = typename Interface::Derivative;
-        using Time       = typename Interface::Time;
-        using CompDesc   = typename Interface::CompDesc;
-        using Jacobian   = typename Interface::Jacobian;
-        using Size       = typename Interface::Size;
-        using FilterList = typename Interface::FilterList;
+        using Types      = TypePack;
+        using EqnBase    = EquationBase<Types>;
+        using EqnBasePtr = std::shared_ptr<EqnBase>;
+        using State      = typename Types::State;
+        using StateComp  = typename Types::StateComp;
+        using Grid       = typename Types::Grid;
+        using GridBox    = typename Types::GridBox;
+        using GridIcos   = typename Types::GridIcos;
+        using Ftype      = typename Types::Ftype;
+        using Mass       = typename Types::Mass;
+        using Derivative = typename Types::Derivative;
+        using Time       = typename Types::Time;
+        using CompDesc   = typename Types::CompDesc;
+        using Jacobian   = typename Types::Jacobian;
+        using Size       = typename Types::Size;
+        using FilterBasePtr = std::shared_ptr<FilterBase<Types>>;
+        using FilterList    = std::vector<FilterBasePtr>;
 
-        static_assert(std::is_same<State,GTVector<GTVector<GFTYPE>*>>::value,
+        static_assert(std::is_same<State,GTVector<GTVector<Ftype>*>>::value,
                "State is of incorrect type");
-        static_assert(std::is_same<StateComp,GTVector<GFTYPE>>::value,
+        static_assert(std::is_same<StateComp,GTVector<Ftype>>::value,
                "StatCompe is of incorrect type");
-        static_assert(std::is_same<Derivative,GTVector<GTVector<GFTYPE>*>>::value,
+        static_assert(std::is_same<Derivative,GTVector<GTVector<Ftype>*>>::value,
                "Derivative is of incorrect type");
-        static_assert(std::is_same<Grid,GGrid>::value,
-               "Grid is of incorrect type");
 
         // MConv solver traits:
         struct Traits {
@@ -136,6 +138,7 @@ public:
           GBOOL           variabledt  = FALSE;  // use variable timestep?
           GBOOL           bvarvterm   = FALSE;  // time dep term velocities?
           GBOOL           divopcolloc = TRUE;   // use collocation in GDivOp?
+          GBOOL           usebdydata  = TRUE;   // use bdy data in GDivOp GStressen?
           GBOOL           Stokeshyp   = FALSE;  // use Stokes hypothesis
           GBOOL           bindepdiss  = FALSE;  // indep. mom & energy diss?
           GBOOL           bSSP        = FALSE;  // use strong stab pres RK?
@@ -143,45 +146,61 @@ public:
           GINT            nsolve      = GDIM+2; // no. vars to solve for
           GINT            nlsector    = 0;      // no. vars in liq-sector
           GINT            nisector    = 0;      // no. vars in ice-sector
+          GINT            nfallout    = 0;      // no. fallout velocity comps
           GINT            nbase       = 2;      // no. vars in base state (p, d)
           GINT            itorder     = 2;      // formal  time iorder
           GINT            nstage      = 2;      // no. stages for time integ.
           GINT            inorder     = 2;      // formal nonlin. extrap order
           GStepperType    isteptype   = GSTEPPER_EXRK;
-          GFTYPE          Ts_base     = 300.0;  // base state surf temp (K)
-          GFTYPE          P0_base     = 1000.0; // base state ref pressure (mb)
-          GFTYPE          courant     = 0.5;    // Courant factor
-          GFTYPE          nu          = 0.0;    // shear viscosity constant
-          GFTYPE          kappa       = 0.0;    // energy-shear visc constant
-          GFTYPE          zeta        = 0.0;    // mom bulk viscosity constant
-          GFTYPE          lambda      = 0.0;    // energy bulk shear visc const
+          Ftype          Ts_base     = 300.0;  // base state surf temp (K)
+          Ftype          P0_base     = 1000.0; // base state ref pressure (mb)
+          Ftype          courant     = 0.5;    // Courant factor
+          Ftype          nu          = 0.0;    // shear viscosity constant
+          Ftype          eta         = 0.0;    // energy-shear visc constant
+          Ftype          zeta        = 0.0;    // mom bulk viscosity constant
+          Ftype          lambda      = 0.0;    // energy bulk shear visc const
           GTVector<GINT>  iforced;              // state comps to force
           GTVector<Ftype> omega;                // rotation rate vector
           GString         ssteptype;            // stepping method
         };
 
+        // Starting indices for each sector:
+        GINT               MOMENTUM;
+        GINT               ENERGY;
+        GINT               DENSITY;
+        GINT               VAPOR;
+        GINT               LIQMASS;
+        GINT               ICEMASS;
+        GINT               PRESCRIBED;
+        GINT               BASESTATE;
+        GINT               LIQTERMV;
+        GINT               ICETERMV;
+
         GMConv() = delete; 
         GMConv(Grid &grid, GMConv<TypePack>::Traits &traits);
-       ~GMConv();
+virtual ~GMConv();
         GMConv(const GMConv &bu) = default;
         GMConv &operator=(const GMConv &bu) = default;
 
-        StateComp           &get_nu() { return nu_; };                       // Set nu/viscosity
-        StateComp           &get_kappa() { return kappa_; };                 // Set nu/viscosity
+        StateComp           &get_nu() { return nu_; };                       // set nu/viscosity
+        StateComp           &get_eta() { return eta_; };                     // set nu/viscosity
+        State               &get_base_state() { return ubase_; }             // get base state
 
         void                set_steptop_callback(
                             std::function<void(const Time &t, State &u, 
                                                const Time &dt)> callback) 
                              { steptop_callback_ = callback; bsteptop_ = TRUE;}
 
-        GMConv<TypePack>::Traits &get_traits() { return traits_; }           // Get traits
+        GMConv<TypePack>::Traits &get_traits() { return traits_; }           // get traits
                                             
+inline  void                compute_v    (const State &u, StateComp &di, State &v);
+inline  void                compute_v    (const State &u, GINT idir, StateComp &di, StateComp &vi);
 
 protected:
-        void                step_impl(const Time &t, State &uin, State &uf, State &ub, 
-                                      const Time &dt);                    // Take a step
-        void                step_impl(const Time &t, const State &uin, State &uf, State &ub,
-                                      const Time &dt, State &uout);       // Take a step
+        void                step_impl(const Time &t, State &uin, State &uf,  
+                                      const Time &dt);                    // take a step
+        void                step_impl(const Time &t, const State &uin, State &uf, 
+                                      const Time &dt, State &uout);       // take a step
         GBOOL               has_dt_impl() const {return traits_.variabledt;}  
         GINT                tmp_size_impl();                              // required tmp size
         GINT                solve_size_impl()                             // required solve size
@@ -190,36 +209,45 @@ protected:
                             {return traits_.nstate;}
         std::vector<GINT>  &iforced_impl()                                // required tmp size
                             {return stdiforced_;}
-        void                init_impl(State &u, State &tmppool);                    // initialize 
-                                                                          // Has dynamic dt?
+        void                init_impl(State &u, State &tmppool);          // initialize 
+                                                                          // has dynamic dt?
         void                compute_derived_impl(const State &uin, GString sop,
                                       State &utmp, State &uout,
-                                      std::vector<GINT> &iuout);          // Compu
+                                      std::vector<GINT> &iuout);          // compu
 
-        void                dt_impl(const Time &t, State &u, Time &dt);   // Get dt
-        void                apply_bc_impl(const Time &t, State &u, 
-                                          State &ub);                     // Apply bdy conditions
+        void                dt_impl(const Time &t, State &u, Time &dt);   // get dt
+        void                apply_bc_impl(const Time &t, State &u);       // apply bdy conditions
 private:
 
-        void                dudt_impl  (const Time &t, const State &u, const State &uf, const State &ub,
+        void                dudt_impl  (const Time &t, const State &u, const State &uf, 
                                         const Time &dt, Derivative &dudt);
-        void                step_exrk  (const Time &t, State &uin, State &uf, State &ub,
+        void                dudt_dry   (const Time &t, const State &u, const State &uf, 
+                                        const Time &dt, Derivative &dudt);
+        void                dudt_wet   (const Time &t, const State &u, const State &uf, 
+                                        const Time &dt, Derivative &dudt);
+        void                step_exrk  (const Time &t, State &uin, State &uf, 
                                         const Time &dt, State &uout);
-        void                step_multistep(const Time &t, State &uin, State &uf, State &ub,
+        void                step_multistep(const Time &t, State &uin, State &uf,
                                            const Time &dt);
         void                cycle_keep   (const State &u);
 inline  void                compute_cv   (const State &u, StateComp &utmp, StateComp &cv);
 inline  void                compute_qd   (const State &u, StateComp &qd);
 inline  void                compute_falloutsrc
                                          (StateComp &g, State &qi, State &v, GINT jexcl, State &utmp, StateComp &r );
-inline  void                compute_v    (const State &u, StateComp &id, State &v);
 inline  void                compute_vpref(StateComp &tv, State &W);
 inline  void                compute_vpref(StateComp &tv, GINT idir, StateComp &W);
 inline  void                assign_helpers(const State &u, const State &uf);
 inline  void                compute_pe   (StateComp &rhoT, State &qi, State &tvi, State &utmp, StateComp      &r);
         void                compute_base  (State &u);
 inline  GINT                szrhstmp();
+
+void init_stagnation();
+void set_stagnation(StateComp &d, State &v, State &utmp, StateComp &p, StateComp &e);
+GBOOL            binit_stag_;
+GTVector<GSIZET> istag_;
+GTVector<GSIZET> iupstream_;
  
+
 
         GBOOL               bInit_;         // object initialized?
         GBOOL               bforced_;       // use forcing vectors
@@ -232,9 +260,9 @@ inline  GINT                szrhstmp();
         GINT                nc_;            // number momentum components
         GSIZET              icycle_;        // internal cycle number
         GStepperType        isteptype_;     // stepper type
-        GTVector<GFTYPE>    tcoeffs_;       // coeffs for time deriv
-        GTVector<GFTYPE>    acoeffs_;       // coeffs for NL adv term
-        GTVector<GFTYPE>    dthist_;        // coeffs for NL adv term
+        GTVector<Ftype>     tcoeffs_;       // coeffs for time deriv
+        GTVector<Ftype>     acoeffs_;       // coeffs for NL adv term
+        GTVector<Ftype>     dthist_;        // coeffs for NL adv term
         State               uold_;          // helper arrays set from utmp
         State               uevolve_;       // helper array to specify evolved state components
         State               ubase_;         // helper array pointing to base state components
@@ -256,42 +284,33 @@ inline  GINT                szrhstmp();
         GTVector<State>     ukeep_;         // state at prev. time levels
         GTVector<GString>
                             valid_types_;   // valid stepping methods supported
-        GTVector<GFTYPE>    nu_   ;         // KE dissipoation
-        GTVector<GFTYPE>    kappa_;         // internal energy dissipoation
-        GTVector<GFTYPE>    dxmin_ ;        // element face mins
-        GTVector<GFTYPE>    maxbyelem_ ;    // element-based maxima for dt
+        GTVector<Ftype>     nu_   ;         // KE dissipoation
+        GTVector<Ftype>     eta_;           // internal energy dissipoation
+        GTVector<Ftype>     maxbyelem_ ;    // element-based maxima for dt
         std::vector<GINT>   stdiforced_;    // traits_.iforced as a std::vector
-        GGrid              *grid_;          // GGrid object
-        GExRKStepper<GFTYPE>
+        Grid               *grid_;          // Grid object
+        GExRKStepper<Grid,Ftype>
                            *gexrk_;         // ExRK stepper, if needed
-        GMass              *gmass_;         // mass op
-        GMass              *gimass_;        // inverse mass op
+        Mass               *gmass_;         // mass op
+        Mass               *gimass_;        // inverse mass op
         GAdvect<TypePack>  *gadvect_;       // advection op
-        GHelmholtz         *ghelm_;         // Helmholz and Laplacian op
+        GHelmholtz<TypePack>         
+                           *ghelm_;         // Helmholz and Laplacian op
         GStressEnOp<TypePack>
                            *gstressen_;     // viscous stress-energy
         GpdV<TypePack>     *gpdv_;          // pdV op
 //      GFlux              *gflux_;         // flux op
         GDivOp<TypePack>   *gdiv_;          // volumetric divergence op
         GC_COMM             comm_;          // communicator
-        GGFX<GFTYPE>       *ggfx_;          // gather-scatter operator
+        GGFX<Ftype>        *ggfx_;          // gather-scatter operator
         GMConv<TypePack>::Traits 
                             traits_;        // traits structure
+        std::shared_ptr<EquationBase<Types>>
+                            pthis_;         // shared pointer to this object
 
         std::function<void(const Time &t, State &u, const Time &dt)>
                            steptop_callback_;
 
-        // Starting indices for each sector:
-        GINT               MOMENTUM;
-        GINT               ENERGY;
-        GINT               DENSITY;
-        GINT               VAPOR;
-        GINT               LIQMASS;
-        GINT               ICEMASS;
-        GINT               PRESCRIBED;
-        GINT               BASESTATE;
-        GINT               LIQTERMV;
-        GINT               ICETERMV;
 
 
 };

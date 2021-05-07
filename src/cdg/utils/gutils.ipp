@@ -161,76 +161,154 @@ void compute_temp(const GTVector<T> &e, const GTVector<T> &d, const GTVector<T> 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : compute_p 
-// DESC   : Compute total pressure from state
+// METHOD : compute_p (1)
+// DESC   : Compute partial pressure from total density, 
 //              p = d ( q R) T,
 //          with total density, d, q the
 //          dry mass fraction, R the gas constants, 
 //          and T the temperature.
 // ARGS   : Temp: temperature
-//          d: density
+//          d: total density
 //          q: mass fraction
 //          R: gas constant
-//          p: pressure fluctuation field returned
+//          p: pressure field returned
 // RETURNS: none.
 //**********************************************************************************
 template<typename T>
 void compute_p(const GTVector<T> &Temp, const GTVector<T> &d, const GTVector<T> &q, GFTYPE R, GTVector<T> &p)
 {
-   GString    serr = "compute_p: ";
+   GString    serr = "compute_p(1): ";
 
    // p' = d q R T:
    for ( auto j=0; j<p.size(); j++ ) {
      p[j] = d[j] * q[j] * R * Temp[j];
    }
 
-} // end of method compute_p 
+} // end of method compute_p (1)
 
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : in_seg
+// METHOD : compute_p (2)
+// DESC   : Compute partial pressure from int. energy density
+//              p = ( q R) e / Cv,
+//          with mass frraction, q, gas constant, R, and 
+//          total specific heat, Cv
+// ARGS   : e : internal energy density
+//          q : mass fraction
+//          R : gas constant
+//          cv: (total) specific heat at const. volume
+//          p : pressure field returned
+// RETURNS: none.
+//**********************************************************************************
+template<typename T>
+void compute_p(const GTVector<T> &e, const GTVector<T> &q, GFTYPE R, const GTVector<T> &cv, GTVector<T> &p)
+{
+   GString    serr = "compute_p(2): ";
+
+   // p = q R e / Cv:
+   for ( auto j=0; j<p.size(); j++ ) {
+     p[j] = q[j] * R * e[j] / cv[j];
+   }
+
+} // end of method compute_p (2)
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : in_seg (1)
 // DESC   : Determine if points, x, lie within segment 
 //          defined by verts. Return indices of contained x
 //          in ind vector, and return the number of points found
 // ARGS   : verts: use first 2 points to define segment
 //          x    : test points
+//          eps  : comparison epsilon
 //          ind  : vector of indices in x that lie on segment. Reallocated
 //                 if necessary to be of insufficient size
 // RETURNS: number of points found on segment (valid number of points in ind)
 //**********************************************************************************
 template<typename T>
-GSIZET in_seg(const GTVector<GTPoint<T>> &verts, const GTVector<GTVector<T>> &x, GTVector<GSIZET> &ind)
+GSIZET in_seg(const GTVector<GTPoint<T>> &verts, const GTVector<GTVector<T>> &x, T eps, GTVector<GSIZET> &ind)
 {
   GINT       ndim;
   GSIZET     nfound;
-  T          mr1, mr2;
+  T          a, h, m1, m2, md;
   GTPoint<T> c(3), d(3), p(3), r1(3), r2(3);
 
   p    = 0.0;
   d    = verts[1] ; d -= verts[0];
+  md   = d.mag();
   ndim = x.size();
   ind.resizem(x[0].size());
   nfound = 0;
   for ( auto i=0; i<x[0].size(); i++ ) {
     p.assign(x, i);
-    r1 = p ; r1 -= verts[0]; mr1 = r1.mag();
-    r2 = p ; r2 -= verts[1]; mr2 = r2.mag();
-    d.cross(r1, c); // c = d X r1
-    if ( (mr1+mr2) <= d.mag() ) {
+    r1 = p ; r1 -= verts[0]; m1 = r1.mag();
+    r2 = p ; r2 -= verts[1]; m2 = r2.mag();
+//  a = 0.25*sqrt( (m1+m2+md) * (m2+md-m1) * (md+m1-m2) * (m1+m2-md) ); //arrea
+    d.cross(r1,c); // c = d x r1
+    a = c.mag(); // Actually, a = 0.5 d x r1
+    h = a / md;  // height, actually, = 2 * a / md
+    if ( h <= eps &&  (m1+m2) <= (md+eps) ) {
       ind[nfound++] = i;
     }
   } // end, test point loop
   
   return nfound;
 
-} // end of method in_seg
+} // end of method in_seg (1)
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : in_seg (2)
+// DESC   : Determine if points, x, lie within segment 
+//          defined by verts. Return indices of contained x
+//          in ind vector, and return the number of points found
+// ARGS   : verts: use first 2 points to define segment
+//          x    : test points
+//          ix   : indirection indices in x to consider
+//          eps  : comparison epsilon
+//          ind  : vector of indices in x that lie on segment. Reallocated
+//                 if necessary to be of insufficient size
+// RETURNS: number of points found on segment (valid number of points in ind)
+//**********************************************************************************
+template<typename T>
+GSIZET in_seg(const GTVector<GTPoint<T>> &verts, const GTVector<GTVector<T>> &x, const GTVector<GSIZET> &ix, T eps, GTVector<GSIZET> &ind)
+{
+  GINT       ndim;
+  GSIZET     nfound;
+  T          a, h, m1, m2, md;
+  GTPoint<T> c(3), d(3), p(3), r1(3), r2(3);
+
+  p    = 0.0;
+  d    = verts[1] ; d -= verts[0];
+  md   - d.mag();
+  ndim = x.size();
+  ind.resizem(x[0].size());
+  nfound = 0;
+  for ( auto i=0; i<ix.size(); i++ ) {
+    p.assign(x, ix[i]);
+    r1 = p ; r1 -= verts[0]; m1 = r1.mag();
+    r2 = p ; r2 -= verts[1]; m2 = r2.mag();
+    d.cross(r1,c); // c = d x r1
+//  a = 0.25*sqrt( (m1+m2+md) * (m2+md-m1) * (md+m1-m2) * (m1+m2-md) ); //arrea
+    a = c.mag(); // Actually, a = 0.5 d x r1
+    h = a / md;  // height, actually, = 2 * a / md
+    if ( h <= eps &&  (m1+m2) <= (md+eps) ) {
+      ind[nfound++] = ix[i];
+    }
+  } // end, test point loop
+  
+  return nfound;
+
+} // end of method in_seg (2)
 
 
 //**********************************************************************************
 //**********************************************************************************
 
-// METHOD : in_poly 
+// METHOD : in_poly (1)
 // DESC   : Determine if points, x, lie within polygon 
 //          defined by verts. Return indices of enclosed x
 //          in ind vector, and return the number of points found
@@ -283,9 +361,164 @@ GSIZET in_poly(GTVector<GTPoint<T>> &verts, const GTVector<GTVector<T>> &x, T ep
 
   return nfound;   
 
-} // end of method in_poly 
+} // end of method in_poly (1)
 
 
+//**********************************************************************************
+//**********************************************************************************
 
+// METHOD : in_poly (2)
+// DESC   : Determine if points, x, lie within polygon 
+//          defined by verts. Return indices of enclosed x
+//          in ind vector, and return the number of points found
+// ARGS   : verts: vertices defining polygon, in 'counter-clockwise' order
+//          x    : test points (x, y, ... z arrays)
+//          ix   : indirection indices in x to consider
+//          ind  : vector of indices in x that lie on segment. Reallocated
+//                 if necessary to be of insufficient size
+//          eps  : 'zero' value
+// RETURNS: number of points found in polygon (valid number of points in ind)
+//**********************************************************************************
+template<typename T>
+GSIZET in_poly(GTVector<GTPoint<T>> &verts, const GTVector<GTVector<T>> &x, const GTVector<GSIZET> &ix, T eps, GTVector<GSIZET> &ind)
+{
+  GINT         nverts;
+  GSIZET       nfound;
+  T            dotdrN, dotdrc;
+  GTPoint<T>   c, N, dr, r1, r2, xp;
+
+  ind.resizem(x[0].size());
+  nverts = verts.size();
+  nfound = 0;
+  for ( auto i=0; i<ix.size(); i++ ) {
+    for ( auto n=0; n<verts.size(); n++ ) {
+
+      // Assume vertices in counterclockwise order, and
+      // compute normal to edge segment n, np1. This vector
+      // points 'inward' in a r.h. sense:
+      r1 = verts[(n+1)%nverts]; r1 -= verts[n];
+      r2 = verts[(n+2)%nverts]; r2  -= verts[(n+1)%nverts];
+     
+      r1.cross(r2, c); // c = r1 X r2, normal to plane
+
+      c.cross(r1, N);  // N = c X r1, in plane 
+
+      xp.assign(x, ix[i]); // test point
+
+      // Compute vector dr =  r_test - polyVertex:
+      dr = xp; dr -= verts[n];
+      dotdrN = dr.dot(N);
+      dotdrc = dr.dot(c);
+
+      // If dr dot N < 0, or there is a component perp to plane of
+      // polygon (dotPar !=0 ) then point is outside of polygon:
+      if ( (fabs(dotdrN) > eps && dotdrN < 0) 
+        ||  fabs(dotdrc) > eps ) {
+        ind[nfound++] = ix[i];
+      }
+    } // end, vert loop
+  }   // end, test point loop
+
+  return nfound;   
+
+} // end of method in_poly (2)
+
+
+//**********************************************************************************
+//**********************************************************************************
+
+// METHOD : fuzzyeq (1)
+// DESC   : Determine which, if any, members of input array are 'fuzzy
+//          equal' to vcomp, and provide memberindces in return array, 
+//          ind.
+// ARGS   : v    : vertices defining polygon, in 'counter-clockwise' order
+//          vcomp: test points value to compare with v elements
+//          eps  : 'fuzzy' epsilon value
+//          ind  : vector of indices in v that are 'fuzy qual' to vcomp. 
+//                 Reallocated if necessary to be of sufficient size
+// RETURNS: number of points found in v that are 'fuzzy equal' to vcomp
+//**********************************************************************************
+template<typename T>
+GSIZET fuzzyeq(const GTVector<T> &v, T vcomp, T eps, GTVector<GSIZET> &ind)
+{
+  GSIZET nfound=0;
+
+  for ( auto j=0; j<v.size(); j++ ) {
+    nfound += FUZZYEQ(v[j], vcomp, eps) ? 1 : 0;
+  }
+
+  ind.resizem(nfound);
+  nfound = 0;
+  for ( auto j=0; j<v.size(); j++ ) {
+    if ( FUZZYEQ(v[j], vcomp, eps) ) {
+      ind[nfound++] = j;
+    }
+  }
+
+  return nfound;
+
+} // end, method fuzzyeq (1)
+
+
+//**********************************************************************************
+//**********************************************************************************
+
+// METHOD : fuzzyeq (2)
+// DESC   : Determine which, if any, members of input array are 'fuzzy
+//          equal' to vcomp, and provide memberindces in return array, 
+//          ind.
+// ARGS   : v    : vertices defining polygon, in 'counter-clockwise' order
+//          iv   : which indices in v to examine
+//          vcomp: test points value to compare with v elements
+//          eps  : 'fuzzy' epsilon value
+//          ind  : vector of indices in v that are 'fuzy qual' to vcomp. 
+//                 Reallocated if necessary to be of sufficient size
+// RETURNS: number of points found in v that are 'fuzzy equal' to vcomp
+//**********************************************************************************
+template<typename T>
+GSIZET fuzzyeq(const GTVector<T> &v, const GTVector<GSIZET> &iv, T vcomp, T eps, GTVector<GSIZET> &ind)
+{
+  GSIZET nfound=0;
+
+  for ( auto j=0; j<iv.size(); j++ ) {
+    nfound += FUZZYEQ(v[iv[j]], vcomp, eps) ? 1 : 0;
+  }
+
+  ind.resizem(nfound);
+  nfound = 0;
+  for ( auto j=0; j<iv.size(); j++ ) {
+    if ( FUZZYEQ(v[iv[j]], vcomp, eps) ) {
+      ind[nfound++] = iv[j];
+    }
+  }
+
+  return nfound;
+
+} // end, method fuzzyeq (2)
+
+
+//**********************************************************************************
+//**********************************************************************************
+
+// METHOD : convert
+// DESC   : Convert vector from one type to another
+// ARGS   : vold : old array
+//          vnew : new array
+// RETURNS: none.
+//**********************************************************************************
+template<typename TOLD, typename TNEW>
+void convert(const GTVector<TOLD> &vold, GTVector<TNEW> &vnew)
+{
+
+  vnew.resize(vold.size());
+
+  for ( auto j=0; j<vold.size(); j++ ) {
+    vnew[j] = static_cast<TNEW>(vold[j]);
+  }
+
+} // end, method convert
+
+
+ 
 } // end, namespace
 

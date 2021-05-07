@@ -18,6 +18,7 @@
 #include "tbox/error_handler.hpp"
 
 #include "pdeint/equation_base.hpp"
+//#include "pdeint/grid_base.hpp"
 #include "pdeint/mixer_base.hpp"
 #include "pdeint/observer_base.hpp"
 #include "pdeint/null_observer.hpp"
@@ -44,8 +45,9 @@ public:
         using EqnBasePtr   = std::shared_ptr<EqnBase>;
 	using State        = typename Types::State;
 	using StateInfo    = typename Types::StateInfo;
+//sing GridBase     = GridBase<Types>;
 	using Grid         = typename Types::Grid;
-	using Value        = typename Types::Value;
+	using Ftype        = typename Types::Ftype;
 	using Derivative   = typename Types::Derivative;
 	using Time         = typename Types::Time;
 	using Jacobian     = typename Types::Jacobian;
@@ -60,8 +62,8 @@ public:
 		IntegType integ_type;
 		size_t    cycle       = 0; 
 		size_t    cycle_end   = 1;
-		Value     cfl_min     = std::numeric_limits<Value>::min();
-		Value     cfl_max     = std::numeric_limits<Value>::max();
+		Ftype     cfl_min     = std::numeric_limits<Ftype>::min();
+		Ftype     cfl_max     = std::numeric_limits<Ftype>::max();
 		Time      dt_min      = std::numeric_limits<Time>::min();
 		Time      dt_max      = std::numeric_limits<Time>::max();   
 		Time      dt          = static_cast<Time>(1.0e-2);
@@ -99,12 +101,10 @@ public:
 	 *
 	 * @param[in,out] t  Initial time at start, and final time
 	 * @param[in,out] uf Forcing tendency
-	 * @param[in,out] ub Boundary condition vectors
 	 * @param[in,out] u  Current and final equation state values
 	 */
 	void time_integrate( Time&        t,
                              State&       uf,
-                             State&       ub,
 			     State&       u );
 	/**
 	 * Take as many steps required to progress from time t0 to t1.
@@ -119,14 +119,12 @@ public:
 	 * @param[in]     t1 Final time an completion of time stepping
 	 * @param[in]     dt Recommend time step size
 	 * @param[in,out] uf Forcing tendency
-	 * @param[in,out] ub Boundary condition vectors
 	 * @param[in,out] u  Current and final equation state values
 	 */
 	void time( const Time&  t0,
 		   const Time&  t1,
 		   const Time&  dt,
                    State&       uf,
-                   State&       ub,
 		   State&       u );
 
 	/**
@@ -141,7 +139,6 @@ public:
 	 * @param[in]     dt Recommend time step size
 	 * @param[in]     n  Number of steps to take
 	 * @param[in,out] uf Forcing tendency
-	 * @param[in,out] ub Boundary condition vectors
 	 * @param[in,out] u  Current and final equation state values
 	 * @param[out]    t  Final time resulting from taking n steps
 	 */
@@ -149,7 +146,6 @@ public:
 		    const Time&  dt,
 		    const Size&  n,
                     State&       uf,
-                    State&       ub,
 		    State&       u,
 	    	    Time&        t );
 
@@ -164,12 +160,10 @@ public:
 	 *
 	 * @param[in]     tvec Vector of time points to march through
 	 * @param[in,out] uf Forcing tendency
-	 * @param[in,out] ub Boundary condition vectors
 	 * @param[in,out] u  Current and final equation state values
 	 */
 	void list( const std::vector<Time>& tvec,
                    State&                   uf,
-                   State&                   ub,
 		   State&                   u );
 
         /**
@@ -196,6 +190,14 @@ protected:
 	 * Used to calculate the limited time step size if required.
 	 */
 	void init_dt(const Time& t, State& u, Time& dt) const;
+
+#if 0
+	/**
+	 * Used to update state due to boundary conditions:
+	 */
+        void bdy_update(const Time& t, State& utmp, State& u) const{
+#endif
+
 
 };
 

@@ -28,7 +28,7 @@ struct IntegratorFactory {
         using State        = typename Types::State;
         using StateInfo    = typename Types::StateInfo;
         using Grid         = typename Types::Grid;
-        using Value        = typename Types::Value;
+        using Ftype        = typename Types::Ftype;
         using Derivative   = typename Types::Derivative;
         using Time         = typename Types::Time;
         using Jacobian     = typename Types::Jacobian;

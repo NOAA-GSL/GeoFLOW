@@ -79,6 +79,7 @@ EquationFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid){
                 ctraits.dograv      = eqn_ptree.getValue<bool>  ("dogravity");
                 ctraits.usebase     = eqn_ptree.getValue<bool>  ("usebase_state");
                 ctraits.divopcolloc = eqn_ptree.getValue<bool>  ("divopcolloc");
+                ctraits.usebdydata  = eqn_ptree.getValue<bool>  ("usebdydat",true);
                 ctraits.Stokeshyp   = eqn_ptree.getValue<bool>  ("Stokeshyp");
                 ctraits.bindepdiss  = eqn_ptree.getValue<bool>  ("bindepdiss",false);
                 ctraits.nbase       = ctraits.usebase ? 2 : 0;
@@ -88,10 +89,9 @@ EquationFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid){
                                     + (!ctraits.dodry ? 1 : 0) // vapor
                                     + ( ctraits.dofallout ? ctraits.nlsector 
                                                         + ctraits.nisector : 0); // q_i
-                ctraits.nstate      =  ctraits.nsolve
-                                    + (ctraits.dofallout ? ctraits.nlsector 
-                                                       + ctraits.nisector : 0)
-                                    + (ctraits.usebase ? 2 : 0);
+                ctraits.nstate      = ctraits.nsolve;
+                ctraits.nfallout    = (ctraits.dofallout ? ctraits.nlsector 
+                                    +  ctraits.nisector + 1 : 0);
                 ctraits.bconserved  = eqn_ptree.getValue<bool>  ("bconserved",false);
                 ctraits.bforced     = eqn_ptree.getValue<bool>  ("use_forcing",false);
                 ctraits.Ts_base     = eqn_ptree.getValue<double>("T_surf"); // K
@@ -107,7 +107,7 @@ EquationFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid){
                 ctraits.ssteptype   = stp_ptree.getValue<std::string>
                                                              ("stepping_method","GSTEPPER_EXRK");
                 ctraits.nu          = dis_ptree.getValue<double>("nu");
-                ctraits.kappa       = dis_ptree.getValue<double>("kappa");
+                ctraits.eta         = dis_ptree.getValue<double>("eta");
                 ctraits.zeta        = dis_ptree.getValue<double>("zeta");
                 ctraits.lambda      = dis_ptree.getValue<double>("lambda");
                 for ( auto i=0; i<GDIM; i++ ) default_comps.push_back(i);
@@ -173,18 +173,11 @@ EquationFactory<ET>::config_filters(const PropertyTree& ptree, const std::string
             exit(1);
           }
           fptree  = eqn_ptree.getPropertyTree(fblocklist[j]);
-          icomp   = fptree.getArray<int>("state_index");
           pfilter = FilterFactory<ET>::build(eqn_ptree, fblocklist[j], grid);
 
           // Cycle over specified state indices, and set 
           // filter_list for those indices to this filter:
-          for ( auto i=0; i<icomp.size(); i++ ) {
-            if ( icomp[i] < 0 || icomp[i] >= filter_list.size() ) {
-              cout << "EquationFactory::config_filters: state index " << icomp[i] << " invalid in PropertTree: " << fblocklist[j] << endl;
-              exit(1);
-            }
-            filter_list[icomp[i]] = pfilter;
-          }
+          filter_list[j] = pfilter;
         }
 
 

@@ -9,7 +9,6 @@
 #define _GIO_HPP
 
 #include "gtvector.hpp"
-#include "ggrid.hpp"
 #include "pdeint/io_base.hpp"
 #include "tbox/property_tree.hpp"
 #include "tbox/mpixx.hpp"
@@ -22,20 +21,20 @@ class GIO : public IOBase<TypePack>
 {
 
 public:
-        using Interface   = EquationBase<TypePack>;
+        using Types       = TypePack;
         using IOBaseType  = IOBase<TypePack>;
         using IOBasePtr   = std::shared_ptr<IOBaseType>;
-        using State       = typename Interface::State;
-        using Grid        = typename Interface::Grid;
-        using Value       = typename Interface::Value;
-        using Time        = typename Interface::Time;
-        using Size        = typename Interface::Size;
-        using StateInfo   = typename Interface::StateInfo; 
-
+        using State       = typename Types::State;
+        using StateComp   = typename Types::StateComp;
+        using Grid        = typename Types::Grid;
+        using Ftype       = typename Types::Ftype;
+        using Time        = typename Types::Time;
+        using Size        = typename Types::Size;
+        using StateInfo   = typename Types::StateInfo; 
         using Traits      = typename IOBaseType::Traits;
 
-        static_assert(std::is_same<Value,GFTYPE>::value,
-               "Value is of incorrect type");
+        static_assert(std::is_same<Ftype,GFTYPE>::value,
+               "Ftype is of incorrect type");
         static_assert(std::is_same<State,GTVector<GTVector<GFTYPE>*>>::value,
                "State is of incorrect type");
 //      static_assert(std::is_same<StateInfo,GStateIOTraits>::value,
@@ -57,8 +56,8 @@ private:
         void               update_type(StateInfo &);
 //      void               read_state_posix (StateInfo &info,       State  &u);
 //      void               read_state_coll  (StateInfo &info,       State  &u);
-        GSIZET             write_posix(GString filename, StateInfo &info, const GTVector<Value> &u);
-        GSIZET             read_posix (GString filename, StateInfo &info,       GTVector<Value> &u, bool bstate);
+        GSIZET             write_posix(GString filename, StateInfo &info, const GTVector<Ftype> &u);
+        GSIZET             read_posix (GString filename, StateInfo &info,       GTVector<Ftype> &u, bool bstate);
         GSIZET             write_coll (GString filename, StateInfo &info, const State           &u);
         GSIZET             read_coll  (GString filename, StateInfo &info,       State           &u, bool bstate);
         GSIZET             read_header(GString filename, StateInfo &info, Traits &traits);

@@ -3,14 +3,8 @@
 // Date         : 10/19/18 (DLR)
 // Description  : Represents the SEM mass operator. Mass-lumping is assumed.
 // Copyright    : Copyright 2018. Colorado State University. All rights reserved
-// Derived From : GLinOp
+// Derived From : none.
 //==================================================================================
-
-#include <cstdlib>
-#include <memory>
-#include <cmath>
-#include "gmass.hpp"
-#include "gtmatrix.hpp"
 
 
 //**********************************************************************************
@@ -20,8 +14,9 @@
 // ARGS   : none
 // RETURNS: none
 //**********************************************************************************
-GMass::GMass(GGrid &grid, GBOOL bdoinverse)
-: GLinOp(grid),
+template<typename Types>
+GMass<Types>::GMass(Grid &grid, GBOOL bdoinverse):
+bInitialized_     (FALSE),
 bdoinverse_  (bdoinverse),
 bmasslumped_       (TRUE)
 {
@@ -37,7 +32,8 @@ bmasslumped_       (TRUE)
 // ARGS   : none
 // RETURNS: none
 //**********************************************************************************
-GMass::~GMass()
+template<typename Types>
+GMass<Types>::~GMass()
 {
 } // end, destructor
 
@@ -49,7 +45,8 @@ GMass::~GMass()
 // ARGS   : bml : boolean flag (TRUE or FALSE)
 // RETURNS:  none
 //**********************************************************************************
-void GMass::do_mass_lumping(GBOOL bml) 
+template<typename Types>
+void GMass<Types>::do_mass_lumping(GBOOL bml) 
 {
   bmasslumped_ = bml;
 
@@ -64,7 +61,8 @@ void GMass::do_mass_lumping(GBOOL bml)
 // ARGS   : none.
 // RETURNS: none.
 //**********************************************************************************
-void GMass::init()
+template<typename Types>
+void GMass<Types>::init()
 {
 
   #if defined(_G_IS1D)
@@ -75,12 +73,14 @@ void GMass::init()
     init3d();
   #endif
 
+
   if ( bdoinverse_ ) {
-    grid_->get_ggfx().doOp(mass_, GGFX<decltype(mass_[0])>::Smooth());
+    grid_->get_ggfx().doOp(mass_, typename GGFX<Ftype>::Smooth());
     for ( auto j=0; j<mass_.size(); j++ ) {
       mass_[j] = 1.0 / mass_[j];
     }
   }
+
   bInitialized_ = TRUE;
 
 } // end of method init
@@ -93,16 +93,17 @@ void GMass::init()
 // ARGS   : none.
 // RETURNS: none.
 //**********************************************************************************
-void GMass::init1d()
+template<typename Types>
+void GMass<Types>::init1d()
 {
 
   // Fill mass vector with weights. This would have to be
   // a matrix if we were not doing mass lumping:
   GSIZET n;
   GTVector<GINT> N(GDIM);
-  GTVector<GTVector<GFTYPE>*> W(GDIM);
-  GTVector<GFTYPE> *Jac;
-  GElemList *gelems;
+  GTVector<GTVector<Ftype>*> W(GDIM);
+  GTVector<Ftype> *Jac;
+  typename Grid::GElemList *gelems;
 
   Jac    = &grid_->Jac(); 
   gelems = &grid_->elems(); 
@@ -129,15 +130,16 @@ void GMass::init1d()
 // ARGS   : none.
 // RETURNS: none.
 //**********************************************************************************
-void GMass::init2d()
+template<typename Types>
+void GMass<Types>::init2d()
 {
 
 
   GSIZET n;
   GTVector<GINT> N(GDIM);
-  GTVector<GTVector<GFTYPE>*> W(GDIM);
-  GTVector<GFTYPE> *Jac;
-  GElemList *gelems;
+  GTVector<GTVector<Ftype>*> W(GDIM);
+  GTVector<Ftype> *Jac;
+  typename Grid::GElemList *gelems;
 
 
   // Fill Fill mass vector with tensor product of weights and
@@ -174,15 +176,16 @@ void GMass::init2d()
 // ARGS   : none.
 // RETURNS: none.
 //**********************************************************************************
-void GMass::init3d()
+template<typename Types>
+void GMass<Types>::init3d()
 {
 
 
   GSIZET n;
   GTVector<GINT> N(GDIM);
-  GTVector<GTVector<GFTYPE>*> W(GDIM);
-  GTVector<GFTYPE> *Jac;
-  GElemList *gelems;
+  GTVector<GTVector<Ftype>*> W(GDIM);
+  GTVector<Ftype> *Jac;
+  typename Grid::GElemList *gelems;
 
 
   // Fill mass vector with tensor product of weights and
@@ -219,9 +222,11 @@ void GMass::init3d()
 //             
 // RETURNS:  none
 //**********************************************************************************
-void GMass::opVec_prod(GTVector<GFTYPE> &input, GTVector<GTVector<GFTYPE>*> &utmp, 
-                       GTVector<GFTYPE> &output)
+template<typename Types>
+void GMass<Types>::opVec_prod(GTVector<Ftype> &input, GTVector<GTVector<Ftype>*> &utmp, 
+                       GTVector<Ftype> &output)
 {
+  assert(bInitialized_);
 
   mass_.pointProd(input, output);
 

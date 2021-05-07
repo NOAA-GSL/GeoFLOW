@@ -20,7 +20,7 @@
 //        |   /       M9 |   /                       |/________  x
 //        |  / M3   F4   |  / M1                     
 //        | /            | /                       
-//        |/_____________|/a                     
+//        |/_____________|/                      
 // P0_<-> V0     M0     V1
 //
 // Faces are labeled s.t. F0-F3 correspond to orientation of edges on bottom plane;
@@ -146,6 +146,7 @@ inline  GVVFType           &faceJac(){ return faceJac_; }
 inline  GTVector<GFTYPE>   &faceJac(GINT i){ return faceJac_[i];}
 #endif
 
+        GBOOL               isvert(GSIZET ind, GUINT &ivert);
 inline  GVVInt             &vert_indices(){ return vert_indices_;}
 inline  GTVector<GINT>     &vert_indices(GINT i){ return vert_indices_[i];}
 inline  GVVInt             &edge_indices(){ return edge_indices_;}
@@ -186,7 +187,7 @@ virtual void                get_indirect2d(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b,
 virtual void                get_indirect3d(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GVVInt &vert_ind,
                                           GVVInt &edge_ind, GVVInt &face_ind, GVFType &face_mass, GVVUInt &face_desc);
         void                Jac(GMVFType &rij, GTVector<GFTYPE> &jac, GBOOL &pChk, GINT *ind, GINT nind);
-virtual void                Jac_embed(GMVFType &G, GTVector<GFTYPE> &jac, GBOOL &pChk, GINT *pind, GINT nind);
+//virtual void                Jac_embed(GMVFType &G, GTVector<GFTYPE> &jac, GBOOL &pChk, GINT *pind, GINT nind);
         void                inv(GMVFType &G, GMVFType &iG);
 /*
         void                set_faceNormal2d(GTMatrix<GTVector<GFTYPE>> &rij, GTVector<GINT> &iind, GTVector<GTVector<GFTYPE>> &bdyNormal);

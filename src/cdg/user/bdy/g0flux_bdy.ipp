@@ -19,15 +19,12 @@
 template<typename Types>
 G0FluxBdy<Types>::G0FluxBdy(typename G0FluxBdy<Types>::Traits &traits) :
 UpdateBdyBase<Types>(),
-bcomputed_               (FALSE),
-nstate_                      (0),
 traits_                 (traits)
 {
 
   assert( traits_.istate.size() == GDIM 
        && "Kinetic vector must be specified");
 
-  nstate_ = traits_.istate.size();
 
 } // end of constructor method 
 
@@ -50,22 +47,20 @@ G0FluxBdy<Types>::~G0FluxBdy()
 // METHOD : update_impl
 // DESC   : Entry method for updating 0-Flux bdy conditions
 // ARGS   : 
+//          eqn   : equation implementation
 //          grid  : grid object (necessary?)
-//          stinfo: state info structure
 //          time  : timestep
 //          utmp  : tmp vectors
 //          u     : state vector
-//          ub    : bdy vector
 // RETURNS: none.
 //**********************************************************************************
 template<typename Types>
 GBOOL G0FluxBdy<Types>::update_impl(
-                              Grid      &grid,
-                              StateInfo &stinfo,
-                              Time      &time,
-                              State     &utmp,
-                              State     &u,
-                              State     &ub)
+                              EqnBasePtr &eqn,
+                              Grid       &grid,
+                              Time       &time,
+                              State      &utmp,
+                              State      &u)
 {
    GString    serr = "G0FluxBdy<Types>::update_impl: ";
    GBdyType   itype;
@@ -75,12 +70,8 @@ GBOOL G0FluxBdy<Types>::update_impl(
    GTVector<GTVector<Ftype>>  *bdyNormals;
 // GTVector<GTVector<Ftype>>  *xnodes;
    GTVector<GINT>             *idep;
-   GTVector<GSIZET>           *igbdy;
-// GTVector<GTVector<GSIZET>> *ilbdy;
 
 
-
-  if ( traits_.compute_once && bcomputed_ ) return TRUE;
 
 
   // Handle 0-Flux bdy conditions. This
@@ -92,36 +83,33 @@ GBOOL G0FluxBdy<Types>::update_impl(
   //       following loops to have a better chance
   //       of vectorization. Unrolling likely
   //       won't occur:
-//xnodes     = &grid.xNodes();
   bdyNormals = &grid.bdyNormals(); // bdy normal vector
   idep       = &grid.idepComp();   // dependent components
-  igbdy      = &traits_.ibdyvol;
-//ilbdy      = &grid_->ilbdy_binned()[traits_.bdyid];
   itype      = GBDY_0FLUX;
-  for ( auto j=0; j<igbdy->size(); j++ ) {
+  for ( auto j=0; j<traits_.ibdyloc.size(); j++ ) {
     iloc = traits_.ibdyloc[j];     // index into bdy arrays
-    ind  = (*igbdy)[j];            // index into volume array
+    ind  = traits_.ibdyvol[j];     // index into volume array
     idd  = (*idep)[iloc];          // dependent vector component
 
-    if ( idd >= 0 ) {
-      xn   = (*bdyNormals)[idd][iloc];// n_idd == normal component for dependent vector comp
-      sum  = 0.0;
-      for ( auto k=0; k<nstate_; k++ ) { // for each indep vector component
-        sum += idd == traits_.istate[k] ? 0.0 
-                    : (*bdyNormals)[k][iloc] * (*u[traits_.istate[k]])[ind];
-      }
-    
-      // Ensure v.n = 0:
-//    (*u[idd])[ind] = ( sum + (*bdyNormals)[idd][iloc] * (*u[idd])[ind] ) / xn;
-      (*u[idd])[ind] = -sum / xn;
-    }
-    else {
-        // Set v == 0, say, on a vertex:
-        for ( auto k=0; k<nstate_; k++ ) (*u[traits_.istate[k]])[ind] = 0.0;
-    }
-  }
 
-  bcomputed_ = TRUE;
+    xn   = (*bdyNormals)[idd][iloc];// n_idd == normal component for dependent vector comp
+    sum  = 0.0;
+    for ( auto k=0; k<traits_.istate.size(); k++ ) { // for each indep vector component
+        sum += traits_.istate[k] != idd 
+             ? (*bdyNormals)[k][iloc] * (*u[traits_.istate[k]])[ind]
+             : 0.0;
+    }
+    (*u[idd])[ind] = -sum / xn; // Ensure v.n = 0:
+  
+#if 0 
+    if ( GET_NDTYPE(traits_.ibdydsc[j]) == GElem_base::VERTEX ) {
+      for ( auto k=0; k<traits_.istate.size(); k++ ) { 
+        (*u[traits_.istate[k]])[ind] = 0.0;
+      }
+    }
+#endif
+
+  }
 
 
   return TRUE;

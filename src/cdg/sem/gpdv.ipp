@@ -2,9 +2,8 @@
 // Module       : gpdv.ipp
 // Date         : 11/11/18 (DLR)
 // Description  : Represents the SEM discretization of the 'pdV' operator:
-//                p Div u. This is a nonlinear operator, so should not derive 
-//                from GLinOp. This operator requires that grid consist of
-//                elements of only one type.
+//                p Div u. This is a nonlinear operator, and requires that 
+//                grid consist of elements of only one type.
 // Copyright    : Copyright 2018. Colorado State University. All rights reserved.
 // Derived From : GLinOp
 //==================================================================================
@@ -60,12 +59,11 @@ void GpdV<TypePack>::apply(StateComp &p, State &u, State &utmp, StateComp &po)
   assert( utmp.size() >= 2
        && "Insufficient temp space specified");
 
-  GElemList *gelems=&grid_->elems();
 
 // Must compute:
 //    po = p Div u 
 //
-  GMass *mass = &grid_->massop();
+  Mass *mass = &grid_->massop();
 
   // Compute po += Gj (D^j u_j): 
   grid_->deriv(*u[0], 1, *utmp[0], po );

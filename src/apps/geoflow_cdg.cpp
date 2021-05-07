@@ -8,6 +8,13 @@
 //==================================================================================
 #include "geoflow_cdg.h"
 
+//#if !defined(_GMTK_GLOBAL_DATA)
+//  #define _GMTK_GLOBAL_DATA
+  GINT szMatCache_ = _G_MAT_CACHE_SIZE;
+  GINT szVecCache_ = _G_VEC_CACHE_SIZE;
+//#endif
+
+
 int main(int argc, char **argv) {
     GEOFLOW_TRACE_INITIALIZE();  // Must be before MPI_Init (thanks GPTL)
     using namespace ::geoflow::tbox;
@@ -130,7 +137,7 @@ int main(int argc, char **argv) {
     if (itindex == 0) {  // start new run
         icycle = 0;
         t = 0.0;
-        init_state(ptree_, *grid_, pEqn_, t, utmp_, u_, ub_);
+        init_state(ptree_, *grid_, pEqn_, t, utmp_, u_);
     } else {  // restart run
         do_restart(ptree_, *grid_, u_, p, icycle, t);
     }
@@ -143,7 +150,7 @@ int main(int argc, char **argv) {
     GComm::Synch();
     pio::pout << "geoflow: do time stepping..." << std::endl;
 
-    pIntegrator_->time_integrate(t, uf_, ub_, u_);
+    pIntegrator_->time_integrate(t, uf_, u_);
 
     pio::pout << "geoflow: time stepping done." << std::endl;
 
@@ -155,7 +162,7 @@ int main(int argc, char **argv) {
     //***************************************************
     // Compare solution if required:
     //***************************************************
-    compare(ptree_, *grid_, pEqn_, t, utmp_, ub_, u_);
+    compare(ptree_, *grid_, pEqn_, t, utmp_, u_);
 
     //***************************************************
     // Do shutdown, cleaning:
@@ -233,7 +240,7 @@ void create_mixer(PropertyTree &ptree, MixBasePtr &pMixer) {
 //**********************************************************************************
 // METHOD: create_observers
 // DESC  : Create IO object and observer list from main ptree.
-// ARGS  : grid      : GGrid object
+// ARGS  : grid      : Grid object
 //         icycle    : initial icycle
 //         time      : initial time
 //         pObservers: observer list, returned
@@ -244,7 +251,7 @@ void create_observers(EqnBasePtr &pEqn, PropertyTree &ptree, GSIZET icycle, Time
     GINT ivers;
     GSIZET rest_ocycle;      // restart output cycle
     GSIZET deltac, cyc_ref;  // cycle interval
-    GFTYPE ofact;            // output freq in terms of restart output
+    Ftype  ofact;            // output freq in terms of restart output
     Time deltat, delt_ref;   // time interval
     GString dstr = "none";
     GString spref;
@@ -301,11 +308,11 @@ void create_observers(EqnBasePtr &pEqn, PropertyTree &ptree, GSIZET icycle, Time
             // These could/should be hidden from the config file:
             if ("gio_observer" == obslist[j]) ofact = 1.0;
             obsptree.setValue<GSIZET>("start_ocycle", MAX(0.0, rest_ocycle * ofact));
-            obsptree.setValue<GFTYPE>("start_time", time);
+            obsptree.setValue<Ftype>("start_time", time);
 
             // Link each observer cadence to I/O cadence:
             if ("gio_observer" != obslist[j]) {
-                obsptree.setValue<GFTYPE>("time_interval", MAX(0.0, delt_ref / ofact));
+                obsptree.setValue<Ftype>("time_interval", MAX(0.0, delt_ref / ofact));
                 deltac = (GSIZET)(((GDOUBLE)cyc_ref) / ofact);
                 obsptree.setValue<GSIZET>("cycle_interval", MAX(1, deltac));
                 obsptree.setValue<GString>("cadence_type", ctype);
@@ -354,7 +361,7 @@ void create_basis_pool(PropertyTree &ptree, BasisBase &gbasis) {
     // Eventually, this may become an actual pool, from which
     // solvers will determine basis in each direction. For now...
     for (auto j = 0; j < GDIM; j++) {
-        gbasis[j] = new GLLBasis<GCTYPE, GFTYPE>(pstd[j]);
+        gbasis[j] = new GLLBasis<GCTYPE, Ftype>(pstd[j]);
     }
 
 }  // end method create_basis_pool
@@ -375,15 +382,15 @@ void do_bench(GString fname, GSIZET ncyc) {
 
 #if defined(GEOFLOW_USE_GPTL)
 
-    GINT myrank = GComm::WorldRank(comm_);
-    GINT ntasks = GComm::WorldSize(comm_);
-    GINT nthreads = 1;
-    GFTYPE dxmin, lmin;
-    GFTYPE ttotal;
-    GFTYPE tggfx;
-    GFTYPE texch;
-    GFTYPE tgrid;
-    GFTYPE tggfxinit;
+    GINT  myrank = GComm::WorldRank(comm_);
+    GINT  ntasks = GComm::WorldSize(comm_);
+    GINT  nthreads = 1;
+    Ftype dxmin, lmin;
+    Ftype ttotal;
+    Ftype tggfx;
+    Ftype texch;
+    Ftype tgrid;
+    Ftype tggfxinit;
     std::ifstream itst;
     std::ofstream ios;
     GTVector<GSIZET> lsz(2), gsz(2);
@@ -472,24 +479,22 @@ void allocate(const PropertyTree &ptree) {
 
     nsolve_ = pEqn_->solve_size();
     nstate_ = pEqn_->state_size();
-    ntmp_ = pEqn_->tmp_size();
+    ntmp_   = pEqn_->tmp_size();
     iforced = &pEqn_->iforced();
     nstate_ = pEqn_->state_size();
-    ntmp_ = pEqn_->tmp_size();
+    ntmp_   = pEqn_->tmp_size();
     iforced = &pEqn_->iforced();
 
     u_.resize(nstate_);  // state
-    ub_.resize(nstate_);
-    ub_ = NULLPTR;  // bdy state array
     uf_.resize(nstate_);
     uf_ = NULLPTR;        // forcing array
     utmp_.resize(ntmp_);  // tmp array
 
-    for (auto j = 0; j < u_.size(); j++) u_[j] = new GTVector<GFTYPE>(grid_->size());
+    for (auto j = 0; j < u_.size(); j++) u_[j] = new GTVector<Ftype>(grid_->size());
 
-    for (auto j = 0; j < iforced->size(); j++) uf_[(*iforced)[j]] = new GTVector<GFTYPE>(grid_->ndof());
+    for (auto j = 0; j < iforced->size(); j++) uf_[(*iforced)[j]] = new GTVector<Ftype>(grid_->ndof());
 
-    for (auto j = 0; j < utmp_.size(); j++) utmp_[j] = new GTVector<GFTYPE>(grid_->size());
+    for (auto j = 0; j < utmp_.size(); j++) utmp_[j] = new GTVector<Ftype>(grid_->size());
 
     // If linear adv. prescribed var is set,
     // point to correct area of u_:
@@ -510,7 +515,6 @@ void deallocate() {
     for (auto j = 0; j < gbasis_.size(); j++) delete gbasis_[j];
     for (auto j = 0; j < utmp_.size(); j++) delete utmp_[j];
     for (auto j = 0; j < u_.size(); j++) delete u_[j];
-    for (auto j = 0; j < ub_.size(); j++) delete ub_[j];
     for (auto j = 0; j < uf_.size(); j++) delete uf_[j];
 
 }  // end method deallocate
@@ -525,13 +529,12 @@ void deallocate() {
 //         t    : initial time
 //         utmp : vector of tmp vectors
 //         u    : full state vector
-//         ub   : full boundary state vector
 //**********************************************************************************
-void init_state(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &t, State &utmp, State &u, State &ub) {
+void init_state(const PropertyTree &ptree, Grid &grid, EqnBasePtr &peqn, Time &t, State &utmp, State &u) {
     GEOFLOW_TRACE();
     GBOOL bret;
 
-    bret = GInitStateFactory<MyTypes>::init(ptree, grid, peqn->stateinfo(), t, utmp, ub, u);
+    bret = GInitStateFactory<MyTypes>::init(ptree, peqn, grid, t, utmp, u);
 
     assert(bret && "state initialization failed");
 
@@ -549,11 +552,11 @@ void init_state(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &
 //         u   : full state vector
 //         uf  : full boundary state vector
 //**********************************************************************************
-void init_force(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &t, State &utmp, State &u, State &uf) {
+void init_force(const PropertyTree &ptree, Grid &grid, EqnBasePtr &peqn, Time &t, State &utmp, State &u, State &uf) {
     GEOFLOW_TRACE();
     GBOOL bret;
 
-    bret = GInitForceFactory<MyTypes>::init(ptree, grid, peqn->stateinfo(), t, utmp, u, uf);
+    bret = GInitForceFactory<MyTypes>::init(ptree, peqn, grid, t, utmp, u, uf);
 
     assert(bret && "forcing initialization failed");
 
@@ -572,13 +575,13 @@ void init_force(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &
 //         utmp : vector of tmp vectors
 //         u    : full state vector
 //**********************************************************************************
-void compare(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &t, State &utmp, State &ub, State &u) {
+void compare(const PropertyTree &ptree, Grid &grid, EqnBasePtr &peqn, Time &t, State &utmp, State &u) {
     GEOFLOW_TRACE();
     GBOOL bret, bvardt;
     GINT myrank, ntasks;
-    GFTYPE dxmin, lmin, tt;
-    GTVector<GFTYPE> lnorm(3), gnorm(3), maxerror(3);
-    GTVector<GFTYPE> nnorm(nsolve_);
+    Ftype dxmin, lmin, tt;
+    GTVector<Ftype> lnorm(3), gnorm(3), maxerror(3);
+    GTVector<Ftype> nnorm(nsolve_);
     GTVector<GString> savars, scvars, sdvars;
     State ua(nstate_);
     std::vector<GINT> pstd(GDIM);
@@ -597,7 +600,7 @@ void compare(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &t, 
     pstd = ptree.getArray<GINT>("exp_order");
 
     // Create analytic solution array:
-    for (GINT j = 0; j < ua.size(); j++) ua[j] = new GTVector<GFTYPE>(grid.ndof());
+    for (GINT j = 0; j < ua.size(); j++) ua[j] = new GTVector<Ftype>(grid.ndof());
 
     // Set up some output variables:
     for (GSIZET j = 0; j < u.size(); j++) {
@@ -618,13 +621,13 @@ void compare(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &t, 
     nnorm = 1.0;
 
     tt = t;
-    bret = GInitStateFactory<MyTypes>::init(ptree, grid, peqn->stateinfo(), tt, utmp, ub, ua);
+    bret = GInitStateFactory<MyTypes>::init(ptree, peqn, grid, tt, utmp, ua);
     assert(bret && "state initialization failed");
     for (GSIZET j = 0; j < nsolve_; j++) {  // local errors
         *utmp[1] = *ua[j];
         utmp[1]->rpow(2);
         nnorm[j] = grid.integrate(*utmp[1], *utmp[0]);  // L2 norm of analyt soln at t=0
-        nnorm[j] = nnorm[j] > std::numeric_limits<GFTYPE>::epsilon() ? nnorm[j] : 1.0;
+        nnorm[j] = nnorm[j] > std::numeric_limits<Ftype>::epsilon() ? nnorm[j] : 1.0;
         cout << "main: nnorm[" << j << "]=" << nnorm[j] << endl;
     }
 
@@ -635,7 +638,7 @@ void compare(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &t, 
 
     // Compute analytic solution at t:
     tt = t;
-    bret = GInitStateFactory<MyTypes>::init(ptree, grid, peqn->stateinfo(), tt, utmp, ub, ua);
+    bret = GInitStateFactory<MyTypes>::init(ptree, peqn, grid, tt, utmp, ua);
     assert(bret && "state initialization failed");
 
 #if 0
@@ -693,7 +696,7 @@ void compare(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &t, 
         gnorm[1] = grid.integrate(*utmp[1], *utmp[0]);  // L1-norm numerator
         gnorm[2] = grid.integrate(*utmp[2], *utmp[0]);  // L2-norm numerator
         // Accumulate to find global errors for this field:
-        GComm::Allreduce(lnorm.data(), gnorm.data(), 1, T2GCDatatype<GFTYPE>(), GC_OP_MAX, comm_);
+        GComm::Allreduce(lnorm.data(), gnorm.data(), 1, T2GCDatatype<Ftype>(), GC_OP_MAX, comm_);
         gnorm[1] = gnorm[1] / nnorm[j];
         gnorm[2] = sqrt(gnorm[2] / nnorm[j]);
         // now find max errors of each type for each field:
@@ -757,7 +760,7 @@ void compare(const PropertyTree &ptree, GGrid &grid, EqnBasePtr &peqn, Time &t, 
 //          grid : grid object
 // RETURNS: none.
 //**********************************************************************************
-void do_terrain(const PropertyTree &ptree, GGrid &grid) {
+void do_terrain(const PropertyTree &ptree, Grid &grid) {
     GEOFLOW_TRACE();
     GBOOL bret, bterr;
     GINT iret, nc;
@@ -771,7 +774,7 @@ void do_terrain(const PropertyTree &ptree, GGrid &grid) {
     // use local variable:
     utmp.resize(2 * nc);
     tmp.resize(nc);
-    for (auto j = 0; j < utmp.size(); j++) utmp[j] = new GTVector<GFTYPE>(grid_->ndof());
+    for (auto j = 0; j < utmp.size(); j++) utmp[j] = new GTVector<Ftype>(grid_->ndof());
 
     // Set terrain & tmp arrays from tmp array pool:
     for (auto j = 0; j < nc; j++) xb[j] = utmp[j];
@@ -798,14 +801,14 @@ void do_terrain(const PropertyTree &ptree, GGrid &grid) {
 //          t    : time from restart
 // RETURNS: none.
 //**********************************************************************************
-void do_restart(const PropertyTree &ptree, GGrid &, State &u,
+void do_restart(const PropertyTree &ptree, Grid &, State &u,
                 GTMatrix<GINT> &p, GSIZET &cycle, Time &t) {
     GEOFLOW_TRACE();
     assert(pIO_ != NULLPTR && "IO operator not set!");
 
     GBOOL bret;
     GSIZET itindex;
-    GFTYPE tt = t;
+    Ftype  tt = t;
     std::stringstream format;
     StateInfo stateinfo;
     ObsTraitsType binobstraits = (*pObservers_)[irestobs_]->get_traits();
@@ -831,16 +834,16 @@ void do_restart(const PropertyTree &ptree, GGrid &, State &u,
 
 }  // end of method do_restart
 
-void init_ggfx(PropertyTree &ptree, GGrid &grid, GGFX<GFTYPE> *&ggfx) {
+void init_ggfx(PropertyTree &ptree, Grid &grid, GGFX<Ftype> *&ggfx) {
     GEOFLOW_TRACE();
 
     // Periodize coords if needed
-    if (typeid(grid) == typeid(GGridBox)) {
-        static_cast<GGridBox *>(&grid)->periodize();
+    if (typeid(grid) == typeid(GGridBox<MyTypes>)) {
+        static_cast<GGridBox<MyTypes> *>(&grid)->periodize();
     }
 
     const auto ndof = grid_->ndof();
-    std::vector<std::array<GFTYPE, GDIM>> xyz(ndof);
+    std::vector<std::array<Ftype, GDIM>> xyz(ndof);
     for (std::size_t i = 0; i < ndof; i++) {
         for (std::size_t d = 0; d < GDIM; d++) {
             xyz[i][d] = grid.xNodes()[d][i];
@@ -848,15 +851,15 @@ void init_ggfx(PropertyTree &ptree, GGrid &grid, GGFX<GFTYPE> *&ggfx) {
     }
 
     // Unperiodize nodes now that connectivity map is generated
-    if (typeid(grid) == typeid(GGridBox)) {
-        static_cast<GGridBox *>(&grid)->unperiodize();
+    if (typeid(grid) == typeid(GGridBox<MyTypes>)) {
+        static_cast<GGridBox<MyTypes> *>(&grid)->unperiodize();
     }
 
     // Create GGFX
     ASSERT(ggfx == nullptr);
-    ggfx = new GGFX<GFTYPE>();
+    ggfx = new GGFX<Ftype>();
     ASSERT(ggfx != nullptr);
     pio::pout << "Calling ggfx->init(xyz)" << std::endl;
-    ggfx->init(0.05 * grid.minnodedist(), xyz);
+    ggfx->init(0.1 * grid.minnodedist(), xyz);
 
 }  // end method init_ggfx

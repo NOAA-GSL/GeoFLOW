@@ -611,7 +611,7 @@ GBOOL GLLBasis<T,TE>::computeDerivMatrix()
 //************************************************************************************
 // METHOD : computeJacobi
 // DESC   : Compute Jacobi polynomial nodes and derivatives for polynomial
-//          type specified by alpha_, beta_. Taken from: 
+//          type specified by alpha_, beta_. 
 // ARGS   : 
 // RETURNS: none  
 //************************************************************************************
@@ -722,6 +722,8 @@ GBOOL GLLBasis<T,TE>::init()
 
   if ( !computeStiffMatrix() ) return FALSE; // stiffness matrix computed; dPhi_ also computed.
 
+  if ( !computeLegendreMatrix() ) return FALSE; // Legendre matrix computed
+
   // Copy computated data to the 'evaluated' structures:
   getXiNodes(xiNodesEv_);
   getWeights(weightsEv_);
@@ -770,6 +772,7 @@ GBOOL GLLBasis<T,TE>::computeLegendreMatrix()
     }
   }
 
+
   return TRUE;
 
 } // end of method computeLegendreMatrix
@@ -779,7 +782,8 @@ GBOOL GLLBasis<T,TE>::computeLegendreMatrix()
 //************************************************************************************
 // METHOD : computeLegTransform
 // DESC   : Computes Legendre transform matrix that
-//          enables conversion to modal space. 
+//          enables conversion to modal space. Taken
+//          from Giraldo & Rosmond, MWR 132:133 ((2004).
 // ARGS   : ifilter: reference mode number 
 // RETURNS: TRUE on success; else FALSE 
 //************************************************************************************
@@ -791,18 +795,25 @@ GBOOL GLLBasis<T,TE>::computeLegTransform(GINT ifilter)
   
   assert(ifilter >= 0 && ifilter < Np_+1);
 
+  // Want LegTransform(i,j) = fcn[P_j(xi_i)]
+  // LegTransform_ij = P_j(xi_i)  = LegMatrix(i,j)
+
   for ( i=0; i<Np_+1; i++ ) {
     for ( j=0; j<Np_+1; j++ ) {
       if ( j < ifilter ) {
-        LegTransform_(i,j) = evalBasis(j,xiNodes_[i]);
+        LegTransform_(i,j) = LegMatrix_(i,j);
       }
       else {
-        LegTransform_(i,j) = evalBasis(j,xiNodes_[i]) - evalBasis(j-ifilter,xiNodes_[i]);
+#if 1
+        LegTransform_(i,j) = LegMatrix_(i,j) - LegMatrix_(i,j-ifilter);
+#else
+        LegTransform_(i,j) = LegMatrix_(i,j);
+#endif
       }
     }
   }
-  LegTransform_.inverse(iLegTransform_);  
 
+  LegTransform_.inverse(iLegTransform_);  
 
   return TRUE;
 
@@ -871,6 +882,7 @@ template<typename T, typename TE>
 template<typename T, typename TE>
  void GLLBasis<T,TE>::getXiNodes(GTVector<TE> &ret)
 {
+  ret.resize(Np_+1);
   getXiNodes(ret.data(), ret.size());
 } // end of method getXiNodes (3)
 
@@ -1044,6 +1056,7 @@ void GLLBasis<T,TE>::getLegMatrix(GTMatrix<TE> &ret)
       ret(i,j) = static_cast<TE>(LegMatrix_(i,j));
 
 } // end of method getLegMatrix
+
 
 
 //************************************************************************************

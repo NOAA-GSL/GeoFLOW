@@ -35,7 +35,7 @@ public:
 	using State         = typename Types::State;
         using StateInfo     = typename Types::StateInfo;
 	using Grid          = typename Types::Grid;
-	using Value         = typename Types::Value;
+	using Ftype         = typename Types::Ftype;
 	using Derivative    = typename Types::Derivative;
 	using Time          = typename Types::Time;
 	using Jacobian      = typename Types::Jacobian;
@@ -96,8 +96,8 @@ public:
         };
 
         ObserverBase() = default;
-	ObserverBase(const EqnBasePtr& equation, Grid& grid, Traits& traits) {eqn_ptr_=equation; traits_=traits; grid_= &grid; utmp_=nullptr;}
-	ObserverBase(const ObserverBase& obs) = default;
+	ObserverBase(EqnBasePtr& equation, Grid& grid, Traits& traits) {eqn_ptr_=equation; traits_=traits; grid_= &grid; utmp_=nullptr;}
+	ObserverBase(ObserverBase& obs) = default;
 	virtual ~ObserverBase() = default;
 	ObserverBase& operator=(const ObserverBase& obs) = default;
 
@@ -106,10 +106,11 @@ public:
 	 *
 	 * @param[in] Traits structure
 	 * @param[in] t Time of current state
+	 * @param[in] dt Time step for current state
 	 * @param[in] u State at the current time
 	 */
-	void observe(const Time t, const State& u, const State& uf){
-		this->observe_impl(t,u,uf);
+	void observe(const Time t, const Time dt, const State& u, const State& uf){
+		this->observe_impl(t, dt, u, uf);
 	}
 
 	/**
@@ -142,7 +143,7 @@ protected:
 	/**
 	 * Must be provided by implementation
 	 */
-	virtual void observe_impl(const Time& t, const State& u, const State& uf) = 0;
+	virtual void observe_impl(const Time& t, const Time& dt, const State& u, const State& uf) = 0;
 	virtual void init_impl   (StateInfo &) = 0;
 
 };

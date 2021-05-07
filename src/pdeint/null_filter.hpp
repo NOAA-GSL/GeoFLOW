@@ -29,7 +29,6 @@ public:
         using Interface  = FilterBase<TypePack>;
         using State      = typename Interface::State;
         using StateComp  = typename Interface::StateComp;
-        using StateInfo  = typename Interface::StateInfo;
         using Grid       = typename Interface::Grid;
         using Time       = typename Interface::Time;
 
@@ -44,11 +43,11 @@ public:
 
 protected:
 
-	void apply_impl(const Time& /* t */, StateComp& /* u */, State& /* utmp */, StateComp& /* uo */){
+	void apply_impl(const Time& /* t */, State& /* u */, State& /* utmp */, State& /* uo */){
 		// Do nothing ...
 	}
 
-	void apply_impl(const Time& /* t */, StateComp& /* u */, State& /* utmp */){
+	void apply_impl(const Time& /* t */, State& /* u */, State& /* utmp */){
 		// Do nothing ...
 	}
 

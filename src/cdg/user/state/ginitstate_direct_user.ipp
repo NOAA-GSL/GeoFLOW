@@ -9,13 +9,7 @@
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
-#include "gmtk.hpp"
-#include "ginitstate_direct_user.hpp"
-#include "ggrid_box.hpp"
-#include "ggrid_icos.hpp"
 
-
-namespace ginitstate {
 
 
 
@@ -26,15 +20,15 @@ namespace ginitstate {
 //          Dirichlet or periodic boundaries
 // ARGS   : ptree  : main prop tree
 //          sconfig: ptree block name containing variable config
+//          eqn    : equation implementation
 //          grid   : grid
-//          stinfo : StateInfo
 //          t      : time
 //          utmp   : tmp arrays
-//          ub     : bdy vectors (one for each state element)
 //          u      : current state
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_boxnwaveburgers(const PropertyTree &ptree, GString &sconfig, GGrid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &u)
+template<typename Types>
+GBOOL ginitstate<Types>::impl_boxnwaveburgers(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
 {
   GString          serr = "impl_boxnwaveburgers: ";
   GBOOL            bret = TRUE, brot = FALSE;
@@ -170,15 +164,15 @@ GBOOL impl_boxnwaveburgers(const PropertyTree &ptree, GString &sconfig, GGrid &g
 // DESC   : Initialize state for Burgers with N-wave on icos grids
 // ARGS   : ptree  : main prop tree
 //          sconfig: ptree block name containing variable config
+//          eqn    : equation implementation
 //          grid   : grid
-//          stinfo : StateInfo
 //          t      : time
 //          utmp   : tmp arrays
-//          ub     : bdy vectors (one for each state element)
 //          u      : current state
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_icosnwaveburgers(const PropertyTree &ptree, GString &sconfig, GGrid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &u)
+template<typename Types>
+GBOOL ginitstate<Types>::impl_icosnwaveburgers(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
 {
   GString          serr = "impl_icosnwaveburgers: ";
   GBOOL            bret;
@@ -267,8 +261,8 @@ GBOOL impl_icosnwaveburgers(const PropertyTree &ptree, GString &sconfig, GGrid &
     } // end, coord j-loop 
   } // end, ilump-loop
 
-//GMTK::vsphere2cart(grid, usph, GVECTYPE_PHYS, u);
-  GMTK::constrain2sphere(grid, u);
+//GMTK::vsphere2cart<Grid,GFTYPE>(grid, usph, GVECTYPE_PHYS, u);
+  GMTK::constrain2sphere<Grid,GFTYPE>(grid, u);
 
   bret = TRUE;
   for ( j=0; j<GDIM+1; j++ ) {
@@ -290,15 +284,15 @@ GBOOL impl_icosnwaveburgers(const PropertyTree &ptree, GString &sconfig, GGrid &
 //          Dirichlet boundaries
 // ARGS   : ptree  : main prop tree
 //          sconfig: ptree block name containing variable config
+//          eqn    : equation implementation
 //          grid   : grid
-//          stinfo : StateInfo
 //          time   : time
 //          utmp   : tmp arrays
-//          ub     : bdy vectors (one for each state element)
 //          u      : current state
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_boxdirgauss(const PropertyTree &ptree, GString &sconfig, GGrid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &u)
+template<typename Types>
+GBOOL ginitstate<Types>::impl_boxdirgauss(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
 {
   GString          serr = "impl_boxdirgauss: ";
   GBOOL            bContin;
@@ -390,15 +384,15 @@ cout << "boxpergauss: num=" << (*igbdyt_face)[j].size() << " igbdyt_face[" << j 
 //          periodic boundaries
 // ARGS   : stree  : main prop tree
 //          sconfig: ptree block name containing variable config
+//          eqn    : equation implementation
 //          grid   : grid
-//          stinfo : StateInfo
 //          t      : time
 //          utmp   : tmp arrays
-//          ub     : bdy vectors (one for each state element)
 //          u      : current state
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_boxpergauss(const PropertyTree &ptree, GString &sconfig, GGrid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &u)
+template<typename Types>
+GBOOL ginitstate<Types>::impl_boxpergauss(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
 {
   GString          serr = "impl_boxpergauss: ";
   GBOOL            bContin;
@@ -513,15 +507,15 @@ cout << "boxpergauss: num=" << (*igbdyt_face)[j].size() << " igbdyt_face[" << j 
 //          on a the Cartesian method
 // ARGS   : ptree  : main prop tree
 //          sconfig: ptree block name containing variable config
+//          eqn    : equation implementation
 //          grid   : grid
-//          stinfo : StateInfo
 //          t      : time
 //          utmp   : tmp arrays
-//          ub     : bdy vectors (one for each state element)
 //          u      : current state
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_icosgauss(const PropertyTree &ptree, GString &sconfig, GGrid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &u)
+template<typename Types>
+GBOOL ginitstate<Types>::impl_icosgauss(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
 {
 
   GString             serr = "impl_icosgauss: ";
@@ -596,7 +590,7 @@ GBOOL impl_icosgauss(const PropertyTree &ptree, GString &sconfig, GGrid &grid, S
     (*utmp[0])[j] = -c0 * sin(lon) * sin(alpha);
     (*utmp[1])[j] =  c0 * ( cos(lat) * cos(alpha) - sin(lat)*cos(lon)*sin(alpha) );
   }
-  GMTK::vsphere2cart(grid, utmp, GVECTYPE_PHYS, c);
+  GMTK::vsphere2cart<Grid,GFTYPE>(grid, utmp, GVECTYPE_PHYS, c);
 
   *u[0] = 0.0;
   for ( auto k=0; k<nlumps; k++ ) {
@@ -634,48 +628,72 @@ GBOOL impl_icosgauss(const PropertyTree &ptree, GString &sconfig, GGrid &grid, S
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : impl_boxdrybubble
-// DESC   : Initialize state for GMConv solver with cold/dry bubble
-//          on box grids. Taken from Straka et al. 1993, Int. J. Num. 
-//          Meth. Fluids 17:1, and from Bryan & Fritsch 2002 MWR
+// METHOD : impl_boxdrywarmbubble
+// DESC   : Initialize state for GMConv solver with warm/dry bubble
+//          on box grids.  Taken from Bryan & Fritsch 2002 MWR
 //          130:2817.
 // ARGS   : ptree  : main prop tree
 //          sconfig: ptree block name containing variable config
+//          eqn    : equation implementation
 //          grid   : grid
-//          stinfo : StateInfo
 //          t      : time
-//          utmp   : tmp arrays
-//          ub     : bdy vectors (one for each state element)
+//          utmp   : tmp arrays; sizee >= 1
 //          u      : current state
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_boxdrybubble(const PropertyTree &ptree, GString &sconfig, GGrid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &u)
+template<typename Types>
+GBOOL ginitstate<Types>::impl_boxdrywarmbubble(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
 {
 
-  GString             serr = "impl_boxdrybubble: ";
+  GString             serr = "impl_boxdrywarmbubble: ";
   GSIZET              nxy;
   GFTYPE              x, y, z, r;
-  GFTYPE              delT, dj, exnerb, exner, L, P0, pj, thetab, T0, Ts;
-  GTVector<GFTYPE>   *db, *d, *e, *pb, *Tb;
+  GFTYPE              delT, dj, exnerb, exner, L;
+  GFTYPE              P0, pj, thetab, T0, Tb, Ts;
+  GTVector<GFTYPE>   *db, *d, *e, *pb, *T;
   std::vector<GFTYPE> xc, xr;  
   GString             sblock;
+  typename Types::State
+                     *ubase;
+  GTVector<GTVector<GFTYPE>> 
+                     *xnodes = &grid.xNodes();
+  GMConv<Types>      *ceqn;
 
-  PropertyTree inittree   = ptree.getPropertyTree(sconfig);
+  PropertyTree inittree    = ptree.getPropertyTree(sconfig);
   sblock                   = ptree.getValue<GString>("pde_name");
   PropertyTree convptree   = ptree.getPropertyTree(sblock);
 
-  GGridBox  *box   = dynamic_cast <GGridBox*>(&grid);
+  assert(ceqn != NULLPTR && "Must initialize for Equation GMConv");
+
+  // Check solver type 
+  // Remember: eqn is a shared_ptr, so must check 
+  //           against its contets
+  
+  ceqn = dynamic_cast<GMConv<Types>*>(eqn.get());
+  assert(ceqn && "Must use GMConv solver");
+
+  // Check grid type:
+  GridBox  *box   = dynamic_cast <GridBox*>(&grid);
   assert(box && "Must use a box grid");
 
-  GTVector<GTVector<GFTYPE>> *xnodes = &grid.xNodes();
+  // Check state size:
+  assert(u.size() == ceqn->state_size());
 
-  assert(u.size() == GDIM+4);
+  // Check tmp size:
+  assert(utmp.size() >= 1 );
 
-  Tb    = utmp[0];  // background temp
-  e     = u  [GDIM];// int. energy density
-  d     = u[GDIM+1];// total density fluctuation
-  db    = u[GDIM+2];// background density fluct, from solver
-  pb    = u[GDIM+3];// background pressure  , from solver
+  // Get base state:
+  typename GMConv<Types>::Traits traits = ceqn->get_traits();
+  ubase = &ceqn->get_base_state();
+//assert( traits.usebase && ubase->size() == 2 );
+  assert( ubase->size() == 2 );
+   
+
+  T     = utmp[0];  // background temp
+  d     = u  [ceqn->DENSITY]; // density
+  e     = u  [ceqn->ENERGY]; // int. energy density
+  db    = (*ubase)[0];// background density 
+  pb    = (*ubase)[1];// background pressure
   nxy   = (*xnodes)[0].size(); // same size for x, y, z
 
   T0    = inittree.getValue<GFTYPE>("T_pert", 15.0);    // temp. perturb. magnitude (K)
@@ -687,10 +705,8 @@ GBOOL impl_boxdrybubble(const PropertyTree &ptree, GString &sconfig, GGrid &grid
 
   assert(xc.size() >= GDIM && xr.size() >= GDIM);
 
- *u[0]  = 0.0; // sx
- *u[1]  = 0.0; // sy
- if ( GDIM == 3 ) *u[2]  = 0.0; // sz
- *d     = 0.0;
+  // Initialize momentum:
+  for ( auto j=0; j<ceqn->ENERGY; j++ ) *u[j] = 0.0;
 
   for ( auto j=0; j<nxy; j++ ) { 
     x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; 
@@ -699,25 +715,166 @@ GBOOL impl_boxdrybubble(const PropertyTree &ptree, GString &sconfig, GGrid &grid
     L         = pow((x-xc[0])/xr[0],2) + pow((y-xc[1])/xr[1],2);
     L        += GDIM == 3 ? pow((z-xc[2])/xr[2],2) : 0.0;
     L         = sqrt(L);
-    exnerb    = pow((*pb)[j]/P0, RD/CPD);
+//  exnerb    = pow((*pb)[j]/P0, RD/CPD);
     delT      = L <= 1.0 ? 2.0*T0*pow(cos(0.5*PI*L),2.0) : 0.0;
 #if 1
     // Ts, delT are pot'l temp, 
-    (*Tb)[j]  = (Ts + delT)*exnerb; // T = (theta + dtheta)*exner
+    (*T) [j]  = (Ts + delT)*exnerb; // T = (theta + dtheta)*exner
     pj        = (*pb)[j]; 
-    (*d)[j]   = pj / ( RD * (*Tb)[j]  ) - (*db)[j];
-    dj        = (*d)[j] + (*db)[j];
-    (*e)[j]   = CVD * dj * ( (*Tb)[j] ); // e = Cv d (T+delT);
-//  (*Tb)[j]  = (Ts + delT)*exnerb; // T = (theta + dtheta)*exner
-//  (*Tb)[j]  = (thetab + delT)*exnerb;
-//  (*d)[j]   = pj / ( RD * (*Tb)[j] )  - (*db)[j];
+    if ( traits.usebase ) { // There is a base-state
+      (*d) [j]  = pj / ( RD * (*T)[j]  ) - (*db)[j];  // fluctuation
+      dj        = (*d)[j] + (*db)[j]; // total density
+    }
+    else {
+      (*d) [j]  = pj / ( RD * (*T)[j]  );
+      dj        = (*d)[j]; // total density
+   }
+    (*e)[j]   = CVD * dj * ( (*T)[j] ); // e = Cv d T
+
+//  (*T) [j]  = (Ts + delT)*exnerb; // T = (theta + dtheta)*exner
+//  (*T) [j]  = (thetab + delT)*exnerb;
+//  (*d) [j]  = pj / ( RD * (*T)[j] )  - (*db)[j];
 //  (*e)[j]   = CVD * dj * (thetab+delT)*(exnerb); // e = Cv d (theta+dtheta) * exner;
 
 #else
     // Check that hydrostatic state is maintained:
-    (*d)[j]   = 0.0;
-    (*Tb)[j]  = Ts*exnerb; // T = (theta + dtheta)*exner
-    (*e)[j]   = CVD * (*db)[j] * ( (*Tb)[j] ); // e = Cv d (T);
+    (*d) [j]   = 0.0;
+    (*T) [j]   = Ts*exnerb; // T = (theta + dtheta)*exner
+    (*e) [j]   = CVD * (*db)[j] * ( (*T)[j] ); // e = Cv d (T);
+#endif
+
+  }
+
+  return TRUE;
+
+} // end of method impl_boxdrywarmbubble
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : impl_boxdrybubble
+// DESC   : Initialize state for GMConv solver with cold/dry bubble
+//          on box grids. Taken from Straka et al. 1993, Int. J. Num. 
+//          Meth. Fluids 17:1, and from Bryan & Fritsch 2002 MWR
+//          130:2817.
+// ARGS   : ptree  : main prop tree
+//          sconfig: ptree block name containing variable config
+//          eqn    : equation implementation
+//          grid   : grid
+//          t      : time
+//          utmp   : tmp arrays; sizee >= 1
+//          u      : current state
+// RETURNS: TRUE on success; else FALSE 
+//**********************************************************************************
+template<typename Types>
+GBOOL ginitstate<Types>::impl_boxdrybubble(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
+{
+
+  GString             serr = "impl_boxdrybubble: ";
+  GSIZET              nxy;
+  GFTYPE              x, y, z, r;
+  GFTYPE              deld, delp, delT, dj, exnerb, exner, L;
+  GFTYPE              P0, pj, thetab, T0, Tb, Ts;
+  GTVector<GFTYPE>   *db, *d, *e, *pb, *T;
+  std::vector<GFTYPE> xc, xr;  
+  GString             sblock;
+  typename Types::State
+                     *ubase;
+  GTVector<GTVector<GFTYPE>> 
+                     *xnodes = &grid.xNodes();
+  GMConv<Types>      *ceqn;
+
+  PropertyTree inittree    = ptree.getPropertyTree(sconfig);
+  sblock                   = ptree.getValue<GString>("pde_name");
+  PropertyTree convptree   = ptree.getPropertyTree(sblock);
+
+
+  // Check solver type 
+  // Remember: eqn is a shared_ptr, so must check 
+  //           against its contets
+  
+  ceqn = dynamic_cast<GMConv<Types>*>(eqn.get());
+  assert(ceqn != NULLPTR && "Must initialize for Equation GMConv");
+
+  // Check grid type:
+  GridBox  *box   = dynamic_cast <GridBox*>(&grid);
+  assert(box && "Must use a box grid");
+
+  // Check state size:
+  assert(u.size() == ceqn->state_size());
+
+  // Check tmp size:
+  assert(utmp.size() >= 1 );
+
+  // Get base state:
+  typename GMConv<Types>::Traits traits = ceqn->get_traits();
+  ubase = &ceqn->get_base_state();
+//assert( traits.usebase && ubase->size() == 2 );
+  assert( ubase->size() == 2 );
+   
+
+  T     = utmp[0];  // background temp
+  d     = u  [ceqn->DENSITY]; // density
+  e     = u  [ceqn->ENERGY]; // int. energy density
+  db    = (*ubase)[0];// background density 
+  pb    = (*ubase)[1];// background pressure
+  nxy   = (*xnodes)[0].size(); // same size for x, y, z
+
+  T0    = inittree.getValue<GFTYPE>("T_pert", 15.0);    // temp. perturb. magnitude (K)
+  xc    = inittree.getArray<GFTYPE>("x_center");        // center location
+  xr    = inittree.getArray<GFTYPE>("x_width");         // bubble width
+  P0    = convptree.getValue<GFTYPE>("P0");              // ref pressure (mb or hPa)
+  P0   *= 100.0;                                         // convert to Pa
+  Ts    = convptree.getValue<GFTYPE>("T_surf");          // surf temp
+
+  assert(xc.size() >= GDIM && xr.size() >= GDIM);
+
+  // Initialize momentum:
+  for ( auto j=0; j<ceqn->ENERGY; j++ ) *u[j] = 0.0;
+
+  for ( auto j=0; j<nxy; j++ ) { 
+    x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; 
+    if ( GDIM == 3 ) z = (*xnodes)[2][j];
+    r = GDIM == 3 ? z : y;
+    L         = pow((x-xc[0])/xr[0],2) + pow((y-xc[1])/xr[1],2);
+    L        += GDIM == 3 ? pow((z-xc[2])/xr[2],2) : 0.0;
+    L         = sqrt(L);
+//  exnerb    = pow((*pb)[j]/P0, RD/CPD);
+    delT      = L <= 1.0 ? 2.0*T0*pow(cos(0.5*PI*L),2.0) : 0.0;
+#if 1
+    // Ts, delT are pot'l temp, 
+    Tb        = Ts - r*GG/CPD; // background temp
+//  (*T) [j]  = (Ts + delT)*exnerb; // T = (theta + dtheta)*exner
+    (*T) [j]  = Tb + delT;
+    (*pb)[j]  = P0*pow(Tb/Ts,CPD/RD);
+    (*db) [j] = (*pb)[j] / ( RD * Tb ); // density base state
+    pj        = (*pb)[j]; 
+    deld      = -pj*delT/(RD*Tb*Tb);
+    delp      = (*db)[j]*RD*delT + deld*RD*Tb;
+    if ( traits.usebase ) { // There is a base-state
+//    (*d) [j]  = pj / ( RD * (*T)[j]  ) - (*db)[j];  // fluctuation
+      (*d) [j]  = deld;  // fluctuation
+      dj        = (*d)[j] + (*db)[j]; // total density
+    }
+    else {
+//    (*d) [j]  = pj / ( RD * (*T)[j]  );
+      (*d) [j]  = (*db)[j] + deld;
+      dj        = (*d)[j]; // total density
+   }
+//  (*e)[j]   = CVD * dj * ( (*T)[j] ); // e = Cv d T
+    (*e)[j]   = CVD * (pj + delp) / RD; // e = Cv * p / R
+
+
+//  (*T) [j]  = (Ts + delT)*exnerb; // T = (theta + dtheta)*exner
+//  (*T) [j]  = (thetab + delT)*exnerb;
+//  (*d) [j]  = pj / ( RD * (*T)[j] )  - (*db)[j];
+//  (*e)[j]   = CVD * dj * (thetab+delT)*(exnerb); // e = Cv d (theta+dtheta) * exner;
+
+#else
+    // Check that hydrostatic state is maintained:
+    (*d) [j]   = 0.0;
+    (*T) [j]   = Ts*exnerb; // T = (theta + dtheta)*exner
+    (*e) [j]   = CVD * (*db)[j] * ( (*T)[j] ); // e = Cv d (T);
 #endif
 
   }
@@ -735,26 +892,29 @@ GBOOL impl_boxdrybubble(const PropertyTree &ptree, GString &sconfig, GGrid &grid
 //          on velocity, and sinusoidal function in theta
 // ARGS   : ptree  : main prop tree
 //          sconfig: ptree block name containing variable config
+//          eqn    : equation implementation
 //          grid   : grid
-//          stinfo : StateInfo
 //          t      : time
-//          utmp   : tmp arrays
-//          ub     : bdy vectors (one for each state element)
+//          utmp   : tmp arrays; sizee >= 2
 //          u      : current state
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_icosabcconv(const PropertyTree &ptree, GString &sconfig, GGrid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &u)
+template<typename Types>
+GBOOL ginitstate<Types>::impl_icosabcconv(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
 {
 
   GString             serr = "impl_icosabcconv: ";
-  GSIZET              kdn, kup, nxy;
-  GFTYPE              alpha, A, B, C, hphase, poly;
+  GSIZET              kdn, kup, nc, nxy;
+  GFTYPE              alpha, A, B, C, fact,hphase, poly;
   GFTYPE              x, y, z, r, ri, ro, lat, lon;
   GFTYPE              exner, p, pi2, P0, T0;
   GTVector<GFTYPE>   *d, *e;
   GTVector<GTVector<GFTYPE>*>
-                      vh(2);
+                      vh(GDIM);
   GString             sblock;
+  std::default_random_engine        generator;
+  std::normal_distribution<GFTYPE> *distribution=NULLPTR;
+
 
   PropertyTree inittree    = ptree.getPropertyTree(sconfig);
   sblock                   = ptree.getValue<GString>("pde_name");
@@ -763,15 +923,18 @@ GBOOL impl_icosabcconv(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
   PropertyTree gridptree   = ptree.getPropertyTree(sblock);
 
 
-  GGridIcos  *icos   = dynamic_cast <GGridIcos*>(&grid);
+  GridIcos  *icos   = dynamic_cast <GridIcos*>(&grid);
   assert(icos && "Must use ICOS grid");
 
+  nc = grid.gtype() == GE_2DEMBEDDED ? 3 : GDIM;
   GTVector<GTVector<GFTYPE>> *xnodes = &grid.xNodes();
 
-  assert(u.size() >= GDIM+1);
+  assert(u.size() >= nc+1);
+  assert(utmp.size() >= GDIM );
 
-  e     = u  [GDIM];// int. energy density
-  d     = u[GDIM+1];// total density 
+  distribution = new normal_distribution<GFTYPE>(0,2.0*PI);
+  e     = u  [nc];// int. energy density
+  d     = u[nc+1];// total density 
   nxy   = (*xnodes)[0].size(); // same size for x, y, z
 
   #if defined(_G_IS2D)
@@ -794,42 +957,50 @@ GBOOL impl_icosabcconv(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
 
   vh[0] = utmp[0];
   vh[1] = utmp[1];
+  if ( GDIM > 2 ) { 
+    vh[2] = utmp[2];
+   *vh[2] = 0.0;
+  }
 
  *u[0]  = 0.0; // sx
  *u[1]  = 0.0; // sy
  *u[2]  = 0.0; // sz
  *d     = 0.0;
 
+  r     = ri;
+
+
   // Initialize each variable:
-  for ( auto j=0; j<nxy; j++ ) {
-     x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
-     r   = sqrt(x*x + y*y + z*z);
-     alpha =  hphase*(r - ri);
-     lat = asin(z/r);
-     lon = atan2(y,x);
-     for ( auto k=kdn; k<kup; k++ ) { // sum over wavemodes
-       (*d)   [j] +=  ( B*cos(pi2*y+alpha) + C*sin(pi2*z+alpha) ) / pow(k,poly);
-     }
-     for ( auto k=kdn; k<kup; k++ ) { // sum over wavemodes
-       pi2         = 2.0*PI*k;
+  for ( auto k=kdn; k<=kup; k++ ) { // sum over wavemodes
+    for ( auto j=0; j<nxy; j++ ) {
+      x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; z = (*xnodes)[2][j];
+      r   = sqrt(x*x + y*y + z*z);
+      lat = asin(z/r);
+      lon = atan2(y,x);
+      alpha =  hphase*(r - ri)*(*distribution)(generator);
+      pi2         = 2.0*PI*k;
+      (*d)   [j] +=  fabs( B*cos(pi2*y+alpha) + C*sin(pi2*z+alpha) ) / pow(k,poly) + 0.001;
+      fact        = exp(-32.0*lat*lat/(PI*PI));
 #if 0
-       (*u[0])[j] +=  ( B*cos(k*lon) + C*sin(k*lat) ) / pow(k,poly);
-       (*u[1])[j] +=  ( A*sin(k*lon) + C*cos(k*lat) ) / pow(k,poly);
-       (*u[2])[j] +=  ( A*cos(k*lon) + B*sin(k*lat) ) / pow(k,poly);
+      (*u[0])[j] +=  ( B*cos(k*lon) + C*sin(k*lat) ) / pow(k,poly);
+      (*u[1])[j] +=  ( A*sin(k*lon) + C*cos(k*lat) ) / pow(k,poly);
+      (*u[2])[j] +=  ( A*cos(k*lon) + B*sin(k*lat) ) / pow(k,poly);
 #else
-       (*vh[0])[j] +=  A*cos    (k*lat+alpha) / pow(k,poly); // lat
-       (*vh[1])[j] +=  B*sin(2.0*k*lat+alpha) / pow(k,poly); // long
+      (*vh[0])[j] +=  fact*A*cos    (k*lat+alpha) / pow(k,poly); // lat
+      (*vh[1])[j] +=  fact*B*sin(2.0*k*lat+alpha) / pow(k,poly); // long
 #endif
-     }
-     p           = (*d)[j] * RD * T0;
-     exner       = pow(p/P0, RD/CPD);
-     (*e)[j]     = CVD * (*d)[j] * T0*exner; 
+      p           = (*d)[j] * RD * T0;
+      exner       = pow(p/P0, RD/CPD);
+      (*e)[j]     = CVD * (*d)[j] * T0*exner; 
+    }
   } // end, coord j-loop 
 
   // Convert from 2d surface to 3d Cartesian 
   // momentum densities:
-  GMTK::vsphere2cart(grid, vh, GVECTYPE_PHYS, u);
+  GMTK::vsphere2cart<Grid,GFTYPE>(grid, vh, GVECTYPE_PHYS, u);
   for ( auto j=0; j<3; j++ ) *u[j] *=  *d;
+
+  if ( distribution != NULLPTR ) delete distribution;
 
   return TRUE;
 
@@ -842,15 +1013,15 @@ GBOOL impl_icosabcconv(const PropertyTree &ptree, GString &sconfig, GGrid &grid,
 // DESC   : Initialize state for GMConv solver with Sod shock tube.
 // ARGS   : ptree  : main prop tree
 //          sconfig: ptree block name containing variable config
+//          eqn    : equation implementation
 //          grid   : grid
-//          stinfo : StateInfo
 //          t      : time
 //          utmp   : tmp arrays
-//          ub     : bdy vectors (one for each state element)
 //          u      : current state
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_boxsod(const PropertyTree &ptree, GString &sconfig, GGrid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &u)
+template<typename Types>
+GBOOL ginitstate<Types>::impl_boxsod(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
 {
 
   GString             serr = "impl_boxsod: ";
@@ -862,7 +1033,7 @@ GBOOL impl_boxsod(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Stat
 
   PropertyTree sodptree   = ptree.getPropertyTree(sconfig);
 
-  GGridBox  *box   = dynamic_cast <GGridBox*>(&grid);
+  GridBox  *box   = dynamic_cast <GridBox*>(&grid);
   assert(box && "Must use a box grid");
 
   GTVector<GTVector<GFTYPE>> *xnodes = &grid.xNodes();
@@ -892,7 +1063,7 @@ GBOOL impl_boxsod(const PropertyTree &ptree, GString &sconfig, GGrid &grid, Stat
     if ( GDIM == 3 ) z = (*xnodes)[2][j];
     pj = a*atan((x-xc)/width) + b;
        
-//  (*d)[j]   = (*pb)[j] / ( RD * ( (*Tb)[j] + delT ) ) - (*db)[j];
+//  (*d)[j]   = (*pb)[j] / ( RD * ( (*T)[j] + delT ) ) - (*db)[j];
     (*d)[j]   = pj / ( RD * T0 );
     (*e) [j]  = CVD * (*d)[j]  * T0;
 cout << "boxsod: p=" << pj << " d=" << (*d)[j] <<  endl;
@@ -906,4 +1077,3 @@ cout << "boxsod: p=" << pj << " d=" << (*d)[j] <<  endl;
 
 
 
-} // end, ginitstate namespace

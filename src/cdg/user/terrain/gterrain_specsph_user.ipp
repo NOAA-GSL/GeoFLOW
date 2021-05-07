@@ -5,10 +5,6 @@
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
-#include "gterrain_specsph_user.hpp"
-
-
-namespace gterrain_specsph {
 
 
 
@@ -25,7 +21,8 @@ namespace gterrain_specsph {
 //          xb   : terrain vectors
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_gauss_range(const PropertyTree &ptree, GString sblk, GGrid &grid, State &utmp, State &xb)
+template<typename Types>
+GBOOL gterrainSpecSph<Types>::impl_gauss_range(const PropertyTree &ptree, GString sblk, Grid &grid, State &utmp, State &xb)
 {
 
   assert(FALSE && "Under construction");
@@ -78,7 +75,8 @@ GBOOL impl_gauss_range(const PropertyTree &ptree, GString sblk, GGrid &grid, Sta
 //          xb   : terrain vectors
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_poly_range(const PropertyTree &ptree, GString sblk, GGrid &grid, State &utmp, State &xb)
+template<typename Types>
+GBOOL gterrainSpecSph<Types>::impl_poly_range(const PropertyTree &ptree, GString sblk, Grid &grid, State &utmp, State &xb)
 {
 
   assert(FALSE && "Under construction");
@@ -121,4 +119,3 @@ GBOOL impl_poly_range(const PropertyTree &ptree, GString sblk, GGrid &grid, Stat
 
 
 
-} // end, ginitbdy namespace

@@ -21,6 +21,7 @@
 #cmakedefine GEOFLOW_TRACER_USE_NVTX
 #cmakedefine GEOFLOW_TRACER_USE_PIO
 #cmakedefine GEOFLOW_TRACER_USE_GPTL
+#cmakedefine GEOFLOW_USE_NEUMANN_HACK
 
 #cmakedefine GEOFLOW_ASSERT_HANG
 #cmakedefine GEOFLOW_ASSERT_CORE

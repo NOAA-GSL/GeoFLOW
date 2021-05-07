@@ -16,7 +16,7 @@
 //                   This class returns alpha, and c coeffs as vectors, and
 //                   the beta as a matrix with lower diagonal filled with the beta
  
-// Copyright    : Copyright 2019. Colorado State University. All rights reserved
+// Copyright    : Copyright 2019. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
 

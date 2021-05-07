@@ -6,10 +6,7 @@
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
-#include "gns_inflow_user.hpp"
 
-
-namespace GInflowBdyMethods {
 
 
 
@@ -19,8 +16,8 @@ namespace GInflowBdyMethods {
 // METHOD : myinflow
 // DESC   : Place holder template for inflow update methods
 // ARGS   : 
+//          eqn   : equation implementation
 //          grid  : grid
-//          stinfo: StateInfo
 //          t     : time
 //          id    : canonical bdy id
 //          utmp  : tmp arrays
@@ -28,7 +25,8 @@ namespace GInflowBdyMethods {
 //          ub    : bdy vectors (one for each state element)
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL myinflow(GGrid &grid, StateInfo &stinfo, Time &time, const GINT id, State &utmp, State &u, State &ub)
+template<typename Types>
+GBOOL GInflowUser<Types>::myinflow(EqnBasePtr &eqn, Grid &grid, Time &time, const GINT id, State &utmp, State &u, State &ub)
 {
 #if 0
   Time             tt = t;
@@ -59,4 +57,3 @@ GBOOL myinflow(GGrid &grid, StateInfo &stinfo, Time &time, const GINT id, State 
 
 
 
-} // end, GInflowBdyMethods

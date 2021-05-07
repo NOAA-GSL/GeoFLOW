@@ -40,36 +40,13 @@ target_sources(cdg
         ${GHOME}/blas/qmxmp.F
         ${GHOME}/blas/dmxmp.F
         ${GHOME}/blas/fmxmp.F
-        ${GHOME}/blas/gmtk.cpp
         ${GHOME}/blas/gcblas.cpp
         
         ${GHOME}/comm/gcomm.cpp 
         
-        ${GHOME}/grid/ggrid.cpp
-        ${GHOME}/grid/ggrid_icos.cpp
-        ${GHOME}/grid/ggrid_box.cpp
-        
-        ${GHOME}/config/gspecbdy_factory.cpp 
-        
         ${GHOME}/sem/gelem_base.cpp
-        ${GHOME}/sem/gmass.cpp
-        ${GHOME}/sem/ghelmholtz.cpp
+#       ${GHOME}/sem/ghelmholtz.cpp
         
-        ${GHOME}/user/bdy/gspecbdy_user.cpp
-        ${GHOME}/user/bdy/gns_inflow_user.cpp
-        ${GHOME}/user/force/ginitfb.cpp 
-        ${GHOME}/user/force/ginitforce_direct_user.cpp 
-        ${GHOME}/user/force/ginitfps.cpp 
-        ${GHOME}/user/force/ginitfs.cpp 
-        ${GHOME}/user/force/ginitfv.cpp 
-        ${GHOME}/user/state/ginitb.cpp 
-        ${GHOME}/user/state/ginitc.cpp 
-        ${GHOME}/user/state/ginitps.cpp 
-        ${GHOME}/user/state/ginits.cpp 
-        ${GHOME}/user/state/ginitstate_direct_user.cpp 
-        ${GHOME}/user/state/ginitv.cpp 
-        ${GHOME}/user/terrain/gterrain_specbox_user.cpp 
-        ${GHOME}/user/terrain/gterrain_specsph_user.cpp 
         
         ${GHOME}/utils/gbitblock.cpp 
         ${GHOME}/utils/gutils.cpp

@@ -8,27 +8,37 @@
 #if !defined(_GSPECBDY_USER_HPP)
 #define _GSPECBDY_USER_HPP
 
-#include "tbox/property_tree.hpp"
 #include "gtypes.h"
 #include "gtvector.hpp"
-#include "ggrid.hpp"
 #include "gutils.hpp"
+#include "tbox/property_tree.hpp"
+#include "pdeint/equation_base.hpp"
 
 
 using namespace geoflow;
 using namespace geoflow::tbox;
 
 
-typedef GFTYPE                      Time;
-typedef GTVector<GTVector<GFTYPE>*> State;
 
-
-namespace gspecbdy
+template<typename TypePack>
+struct gspecbdy
 {
+        using Types         = TypePack;
+        using EqnBase       = EquationBase<TypePack>;
+        using EqnBasePtr    = std::shared_ptr<EqnBase>;
+        using State         = typename Types::State;
+        using Grid          = typename Types::Grid;
+        using Ftype         = typename Types::Ftype;
+        using Time          = typename Types::Ftype;
 
-GBOOL impl_my_mixed_bdy(const PropertyTree &stree, GGrid &grid,  const GINT id, GTVector<GSIZET> &ibdy);
+
+
+        static GBOOL impl_my_mixed_bdy(const PropertyTree &stree, Grid &grid,  const GINT id, GTVector<GSIZET> &ibdy);
 
 };
+
+
+#include "gspecbdy_user.ipp"
 
 
 #endif
