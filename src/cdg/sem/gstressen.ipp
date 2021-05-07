@@ -200,7 +200,7 @@ GMTK::zero<Ftype>(*utmp[1],(*igb)[2][GBDY_0FLUX]);
 }
 #endif
     // Point-multiply by mu before taking 'divergence':
-    utmp[1]->pointProd(d);
+//  utmp[1]->pointProd(d);
     utmp[1]->pointProd(*nu_);
     grid_->deriv(*utmp[1]  , j+1, *utmp[0], *utmp[2]);
     so += *utmp[2];
@@ -220,7 +220,7 @@ GMTK::zero<Ftype>(*utmp[1],(*igb)[2][GBDY_0FLUX]);
 }
 #endif
     // Point-multiply by mu before taking 'divergence':
-    utmp[1]->pointProd(d);
+//  utmp[1]->pointProd(d);
     utmp[1]->pointProd(*nu_);
     grid_->deriv(*utmp[1]  , j+1, *utmp[0], *utmp[2]);
     so += *utmp[2];
@@ -234,7 +234,7 @@ GMTK::zero<Ftype>(*utmp[1],(*igb)[2][GBDY_0FLUX]);
     *utmp[1] += *utmp[2];
   }
 
-  utmp[1]->pointProd(d);
+//utmp[1]->pointProd(d);
   utmp[1]->pointProd(*zeta_);  // zeta Div u
 
   grid_->deriv(*utmp[1], idir, *utmp[0], *utmp[2]);
@@ -296,7 +296,7 @@ GMTK::zero<Ftype>(*utmp[2],(*igb)[2][GBDY_0FLUX]);
       *utmp[1] += *utmp[2];
     }
     // Point-multiply by eta before taking 'divergence':
-    utmp[1]->pointProd(d);
+//  utmp[1]->pointProd(d);
     utmp[1]->pointProd(*eta_);
     grid_->deriv(*utmp[1], j+1, *utmp[0], *utmp[2]);
     eo += *utmp[2];
@@ -321,7 +321,7 @@ GMTK::zero<Ftype>(*utmp[2],(*igb)[2][GBDY_0FLUX]);
        *utmp[1] += *utmp[2];
     }
     // Point-multiply by eta before taking 'divergence':
-    utmp[1]->pointProd(d);
+//  utmp[1]->pointProd(d);
     utmp[1]->pointProd(*eta_);
     grid_->deriv(*utmp[1], j+1, *utmp[0], *utmp[2]);
     eo += *utmp[2];
@@ -341,7 +341,7 @@ GMTK::zero<Ftype>(*utmp[2],(*igb)[2][GBDY_0FLUX]);
     *utmp[1] += *utmp[2];
   }
 
-  utmp[1]->pointProd(d);
+//utmp[1]->pointProd(d);
   utmp[1]->pointProd(*lambda_);
 
   // Now compute
@@ -395,8 +395,8 @@ void GStressEnOp<TypePack>::mom_update_full_cons(StateComp &d, State &u, GINT id
   tfact_.resizem(u[0]->size());
 #endif
 
-  // so = -D^{T,j} [mu d [D_i u_j + Dj u_i) + Dk zeta d u_k delta_ij ]:
-  //    + bdy surface terms:
+  // so_i = -D^{T,j} [mu d [D_i u_j + Dj u_i) + zeta d D_k u_k delta_ij ]:
+  //      + bdy surface terms:
   // Below, i = idir:
 
   // Do -D^{T,j} [mu (D_i u_j) ] terms:
@@ -404,7 +404,7 @@ void GStressEnOp<TypePack>::mom_update_full_cons(StateComp &d, State &u, GINT id
   for ( auto j=0; j<nxy; j++ ) { 
     grid_->deriv(*u[j], idir, *utmp[0], *utmp[1]);
     // Point-multiply by mu before taking 'divergence':
-    utmp[1]->pointProd(d);
+//  utmp[1]->pointProd(d);
     utmp[1]->pointProd(*nu_);
 #if 0 // defined(GEOFLOW_USE_NEUMANN_HACK)
 if ( idir == 1 && j == 1 ){
@@ -430,7 +430,7 @@ GMTK::zero<Ftype>(*u[idir-1],(*igb)[2][GBDY_0FLUX]);
   for ( auto j=0; j<nxy; j++ ) { 
     grid_->deriv(*u[idir-1], j+1, *utmp[0], *utmp[1]);
     // Point-multiply by mu before taking 'divergence':
-    utmp[1]->pointProd(d);
+//  utmp[1]->pointProd(d);
     utmp[1]->pointProd(*nu_);
 #if 0 // defined(GEOFLOW_USE_NEUMANN_HACK)
 if ( j == 0 && idir == 1 ){
@@ -460,7 +460,7 @@ GMTK::zero<Ftype>(*u[idir-1],(*igb)[2][GBDY_0FLUX]);
     *utmp[1] += *utmp[2];
   }
 
-  utmp[1]->pointProd(d);
+//utmp[1]->pointProd(d);
   utmp[1]->pointProd(*zeta_);  // zeta Div u
 
 #if defined(DO_COMPRESS_MODES_ONLY)
@@ -542,7 +542,7 @@ void GStressEnOp<TypePack>::energy_update_full_cons(StateComp &d, State &u, Stat
       *utmp[1] += *utmp[2];
     }
     // Point-multiply by eta before taking 'divergence':
-    utmp[1]->pointProd(d);
+//  utmp[1]->pointProd(d);
     utmp[1]->pointProd(*eta_);
     grid_->wderiv(*utmp[1], j+1, TRUE, *utmp[0], *utmp[2]);
     eo -= *utmp[2];
@@ -563,7 +563,7 @@ void GStressEnOp<TypePack>::energy_update_full_cons(StateComp &d, State &u, Stat
        *utmp[1] += *utmp[2];
     }
     // Point-multiply by eta before taking 'divergence':
-    utmp[1]->pointProd(d);
+//  utmp[1]->pointProd(d);
     utmp[1]->pointProd(*eta_);
     grid_->wderiv(*utmp[1], j+1, TRUE, *utmp[0], *utmp[2]);
     eo -= *utmp[2];
@@ -589,7 +589,7 @@ void GStressEnOp<TypePack>::energy_update_full_cons(StateComp &d, State &u, Stat
     *utmp[1] += *utmp[2];
   }
 
-  utmp[1]->pointProd(d);
+//utmp[1]->pointProd(d);
   utmp[1]->pointProd(*lambda_);
 
 #if defined(DO_COMPRESS_MODES_ONLY)
@@ -673,7 +673,7 @@ GMTK::zero<Ftype>(*utmp[1],(*igb)[0][GBDY_0FLUX]);
 GMTK::zero<Ftype>(*utmp[1],(*igb)[2][GBDY_0FLUX]);
 }
 #endif
-    utmp[1]->pointProd(d);
+//  utmp[1]->pointProd(d);
     utmp[1]->pointProd(*nu_);
     grid_->deriv(*utmp[1], j+1, *utmp[0], *utmp[2]);
     so += *utmp[2];
@@ -733,7 +733,7 @@ GMTK::zero<Ftype>(*utmp[2],(*igb)[2][GBDY_0FLUX]);
        *utmp[1] += *utmp[2];
     }
     // Point-multiply by eta before taking 'divergence':
-    utmp[1]->pointProd(d);
+//  utmp[1]->pointProd(d);
     utmp[1]->pointProd(*eta_);
     grid_->deriv(*utmp[1], j+1, *utmp[0], *utmp[2]);
     eo += *utmp[2];
