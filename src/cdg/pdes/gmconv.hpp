@@ -265,7 +265,7 @@ GTVector<GSIZET> iupstream_;
         GTVector<Ftype>     dthist_;        // coeffs for NL adv term
         State               uold_;          // helper arrays set from utmp
         State               uevolve_;       // helper array to specify evolved state components
-        State               ubase_;         // helper array pointing to base state components
+        State               ubase_;         // helper array containing base state components
         State               utmp_;          // tmp pool
         State               urhstmp_;       // helper arrays set from utmp
         State               urktmp_;        // helper arrays set from utmp

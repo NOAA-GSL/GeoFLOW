@@ -269,6 +269,14 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
   tmp1  = urhstmp_[stmp.size()+2];
   tmp2  = urhstmp_[stmp.size()+3];
 
+#if 0
+  init_stagnation();
+  for ( auto j=0; j<istag_.size(); j++ ) {
+    (*u[DENSITY])[istag_[j]] = (*ubase_[0])[istag_[j]];
+    (*u [ENERGY])[istag_[j]] = (*ubase_[1])[istag_[j]] *  CVD/RD;
+  }
+#endif
+
   // Get total density and inverse: *rhoT  = *u[DENSITY]; 
   *rhoT = *u[DENSITY];
   if ( traits_.usebase ) *rhoT +=  *ubase_[0];   
@@ -290,20 +298,17 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
   compute_qd(u, *tmp1);                                   // dry mass ratio
   geoflow::compute_p<Ftype>(*e, *tmp1, RD, *tmp2, *p);    // partial pressure for dry air
 
-//set_stagnation(*rhoT, v_, urhstmp_, *p, *e);
-
+#if 1
   GMTK::saxpby<Ftype>(*tmp1, *e, 1.0, *p, 1.0);     // h = p+e, enthalpy density
   gdiv_->apply(*tmp1, v_, stmp, *dudt[ENERGY], -2); // Div(h v) 
-//gdiv_->apply(*e, v_, stmp, *dudt[ENERGY], -2);    // Div(e v) 
-
-#if 1
-  gadvect_->apply(*p, v_, stmp, *tmp1, -1);     // v.Grad p 
+  gadvect_->apply(*p, v_, stmp, *tmp1, -2);     // v.Grad p 
  *dudt[ENERGY] -= *tmp1;                        // -= v . Grad p
 #else
+  gdiv_->apply(*e, v_, stmp, *dudt[ENERGY], -2);// Div(e v) 
   GMTK::div(*grid_, v_, urhstmp_, *tmp1);
   *tmp1 *= *p;                                  // p Div v
   *tmp1 *= *Mass;                               // M Grad p' 
- *dudt[ENERGY] += *tmp1;                        // += v . Grad p
+ *dudt[ENERGY] += *tmp1;                        // += p Div v
 #endif
 
 #if 1
@@ -331,9 +336,10 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
   }
   for ( auto j=0; j<s_.size(); j++ ) { // for each component
 
-    gdiv_->apply(*s_[j], v_, stmp, *dudt[j], -2); //j+1 );
+    gdiv_->apply(*s_[j], v_, stmp, *dudt[j], j+1 );
 
     grid_->deriv(*p, j+1, *tmp2, *tmp1);              // Grad p'
+   *tmp1 *= *Mass;                                    // M Grad p' 
 #if defined(GEOFLOW_USE_NEUMANN_HACK)
 if ( j==0) {
 GMTK::zero<Ftype>(*tmp1,(*igb)[1][GBDY_0FLUX]);
@@ -343,7 +349,6 @@ GMTK::zero<Ftype>(*tmp1,(*igb)[0][GBDY_0FLUX]);
 GMTK::zero<Ftype>(*tmp1,(*igb)[2][GBDY_0FLUX]);
 }
 #endif
-   *tmp1 *= *Mass;                                    // M Grad p' 
    *dudt[j] += *tmp1;                                 // += Grad p'
 
 #if 0
@@ -359,9 +364,11 @@ GMTK::zero<Ftype>(*tmp1,(*igb)[2][GBDY_0FLUX]);
       compute_vpref(*tmp1, j+1, *tmp2);               // compute grav component
       tmp2->pointProd(*dd);
      *tmp2 *= *Mass;             
-#if 0 // defined(GEOFLOW_USE_NEUMANN_HACK)
-tmp2->constProd(-1.0, (*igb)[0][GBDY_0FLUX].data(),
-                      (*igb)[0][GBDY_0FLUX].size());
+#if defined(GEOFLOW_USE_NEUMANN_HACK)
+if ( j==0) {
+GMTK::zero<Ftype>(*tmp2,(*igb)[0][GBDY_0FLUX]);
+GMTK::zero<Ftype>(*tmp2,(*igb)[2][GBDY_0FLUX]);
+} 
 #endif
      *dudt[j] -= *tmp2;                               // -= rho' vec{g} M J
     }
@@ -1862,8 +1869,6 @@ void GMConv<TypePack>::set_stagnation(StateComp &d, State &v, State &utmp, State
 template<typename TypePack>
 void GMConv<TypePack>::init_stagnation()
 {
-//  GSIZET istag_;
-//  GSIZET iupstream_;
   GSIZET           istart, istg, iups;
   GTPoint<Ftype>   xstag(3);
   GTVector<GINT>   iuout(1);
