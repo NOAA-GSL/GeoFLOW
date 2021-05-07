@@ -107,8 +107,9 @@
     "bdy_class"        : "uniform",
     "base_type"        : ["GBDY_INFLOW"],
     "istate"           : [[0, 1, 2]],
-    "use_init"         : true,
-    "inflow_method"    : ""
+    "use_init"         : [true],
+    "inflow_method"    : "",
+    "compute_once"     : [true]
   },
   "my_dirichlet": {
     "bdy_class"        : "uniform",

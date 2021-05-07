@@ -60,7 +60,7 @@ bdy_apply_callback_           (NULLPTR)
   cudat_.nstreams = MAX(cudat_.nstreams,1);
   
   
-  doQDealias_ = ptree.getValue<GBOOL>("do_dealiasing");
+  doQDealias_ = ptree.getValue<GBOOL>("do_dealiasing", false);
   if ( doQDealias_ &&  ptree.keyExists("qdealias_order") ) {
      pqdealias_      = ptree.getArray<GINT>("qdealias_order");
      assert( pqdealias_.size() >= GDIM );
