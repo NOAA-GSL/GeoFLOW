@@ -2731,7 +2731,7 @@ void dot(GTVector<GTVector<T>*> &x, GTVector<GTVector<T>*> &y, GTVector<T> &tmp,
 //          
 // ARGS   : grid : grid
 //          u    : input vector field. 
-//          tmp  : tmp vector; must be of at least length 2.
+//          tmp  : tmp vector; must be of at least length 3.
 //          div  : result
 // RETURNS: none.
 //**********************************************************************************
@@ -2741,10 +2741,12 @@ void div(Grid &grid, const GTVector<GTVector<T>*> &u,
 {
   GEOFLOW_TRACE();
 
+  assert(tmp.size() >= 3);
+
   grid.deriv(*u[0], 1, *tmp[0], div);
   for ( auto j=1; j<u.size(); j++ ) {
-    grid.deriv(*u[j], j+1, *tmp[0], *tmp[0]);
-    div += *tmp[0];
+    grid.deriv(*u[j], j+1, *tmp[0], *tmp[2]);
+    div += *tmp[2];
   }
 
 } // end of method div
