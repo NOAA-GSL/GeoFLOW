@@ -1,6 +1,8 @@
 { 
-  "exp_order"         : [4, 4, 8],
+  "exp_order"         : [6, 6, 6],
   "exp_order_type"    : "constant",
+  "do_dealiasing"     : false,
+  "qdealias_order"    : [7, 7, 7],
   "grid_type"         : "grid_box",
   "pde_name"          : "pde_mconv",
   "initstate_block"   : "initstate_boxdrybubble",
@@ -11,64 +13,65 @@
   "restart_index"     : 0,
   "benchmark"         : false,
   "do_comparison"     : false,
-  "observer_list"     : ["gio_observer", "burgers_diag"],
+  "observer_list"     : ["gio_observer", "gmconv_diag"],
   "IO_implementation" : "gio",
   "terrain_type"      : "none",
   "initstate_boxdrybubble": {
-    "T_pert"     : -15.0,
+    "T_pert"     : -7.5,
     "x_center"   : [0, 3000.0, 1000.0],
     "x_width"    : [4000.0, 2000.0, 2000.0]
   },
-  "grid_icos": {
-    "grid_name"   : "grid_icos",
-    "ilevel"      : 1,
-    "refine_type" : "GICOS_BISECTION",
-    "radius"      : 1.0,
-    "maxit"       : 128,
-    "tol"         : 1.0e-8,
-    "norm_type"   : "GCG_NORM_INF"
-  },
-  "grid_sphere" : {
-    "grid_name" : "grid_sphere",
-    "radiusi"   : 1.0,
-    "radiuso"   : 2.0,
-    "bdy_inner": "GBDY_DIRICHLET",
-    "bdy_outer": "GBDY_SPONGE"
+  "test": {
+    "bdy_class"        : "uniform",
+    "base_type"        : ["GBDY_0FLUX", "GBDY_DIRICHLET"],
+    "istate"           : [[0, 1], [2, 3]],
+    "value"            : [[0, 0], [0, 0]],
+    "use_init"         : [false, true],
+    "compute_once"     : [false, true]
   },
   "0-flux": {
     "bdy_class"        : "uniform",
     "base_type"        : ["GBDY_0FLUX"],
-    "istate"           : [[0, 1]]
+    "istate"           : [[0, 1]],
+    "use_init"         : [false],
+    "compute_once"     : [false]
   },
   "pde_mconv": {
     "docoriolis"      : false,
     "dodry"           : true,
-    "usebase_state"   : true,
+    "usebase_state"   : false,
     "dofallout"       : false,
     "dogravity"       : true,
     "bconserved"      : false,
     "divopcolloc"     : true,
+    "usebdydat"       : true,
     "Stokeshyp"       : false,
     "bindepdiss"      : false,
     "nliq"            : 0,
     "nice"            : 0,
     "use_forcing"     : false,
-    "forcing_comp"    : [0, 1, 2],
+    "forcing_comp"    : [],
     "T_surf"          : 300.0,
     "P0"              : 1000.0,
     "filter_list"     : [],
-    "my_filter" : {
+    "boyd_filter" : {
       "filter_type" : "boyd_filter",
-      "ifilter"     : 4,
-      "mufilter"    : 0.05,
-      "state_index" : [0, 1]
+      "strength"    : [1e-3, 1e-3, 1e-3],
+      "pdelta"      : [1, 1, 1],
+      "istate"      : [0, 1, 2, 3]
+    },
+    "proj_filter" : {
+      "filter_type" : "projection_filter",
+      "strength"    : [0.05 , 0.05, 0.05],
+      "pdelta"      : [2, 2, 2],
+      "istate"      : [0, 1, 2, 3]
     }
   },
   "grid_box": {
     "grid_name" : "grid_box",
-    "xyz0"      : [-25600, 0, 0],
-    "delxyz"    : [51200.0, 10000.0, 1.0],
-    "num_elems" : [256, 50, 1],
+    "xyz0"      : [0, 0, 0],
+    "delxyz"    : [25600, 10000, 1.0],
+    "num_elems" : [128, 25, 1],
     "bdy_x_0"   : "0-flux",
     "bdy_x_1"   : "0-flux",
     "bdy_y_0"   : "0-flux",
@@ -89,14 +92,14 @@
     "courant"          : 0.1
   },
   "dissipation_traits": {
-    "nu"      : 100.0,
-    "kappa"   : 100.0,
-    "zeta"    : 100.0,
-    "lambda"  : 100.0,
+    "nu"      : 75.0,
+    "eta"     : 75.0,
+    "zeta"    : 75.0,
+    "lambda"  : 75.0,
     "nu_type" : "constant"
   },
   "gio": {
-    "ivers"   : 0,
+    "ivers"    : 0,
     "multivar" : false,
     "io_type"  : "collective",
     "wtime"    : 6,
@@ -115,6 +118,18 @@
     "names"       : ["dtheta"],
     "mathop"      : "dptemp"
   },
+  "cs": {
+    "names"       : ["cs"],
+    "mathop"      : "cs"
+  },
+  "dpress": {
+    "names"       : ["dp"],
+    "mathop"      : "dpress"
+  },
+  "de": {
+    "names"       : ["de"],
+    "mathop"      : "de"
+  },
   "press": {
     "names"       : ["p"],
     "mathop"      : "press"
@@ -122,6 +137,10 @@
   "den": {
     "names"       : ["dtotal"],
     "mathop"      : "den"
+  },
+  "dden": {
+    "names"       : ["dd"],
+    "mathop"      : "dden"
   },
   "vel": {
     "names"       : ["v1","v2"],
@@ -132,17 +151,17 @@
     "idir"               : "outs",
     "odir"               : "outs",
     "cadence_type"       : "time",
-    "cycle_interval"     : 100,
-    "time_interval"      : 10.0,
+    "cycle_interval"     : 1,
+    "time_interval"      : 5.0,
     "state_names"        : ["s1", "s2", "e", "d"],
     "grid_names"         : ["xgrid", "ygrid", "zgrid"],
     "agg_state_name"     : "u",
     "agg_grid_name "     : "grid",
     "derived_quantities"       : [],
-    "state_derived_quantities" : ["temp","press","vel","ptemp","dptemp","den"]
+    "state_derived_quantities" : ["temp","press","vel","cs","ptemp","de","dpress","dptemp","den","dden"]
   },
-  "burgers_diag": {
-    "observer_name"      : "burgers_diag",
+  "gmconv_diag": {
+    "observer_name"      : "gmconv_diag",
     "idir"               : ".",
     "odir"               : ".",
     "interval_freq_fact" : 100.0,
@@ -150,8 +169,8 @@
   },
   "time_integration": {
     "integ_type" : "time",
-    "time_end"   : 900.0,
-    "cycle_end"  : 1000,
+    "time_end"   : 900.5,
+    "cycle_end"  : 10,
     "dt"         : 1.0e-2
   }
 

@@ -37,41 +37,45 @@ using namespace geoflow::tbox;
 using namespace std;
 
 
-
-template< // Complete typepack
-typename StateType     = GTVector<GTVector<GFTYPE>*>,
-typename StateCompType = GTVector<GFTYPE>,
-typename StateInfoType = GStateInfo,
-typename GridType      = GGrid,
-typename MassOpType    = GMass,
-typename ValueType     = GFTYPE,
-typename DerivType     = StateType,
-typename TimeType      = ValueType,
-typename CompType      = GTVector<GStateCompType>,
-typename JacoType      = StateType,
-typename SizeType      = GSIZET
->
 struct TypePack {
-        using State      = StateType;
-        using StateComp  = StateCompType;
-        using StateInfo  = StateInfoType;
-        using Grid       = GridType;
-        using Mass       = MassOpType;
-        using Value      = ValueType;
-        using Derivative = DerivType;
-        using Time       = TimeType;
-        using CompDesc   = CompType;
-        using Jacobian   = JacoType;
-        using Size       = SizeType;
+        using State      = GTVector<GTVector<GFTYPE>*>;
+        using StateComp  = GTVector<GFTYPE>;
+        using StateInfo  = GStateInfo;
+        using Grid       = GGrid<TypePack>;
+        using GridBox    = GGridBox<TypePack>;
+        using GridIcos   = GGridIcos<TypePack>;
+        using Mass       = GMass<TypePack>;
+        using Ftype      = GFTYPE;
+        using Derivative = State;
+        using Time       = Ftype;
+        using CompDesc   = GTVector<GStateCompType>;
+        using Jacobian   = State;
+        using Size       = GSIZET;
+        using EqnBase    = EquationBase<TypePack>;     // Equation Base type
+        using EqnBasePtr = std::shared_ptr<EqnBase>;   // Equation Base ptr
+        using IBdyVol    = GTVector<GSIZET>;
+        using TBdyVol    = GTVector<GBdyType>;
+        using Operator   = GHelmholtz<TypePack>;
+        using GElemList  = GTVector<GElem_base*>;
+        using Preconditioner = GHelmholtz<TypePack>;
+        using ConnectivityOp = GGFX<Ftype>;
+        using FilterBasePtr  = std::shared_ptr<FilterBase<TypePack>>;
+        using FilterList     = std::vector<FilterBasePtr>;
+
 };
-using MyTypes       = TypePack<>;           // Define grid types used
-using Grid          = GGrid;
-using IOBaseType    = IOBase<MyTypes>;          // IO Base type
+using Types         = TypePack;                   // Define grid types used
+using Grid          = typename Types::Grid;
+using State         = typename Types::State;
+using StateComp     = typename Types::StateComp;
+using IOBaseType    = IOBase<Types>;              // IO Base type
 using IOBasePtr     = std::shared_ptr<IOBaseType>;// IO Base ptr
-using ObsTraitsType = ObserverBase<MyTypes>::Traits;
+using ObsTraitsType = ObserverBase<Types>::Traits;
 
 Grid      *grid_ = NULLPTR;
 IOBasePtr  pIO_  = NULLPTR; // ptr to IOBase operator
+
+GINT szMatCache_ = _G_MAT_CACHE_SIZE;
+GINT szVecCache_ = _G_VEC_CACHE_SIZE;
 
 
 #define NMETH 2
@@ -129,7 +133,7 @@ int main(int argc, char **argv)
     
     // Create grid:
     ObsTraitsType binobstraits;
-    grid_ = GGridFactory<MyTypes>::build(ptree, gbasis, pIO_, binobstraits, comm);
+    grid_ = GGridFactory<Types>::build(ptree, gbasis, pIO_, binobstraits, comm);
 
     /////////////////////////////////////////////////////////////////
     ////////////////////// Allocate arrays //////////////////////////
@@ -185,14 +189,14 @@ int main(int argc, char **argv)
 
     // Compute numerical derivs of u in each direction, using
     // different methods:
-    grid_->set_derivtype(GGrid::GDV_VARP); // variable order
+    grid_->set_derivtype(GGrid<Types>::GDV_VARP); // variable order
     GEOFLOW_TRACE_START("old_deriv");
     for ( auto n=0; n<ncyc; n++ ) {
        grid_->deriv(u, idir, *utmp[0], duold);
     }
     GEOFLOW_TRACE_STOP();
 
-    grid_->set_derivtype(GGrid::GDV_CONSTP); // const order
+    grid_->set_derivtype(GGrid<Types>::GDV_CONSTP); // const order
     GEOFLOW_TRACE_START("new_deriv");
     for ( auto n=0; n<ncyc; n++ ) {
        grid_->deriv(u, idir, *utmp[0], dunew);

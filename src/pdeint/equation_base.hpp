@@ -31,14 +31,14 @@ public:
         using StateInfo  = typename Types::StateInfo;
         using Mass       = typename Types::Mass;
 	using Grid       = typename Types::Grid;
-	using Value      = typename Types::Value;
+	using Ftype      = typename Types::Ftype;
 	using Derivative = typename Types::Derivative;
 	using Time       = typename Types::Time;
 	using Jacobian   = typename Types::Jacobian;
 	using CompDesc   = typename Types::CompDesc;
 	using Size       = typename Types::Size;
         using FilterBasePtr = std::shared_ptr<FilterBase<Types>>;
-	using FilterList    = std::vector<FilterBasePtr>;
+        using FilterList    = std::vector<FilterBasePtr>;
 
 
 /*
@@ -48,7 +48,7 @@ public:
           size_t      index   = 0;        // time index
           size_t      nelems  = 0;        // num elems
           size_t      cycle   = 0;        // continuous time cycle
-          Value       time    = 0.0;      // state time
+          Ftype       time    = 0.0;      // state time
           std::vector<std::string>
                       svars;              // names of state members
           CompDesc    icomptype;          // encoding of state component types    
@@ -97,14 +97,13 @@ public:
 	/**
 	 * Apply Boundary Condition.
 	 *
-	 * Apply the provided ub boundary condition to the state u.
+	 * Apply the boundary condition to the state u.
 	 *
 	 * @param[in]     t  Current time of state u before taking step
 	 * @param[in,out] u  Is the state of the system of equations
-	 * @param[in]     ub Boundary condition values
 	 */
-	void apply_bc(const Time &t, State &u, State &ub){
-		this->apply_bc_impl(t,u,ub);
+	void apply_bc(const Time &t, State &u){
+		this->apply_bc_impl(t,u);
 	}
 
 
@@ -114,14 +113,12 @@ public:
 	 * time t + dt and return new solution within u.
 	 *
 	 * \param[in]     t  Current time of state u before taking step
-	 * \param[in]     ub Boundary conditions for u
 	 * \param[in,out] u  State of the system of equations
 	 * \param[in,out] uf Forcing tendency
-	 * \param[in,out] ub Boundary vector
 	 * \param[in]     dt Size of time step to take
 	 */
-	void step(const Time& t, State& u, State& uf, State& ub, const Time &dt){
-		this->step_impl(t,u,uf,ub,dt);
+	void step(const Time& t, State& u, State& uf,  const Time &dt){
+		this->step_impl(t,u,uf,dt);
 	}
 
 	/** Take one step from time t to time t + dt.
@@ -132,12 +129,11 @@ public:
 	 * \param[in]     t     Current time of state u before taking step
 	 * \param[in]     uin   State of the system of equations at time t
 	 * \param[in,out] uf    Forcing tendency
-	 * \param[in,out] ub    Boundary conditions for u
 	 * \param[in]     dt    Size of time step to take
 	 * \param[out]    uout  New state of the system of equations at t + dt
 	 */
-	void step(const Time& t, const State& uin, State& uf, State& ub, const Time& dt, State& uout){
-		this->step_impl(t,uin,uf,ub,dt,uout);
+	void step(const Time& t, const State& uin, State& uf, const Time& dt, State& uout){
+		this->step_impl(t,uin,uf,dt,uout);
 	}
 
 	/** Initialize solver
@@ -203,7 +199,7 @@ public:
 	 *
 	 * \param[in]     fcn   bdy update function
 	 */
-	virtual void set_bdy_update_callback(std::function<void(const Time& t, State& u, State& ub)> fcn){
+	virtual void set_bdy_update_callback(std::function<void(const Time& t, State& u)> fcn){
 		update_bdy_callback_ = fcn;
 	}
 
@@ -243,17 +239,17 @@ protected:
 	/**
 	 * Must be provided by implementation
 	 */
-	virtual void apply_bc_impl(const Time &t, State &u, State &ub) = 0;
+	virtual void apply_bc_impl(const Time &t, State &u) = 0;
 
 	/**
 	 * Must be provided by implementation
 	 */
-	virtual void step_impl(const Time& t, State& u, State& uf,  State& ub, const Time& dt) = 0;
+	virtual void step_impl(const Time& t, State& u, State& uf,  const Time& dt) = 0;
 
 	/**
 	 * Must be provided by implementation
 	 */
-	virtual void step_impl(const Time& t, const State& uin, State& uf, State& ub, const Time& dt, State& uout) = 0;
+	virtual void step_impl(const Time& t, const State& uin, State& uf, const Time& dt, State& uout) = 0;
   
 	/**
 	 * Must be provided by implementation
@@ -285,7 +281,7 @@ protected:
 	 */
 	virtual std::vector<int> &iforced_impl() = 0;
   
-        std::function<void(const Time &t, State &u, State &ub)> 
+        std::function<void(const Time &t, State &u)> 
                  update_bdy_callback_;
 
         StateInfo  stateinfo_;

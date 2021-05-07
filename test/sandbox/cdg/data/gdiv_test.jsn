@@ -1,0 +1,43 @@
+{ 
+  "exp_order"            : [2, 2, 2],
+  "grid_type"            : "grid_box",
+  "IO_implementation"    : "gio",
+  "nstreams"             : 1,
+  "div_test": {
+    "poly"     : [[0, 0, 0],[0, 0, 0],[0, 0, 0]],
+    "ncycles"  : 1,
+    "docolloc" : false,
+    "usebdydat": true
+  },
+  "fully_periodic": {
+    "bdy_class"        : "uniform",
+    "base_type"        : ["GBDY_PERIODIC"],
+    "istate"           : [[0, 1, 2]]
+  },
+  "0-flux": {
+    "bdy_class"        : "uniform",
+    "base_type"        : ["GBDY_0FLUX"],
+    "istate"           : [[0, 1]]
+  },
+  "grid_box": {
+  "grid_name" : "grid_box",
+    "xyz0"      : [0.0, 0.0, 0.0],
+    "delxyz"    : [1.0, 1.0, 1.0],
+    "num_elems" : [1, 1, 1],
+    "bdy_x_0"   : "0-flux",
+    "bdy_x_1"   : "0-flux",
+    "bdy_y_0"   : "0-flux",
+    "bdy_y_1"   : "0-flux",
+    "bdy_z_0"   : "0-flux",
+    "bdy_z_1"   : "0-flux"
+  },
+  "gio": {
+    "ivers"   : 0,
+    "multivar" : false,
+    "io_type"  : "collective",
+    "wtime"    : 6,
+    "wtask"    : 5,
+    "wfile"    : 2048
+  }
+
+}

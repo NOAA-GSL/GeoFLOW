@@ -12,9 +12,6 @@
 #include "pdeint/equation_base.hpp"
 #include "gcomm.hpp"
 #include "gtvector.hpp"
-#include "ggrid.hpp"
-#include "ggrid_icos.hpp"
-#include "ggrid_box.hpp"
 #include "gterrain_specbox_user.hpp"
 #include "gterrain_specsph_user.hpp"
 
@@ -28,7 +25,9 @@ class GSpecTerrainFactory
         using Types         = TypePack;
         using State         = typename Types::State;
         using Grid          = typename Types::Grid;
-        using Value         = typename Types::Value;
+        using GridBox       = typename Types::GridBox;
+        using GridIcos      = typename Types::GridIcos;
+        using Ftype         = typename Types::Ftype;
 
 
 	static GBOOL spec(const PropertyTree& ptree, Grid &grid, State &utmp, State &xb, GBOOL &bterr);

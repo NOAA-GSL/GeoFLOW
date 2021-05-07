@@ -18,7 +18,7 @@
 //          traits  : Traits sturcture
 //**********************************************************************************
 template<typename EquationType>
-GIOObserver<EquationType>::GIOObserver(const EqnBasePtr &equation, Grid &grid,  const IOBasePtr &io_ptr, typename ObserverBase<EquationType>::Traits &traits):
+GIOObserver<EquationType>::GIOObserver(EqnBasePtr &equation, Grid &grid,  const IOBasePtr &io_ptr, typename ObserverBase<EquationType>::Traits &traits):
 ObserverBase<EquationType>(equation, grid, traits),
 bprgrid_         (TRUE),
 bInit_          (FALSE),
@@ -45,13 +45,14 @@ pEqn_        (equation)
 //                    each time step.
 //
 // ARGUMENTS  : t    : time, t^n, for state, uin=u^n
+//              dt   : timestep
 //              u    : state
 //              uf   : forcing
 //               
 // RETURNS    : none.
 //**********************************************************************************
 template<typename EquationType>
-void GIOObserver<EquationType>::observe_impl(const Time &t, const State &u, const State &uf)
+void GIOObserver<EquationType>::observe_impl(const Time &t, const Time &dt, const State &u, const State &uf)
 {
   GEOFLOW_TRACE();
   assert(bInit_ && "Object not initialized");
@@ -152,7 +153,7 @@ void GIOObserver<EquationType>::print_derived(const Time &t, const State &u)
 
   GString            sop;   // math operation
 //GTVector<GString>  sdqnames;
-  GTVector<GINT>     iuin(3), iuout(3);
+  std::vector<GINT>  iuout(3);
   State              tmp(5),  uout(3);
   GString            agg_derived;
   std::vector<GINT>  isout;

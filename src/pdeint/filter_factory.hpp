@@ -15,6 +15,7 @@
 #include "pdeint/filter_base.hpp"
 #include "pdeint/null_filter.hpp"
 #include "gboyd_filter.hpp"
+#include "gprojection_filter.hpp"
 
 
 namespace geoflow {

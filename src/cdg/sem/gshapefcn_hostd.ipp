@@ -92,7 +92,7 @@ GShapeFcn_hostd<T>::~GShapeFcn_hostd()
 //                  Size of this array must be the same as that for xi array.
 //          xi    : [*xi_0[N0], *xi_1[N1], ... *xi_2[N_GDIM]]: array of reference interval 
 //                  points in each direction. Each array should have the number of 
-//                  ref interfal points for that coord direction.
+//                  ref interval points for that coord direction.
 //          N     : computation of coordinate at each reference node point, 
 //                  corresponding to direction icoord
 //             
@@ -134,7 +134,7 @@ void GShapeFcn_hostd<T>::Ni(GTVector<GINT> &ishape,
 //                  Size of this array must be the same as that for xi array.
 //          xi    : [*xi_0[N0], *xi_1[N1], ... *xi_2[N_GDIM]]: array of reference interval 
 //                  points in each direction. Each array should have the number of 
-//                  ref interfal points for that coord direction.
+//                  ref interval points for that coord direction.
 //          N     : computation of shape fcn at each reference node point, 
 //                  corresponding to direction icoord
 // 
@@ -165,7 +165,7 @@ void GShapeFcn_hostd<T>::Ni_1d(GTVector<GINT> &ishape,
 //                  Size of this array must be the same as that for xi array.
 //          xi    : [*xi_0[N0], *xi_1[N1], ... *xi_2[N_GDIM]]: array of reference interval 
 //                  points in each direction. Each array should have the number of 
-//                  ref interfal points for that coord direction.
+//                  ref interval points for that coord direction.
 //          N     : computation of shape fcn at each reference node point, 
 //                  corresponding to direction icoord
 // 
@@ -179,14 +179,14 @@ void GShapeFcn_hostd<T>::Ni_2d(GTVector<GINT> &ishape,
   
   d_.resizem(xi.size());
 
-  for ( GSIZET j=0; j<xi.size(); j++ ) {
+  for ( auto j=0; j<xi.size(); j++ ) {
     d_[j].resize(xi[j]->size());
     this->gbasis_[j]->evalBasis(ishape[j], *xi[j], d_[j]);
   }
 
   GSIZET n = 0;
-  for ( GSIZET j=0; j<xi[1]->size(); j++ ) {
-    for ( GSIZET i=0; i<xi[0]->size(); i++ ) {
+  for ( auto j=0; j<xi[1]->size(); j++ ) {
+    for ( auto i=0; i<xi[0]->size(); i++ ) {
       N[n++] = d_[0][i]*d_[1][j];
     }
   }
@@ -208,7 +208,7 @@ void GShapeFcn_hostd<T>::Ni_2d(GTVector<GINT> &ishape,
 //                  Size of this array must be the same as that for xi array.
 //          xi    : [*xi_0[N0], *xi_1[N1], ... *xi_2[N_GDIM]]: array of reference interval 
 //                  points in each direction. Each array should have the number of 
-//                  ref interfal points for that coord direction.
+//                  ref interval points for that coord direction.
 //          N     : computation of shape fcn at each reference node point, 
 //                  corresponding to direction icoord
 // 
@@ -221,15 +221,15 @@ void GShapeFcn_hostd<T>::Ni_3d(GTVector<GINT> &ishape,
 {
   d_.resizem(xi.size());
 
-  for ( GSIZET j=0; j<xi.size(); j++ ) {
+  for ( auto j=0; j<xi.size(); j++ ) {
     d_[j].resize(xi[j]->size());
     this->gbasis_[0]->evalBasis(ishape[j], *xi[j], d_[j]);
   }
 
   GSIZET n=0;
-  for ( GSIZET k=0; k<xi[1]->size(); k++ ) {
-    for ( GSIZET j=0; j<xi[1]->size(); j++ ) {
-      for ( GSIZET i=0; i<xi[0]->size(); i++ ) {
+  for ( auto k=0; k<xi[1]->size(); k++ ) {
+    for ( auto j=0; j<xi[1]->size(); j++ ) {
+      for ( auto i=0; i<xi[0]->size(); i++ ) {
         N[n++] = d_[0][i]*d_[1][j]*d_[2][k];
       }
     }
@@ -252,7 +252,7 @@ void GShapeFcn_hostd<T>::Ni_3d(GTVector<GINT> &ishape,
 //          jder  : derivative wrt xi^j; may be 1, 2, or 3
 //          xi    : [*xi_0[N0], *xi_1[N1], *xi_2[N3]]: array of reference interval 
 //                  points in each direction. Each array should have the number of 
-//                  ref interfal points for that coord direction
+//                  ref interval points for that coord direction
 //          dNdxi : computation of derivative at each tensor prod node point
 //             
 // RETURNS:  none
@@ -293,7 +293,7 @@ void GShapeFcn_hostd<T>::dNdXi(GTVector<GINT> &ishape, GINT jder,
 //          jder  : derivative wrt xi^j  (1-deriv only)
 //          xi    : [*xi_0[N0], *xi_1[N1], *xi_2[N3]]: array of reference interval 
 //                  points in each direction. Each array should have the number of 
-//                  ref interfal points for that coord direction
+//                  ref interval points for that coord direction
 //          dNdxi : computation of derivative at each tensor prod node point
 //             
 // RETURNS:  none
@@ -324,7 +324,7 @@ void GShapeFcn_hostd<T>::dNdXi_1d(GTVector<GINT> &ishape, GINT jder,
 //          jder  : derivative wrt xi^jder: 1, or 2
 //          xi    : [*xi_0[N0], *xi_1[N1], *xi_2[N3]]: array of reference interval 
 //                  points in each direction. Each array should have the number of 
-//                  ref interfal points for that coord direction
+//                  ref interval points for that coord direction
 //          dNdxi : computation of derivative at each tensor prod node point
 //             
 // RETURNS:  none
@@ -338,7 +338,7 @@ void GShapeFcn_hostd<T>::dNdXi_2d(GTVector<GINT> &ishape, GINT jder,
 
   d_.resizem(xi.size());
 
-  for ( GSIZET j=0; j<xi.size(); j++ ) {
+  for ( auto j=0; j<xi.size(); j++ ) {
     d_[j].resize(xi[j]->size());
     if ( j == (jder-1)) {
       this->gbasis_[j]->evalDBasis(ishape[j], *xi[j], d_[j]);
@@ -349,8 +349,8 @@ void GShapeFcn_hostd<T>::dNdXi_2d(GTVector<GINT> &ishape, GINT jder,
   }
 
   GSIZET n = 0;
-  for ( GSIZET j=0; j<xi[1]->size(); j++ ) {
-    for ( GSIZET i=0; i<xi[0]->size(); i++ ) {
+  for ( auto j=0; j<xi[1]->size(); j++ ) {
+    for ( auto i=0; i<xi[0]->size(); i++ ) {
       dNdxi[n++] = d_[0][i]*d_[1][j];
     }
   }
@@ -371,7 +371,7 @@ void GShapeFcn_hostd<T>::dNdXi_2d(GTVector<GINT> &ishape, GINT jder,
 //          jder  : derivative wrt xi^jder: 1, 2, or 3
 //          xi    : [*xi_0[N0], *xi_1[N1], *xi_2[N3]]: array of reference interval 
 //                  points in each direction. Each array should have the number of 
-//                  ref interfal points for that coord direction
+//                  ref interval points for that coord direction
 //          dNdxi : computation of derivative at each tensor prod node point
 //             
 // RETURNS:  none
@@ -385,9 +385,9 @@ void GShapeFcn_hostd<T>::dNdXi_3d(GTVector<GINT> &ishape, GINT jder,
 
   d_.resizem(xi.size());
 
-  for ( GSIZET j=0; j<xi.size(); j++ ) {
+  for ( auto j=0; j<xi.size(); j++ ) {
     d_[j].resize(xi[j]->size());
-    if ( j == jder ) {
+    if ( j == (jder-1) ) {
       this->gbasis_[j]->evalDBasis(ishape[j], *xi[j], d_[j]);
     }
     else {
@@ -396,9 +396,9 @@ void GShapeFcn_hostd<T>::dNdXi_3d(GTVector<GINT> &ishape, GINT jder,
   }
 
   GSIZET n = 0;
-  for ( GSIZET k=0; k<xi[2]->size(); k++ ) {
-    for ( GSIZET j=0; j<xi[1]->size(); j++ ) {
-      for ( GSIZET i=0; i<xi[0]->size(); i++ ) {
+  for ( auto k=0; k<xi[2]->size(); k++ ) {
+    for ( auto j=0; j<xi[1]->size(); j++ ) {
+      for ( auto i=0; i<xi[0]->size(); i++ ) {
         dNdxi[n++] = d_[0][i]*d_[1][j]*d_[2][k];
       }
     }

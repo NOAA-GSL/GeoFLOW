@@ -9,7 +9,6 @@
 #if !defined(_GINITSTATE_COMP_H)
 #define _GINITSTATE_COMP_H
 
-#include "ginitb.hpp"
 #include "ginitc.hpp"
 #include "ginitps.hpp"
 #include "ginits.hpp"

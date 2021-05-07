@@ -8,7 +8,7 @@
 //                remove the nonlinear terms so as to solve only the heat equation.
 //
 //                The State variable must always be of specific type
-//                   GTVector<GTVector<GFTYPE>*>, but the elements rep-
+//                   GTVector<GTVector<Ftype>*>, but the elements rep-
 //                resent different things depending on whether
 //                the equation is doing nonlinear advection, heat only, or 
 //                pure linear advection. If solving with nonlinear advection 
@@ -37,7 +37,6 @@
 #include <cmath>
 #include "gtvector.hpp"
 #include "gdd_base.hpp"
-#include "ggrid.hpp"
 #include "gab.hpp"
 #include "gext.hpp"
 #include "gbdf.hpp"
@@ -45,7 +44,6 @@
 #include "gmass.hpp"
 #include "gadvect.hpp"
 #include "ghelmholtz.hpp"
-//#include "gflux.hpp"
 #include "gexrk_stepper.hpp"
 #include "gbutcherrk.hpp"
 #include "ggfx.hpp"
@@ -54,27 +52,33 @@
 using namespace geoflow::pdeint;
 using namespace std;
 
+
 template<typename TypePack>
-class GBurgers : public EquationBase<TypePack>
+class GBurgers : public EquationBase<TypePack>, std::enable_shared_from_this<GBurgers<TypePack>>
 {
 public:
-        using Interface  = EquationBase<TypePack>;
-        using Base       = Interface;
-        using State      = typename Interface::State;
-        using Grid       = typename Interface::Grid;
-        using Value      = typename Interface::Value;
-        using Derivative = typename Interface::Derivative;
-        using Time       = typename Interface::Time;
-        using CompDesc   = typename Interface::CompDesc;
-        using Jacobian   = typename Interface::Jacobian;
-        using Size       = typename Interface::Size;
+        using Types      = TypePack;
+        using EqnBase    = EquationBase<Types>;
+        using EqnBasePtr = std::shared_ptr<EqnBase>;
+        using State      = typename Types::State;
+        using Grid       = typename Types::Grid;
+        using GridBox    = typename Types::GridBox;
+        using GridIcos   = typename Types::GridIcos;
+        using Ftype      = typename Types::Ftype;
+        using Mass       = typename Types::Mass;
+        using Derivative = typename Types::Derivative;
+        using Time       = typename Types::Time;
+        using CompDesc   = typename Types::CompDesc;
+        using Jacobian   = typename Types::Jacobian;
+        using Size       = typename Types::Size;
+        using FilterBasePtr = std::shared_ptr<FilterBase<Types>>;
+        using FilterList    = std::vector<FilterBasePtr>;
 
-        static_assert(std::is_same<State,GTVector<GTVector<GFTYPE>*>>::value,
+
+        static_assert(std::is_same<State,GTVector<GTVector<Ftype>*>>::value,
                "State is of incorrect type");
-        static_assert(std::is_same<Derivative,GTVector<GTVector<GFTYPE>*>>::value,
+        static_assert(std::is_same<Derivative,GTVector<GTVector<Ftype>*>>::value,
                "Derivative is of incorrect type");
-        static_assert(std::is_same<Grid,GGrid>::value,
-               "Grid is of incorrect type");
 
         // Burgers solver traits:
         struct Traits {
@@ -90,15 +94,15 @@ public:
           GINT           itorder     = 2;
           GINT           nstage      = 2;
           GINT           inorder     = 2;
-          GFTYPE         courant     = 0.5;
-          GFTYPE         nu          = 0.0;
+          Ftype         courant     = 0.5;
+          Ftype         nu          = 0.0;
           GTVector<GINT> iforced;
           GString        ssteptype;
         };
 
         GBurgers() = delete; 
-        GBurgers(Grid &grid, GBurgers<TypePack>::Traits &traits);
-       ~GBurgers();
+        GBurgers(Grid &grid, GBurgers<Types>::Traits &traits);
+virtual ~GBurgers();
         GBurgers(const GBurgers &bu) = default;
         GBurgers &operator=(const GBurgers &bu) = default;
 
@@ -107,13 +111,13 @@ public:
                             std::function<void(const Time &t, State &u, 
                                                const Time &dt)> callback) 
                              { steptop_callback_ = callback; bsteptop_ = TRUE;}
-        GBurgers<TypePack>::Traits &get_traits() { return traits_; }      // Get traits
+        GBurgers<Types>::Traits &get_traits() { return traits_; }      // Get traits
                                             
 
 protected:
-        void                step_impl(const Time &t, State &uin, State &uf, State &ub, 
+        void                step_impl(const Time &t, State &uin, State &uf, 
                                       const Time &dt);                    // Take a step
-        void                step_impl(const Time &t, const State &uin, State &uf, State &ub,
+        void                step_impl(const Time &t, const State &uin, State &uf, 
                                       const Time &dt, State &uout);       // Take a step
         void                compute_derived_impl(const State &uin, GString sop, 
                                       State &utmp, State &uout, 
@@ -127,19 +131,18 @@ protected:
                             {return stdiforced_;}
 
         void                init_impl(State &u, State &tmppool);          // initialize 
-        GTVector<GFTYPE>    &get_nu() { return nu_; };                    // Set nu/viscosity
+        GTVector<Ftype>    &get_nu() { return nu_; };                    // Set nu/viscosity
         GBOOL               has_dt_impl() const {return bvariabledt_;}    // Has dynamic dt?
         void                dt_impl(const Time &t, State &u, Time &dt);   // Get dt
-        void                apply_bc_impl(const Time &t, State &u, 
-                                          State &ub);                     // Apply bdy conditions
+        void                apply_bc_impl(const Time &t, State &u);       // Apply bdy conditions
 
 private:
 
-        void                dudt_impl  (const Time &t, const State &u, const State &uf, const State &ub,
+        void                dudt_impl  (const Time &t, const State &u, const State &uf, 
                                         const Time &dt, Derivative &dudt);
-        void                step_exrk  (const Time &t, State &uin, State &uf, State &ub,
+        void                step_exrk  (const Time &t, State &uin, State &uf, 
                                         const Time &dt, State &uout);
-        void                step_multistep(const Time &t, State &uin, State &uf, State &ub,
+        void                step_multistep(const Time &t, State &uin, State &uf, 
                                            const Time &dt);
         void                cycle_keep(State &u);
        
@@ -157,11 +160,11 @@ private:
         GINT                itorder_;       // time deriv order
         GINT                inorder_;       // nonlin term order
         GINT                nstage_;        // no. stages in time deriv RK
-        GFTYPE              courant_;       // Courant number if dt varies
-        GTVector<GFTYPE>    tcoeffs_;       // coeffs for time deriv
-        GTVector<GFTYPE>    acoeffs_;       // coeffs for NL adv term
-        GTVector<GFTYPE>    dthist_;        // coeffs for NL adv term
-        GTVector<GTVector<GFTYPE>*>  
+        Ftype               courant_;       // Courant number if dt varies
+        GTVector<Ftype>     tcoeffs_;       // coeffs for time deriv
+        GTVector<Ftype>     acoeffs_;       // coeffs for NL adv term
+        GTVector<Ftype>     dthist_;        // coeffs for NL adv term
+        GTVector<GTVector<Ftype>*>  
                             uevolve_;       // helper array to specify evolved sstate components
         State               utmp_;
         State               uold_;          // helper arrays set from utmp
@@ -172,24 +175,27 @@ private:
         GTVector<State>     ukeep_;         // state at prev. time levels
         GTVector<GString>
                             valid_types_;   // valid stepping methods supported
-        GTVector<GFTYPE>    nu_   ;         // dissipoation
+        GTVector<Ftype>     nu_   ;         // dissipoation
         std::vector<GINT>   stdiforced_;    // std::verctor for traits_.iforced
-        GGrid              *grid_;          // GGrid object
-        GExRKStepper<GFTYPE>
+        Grid               *grid_;          // Grid object
+        GExRKStepper<Grid,Ftype>
                            *gexrk_;         // ExRK stepper, if needed
-        GMass              *gmass_;         // mass op
-        GMass              *gimass_;        // inverse mass op
-        GAdvect<TypePack>  *gadvect_;       // advection op
-        GHelmholtz         *ghelm_;         // Helmholz and Laplacian op
-        GpdV<TypePack>     *gpdv_;          // pdV op
+        Mass               *gmass_;         // mass op
+        Mass               *gimass_;        // inverse mass op
+        GAdvect<Types>     *gadvect_;       // advection op
+        GHelmholtz<Types>  *ghelm_;         // Helmholz and Laplacian op
+        GpdV<Types>        *gpdv_;          // pdV op
 //      GFlux              *gflux_;         // flux op
         GC_COMM             comm_;          // communicator
-        GGFX<GFTYPE>       *ggfx_;          // gather-scatter operator
-        GBurgers<TypePack>::Traits         
+        GGFX<Ftype>        *ggfx_;          // gather-scatter operator
+        GBurgers<Types>::Traits         
                             traits_;        // solver traits
 
         std::function<void(const Time &t, State &u, const Time &dt)>
                            steptop_callback_;
+        std::shared_ptr<EquationBase<Types>>
+                            pthis_;         // shared pointer to this object
+
 
 
 };

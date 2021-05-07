@@ -119,7 +119,7 @@ nelems
   lelem = prod(NN(1:dim));  % data length per element
 
 
-  % Cycle over elems, and gather 22 data:
+  % Cycle over elems, and gather data:
   icurr = 1;
   for n = 1:nelems
     xx  = x{1}(icurr:icurr+lelem-1);

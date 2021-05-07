@@ -10,98 +10,109 @@
 #if !defined(_GGRID_HPP)
 #define _GGRID_HPP 
 
+
+#include "gtypes.h"
 #include <iostream>
-#include "gstateinfo.hpp"
+#include <memory>
+#include <cmath>
+#include <limits>
+#include <typeinfo>
 #include "gcomm.hpp"
 #include "gtvector.hpp"
 #include "gtmatrix.hpp"
 #include "gnbasis.hpp"
+#include "gllbasis.hpp"
 #include "gelem_base.hpp"
 #include "gdd_base.hpp"
-#include "gcomm.hpp"
-#include "ggfx.hpp"
-#include "glinop.hpp"
-#include "ghelmholtz.hpp"
 #include "gcblas.hpp"
+#include "gutils.hpp"
+#include "gcg.hpp"
+#include "gmtk.hpp"
+#include "ghelmholtz.hpp"
+#include "glinop_base.hpp"
+
+#include "polygon.h"
+#include "gshapefcn_linear.hpp"
+#include "gshapefcn_embed.hpp"
+#include "gupdatebdy_factory.hpp"
+
 #include "pdeint/update_bdy_base.hpp"
 #include "pdeint/lin_solver_base.hpp"
+#include "tbox/error_handler.hpp"
+#include "tbox/tracer.hpp"
 #include "tbox/property_tree.hpp"
 
 
+using namespace geoflow;
 using namespace geoflow::tbox;
 using namespace geoflow::pdeint;
 using namespace std;
 
-class GMass;
 
-struct BdyTypePack { // define bdy update typepack
-        using State            = GTVector<GTVector<GFTYPE>*>;
-        using StateComp        = GTVector<GFTYPE>;
-        using StateInfo        = GStateInfo;
-        using Grid             = GGrid;
-        using Value            = GFTYPE;
-        using Time             = GFTYPE;
-        using Derivative       = GTVector<GTVector<GFTYPE>*>;;
-        using CompDesc         = GTVector<GStateCompType>;
-        using IBdyVol          = GTVector<GSIZET>;
-        using TBdyVol          = GTVector<GBdyType>;
-};
 
-struct CGTypePack { // define terrain typepack
-        using Types            = CGTypePack;
-        using Operator         = class GHelmholtz;
-        using Preconditioner   = LinSolverBase<Types>;
-        using State            = GTVector<GTVector<GFTYPE>*>;
-        using StateComp        = GTVector<GFTYPE>;
-        using StateInfo        = GStateInfo;
-        using Grid             = GGrid;
-        using Value            = GFTYPE;
-        using Time             = GFTYPE;
-        using ConnectivityOp   = GGFX<GFTYPE>;
-};
-
-typedef UpdateBdyBase<BdyTypePack> UpdateBase;
-typedef std::shared_ptr<UpdateBase> UpdateBasePtr;
-typedef GTVector<GTVector<UpdateBasePtr>> BdyUpdateList;
-
-typedef GLinOp                                 PrecondType;
-typedef GTVector<GTVector<GFTYPE>*>            State;
-typedef GTVector<GFTYPE>                       StateComp;
-typedef GStateInfo                             StateInfo;
-typedef GGrid                                  Grid;
-typedef GFTYPE                                 Value;
-typedef GFTYPE                                 Time;
-typedef GTVector<GTVector<GTVector<GSIZET>>>   BinnedBdyIndex;
-typedef GTVector<GTVector<GTVector<GBdyType>>> BinnedBdyType;
-
-typedef GTVector<GElem_base*> GElemList;
-typedef GFTYPE                Time;
-typedef GStateInfo            StateInfo;
-
+template<typename TypePack>
 class GGrid 
 {
 public:
                              enum GDerivType {GDV_VARP=0, GDV_CONSTP}; 
+                             struct CGTypePack { // define terrain typepack
+                                     using Operator         = class GHelmholtz<TypePack>;
+                                     using Preconditioner   = GLinOpBase<TypePack>;
+                                     using State            = typename TypePack::State;
+                                     using StateComp        = typename TypePack::StateComp;
+                                     using Grid             = GGrid<TypePack>;
+                                     using Ftype            = typename TypePack::Ftype;
+                                     using ConnectivityOp   = GGFX<GFTYPE>;
+                             };
 
-                             using CGTypes        = CGTypePack;
-                             using Operator       = typename CGTypes::Operator;
-                             using Preconditioner = typename CGTypes::Preconditioner;
-                             using State          = typename CGTypes::State;
-                             using StateComp      = typename CGTypes::StateComp;
-                             using Grid           = typename CGTypes::Grid;
-                             using Value          = typename CGTypes::Value;
-                             using ConnectivityOp = typename CGTypes::ConnectivityOp;
+                             using Types          = TypePack;
+                             using EqnBase        = typename Types::EqnBase;
+                             using EqnBasePtr     = typename Types::EqnBasePtr;
+                             using State          = typename Types::State;
+                             using StateComp      = typename Types::StateComp;
+//                           using Grid           = typename Types::Grid;
+                             using Mass           = typename Types::Mass;
+                             using Ftype          = typename Types::Ftype;
+                             using Size           = typename Types::Size;
+                             using Derivative     = typename Types::Derivative;
+                             using Time           = typename Types::Time;
+                             using CompDesc       = typename Types::CompDesc;
+                             using Jacobian       = typename Types::Jacobian;
+
+                             using IBdyVol        = GTVector<GSIZET>;
+                             using TBdyVol        = GTVector<GBdyType>;
+                             using GElemList      = GTVector<GElem_base*>;
+
+                             using TerrainOp      = typename CGTypePack::Operator;
+                             using TerrainPrecond = typename CGTypePack::Preconditioner;
+                             using ConnectivityOp = GGFX<Ftype>;
+
+                             using UpdateBase     = UpdateBdyBase<Types>;
+                             using UpdateBasePtr  = std::shared_ptr<UpdateBase>;
+                             using BdyUpdateList  = GTVector<GTVector<UpdateBasePtr>>;
+
+                             typedef GTVector<GTVector<GTVector<GSIZET>>>   BinnedBdyIndex;
+                             typedef GTVector<GTVector<GTVector<GBdyType>>> BinnedBdyType;
+
+                             static_assert(std::is_same<State,GTVector<GTVector<Ftype>*>>::value,
+                               "State is of incorrect type");
+                             static_assert(std::is_same<StateComp,GTVector<Ftype>>::value,
+                               "StateComp is of incorrect type");
+                             static_assert(std::is_same<Derivative,GTVector<GTVector<Ftype>*>>::value,
+                               "Derivative is of incorrect type");
+                             static_assert(std::is_same<Ftype,Ftype>::value,
+                               "Ftype is of incorrect type");
+
 
                              GGrid() = delete;
-                             GGrid(const geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GC_COMM &comm);
+                             GGrid(const geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,Ftype>*> &b, GC_COMM &comm);
 
-virtual                       ~GGrid();
-//static                       GGrid *build(geoflow::tbox::PropertyTree &ptree, GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GC_COMM comm);
+virtual                     ~GGrid();
 
-virtual void                 do_elems() = 0;                            // compute grid for irank
+virtual void                 do_elems() = 0;                           // compute grid for irank
 virtual void                 do_elems(GTMatrix<GINT> &p,
-                               GTVector<GTVector<GFTYPE>> &xnodes) = 0; // compute grid on restart
-//virtual void                 set_partitioner(GDD_base<GTICOS> *d) = 0;   // set and use GDD object
+                               GTVector<GTVector<Ftype>> &xnodes) = 0;// compute grid on restart
+//virtual void               set_partitioner(GDD_base<GTICOS> *d) = 0; // set and use GDD object
 
 #if 0
 virtual void                 set_bdy_callback(
@@ -114,7 +125,7 @@ virtual void                 print(const GString &filename){}          // print 
 
         void                 grid_init();                             // initialize class
         void                 grid_init(GTMatrix<GINT> &p, 
-                               GTVector<GTVector<GFTYPE>> &xnodes);   // initialize class for restart
+                               GTVector<GTVector<Ftype>> &xnodes);   // initialize class for restart
         void                 add_terrain(const State &xb, State &tmp);// add terrain 
         void                 do_typing(); // classify into types
         GCBLAS::cuMatBlockDat 
@@ -129,12 +140,15 @@ virtual void                 print(const GString &filename){}          // print 
                             &itype() { return itype_; }               // indices for all types
         GTVector<GSIZET>    &itype(GElemType i) { return itype_[i]; } // indices for type i    
         GElemType            gtype() { return gtype_; }               // get unique elem type on grid       
-        void                 deriv(GTVector<GFTYPE> &u, GINT idir, GTVector<GFTYPE> &tmp,
-                                   GTVector<GFTYPE> &du );            // derivative of global vector
-        void                 deriv(GTVector<GFTYPE> &u, GINT idir, GBOOL dotrans, GTVector<GFTYPE> &tmp,
-                                   GTVector<GFTYPE> &du );            // derivative of global vector
-       void                  wderiv(GTVector<GFTYPE> &q, GINT idir, GBOOL bwghts, 
-                                   GTVector<GFTYPE> &utmp, GTVector<GFTYPE> &du); // weak derivative
+        GBOOL                ispconst();                              // is order constant?
+        void                 dealias(StateComp &v1, StateComp &v2, 
+                                     StateComp &prod);                // dealias for quadratic nonlinearity
+        void                 deriv(GTVector<Ftype> &u, GINT idir, GTVector<Ftype> &tmp,
+                                   GTVector<Ftype> &du );             // derivative of global vector
+        void                 deriv(GTVector<Ftype> &u, GINT idir, GBOOL dotrans, GTVector<Ftype> &tmp,
+                                   GTVector<Ftype> &du );            // derivative of global vector
+       void                  wderiv(GTVector<Ftype> &q, GINT idir, GBOOL bwghts, 
+                                   GTVector<Ftype> &utmp, GTVector<Ftype> &du); // weak derivative
                            
 
 
@@ -144,50 +158,48 @@ virtual void                 print(const GString &filename){}          // print 
                                          { bdy_apply_callback_ = callback;
                                            bapplybc_ = TRUE; }        // set bdy-application callback
 
-        GFTYPE               integrate(GTVector<GFTYPE> &u,
-                                       GTVector<GFTYPE> &tmp, 
+        Ftype                integrate(GTVector<Ftype> &u,
+                                       GTVector<Ftype> &tmp, 
 				       GBOOL bglobal = TRUE);         // spatial integration of global vector
         void                 print(GString fname, GBOOL bdof=FALSE);
         GSIZET               ndof();                                  // compute total number elem dof
         GSIZET               size() { return ndof(); }
         GSIZET               nfacedof();                              // compute total number elem face dof
         GSIZET               nbdydof();                               // compute total number elem bdy dof
-        GFTYPE               minlength(GTVector<GFTYPE> *dx=NULLPTR); // find min elem length
-        GFTYPE               maxlength(GTVector<GFTYPE> *dx=NULLPTR); // find max elem length
-        GFTYPE               avglength();                             // find avg elem length
-        GFTYPE               minnodedist()         
-                             {return minnodedist_;}                   // find min node distance
-        GFTYPE               volume()         
+        Ftype                minlength(GTVector<Ftype> *dx=NULLPTR); // find min elem length
+        Ftype                maxlength(GTVector<Ftype> *dx=NULLPTR); // find max elem length
+        Ftype                avglength();                             // find avg elem length
+        Ftype                minnodedist()         
+                             {return minnodedist_;}                   // get min node distance
+        GTVector<Ftype>     &dxmin()         
+                             {return dxmin_;}                         // get min node distance for each elem
+        Ftype                volume()         
                              {return volume_;}                        // get grid volume
-        GFTYPE               ivolume()         
+        Ftype                ivolume()         
                              {return ivolume_;}                       // get nverse of grid volume
-        GTMatrix<GTVector<GFTYPE>>
+        GTMatrix<GTVector<Ftype>>
                             &dXidX();                                 // global Rij = dXi^j/dX^i
-        GTVector<GFTYPE>    &dXidX(GSIZET i,GSIZET j);                // Rij matrix element 
-        GTVector<GTVector<GFTYPE>>
+        GTVector<Ftype>     &dXidX(GSIZET i,GSIZET j);                // Rij matrix element 
+        GTVector<GTVector<Ftype>>
                             &xNodes() { return xNodes_; }             // get all nodes coords (Cart)
-        GTVector<GFTYPE>    &xNodes(GSIZET i) { return xNodes_[i]; }  // get all nodes coords (Cart)
+        GTVector<Ftype>     &xNodes(GSIZET i) { return xNodes_[i]; }  // get all nodes coords (Cart)
                             
 
-        GMass               &massop();                                 // global mass op
-        GMass               &imassop();                                // global inv.mass op
-        GTVector<GFTYPE>    &Jac();                                    // global Jacobian
-        GTVector<GFTYPE>
+        Mass                &massop();                                 // global mass op
+        Mass                &imassop();                                // global inv.mass op
+        GTVector<Ftype>     &Jac();                                    // global Jacobian
+        GTVector<Ftype>
                             &faceJac();                                // global face Jacobian
         BdyUpdateList       &bdy_update_list() 
                              { return bdy_update_list_; }              // bdy_update_list pointers
-        GTVector<GTVector<GFTYPE>>
+        GTVector<GTVector<Ftype>>
                             &faceNormals()
                              { return faceNormals_; }                  // elem face normals
-        GTVector<GFTYPE>
+        GTVector<Ftype>
                             &faceMass()
                              { return faceMass_; }                     // elem face Mass * Jac
         GTVector<GSIZET>
                             &gieface() { return gieface_;}             // elem face indices into glob u for all elem faces
-        GTVector<GINT>
-                            &giefaceid() { return giefaceid_;}         // elem face id for each gieface_
-        GTVector<GUINT>
-                            &gdeface() { return gdeface_;}             // elem face node 'descriptions'
         BinnedBdyIndex
                             &igbdy_binned() { return igbdy_binned_;}   // global dom bdy indices binned into GBdyType
         GTVector<GSIZET>
@@ -196,125 +208,147 @@ virtual void                 print(const GString &filename){}          // print 
                             &igbdy_bdyface() { return igbdy_bdyface_;} // bdy ind for each face node
         GTVector<GTVector<GBdyType>>  
                             &igbdyt_bdyface() { return igbdyt_bdyface_;}// bdy types for each face node
-        GTVector<GFTYPE>    &bdyMass() { return bdyMass_; }            // bdy Mass * Jac
-        GTVector<GTVector<GFTYPE>>
+        GTVector<GTVector<Ftype>>
                             &bdyNormals() { return bdyNormals_; }      // bdy normals
-        GTVector<GINT>      &idepComp  () { return idepComp_; }        // dependent vector components on bdy 
+        GTVector<GINT>      &idepComp  () { return idepComp_; }        // dependent vector components on gbdy 
         GC_COMM              get_comm() { return comm_; }              // get communicator
         void                 set_derivtype(GDerivType gt);             // set deriv. method
         GDerivType           get_derivtype() { return gderivtype_; }   // return deriv. method
+        GBOOL                usebdydata() { return do_face_normals_;}  // get usebdydata flag
+        void                 set_usebdydata(GBOOL bflag) 
+                             {do_face_normals_= bflag;}                // set usebdydata flag
  
 
-virtual void                 config_bdy(const PropertyTree &ptree, 
-                               GTVector<GTVector<GSIZET>>   &igbdyf, 
-                               GTVector<GTVector<GBdyType>> &igbdyft,
-                               GTVector<GSIZET>             &igbdy,
-                               GTVector<GUINT>              &debdy,
-                               GTVector<GFTYPE>             &Mbdy)=0;  // config bdy
 
-        GGFX<GFTYPE>        &get_ggfx() { return *ggfx_; }             // get GGFX op
-        void                 set_ggfx(GGFX<GFTYPE> &ggfx) 
+        GGFX<Ftype>         &get_ggfx() { return *ggfx_; }             // get GGFX op
+        void                 set_ggfx(GGFX<Ftype> &ggfx) 
                                { ggfx_ = &ggfx; }                      // set GGFX op    
-        GTVector<GFTYPE>    &get_mask() { return mask_; }              // get mask
+        GTVector<Ftype>     &get_mask() { return mask_; }              // get mask
 
-        void                 smooth(GTVector<GFTYPE> &tmp, 
-                                    GTVector<GFTYPE> &u);              // H1-smoothing operatrion     
-        void                 compute_grefderiv(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
-                                               GINT idir, GBOOL dotrans, GTVector<GFTYPE> &du);
+        void                 smooth(GTVector<Ftype> &tmp, 
+                                    GTVector<Ftype> &u);              // H1-smoothing operatrion     
+        void                 compute_grefderiv(GTVector<Ftype> &u, GTVector<Ftype> &etmp,
+                                               GINT idir, GBOOL dotrans, GTVector<Ftype> &du);
 
-        void                 compute_grefderivW(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
-                                                GINT idir, GBOOL dotrans, GTVector<GFTYPE> &du);
+        void                 compute_grefderivW(GTVector<Ftype> &u, GTVector<Ftype> &etmp,
+                                                GINT idir, GBOOL dotrans, GTVector<Ftype> &du);
 
-        void                 compute_grefderivs(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
-                                                GBOOL btrans, GTVector<GTVector<GFTYPE>*> &du);
-        void                 compute_grefderivsW(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
-                                                 GBOOL btrans, GTVector<GTVector<GFTYPE>*> &du);
-        void                 compute_grefdiv(GTVector<GTVector<GFTYPE>*> &u, GTVector<GFTYPE> &etmp,
-                                              GBOOL btrans, GTVector<GFTYPE> &divu);
+        void                 compute_grefderivs(GTVector<Ftype> &u, GTVector<Ftype> &etmp,
+                                                GBOOL btrans, GTVector<GTVector<Ftype>*> &du);
+        void                 compute_grefderivsW(GTVector<Ftype> &u, GTVector<Ftype> &etmp,
+                                                 GBOOL btrans, GTVector<GTVector<Ftype>*> &du);
+        void                 compute_grefdiv(GTVector<GTVector<Ftype>*> &u, GTVector<Ftype> &etmp,
+                                              GBOOL btrans, GTVector<Ftype> &divu);
 
-friend  std::ostream&        operator<<(std::ostream&, GGrid &);       // Output stream operator
+         GTVector<GINT>     &testid() { return testid_; }
+         GTVector<GINT>     &testty() { return testty_; }
+
+
+#if 0
+friend  std::ostream&        operator<<(std::ostream&, Grid &);       // Output stream operator
+#endif
  
 
 protected:
        
-        void                 grefderiv_varp  (GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
-                                              GINT idir, GBOOL dotrans, GTVector<GFTYPE> &du);
-        void                 grefderiv_constp(GTVector<GFTYPE> &u, GTVector<GFTYPE> &etmp,
-                                              GINT idir, GBOOL dotrans, GTVector<GFTYPE> &du);
-        GBOOL                 ispconst();
-virtual void                        do_face_normals(GTMatrix<GTVector<GFTYPE>> &dXdXi, 
-                                      GTVector<GSIZET>           &igface,
-                                      GTVector<GUINT>            &dgface,
-                                      GTVector<GFTYPE>           &face_mass,
-                                      GTVector<GTVector<GFTYPE>> &normals,
-                                      GTVector<GINT>             &idepComp)=0;
-                                                                      // compute normals to elem faces 
-virtual void                        do_bdy_normals(GTMatrix<GTVector<GFTYPE>> &dXdXi,
-                                      GTVector<GSIZET>           &igbdy,
-                                      GTVector<GUINT>            &debdy,  
-                                      GTVector<GFTYPE>           &bdy_mass,
-                                      GTVector<GTVector<GFTYPE>> &normals,
-                                      GTVector<GINT>             &idepComp)=0;
-                                                                      // compute bdy normals entry point
+        void                 grefderiv_varp  (GTVector<Ftype> &u, GTVector<Ftype> &etmp,
+                                              GINT idir, GBOOL dotrans, GTVector<Ftype> &du);
+        void                 grefderiv_constp(GTVector<Ftype> &u, GTVector<Ftype> &etmp,
+                                              GINT idir, GBOOL dotrans, GTVector<Ftype> &du);
+virtual void                 config_gbdy(const PropertyTree &ptree, 
+                               GBOOL                         bterrain,
+                               GTVector<GTVector<GSIZET>>   &igbdyf, 
+                               GTVector<GTVector<GBdyType>> &igbdyft,
+                               GTVector<GSIZET>             &igbdy,
+                               GTVector<GUINT>              &debdy)=0; // config bdy
+virtual void                 elem_face_data(
+                               GTMatrix<GTVector<Ftype>>       &dXdXi,
+                               GTVector<GSIZET>                 &igeface,
+                               GTVector<Ftype>                 &face_mass,
+                               GTVector<GTVector<Ftype>>       &normals)=0;// compute elem face data
 
-        void                        init_local_face_info();           // get local face info
-        void                        globalize_coords();               // create global coord vecs from elems
-        void                        init_bc_info();                   // configure bdys
-        void                        def_geom_init();                  // iniitialze deformed elems
-        void                        reg_geom_init();                  // initialize regular elems
-        void                        do_normals();                     // compute normals to elem faces and domain bdy
-        GFTYPE                      find_min_dist(); 
+                                                                       // compute bdy normals entry point
 
-        GBOOL                       bInitialized_;  // object initialized?
-        GBOOL                       bapplybc_;      // bc apply callback set
-        GBOOL                       do_face_normals_; // compute elem face normals for fluxes?
-        GBOOL                       bpconst_;       // is p const among elems?
-        GINT                        nstreams_;      // no. CUDA streams
-        GDerivType                  gderivtype_;    // ref. deriv method type
+//      void                        init_local_face_info();            // get local face info
+        void                        globalize_coords();                // create global coord vecs from elems
+        void                        init_bc_info(GBOOL bterrain=FALSE);// configure bdys
+        void                        init_qdealias();                   // create quadratic dealias data
+        void                        def_geom_init();                   // iniitialze deformed elems
+        void                        reg_geom_init();                   // initialize regular elems
+        void                        do_face_data();                    // compute normals to elem faces 
+        Ftype                       find_min_dist(); 
+        void                        find_min_dist(GTVector<Ftype> &dx); 
 
-        GElemType                   gtype_;         // element types comprising grid
-        GINT                        irank_;         // MPI task id
-        GINT                        nprocs_;        // number of MPI tasks
-        GSIZET                      ngelems_;       // global number of elements
-        GC_COMM                     comm_;          // communicator
-        GFTYPE                      minnodedist_;   // min node length array (for each elem)
-	GFTYPE                      volume_;        // grid volume
-	GFTYPE                      ivolume_;       // 1 / grid volume
-        GElemList                   gelems_;        // element list
-        GTVector<GFTYPE>            etmp_;          // elem-level tmp vector
-        GTVector<GTVector<GSIZET>>  itype_;         // indices in elem list of each type
-        GTVector<GSIZET>            ntype_;         // no. elems of each type on grid
-        GTMatrix<GTVector<GFTYPE>>  dXidX_;         // matrix Rij = dXi^j/dX^i, global
-        GTMatrix<GTVector<GFTYPE>>  dXdXi_;         // matrix Bij = dX^j/dXi^i, global, used for constructing normals
-        GTVector<GTVector<GFTYPE>>  xNodes_;        // Cart coords of all node points
-        GMass                      *mass_;          // mass operator
-        GMass                      *imass_;         // inverse of mass operator
-        GTVector<GFTYPE>            Jac_;           // interior Jacobian, global
-        GTVector<GFTYPE>            faceJac_;       // face Jacobians, global
-        GTVector<GFTYPE>            bdyMass_;       // MJ on the bdy surfaces
-        GTVector<GFTYPE>            faceMass_;      // elem face mass * Jacobians
-        GTVector<GTVector<GFTYPE>>  faceNormals_;   // normal to elem faces each face node point (2d & 3d), global
-        GTVector<GSIZET>            gieface_;       // index into global field indicating elem face node
-        GTVector<GINT>              giefaceid_;     // elem face id for each gieface_
-        GTVector<GUINT>             gdeface_;       // 'desc' of each face node
-        GTVector<GUINT>             debdy_;         // 'desc' of each global bdy node
-        GTVector<GTVector<GFTYPE>>  bdyNormals_;    // normal to surface at each bdy node point (2d & 3d), global
-        GTVector<GINT>              idepComp_;      // dependent component index at each bdy point
-        BinnedBdyIndex              igbdy_binned_;  // index into global field indicating a domain bdy--by type
-        GTVector<GTVector<GSIZET>>  igbdy_bdyface_;// volumbe index for each bdy node on each face
-        GTVector<GTVector<GBdyType>> igbdyt_bdyface_;// bdy type for each igbdt_bdyface_
-        GTVector<GSIZET>            igbdy_;         // index into global field indicating a domain bdy
+        GBOOL                       bInitialized_;     // object initialized?
+        GBOOL                       bapplybc_;         // bc apply callback set
+        GBOOL                       do_face_normals_;  // compute elem face normals for fluxes?
+        GBOOL                       bpconst_;          // is p const among elems?
+        GBOOL                       usebdydat_;        // flag to set to use bdy data
+        GBOOL                       do_gbdy_test_;     // create data required to test gbdys?
+        GBOOL                       bInitQDealias_;    // quadratic dealias data initialized?
+        GBOOL                       doQDealias_;       // do quadratic dealiasing?
+        GINT                        nstreams_;         // no. CUDA streams
+        
+        GDerivType                  gderivtype_;       // ref. deriv method type
+
+        GElemType                   gtype_;            // element types comprising grid
+        GINT                        irank_;            // MPI task id
+        GINT                        nprocs_;           // number of MPI tasks
+        GSIZET                      ngelems_;          // global number of elements
+        GC_COMM                     comm_;             // communicator
+        Ftype                       minnodedist_;      // min node length array (for each elem)
+        Ftype                       eps_;              // spatial epsilon
+	Ftype                       volume_;           // grid volume
+	Ftype                       ivolume_;          // 1 / grid volume
+        GElemList                   gelems_;           // element list
+        GTVector<Ftype>             etmp_;             // elem-level tmp vector
+        GTVector<Ftype>             dxmin_;            // elem-based min node dist
+        GTVector<GTVector<GSIZET>>  itype_;            // indices in elem list of each type
+        GTVector<GSIZET>            ntype_;            // no. elems of each type on grid
+        GTMatrix<GTVector<Ftype>>   dXidX_;            // matrix Rij = dXi^j/dX^i, global
+        GTMatrix<GTVector<Ftype>>   dXdXi_;            // matrix Bij = dX^j/dXi^i, global, used for constructing normals
+        GTVector<GTVector<Ftype>>   xNodes_;           // Cart coords of all node points
+        Mass                       *mass_;             // mass operator
+        Mass                       *imass_;            // inverse of mass operator
+        GTVector<Ftype>             Jac_;              // interior Jacobian, global
+        GTVector<Ftype>             faceJac_;          // face Jacobians, global
+        GTVector<Ftype>             faceMass_;         // elem face mass * Jacobians
+        GTVector<GTVector<Ftype>>   faceNormals_;      // normal to elem faces each face node point (2d & 3d), global
+        GTVector<GSIZET>            gieface_;          // index into global field indicating elem face node
+        GTVector<GTVector<Ftype>>   bdyNormals_;       // normal to surface at each bdy node point (2d & 3d), global
+        GTVector<GINT>              idepComp_;         // dependent component index at each bdy point
+        GTVector<GUINT>             degbdy_;           // gbdy node descriptorsgbdy node descriptors
+        BinnedBdyIndex              igbdy_binned_;     // index into global field indicating a domain bdy--by type
+        GTVector<GTVector<GSIZET>>  igbdy_bdyface_;    // volumbe index for each bdy node on each face
+        GTVector<GTVector<GBdyType>> igbdyt_bdyface_;  // bdy type for each igbdt_bdyface_
+        GTVector<GSIZET>            igbdy_;            // index into global field indicating a domain bdy
         BdyUpdateList               bdy_update_list_;
-                                                    // bdy update class list
-        GTVector<GFTYPE>            mask_;          // bdy mask
-        PropertyTree                ptree_;         // main prop tree
-        GGFX<GFTYPE>               *ggfx_;          // connectivity operator
-        LinSolverBase<CGTypes>::Traits
-                                    cgtraits_;      // GCG operator traits
+                                                       // bdy update class list
+        GTVector<Ftype>             mask_;             // bdy mask
+        GTVector<GTMatrix<Ftype>>   IQPdealias_;       // 1d quadratic dealias interp mats P->Q
+        GTVector<GTMatrix<Ftype>>   IQPdealiasT_;      // transp of 1d quadratic dealias interp mats 
+        GTVector<GINT>              qdN_;              // # nodes in each elem for quadratic dealiasing
+        GTVector<Ftype>             iWp_;              // inv. of p-based weights (no JAc) for dealiasing
+        GTVector<Ftype>             qW_;               // quadratic dealias weights
+        std::vector<GINT>           pqdealias_;        // order of quadratic dealias basis in each direction
+        GTVector<Ftype>             tptmp_;            // tensor product tmp space
+        GTVector<GTVector<Ftype>>   qdtmp_;            // quadratic dealias tmp space
+        PropertyTree                ptree_;            // main prop tree
+        GGFX<Ftype>                *ggfx_;             // connectivity operator
+        typename LinSolverBase<CGTypePack>::Traits
+                                    cgtraits_;         // GCG operator traits
 
         std::function<void(const Time &t, State &u, State &ub)>
                                     bdy_apply_callback_;            
-        GCBLAS::cuMatBlockDat       cudat_;         // CUDA data structure
+        GCBLAS::cuMatBlockDat       cudat_;            // CUDA data structure
+
+        GTVector<GINT>              testid_;
+        GTVector<GINT>              testty_;
+
 };
+
+
+#include "ggrid.ipp"
+
 
 #endif

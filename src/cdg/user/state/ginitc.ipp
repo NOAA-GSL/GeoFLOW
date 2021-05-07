@@ -1,15 +1,12 @@
 //==================================================================================
-// Module       : ginitfb.cpp
+// Module       : ginitc.cpp
 // Date         : 7/16/19 (DLR)
-// Description  : Mag. field force inititial condition implementations 
+// Description  : Prescribed (vec field) inititial condition implementations 
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
-#include "ginitfb.hpp"
 
 
-
-namespace ginitfb {
 
 
 //**********************************************************************************
@@ -18,15 +15,15 @@ namespace ginitfb {
 // DESC   : Inititialize velocity with Gaussian-randomized values
 // ARGS   : ptree  : main property tree
 //          sconfig: ptree block name containing variable config
+//          eqn    : equation implementation
 //          grid   : grid object
-//          stinfo : StateInfo
 //          time   : initialization time
 //          utmp   : tmp arrays
-//          ub     : boundary state (also initialized here)
-//          uf     : state to be initialized.
+//          u      : state to be initialized.
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_rand(const PropertyTree &ptree, GString &sconfig, GGrid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &uf)
+template<typename Types>
+GBOOL ginitc<Types>::impl_rand(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
 {
 
   return FALSE;
@@ -34,4 +31,3 @@ GBOOL impl_rand(const PropertyTree &ptree, GString &sconfig, GGrid &grid, StateI
 } // end, method impl_rand
 
 
-} // end, ginitfb  namespace

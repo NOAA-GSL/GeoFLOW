@@ -26,10 +26,11 @@ class NullUpdateBdy : public UpdateBdyBase<TypePack> {
 public:
         using Types        = TypePack;
 	using State        = typename Types::State;
-	using StateInfo    = typename Types::StateInfo; // May contain time, time index, var name etc
+        using EqnBase      = EquationBase<Types>;
+        using EqnBasePtr   = std::shared_ptr<EqnBase>;
 	using Grid         = typename Types::Grid;
-	using Ftype        = typename Types::Value;
-    using Time         = typename Types::Time;
+	using Ftype        = typename Types::Ftype;
+        using Time         = typename Types::Time;
 
       
 	NullUpdateBdy() = default;
@@ -43,23 +44,21 @@ public:
 	 * @param[in,out] ptree  Initial time at start, and final time
 	 * @param[in,out] u  Current state values
 	 */
-	bool update (Grid      &grid, 
-                     StateInfo &stinfo, 
-                     Time      &time, 
-                     State     &utmp, 
-                     State     &u, 
-                     State     &ub){
-                        return this->update_impl(grid, stinfo, time, utmp, u, ub);
+	bool update (EqnBasePtr &eqn,
+                     Grid       &grid, 
+                     Time       &time, 
+                     State      &utmp, 
+                     State      &u){
+                        return this->update_impl(eqn, grid, time, utmp, u);
                      }
 
 protected:
 	bool update_impl (
-                     Grid      &grid, 
-                     StateInfo &stinfo, 
-                     Time      &time, 
-                     State     &utmp, 
-                     State     &u, 
-                     State     &ub) {
+                     EqnBasePtr &eqn,
+                     Grid       &grid, 
+                     Time       &time, 
+                     State      &utmp, 
+                     State      &u) {
                 // Do nothing ...
                 return true;
               }

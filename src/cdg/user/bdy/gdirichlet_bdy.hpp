@@ -17,7 +17,6 @@
 #include <cmath>
 #include "gtvector.hpp"
 #include "ggfx.hpp"
-#include "ggrid.hpp"
 #include "pdeint/update_bdy_base.hpp"
 
 using namespace geoflow::pdeint;
@@ -29,20 +28,18 @@ class GDirichletBdy : public UpdateBdyBase<TypePack>
 public:
         using Types      = TypePack;
         using Base       = UpdateBdyBase<Types>;
+        using EqnBase    = EquationBase<TypePack>;
+        using EqnBasePtr = std::shared_ptr<EqnBase>;
         using State      = typename Types::State;
         using Grid       = typename Types::Grid;
-        using Ftype      = typename Types::Value;
+        using Ftype      = typename Types::Ftype;
         using Time       = typename Types::Time;
-        using StateInfo  = typename Types::StateInfo;
 
 //      static_assert(std::is_same<State,GTVector<GTVector<GFTYPE>*>>::value,
 //             "State is of incorrect type");
-//      static_assert(std::is_same<Grid,GGrid>::value,
-//             "Grid is of incorrect type");
 
         // GDirichletBdy solver traits:
         struct Traits {
-          GBOOL    compute_once=FALSE;     // compute bdy condition once?
           GINT             bdyid;    // bdy id
           GTVector<Ftype>  value;    // Diriclet value for each istate 
           GTVector<GINT>   istate;   // state indices to operate on
@@ -59,18 +56,16 @@ public:
 
 protected:
         GBOOL               update_impl (
-                              Grid      &grid,
-                              StateInfo &stinfo,
-                              Time      &time,
-                              State     &utmp,
-                              State     &u,
-                              State     &ub);
+                              EqnBasePtr &eqn,
+                              Grid       &grid,
+                              Time       &time,
+                              State      &utmp,
+                              State      &u);
         
 private:
 
 
         Traits              traits_;        // Traits structure
-        GBOOL               bcomputed_;     // tell us that operation was called
 
 };
 

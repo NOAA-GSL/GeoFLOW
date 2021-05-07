@@ -952,25 +952,6 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
   }
 
 
-#if 0
-  // Compute face Jacobians. Linearize edge nodes, including them
-  // in order:
-  GINT ntot=0;
-  GTVector<GINT> iedge;
-  for ( j=0; j<nEdges_; j++ ) ntot += edge_indices_[j].size();
-  iedge.resize(ntot);
-  for ( j=0,ntot=0; j<nEdges_; j++ ) { 
-    for ( k=0; k<edge_indices_[j].size(); k++ ) 
-      iedge[ntot++] = edge_indices_[j][k];
-  }
-  if ( elemtype_ == GE_2DEMBEDDED || elemtype_ == GE_DEFORMED ) {
-    Jac(rij, fjac, pChk, iedge.data(), iedge.size()); 
-  }
-  else if ( elemtype_ == GE_REGULAR ) {
-    fjac = jac[0];
-  } 
-#endif
-
 } // end of method dogeom2d
 
 
@@ -996,12 +977,14 @@ void GElem_base::dogeom3d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
   GSIZET i, j, k, l, m, n, p, nnodes;
   GTVector<GINT> N(3);
   GTVector<GFTYPE> L(3);
+  GTVector<GFTYPE> tmp;// tmp space
   GTVector<GTVector<GFTYPE>*>  xi_ev(gbasis_.size()); // ref points at which to evaluate shape fcns
 
   for ( k=0,nnodes=1; k<gbasis_.size(); k++ ) {
     N[k] = gbasis_[k]->getOrder()+1;
     nnodes *= N[k];
   }
+  tmp.resize(nnodes);
 
   assert(nnodes > 1 && "GElem_base::dogeom3d: Evaluation basis not set");
 
@@ -1028,19 +1011,20 @@ void GElem_base::dogeom3d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
   // still be (h1-order+1) X (h2-order+1):
   GSIZET nxy = dim_;
   if ( elemtype_ == GE_DEFORMED ) {
-    for ( m=0; m<nxy; m++ ) { // matrix element col
-      for ( l=0; l<nxy; l++ ) { // matrix element row
-        rij(l,m) = 0.0;
+    for ( m=0; m<nxy; m++ ) { // matrix element col: basis deriv dir
+      for ( l=0; l<nxy; l++ ) { // matrix element row: Cart coord
+        tmp  = 0.0;
         for ( k=0, n=0; k<gbasis_[2]->getOrder()+1; k++ ) {
           for ( j=0; j<gbasis_[1]->getOrder()+1; j++ ) {
             for ( i=0; i<gbasis_[0]->getOrder()+1; i++, n++ ) {
               I[0] = i; I[1] = j; I[2] = k;
               gshapefcn_->dNdXi(I, m+1, xi_ev, dNi); // m-th deriv of shape function I
               dNi *= xNodes_[l][n]; // multiply by spatial coord
-              rij(l,m) += dNi;
+              tmp += dNi;
             } // i-loop
           } // j-loop
         } // k-loop
+        rij(l,m) = tmp;
       } // l-loop
     } // m-loop
   } else if ( elemtype_ == GE_REGULAR) {  // dXi/dX are just constants for GE_REGULAR:
@@ -1060,25 +1044,6 @@ void GElem_base::dogeom3d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
   else  {
     jac = 0.125*L[0]*L[1]*L[2];
   }
-
-#if 0
-  // Compute face Jacobians. Linearize edge nodes, including them
-  // in order:
-  GINT ntot=0;
-  GTVector<GINT> iface;
-  for ( j=0; j<nFaces_; j++ ) ntot += face_indices_[j].size();
-  iface.resize(ntot);
-  for ( j=0,ntot=0; j<nFaces_; j++ ) { 
-    for ( k=0; k<face_indices_[j].size(); k++ ) 
-      iface[ntot++] = face_indices_[j][k];
-  }
-  if ( elemtype_ == GE_2DEMBEDDED || elemtype_ == GE_DEFORMED ) {
-    Jac(rij, fjac, pChk, iface.data(), iface.size()); 
-  }
-  else if ( elemtype_ == GE_REGULAR ) {
-    fjac = jac[0];
-  } 
-#endif
 
 } // end of method dogeom3d
 
@@ -1180,6 +1145,7 @@ cout << serr << "cos(_x_, _G_)=" << cost << " |G|=" << jacv[n] << " xGx=" << x*G
       jacv[k] = G(0,0)[n]*(G(1,1)[n]*G(2,2)[n] - G(1,2)[n]*G(2,1)[n])
               - G(0,1)[n]*(G(1,0)[n]*G(2,2)[n] - G(1,2)[n]*G(2,0)[n])
               + G(0,2)[n]*(G(1,0)[n]*G(2,1)[n] - G(1,1)[n]*G(2,0)[n]);
+      jacv[k] = fabs(jacv[k]);
 //    pChk = pChk && fabs(jacv[k]) > std::numeric_limits<GFTYPE>::epsilon();  // test for zero det
     }
   }
@@ -1188,6 +1154,7 @@ cout << serr << "cos(_x_, _G_)=" << cost << " |G|=" << jacv[n] << " xGx=" << x*G
       jacv[n] = G(0,0)[n]*(G(1,1)[n]*G(2,2)[n] - G(1,2)[n]*G(2,1)[n])
               - G(0,1)[n]*(G(1,0)[n]*G(2,2)[n] - G(1,2)[n]*G(2,0)[n])
               + G(0,2)[n]*(G(1,0)[n]*G(2,1)[n] - G(1,1)[n]*G(2,0)[n]);
+      jacv[n] = fabs(jacv[n]);
       if ( elemtype_ == GE_2DEMBEDDED ) {
         // Divide out the d_x_/dzeta term to find Jacobian:
         x  = G(0,2)[n];
@@ -1203,6 +1170,7 @@ cout << serr << "cos(_x_, _G_)=" << cost << " |G|=" << jacv[n] << " xGx=" << x*G
 } // end of method Jac
 
 
+#if 0
 //***********************************************************************************
 //***********************************************************************************
 // METHOD : Jac_embed
@@ -1224,7 +1192,7 @@ void GElem_base::Jac_embed(GMVFType &G, GTVector<GFTYPE> &jac, GBOOL &pChk, GINT
   assert((G.size(1) == 3 && G.size(2) == 3) 
        && "Invalid matrix dimension"); // must have 3 coordinates
 
-  // Compute Jac, and check Jacobian for being positive-definiteness.
+  // Compute Jac, and check Jacobian for positive-definiteness.
   // We compuate the Jacobian as the inner product of
   // (_x_ is vector Cartesian coordinate)
   //      Jacobian is: d_x_/dzeta . _g_
@@ -1264,6 +1232,7 @@ void GElem_base::Jac_embed(GMVFType &G, GTVector<GFTYPE> &jac, GBOOL &pChk, GINT
   }
 
 } // end of method Jac_embed
+#endif
 
 
 //***********************************************************************************
@@ -1493,7 +1462,7 @@ void GElem_base::get_indirect2d(GTVector<GNBasis<GCTYPE,GFTYPE>*> &b, GVVInt &ve
 
   // Indirection indices for faces (same as for edges):
   face_ind.resize(nFaces_);
-  face_mass.resize(N[0]*N[1]);
+  face_mass.resize(N[0]*N[1]); // full elem size required!
   face_mass = 0.0;
   face_desc.resize(nFaces_);
   for ( auto j=0; j<nFaces_; j++ ) { 
@@ -2264,3 +2233,28 @@ void GElem_base::operator=(const GElem_base &e)
 
 } // end, method operator=
 
+
+//***********************************************************************************
+//***********************************************************************************
+// METHOD : isvert
+// DESC   : Returns TRUE if specified integer is a vertex id, and sets ivert to the 
+//          verex index. Else returns FALSE, and ivert is unfilled.
+// ARGS   : 
+//          ind  : Index into element volume
+//          ivert: If return us TRUE, contains the vertex id
+// RETURNS: none.
+//***********************************************************************************
+GBOOL GElem_base::isvert(GSIZET ind, GUINT &ivert)
+{
+
+  GBOOL bfound=FALSE;
+
+  for ( auto j=0; !bfound && j<vert_indices_.size(); j++ ) {
+    if ( ind == vert_indices_[j][0] ) {
+      bfound = TRUE;
+      ivert  = static_cast<GUINT>(j);
+    }
+  } 
+
+  return bfound;
+} // end, isvert

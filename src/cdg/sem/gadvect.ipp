@@ -47,18 +47,22 @@ GAdvect<TypePack>::~GAdvect()
 //                for GE_2DEMBEDDED elements.
 // ARGS   : p   : input p field
 //          u   : input vector field
-//          utmp: tmp arrays
+//          utmp: tmp arrays, sie >= 2
 //          po  : output (result) vector
+//          ivec: if d is a vector component, specifies which component. 
+//                Default is -1 (meaning, a scalar).
 //             
 // RETURNS:  none
 //**********************************************************************************
 template<typename TypePack>
-void GAdvect<TypePack>::apply(StateComp &p, const State &u, State &utmp, StateComp  &po) 
+void GAdvect<TypePack>::apply(StateComp &p, const State &u, State &utmp, StateComp  &po, GINT ivec) 
 {
     
   GSIZET nxy = grid_->gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
 
   assert(u.size() >= nxy && "Insufficient number of velocity components");
+
+  typename Grid::BinnedBdyIndex *igb = &grid_->igbdy_binned();
 
   if ( p.size() <= 1 ) { // p is a constant 
     po = 0.0;
@@ -67,6 +71,12 @@ void GAdvect<TypePack>::apply(StateComp &p, const State &u, State &utmp, StateCo
 
   if ( u[0] != NULLPTR ) {
     grid_->deriv(p, 1, *utmp[0], po);
+#if defined(GEOFLOW_USE_NEUMANN_HACK)
+if ( ivec == -1 || ivec == 2 ) {
+GMTK::zero<Ftype>(po,(*igb)[1][GBDY_0FLUX]);
+GMTK::zero<Ftype>(po,(*igb)[3][GBDY_0FLUX]);
+}
+#endif
     po.pointProd(*u[0]); // do u_1 * dp/dx_1)
   }
   else {
@@ -75,10 +85,16 @@ void GAdvect<TypePack>::apply(StateComp &p, const State &u, State &utmp, StateCo
   for ( auto j=1; j<u.size(); j++ ) { 
     if ( u[j] == NULLPTR ) continue;
     grid_->deriv(p, j+1, *utmp[1], *utmp[0]);
+#if defined(GEOFLOW_USE_NEUMANN_HACK)
+if ( ivec == -1 || ivec == 1 ) {
+GMTK::zero<Ftype>(*utmp[0],(*igb)[0][GBDY_0FLUX]);
+GMTK::zero<Ftype>(*utmp[0],(*igb)[2][GBDY_0FLUX]);
+}
+#endif
     utmp[0]->pointProd(*u[j]);
     po += *utmp[0];
   }
-  po.pointProd(*grid_->massop().data());
+  po.pointProd(*grid_->massop().data()); // multiply by mass
 
 } // end of method apply
 

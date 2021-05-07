@@ -1,31 +1,29 @@
 //==================================================================================
-// Module       : ginitc.cpp
+// Module       : ginitfs.hpp
 // Date         : 7/16/19 (DLR)
-// Description  : Prescribed (vec field) inititial condition implementations 
+// Description  : Scalar forcing inititial condition implementations 
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : none.
 //==================================================================================
-#include "ginitc.hpp"
 
 
-namespace ginitc {
 
 
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : impl_rand
 // DESC   : Inititialize velocity with Gaussian-randomized values
-// ARGS   : ptree  : main property tree
+// ARGS   : ptree  : initial condition property tree
 //          sconfig: ptree block name containing variable config
+//          eqn    : equation implementation
 //          grid   : grid object
-//          stinfo : StateInfo
 //          time   : initialization time
 //          utmp   : tmp arrays
-//          ub     : boundary state (also initialized here)
-//          u      : state to be initialized.
+//          uf     : state to be initialized.
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
-GBOOL impl_rand(const PropertyTree &ptree, GString &sconfig, GGrid &grid, StateInfo &stinfo, Time &time, State &utmp, State &ub, State &u)
+template<typename Types>
+GBOOL ginitfs<Types>::impl_rand(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u, State &uf)
 {
 
   return FALSE;
@@ -33,4 +31,3 @@ GBOOL impl_rand(const PropertyTree &ptree, GString &sconfig, GGrid &grid, StateI
 } // end, method impl_rand
 
 
-} // end, ginitc  namespace

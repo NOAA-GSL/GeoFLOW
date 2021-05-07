@@ -18,7 +18,6 @@
 template<typename Types>
 GDirichletBdy<Types>::GDirichletBdy(typename GDirichletBdy<Types>::Traits &traits) :
 UpdateBdyBase<Types>(),
-bcomputed_               (FALSE),
 traits_                 (traits)
 {
 
@@ -47,21 +46,18 @@ GDirichletBdy<Types>::~GDirichletBdy()
 // DESC   : Entry method for doing a sponge-layer update
 // ARGS   : 
 //          grid  : grid object (necessary?)
-//          stinfo: state info structure
 //          time  : timestep
 //          utmp  : tmp vectors
 //          u     : state vector
-//          ub    : bdy vector
 // RETURNS: none.
 //**********************************************************************************
 template<typename Types>
 GBOOL GDirichletBdy<Types>::update_impl(
-                              Grid      &grid,
-                              StateInfo &stinfo,
-                              Time      &time,
-                              State     &utmp,
-                              State     &u,
-                              State     &ub)
+                              EqnBasePtr &eqn,
+                              Grid       &grid,
+                              Time       &time,
+                              State      &utmp,
+                              State      &u)
 {
    GString    serr = "GDirichletBdy<Types>::update_impl: ";
    GINT       idstate;
@@ -69,24 +65,18 @@ GBOOL GDirichletBdy<Types>::update_impl(
 
   GTVector<GSIZET> *igbdy = &traits_.ibdyvol;
 
-  if ( traits_.compute_once && bcomputed_ ) return TRUE;
 
 
   // Set boundary vector to corresp. value:
   for ( auto k=0; k<traits_.istate.size(); k++ ) { 
     idstate = traits_.istate[k];
-    if ( stinfo.icomptype[idstate] == GSC_PRESCRIBED
-      || stinfo.icomptype[idstate] == GSC_NONE ) continue;
     
     // Set from initialized State vector, 
-    for ( auto j=0; j<igbdy->size()
-       && ub[idstate] != NULLPTR; j++ ) {
+    for ( auto j=0; j<igbdy->size(); j++ ) {
       ind = (*igbdy)[j];
-//    (*ub[idstate])[j] = traits_.value[k];
-      (*ub[idstate])[ind] = traits_.value[k];
+      (*u[idstate])[ind] = traits_.value[k];
     }
   }
-  bcomputed_ = TRUE;
 
   return TRUE;
 

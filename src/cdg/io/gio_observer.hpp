@@ -34,7 +34,7 @@ public:
         using State       = typename Equation::State;
         using StateInfo   = typename Equation::StateInfo;
         using Grid        = typename Equation::Grid;
-        using Value       = typename Equation::Value;
+        using Ftype       = typename Equation::Ftype;
         using Derivative  = typename Equation::Derivative;
         using Time        = typename Equation::Time;
         using Jacobian    = typename Equation::Jacobian;
@@ -48,18 +48,16 @@ public:
                "State is of incorrect type");
         static_assert(std::is_same<Derivative,GTVector<GTVector<GFTYPE>*>>::value,
                "Derivative is of incorrect type");
-        static_assert(std::is_same<Grid,GGrid>::value,
-               "Grid is of incorrect type");
 
                            GIOObserver() = delete;
-                           GIOObserver(const EqnBasePtr &equation, Grid &grid, const IOBasePtr &io_ptr,
+                           GIOObserver(EqnBasePtr &equation, Grid &grid, const IOBasePtr &io_ptr,
                                        typename ObserverBase<EquationType>::Traits &traits);
 
                           ~GIOObserver() = default;
                            GIOObserver(const GIOObserver &a) = default;
                            GIOObserver &operator=(const GIOObserver &bu) = default;
 
-        void               observe_impl(const Time &t, const State &u, const State &uf);
+        void               observe_impl(const Time &t, const Time &dt, const State &u, const State &uf);
         void               init_impl(StateInfo &);
         void               setIO(IOBasePtr ioobj) { pIO_ = ioobj; }
 

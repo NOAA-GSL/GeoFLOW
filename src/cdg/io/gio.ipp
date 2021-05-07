@@ -16,9 +16,9 @@
 //          traits: Traits sturcture
 //          comm  : communicator
 //**********************************************************************************
-template<typename IOType>
-GIO<IOType>::GIO(Grid &grid,  Traits &traits, GC_COMM comm):
-IOBase<IOType>(grid, traits),
+template<typename Types>
+GIO<Types>::GIO(Grid &grid,  Traits &traits, GC_COMM comm):
+IOBase<Types>(grid, traits),
 bInit_                     (FALSE),
 myrank_   (GComm::WorldRank(comm)),
 comm_                       (comm),
@@ -27,7 +27,7 @@ nfname_                        (0)
 { 
   GEOFLOW_TRACE();
 #if !defined(GEOFLOW_USE_MPI)
-  assert(this->traits_->io_type == IOBase<IOType>::GIO_COLL && "Collective IO only allowed if MPI is used");
+  assert(this->traits_->io_type == IOBase<Types>::GIO_COLL && "Collective IO only allowed if MPI is used");
 #endif
   init();
 
@@ -40,8 +40,8 @@ nfname_                        (0)
 // DESC   :
 // ARGS   : none.
 //**********************************************************************************
-template<typename IOType>
-GIO<IOType>::~GIO()
+template<typename Types>
+GIO<Types>::~GIO()
 { 
   GEOFLOW_TRACE();
 #if defined(GEOFLOW_USE_MPI)
@@ -58,8 +58,8 @@ GIO<IOType>::~GIO()
 // ARGUMENTS  : info: StateInfo structure
 // RETURNS    : none.
 //**********************************************************************************
-template<typename IOType>
-void GIO<IOType>::update_type(StateInfo &info)
+template<typename Types>
+void GIO<Types>::update_type(StateInfo &info)
 {
   GEOFLOW_TRACE();
 
@@ -86,12 +86,12 @@ void GIO<IOType>::update_type(StateInfo &info)
 // ARGUMENTS  : info: StateInfo structure
 // RETURNS    : none.
 //**********************************************************************************
-template<typename IOType>
-void GIO<IOType>::init()
+template<typename Types>
+void GIO<Types>::init()
 {
   GEOFLOW_TRACE();
 
-  if ( this->traits_.io_type != IOBase<IOType>::GIO_COLL ) {
+  if ( this->traits_.io_type != IOBase<Types>::GIO_COLL ) {
     bInit_ = TRUE;
     return; // nothing more to do
   }
@@ -115,15 +115,15 @@ void GIO<IOType>::init()
     state_disp   = extent.sum(0,myrank_-1); // count
     state_extent = extent[myrank_]; // count
   }
-  nbgdof_ = extent.sum()*sizeof(Value); // no. bytes of single state comp
+  nbgdof_ = extent.sum()*sizeof(Ftype); // no. bytes of single state comp
 
 
 #if defined(GEOFLOW_USE_MPI)
-  MPI_Type_free(&mpi_state_type_);
+//MPI_Type_free(&mpi_state_type_);
 
 
   sztot = extent.sum();
-  iret = MPI_Type_create_subarray(1, &sztot, &state_extent, &state_disp, MPI_ORDER_C, T2GCDatatype<Value>(), &mpi_state_type_);
+  iret = MPI_Type_create_subarray(1, &sztot, &state_extent, &state_disp, MPI_ORDER_C, T2GCDatatype<Ftype>(), &mpi_state_type_);
   assert(iret == MPI_SUCCESS);
   iret = MPI_Type_commit(&mpi_state_type_);
   assert(iret == MPI_SUCCESS);
@@ -144,23 +144,23 @@ void GIO<IOType>::init()
 //          Note: if info.sttype > 0, then we assume we are printing a 
 //          grid, and the filename is created without the time index tag.
 // ARGS   : filepref: used if traits.multivar > 0 to specify file name for
-//                    all state variables. This works only if we GIOType is GIO_COLL.
+//                    all state variables. This works only if we GTypes is GIO_COLL.
 //                    If traits.multivar ==0, individual filename refixes are provided 
 //                    in info.svar
 //          info    : StateInfo structure
 //          u       : state
 // RETURNS: none
 //**********************************************************************************
-template<typename IOType>
-void GIO<IOType>::write_state_impl(std::string filepref, StateInfo &info, const State &u)
+template<typename Types>
+void GIO<Types>::write_state_impl(std::string filepref, StateInfo &info, const State &u)
 {
   GEOFLOW_TRACE();
   GString        serr = "write_state_impl: ";
   GSIZET         nb, nc, nd;
-  GTVector<GTVector<Value>>
+  GTVector<GTVector<Ftype>>
                 *xnodes = &(this->grid_->xNodes());
   State         ostate(1);
-  GElemList     *elems  = &(this->grid_->elems());
+  typename Grid::GElemList     *elems  = &(this->grid_->elems());
 
   assert(bInit_ && "Object uninitialized");
 
@@ -175,7 +175,7 @@ void GIO<IOType>::write_state_impl(std::string filepref, StateInfo &info, const 
     
   this->traits_.dim  = GDIM;
 
-  if ( this->traits_.io_type == IOBase<IOType>::GIO_COLL ) {
+  if ( this->traits_.io_type == IOBase<Types>::GIO_COLL ) {
     info.nelems = this->grid_->ngelems(); // total no. elems among all tasks
   }
   else {
@@ -201,7 +201,7 @@ void GIO<IOType>::write_state_impl(std::string filepref, StateInfo &info, const 
       svarname_.str(""); svarname_.clear();
       assert(info.svars[j].length() > 0);
       svarname_ << info.svars[j];
-      if ( this->traits_.io_type == IOBase<IOType>::GIO_POSIX ) {
+      if ( this->traits_.io_type == IOBase<Types>::GIO_POSIX ) {
         sprintf(cfname_, spformat_.str().c_str(), info.odir.c_str(),
                 svarname_.str().c_str(), info.index, myrank_);
         fname_.assign(cfname_);
@@ -214,19 +214,19 @@ void GIO<IOType>::write_state_impl(std::string filepref, StateInfo &info, const 
         ostate[0] = u[j];
         nb = write_coll(fname_, info, ostate);
       }
-      nd = sz_header(info,this->traits_) + u[j]->size()*sizeof(Value);
+      nd = sz_header(info,this->traits_) + u[j]->size()*sizeof(Ftype);
       assert(nb == nd && "Incorrect number of bytes written");
     }
   }
   else {                      // multiple components per file
-    assert(this->traits_.io_type == IOBase<IOType>::GIO_COLL && "Invalid io_type");
+    assert(this->traits_.io_type == IOBase<Types>::GIO_COLL && "Invalid io_type");
     svarname_.str(""); svarname_.clear();
     assert(filepref.length() > 0);
     svarname_ << filepref;
     sprintf(cfname_, scformat_.str().c_str(), info.odir.c_str(),
             svarname_.str().c_str(), info.index);
     nb = write_coll(fname_, info, u);
-    nd = sz_header(info,this->traits_) + u.size()*u[0]->size()*sizeof(Value);
+    nd = sz_header(info,this->traits_) + u.size()*u[0]->size()*sizeof(Ftype);
     assert(nb == nd && "Incorrect number of bytes written");
   }
 
@@ -245,8 +245,8 @@ void GIO<IOType>::write_state_impl(std::string filepref, StateInfo &info, const 
 //          bstate  : if == TRUE, read state; else read just stateinfo. Default is TRUE.
 // RETURNS: none
 //**********************************************************************************
-template<typename IOType>
-void GIO<IOType>::read_state_impl(std::string filepref, StateInfo &info, State  &u, bool bstate)
+template<typename Types>
+void GIO<Types>::read_state_impl(std::string filepref, StateInfo &info, State  &u, bool bstate)
 {
   GEOFLOW_TRACE();
   GString              serr ="read_state_impl: ";
@@ -278,7 +278,7 @@ void GIO<IOType>::read_state_impl(std::string filepref, StateInfo &info, State  
       svarname_.str(""); svarname_.clear();
       assert(info.svars[j].length() > 0);
       svarname_ << info.svars[j];
-      if ( this->traits_.io_type == IOBase<IOType>::GIO_POSIX ) { // POSIX
+      if ( this->traits_.io_type == IOBase<Types>::GIO_POSIX ) { // POSIX
         sprintf(cfname_, spformat_.str().c_str(), info.idir.c_str(),
                 svarname_.str().c_str(), info.index, myrank_);
         fname_.assign(cfname_);
@@ -295,7 +295,7 @@ void GIO<IOType>::read_state_impl(std::string filepref, StateInfo &info, State  
   }
   else {                      // multiple state components in file
 
-    assert(this->traits_.io_type == IOBase<IOType>::GIO_COLL && "Invalid io_type");
+    assert(this->traits_.io_type == IOBase<Types>::GIO_COLL && "Invalid io_type");
     svarname_.str(""); svarname_.clear();
     assert(filepref.length() > 0);
     svarname_ << filepref;
@@ -317,8 +317,8 @@ void GIO<IOType>::read_state_impl(std::string filepref, StateInfo &info, State  
 //          info    : StateInfo structure, returned
 // RETURNS: none
 //**********************************************************************************
-template<typename IOType>
-void GIO<IOType>::read_state_info_impl(std::string filename, StateInfo &info)
+template<typename Types>
+void GIO<Types>::read_state_info_impl(std::string filename, StateInfo &info)
 {
   GEOFLOW_TRACE();
   GString              serr ="read_state_info_impl: ";
@@ -343,8 +343,8 @@ void GIO<IOType>::read_state_info_impl(std::string filename, StateInfo &info)
 //          u       : field to output
 // RETURNS: number bytes written
 //**********************************************************************************
-template<typename IOType>
-GSIZET GIO<IOType>::write_posix(GString filename, StateInfo &info, const GTVector<Value> &u) 
+template<typename Types>
+GSIZET GIO<Types>::write_posix(GString filename, StateInfo &info, const GTVector<Ftype> &u) 
 {
   GEOFLOW_TRACE();
 
@@ -367,10 +367,10 @@ GSIZET GIO<IOType>::write_posix(GString filename, StateInfo &info, const GTVecto
 
 
     // Write field data:
-    nd = fwrite(u.data(), sizeof(Value), u.size(), fp);
+    nd = fwrite(u.data(), sizeof(Ftype), u.size(), fp);
     fclose(fp);
 
-    nb +=  nd*sizeof(Value);
+    nb +=  nd*sizeof(Ftype);
 
     return nb;
 
@@ -388,8 +388,8 @@ GSIZET GIO<IOType>::write_posix(GString filename, StateInfo &info, const GTVecto
 //          bstate  : if == TRUE, read state; else read just stateinfo. Default is TRUE.
 // RETURNS: no. bytes read
 //**********************************************************************************
-template<typename IOType>
-GSIZET GIO<IOType>::read_posix(GString filename, StateInfo &info, GTVector<Value> &u, bool bstate)
+template<typename Types>
+GSIZET GIO<Types>::read_posix(GString filename, StateInfo &info, GTVector<Ftype> &u, bool bstate)
 {
   GEOFLOW_TRACE();
 
@@ -429,7 +429,7 @@ GSIZET GIO<IOType>::read_posix(GString filename, StateInfo &info, GTVector<Value
     }
 
     u.resize(nd);
-    nb = fread(u.data(), sizeof(Value), nd, fp);
+    nb = fread(u.data(), sizeof(Ftype), nd, fp);
     
     fclose(fp);
 
@@ -437,7 +437,7 @@ GSIZET GIO<IOType>::read_posix(GString filename, StateInfo &info, GTVector<Value
       cout << serr << "Incorrect amount of data read from file: " << filename << endl;
       exit(1);
     }
-    nh += nb*sizeof(Value);
+    nh += nb*sizeof(Ftype);
 
    return nh;
 
@@ -455,8 +455,8 @@ GSIZET GIO<IOType>::read_posix(GString filename, StateInfo &info, GTVector<Value
 //          traits   : object's traits
 // RETURNS: no. header bytes written
 //**********************************************************************************
-template<typename IOType>
-GSIZET GIO<IOType>::write_header_posix(GString filename, StateInfo &info, Traits &traits)
+template<typename Types>
+GSIZET GIO<Types>::write_header_posix(GString filename, StateInfo &info, Traits &traits)
 {
   GEOFLOW_TRACE();
     GString serr ="write_header_posix: ";
@@ -485,8 +485,8 @@ GSIZET GIO<IOType>::write_header_posix(GString filename, StateInfo &info, Traits
       nb += nh*sizeof(GINT);
     nh=fwrite(&info.cycle         , sizeof(GSIZET),    1, fp); // time cycle stamp
       nb += nh*sizeof(GSIZET);
-    nh=fwrite(&info.time          , sizeof(Value),    1, fp); // time stamp
-      nb += nh*sizeof(Value);
+    nh=fwrite(&info.time          , sizeof(Ftype),    1, fp); // time stamp
+      nb += nh*sizeof(Ftype);
     nh=fwrite(&imulti             , sizeof(GINT),      1, fp); // time stamp
       nb += nh*sizeof(GINT);
 
@@ -509,8 +509,8 @@ GSIZET GIO<IOType>::write_header_posix(GString filename, StateInfo &info, Traits
 //          traits   : object's traits
 // RETURNS: no. header bytes written
 //**********************************************************************************
-template<typename IOType>
-GSIZET GIO<IOType>::write_header_coll(GString filename, StateInfo &info, Traits &traits)
+template<typename Types>
+GSIZET GIO<Types>::write_header_coll(GString filename, StateInfo &info, Traits &traits)
 {
   GEOFLOW_TRACE();
   GString serr ="write_header: ";
@@ -545,7 +545,7 @@ GSIZET GIO<IOType>::write_header_coll(GString filename, StateInfo &info, Traits 
         MPI_Get_count(&status, MPI_BYTE, &nh);  nb += nh;
     MPI_File_write(fp, &info.cycle       , 1   , T2GCDatatype<GSIZET>(), &status);
         MPI_Get_count(&status, MPI_BYTE, &nh); nb += nh;
-    MPI_File_write(fp, &info.time        , 1   , T2GCDatatype<Value>(), &status); 
+    MPI_File_write(fp, &info.time        , 1   , T2GCDatatype<Ftype>(), &status); 
         MPI_Get_count(&status, MPI_BYTE, &nh); nb += nh;
     MPI_File_write(fp, &imulti           , 1   , T2GCDatatype  <GINT>(), &status); 
         MPI_Get_count(&status, MPI_BYTE, &nh); nb += nh;
@@ -572,8 +572,8 @@ GSIZET GIO<IOType>::write_header_coll(GString filename, StateInfo &info, Traits 
 //          traits   : this object's traits
 // RETURNS: no. header bytes read
 //**********************************************************************************
-template<typename IOType>
-GSIZET GIO<IOType>::read_header(GString filename, StateInfo &info, Traits &traits)
+template<typename Types>
+GSIZET GIO<Types>::read_header(GString filename, StateInfo &info, Traits &traits)
 {
   GEOFLOW_TRACE();
 
@@ -582,7 +582,7 @@ GSIZET GIO<IOType>::read_header(GString filename, StateInfo &info, Traits &trait
     GSIZET nb, nd, nh, numr;
   
     nb = 0;
-//  if ( traits.io_type == IOBase<IOType>::GIO_POSIX ) {
+//  if ( traits.io_type == IOBase<Types>::GIO_POSIX ) {
       // Read field data:
       FILE *fp;
       fp = fopen(filename.c_str(),"rb");
@@ -599,7 +599,7 @@ GSIZET GIO<IOType>::read_header(GString filename, StateInfo &info, Traits &trait
                                    , sizeof(GINT)  , numr, fp); nb += nh*sizeof(GINT);
       nh = fread(&info.gtype       , sizeof(GINT)  ,    1, fp); nb += nh*sizeof(GINT);
       nh = fread(&info.cycle       , sizeof(GSIZET),    1, fp); nb += nh*sizeof(GSIZET);
-      nh = fread(&info.time        , sizeof(Value) ,    1, fp); nb += nh*sizeof(Value);
+      nh = fread(&info.time        , sizeof(Ftype) ,    1, fp); nb += nh*sizeof(Ftype);
       nh = fread(&imulti           , sizeof(GINT)  ,    1, fp); nb += nh*sizeof(GINT);
       traits.multivar = static_cast<GBOOL>(imulti);
     
@@ -625,7 +625,7 @@ GSIZET GIO<IOType>::read_header(GString filename, StateInfo &info, Traits &trait
                                                , numr, T2GCDatatype  <GINT>(), &status); nb += nh*sizeof(GINT);
       nh = MPI_File_read(fh, &info.gtype       , 1   , T2GCDatatype<GINT>  (), &status); nb += nh*sizeof(GINT);
       nh = MPI_File_read(fh, &info.cycle       , 1   , T2GCDatatype<GSIZET>(), &status); nb += nh*sizeof(GSIZET);
-      nh = MPI_File_read(fh, &info.time        , 1   , T2GCDatatype<Value>(), &status); nb += nh*sizeof(Value);
+      nh = MPI_File_read(fh, &info.time        , 1   , T2GCDatatype<Ftype>(), &status); nb += nh*sizeof(Ftype);
 
       MPI_File_close(&fh); 
 #else
@@ -655,8 +655,8 @@ GSIZET GIO<IOType>::read_header(GString filename, StateInfo &info, Traits &trait
 //          traits   : object's traits
 // RETURNS: no. header bytes 
 //**********************************************************************************
-template<typename IOType>
-GSIZET GIO<IOType>::sz_header(const StateInfo &info, const Traits &traits)
+template<typename Types>
+GSIZET GIO<Types>::sz_header(const StateInfo &info, const Traits &traits)
 {
   GEOFLOW_TRACE();
 
@@ -666,7 +666,7 @@ GSIZET GIO<IOType>::sz_header(const StateInfo &info, const Traits &traits)
     // Get no. bytes in header (should agree with read_posx, write_posix):
     numr = traits.ivers == 0 ? 1 : info.nelems;
     numr *= traits.dim;
-    nd = (numr+4)*sizeof(GINT) + 2*sizeof(GSIZET) + sizeof(Value);
+    nd = (numr+4)*sizeof(GINT) + 2*sizeof(GSIZET) + sizeof(Ftype);
 
     return nd;
 
@@ -680,8 +680,8 @@ GSIZET GIO<IOType>::sz_header(const StateInfo &info, const Traits &traits)
 // ARGS   : n  : new number bytes
 // RETURNS: none.
 //**********************************************************************************
-template<typename IOType>
-void GIO<IOType>::resize(GINT n)
+template<typename Types>
+void GIO<Types>::resize(GINT n)
 {
   GEOFLOW_TRACE();
 
@@ -704,12 +704,12 @@ void GIO<IOType>::resize(GINT n)
 //          u       : state
 // RETURNS: number bytes written
 //**********************************************************************************
-template<typename IOType>
-GSIZET GIO<IOType>::write_coll(GString filename, StateInfo &info, const State &u)
+template<typename Types>
+GSIZET GIO<Types>::write_coll(GString filename, StateInfo &info, const State &u)
 {
   GEOFLOW_TRACE();
 #if !defined(GEOFLOW_USE_MPI)
-  #error "Illegal entry into GIO<IOType>::write_coll: MPI not defined"
+  #error "Illegal entry into GIO<Types>::write_coll: MPI not defined"
 #endif
 
 #if defined(GEOFLOW_USE_MPI)
@@ -741,9 +741,9 @@ GSIZET GIO<IOType>::write_coll(GString filename, StateInfo &info, const State &u
     if ( !this->traits_.multivar ) { // print each comp to sep. file
         assert(u[0]->size() > 0 && "Invalid state component");
         disp = nbheader ;
-        iret = MPI_File_set_view(fh, disp, T2GCDatatype<Value>(), mpi_state_type_, "native", MPI::INFO_NULL);
+        iret = MPI_File_set_view(fh, disp, T2GCDatatype<Ftype>(), mpi_state_type_, "native", MPI::INFO_NULL);
         assert(iret == MPI_SUCCESS);
-        iret = MPI_File_write_all(fh, u[0]->data(), u[0]->size(), T2GCDatatype<Value>(), &status);
+        iret = MPI_File_write_all(fh, u[0]->data(), u[0]->size(), T2GCDatatype<Ftype>(), &status);
         assert(iret == MPI_SUCCESS);
         MPI_Get_count(&status, MPI_BYTE, &nh);  
         ntot += nh;
@@ -751,9 +751,9 @@ GSIZET GIO<IOType>::write_coll(GString filename, StateInfo &info, const State &u
     else {                       // print each comp to same file
       for ( auto j=0; j<u.size(); j++ ) {
         disp = nbheader + j*nbgdof_ ; 
-        iret = MPI_File_set_view(fh, disp, T2GCDatatype<Value>(), mpi_state_type_, "native", MPI::INFO_NULL);
+        iret = MPI_File_set_view(fh, disp, T2GCDatatype<Ftype>(), mpi_state_type_, "native", MPI::INFO_NULL);
         assert(iret == MPI_SUCCESS);
-        iret = MPI_File_write_all(fh, u[j]->data(), u[j]->size(), T2GCDatatype<Value>(), &status);
+        iret = MPI_File_write_all(fh, u[j]->data(), u[j]->size(), T2GCDatatype<Ftype>(), &status);
         assert(iret == MPI_SUCCESS);
         MPI_Get_count(&status, MPI_BYTE, &nh);  
         ntot += nh;
@@ -778,8 +778,8 @@ GSIZET GIO<IOType>::write_coll(GString filename, StateInfo &info, const State &u
 //          bstate  : if == TRUE, read state; else read just stateinfo. Default is TRUE.
 // RETURNS: none
 //**********************************************************************************
-template<typename IOType>
-GSIZET GIO<IOType>::read_coll(GString filename, StateInfo &info, State &u, bool bstate)
+template<typename Types>
+GSIZET GIO<Types>::read_coll(GString filename, StateInfo &info, State &u, bool bstate)
 {
   GEOFLOW_TRACE();
 #if defined(GEOFLOW_USE_MPI)
@@ -822,18 +822,18 @@ GSIZET GIO<IOType>::read_coll(GString filename, StateInfo &info, State &u, bool 
     if ( !this->traits_.multivar ) { // print each comp to sep. file
         assert(u[0]->size() > 0 && "Invalid state component");
         disp = nbheader ;
-        iret = MPI_File_set_view(fh, disp, T2GCDatatype<Value>(), mpi_state_type_, "native", MPI::INFO_NULL);
+        iret = MPI_File_set_view(fh, disp, T2GCDatatype<Ftype>(), mpi_state_type_, "native", MPI::INFO_NULL);
         assert(iret == MPI_SUCCESS);
-        iret = MPI_File_read_all(fh, u[0]->data(), u[0]->size(), T2GCDatatype<Value>(), &status);
+        iret = MPI_File_read_all(fh, u[0]->data(), u[0]->size(), T2GCDatatype<Ftype>(), &status);
         assert(iret == MPI_SUCCESS);
         ntot += iret == MPI_SUCCESS ? u[0]->size() : 0;
     }
     else {                       // read each comp from same file
       for ( auto j=0; j<u.size(); j++ ) {
         disp = nbheader + j*nbgdof_ ; 
-        iret = MPI_File_set_view(fh, disp, T2GCDatatype<Value>(), mpi_state_type_, "native", MPI::INFO_NULL);
+        iret = MPI_File_set_view(fh, disp, T2GCDatatype<Ftype>(), mpi_state_type_, "native", MPI::INFO_NULL);
         assert(iret == MPI_SUCCESS);
-        iret = MPI_File_read_all(fh, u[j]->data(), u[j]->size(), T2GCDatatype<Value>(), &status);
+        iret = MPI_File_read_all(fh, u[j]->data(), u[j]->size(), T2GCDatatype<Ftype>(), &status);
         assert(iret == MPI_SUCCESS);
         ntot += iret == MPI_SUCCESS ? u[j]->size() : 0;
       } 

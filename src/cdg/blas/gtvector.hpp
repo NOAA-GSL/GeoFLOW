@@ -84,6 +84,7 @@ template <class T> class GTVector
     void               pointProd(const GTVector<T> &);
     
     void               constProd(const T a, GTVector<T> &ret);
+    void               constProd(const T a, GSIZET *iv, GSIZET n);
     
     void transpose(GSIZET n);
 
@@ -92,6 +93,8 @@ template <class T> class GTVector
     void               set(T b);
     
     void               set(T *b, GSIZET n);
+
+    void               floor(T b);
     // Device//accelerator data methods:
     void updatehost();
     void updatedev();

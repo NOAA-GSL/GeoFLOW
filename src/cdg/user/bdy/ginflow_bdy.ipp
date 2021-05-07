@@ -19,9 +19,15 @@ template<typename Types>
 GInflowBdy<Types>::GInflowBdy(typename GInflowBdy<Types>::Traits &traits) :
 UpdateBdyBase<Types>(),
 bcomputed_               (FALSE),
+ballocated_              (FALSE),
 traits_                 (traits)
 {
-
+  // Allocate bdy arrays foreach state component:
+  bdydata_.resize(traits_.istate.size());
+  bdydata_ = NULLPTR;
+  for ( auto j=0; j<traits_.istate.size(); j++ ) {
+    bdydata_[j]  = new GTVector<Ftype>(traits_.ibdyvol.size());
+  }
 
 } // end of constructor method 
 
@@ -36,6 +42,17 @@ traits_                 (traits)
 template<typename Types>
 GInflowBdy<Types>::~GInflowBdy()
 {
+
+  for ( auto j=0; j<bdydata_.size(); j++ ) {
+    if ( bdydata_[j] != NULLPTR ) delete bdydata_[j];
+  }
+  for ( auto j=0; j<unew_.size(); j++ ) {
+    if ( unew_[j] != NULLPTR ) delete unew_[j];
+  }
+  for ( auto j=0; j<utmp_.size(); j++ ) { 
+    if ( utmp_[j] != NULLPTR ) delete utmp_[j];
+  }
+
 } // end, destructor
 
 
@@ -44,31 +61,41 @@ GInflowBdy<Types>::~GInflowBdy()
 // METHOD : update_impl
 // DESC   : Entry method for doing a sponge-layer update
 // ARGS   : 
+//          eqn   : equation implementation
 //          grid  : grid object (necessary?)
-//          stinfo: state info structure
 //          time  : timestep
 //          utmp  : tmp vectors
 //          u     : state vector
-//          ub    : bdy vector
 // RETURNS: none.
 //**********************************************************************************
 template<typename Types>
 GBOOL GInflowBdy<Types>::update_impl(
-                              Grid      &grid,
-                              StateInfo &stinfo,
-                              Time      &time,
-                              State     &utmp,
-                              State     &u,
-                              State     &ub)
+                              EqnBasePtr &eqn,
+                              Grid       &grid,
+                              Time       &time,
+                              State      &utmp,
+                              State      &u)
 {
    GString    serr = "GInflowBdy<Types>::update_impl: ";
    GBOOL      bret;
+   GINT       idstate;
+   GSIZET     ind;
 
-   if ( traits_.use_init ) {
-     bret = update_from_init(grid, stinfo, time, utmp, u, ub);
+   // Compute bdy data, if necessary:
+   if ( !traits_.compute_once || !bcomputed_ ) {
+     bret = compute_bdy_data(eqn, grid, time, utmp, u, bdydata_);
+     assert(bret);
    }
-   else {
-     bret = update_from_user(grid, stinfo, time, utmp, u, ub);
+   
+   // Apply bdy data:
+   for ( auto n=0; n<traits_.istate.size(); n++ ) { 
+     idstate = traits_.istate[n];
+    
+     // Set bdy values computed above:
+     for ( auto j=0; j<traits_.ibdyvol.size(); j++ ) {
+       ind = traits_.ibdyvol[j];
+       (*u[idstate])[ind] = (*bdydata_[n])[j];
+     }
    }
 
    return bret;
@@ -78,103 +105,85 @@ GBOOL GInflowBdy<Types>::update_impl(
 
 //**********************************************************************************
 //**********************************************************************************
-// METHOD : update_from_user
-// DESC   : Entry method for updating inflow bdys from 
-//          user-specified function
+// METHOD : compute_bdy_data
+// DESC   : Compute boundary data from state.
 // ARGS   : 
+//          eqn   : equation implementation
 //          grid  : grid object (necessary?)
-//          stinfo: state info structure
 //          time  : timestep
 //          utmp  : tmp vectors
 //          u     : state vector
-//          ub    : bdy vector
+//          ub    : bdy vector(s), returned
 // RETURNS: none.
 //**********************************************************************************
 template<typename Types>
-GBOOL GInflowBdy<Types>::update_from_user(
-                              Grid      &grid,
-                              StateInfo &stinfo,
-                              Time      &time,
-                              State     &utmp,
-                              State     &u,
-                              State     &ub)
+GBOOL GInflowBdy<Types>::compute_bdy_data(
+                              EqnBasePtr &eqn,
+                              Grid       &grid,
+                              Time       &time,
+                              State      &utmp,
+                              State      &u,
+                              State      &ub)
 {
-  GString    serr = "GInflowBdy<Types>::update_from_user: ";
-  GBOOL      bret;
-
-  assert(traits_.callback != NULLPTR);  
-
-  bret = traits_.callback(grid, stinfo, time, traits_.bdyid,  utmp, u, ub);
-  bcomputed_ = bret;
-
-  return bret;
-
-} // end of method update_from_user
-
-
-//**********************************************************************************
-//**********************************************************************************
-// METHOD : update_from_init
-// DESC   : Entry method for updating inflow bdys from 
-//          initialization state. Useful for testing.
-// ARGS   : 
-//          grid  : grid object (necessary?)
-//          stinfo: state info structure
-//          time  : timestep
-//          utmp  : tmp vectors
-//          u     : state vector
-//          ub    : bdy vector
-// RETURNS: none.
-//**********************************************************************************
-template<typename Types>
-GBOOL GInflowBdy<Types>::update_from_init(
-                              Grid      &grid,
-                              StateInfo &stinfo,
-                              Time      &time,
-                              State     &utmp,
-                              State     &u,
-                              State     &ub)
-{
-   GString    serr = "GInflowBdy<Types>::update_from_init: ";
+   GString    serr = "GInflowBdy<Types>::compute_bdy_data: ";
    GBOOL      bret;
-   GINT       idstate, ind;
-   State      tmp;
+   GINT       idstate;
+   GSIZET     ind;
+   Ftype      tt = 0.0;
+   State      tmpnew, unew;
 
-  GTVector<GSIZET> *igbdy = &traits_.ibdyvol;
+   GTVector<GSIZET> *igbdy = &traits_.ibdyvol;
 
-  if ( traits_.compute_once && bcomputed_ ) return TRUE;
 
-  assert( u.size() == stinfo.icomptype.size() && "State info structure invalid");
 
-  assert(utmp.size() >= u.size());
-  if ( unew_.size() < u.size() ) {
-    unew_.resizem(u.size());
-    tmpnew_.resizem(utmp.size()-u.size());
-  }
-  for ( auto j=0; j<u.size(); j++ ) unew_ [j] = utmp[j];
-  for ( auto j=0; j<utmp.size()-u.size(); j++ ) tmpnew_[j] = utmp[u.size()+j];
-
-  // Call initialization method with utmp:
-  bret = GInitStateFactory<Types>::init(traits_.ptree, grid, stinfo, time, tmpnew_, ub, unew_);
-
-  // Set boundary vector with initialized state:
-  for ( auto n=0; n<traits_.istate.size() && bret; n++ ) { 
-    idstate = traits_.istate[n];
-    if ( stinfo.icomptype[idstate] == GSC_PRESCRIBED
-      || stinfo.icomptype[idstate] == GSC_NONE ) continue;
-    
-    // Set from initialized State vector, 
-    for ( auto j=0; j<igbdy->size()
-       && ub[idstate] != NULLPTR; j++ ) {
-      ind = (*igbdy)[j];
-//    (*ub[idstate])[j] = (*unew_[idstate])[ind];
-      (*u [idstate])[ind] = (*unew_[idstate])[ind];
+   assert(utmp.size() >= u.size());
+   if (!ballocated_ ) {
+// if ( unew.size() < u.size() ) {
+//   unew.resize(u.size());
+//   tmpnew.resize(utmp.size()-u.size());
+     unew_.resize(u.size());
+     utmp_.resize(4);
+     for ( auto j=0; j<unew_.size(); j++ ) unew_[j] = new GTVector<Ftype>(u[0]->size());
+     for ( auto j=0; j<utmp_.size(); j++ ) utmp_[j] = new GTVector<Ftype>(u[0]->size());
+     ballocated_ = TRUE;
+   }
+// for ( auto j=0; j<u.size(); j++ ) unew [j] = utmp[j];
+// for ( auto j=0; j<tmpnew.size(); j++ ) tmpnew[j] = utmp[unew.size()+j];
+ 
+   // Call initialization method with utmp:
+    if ( traits_.use_init ) {
+ 
+      bret = GInitStateFactory<Types>::init(traits_.ptree, eqn, grid, tt, utmp_, unew_);
+      for ( auto n=0; n<traits_.istate.size() && bret; n++ ) { 
+        idstate = traits_.istate[n];
+     
+        // Set bdy vectors from initialized State vector, 
+        for ( auto j=0; j<igbdy->size(); j++ ) {
+          ind = (*igbdy)[j];
+          (*ub[n])[j] = (*unew_[idstate])[ind];
+        }
+      }
+ 
     }
-  }
-  bcomputed_ = bret;
+    else {
 
-  return bret;
+      bret = traits_.callback(eqn, grid, time, traits_.bdyid, utmp_, unew_,  ub);
 
-} // end of method update_from_init
+    }
+    assert(bret);
+
+   // Set boundary vector with initialized state:
+   bcomputed_ = true;
+
+   if ( traits_.compute_once ) {
+     for ( auto j=0; j<unew_.size(); j++ ) delete unew_[j];
+     for ( auto j=0; j<utmp_.size(); j++ ) delete utmp_[j];
+     unew_.clear();
+     utmp_.clear();
+   }
+
+   return bret;
+
+} // end of method compute_bdy_data
 
 

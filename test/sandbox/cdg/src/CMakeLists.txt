@@ -13,6 +13,7 @@ set(test_cdg_files
 		# gtest_gmm.cpp
 		# gtest_helm.cpp
 		# gtest_morton.cpp
+		# gtest_mult.cpp
 		# gtest_pingpong.cpp
 		# gtest_rk.cpp
 		# gtest_vec_access.cpp

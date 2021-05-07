@@ -16,7 +16,6 @@
 #include <memory>
 #include <cmath>
 #include "gtvector.hpp"
-#include "ggrid.hpp"
 #include "ggfx.hpp"
 #include "pdeint/update_bdy_base.hpp"
 
@@ -29,19 +28,18 @@ class GOutflowBdy : public UpdateBdyBase<TypePack>
 public:
         using Types      = TypePack;
         using Base       = UpdateBdyBase<Types>;
+        using EqnBase    = EquationBase<Types>;
+        using EqnBasePtr = std::shared_ptr<EqnBase>;
+        using State      = typename Types::State;
         using Grid       = typename Types::Grid;
-        using Ftype      = typename Types::Value;
+        using Ftype      = typename Types::Ftype;
         using Time       = typename Types::Time;
-        using StateInfo  = typename Types::StateInfo;
 
         static_assert(std::is_same<State,GTVector<GTVector<Ftype>*>>::value,
                "State is of incorrect type");
-        static_assert(std::is_same<Grid,GGrid>::value,
-               "Grid is of incorrect type");
 
         // GOutflowBdy solver traits:
         struct Traits {
-          GBOOL     compute_once=FALSE; // compute bdy cond once?
           GINT             bdyid;    // bdy id
           GTVector<GINT>   istate;   // state indices to operate on
           GTVector<GSIZET> ibdyvol;  // indir. inidices into comput volume
@@ -57,21 +55,21 @@ public:
 
 protected:
         GBOOL               update_impl (
-                              Grid      &grid,
-                              StateInfo &stinfo,
-                              Time      &time,
-                              State     &utmp,
-                              State     &u,
-                              State     &ub);
+                              EqnBasePtr &eqn,
+                              Grid       &grid,
+                              Time       &time,
+                              State      &utmp,
+                              State      &u);
         
 private:
 
-        GBOOL               bcomputed_;     // was computation done?
 
         Traits              traits_;        // Traits structure
 
 };
 
+
 #include "goutflow_bdy.ipp"
+
 
 #endif

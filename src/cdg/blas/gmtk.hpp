@@ -13,24 +13,25 @@
 #include <limits>
 #include "gtypes.h"
 #include "cff_blas.h"
-#include "gelem_base.hpp"
 
 #include "gtvector.hpp"
 #include "gtmatrix.hpp"
-#include "ggrid.hpp"
-#include "ggrid_box.hpp"
-#include "ggrid_icos.hpp"
+//#include "ggrid.hpp"
+//#include "ggrid_box.hpp"
+//#include "ggrid_icos.hpp"
 #include "gcblas.hpp"
 
 //template<typename T> class GTVector;
 //template<typename T> class GTMatrix;
-//                   class GGrid;
+//                   class Grid;
 
 //typedef GTVector<GElem_base*> GElemList;
 
 
 extern GINT szMatCache_;
 extern GINT szVecCache_;
+
+using namespace std;
 
 
 namespace GMTK
@@ -102,19 +103,19 @@ namespace GMTK
   void I3_X_I2_X_D1(GTMatrix<T> &D1, GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET N3, GTVector<T> &y);
 
   template<typename T>
-  void I3_X_I2_X_D1(GTMatrix<T> &D1, GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET N3, GSIZET Ne, GTVector<T> &y);
+  void I3_X_I2_X_D1(GTMatrix<T> &D1, GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET N3, GSIZET Ne, GCBLAS::cuMatBlockDat &cudat, GTVector<T> &y);
 
   template<typename T>
   void I3_X_D2_X_I1(GTMatrix<T> &D2T, GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET N3, GTVector<T> &y);
 
   template<typename T>
-  void I3_X_D2_X_I1(GTMatrix<T> &D2T, GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET N3, GSIZET Ne, GTVector<T> &y);
+  void I3_X_D2_X_I1(GTMatrix<T> &D2T, GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET N3, GSIZET Ne, GCBLAS::cuMatBlockDat &cudat, GTVector<T> &y);
 
   template<typename T>
   void D3_X_I2_X_I1(GTMatrix<T> &D3T, GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET N3, GTVector<T> &y);
 
   template<typename T>
-  void D3_X_I2_X_I1(GTMatrix<T> &D3T, GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET N3, GSIZET Ne, GTVector<T> &y);
+  void D3_X_I2_X_I1(GTMatrix<T> &D3T, GTVector<T> &u, GSIZET N1, GSIZET N2, GSIZET N3, GSIZET Ne, GCBLAS::cuMatBlockDat &cudat, GTVector<T> &y);
 
   template<typename T>
   void matvec_prod(GTVector<T> &vret, const GTMatrix<T> &A, const GTVector<T> &b);
@@ -159,8 +160,8 @@ namespace GMTK
   template<typename T>
   void    normalize_euclidean(GTVector<GTVector<T>*> &x, GINT *iind, GINT nind, T x0=1);
 
-  template<typename T>
-  void    normalizeL2(GGrid &grid, GTVector<GTVector<T>*> &u, GTVector<GTVector<T>*    > &tmp, T u0);
+  template<typename Grid, typename T>
+  void    normalizeL2(Grid &grid, GTVector<GTVector<T>*> &u, GTVector<GTVector<T>*    > &tmp, T u0);
 
   template<typename T>
   void paxy(GTVector<T> &z, const GTVector<T> &x, T a, const GTVector<T> &y); 
@@ -168,10 +169,10 @@ namespace GMTK
   void paxy(GTVector<T> &x, T a, const GTVector<T> &y); 
 
   template<typename T>
-  void saxpy(GTVector<T> &x, T a, GTVector<T> &y, T b); 
+  void saxpby(GTVector<T> &x, T a, GTVector<T> &y, T b); 
 
   template<typename T>
-  void saxpy(GTVector<T> &z, GTVector<T> &x, T a, GTVector<T> &y, T b); 
+  void saxpby(GTVector<T> &z, GTVector<T> &x, T a, GTVector<T> &y, T b); 
 
   template<typename T>
   void     add(GTVector<T> &vret, const GTVector<T> &va, const GTVector<T> &vb, T a, T b);
@@ -191,43 +192,65 @@ namespace GMTK
   template<typename T>
   void    D3_X_Dg2_X_Dg1     (GTVector<T> &Dg1, GTVector<T> &Dg2, GTMatrix<T> &D3T, GTVector<T> &x, GTVector<T> &tmp, GTVector<T> &y);
 
-  template<typename T>
-  void    grad(GGrid &grid, GTVector<T> &u, const GINT idir, 
+  template<typename Grid, typename T>
+  void    div(Grid &grid, const GTVector<GTVector<T>*> &u, 
+              GTVector<GTVector<T>*> &tmp, GTVector<T> &div);
+
+  template<typename Grid, typename T>
+  void    grad(Grid &grid, GTVector<T> &u, const GINT idir, 
                GTVector<GTVector<T>*> &tmp, GTVector<T> &grad);
-  template<typename T>
-  void    curl(GGrid &grid, const GTVector<GTVector<T>*> &u, const GINT idir, 
+
+  template<typename Grid, typename T>
+  void    curl(Grid &grid, const GTVector<GTVector<T>*> &u, const GINT idir, 
                GTVector<GTVector<T>*> &tmp, GTVector<T> &curl);
 
-  template<typename T>
-  void    constrain2sphere(GGrid &grid, const GTVector<GTVector<T>*> &v, GTVector<GTVector<T>*    > &Pv);
-  template<typename T>
-  void    constrain2sphere(GGrid &grid, GTVector<GTVector<T>*> &v);
-  template<typename T>
-  void    vsphere2cart(GGrid &grid, const GTVector<GTVector<T>*> &vsph, GVectorType vtype, GTVector<GTVector<T>*> &vcart);
-  template<typename T>
-  void    vcart2sphere(GGrid &grid, const GTVector<GTVector<T>*> &vcart, GVectorType vtype, GTVector<GTVector<T>*> &vsph);
+
+  template<typename Grid, typename T>
+  void    constrain2sphere(Grid &grid, const GTVector<GTVector<T>*> &v, GTVector<GTVector<T>*    > &Pv);
+
+  template<typename Grid, typename T>
+  void    constrain2sphere(Grid &grid, GTVector<GTVector<T>*> &v);
+
+  template<typename Grid, typename T>
+  void    vsphere2cart(Grid &grid, const GTVector<GTVector<T>*> &vsph, GVectorType vtype, GTVector<GTVector<T>*> &vcart);
+
+  template<typename Grid, typename T>
+  void    vcart2sphere(Grid &grid, const GTVector<GTVector<T>*> &vcart, GVectorType vtype, GTVector<GTVector<T>*> &vsph);
+
   template<typename T>
   void    cart2latlon(const GTVector<GTVector<T>*> &vcart, GTVector<GTVector<T>*> &latlon);
+
   template<typename T>
   void    rcart2sphere(const GTVector<GTVector<T>*> &vcart, GTVector<GTVector<T>*> &rlatlon);
+
   template<typename T>
   void    zero(GTVector<T> &v);
+
+  template<typename T>
+  void    zero(GTVector<T> &v, GTVector<GSIZET> &iv);
+
   template<typename T>
   void    zero(GTVector<GTVector<T>*> &v);
+
   template<typename T>
   void    zero(GTVector<GTVector<T>> &v);
-  template<typename T>
-  GDOUBLE energy(GGrid &grid, const GTVector<GTVector<T>*> &u, GTVector<GTVector<T>*> &tmp, GBOOL isglobal, GBOOL ismax=FALSE);
-  template<typename T>
-  GDOUBLE enstrophy(GGrid &grid, const GTVector<GTVector<T>*> &u, GTVector<GTVector<T>*> &tmp, GBOOL isglobal, GBOOL ismax=FALSE);
-  template<typename T>
-  GDOUBLE helicity(GGrid &grid, const GTVector<GTVector<T>*> &u, GTVector<GTVector<T>*> &tmp, GBOOL isglobal, GBOOL ismax=FALSE);
-  template<typename T>
-  GDOUBLE relhelicity(GGrid &grid, const GTVector<GTVector<T>*> &u, GTVector<GTVector<T>*> &tmp, GBOOL isglobal, GBOOL ismax=FALSE);
-  template<typename T>
-  GDOUBLE energyinj(GGrid &grid, const GTVector<GTVector<T>*> &u, const GTVector<GTVector<T>*> &uf, GTVector<GTVector<T>*> &tmp, GBOOL isglobal, GBOOL ismax=FALSE);
-  template<typename T>
-  void domathop(GGrid &grid, const GTVector<GTVector<T>*> &uin, const GString sop, GTVector<GTVector<T>*> &utmp, GTVector<GTVector<T>*> &uout, GTVector<GINT> &iuout);
+
+  template<typename Grid, typename T>
+  GDOUBLE energy(Grid &grid, const GTVector<GTVector<T>*> &u, GTVector<GTVector<T>*> &tmp, GBOOL isglobal, GBOOL ismax=FALSE);
+
+  template<typename Grid, typename T>
+  GDOUBLE enstrophy(Grid &grid, const GTVector<GTVector<T>*> &u, GTVector<GTVector<T>*> &tmp, GBOOL isglobal, GBOOL ismax=FALSE);
+
+  template<typename Grid, typename T>
+  GDOUBLE helicity(Grid &grid, const GTVector<GTVector<T>*> &u, GTVector<GTVector<T>*> &tmp, GBOOL isglobal, GBOOL ismax=FALSE);
+
+  template<typename Grid, typename T>
+  GDOUBLE relhelicity(Grid &grid, const GTVector<GTVector<T>*> &u, GTVector<GTVector<T>*> &tmp, GBOOL isglobal, GBOOL ismax=FALSE);
+
+  template<typename Grid, typename T>
+  GDOUBLE energyinj(Grid &grid, const GTVector<GTVector<T>*> &u, const GTVector<GTVector<T>*> &uf, GTVector<GTVector<T>*> &tmp, GBOOL isglobal, GBOOL ismax=FALSE);
+  template<typename Grid, typename T>
+  void domathop(Grid &grid, const GTVector<GTVector<T>*> &uin, const GString sop, GTVector<GTVector<T>*> &utmp, GTVector<GTVector<T>*> &uout, std::vector<GINT> &iuout);
 
 };
 
