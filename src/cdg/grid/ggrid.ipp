@@ -296,21 +296,24 @@ GSIZET GGrid<Types>::nbdydof()
 //**********************************************************************************
 // METHOD : minlength
 // DESC   : Find elem lengths for each element
-// ARGS   : dx : vector that gives the min length for each element;
-//               filled if non-NULL
+// ARGS   : pmin: poly. order corresponding to min element length
+//          dx  : vector that gives the min length for each element;
+//                filled if non-NULL
 // RETURNS: Ftype separation
 //**********************************************************************************
 template<typename Types>
-typename Types::Ftype GGrid<Types>::minlength(GTVector<Ftype> *dx)
+typename Types::Ftype GGrid<Types>::minlength(GTVector<GINT> *pmin, GTVector<Ftype> *dx)
 {
        GEOFLOW_TRACE();
    assert(gelems_.size() > 0 && "Elements not set");
 
-   Ftype emin, lmin, gmin;
+   GINT           pp;
+   Ftype          dn, emin, lmin, gmin;
    GTPoint<Ftype> dr;
    GTVector<GTPoint<Ftype>> *xverts;
   
-   if ( dx != NULLPTR ) dx->resizem(gelems_.size());
+   if ( dx   != NULLPTR ) dx  ->resizem(gelems_.size());
+   if ( pmin != NULLPTR ) pmin->resizem(gelems_.size());
 
    emin = lmin = std::numeric_limits<Ftype>::max();
    for ( auto i=0; i<gelems_.size(); i++ ) {
@@ -318,24 +321,41 @@ typename Types::Ftype GGrid<Types>::minlength(GTVector<Ftype> *dx)
      #if defined(_G_IS2D)
      for ( auto j=0; j<xverts->size(); j++ ) {
        dr = (*xverts)[(j+1)%xverts->size()] - (*xverts)[j];
-       emin = MIN(emin,dr.norm());
+       dn = dr.norm();
+       if ( dn < emin ) {
+         emin = dn;
+         pp = gelems_[i]->order(j % 2);
+       }
      }
      #elif defined(_G_IS3D)
      for ( auto j=0; j<4; j++ ) { // bottom
        dr = (*xverts)[(j+1)%xverts->size()] - (*xverts)[j];
-       lmin = MIN(emin,dr.norm());
+       dn = dr.norm();
+       if ( dn < emin ) {
+         emin = dn;
+         pp = gelems_[i]->order(j % 2);
+       }
      }
      for ( auto j=4; j<8; j++ ) { // top
        dr = (*xverts)[(j+1)%xverts->size()] - (*xverts)[j];
-       emin = MIN(emin,dr.norm());
+       dn = dr.norm();
+       if ( dn < emin ) {
+         emin = dn;
+         pp = gelems_[i]->order(j % 2);
+       }
      }
      for ( auto j=0; j<4; j++ ) { // vertical edges
        dr = (*xverts)[j+4] - (*xverts)[j];
-       emin = MIN(emin,dr.norm());
+       dn = dr.norm();
+       if ( dn < emin ) {
+         emin = dn;
+         pp = gelems_[i]->order(2);
+       }
      }
      #endif
      lmin = MIN(lmin,emin);
-     if ( dx != NULLPTR ) (*dx)[i] = emin; 
+     if ( dx   != NULLPTR ) (*dx)  [i] = emin; 
+     if ( pmin != NULLPTR ) (*pmin)[i] = pp; 
    }
 
    GComm::Allreduce(&lmin, &gmin, 1, T2GCDatatype<Ftype>() , GC_OP_MIN, comm_);
@@ -348,12 +368,11 @@ typename Types::Ftype GGrid<Types>::minlength(GTVector<Ftype> *dx)
 //**********************************************************************************
 // METHOD : maxlength
 // DESC   : Find max elem length 
-// ARGS   : dx : vector that gives the max length for each element;
-//               filled if non-NULL
+// ARGS   : 
 // RETURNS: Ftype length
 //**********************************************************************************
 template<typename Types>
-typename Types::Ftype GGrid<Types>::maxlength(GTVector<Ftype> *dx)
+typename Types::Ftype GGrid<Types>::maxlength()
 {
        GEOFLOW_TRACE();
    assert(gelems_.size() > 0 && "Elements not set");
@@ -385,7 +404,6 @@ typename Types::Ftype GGrid<Types>::maxlength(GTVector<Ftype> *dx)
      }
      #endif
      lmax = MAX(lmax,emax);
-     if ( dx != NULLPTR ) (*dx)[i] = emax; 
    }
 
    GComm::Allreduce(&lmax, &gmax, 1, T2GCDatatype<Ftype>() , GC_OP_MAX, comm_);
@@ -975,7 +993,11 @@ typename Types::Ftype GGrid<Types>::find_min_dist()
        GEOFLOW_TRACE();
   assert(gelems_.size() > 0 && "Elements not set");
 
+  Ftype            xmin, xgmin;
+  GTVector<GINT>   pmin;
+  GTVector<Ftype>  dx;
  
+#if 0
   Ftype           tiny = 1000.0*std::numeric_limits<Ftype>::epsilon();
   GTPoint<Ftype>  dx(3), p0(3);
 
@@ -1002,6 +1024,13 @@ typename Types::Ftype GGrid<Types>::find_min_dist()
     xn = dx.norm();
     if ( xn > tiny ) xmin = MIN(xmin, xn); 
   }
+#else
+  minlength(&pmin, &dx);
+  for ( auto j=0; j<dx.size(); j++ ) {
+    dx[j] *= 1.0 / (pmin[j]*pmin[j]);
+  }
+  xmin = dx.min();
+#endif
   GComm::Allreduce(&xmin, &xgmin, 1, T2GCDatatype<Ftype>() , GC_OP_MIN, comm_);
 
   return xgmin;
@@ -1024,7 +1053,9 @@ void GGrid<Types>::find_min_dist(GTVector<Ftype> &dx)
        GEOFLOW_TRACE();
   assert(gelems_.size() > 0 && "Elements not set");
 
+  GTVector<GINT>   pmin;
  
+#if 0
   GSIZET           ibeg, iend;
   GTPoint<Ftype>   dd(3), p0(3);
 
@@ -1054,6 +1085,12 @@ void GGrid<Types>::find_min_dist(GTVector<Ftype> &dx)
     }
     dx[e] = xmin;
   }
+#else
+  minlength(&pmin, &dx);
+  for ( auto j=0; j<dx.size(); j++ ) {
+    dx[j] *= 1.0 / (pmin[j]*pmin[j]);
+  }
+#endif
 
 } // end of method find_min_dist (2)
 

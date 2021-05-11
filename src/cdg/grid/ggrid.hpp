@@ -166,8 +166,9 @@ virtual void                 print(const GString &filename){}          // print 
         GSIZET               size() { return ndof(); }
         GSIZET               nfacedof();                              // compute total number elem face dof
         GSIZET               nbdydof();                               // compute total number elem bdy dof
-        Ftype                minlength(GTVector<Ftype> *dx=NULLPTR); // find min elem length
-        Ftype                maxlength(GTVector<Ftype> *dx=NULLPTR); // find max elem length
+        Ftype                minlength(GTVector<GINT> *pmi=NULLPTR, 
+                                       GTVector<Ftype> *dx=NULLPTR);  // find min elem length
+        Ftype                maxlength();                             // find max elem length
         Ftype                avglength();                             // find avg elem length
         Ftype                minnodedist()         
                              {return minnodedist_;}                   // get min node distance
