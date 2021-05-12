@@ -1,4 +1,4 @@
-function [dim nelems porder gtype icycle time multivar ivers skip] = hgeoflow(filein, isz, sformat, quiet)
+function [dim nelems porder gtype icycle time multivar ivers keys skip] = hgeoflow(filein, isz, sformat, quiet)
 %
 % Reads header from binary GeoFLOW data file
 %
@@ -22,6 +22,7 @@ function [dim nelems porder gtype icycle time multivar ivers skip] = hgeoflow(fi
 %    time    : time stamp
 %    multivar: multiple fields in file?
 %    ivers   : version number
+%    keys    : element ids/keys
 %    skip    : total header size in bytes
 %
 if nargin < 1
@@ -35,14 +36,15 @@ end
 if nargin < 3
   sformat = 'ieee-le';
   quiet = 0;
-  warning(swarn);
 end
 if nargin < 4
   quiet = 0;
 end
-swarn = sprintf('using isz=%d; sformat=%s', isz, sformat);
 
-if nargout > 9
+swarn = sprintf('using isz=%d; sformat=%s', isz, sformat);
+warning(swarn);
+
+if nargout > 10
   error('Too many output arguments provided');
 end
 
@@ -66,14 +68,17 @@ if ~strcmp(permission,'r')
 end
 
 % Read header:
-pvers   = fread(lun, 1   , 'uint32'); % version number
-pdim    = fread(lun, 1   , 'uint32'); % problem dimension
-pnelems = fread(lun, 1   , 'uint64'); % # elems
-pporder = fread(lun, pdim, 'uint32'); % expansion order in each dir
-pgtype  = fread(lun, 1   , 'uint32'); % grid type
-pcycle  = fread(lun, 1   , 'uint64'); % time cycle 
-ptime   = fread(lun, 1   ,  zsize  ); % time stamp
-pmvar   = fread(lun, 1   , 'uint32'); % multiple vars in file
+pvers   = fread(lun, 1      , 'uint32'); % version number
+pdim    = fread(lun, 1      , 'uint32'); % problem dimension
+pnelems = fread(lun, 1      , 'uint64'); % # elems
+pporder = fread(lun, pdim   , 'uint32'); % expansion order in each dir
+pgtype  = fread(lun, 1      , 'uint32'); % grid type
+pcycle  = fread(lun, 1      , 'uint64'); % time cycle 
+ptime   = fread(lun, 1      ,  zsize  ); % time stamp
+pmvar   = fread(lun, 1      , 'uint32'); % multiple vars in file
+pkeys   = fread(lun, pnelems, 'uint64'); % element ids/keys
+
+nkeys = pnelems;
 
 % Ensure header types have correct size:
 pvers   = uint32(pvers);
@@ -88,10 +93,13 @@ elseif strcmp(ssize,'real*8')
   ptime = double(ptime);
 end
 pmultivar = uint32(pmvar);
+pkeys     = uint64(pkeys);
 
-pskip = sizeof(pvers) + sizeof(pdim)   + sizeof(pnelems) + pdim*sizeof(pporder) ...
-                      + sizeof(pgtype) + sizeof(pcycle)  + sizeof(ptime) ...
-                      + sizeof(pmultivar)
+
+pskip = sizeof(pvers) + sizeof(pdim)     + sizeof(pnelems) + pdim*sizeof(pporder) ...
+                      + sizeof(pgtype)   + sizeof(pcycle)  + sizeof(ptime) ...
+                      + sizeof(pmultivar) ...
+                      + double(pnelems)*sizeof(pkeys)
 
 pformat = '  %s=';
 for j=1:pdim
@@ -137,7 +145,10 @@ end
 if nargout >= 8
   ivers = pvers;
 end
-if nargout == 9
+if nargout >= 9
+  keys = pkeys;
+end
+if nargout == 10
   skip = pskip;
 end
 
