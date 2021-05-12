@@ -58,7 +58,7 @@ else
 end
 
 % Read header:
-[pdim pnelems pporder pgtype pcycle ptime pmultivar pvers skip] = hgeoflow(filein, isz, sformat, quiet);
+[pdim pnelems pporder pgtype pcycle ptime pmultivar pvers pkeys skip] = hgeoflow(filein, isz, sformat, quiet);
 
 lun =fopen(filein,'r',sformat);
 if  lun == -1
