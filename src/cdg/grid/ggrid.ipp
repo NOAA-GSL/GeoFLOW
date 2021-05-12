@@ -488,6 +488,7 @@ void GGrid<Types>::grid_init()
   find_min_dist(dxmin_);
   eps_         = 0.125*minnodedist_;
 
+
   // Create metric data, Jacobians:
   if ( gtype_ == GE_2DEMBEDDED || gtype_  == GE_DEFORMED ) {
     def_geom_init();
@@ -504,6 +505,9 @@ void GGrid<Types>::grid_init()
   // Get global number of elements:
   GSIZET nelems = gelems_.size();
   GComm::Allreduce(&nelems, &ngelems_, 1, T2GCDatatype<GSIZET>() , GC_OP_SUM, comm_);
+
+  // Set element id vector:
+  set_elemids();
 
   bInitialized_ = TRUE;
 
@@ -2310,6 +2314,28 @@ void GGrid<Types>::set_derivtype(GDerivType gt)
   gderivtype_ = gt;
 
 } // end of method set_derivtype
+
+
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : set_elemids
+// DESC   : Set element id vector from individiual elements
+// ARGS   : none.
+// RETURNS: none.
+//**********************************************************************************
+template<typename Types>
+void GGrid<Types>::set_elemids()
+{
+	GEOFLOW_TRACE();
+
+  gelemids_.resize(gelems_.size());
+  for ( auto e=0; e<gelems_.size(); e++ ) {
+    gelemids_[e] = gelems_[e]->elemid();
+  }
+
+} // end of method set_elemids
 
 
 
