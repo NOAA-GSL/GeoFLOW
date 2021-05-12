@@ -2402,7 +2402,7 @@ void GGrid<Types>::init_qdealias()
     for ( auto k=0; k<pqdealias_[2]+1; k++ ) {
       for ( auto j=0; j<pqdealias_[1]+1; j++ ) {
         for ( auto i=0; i<pqdealias_[0]+1; i++ ) {
-          qW_[n] = (*qW1d[0])[i] * (*qW1d[1])[j] (*qW1d[2])[k];
+          qW_[n] = (*qW1d[0])[i] * (*qW1d[1])[j] * (*qW1d[2])[k];
           n++;
         }
       }
@@ -2468,8 +2468,8 @@ void GGrid<Types>::dealias(StateComp &v1, StateComp &v2, StateComp &prod)
     GMTK::D2_X_D1<Ftype>(IQPdealias_[0], IQPdealiasT_[1], v1, tptmp_, qdtmp_[0]);
     GMTK::D2_X_D1<Ftype>(IQPdealias_[0], IQPdealiasT_[1], v2, tptmp_, qdtmp_[1]);
 #elif defined(_G_IS3D)
-    GMTK::D3_X_D2_X_D1<Ftype>(IQPdealias_[0], IQPdealiasT_[1], IQPdealiasT_[2], v1, tmp_, qdtmp_[0]);
-    GMTK::D3_X_D2_X_D1<Ftype>(IQPdealias_[0], IQPdealiasT_[1], IQPdealiasT_[2], v2, tmp_, qdtmp_[1]);
+    GMTK::D3_X_D2_X_D1<Ftype>(IQPdealias_[0], IQPdealiasT_[1], IQPdealiasT_[2], v1, tptmp_, qdtmp_[0]);
+    GMTK::D3_X_D2_X_D1<Ftype>(IQPdealias_[0], IQPdealiasT_[1], IQPdealiasT_[2], v2, tptmp_, qdtmp_[1]);
 #endif
   } // end, element loop
   v1.range_reset(); v2.range_reset();
@@ -2492,7 +2492,7 @@ void GGrid<Types>::dealias(StateComp &v1, StateComp &v2, StateComp &prod)
 #if defined(_G_IS2D)
     GMTK::D2_X_D1<Ftype>(IQPdealiasT_[0], IQPdealias_[1], qdtmp_[0], tptmp_, prod);
 #elif defined(_G_IS3D)
-    GMTK::D3_X_D2_X_D1<Ftype>(IQPdealiasT_[0], IQPdealias_[1], IQPdealias_[2], qdtmp_[0], tmp_, prod);
+    GMTK::D3_X_D2_X_D1<Ftype>(IQPdealiasT_[0], IQPdealias_[1], IQPdealias_[2], qdtmp_[0], tptmp_, prod);
 #endif
   } // end, element loop
   prod.range_reset();
