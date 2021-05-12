@@ -471,24 +471,30 @@ GSIZET GIO<Types>::write_header_posix(GString filename, StateInfo &info, Traits 
   
     fseek(fp, 0, SEEK_SET);
     // Write header: dim, numelems, poly_order:
-    nh=fwrite(&traits.ivers     , sizeof(GINT)  ,    1, fp); // GIO version number
+    nh=fwrite(&traits.ivers     , sizeof(GINT)  ,    1, fp);   // GIO version number
       nb += nh*sizeof(GINT);
-    nh=fwrite(&traits.dim       , sizeof(GINT)  ,    1, fp); // dimension
+    nh=fwrite(&traits.dim       , sizeof(GINT)  ,    1, fp);   // dimension
       nb += nh*sizeof(GINT);
-    nh=fwrite(&info.nelems      , sizeof(GSIZET),    1, fp); // num elements
+    nh=fwrite(&info.nelems      , sizeof(GSIZET),    1, fp);   // num elements
       nb += nh*sizeof(GSIZET);
     nd = info.porder.size(1) * info.porder.size(2);
     nh=fwrite(info.porder.data().data()
-                               , sizeof(GINT)  ,   nd, fp); // exp order
+                               , sizeof(GINT)     ,   nd, fp); // exp order
       nb += nh*sizeof(GINT);
     nh=fwrite(&info.gtype         , sizeof(GINT)  ,    1, fp); // grid type
       nb += nh*sizeof(GINT);
     nh=fwrite(&info.cycle         , sizeof(GSIZET),    1, fp); // time cycle stamp
       nb += nh*sizeof(GSIZET);
-    nh=fwrite(&info.time          , sizeof(Ftype),    1, fp); // time stamp
+    nh=fwrite(&info.time          , sizeof(Ftype) ,    1, fp); // time stamp
       nb += nh*sizeof(Ftype);
-    nh=fwrite(&imulti             , sizeof(GINT),      1, fp); // time stamp
+    nh=fwrite(&imulti             , sizeof(GINT)  ,    1, fp); // time stamp
       nb += nh*sizeof(GINT);
+
+    // Add list of element ids (keys) always at the end of header:
+    GTVector<GKEY> *keys = &this->grid_->elemids();
+    assert( keys != NULLPTR && keys.size() == info.nelems ); // verify there are the right number
+    nh=fwrite(keys->data()        , sizeof(GKEY)  ,    info.nelems, fp);// keys/ids
+      nb += nh*sizeof(GKEY);
 
     fclose(fp);
   
@@ -545,9 +551,15 @@ GSIZET GIO<Types>::write_header_coll(GString filename, StateInfo &info, Traits &
         MPI_Get_count(&status, MPI_BYTE, &nh);  nb += nh;
     MPI_File_write(fp, &info.cycle       , 1   , T2GCDatatype<GSIZET>(), &status);
         MPI_Get_count(&status, MPI_BYTE, &nh); nb += nh;
-    MPI_File_write(fp, &info.time        , 1   , T2GCDatatype<Ftype>(), &status); 
+    MPI_File_write(fp, &info.time        , 1   , T2GCDatatype<Ftype>(),  &status); 
         MPI_Get_count(&status, MPI_BYTE, &nh); nb += nh;
     MPI_File_write(fp, &imulti           , 1   , T2GCDatatype  <GINT>(), &status); 
+        MPI_Get_count(&status, MPI_BYTE, &nh); nb += nh;
+
+    // Element ids/keys:
+    GTVector<GKEY> *keys = &this->grid_->elemids();
+    assert( keys != NULLPTR && keys.size() == info.nelems ); // verify there are the right number
+    MPI_File_write(fp, keys->data()     , info.nelems, T2GCDatatype  <GKEY>(), &status); 
         MPI_Get_count(&status, MPI_BYTE, &nh); nb += nh;
   }
 
@@ -602,11 +614,15 @@ GSIZET GIO<Types>::read_header(GString filename, StateInfo &info, Traits &traits
       nh = fread(&info.time        , sizeof(Ftype) ,    1, fp); nb += nh*sizeof(Ftype);
       nh = fread(&imulti           , sizeof(GINT)  ,    1, fp); nb += nh*sizeof(GINT);
       traits.multivar = static_cast<GBOOL>(imulti);
+
+      info.elemids.resize(info.nelems);
+      nh = fread( info.elemids.data(), sizeof(GKEY),    info.nelems, fp); nb += nh*sizeof(GKEY);
     
       fclose(fp);
   
-//  }
-/*
+#if 0
+    }
+  
     else {
 #if defined(GEOFLOW_USE_MPI)
       MPI_File        fh;
@@ -627,12 +643,15 @@ GSIZET GIO<Types>::read_header(GString filename, StateInfo &info, Traits &traits
       nh = MPI_File_read(fh, &info.cycle       , 1   , T2GCDatatype<GSIZET>(), &status); nb += nh*sizeof(GSIZET);
       nh = MPI_File_read(fh, &info.time        , 1   , T2GCDatatype<Ftype>(), &status); nb += nh*sizeof(Ftype);
 
+      info.elemids.resize(info.nelems);
+      nh = MPI_File_read(fh, info.elemids.data() , info.nelems  , T2GCDatatype<GKEY>(), &status); nb += nh*sizeof(GKEY);
+
       MPI_File_close(&fh); 
 #else
 # error "MPI not defined; cannot read GIO_COLL"
 #endif
-*/
-//  } 
+    } 
+#endif
 
     // Check number read vs expected value:
     nd = sz_header(info, traits);
@@ -667,6 +686,7 @@ GSIZET GIO<Types>::sz_header(const StateInfo &info, const Traits &traits)
     numr = traits.ivers == 0 ? 1 : info.nelems;
     numr *= traits.dim;
     nd = (numr+4)*sizeof(GINT) + 2*sizeof(GSIZET) + sizeof(Ftype);
+    nd += this->grid_->elems().size() * sizeof(GKEY);
 
     return nd;
 
