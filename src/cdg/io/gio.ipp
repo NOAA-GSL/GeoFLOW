@@ -492,7 +492,7 @@ GSIZET GIO<Types>::write_header_posix(GString filename, StateInfo &info, Traits 
 
     // Add list of element ids (keys) always at the end of header:
     GTVector<GKEY> *keys = &this->grid_->elemids();
-    assert( keys != NULLPTR && keys.size() == info.nelems ); // verify there are the right number
+    assert( keys != NULLPTR && keys->size() == info.nelems ); // verify there are the right number
     nh=fwrite(keys->data()        , sizeof(GKEY)  ,    info.nelems, fp);// keys/ids
       nb += nh*sizeof(GKEY);
 
@@ -558,7 +558,7 @@ GSIZET GIO<Types>::write_header_coll(GString filename, StateInfo &info, Traits &
 
     // Element ids/keys:
     GTVector<GKEY> *keys = &this->grid_->elemids();
-    assert( keys != NULLPTR && keys.size() == info.nelems ); // verify there are the right number
+    assert( keys != NULLPTR && keys->size() == info.nelems ); // verify there are the right number
     MPI_File_write(fp, keys->data()     , info.nelems, T2GCDatatype  <GKEY>(), &status); 
         MPI_Get_count(&status, MPI_BYTE, &nh); nb += nh;
   }
