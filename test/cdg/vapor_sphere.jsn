@@ -22,13 +22,14 @@
     "A"      : 1.0,
     "B"      : 0.9,
     "C"      : 1.1,
+    "time"   : 13.0,
     "poly"   : 0.1,
     "kdn"    : 1,
     "kup"    : 20
   },
   "grid_icos": {
     "grid_name"   : "grid_icos",
-    "ilevel"      : 2,
+    "ilevel"      : 0,
     "refine_type" : "GICOS_BISECTION",
     "radius"      : 6378e3,
     "maxit"       : 128,
@@ -37,7 +38,7 @@
   },
   "grid_sphere" : {
     "grid_name"       : "grid_icos",
-    "ilevel"          : 2,
+    "ilevel"          : 0,
     "refine_type"     : "GICOS_BISECTION",
     "radiusi"         : 6378e3,
     "radiuso"         : 6395e3,
