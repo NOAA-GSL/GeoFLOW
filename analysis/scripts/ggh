@@ -46,6 +46,7 @@ set offdi   = `echo 'ibase=10;obase=10; '$offvs'   + '$ISIZE'  '  | bc`
 set xoffdi  = `echo 'ibase=10;obase=16; '$offdi'  '  | bc`
 
 setenv DOdi   "od -t dI        -j {$PREF}{$xoffdi}{$SUFF} -N {$ISIZE} {$FILE}"
+
 set ardi    = `$DOdi`
 
 set offne   = `echo 'ibase=10;obase=10; '$offdi'   + '$ISIZE'  '  | bc`
@@ -75,12 +76,18 @@ set xoffti   = `echo 'ibase=10;obase=16; '$offti'   '  | bc`
 
 # Get data items at offsets:
 setenv DOvs   "od -t dI        -j {$PREF}{$xoffvs}{$SUFF} -N {$ISIZE} {$FILE}"
-setenv DOne   "od -t dL        -j {$PREF}{$xoffne}{$SUFF} -N {$SIZET} {$FILE}"
+setenv DOne   "od -t dI        -j {$PREF}{$xoffne}{$SUFF} -N {$SIZET} {$FILE}"
 setenv DOor   "od -t dI        -j {$PREF}{$xoffor}{$SUFF} -N {$ISIZE} {$FILE}"
 setenv DOgr   "od -t dI        -j {$PREF}{$xoffgr}{$SUFF} -N {$ISIZE} {$FILE}"
 setenv DOcy   "od -t dI        -j {$PREF}{$xoffcy}{$SUFF} -N {$SIZET} {$FILE}"
 setenv DOti   "od -t f{$FSIZE} -j {$PREF}{$xoffti}{$SUFF} -N {$FSIZE} {$FILE}"
 
+echo DOvs = $DOvs
+echo DOne = $DOne
+echo DOor = $DOor
+echo DOgr = $DOgr
+echo DOcy = $DOcy
+echo DOti = $DOti
 
 set arvs   = `$DOvs`
 set arne   = `$DOne`
@@ -90,6 +97,7 @@ set arcy   = `$DOcy`
 set arti   = `$DOti`
 
 # Print header:
+echo ' '
 echo "Header for GIO file: " $1 " :"
 echo ".................GIO version= " $arvs[2]
 echo ".........................dim= " $ardi[2]
