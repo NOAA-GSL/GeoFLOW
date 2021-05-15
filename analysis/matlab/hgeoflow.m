@@ -3,7 +3,7 @@ function [dim nelems porder gtype icycle time multivar ivers keys skip] = hgeofl
 % Reads header from binary GeoFLOW data file
 %
 %  Usage:
-%    [dim nelems porder gtype icycle time ivers] = hghost(filename, 0, 'ieee-be');
+%    [dim nelems porder gtype icycle time multivar ivers keys] = hgeoflow(filename, 0, 'ieee-be');
 %
 %  Input:
 %    filein  : input file to read. Required.
