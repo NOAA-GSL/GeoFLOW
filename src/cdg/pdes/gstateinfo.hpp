@@ -27,6 +27,8 @@ struct GStateInfo {
               svars;             // names of state members
   GTVector<GStateCompType>
               icomptype;         // encoding of state component types    
+  GTVector<GKEY>
+              elemids;           // element ids
   GTMatrix<GINT>
               porder;            // if ivers=0, is 1 X GDIM; else nelems X GDIM;
   GString     idir;              // input directory

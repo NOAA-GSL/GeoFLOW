@@ -525,6 +525,7 @@ void GGridIcos<Types>::do_elems3d(GINT irank)
 {
 	GEOFLOW_TRACE();
   GString           serr = "GridIcos::do_elems3d (1): ";
+  GKEY              eid, elo, ehi;
   GSIZET            nxy;
   GTICOS            fact, r0, rdelta, xlatc, xlongc;
   GTVector<GTPoint<GTICOS>>
@@ -670,6 +671,12 @@ void GGridIcos<Types>::do_elems3d(GINT irank)
         spherical2xyz<Ftype>(*xNodes);
 
         pelem->init(*xNodes);
+
+        // Set elem id (key): low word is radial 'layer';
+        // hi word is 0 for now:
+        elo = e; ehi = 0;
+        SET_KEY(eid, elo, ehi);
+        pelem->set_elemid(eid);
 
         nfnodes = 0;
         for ( auto j=0; j<pelem->nfaces(); j++ )  // get # face nodes

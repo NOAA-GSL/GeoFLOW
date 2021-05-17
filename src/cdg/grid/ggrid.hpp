@@ -132,6 +132,7 @@ virtual void                 print(const GString &filename){}          // print 
                             &get_cudat() { return cudat_; }           // get CUDA data
 
         GElemList           &elems() { return gelems_; }              // get elem list
+        GTVector<GKEY>      &elemids() { return gelemids_; }          // get elem ids
         GSIZET               nelems() { return gelems_.size(); }      // local num elems
         GSIZET               ngelems() { return ngelems_; }           // global num elems
         GTVector<GSIZET> 
@@ -278,6 +279,7 @@ virtual void                 elem_face_data(
         void                        do_face_data();                    // compute normals to elem faces 
         Ftype                       find_min_dist(); 
         void                        find_min_dist(GTVector<Ftype> &dx); 
+        void                        set_elemids(); 
 
         GBOOL                       bInitialized_;     // object initialized?
         GBOOL                       bapplybc_;         // bc apply callback set
@@ -301,6 +303,7 @@ virtual void                 elem_face_data(
 	Ftype                       volume_;           // grid volume
 	Ftype                       ivolume_;          // 1 / grid volume
         GElemList                   gelems_;           // element list
+        GTVector<GKEY>              gelemids_;         // geom-dependent elem ids
         GTVector<Ftype>             etmp_;             // elem-level tmp vector
         GTVector<Ftype>             dxmin_;            // elem-based min node dist
         GTVector<GTVector<GSIZET>>  itype_;            // indices in elem list of each type

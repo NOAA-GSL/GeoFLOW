@@ -900,7 +900,7 @@ GBOOL ginitstate<Types>::impl_boxdrybubble(const PropertyTree &ptree, GString &s
 // RETURNS: TRUE on success; else FALSE 
 //**********************************************************************************
 template<typename Types>
-GBOOL ginitstate<Types>::impl_icosabcconv(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
+GBOOL ginitstate<Types>::impl_icosabcconv(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &t, State &utmp, State &u)
 {
 
   GString             serr = "impl_icosabcconv: ";
@@ -912,7 +912,7 @@ GBOOL ginitstate<Types>::impl_icosabcconv(const PropertyTree &ptree, GString &sc
   GTVector<GTVector<GFTYPE>*>
                       vh(GDIM);
   GString             sblock;
-  std::default_random_engine        generator;
+  std::default_random_engine        generator(time(0));
   std::normal_distribution<GFTYPE> *distribution=NULLPTR;
 
 
@@ -951,6 +951,7 @@ GBOOL ginitstate<Types>::impl_icosabcconv(const PropertyTree &ptree, GString &sc
   A     = inittree.getValue<GFTYPE>("A", 0.9);  
   B     = inittree.getValue<GFTYPE>("B", 1.0);
   C     = inittree.getValue<GFTYPE>("C", 1.1);
+  t     = inittree.getValue<GFTYPE>("time", 11.0);
   poly  = inittree.getValue<GFTYPE>("poly", 0.0); 
   kdn   = inittree.getValue  <GINT>("kdn", 1); 
   kup   = inittree.getValue  <GINT>("kup", 10); 
