@@ -234,9 +234,10 @@ const char * const sGStateCompType [] ={"GSC_KINETIC","GSC_MAGNETIC","GSC_DENSIT
 
 
 // Macros for 'packing' unsigned ints:
-#define _WLO BITSPERBYTE*sizeof(GUINT)/2
+//    hi word is 25% of SIZET:
+#define _WLO (GUINT)(BITSPERBYTE*sizeof(GKEY)*0.25)
 #if !defined(LOMASK)
-  #define LOMASK          ( ~( (~(GUINT)0) << _WLO ) )
+  #define LOMASK          ( ~( (~(GKEY)0) << _WLO ) )
 #endif
 #if !defined(HIMASK)
   #define HIMASK          ( ~LOMASK ) 
@@ -253,8 +254,8 @@ const char * const sGStateCompType [] ={"GSC_KINETIC","GSC_MAGNETIC","GSC_DENSIT
 #if !defined(SET_HIWORD)
   #define SET_HIWORD(a,b) ( a &= LOMASK );( a |= ( b << _WLO ) )
 #endif
-#if !defined(SET_DSWORD)
-  #define SET_DSWORD(u,lo,hi) SET_LOWORD(u,lo);SET_HIWORD(u,hi) 
+#if !defined(SET_KEY)
+  #define SET_KEY(u,lo,hi) SET_LOWORD(u,lo);SET_HIWORD(u,hi) 
 #endif
 
 // Node id description macros (must act on unsigned ints):

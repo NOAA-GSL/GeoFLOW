@@ -506,6 +506,7 @@ void GGrid<Types>::grid_init()
   find_min_dist(dxmin_);
   eps_         = 0.125*minnodedist_;
 
+
   // Create metric data, Jacobians:
   if ( gtype_ == GE_2DEMBEDDED || gtype_  == GE_DEFORMED ) {
     def_geom_init();
@@ -522,6 +523,9 @@ void GGrid<Types>::grid_init()
   // Get global number of elements:
   GSIZET nelems = gelems_.size();
   GComm::Allreduce(&nelems, &ngelems_, 1, T2GCDatatype<GSIZET>() , GC_OP_SUM, comm_);
+
+  // Set element id vector:
+  set_elemids();
 
   bInitialized_ = TRUE;
 
@@ -2353,6 +2357,28 @@ void GGrid<Types>::set_derivtype(GDerivType gt)
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD : set_elemids
+// DESC   : Set element id vector from individiual elements
+// ARGS   : none.
+// RETURNS: none.
+//**********************************************************************************
+template<typename Types>
+void GGrid<Types>::set_elemids()
+{
+	GEOFLOW_TRACE();
+
+  gelemids_.resize(gelems_.size());
+  for ( auto e=0; e<gelems_.size(); e++ ) {
+    gelemids_[e] = gelems_[e]->elemid();
+  }
+
+} // end of method set_elemids
+
+
+
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD : init_qdealias
 // DESC   : Do initialization for quadratic dealiasing 
 // ARGS   : none.
@@ -2413,7 +2439,7 @@ void GGrid<Types>::init_qdealias()
     for ( auto k=0; k<pqdealias_[2]+1; k++ ) {
       for ( auto j=0; j<pqdealias_[1]+1; j++ ) {
         for ( auto i=0; i<pqdealias_[0]+1; i++ ) {
-          qW_[n] = (*qW1d[0])[i] * (*qW1d[1])[j] (*qW1d[2])[k];
+          qW_[n] = (*qW1d[0])[i] * (*qW1d[1])[j] * (*qW1d[2])[k];
           n++;
         }
       }
@@ -2479,8 +2505,8 @@ void GGrid<Types>::dealias(StateComp &v1, StateComp &v2, StateComp &prod)
     GMTK::D2_X_D1<Ftype>(IQPdealias_[0], IQPdealiasT_[1], v1, tptmp_, qdtmp_[0]);
     GMTK::D2_X_D1<Ftype>(IQPdealias_[0], IQPdealiasT_[1], v2, tptmp_, qdtmp_[1]);
 #elif defined(_G_IS3D)
-    GMTK::D3_X_D2_X_D1<Ftype>(IQPdealias_[0], IQPdealiasT_[1], IQPdealiasT_[2], v1, tmp_, qdtmp_[0]);
-    GMTK::D3_X_D2_X_D1<Ftype>(IQPdealias_[0], IQPdealiasT_[1], IQPdealiasT_[2], v2, tmp_, qdtmp_[1]);
+    GMTK::D3_X_D2_X_D1<Ftype>(IQPdealias_[0], IQPdealiasT_[1], IQPdealiasT_[2], v1, tptmp_, qdtmp_[0]);
+    GMTK::D3_X_D2_X_D1<Ftype>(IQPdealias_[0], IQPdealiasT_[1], IQPdealiasT_[2], v2, tptmp_, qdtmp_[1]);
 #endif
   } // end, element loop
   v1.range_reset(); v2.range_reset();
@@ -2503,7 +2529,7 @@ void GGrid<Types>::dealias(StateComp &v1, StateComp &v2, StateComp &prod)
 #if defined(_G_IS2D)
     GMTK::D2_X_D1<Ftype>(IQPdealiasT_[0], IQPdealias_[1], qdtmp_[0], tptmp_, prod);
 #elif defined(_G_IS3D)
-    GMTK::D3_X_D2_X_D1<Ftype>(IQPdealiasT_[0], IQPdealias_[1], IQPdealias_[2], qdtmp_[0], tmp_, prod);
+    GMTK::D3_X_D2_X_D1<Ftype>(IQPdealiasT_[0], IQPdealias_[1], IQPdealias_[2], qdtmp_[0], tptmp_, prod);
 #endif
   } // end, element loop
   prod.range_reset();

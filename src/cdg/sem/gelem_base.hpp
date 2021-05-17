@@ -82,8 +82,8 @@ virtual GBOOL               differentiateWithMass(GTVector<GFTYPE> &dv, GTVector
 virtual GBOOL               differentiateWeak(GTVector<GFTYPE> &dv, GTVector<GFTYPE> &v, GTVector<GFTYPE> &tmp, GINT  idir);
 #endif
 
-        void                set_elemid(GINT id){elemid_ = id;}
-        void                set_rootid(GINT id){rootid_ = id;}
+        void                set_elemid(GKEY id){elemid_ = id;}
+        void                set_rootid(GKEY id){rootid_ = id;}
         void                resize(GTVector<GINT> &);
 
 inline  GLONG              &igbeg(){ return igbeg_;} // vol beg index 
@@ -103,8 +103,8 @@ inline  GElemType           elemtype(){ return elemtype_;}
 inline  GINT                nvertices(){ return nVertices_;} 
 inline  GINT                nedges(){ return nEdges_;} 
 inline  GINT                nfaces(){ return nFaces_;}
-inline  GINT                elemid(){ return elemid_;}
-inline  GINT                rootid(){ return rootid_;}
+inline  GKEY                elemid(){ return elemid_;}
+inline  GKEY                rootid(){ return rootid_;}
 
 inline  GVVInt             &vedge(){ return ivedge_;}
 inline  GTVector<GINT>     &vedge(GINT i){ return ivedge_[i];}
@@ -210,8 +210,8 @@ GLONG                   ifend_;         // holds ending global face node index
 GBOOL                   bInitialized_;  // element initialized?
 GBOOL                   bbasis_;        // basis set?
 GElemType               elemtype_;      // elem type
-GINT                    elemid_;        // elem id 
-GINT                    rootid_;        // elem's root id
+GKEY                    elemid_;        // elem id 
+GKEY                    rootid_;        // elem's root id
 GINT                    nVertices_;     // # vertices 
 GINT                    nEdges_;        // # edges 
 GINT                    nFaces_;        // # faces
