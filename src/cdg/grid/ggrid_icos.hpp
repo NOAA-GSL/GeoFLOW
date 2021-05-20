@@ -56,6 +56,8 @@ public:
                              using UpdateBasePtr  = std::shared_ptr<UpdateBase>;
                              using BdyUpdateList  = GTVector<GTVector<UpdateBasePtr>>;
 
+                             using VVecFtype      = GTVector<GTVector<Ftype>>;
+
                              typedef GTMatrix<Ftype> GFTMatrix;
                              typedef Ftype GTICOS;
 
@@ -194,14 +196,14 @@ public:
                                const GTMatrix<GTVector<Ftype>> &dXdXi,
                                const GTVector<GSIZET>          &igbdy,
                                const GTVector<GUINT>           &debdy,
-                               GTVector<GTVector<Ftype>>       &normals,
-                               GTVector<GINT>                  &depComp);
+                               VVecFtype                       &normals,
+                               GTVector<VVecFtype>             &tangents);
          void               do_gbdy_normals3d(
                                const GTMatrix<GTVector<Ftype>> &dXdXi,
                                const GTVector<GSIZET>          &igbdy,
                                const GTVector<GUINT>           &debdy,
-                               GTVector<GTVector<Ftype>>       &normals,
-                               GTVector<GINT>                  &depComp);
+                               VVecFtype                       &normals,
+                               GTVector<VVecFtype>             &tangents);
 
          GString            sreftype_;      // subdivision/refinement type
          GINT               ilevel_;        // refinement level (>= 0)

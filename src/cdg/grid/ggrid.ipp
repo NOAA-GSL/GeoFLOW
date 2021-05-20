@@ -654,12 +654,20 @@ void GGrid<Types>::def_geom_init()
    Jac_.resize(ndof());
    faceJac_.resize(nfacedof());
 
-   // Resize surface-point-wise normals:
+   // Resize surface-point-wise normals, tangents:
    faceNormals_.resize(nxy); // no. coords for each normal at each face point
    bdyNormals_.resize(nxy); // no. coords for each normal at each domain bdy point
    for ( auto i=0; i<bdyNormals_.size(); i++ ) {
      faceNormals_[i].resize(nfacedof());
      bdyNormals_ [i].resize(nbdydof());
+   }
+
+   bdyTangents_.resize(GDIM-1);
+   for ( auto j=0; j<bdyTangents_.size(); j++ ) {
+     bdyTangents_[j].resize(nxy);
+     for ( auto i=0; i<bdyTangents_[j].size(); i++ ) {
+       bdyTangents_[j][i].resize(nbdydof());
+     }
    }
 
    // Now, set the geometry/metric quanties from the elements:
@@ -743,12 +751,20 @@ void GGrid<Types>::reg_geom_init()
    faceJac_.resize(nfacedof());
 
 
-   // Resize surface-point-wise normals:
+   // Resize surface-point-wise normals, tangents:
    faceNormals_.resize(nxy); // no. coords for each normal at each face point
    bdyNormals_ .resize(nxy); // no. coords for each normal at each bdy point
    for ( auto i=0; i<nxy; i++ ) {
      faceNormals_[i].resize(nfacedof());
      bdyNormals_ [i].resize(nbdydof());
+   }
+
+   bdyTangents_.resize(GDIM-1);
+   for ( auto j=0; j<bdyTangents_.size(); j++ ) {
+     bdyTangents_[j].resize(nxy);
+     for ( auto i=0; i<bdyTangents_[j].size(); i++ ) {
+       bdyTangents_[j][i].resize(nbdydof());
+     }
    }
 
 
@@ -763,20 +779,12 @@ void GGrid<Types>::reg_geom_init()
   
      xe    = &gelems_[e]->xNodes();
 
-#if 0
-     // Restrict global data to local scope:
-     for ( auto j=0; j<nxy; j++ ) {
-       faceNormals_[j].range(ifbeg, ifend); 
-//     bdyNormals_ [j].range(ibbeg, ibend); 
-     }
-#endif
      for ( auto j=0; j<dXidX_.size(2); j++ ) {
        for ( auto i=0; i<dXidX_.size(1); i++ )  {
          dXidX_(i,j).range(ibeg, iend);
        }
      }
      Jac_.range(ibeg, iend);
-//   faceJac_.range(ifbeg, ifend);
 
      // Set the geom/metric quantities using element data:
      if ( GDIM == 2 ) {
@@ -791,20 +799,12 @@ void GGrid<Types>::reg_geom_init()
 
    } // end, element loop
 
-#if 0
-   // Reset global scope:
-   for ( auto j=0; j<nxy; j++ ) {
-     faceNormals_[j].range_reset();
-     bdyNormals_ [j].range_reset();
-   }
-#endif
    for ( auto j=0; j<dXidX_.size(2); j++ )  {
      for ( auto i=0; i<dXidX_.size(1); i++ )  {
        dXidX_(i,j).range_reset();
      }
    }
    Jac_.range_reset();
-// faceJac_.range_reset();
 
    do_face_data();
 

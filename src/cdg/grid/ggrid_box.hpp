@@ -41,6 +41,8 @@ public:
                              using UpdateBasePtr  = std::shared_ptr<UpdateBase>;
                              using BdyUpdateList  = GTVector<GTVector<UpdateBasePtr>>;
 
+                             using VVecFtype      = GTVector<GTVector<Ftype>>;
+
 
 
         // Box grid traits:
@@ -112,20 +114,20 @@ private:
                                const GTMatrix<GTVector<Ftype>> &dXdXi,
                                const GTVector<GSIZET>          &igbdy,
                                const GTVector<GUINT>           &degbdy,
-                                     GTVector<GTVector<Ftype>> &normals,
-                               GTVector<GINT>                  &idepComp); // compute normals entry point
+                               VVecFtype                       &normals,
+                               GTVector<VVecFtype>             &tangents); // compute normals entry point
          void               do_gbdy_normals2d(
                               const GTMatrix<GTVector<Ftype>> &dXdXi,
                               const GTVector<GSIZET>          &igbdy,
                               const GTVector<GUINT>           &degbdy,
-                              GTVector<GTVector<Ftype>>       &normals,
-                              GTVector<GINT>                  &idepComp);  // compute normals to doimain bdy in 2d
+                              VVecFtype                       &normals,
+                              GTVector<VVecFtype>             &tangents);  // compute normals for 2d
          void               do_gbdy_normals3d(
                               const GTMatrix<GTVector<Ftype>> &dXdXi,
                               const GTVector<GSIZET>          &igbdy,
                               const GTVector<GUINT>           &degbdy,
-                              GTVector<GTVector<Ftype>>       &normals,
-                              GTVector<GINT>                  &idepComp);       // compute normals to doimain bdy in 3d
+                              VVecFtype                       &normals,
+                              GTVector<VVecFtype>             &tangents);  // compute normals for 3d
         void                find_rank_subdomain();                               // find task's default subdomain
 
         void                elem_face_data2d(

@@ -91,6 +91,8 @@ public:
                              using UpdateBasePtr  = std::shared_ptr<UpdateBase>;
                              using BdyUpdateList  = GTVector<GTVector<UpdateBasePtr>>;
 
+                             using VVecFtype      = GTVector<GTVector<Ftype>>;
+
                              typedef GTVector<GTVector<GTVector<GSIZET>>>   BinnedBdyIndex;
                              typedef GTVector<GTVector<GTVector<GBdyType>>> BinnedBdyType;
 
@@ -210,8 +212,10 @@ virtual void                 print(const GString &filename){}          // print 
                             &igbdy_bdyface() { return igbdy_bdyface_;} // bdy ind for each face node
         GTVector<GTVector<GBdyType>>  
                             &igbdyt_bdyface() { return igbdyt_bdyface_;}// bdy types for each face node
-        GTVector<GTVector<Ftype>>
-                            &bdyNormals() { return bdyNormals_; }      // bdy normals
+        VVecFtype           &bdyNormals() { return bdyNormals_; }      // bdy normals
+        VVecFtype           &bdyTangents(GINT iwhich) { 
+                            assert(iwhich >=0 && iwhich < GDIM);
+                            return bdyTangents_[iwhich]; }             // bdy tangents
         GTVector<GINT>      &idepComp  () { return idepComp_; }        // dependent vector components on gbdy 
         GC_COMM              get_comm() { return comm_; }              // get communicator
         void                 set_derivtype(GDerivType gt);             // set deriv. method
@@ -265,9 +269,9 @@ virtual void                 config_gbdy(const PropertyTree &ptree,
                                GTVector<GUINT>              &debdy)=0; // config bdy
 virtual void                 elem_face_data(
                                GTMatrix<GTVector<Ftype>>       &dXdXi,
-                               GTVector<GSIZET>                 &igeface,
+                               GTVector<GSIZET>                &igeface,
                                GTVector<Ftype>                 &face_mass,
-                               GTVector<GTVector<Ftype>>       &normals)=0;// compute elem face data
+                               VVecFtype>                      &normals)=0;// compute elem face data
 
                                                                        // compute bdy normals entry point
 
@@ -319,7 +323,8 @@ virtual void                 elem_face_data(
         GTVector<Ftype>             faceMass_;         // elem face mass * Jacobians
         GTVector<GTVector<Ftype>>   faceNormals_;      // normal to elem faces each face node point (2d & 3d), global
         GTVector<GSIZET>            gieface_;          // index into global field indicating elem face node
-        GTVector<GTVector<Ftype>>   bdyNormals_;       // normal to surface at each bdy node point (2d & 3d), global
+        VVecFtype                   bdyNormals_;       // normals to surface at each bdy node point (2d & 3d), global
+        GTVector<VVecFtype>         bdyTangents_;      // tangent planes to surface at each bdy node point (2d & 3d), global
         GTVector<GINT>              idepComp_;         // dependent component index at each bdy point
         GTVector<GUINT>             degbdy_;           // gbdy node descriptorsgbdy node descriptors
         BinnedBdyIndex              igbdy_binned_;     // index into global field indicating a domain bdy--by type

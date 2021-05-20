@@ -940,7 +940,7 @@ void GGridIcos<Types>::config_gbdy(const geoflow::tbox::PropertyTree &ptree,
   //       user has specified these properly
   if  ( bterrain ) {
     for ( auto j=0; j<2*GDIM; j++ ) { // over each canonical bdy
-      do_gbdy_normals(this->dXdXi_, igbdy, degbdy, this->bdyNormals_, this->idepComp_); // all bdy nodes 
+      do_gbdy_normals(this->dXdXi_, igbdy, degbdy, this->bdyNormals_, this->bdyTangents_); // all bdy nodes 
     }
     return;
   }
@@ -1033,7 +1033,7 @@ void GGridIcos<Types>::config_gbdy(const geoflow::tbox::PropertyTree &ptree,
   } // end, canonical bdy loop
 
   // With global list of domain boundaries, compute bdy data:
-  do_gbdy_normals(this->dXdXi_, igbdy, degbdy, this->bdyNormals_, this->idepComp_); 
+  do_gbdy_normals(this->dXdXi_, igbdy, degbdy, this->bdyNormals_, this->bdyTangents_); 
 
 } // end of method config_gbdy
 
@@ -1325,8 +1325,7 @@ void GGridIcos<Types>::elem_face_data3d(GTMatrix<GTVector<Ftype>> &dXdXi,
 //          igbdy    : vector of bdy indices into global volume fields 
 //          debdy    : array of node 'descriptions', with dimension of igbdy
 //          normals  : vector of normal components, each of dim of igbdy
-//          idepComp : vector index dependent on the other indices (first 
-//                     component index whose normal component is nonzero)
+//          tangents : tangent vectors defining tangent plane to normal
 
 // RETURNS: none
 //**********************************************************************************
@@ -1334,8 +1333,8 @@ template<typename Types>
 void GGridIcos<Types>::do_gbdy_normals(const GTMatrix<GTVector<Ftype>> &dXdXi,
                                 const GTVector<GSIZET>                 &igbdy,
                                 const GTVector<GUINT>                  &debdy,
-                                GTVector<GTVector<Ftype>>              &normals,
-                                GTVector<GINT>                         &idepComp)
+                                VVecFtype                              &normals,
+                                GTVector<VVecFtype>                    &tangents)
 {
   GEOFLOW_TRACE();
   GSIZET nbdy;
@@ -1347,7 +1346,7 @@ void GGridIcos<Types>::do_gbdy_normals(const GTMatrix<GTVector<Ftype>> &dXdXi,
     idepComp.resize(nbdy);
     for ( auto j=0; j<normals.size(); j++ ) normals[j].resize(nbdy);
 
-    do_gbdy_normals3d(dXdXi, igbdy, debdy, normals, idepComp);
+    do_gbdy_normals3d(dXdXi, igbdy, debdy, normals, tangents);
 
   #else
     #error "Invalid problem dimensionality"
@@ -1376,8 +1375,7 @@ void GGridIcos<Types>::do_gbdy_normals(const GTMatrix<GTVector<Ftype>> &dXdXi,
 //          dXdXi    : matrix of dX_i/dXi_j matrix elements, s.t.
 //                     dXdX_i(i,j) = dx^j/dxi^i
 //          normals  : vector of normal components, each of dim of igbdy
-//          idepComp : vector index dependent on the other indices (first 
-//                     component index whose normal component is nonzero)
+//          tangents : tangent vectors defining tangent plane to normal
 
 // RETURNS: none
 //**********************************************************************************
@@ -1385,8 +1383,8 @@ template<typename Types>
 void GGridIcos<Types>::do_gbdy_normals3d(const GTMatrix<GTVector<Ftype>> &dXdXi,
                                   const GTVector<GSIZET>                 &igbdy,
                                   const GTVector<GUINT>                  &debdy,
-                                  GTVector<GTVector<Ftype>>              &normals,
-                                  GTVector<GINT>                         &idepComp)
+                                  VVecFtype                              &normals,
+                                  GTVector<VVecFtype>                    &tangents)
 {
   GEOFLOW_TRACE();
   GINT           ixi[6][2] = { {0,2}, {1,2}, {0,2},
@@ -1398,6 +1396,12 @@ void GGridIcos<Types>::do_gbdy_normals3d(const GTMatrix<GTVector<Ftype>> &dXdXi,
   GTPoint<Ftype> xp(3), p1(3), p2(3);
 
   tiny  = 100.0*std::numeric_limits<Ftype>::epsilon();
+
+  // There must be 2 tangent vectors defining tangent plane:
+  assert(tangents.size() = 2 );
+
+  normals = tangents = 0.0;
+
 
   if ( this->gtype_ == GE_DEFORMED ) {
      // Bdy normal is dvec{X} / dxi_xi X dvec{X} / dxi_eta
@@ -1415,7 +1419,15 @@ void GGridIcos<Types>::do_gbdy_normals3d(const GTMatrix<GTVector<Ftype>> &dXdXi,
        for ( ic=0; ic<xp.dim(); ic++ ) if ( fabs(xp[ic]) > tiny ) break;
        assert(ic < GDIM); // no normal components > 0
        for ( auto i=0; i<normals.size(); i++ ) normals[i][j] = xp[i];
-       idepComp[j] = ic;  // dependent component
+
+       // Use Gram-Schmidt orthogonalization on p1 & p2, and use
+       // the orthogonal vectors for tangent space. Let p1 be one  
+       // vector; create the other by subtracting from p2 the component 
+       // of p2 parallel to p1: xp = p2 - (p1.p2)/p2^2 p1:
+       xp = p1; xp *= -p2.dot(p1)/pow(p1.mag(),2); xp += p2;
+       p1.unit(); xp.unit();
+       for ( auto i=0; i<GDIM; i++ ) tangents[0]i][j] = p1[i];
+       for ( auto i=0; i<GDIM; i++ ) tangents[1]i][j] = xp[i];
      }
    }
    else {
