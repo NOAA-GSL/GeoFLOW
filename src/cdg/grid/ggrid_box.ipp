@@ -1244,7 +1244,6 @@ void GGridBox<Types>::do_gbdy_normals(const GTMatrix<GTVector<Ftype>> &dXdXi,
   GSIZET nbdy;
 
   nbdy = igbdy.size();
-  idepComp.resize(nbdy);
   for ( auto j=0; j<normals.size(); j++ ) {
     normals[j].resize(nbdy);
     normals[j] = 0.0;
@@ -1254,9 +1253,9 @@ void GGridBox<Types>::do_gbdy_normals(const GTMatrix<GTVector<Ftype>> &dXdXi,
   // Compute global boundary normals and associated data:
 
 #if defined(_G_IS2D)
-  do_gbdy_normals2d(dXdXi, igbdy, debdy, normals, idepComp);
+  do_gbdy_normals2d(dXdXi, igbdy, debdy, normals, tangents);
 #elif defined(_G_IS3D)
-  do_gbdy_normals3d(dXdXi, igbdy, debdy, normals, idepComp);
+  do_gbdy_normals3d(dXdXi, igbdy, debdy, normals, tangents);
 #else
   #error Invalid problem dimensionality
 #endif

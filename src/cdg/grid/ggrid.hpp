@@ -216,7 +216,6 @@ virtual void                 print(const GString &filename){}          // print 
         VVecFtype           &bdyTangents(GINT iwhich) { 
                             assert(iwhich >=0 && iwhich < GDIM);
                             return bdyTangents_[iwhich]; }             // bdy tangents
-        GTVector<GINT>      &idepComp  () { return idepComp_; }        // dependent vector components on gbdy 
         GC_COMM              get_comm() { return comm_; }              // get communicator
         void                 set_derivtype(GDerivType gt);             // set deriv. method
         GDerivType           get_derivtype() { return gderivtype_; }   // return deriv. method
@@ -325,7 +324,6 @@ virtual void                 elem_face_data(
         GTVector<GSIZET>            gieface_;          // index into global field indicating elem face node
         VVecFtype                   bdyNormals_;       // normals to surface at each bdy node point (2d & 3d), global
         GTVector<VVecFtype>         bdyTangents_;      // tangent planes to surface at each bdy node point (2d & 3d), global
-        GTVector<GINT>              idepComp_;         // dependent component index at each bdy point
         GTVector<GUINT>             degbdy_;           // gbdy node descriptorsgbdy node descriptors
         BinnedBdyIndex              igbdy_binned_;     // index into global field indicating a domain bdy--by type
         GTVector<GTVector<GSIZET>>  igbdy_bdyface_;    // volumbe index for each bdy node on each face
