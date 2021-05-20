@@ -29,3 +29,9 @@ done.35. terrain-following coordinates
 36. We no longer require the boundary state in equation_base, et seq. Remove it?
 37. Style: make template typepacks consistent; change Value to Ftype everywhere
 38. GTVector: the 'contains' & related methods don't use stride, but should. Also, we need to modify gindex so that it doesn't contain unnecessary fields
+39. Maybe for a student intern: replace macros SET/GET_HIWORD, SET/GET_LOWORD etc, 
+    and SET/GET_NDID, etc with a template class, say, GTMacro<IntType,NumWords>
+    that has a constructor that takes vector of word sizes, or static set/get
+    methods that accept a vector of word sizes.
+40. Maybe for an intern: characterize GIO performance
+41. Refactor grids. Big job.
