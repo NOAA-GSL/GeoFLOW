@@ -31,9 +31,9 @@ private:
 
 
 public:
-                  GTPoint(); 
-                  GTPoint(GINT dim); 
-                  GTPoint(GINT idim, T eps); 
+                  GTPoint();
+                  GTPoint(GINT dim);
+                  GTPoint(GINT idim, T eps);
                   GTPoint(const GTPoint<T> &e); 
                  ~GTPoint();
 
