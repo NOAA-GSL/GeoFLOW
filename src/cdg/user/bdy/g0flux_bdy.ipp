@@ -63,50 +63,58 @@ GBOOL G0FluxBdy<Types>::update_impl(
                               State      &u)
 {
    GString    serr = "G0FluxBdy<Types>::update_impl: ";
-   GBdyType   itype;
-   GINT       idd, k;
+// GBdyType   itype;
+   GINT       idd, k, nv;
    GSIZET     il, iloc, ind;
-   Ftype      sum, xn;
-   GTVector<GTVector<Ftype>>  *bdyNormals;
+   Ftype      sum, pu, tiny, us, ut;
+   Ftype      xs, ys, zs;
+   Ftype      xt, yt, zt;
+   GTPoint<Ftype>             n, s, t;
+   VVecFtype                  *bdyNormals;
+   GTVector<VVecFtype>        *bdyTangents;
 // GTVector<GTVector<Ftype>>  *xnodes;
-   GTVector<GINT>             *idep;
 
-
-
+   tiny  = 100.0*std::numeric_limits<Ftype>::epsilon();
 
   // Handle 0-Flux bdy conditions. This
-  // is computed by solving
-  //    vec{n} \cdot vec{u} = 0
-  // for 'dependent' component set in grid.
+  // is enforced by solving
+  //    vec{n} \cdot vec{u} = 0.
   //
-  // Note: We may want to switch the order of the
-  //       following loops to have a better chance
-  //       of vectorization. Unrolling likely
-  //       won't occur:
-  bdyNormals = &grid.bdyNormals(); // bdy normal vector
-  idep       = &grid.idepComp();   // dependent components
-  itype      = GBDY_0FLUX;
-  for ( auto j=0; j<traits_.ibdyloc.size(); j++ ) {
-    iloc = traits_.ibdyloc[j];     // index into bdy arrays
-    ind  = traits_.ibdyvol[j];     // index into volume array
-    idd  = (*idep)[iloc];          // dependent vector component
-
-
-    xn   = (*bdyNormals)[idd][iloc];// n_idd == normal component for dependent vector comp
-    sum  = 0.0;
-    for ( auto k=0; k<traits_.istate.size(); k++ ) { // for each indep vector component
-        sum += traits_.istate[k] != idd 
-             ? (*bdyNormals)[k][iloc] * (*u[traits_.istate[k]])[ind]
-             : 0.0;
-    }
-    (*u[idd])[ind] = -sum / xn; // Ensure v.n = 0:
+  // Note: The following isn't good for vectorization;
+  //       will revisit later.
   
-#if 0 
-    if ( GET_NDTYPE(traits_.ibdydsc[j]) == GElem_base::VERTEX ) {
-      for ( auto k=0; k<traits_.istate.size(); k++ ) { 
-        (*u[traits_.istate[k]])[ind] = 0.0;
-      }
-    }
+  bdyNormals = &grid.bdyNormals();  // bdy normal vector
+  bdyTangents= &grid.bdyTangents(); // bdy normal vector
+  
+  nv = grid.gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
+
+  for ( auto j=0; j<traits_.ibdyloc.size(); j++ ) {
+    iloc = traits_.ibdyloc[j];      // index into bdy arrays
+    ind  = traits_.ibdyvol[j];      // index into volume array
+
+    n .assign((*bdyNormals) [0],j);
+    t .assign((*bdyTangents)[0],j);
+    pu.assign(u, nv, ind);
+
+#if defined(_G_IS2D)
+
+    ut           = pu.dot(t);  // u.tangent: tangential vel.
+    zt           = 1.0/(t.x1*n.x2 - t.x2*n.x1);
+    (*u[0])[ind] =  n.x2*ut * zt;
+    (*u[1])[ind] = -n.x1*ut * zt;
+  
+#elif defined(_G_IS3D)
+
+    ut           = pu.dot(t);  // u.tangent1: tangential vel.
+    us           = pu.dot(s);  // u.tangent2: tangential vel.
+    (*u[2])[ind] =  t.x3*ut + s.x3*us;
+    (*u[1])[ind] =  s.x3 > tiny 
+                 ?    n.x1*ut + s.x2*(*u[2])[ind]
+                 :    (*u[1])[ind];
+    (*u[0])[ind] =  n.x1 > tiny 
+                 ?    -n.x2*u(*u[0])[ind] - n.x3*(*u[2])[ind]
+                 :    (*u[0])[ind];
+
 #endif
 
   }
