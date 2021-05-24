@@ -94,7 +94,9 @@ GBOOL G0FluxBdy<Types>::update_impl(
 
     n .assign(*bdyNormals,j);
     t .assign((*bdyTangents)[0],j);
-    s .assign((*bdyTangents)[1],j);
+    if ( GDIM > 2 ) {
+      s .assign((*bdyTangents)[1],j);
+    }
     pu.assign(u, nv, ind);
 
 #if defined(_G_IS2D)
