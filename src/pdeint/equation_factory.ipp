@@ -75,6 +75,7 @@ EquationFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid){
                 int nc = grid.gtype() == GE_2DEMBEDDED ? 3 : GDIM;
                 ctraits.docoriolis  = eqn_ptree.getValue<bool>  ("docoriolis");
                 ctraits.dodry       = eqn_ptree.getValue<bool>  ("dodry");
+                ctraits.domassonly  = eqn_ptree.getValue<bool>  ("domassonly",false);
                 ctraits.dofallout   = eqn_ptree.getValue<bool>  ("dofallout");
                 ctraits.dograv      = eqn_ptree.getValue<bool>  ("dogravity");
                 ctraits.usebase     = eqn_ptree.getValue<bool>  ("usebase_state");
