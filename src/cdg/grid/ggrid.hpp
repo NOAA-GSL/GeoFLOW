@@ -213,6 +213,7 @@ virtual void                 print(const GString &filename){}          // print 
         GTVector<GTVector<GBdyType>>  
                             &igbdyt_bdyface() { return igbdyt_bdyface_;}// bdy types for each face node
         VVecFtype           &bdyNormals() { return bdyNormals_; }      // bdy normals
+        GTVector<VVecFtype> &bdyTangents() { return bdyTangents_; }    // bdy tangents
         VVecFtype           &bdyTangents(GINT iwhich) { 
                             assert(iwhich >=0 && iwhich < GDIM);
                             return bdyTangents_[iwhich]; }             // bdy tangents
@@ -270,7 +271,7 @@ virtual void                 elem_face_data(
                                GTMatrix<GTVector<Ftype>>       &dXdXi,
                                GTVector<GSIZET>                &igeface,
                                GTVector<Ftype>                 &face_mass,
-                               VVecFtype>                      &normals)=0;// compute elem face data
+                               VVecFtype                       &normals)=0;// compute elem face data
 
                                                                        // compute bdy normals entry point
 
