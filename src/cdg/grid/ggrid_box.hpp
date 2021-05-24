@@ -75,6 +75,7 @@ public:
 const    GTPoint<Ftype>   &getP0() {return P0_; }                           // get blob bdy point 
 const    GTPoint<Ftype>   &getP1() {return P1_; }                           // get blob bdy point 
 
+         std::size_t       max_duplicates() const;                          // Max duplicate points in grid
          void               print(const GString &filename);                  // print grid to file
 
 

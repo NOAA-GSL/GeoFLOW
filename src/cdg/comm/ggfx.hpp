@@ -94,7 +94,7 @@ public:
 	GGFX& operator=(GGFX&& other)      = default;
 
 	template<typename Coordinates>
-	GBOOL init(const ValueType tolerance, Coordinates& xyz);
+	GBOOL init(const std::size_t max_duplicates, const ValueType tolerance, Coordinates& xyz);
 
 	template<typename ValueArray, typename ReductionOp>
 	GBOOL doOp(ValueArray& u,  ReductionOp op);
@@ -113,7 +113,7 @@ private:
 	using rank_type  = int;
 	using size_type  = std::size_t;
 	using value_type = ValueType;
-	static constexpr size_type MAX_DUPLICATES = ::geoflow::tbox::math::ipow(2,GDIM);
+	size_type max_duplicates_;
 
 	std::map<rank_type, std::set<size_type>>                      send_map_; // [Rank][1:Nsend] = Local Index
 	std::map<rank_type, std::map<size_type, std::set<size_type>>> recv_map_; // [Rank][1:Nrecv][1:Nshare] = Local Index
@@ -121,6 +121,8 @@ private:
 	std::map<rank_type, std::vector<value_type>>                  send_buffer_;      // [Rank][1:Nsend] = Value sending
 	std::map<rank_type, std::vector<value_type>>                  recv_buffer_;      // [Rank][1:Nrecv] = Value received
 	std::vector<std::vector<value_type>>                          reduction_buffer_; // [1:Nlocal][1:Nreduce] = Value to reduce
+
+	size_type get_max_mult_() const;
 };
 
 
@@ -176,9 +178,10 @@ struct pair_extractor {
 template<typename T>
 template<typename Coordinates>
 GBOOL
-GGFX<T>::init(const T tolerance, Coordinates& xyz){
+GGFX<T>::init(const std::size_t max_duplicates, const T tolerance, Coordinates& xyz){
 	GEOFLOW_TRACE();
 	using namespace geoflow::tbox;
+	max_duplicates_ = max_duplicates;
 
 	// Types
 	using index_bound_type     = tbox::spatial::bound::Box<value_type,GDIM>;
@@ -239,6 +242,7 @@ GGFX<T>::init(const T tolerance, Coordinates& xyz){
 		if(not local_already_mapped[id]){
 			std::vector<index_value_type> search_results;
 			local_bound_indexer.query( tbox::spatial::shared::predicate::Intersects(local_bounds_by_id[id]), std::back_inserter(search_results) );
+			ASSERT(search_results.size() <= max_duplicates_);
 
 			// Build list of just the Local ID's
 			std::set<size_type> search_ids;
@@ -318,7 +322,7 @@ GGFX<T>::init(const T tolerance, Coordinates& xyz){
 		// Loop over each remote pair<bound, id>
 		for(auto& [remote_bnd, remote_id]: pairs_from_rank){
 			std::vector<index_value_type> search_results;
-			local_bound_indexer.query( tbox::spatial::shared::predicate::Intersects(remote_bnd), std::back_inserter(search_results));
+			local_bound_indexer.query(tbox::spatial::shared::predicate::Intersects(remote_bnd), std::back_inserter(search_results));
 
 			for(auto& [local_bnd, local_id]: search_results){
 				send_map_[rank].insert(local_id);
@@ -342,12 +346,13 @@ GGFX<T>::init(const T tolerance, Coordinates& xyz){
 	}
 	reduction_buffer_.resize(xyz.size());
 	for(auto& buf : reduction_buffer_){
-		buf.reserve(MAX_DUPLICATES);
+		buf.reserve(max_duplicates_);
 	}
 	GEOFLOW_TRACE_STOP();
 
 	world.barrier(); // TODO: Remove
 
+	ASSERT(get_max_mult_() <= max_duplicates_);
 	return true;
 }
 
@@ -407,7 +412,7 @@ GGFX<T>::doOp(ValueArray& u,  ReductionOp oper){
 	reduction_buffer_.resize(N);
 	for(auto& buf : reduction_buffer_){
 		buf.resize(0);
-		buf.reserve(MAX_DUPLICATES);
+		buf.reserve(max_duplicates_);
 	}
 
 	// Insert local data into the reduction buffer
@@ -434,7 +439,7 @@ GGFX<T>::doOp(ValueArray& u,  ReductionOp oper){
 				// Loop over each local ID the value is used in
 				for(auto& id : local_id_set) {
 					ASSERT(reduction_buffer_.size() > id);
-					ASSERT(reduction_buffer_[id].size() < MAX_DUPLICATES);
+					ASSERT(reduction_buffer_[id].size() < max_duplicates_);
 					reduction_buffer_[id].push_back( buffer_for_rank[n] );
 				}
 				++n;
@@ -502,6 +507,15 @@ GGFX<T>::get_imult(CountArray& imult) const {
 	for(size_type i = 0; i < imult.size(); ++i){
 		imult[i] = static_cast<T>(1.0) / imult[i];
 	}
+}
+
+template<typename T>
+typename GGFX<T>::size_type
+GGFX<T>::get_max_mult_() const {
+	std::vector<std::size_t> mults(reduction_buffer_.size());
+	get_mult(mults);
+	auto it = std::max_element(std::begin(mults), std::end(mults));
+	return *it; 
 }
 
 #endif

@@ -280,8 +280,16 @@ void init_ggfx(PropertyTree& ptree, Grid& grid, GGFX<Ftype>& ggfx)
 	  }
   }
 
+    // Get max duplicate points
+    std::size_t maxdups = 0;
+  switch( GDIM ) {
+    case 1 : maxdups = 2; break;
+    case 2 : maxdups = 6; break;
+    case 3 : maxdups = 12; break;
+  }
+
   // Create GGFX
-  ggfx.init(0.25*grid.minnodedist(), xyz);
+  ggfx.init(4,0.25*grid.minnodedist(), xyz);
 
 } // end method init_ggfx
 

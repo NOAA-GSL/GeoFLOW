@@ -855,11 +855,20 @@ void init_ggfx(PropertyTree &ptree, Grid &grid, GGFX<Ftype> *&ggfx) {
         static_cast<GGridBox<MyTypes> *>(&grid)->unperiodize();
     }
 
+    // Get max duplicate points
+    std::size_t maxdups = 0;
+    if (typeid(grid) == typeid(GGridBox<MyTypes>)) {
+        maxdups = static_cast<GGridBox<MyTypes> *>(&grid)->max_duplicates();
+    }
+    else if(typeid(grid) == typeid(GGridIcos<MyTypes>)) {
+        maxdups = static_cast<GGridIcos<MyTypes> *>(&grid)->max_duplicates();
+    }
+
     // Create GGFX
     ASSERT(ggfx == nullptr);
     ggfx = new GGFX<Ftype>();
     ASSERT(ggfx != nullptr);
-    pio::pout << "Calling ggfx->init(xyz)" << std::endl;
-    ggfx->init(0.1 * grid.minnodedist(), xyz);
+    pio::pout << "Calling ggfx->init(...)" << std::endl;
+    ggfx->init(maxdups, static_cast<Ftype>(0.001)*grid.minnodedist(), xyz);
 
 }  // end method init_ggfx

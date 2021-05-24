@@ -372,7 +372,7 @@ void init_ggfx(PropertyTree& ptree, Grid& grid, GGFX<Ftype>& ggfx)
   }
 
   // Create GGFX
-  ggfx.init(0.25*grid.minnodedist(), xyz);
+  ggfx.init(12, 0.25*grid.minnodedist(), xyz);
 
 } // end method init_ggfx
 
