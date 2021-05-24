@@ -1343,7 +1343,6 @@ void GGridIcos<Types>::do_gbdy_normals(const GTMatrix<GTVector<Ftype>> &dXdXi,
     return;
   #elif defined(_G_IS3D)
     nbdy = igbdy.size();
-    idepComp.resize(nbdy);
     for ( auto j=0; j<normals.size(); j++ ) normals[j].resize(nbdy);
 
     do_gbdy_normals3d(dXdXi, igbdy, debdy, normals, tangents);
@@ -1398,9 +1397,13 @@ void GGridIcos<Types>::do_gbdy_normals3d(const GTMatrix<GTVector<Ftype>> &dXdXi,
   tiny  = 100.0*std::numeric_limits<Ftype>::epsilon();
 
   // There must be 2 tangent vectors defining tangent plane:
-  assert(tangents.size() = 2 );
+  assert(tangents.size() == 2 );
 
-  normals = tangents = 0.0;
+  for ( auto j=0; j<normals.size(); j++ ) 
+      normals[j] = 0.0;
+  for ( auto j=0; j<normals.size(); j++ )
+    for ( auto i=0; i<normals.size(); i++ )
+      tangents[j][i] = 0.0;
 
 
   if ( this->gtype_ == GE_DEFORMED ) {
@@ -1426,8 +1429,8 @@ void GGridIcos<Types>::do_gbdy_normals3d(const GTMatrix<GTVector<Ftype>> &dXdXi,
        // of p2 parallel to p1: xp = p2 - (p1.p2)/p2^2 p1:
        xp = p1; xp *= -p2.dot(p1)/pow(p1.mag(),2); xp += p2;
        p1.unit(); xp.unit();
-       for ( auto i=0; i<GDIM; i++ ) tangents[0]i][j] = p1[i];
-       for ( auto i=0; i<GDIM; i++ ) tangents[1]i][j] = xp[i];
+       for ( auto i=0; i<GDIM; i++ ) tangents[0][i][j] = p1[i];
+       for ( auto i=0; i<GDIM; i++ ) tangents[1][i][j] = xp[i];
      }
    }
    else {
