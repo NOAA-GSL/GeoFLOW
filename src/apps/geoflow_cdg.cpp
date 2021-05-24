@@ -836,6 +836,7 @@ void do_restart(const PropertyTree &ptree, Grid &, State &u,
 
 void init_ggfx(PropertyTree &ptree, Grid &grid, GGFX<Ftype> *&ggfx) {
     GEOFLOW_TRACE();
+    constexpr auto ndim = GGFX<Ftype>::NDIM;
 
     // Periodize coords if needed
     if (typeid(grid) == typeid(GGridBox<MyTypes>)) {
@@ -843,10 +844,15 @@ void init_ggfx(PropertyTree &ptree, Grid &grid, GGFX<Ftype> *&ggfx) {
     }
 
     const auto ndof = grid_->ndof();
-    std::vector<std::array<Ftype, GDIM>> xyz(ndof);
+    const auto nxyz = grid.xNodes().size();
+    ASSERT( nxyz <= ndim );
+    std::vector<std::array<Ftype, ndim>> xyz(ndof);
     for (std::size_t i = 0; i < ndof; i++) {
-        for (std::size_t d = 0; d < GDIM; d++) {
+        for (std::size_t d = 0; d < nxyz; d++) {
             xyz[i][d] = grid.xNodes()[d][i];
+        }
+        for (std::size_t d = nxyz; d < ndim; d++) {
+            xyz[i][d] = 0.0;
         }
     }
 
@@ -855,11 +861,20 @@ void init_ggfx(PropertyTree &ptree, Grid &grid, GGFX<Ftype> *&ggfx) {
         static_cast<GGridBox<MyTypes> *>(&grid)->unperiodize();
     }
 
+    // Get max duplicate points
+    std::size_t maxdups = 0;
+    if (typeid(grid) == typeid(GGridBox<MyTypes>)) {
+        maxdups = static_cast<GGridBox<MyTypes> *>(&grid)->max_duplicates();
+    }
+    else if(typeid(grid) == typeid(GGridIcos<MyTypes>)) {
+        maxdups = static_cast<GGridIcos<MyTypes> *>(&grid)->max_duplicates();
+    }
+
     // Create GGFX
     ASSERT(ggfx == nullptr);
     ggfx = new GGFX<Ftype>();
     ASSERT(ggfx != nullptr);
-    pio::pout << "Calling ggfx->init(xyz)" << std::endl;
-    ggfx->init(0.1 * grid.minnodedist(), xyz);
+    pio::pout << "Calling ggfx->init(...)" << std::endl;
+    ggfx->init(maxdups, static_cast<Ftype>(0.001)*grid.minnodedist(), xyz);
 
 }  // end method init_ggfx

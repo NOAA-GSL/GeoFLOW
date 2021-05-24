@@ -27,7 +27,7 @@
 
 
 using namespace geoflow;
-using namespace geoflow::pdeint;
+using namespace geoflow::pdeint;  
 using namespace geoflow::tbox;
 using namespace std;
 
@@ -95,6 +95,7 @@ public:
                               GTVector<Ftype>                 &face_mass,
                               GTVector<GTVector<Ftype>>       &normals);  // compute faces data
 
+  std::size_t       max_duplicates() const;                          // Max duplicate points in grid
 
 //friend  std::ostream&       operator<<(std::ostream&, GGridIcos<Types> &);         // Output stream operator
  
