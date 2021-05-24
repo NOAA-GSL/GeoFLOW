@@ -242,7 +242,7 @@ GGFX<T>::init(const std::size_t max_duplicates, const T tolerance, Coordinates& 
 		if(not local_already_mapped[id]){
 			std::vector<index_value_type> search_results;
 			local_bound_indexer.query( tbox::spatial::shared::predicate::Intersects(local_bounds_by_id[id]), std::back_inserter(search_results) );
-			ASSERT(search_results.size() <= max_duplicates_);
+			//ASSERT(search_results.size() <= max_duplicates_);
 
 			// Build list of just the Local ID's
 			std::set<size_type> search_ids;
@@ -352,7 +352,7 @@ GGFX<T>::init(const std::size_t max_duplicates, const T tolerance, Coordinates& 
 
 	world.barrier(); // TODO: Remove
 
-	ASSERT(get_max_mult_() <= max_duplicates_);
+	//ASSERT(get_max_mult_() <= max_duplicates_);
 	return true;
 }
 
@@ -439,7 +439,7 @@ GGFX<T>::doOp(ValueArray& u,  ReductionOp oper){
 				// Loop over each local ID the value is used in
 				for(auto& id : local_id_set) {
 					ASSERT(reduction_buffer_.size() > id);
-					ASSERT(reduction_buffer_[id].size() < max_duplicates_);
+					//ASSERT(reduction_buffer_[id].size() < max_duplicates_);
 					reduction_buffer_[id].push_back( buffer_for_rank[n] );
 				}
 				++n;
@@ -515,6 +515,7 @@ GGFX<T>::get_max_mult_() const {
 	std::vector<std::size_t> mults(reduction_buffer_.size());
 	get_mult(mults);
 	auto it = std::max_element(std::begin(mults), std::end(mults));
+	::geoflow::tbox::pio::perr << "Max Multiplicity = " << *it << std::endl;
 	return *it; 
 }
 
