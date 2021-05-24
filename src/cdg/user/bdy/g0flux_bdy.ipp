@@ -66,10 +66,10 @@ GBOOL G0FluxBdy<Types>::update_impl(
 // GBdyType   itype;
    GINT       idd, k, nv;
    GSIZET     il, iloc, ind;
-   Ftype      sum, pu, tiny, us, ut;
+   Ftype      sum, tiny, us, ut;
    Ftype      xs, ys, zs;
    Ftype      xt, yt, zt;
-   GTPoint<Ftype>             n, s, t;
+   GTPoint<Ftype>             n, s, pu, t;
    VVecFtype                  *bdyNormals;
    GTVector<VVecFtype>        *bdyTangents;
 // GTVector<GTVector<Ftype>>  *xnodes;
@@ -84,7 +84,7 @@ GBOOL G0FluxBdy<Types>::update_impl(
   //       will revisit later.
   
   bdyNormals = &grid.bdyNormals();  // bdy normal vector
-  bdyTangents= &grid.bdyTangents(); // bdy normal vector
+  bdyTangents= &grid.bdyTangents(); // bdy tangent plane vectors
   
   nv = grid.gtype() == GE_2DEMBEDDED ? GDIM+1 : GDIM;
 
@@ -92,8 +92,9 @@ GBOOL G0FluxBdy<Types>::update_impl(
     iloc = traits_.ibdyloc[j];      // index into bdy arrays
     ind  = traits_.ibdyvol[j];      // index into volume array
 
-    n .assign((*bdyNormals) [0],j);
+    n .assign(*bdyNormals,j);
     t .assign((*bdyTangents)[0],j);
+    s .assign((*bdyTangents)[1],j);
     pu.assign(u, nv, ind);
 
 #if defined(_G_IS2D)
@@ -112,7 +113,7 @@ GBOOL G0FluxBdy<Types>::update_impl(
                  ?    n.x1*ut + s.x2*(*u[2])[ind]
                  :    (*u[1])[ind];
     (*u[0])[ind] =  n.x1 > tiny 
-                 ?    -n.x2*u(*u[0])[ind] - n.x3*(*u[2])[ind]
+                 ?    -n.x2*(*u[0])[ind] - n.x3*(*u[2])[ind]
                  :    (*u[0])[ind];
 
 #endif

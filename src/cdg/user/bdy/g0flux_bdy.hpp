@@ -35,6 +35,7 @@ public:
         using Grid       = typename Types::Grid;
         using Ftype      = typename Types::Ftype;
         using Time       = typename Types::Time;
+        using VVecFtype  = GTVector<GTVector<Ftype>>;
 
         static_assert(std::is_same<State,GTVector<GTVector<Ftype>*>>::value,
                "State is of incorrect type");
