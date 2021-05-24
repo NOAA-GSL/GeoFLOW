@@ -836,6 +836,7 @@ void do_restart(const PropertyTree &ptree, Grid &, State &u,
 
 void init_ggfx(PropertyTree &ptree, Grid &grid, GGFX<Ftype> *&ggfx) {
     GEOFLOW_TRACE();
+    constexpr auto ndim = GGFX<Ftype>::NDIM;
 
     // Periodize coords if needed
     if (typeid(grid) == typeid(GGridBox<MyTypes>)) {
@@ -843,10 +844,15 @@ void init_ggfx(PropertyTree &ptree, Grid &grid, GGFX<Ftype> *&ggfx) {
     }
 
     const auto ndof = grid_->ndof();
-    std::vector<std::array<Ftype, GDIM>> xyz(ndof);
+    const auto nxyz = grid.xNodes().size();
+    ASSERT( nxyz <= ndim );
+    std::vector<std::array<Ftype, ndim>> xyz(ndof);
     for (std::size_t i = 0; i < ndof; i++) {
-        for (std::size_t d = 0; d < GDIM; d++) {
+        for (std::size_t d = 0; d < nxyz; d++) {
             xyz[i][d] = grid.xNodes()[d][i];
+        }
+        for (std::size_t d = nxyz; d < ndim; d++) {
+            xyz[i][d] = 0.0;
         }
     }
 

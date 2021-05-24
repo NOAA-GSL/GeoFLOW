@@ -159,7 +159,7 @@ int main(int argc, char** argv) {
     constexpr int NDIM = GDIM;
     using size_type = std::size_t;
     using value_type = double;
-    using point_type = std::array<value_type, NDIM>;
+    using point_type = std::array<value_type, GGFX<value_type>::NDIM>;
 
     // Start Up MPI and find my place in it
     mpi::environment env(argc, argv);
@@ -190,6 +190,9 @@ int main(int argc, char** argv) {
     for (index = 0; index < num_points; ++index) {
         for (size_type d = 0; d < NDIM; ++d) {
             xyz[index][d] = sxyz[d] + index[NDIM - 1 - d] * dxyz[d];
+        }
+        for (size_type d = NDIM; d < GGFX<value_type>::NDIM; ++d) {
+            xyz[index][d] = 0;
         }
     }
 

@@ -8,7 +8,7 @@
 # ---------------------------- Variables ------------------------------
 #
 set(GDIM                  2         CACHE STRING "Problem Dimension")
-set(GEOFLOW_BUILD_TYPE    "Debug" CACHE STRING "Build Type")
+set(GEOFLOW_BUILD_TYPE    "Release" CACHE STRING "Build Type")
 set(OpenACC_ACCEL_TARGET  "tesla"   CACHE STRING "Target for OpenACC")
 
 #
@@ -17,7 +17,7 @@ set(OpenACC_ACCEL_TARGET  "tesla"   CACHE STRING "Target for OpenACC")
 option(GEOFLOW_BUILD_TESTS        "Build testing targets"      ON)
 option(GEOFLOW_BUILD_GEOFLOW      "Build GeoFLOW target"       ON)
 
-option(GEOFLOW_USE_NEUMANN_HACK   "Build with Neumann bcs"    OFF)
+option(GEOFLOW_USE_NEUMANN_HACK   "Build with Neumann bcs"     ON)
 option(GEOFLOW_USE_MPI            "Build with MPI"             ON)   
 option(GEOFLOW_USE_OPENMP         "Compile for OpenMP"        OFF)
 option(GEOFLOW_USE_CBLAS          "Build with CBLAS"          OFF)  
