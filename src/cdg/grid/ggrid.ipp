@@ -665,7 +665,7 @@ void GGrid<Types>::def_geom_init()
    bdyTangents_.resize(GDIM-1);
    for ( auto j=0; j<bdyTangents_.size(); j++ ) {
      bdyTangents_[j].resize(nxy);
-     for ( auto i=0; i<bdyTangents_[j].size(); i++ ) {
+     for ( auto i=0; i<bdyTangents_.size(); i++ ) {
        bdyTangents_[j][i].resize(nbdydof());
      }
    }

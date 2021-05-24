@@ -1399,12 +1399,16 @@ void GGridIcos<Types>::do_gbdy_normals3d(const GTMatrix<GTVector<Ftype>> &dXdXi,
   // There must be 2 tangent vectors defining tangent plane:
   assert(tangents.size() == 2 );
 
-  for ( auto j=0; j<normals.size(); j++ ) 
-      normals[j] = 0.0;
-  for ( auto j=0; j<normals.size(); j++ )
-    for ( auto i=0; i<normals.size(); i++ )
-      tangents[j][i] = 0.0;
-
+   for ( auto j=0; j<normals.size(); j++ ) {
+     normals[j].resize(igbdy.size());
+     normals[j] = 0.0;
+   } 
+   for ( auto j=0; j<tangents.size(); j++ ) {
+     for ( auto i=0; i<tangents[j].size(); i++ ) {
+       tangents[j][i].resize(igbdy.size());
+       tangents[j][i] = 0.0;
+     } 
+   }   
 
   if ( this->gtype_ == GE_DEFORMED ) {
      // Bdy normal is dvec{X} / dxi_xi X dvec{X} / dxi_eta
