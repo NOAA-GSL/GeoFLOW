@@ -104,7 +104,7 @@ public:
 
   inline void assign(const GTVector<GTVector<T>*> &v, GINT nv, GSIZET i)
   { for ( auto j=0; j<gdim_; j++ ) *px_[j] = 0.0;
-    for ( auto j=0; j<nv; j++ ) *px_[j] = (*v[j])][i];
+    for ( auto j=0; j<nv; j++ ) *px_[j] = (*v[j])[i];
   }
 
   inline GTPoint<T> operator-(T f) {
