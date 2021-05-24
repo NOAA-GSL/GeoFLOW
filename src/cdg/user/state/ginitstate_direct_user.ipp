@@ -1078,3 +1078,99 @@ cout << "boxsod: p=" << pj << " d=" << (*d)[j] <<  endl;
 
 
 
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : impl_boxdryscharadv
+// DESC   : Initialize state for GMConv solver with idealized 
+//          advection test, intended to be in the presence of
+//          topography. Taken from Schar 2002 MWR 130:2549.
+// ARGS   : ptree  : main prop tree
+//          sconfig: ptree block name containing variable config
+//          eqn    : equation implementation
+//          grid   : grid
+//          t      : time
+//          utmp   : tmp arrays
+//          u      : current state
+// RETURNS: TRUE on success; else FALSE 
+//**********************************************************************************
+template<typename Types>
+GBOOL ginitstate<Types>::impl_boxdryscharadv(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
+{
+  GString             serr = "impl_boxscharadv: ";
+  GSIZET              nxy;
+  GFTYPE              x, y, z, r;
+  GFTYPE              rho0, u0, zlo, zhi;
+  GFTYPE              del, zi;
+  GTVector<GFTYPE>   *db, *d;
+  std::vector<GFTYPE> xc, xr;  
+  GString             sblock;
+  typename Types::State
+                     *ubase;
+  GTVector<GTVector<GFTYPE>> 
+                     *xnodes = &grid.xNodes();
+  GMConv<Types>      *ceqn;
+
+  PropertyTree inittree    = ptree.getPropertyTree(sconfig);
+  sblock                   = ptree.getValue<GString>("pde_name");
+  PropertyTree convptree   = ptree.getPropertyTree(sblock);
+
+
+  // Check solver type 
+  // Remember: eqn is a shared_ptr, so must check 
+  //           against its contets
+  ceqn = dynamic_cast<GMConv<Types>*>(eqn.get());
+  assert(ceqn != NULLPTR && "Must initialize for Equation GMConv");
+
+  // Check grid type:
+  GridBox  *box   = dynamic_cast <GridBox*>(&grid);
+  assert(box && "Must use a box grid");
+
+  // Check state size:
+  assert(u.size() == ceqn->state_size());
+
+  // Check tmp size:
+  assert(utmp.size() >= 1 );
+
+  // Get base state:
+  typename GMConv<Types>::Traits traits = ceqn->get_traits();
+  ubase = &ceqn->get_base_state();
+//assert( ubase->size() == 2 );
+  assert( traits.domassonly );
+   
+
+  d     = u  [ceqn->DENSITY]; // density
+  nxy   = (*xnodes)[0].size(); // same size for x, y, z
+
+  xc    = inittree.getArray<GFTYPE>("x_center");        // center location
+  xr    = inittree.getArray<GFTYPE>("x_width");         // bubble width
+  rho0  = convptree.getValue<GFTYPE>("rho0");           // ref pressure (mb or hPa)
+  u0    = convptree.getValue<GFTYPE>("u0");             // ref velocity
+  zlo   = convptree.getValue<GFTYPE>("zlo");            // transition zone start
+  zhi   = convptree.getValue<GFTYPE>("zhi");            // transition zone end
+
+  zi    = 1.0 / (zhi - zlo);
+
+  assert(xc.size() >= GDIM && xr.size() >= GDIM);
+
+  // Initialize momentum:
+  for ( auto j=0; j<ceqn->DENSITY; j++ ) *u[j] = 0.0;
+
+  for ( auto j=0; j<nxy; j++ ) { 
+    x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; 
+    if ( GDIM == 3 ) z = (*xnodes)[2][j];
+    r           = pow((x-xc[0]-time)/xr[0],2) + pow((y-xc[1]-time)/xr[1],2);
+    r          += GDIM == 3 ? pow((z-xc[2]-time)/xr[2],2) : 0.0;
+    r           = sqrt(r);
+    del         = 0.5*PI * ( z - zlo ) * zi;
+    (*d) [j]    = r > 1.0 
+                ? 0.0
+                : rho0 * cos(0.5*PI*r)*cos(0.5*PI*r);
+    if                   ( z > zhi ) (*u[0])[j] = 1.0;
+    else if ( z >= zlo && z <= zhi ) (*u[0])[j] = u0 * sin(del)*sin(del);
+  }
+
+  return TRUE;
+
+} // end of method impl_boxdryscharadv
+
+
