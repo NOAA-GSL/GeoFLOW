@@ -217,7 +217,7 @@ void GMConv<TypePack>::dt_impl(const Time &t, State &u, Time &dt)
 template<typename TypePack>
 void GMConv<TypePack>::dudt_impl(const Time &t, const State &u, const State &uf,   const Time &dt, Derivative &dudt)
 {
-  if ( traits_.dodry ) {
+  if ( traits_.domassonly || traits_.dodry ) {
     dudt_dry(t, u, uf, dt, dudt);
   }
   else {
@@ -288,58 +288,61 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
   // Compute all terms as though they are on the LHS, then
   // change the sign and divide by Mass at the end....
 
-  p     = urhstmp_[stmp.size()+1]; // holds pressure
-  e     = u[ENERGY];               // current internal energy density
+  if ( !traits_.domassonly ) {
+    p     = urhstmp_[stmp.size()+1]; // holds pressure
+    e     = u[ENERGY];               // current internal energy density
 
-  // *************************************************************
-  // Energy equation RHS:
-  // *************************************************************
-  compute_cv(u, *tmp1, *tmp2);                            // Cv
-  compute_qd(u, *tmp1);                                   // dry mass ratio
-  geoflow::compute_p<Ftype>(*e, *tmp1, RD, *tmp2, *p);    // partial pressure for dry air
+    // *************************************************************
+    // Energy equation RHS:
+    // *************************************************************
+    compute_cv(u, *tmp1, *tmp2);                            // Cv
+    compute_qd(u, *tmp1);                                   // dry mass ratio
+    geoflow::compute_p<Ftype>(*e, *tmp1, RD, *tmp2, *p);    // partial pressure for dry air
 
 #if 1
-  GMTK::saxpby<Ftype>(*tmp1, *e, 1.0, *p, 1.0);     // h = p+e, enthalpy density
-  gdiv_->apply(*tmp1, v_, stmp, *dudt[ENERGY], -2); // Div(h v) 
-  gadvect_->apply(*p, v_, stmp, *tmp1, -2);     // v.Grad p 
- *dudt[ENERGY] -= *tmp1;                        // -= v . Grad p
+    GMTK::saxpby<Ftype>(*tmp1, *e, 1.0, *p, 1.0);     // h = p+e, enthalpy density
+    gdiv_->apply(*tmp1, v_, stmp, *dudt[ENERGY], -2); // Div(h v) 
+    gadvect_->apply(*p, v_, stmp, *tmp1, -2);     // v.Grad p 
+   *dudt[ENERGY] -= *tmp1;                        // -= v . Grad p
 #else
-  gdiv_->apply(*e, v_, stmp, *dudt[ENERGY], -2);// Div(e v) 
-  GMTK::div(*grid_, v_, urhstmp_, *tmp1);
-  *tmp1 *= *p;                                  // p Div v
-  *tmp1 *= *Mass;                               // M Grad p' 
- *dudt[ENERGY] += *tmp1;                        // += p Div v
+    gdiv_->apply(*e, v_, stmp, *dudt[ENERGY], -2);// Div(e v) 
+    GMTK::div(*grid_, v_, urhstmp_, *tmp1);
+    *tmp1 *= *p;                                  // p Div v
+    *tmp1 *= *Mass;                               // M Grad p' 
+   *dudt[ENERGY] += *tmp1;                        // += p Div v
 #endif
 
-#if 1
-  gstressen_->apply(*rhoT, v_, stmp, *tmp1);    // [mu u_i s^{ij}],j
-//tmp1->pointProd(*mask);
- *dudt[ENERGY] += *tmp1;                        // += [mu u^i s^{ij}],j
-#endif
+
+    gstressen_->apply(*rhoT, v_, stmp, *tmp1);    // [mu u_i s^{ij}],j
+  //tmp1->pointProd(*mask);
+   *dudt[ENERGY] -= *tmp1;                        // += [mu u^i s^{ij}],j
+
+  }
 
 
   // *************************************************************
   // Total density RHS:
   // *************************************************************
-
+  
   gdiv_->apply(*rhoT, v_, stmp, *dudt[DENSITY], -2); 
 
 
-  // *************************************************************
-  // Momentum equations RHS:
-  // *************************************************************
-  dd   = urhstmp_[stmp.size()+4];      // holds density fluctuation
- *dd   = *rhoT; 
-  if ( traits_.usebase ) {
-   *dd -= *ubase_[0];                  // density fluctuation
-   *p  -= *ubase_[1];                  // pressure fluctuation
-  }
-  for ( auto j=0; j<s_.size(); j++ ) { // for each component
+  if ( traits_.domassonly ) {
+    // *************************************************************
+    // Momentum equations RHS:
+    // *************************************************************
+    dd   = urhstmp_[stmp.size()+4];      // holds density fluctuation
+   *dd   = *rhoT; 
+    if ( traits_.usebase ) {
+     *dd -= *ubase_[0];                  // density fluctuation
+     *p  -= *ubase_[1];                  // pressure fluctuation
+    }
+    for ( auto j=0; j<s_.size(); j++ ) { // for each component
+  
+      gdiv_->apply(*s_[j], v_, stmp, *dudt[j], j+1 );
 
-    gdiv_->apply(*s_[j], v_, stmp, *dudt[j], j+1 );
-
-    grid_->deriv(*p, j+1, *tmp2, *tmp1);              // Grad p'
-   *tmp1 *= *Mass;                                    // M Grad p' 
+      grid_->deriv(*p, j+1, *tmp2, *tmp1);              // Grad p'
+     *tmp1 *= *Mass;                                    // M Grad p' 
 #if defined(GEOFLOW_USE_NEUMANN_HACK)
 if ( j==0) {
 GMTK::zero<Ftype>(*tmp1,(*igb)[1][GBDY_0FLUX]);
@@ -349,37 +352,37 @@ GMTK::zero<Ftype>(*tmp1,(*igb)[0][GBDY_0FLUX]);
 GMTK::zero<Ftype>(*tmp1,(*igb)[2][GBDY_0FLUX]);
 }
 #endif
-   *dudt[j] += *tmp1;                                 // += Grad p'
+     *dudt[j] += *tmp1;                                 // += Grad p'
 
-#if 0
-    if ( traits_.docoriolis ) {
-      GMTK::cross_prod_s<Ftype>(traits_.omega, s_, j+1, *tmp1);
-     *tmp1 *= *Mass;             
-      GMTK::saxpby<Ftype>(*dudt[j], 1.0, *tmp1, 2.0);  // += 2 Omega X (rhoT v) M J
-    }
-#endif
+      if ( traits_.docoriolis ) {
+        GMTK::cross_prod_s<Ftype>(traits_.omega, s_, j+1, *tmp1);
+       *tmp1 *= *Mass;             
+        GMTK::saxpby<Ftype>(*dudt[j], 1.0, *tmp1, 2.0);  // += 2 Omega X (rhoT v) M J
+      }
 
-    if ( traits_.dograv || traits_.usebase ) {
-     *tmp1 = -GG; 
-      compute_vpref(*tmp1, j+1, *tmp2);               // compute grav component
-      tmp2->pointProd(*dd);
-     *tmp2 *= *Mass;             
+      if ( traits_.dograv || traits_.usebase ) {
+       *tmp1 = -GG; 
+        compute_vpref(*tmp1, j+1, *tmp2);               // compute grav component
+        tmp2->pointProd(*dd);
+       *tmp2 *= *Mass;             
 #if defined(GEOFLOW_USE_NEUMANN_HACK)
 if ( j==0) {
 GMTK::zero<Ftype>(*tmp2,(*igb)[0][GBDY_0FLUX]);
 GMTK::zero<Ftype>(*tmp2,(*igb)[2][GBDY_0FLUX]);
 } 
 #endif
-     *dudt[j] -= *tmp2;                               // -= rho' vec{g} M J
-    }
+       *dudt[j] -= *tmp2;                               // -= rho' vec{g} M J
+      }
 
-    gstressen_->apply(*rhoT, v_, j+1, stmp, 
+      gstressen_->apply(*rhoT, v_, j+1, stmp, 
                                          *tmp1);      // [mu s^{ij}],j
 //cout << "GMCONV::stress_mom: max=" << tmp1->max() << " min=" << tmp1->min() << endl;
 //  tmp1->pointProd(*mask);
    *dudt[j] -= *tmp1;                                 //  -= [mu s^{ij}],j
 
-  } // end, momentum loop
+    } // end, momentum loop
+
+  } // end, mass-only conditional
 
   // Multiply RHS by -M^-1 to (1) place all terms on the 'RHS',
   // and (2) to account for factor of M on du/dt term:
@@ -844,8 +847,8 @@ void GMConv<TypePack>::init_impl(State &u, State &tmp)
   // Specify starting indices for each sector
   // (negative if invalid):
   MOMENTUM   = 0;
-  ENERGY     = nc_;
-  DENSITY    = ENERGY+1;
+  ENERGY     = traits_.domassonly ? -1 : nc_;
+  DENSITY    = traits_.domassonly ? nc_ : ENERGY+1;
   VAPOR      = traits_.dodry ? -1 : DENSITY+1;
   LIQMASS    = traits_.dodry ? -1 : VAPOR+1;
   ICEMASS    = traits_.dodry ? -1 : LIQMASS+traits_.nlsector;

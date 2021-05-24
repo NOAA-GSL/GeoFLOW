@@ -128,6 +128,7 @@ public:
         // MConv solver traits:
         struct Traits {
           GBOOL           dodry       = TRUE;   // do dry dynamics?
+          GBOOL           domassonly  = FALSE;  // do contin. eqn only?
           GBOOL           docoriolis  = FALSE;  // use Coriolis force?
           GBOOL           dograv      = TRUE;   // use gravitational force?
           GBOOL           dofallout   = FALSE;  // allow precip fallout?
@@ -152,13 +153,13 @@ public:
           GINT            nstage      = 2;      // no. stages for time integ.
           GINT            inorder     = 2;      // formal nonlin. extrap order
           GStepperType    isteptype   = GSTEPPER_EXRK;
-          Ftype          Ts_base     = 300.0;  // base state surf temp (K)
-          Ftype          P0_base     = 1000.0; // base state ref pressure (mb)
-          Ftype          courant     = 0.5;    // Courant factor
-          Ftype          nu          = 0.0;    // shear viscosity constant
-          Ftype          eta         = 0.0;    // energy-shear visc constant
-          Ftype          zeta        = 0.0;    // mom bulk viscosity constant
-          Ftype          lambda      = 0.0;    // energy bulk shear visc const
+          Ftype           Ts_base     = 300.0;  // base state surf temp (K)
+          Ftype           P0_base     = 1000.0; // base state ref pressure (mb)
+          Ftype           courant     = 0.5;    // Courant factor
+          Ftype           nu          = 0.0;    // shear viscosity constant
+          Ftype           eta         = 0.0;    // energy-shear visc constant
+          Ftype           zeta        = 0.0;    // mom bulk viscosity constant
+          Ftype           lambda      = 0.0;    // energy bulk shear visc const
           GTVector<GINT>  iforced;              // state comps to force
           GTVector<Ftype> omega;                // rotation rate vector
           GString         ssteptype;            // stepping method
