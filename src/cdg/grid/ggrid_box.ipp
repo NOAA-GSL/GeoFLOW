@@ -1307,8 +1307,11 @@ void GGridBox<Types>::do_gbdy_normals2d(const GTMatrix<GTVector<Ftype>> &dXdXi,
    kp    = 0.0;
    kp[2] = 1.0; // k-vector
 
-   normals  = 0.0;
-   tangents = 0.0;
+   for ( auto j=0; j<normals.size(); j++ ) normals[j] = 0.0;
+   for ( auto j=0; j<normals.size(); j++ ) 
+     for ( auto i=0; i<normals.size(); i++ ) 
+       tangents[j][i] = 0.0;
+
 
    // Normals depend on element type:
    if ( this->gtype_ == GE_REGULAR ) {
