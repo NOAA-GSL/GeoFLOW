@@ -1161,8 +1161,8 @@ GBOOL ginitstate<Types>::impl_boxdryscharadv(const PropertyTree &ptree, GString 
   for ( auto j=0; j<nxy; j++ ) { 
     x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; 
     if ( GDIM == 3 ) z = (*xnodes)[2][j];
-    r           = pow((x-xc[0]-time)/xr[0],2) + pow((y-xc[1]-time)/xr[1],2);
-    r          += GDIM == 3 ? pow((z-xc[2]-time)/xr[2],2) : 0.0;
+    r           = pow((x-xc[0]-u0*time)/xr[0],2) + pow((y-xc[1])/xr[1],2);
+    r          += GDIM == 3 ? pow((z-xc[2])/xr[2],2) : 0.0;
     r           = sqrt(r);
     yz          = GDIM == 2 ? y : z;
     del         = 0.5*PI * ( yz - zlo ) * zi;
