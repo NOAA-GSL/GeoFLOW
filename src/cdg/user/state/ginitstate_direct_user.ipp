@@ -1169,7 +1169,7 @@ GBOOL ginitstate<Types>::impl_boxdryscharadv(const PropertyTree &ptree, GString 
     (*d) [j]    = r > 1.0 
                 ? tiny
                 : rho0 * cos(0.5*PI*r)*cos(0.5*PI*r);
-    if                   ( yz > zhi ) (*u[0])[j] = 1.0;
+    if                   ( yz > zhi ) (*u[0])[j] = u0;
     else if ( yz >= zlo && yz <= zhi ) (*u[0])[j] = u0 * sin(del)*sin(del);
   }
 
