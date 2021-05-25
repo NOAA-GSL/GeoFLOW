@@ -164,12 +164,12 @@
     "cadence_type"       : "time",
     "cycle_interval"     : 1,
     "time_interval"      : 20.0,
-    "state_names"        : ["s1", "s2", "d"],
+    "state_names"        : ["v1", "v2", "d"],
     "grid_names"         : ["xgrid", "ygrid", "zgrid"],
     "agg_state_name"     : "u",
     "agg_grid_name "     : "grid",
     "derived_quantities"       : [],
-    "state_derived_quantities" : ["vel"]
+    "state_derived_quantities" : []
   },
   "gmconv_diag": {
     "observer_name"      : "gmconv_diag",
