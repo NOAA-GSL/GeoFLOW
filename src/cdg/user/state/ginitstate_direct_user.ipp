@@ -1150,13 +1150,14 @@ GBOOL ginitstate<Types>::impl_boxdryscharadv(const PropertyTree &ptree, GString 
   u0    = inittree.getValue<GFTYPE>("u0");             // ref velocity
   zlo   = inittree.getValue<GFTYPE>("zlo");            // transition zone start
   zhi   = inittree.getValue<GFTYPE>("zhi");            // transition zone end
+//time  = inittree.getValue<Time>  ("time",0.0);       // time
 
   zi    = 1.0 / (zhi - zlo);
 
   assert(xc.size() >= GDIM && xr.size() >= GDIM);
 
   // Initialize momentum:
-  for ( auto j=0; j<ceqn->DENSITY; j++ ) *u[j] = 0.0;
+  for ( auto j=0; j<GDIM; j++ ) *u[j] = 0.0;
 
   for ( auto j=0; j<nxy; j++ ) { 
     x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; 
