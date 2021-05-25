@@ -1388,7 +1388,7 @@ void GGridIcos<Types>::do_gbdy_normals3d(const GTMatrix<GTVector<Ftype>> &dXdXi,
   GEOFLOW_TRACE();
   GINT           ixi[6][2] = { {0,2}, {1,2}, {0,2},
                                {1,2}, {0,1}, {0,1} };
-  GSIZET         ib, ic, ip;
+  GSIZET         ib, ip;
   GUINT          id;
   Ftype          tiny;
   Ftype          xm;
@@ -1423,8 +1423,6 @@ void GGridIcos<Types>::do_gbdy_normals3d(const GTMatrix<GTVector<Ftype>> &dXdXi,
        p1.cross(p2, xp);   // xp = p1 X p2
        xp *= xm;
        xp.unit();
-       for ( ic=0; ic<xp.dim(); ic++ ) if ( fabs(xp[ic]) > tiny ) break;
-       assert(ic < GDIM); // no normal components > 0
        for ( auto i=0; i<normals.size(); i++ ) normals[i][j] = xp[i];
 
        // Use Gram-Schmidt orthogonalization on p1 & p2, and use

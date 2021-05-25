@@ -1297,8 +1297,8 @@ void GGridBox<Types>::do_gbdy_normals2d(const GTMatrix<GTVector<Ftype>> &dXdXi,
                                  GTVector<VVecFtype>              &tangents)
 {
    GEOFLOW_TRACE();
-   GINT            ib, ic, ip;
-   GUINT           id;
+   GINT           ib, ip;
+   GUINT          id;
    Ftype          tiny;
    Ftype          xm;
    GTPoint<Ftype> kp(3), xp(3), p1(3), p2(3);
@@ -1345,10 +1345,8 @@ void GGridBox<Types>::do_gbdy_normals2d(const GTMatrix<GTVector<Ftype>> &dXdXi,
        kp.cross(p1, xp);   // xp = k X p1
        xp *= xm;
        xp.unit();
-       for ( ic=0; ic<GDIM; ic++ ) if ( fabs(xp[ic]) > tiny ) break;
-       assert(ic >= GDIM); // no normal components > 0
        for ( auto i=0; i<normals.size(); i++ ) normals[i][j] = xp[i];
-       /// k X tangent = n ==>
+       // k X tangent = n ==>
        tangents[0][id%2][j] =  normals[1][j]; 
        tangents[0][id%2][j] = -normals[0][j];
      }
@@ -1407,7 +1405,7 @@ void GGridBox<Types>::do_gbdy_normals3d(const GTMatrix<GTVector<Ftype>> &dXdXi,
                                  GTVector<VVecFtype>              &tangents)
 {
    GEOFLOW_TRACE();
-   GSIZET          ib, ic, ip; 
+   GSIZET          ib, ip; 
    GUINT           id;
    GINT            ixi[6][2] = { {0,2}, {1,2}, {0,2}, 
                                  {1,2}, {0,1}, {0,1} };
@@ -1454,8 +1452,6 @@ void GGridBox<Types>::do_gbdy_normals3d(const GTMatrix<GTVector<Ftype>> &dXdXi,
        }
        p1.cross(p2, xp);   // xp = p1 X p2
        xp.unit(); 
-       for ( ic=0; ic<xp.dim(); ic++ ) if ( fabs(xp[ic]) > tiny ) break;
-       assert(ic >= GDIM); // no normal components > 0
        for ( auto i=0; i<normals.size(); i++ ) normals[i][j] = xp[i];
 
        // Use Gram-Schmidt orthogonalization on p1 & p2, and use
