@@ -1142,7 +1142,7 @@ GBOOL ginitstate<Types>::impl_boxdryscharadv(const PropertyTree &ptree, GString 
 
   xc    = inittree.getArray<GFTYPE>("x_center");       // center location
   xr    = inittree.getArray<GFTYPE>("x_width");        // bubble width
-  rho0  = initptree.getValue<GFTYPE>("rho0");          // ref pressure (mb or hPa)
+  rho0  = inittree.getValue<GFTYPE>("rho0");           // ref pressure (mb or hPa)
   u0    = inittree.getValue<GFTYPE>("u0");             // ref velocity
   zlo   = inittree.getValue<GFTYPE>("zlo");            // transition zone start
   zhi   = inittree.getValue<GFTYPE>("zhi");            // transition zone end
