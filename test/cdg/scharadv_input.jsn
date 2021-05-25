@@ -98,7 +98,7 @@
     "nstage"           : 2,
     "stab_preserving"  : false,
     "extrap_order"     : 2,
-    "variable_dt"      : true,
+    "variable_dt"      : false,
     "courant"          : 0.1
   },
   "dissipation_traits": {
@@ -168,7 +168,7 @@
     "agg_state_name"     : "u",
     "agg_grid_name "     : "grid",
     "derived_quantities"       : [],
-    "state_derived_quantities" : ["temp","press","vel","cs","ptemp","de","dpress","dptemp","den","dden"]
+    "state_derived_quantities" : ["vel","den"]
   },
   "gmconv_diag": {
     "observer_name"      : "gmconv_diag",
@@ -181,7 +181,7 @@
     "integ_type" : "time",
     "time_end"   : 2500.1,
     "cycle_end"  : 10,
-    "dt"         : 1.0e-2
+    "dt"         : 1.25e-1
   }
 
 }
