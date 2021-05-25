@@ -1168,8 +1168,6 @@ GBOOL ginitstate<Types>::impl_boxdryscharadv(const PropertyTree &ptree, GString 
                 : rho0 * cos(0.5*PI*r)*cos(0.5*PI*r);
     if                   ( yz > zhi ) (*u[0])[j] = (*d)[j];
     else if ( yz >= zlo && yz <= zhi ) (*u[0])[j] = u0 * sin(del)*sin(del);
-if ( yz > zlo )
-cout << "impl_boxdryscharadv: sx=" << (*u[0])[j] <<  endl;
   }
 
   return TRUE;
