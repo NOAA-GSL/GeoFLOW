@@ -1098,9 +1098,10 @@ GBOOL ginitstate<Types>::impl_boxdryscharadv(const PropertyTree &ptree, GString 
 {
   GString             serr = "impl_boxscharadv: ";
   GSIZET              nxy;
-  GFTYPE              x, y, z, r;
+  GFTYPE              x, y, z, r, yz;
   GFTYPE              rho0, u0, zlo, zhi;
   GFTYPE              del, zi;
+  GFTYPE              tiny = 100.0 * std::numeric_limits<GFTYPE>::min();
   GTVector<GFTYPE>   *db, *d;
   std::vector<GFTYPE> xc, xr;  
   GString             sblock;
@@ -1160,12 +1161,15 @@ GBOOL ginitstate<Types>::impl_boxdryscharadv(const PropertyTree &ptree, GString 
     r           = pow((x-xc[0]-time)/xr[0],2) + pow((y-xc[1]-time)/xr[1],2);
     r          += GDIM == 3 ? pow((z-xc[2]-time)/xr[2],2) : 0.0;
     r           = sqrt(r);
-    del         = 0.5*PI * ( z - zlo ) * zi;
+    yz          = GDIM == 2 ? y : z;
+    del         = 0.5*PI * ( yz - zlo ) * zi;
     (*d) [j]    = r > 1.0 
-                ? 0.0
+                ? tiny
                 : rho0 * cos(0.5*PI*r)*cos(0.5*PI*r);
-    if                   ( z > zhi ) (*u[0])[j] = 1.0;
-    else if ( z >= zlo && z <= zhi ) (*u[0])[j] = u0 * sin(del)*sin(del);
+    if                   ( yz > zhi ) (*u[0])[j] = (*d)[j];
+    else if ( yz >= zlo && yz <= zhi ) (*u[0])[j] = u0 * sin(del)*sin(del);
+if ( yz > zlo )
+cout << "impl_boxdryscharadv: sx=" << (*u[0])[j] <<  endl;
   }
 
   return TRUE;
