@@ -1112,7 +1112,6 @@ GBOOL ginitstate<Types>::impl_boxdryscharadv(const PropertyTree &ptree, GString 
 
   PropertyTree inittree    = ptree.getPropertyTree(sconfig);
   sblock                   = ptree.getValue<GString>("pde_name");
-  PropertyTree convptree   = ptree.getPropertyTree(sblock);
 
 
   // Check solver type 
@@ -1141,12 +1140,12 @@ GBOOL ginitstate<Types>::impl_boxdryscharadv(const PropertyTree &ptree, GString 
   d     = u  [ceqn->DENSITY]; // density
   nxy   = (*xnodes)[0].size(); // same size for x, y, z
 
-  xc    = inittree.getArray<GFTYPE>("x_center");        // center location
-  xr    = inittree.getArray<GFTYPE>("x_width");         // bubble width
-  rho0  = convptree.getValue<GFTYPE>("rho0");           // ref pressure (mb or hPa)
-  u0    = convptree.getValue<GFTYPE>("u0");             // ref velocity
-  zlo   = convptree.getValue<GFTYPE>("zlo");            // transition zone start
-  zhi   = convptree.getValue<GFTYPE>("zhi");            // transition zone end
+  xc    = inittree.getArray<GFTYPE>("x_center");       // center location
+  xr    = inittree.getArray<GFTYPE>("x_width");        // bubble width
+  rho0  = initptree.getValue<GFTYPE>("rho0");          // ref pressure (mb or hPa)
+  u0    = inittree.getValue<GFTYPE>("u0");             // ref velocity
+  zlo   = inittree.getValue<GFTYPE>("zlo");            // transition zone start
+  zhi   = inittree.getValue<GFTYPE>("zhi");            // transition zone end
 
   zi    = 1.0 / (zhi - zlo);
 
