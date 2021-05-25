@@ -90,6 +90,7 @@ EquationFactory<ET>::build(const tbox::PropertyTree& ptree, Grid& grid){
                                     + (!ctraits.dodry ? 1 : 0) // vapor
                                     + ( ctraits.dofallout ? ctraits.nlsector 
                                                         + ctraits.nisector : 0); // q_i
+                ctraits.nsolve      = ctraits.domassonly ? nc + 1 : ctraits.nsolve;
                 ctraits.nstate      = ctraits.nsolve;
                 ctraits.nfallout    = (ctraits.dofallout ? ctraits.nlsector 
                                     +  ctraits.nisector + 1 : 0);
