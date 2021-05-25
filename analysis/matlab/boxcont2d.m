@@ -129,7 +129,8 @@ for itask = 0:ntasks-1
     u = log10(abs(u));
   end
 
-if 1
+if 0
+   % print max(u) and its position:
    aumax = max(abs(umax),abs(umin));
    aumin = min(abs(umax),abs(umin));
    I = find(abs(u) > 0.95*aumax & abs(u) <= aumax);
