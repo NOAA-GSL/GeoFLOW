@@ -1137,6 +1137,9 @@ GBOOL ginitstate<Types>::impl_boxdryscharadv(const PropertyTree &ptree, GString 
 //assert( ubase->size() == 2 );
   assert( traits.domassonly );
    
+  // Note: state components u[0]..., u[GDIM-1] 
+  //       are velocities, not momentum densities 
+  //       when traits.domassonly == TRUE!
 
   d     = u  [ceqn->DENSITY]; // density
   nxy   = (*xnodes)[0].size(); // same size for x, y, z
@@ -1166,7 +1169,7 @@ GBOOL ginitstate<Types>::impl_boxdryscharadv(const PropertyTree &ptree, GString 
     (*d) [j]    = r > 1.0 
                 ? tiny
                 : rho0 * cos(0.5*PI*r)*cos(0.5*PI*r);
-    if                   ( yz > zhi ) (*u[0])[j] = (*d)[j];
+    if                   ( yz > zhi ) (*u[0])[j] = 1.0;
     else if ( yz >= zlo && yz <= zhi ) (*u[0])[j] = u0 * sin(del)*sin(del);
   }
 
