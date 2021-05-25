@@ -1851,7 +1851,7 @@ GTVector<T>::sum()
 //**********************************************************************************
 template<class T>
 T
-GTVector<T>::sum(GSIZET ibeg, GSIZET iend) 
+GTVector<T>::sum(GLLONG ibeg, GLLONG iend) 
 {
   GEOFLOW_TRACE();
   T      sum=static_cast<T>(0);

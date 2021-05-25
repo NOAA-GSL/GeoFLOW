@@ -177,7 +177,7 @@ template <class T> class GTVector
     
         T sum();
     
-        T sum(GSIZET ibeg, GSIZET iend);
+        T sum(GLLONG ibeg, GLLONG iend);
     
         T infnorm();
     
