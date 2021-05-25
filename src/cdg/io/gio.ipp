@@ -99,24 +99,28 @@ void GIO<Types>::init()
 
   GINT             iret, state_disp, state_extent, sztot;
   GSIZET           ndof  =this->grid_->ndof();
-  GSIZET           nelems=this->grid_->nelems();
+  GINT             nelems=this->grid_->nelems();
   GTVector<GSIZET> extent;
 
-  extent.resize(GComm::WorldSize(comm_));
 
   // Get extents of a single state component on each task:
-  GComm::Allgather(&ndof, 1, T2GCDatatype<GSIZET>(), extent.data(), 1, T2GCDatatype<GSIZET>(), comm_);
+  extent.resize(GComm::WorldSize(comm_));
+  iret = GComm::Allgather(&ndof, 1, T2GCDatatype<GSIZET>(), extent.data(), 1, T2GCDatatype<GSIZET>(), comm_);
 
-  if ( myrank_ == 0 ) {
-    state_disp   = 0; // count
-    state_extent = extent[0]; // count
-  }
-  else {
-    state_disp   = extent.sum(0,myrank_-1); // count
-    state_extent = extent[myrank_]; // count
-  }
+  state_disp   = extent.sum(0,myrank_-1); // cumulative sum
+  state_extent = extent[myrank_]; // count
   nbgdof_ = extent.sum()*sizeof(Ftype); // no. bytes of single state comp
 
+  // Find displacements for each set of elem ids:
+  GTVector<GINT>   iddisp;;
+  GTVector<GINT>   elemcount;;
+  elemcount.resize(GComm::WorldSize(comm_));
+  iddisp   .resize(GComm::WorldSize(comm_));
+  iret = GComm::Allgather(&nelems, 1, T2GCDatatype<GINT>(), elemcount.data(), 1, T2GCDatatype<GINT>(), comm_);
+  for ( auto i=0; i<iddisp.size(); i++ ) {
+    iddisp[i] = elemcount.sum(0,i-1);
+  }
+  
 
 #if defined(GEOFLOW_USE_MPI)
 //MPI_Type_free(&mpi_state_type_);
@@ -128,6 +132,14 @@ void GIO<Types>::init()
   iret = MPI_Type_commit(&mpi_state_type_);
   assert(iret == MPI_SUCCESS);
 
+  // Use id displacements to get element keys/ids on task 0,
+  // so that task 0 can write header:
+  GTVector<GKEY> *keys = &this->grid_->elemids();
+  assert( keys != NULLPTR && keys->size() == this->grid_->nelems() ); // verify there are the right #
+  hkeys_.resize(this->grid_->ngelems());
+  iret = GComm::Gatherv(keys->data(), keys->size(), T2GCDatatype<GKEY>(), 
+                        hkeys_.data(), elemcount.data(), iddisp.data(), T2GCDatatype<GKEY>(),            
+                        0, comm_);
 #endif
   bInit_ = TRUE;
 
@@ -558,8 +570,8 @@ GSIZET GIO<Types>::write_header_coll(GString filename, StateInfo &info, Traits &
 
     // Element ids/keys:
     GTVector<GKEY> *keys = &this->grid_->elemids();
-    assert( keys != NULLPTR && keys->size() == info.nelems ); // verify there are the right number
-    MPI_File_write(fp, keys->data()     , info.nelems, T2GCDatatype  <GKEY>(), &status); 
+    assert( hkeys_.size() == info.nelems ); // verify there are the right number
+    MPI_File_write(fp, hkeys_.data()     , info.nelems, T2GCDatatype  <GKEY>(), &status); 
         MPI_Get_count(&status, MPI_BYTE, &nh); nb += nh;
   }
 
@@ -686,7 +698,13 @@ GSIZET GIO<Types>::sz_header(const StateInfo &info, const Traits &traits)
     numr = traits.ivers == 0 ? 1 : info.nelems;
     numr *= traits.dim;
     nd = (numr+4)*sizeof(GINT) + 2*sizeof(GSIZET) + sizeof(Ftype);
-    nd += this->grid_->elems().size() * sizeof(GKEY);
+
+    if ( this->traits_.io_type == IOBase<Types>::GIO_COLL ) {
+      nd += this->grid_->ngelems() * sizeof(GKEY);
+    }
+    else if ( this->traits_.io_type == IOBase<Types>::GIO_POSIX ) {
+      nd += this->grid_->nelems () * sizeof(GKEY);
+    }
 
     return nd;
 

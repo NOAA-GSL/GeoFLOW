@@ -83,7 +83,7 @@ private:
         char              *cfname_;
         std::stringstream  spformat_;   // POSIX format
         std::stringstream  scformat_;   // collective format
-
+        GTVector<GKEY>     hkeys_;      // global vector of elem ids
 };
 
 #include "gio.ipp"
