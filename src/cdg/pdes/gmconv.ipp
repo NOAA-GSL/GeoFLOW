@@ -282,9 +282,14 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
   if ( traits_.usebase ) *rhoT +=  *ubase_[0];   
  *irhoT = *rhoT; irhoT->rpow(-1.0); // 1/rhoT
 
+  // If domasonly, don't update momentum:
+  for ( auto j=0; j<v_.size() && traits_.domassonly; j++ ) {
+    *dudt[j] = 0.0;
+  } 
+
   // Compute velocity for timestep:
   compute_v(s_, *irhoT, v_); // stored in v_
-
+ 
   
   // Compute all terms as though they are on the LHS, then
   // change the sign and divide by Mass at the end....
@@ -1006,9 +1011,11 @@ void GMConv<TypePack>::init_impl(State &u, State &tmp)
   // timestep computation:
   maxbyelem_.resize(grid_->nelems());
 
-  // Set size of mass frac and 
-  // misc. helper arrays:
+  // Set sizes of mass frac and misc. helper arrays; 
+  // adjust solver traits:
   traits_.dodry = traits_.domassonly ? TRUE : traits_.dodry;
+  traits_.usemomden = traits_.domassonly ? FALSE : TRUE;
+
   nhydro_ = traits_.dodry ? 0 : traits_.nlsector + traits_.nisector;
   nmoist_ = traits_.dodry ? 0 : nhydro_ + 1;
   nevolve_ = traits_.domassonly ? nc_ + 1 : nc_ + 2 + nmoist_;
