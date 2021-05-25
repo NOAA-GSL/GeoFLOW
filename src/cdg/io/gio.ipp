@@ -132,8 +132,8 @@ void GIO<Types>::init()
   iret = MPI_Type_commit(&mpi_state_type_);
   assert(iret == MPI_SUCCESS);
 
-  // Use id displacements to get element keys/ids on task 0,
-  // so that task 0 can write header:
+  // Use id displacements to get element keys/ids 
+  // so that task 0 can write them in header:
   GTVector<GKEY> *keys = &this->grid_->elemids();
   assert( keys != NULLPTR && keys->size() == this->grid_->nelems() ); // verify there are the right #
   hkeys_.resize(this->grid_->ngelems());
