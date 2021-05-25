@@ -284,6 +284,7 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
 
   // Compute velocity for timestep:
   compute_v(s_, *irhoT, v_); // stored in v_
+
   
   // Compute all terms as though they are on the LHS, then
   // change the sign and divide by Mass at the end....
@@ -327,7 +328,7 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
   gdiv_->apply(*rhoT, v_, stmp, *dudt[DENSITY], -2); 
 
 
-  if ( traits_.domassonly ) {
+  if ( !traits_.domassonly ) {
     // *************************************************************
     // Momentum equations RHS:
     // *************************************************************
@@ -1007,9 +1008,10 @@ void GMConv<TypePack>::init_impl(State &u, State &tmp)
 
   // Set size of mass frac and 
   // misc. helper arrays:
+  traits_.dodry = traits_.domassonly ? TRUE : traits_.dodry;
   nhydro_ = traits_.dodry ? 0 : traits_.nlsector + traits_.nisector;
   nmoist_ = traits_.dodry ? 0 : nhydro_ + 1;
-  nevolve_ = nc_ + 2 + nmoist_;
+  nevolve_ = traits_.domassonly ? nc_ + 1 : nc_ + 2 + nmoist_;
   this->stateinfo().nevolve = traits_.nsolve;
   this->stateinfo().npresc  = traits_.nstate - traits_.nsolve;
   qi_   .resize(nmoist_);
