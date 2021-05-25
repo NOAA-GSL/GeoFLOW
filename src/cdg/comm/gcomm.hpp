@@ -46,7 +46,8 @@ namespace GComm
                        GBOOL    ASendRecv  (void *RecvBuff, GINT nRecvBuff, GINT  *irecv, GINT RecvLen   , GCommDatatype rtype, GINT *source, GBOOL bUseSource, 
                                             void *SendBuff, GINT nSendBuff, GINT  *isend, GINT maxSendLen, GCommDatatype stype, GINT *dest, GC_COMM icomm=GC_COMM_WORLD   );
                        GINT Allreduce  (void *, void *, const GINT  count, GCommDatatype type, GC_OP op, GC_COMM icomm=GC_COMM_WORLD);
-                       GINT Allgather  (void *operand, GINT  sendcount, GCommDatatype stype, void *result, GINT  recvcount, GCommDatatype gtype, GC_COMM icomm=GC_COMM_WORLD);
+                       GINT Allgather(void *operand, GINT  sendcount, GCommDatatype stype, void *result , GINT  recvcount, GCommDatatype rtype, GC_COMM comm);
+                       GINT Gatherv  (void *sbuff, GINT sendcount, GCommDatatype stype, void *rbuff, GINT *recvcount, GINT *disp, GCommDatatype gtype, GINT root, GC_COMM icomm=GC_COMM_WORLD);
 
                        GBOOL    BSend      (void *sbuff, GINT  buffcount, GCommDatatype stype, GINT dest, GC_COMM icomm=GC_COMM_WORLD  );
                        GBOOL    ISend      (void *sbuff, GINT  buffcount, GCommDatatype stype, GINT dest, void *hreq, GC_COMM icomm=GC_COMM_WORLD);

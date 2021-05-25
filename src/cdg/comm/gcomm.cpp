@@ -542,6 +542,42 @@ GINT GComm::Allgather(void *operand, GINT  sendcount, GCommDatatype stype,
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD     : Gatherv
+// DESC       : Performs MPI_Gatherv operation
+// ARGS       :
+// RETURNS    : 
+//**********************************************************************************
+GINT GComm::Gatherv(void *sbuff, GINT sendcount, GCommDatatype stype, void *rbuff, GINT *recvcount, GINT *disp, GCommDatatype rtype, GINT root, GC_COMM comm)
+{
+
+  GINT    iret=sendcount, rank=GComm::WorldRank(comm);
+  GString serr = "GComm::Allgather: ";
+
+#if defined(GEOFLOW_USE_MPI)
+  if ( sbuff == NULLPTR ) {
+    std::cout << serr << "MPI_IN_PLACE requested, but not allowed" << std::endl;
+    exit(1);
+  }
+
+  iret = MPI_Gatherv(sbuff, sendcount, stype, rbuff, recvcount, disp, rtype, root, comm);
+#else
+  if ( recvcount[0] < sendcount ) return 0;
+  if ( sbuff == NULLPTR || result == NULLPTR ) return 0;
+  GD_DATATYPE irtype = GCommData2Index(rtype);
+  GD_DATATYPE istype = GCommData2Index(stype);
+  for ( auto i=0; i<sendcount; i++ ) {
+    memcpy((GBYTE*)rbuff  + disp[i]*GD_DATATYPE_SZ[irtype], 
+           (GBYTE*)sbuff, sendcount*GD_DATATYPE_SZ[istype]);
+  } 
+#endif
+
+  return iret;
+
+} // end of method Gatherv
+
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD     : DataTypeFromStruct
 // DESC       : Builds a derived data type usable by Comm methods, which encapsulates
 //              the data associated with a C-type structure, *WHICH CONTAINS
