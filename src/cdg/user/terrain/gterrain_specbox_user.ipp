@@ -226,7 +226,7 @@ GBOOL gterrainSpecBox<Types>::impl_schar_range(const PropertyTree &ptree, GStrin
   nxy = (*xnodes)[0].size();
 
   GFTYPE lambda  = ttree.getValue<GFTYPE>("lambda");       // perturbation wavelength
-  GFTYPE extent  = ttree.getValue<GFTYPE>("range_extent"); // extent 
+  GFTYPE extent  = ttree.getValue<GFTYPE>("extent");       // range extent
   GFTYPE h0      = ttree.getValue<GFTYPE>("h0");           // height
   GFTYPE x0      = ttree.getValue<GFTYPE>("x0");           // ref position
   std::vector<GFTYPE> xyz0 = boxptree.getArray<GFTYPE>("xyz0");
