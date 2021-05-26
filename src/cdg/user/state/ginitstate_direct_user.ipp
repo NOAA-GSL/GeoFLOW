@@ -1100,11 +1100,11 @@ GBOOL ginitstate<Types>::impl_boxdryscharadv(const PropertyTree &ptree, GString 
   GSIZET              nxy;
   GFTYPE              x, y, z, r, yz;
   GFTYPE              rho0, u0, zlo, zhi;
-  GFTYPE              del, zi;
+  GFTYPE              del, falloff, zi;
   GFTYPE              tiny = 100.0 * std::numeric_limits<GFTYPE>::min();
   GTVector<GFTYPE>   *db, *d;
   std::vector<GFTYPE> xc, xr;  
-  GString             sblock;
+  GString             sblock, stype;
   typename Types::State
                      *ubase;
   GTVector<GTVector<GFTYPE>> 
@@ -1150,6 +1150,8 @@ GBOOL ginitstate<Types>::impl_boxdryscharadv(const PropertyTree &ptree, GString 
   u0    = inittree.getValue<GFTYPE>("u0");             // ref velocity
   zlo   = inittree.getValue<GFTYPE>("zlo");            // transition zone start
   zhi   = inittree.getValue<GFTYPE>("zhi");            // transition zone end
+  stype = inittree.getValue<GString>("ftype","cosine");// function type (Gaussian or cosine)
+  falloff = inittree.getValue<GFTYPE>("falloff",4.0);  // Gaussian falloff rate
 //time  = inittree.getValue<Time>  ("time",0.0);       // time
 
   zi    = 1.0 / (zhi - zlo);
@@ -1167,9 +1169,13 @@ GBOOL ginitstate<Types>::impl_boxdryscharadv(const PropertyTree &ptree, GString 
     r           = sqrt(r);
     yz          = GDIM == 2 ? y : z;
     del         = 0.5*PI * ( yz - zlo ) * zi;
-    (*d) [j]    = r > 1.0 
-                ? tiny
-                : rho0 * cos(0.5*PI*r)*cos(0.5*PI*r);
+    if ( "cosine" == stype ) {
+      (*d) [j]    = r > 1.0 
+                  ? tiny
+                  : rho0 * cos(0.5*PI*r)*cos(0.5*PI*r);
+    } else {
+      (*d) [j]    = rho0 * exp(-falloff*r*r);
+    }
     if                   ( yz > zhi ) (*u[0])[j] = u0;
     else if ( yz >= zlo && yz <= zhi ) (*u[0])[j] = u0 * sin(del)*sin(del);
   }
