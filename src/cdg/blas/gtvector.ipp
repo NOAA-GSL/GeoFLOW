@@ -1876,13 +1876,13 @@ T
 GTVector<T>::infnorm() 
 {
   GEOFLOW_TRACE();
-  GDOUBLE xnorm=0.0;
+  T xnorm = std::numeric_limits<T>::min();
 
   for ( auto j=this->gindex_.beg(); j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
     xnorm = MAX(xnorm,fabs(this->data_[j]));
   }
   
-  return static_cast<T>(xnorm);
+  return xnorm;
 } // end, infnorm
 
 
