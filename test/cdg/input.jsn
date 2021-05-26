@@ -28,10 +28,10 @@
     "u0"         : 10.0,
     "zlo"        : 4000.0,
     "zhi"        : 5000.0,
-    "x_center"   : [-50000.0, 9000.0],
+    "x_center"   : [-25000.0, 9000.0],
     "x_width"    : [25000.0, 3000.0],
     "ftype"      : "Gaussian",
-    "falloff"    : -4.0
+    "falloff"    : 3.0
   },
   "test": {
     "bdy_class"        : "uniform",
