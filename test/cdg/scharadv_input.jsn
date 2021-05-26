@@ -31,7 +31,7 @@
     "x_center"   : [-50000.0, 9000.0],
     "x_width"    : [2500.0, 3000.0],
     "ftype"      : "cosine",
-    "falloff"    : -4.0
+    "falloff"    : 3.0
   },
   "test": {
     "bdy_class"        : "uniform",
