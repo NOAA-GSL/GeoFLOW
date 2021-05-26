@@ -251,7 +251,6 @@ GBOOL gterrainSpecBox<Types>::impl_schar_range(const PropertyTree &ptree, GStrin
     if ( FUZZYEQ(P0.x2,(*xnodes)[1][j],eps) ) {
 //               h(x) = cos^2(pi x/lambda) h'(x),
 //               h'(x) = h0 cos^2(pi x/2a), |x| <= a;
-      (*xb[1])[j] = 0.0;
       if ( abs(x) <= extent ) {
         (*xb[1])[j] += h0*pow(cos(PI*x/lambda)    ,2)
                          *pow(cos(PI*x/(2*extent)),2);
