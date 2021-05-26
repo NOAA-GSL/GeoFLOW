@@ -282,8 +282,8 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
   if ( traits_.usebase ) *rhoT +=  *ubase_[0];   
  *irhoT = *rhoT; irhoT->rpow(-1.0); // 1/rhoT
 
-  // If domasonly, don't update momentum:
-  for ( auto j=0; j<v_.size() && traits_.domassonly; j++ ) {
+  // Initialize RHS vector:
+  for ( auto j=0; j<dudt.size() && traits_.domassonly; j++ ) {
     *dudt[j] = 0.0;
   } 
 
