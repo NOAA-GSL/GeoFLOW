@@ -20,7 +20,7 @@
     "name"       : "boxschar_range",
     "lambda"     : 8000.0,
     "extent"     : 25000.0,
-    "h0"         : 8000.0,
+    "h0"         : 3000.0,
     "x0"         : 0.0
   },
   "initstate_boxdryscharadv": {
