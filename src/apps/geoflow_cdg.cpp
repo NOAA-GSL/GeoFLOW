@@ -641,62 +641,17 @@ void compare(const PropertyTree &ptree, Grid &grid, EqnBasePtr &peqn, Time &t, S
     bret = GInitStateFactory<MyTypes>::init(ptree, peqn, grid, tt, utmp, ua);
     assert(bret && "state initialization failed");
 
-#if 0
-  // Set up and output the analytic solution
-  // and difference solution as well as
-  // advection velocity if one exists:
-  std::stringstream  format;
-  StateInfo          stateinfo;
-  ObsTraitsType      binobstraits = (*pObservers_)[irestobs_]->get_traits();
-
-  stateinfo.sttype   = 1; // state variable type
-  stateinfo.svars.resize(binobstraits.state_names.size());
-  stateinfo.svars    = binobstraits.state_names;
-  stateinfo.idir     = binobstraits.idir;
-  stateinfo.odir     = binobstraits.odir;
-  stateinfo.index    = 0;
-  stateinfo.cycle    = 0;
-  stateinfo.time     = t;
-
-  // Get data:
-  stateinfo.svars.resize(nsolve_);
-  for ( GINT j=0; j<nsolve_; j++ ) { 
-    format .str(""); format .clear();
-    format << "u" << j+1 << "a";
-    stateinfo.svars[j] = format.str();
-  }
-  pIO_->write_state("ua", stateinfo, ua);
-
-  for ( GINT j=0; j<nsolve_; j++ ) { 
-    *utmp[j] = *u[j] - *ua[j];
-    format .str(""); format .clear();
-    format << "diff" << j+1;
-    stateinfo.svars[j] = format.str();
-  }
-  pIO_->write_state("diff", stateinfo, utmp);
-  
-  stateinfo.svars.resize(c_.size());
-  for ( GINT j=0; j<c_.size(); j++ ) { 
-    format .str(""); format .clear();
-    format << "c" << j+1;
-    stateinfo.svars[j] = format.str();
-  }
-
-  pIO_->write_state("c", stateinfo, c_);
-#endif
-
     // Compute error norms:
-    for (GINT j = 0; j < nsolve_; j++) {  //local errors
-        *utmp[0] = *u[j] - *ua[j];
-        *utmp[1] = *utmp[0];
-        utmp[1]->abs();
-        *utmp[2] = *utmp[0];
-        utmp[2]->rpow(2);
+    for (GINT j = GDIM-1; j < nsolve_; j++) {  // local errors
+        *utmp[0] = *u[j] ; *utmp[0] -= *ua[j];
+        *utmp[1] = *utmp[0]; utmp[1]->abs();
+        *utmp[2] = *utmp[0]; utmp[2]->rpow(2);
         lnorm[0] = utmp[0]->infnorm();                  // inf-norm
         gnorm[1] = grid.integrate(*utmp[1], *utmp[0]);  // L1-norm numerator
         gnorm[2] = grid.integrate(*utmp[2], *utmp[0]);  // L2-norm numerator
         // Accumulate to find global errors for this field:
         GComm::Allreduce(lnorm.data(), gnorm.data(), 1, T2GCDatatype<Ftype>(), GC_OP_MAX, comm_);
+
         gnorm[1] = gnorm[1] / nnorm[j];
         gnorm[2] = sqrt(gnorm[2] / nnorm[j]);
         // now find max errors of each type for each field:
@@ -725,6 +680,8 @@ void compare(const PropertyTree &ptree, Grid &grid, EqnBasePtr &peqn, Time &t, S
 
         // Write header, if required:
         if (itst.peek() == std::ofstream::traits_type::eof()) {
+            ios << "Time"
+                << "  ";
             ios << "#ntasks"
                 << "  ";
             ios << "ncyc"
@@ -736,6 +693,7 @@ void compare(const PropertyTree &ptree, Grid &grid, EqnBasePtr &peqn, Time &t, S
         }
         itst.close();
 
+        ios << t      << "  ";
         ios << ntasks << "  ";
         ios << pIntegrator_->get_numsteps() << "  ";
         ios << bvardt << "  ";
