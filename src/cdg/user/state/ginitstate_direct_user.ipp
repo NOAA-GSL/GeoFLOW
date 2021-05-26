@@ -1152,6 +1152,7 @@ GBOOL ginitstate<Types>::impl_boxdryscharadv(const PropertyTree &ptree, GString 
   zhi   = inittree.getValue<GFTYPE>("zhi");            // transition zone end
   stype = inittree.getValue<GString>("ftype","cosine");// function type (Gaussian or cosine)
   falloff = inittree.getValue<GFTYPE>("falloff",4.0);  // Gaussian falloff rate
+  falloff = fabs(falloff);
 //time  = inittree.getValue<Time>  ("time",0.0);       // time
 
   zi    = 1.0 / (zhi - zlo);
