@@ -946,8 +946,6 @@ void GGridIcos<Types>::config_gbdy(const geoflow::tbox::PropertyTree &ptree,
   }
 
 
-
-
   // Clear input arrays:
   igbdyf .clear();
   igbdyft.clear();

@@ -605,7 +605,7 @@ void GGrid<Types>::grid_init(GTMatrix<GINT> &p,
   }
 
   // Configure and initialize domain bdy data:
-  init_bc_info(TRUE); // TRUE == restart
+  init_bc_info();
 
 
   bInitialized_ = TRUE;
@@ -1526,9 +1526,10 @@ void GGrid<Types>::add_terrain(const State &xb, State &utmp)
    assert(gtype_ == GE_2DEMBEDDED
        || gtype_ == GE_DEFORMED && "Invalid element type");
 
-   assert(utmp.size() > 5);
+   assert(utmp.size() >= 6);
 
   // Set up temp arrays from pool:
+  GINT       iret;
   StateComp *x0=utmp[0];
   StateComp *b =utmp[1];
   State      tmp(utmp.size()-2);
@@ -1544,15 +1545,17 @@ void GGrid<Types>::add_terrain(const State &xb, State &utmp)
   H.use_metric(TRUE); // do Laplacian in real space
 
 
-  // Solve Nabla^2 (Xnew + Xb - XNodes) = 0 
+  // Solve Nabla^2 (Xnew + Xb ) = 0 
   // for new (homgogeneous) grid solution, Xnew, 
   // given terrain, Xb, and // 'base' grid, XNodes:
   GEOFLOW_TRACE_START("GGrid<Types>::add_terrain: Solve");
   for ( auto j=0; j<xNodes_.size(); j++ ) {
    *b  = 0.0;
    *x0 = 0.0; // first guess
-    cg.solve(H, *b, *xb[j], *x0);
-//  cout << "GGrid<Types>::add_terrain: xb_new[" << j << "]=" << *x0 << endl;
+    iret = cg.solve(H, *b, *xb[j], *x0);
+//cout << "GGrid<Types>::add_terrain: iret=" << iret << endl;
+    assert(iret == GCG<CGTypePack>::GCGERR_NONE);
+//cout << "GGrid<Types>::add_terrain: xb_new[" << j << "]=" << *x0 << endl;
     xNodes_[j] = *x0;             // Reset XNodes = x0
 //GPP(comm_,"GGrid<Types>::add_terrain: new_xNodes[" << j << "]=" << xNodes_[j]);
   }
@@ -1572,6 +1575,12 @@ void GGrid<Types>::add_terrain(const State &xb, State &utmp)
   // Now, with new coordinates, recompute metric terms, 
   // Jacobian, normals:
   def_geom_init();
+
+  // Configure and initialize domain bdy data:
+  init_bc_info(TRUE); // TRUE ==> adding terrain
+
+  // Compute element face data:
+  do_face_data();
 
   // Compute new minimum node distance:
   minnodedist_ = find_min_dist();
