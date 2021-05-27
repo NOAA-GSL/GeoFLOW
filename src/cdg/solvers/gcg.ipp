@@ -337,7 +337,9 @@ GINT GCG<Types>::solve_impl(Operator& A, const StateComp& b, StateComp& x)
 
   if ( bbv_ ) x.pointProd(*mask);
 
-cout << "GCG::solve_impl: .....................bv=" << bbv_ << " iterations: " << iter_ << " rnorm=" << rnorm << " traits.tol=" << this->traits_.tol <<  " rtol=" << rtol << " iret=" << iret << endl;
+  if ( irank == 0 ) {
+    cout << "GCG::solve_impl: .....................bv=" << bbv_ << " iterations: " << iter_ << " rnorm=" << rnorm << " traits.tol=" << this->traits_.tol <<  " rtol=" << rtol << " iret=" << iret << endl;
+  }
 
   if ( iret == GCGERR_NONE 
     && iter_ >= this->traits_.maxit 
