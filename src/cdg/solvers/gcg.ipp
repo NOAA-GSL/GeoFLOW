@@ -110,7 +110,7 @@ void GCG<Types>::init()
 //************************************************************************************
 // METHOD : solve_impl (1)
 // DESC   : Solve implementation to find homogeneous solution. 
-//          Taken from van der Vorst.
+//          Taken from van der Vorst text.
 //           
 // ARGS   : A    : linear operator to invert
 //          b    : right-hand side vector
@@ -253,6 +253,7 @@ GINT GCG<Types>::solve_impl(Operator& A, const StateComp& b, StateComp& x)
   assert(this->tmp_->size() > 5);
   init();
 
+
   // Set some pointers:
   tmp.resize(this->tmp_->size()-4);
   q  = (*this->tmp_)[0];
@@ -271,7 +272,7 @@ GINT GCG<Types>::solve_impl(Operator& A, const StateComp& b, StateComp& x)
 
  *r -= (*w);                            // r = b - Ax, initial residual
 
- this->ggfx_->doOp(*r, typename GGFX<decltype(r[0])>::Sum());   // DSS r
+  this->ggfx_->doOp(*r, typename GGFX<decltype(r[0])>::Sum());   // DSS r
 
   if ( bbv_ ) r->pointProd(*mask);      // Mask DSS r
   if ( precond_ != NULLPTR ) {          // solve P z = r for z
@@ -299,7 +300,6 @@ GINT GCG<Types>::solve_impl(Operator& A, const StateComp& b, StateComp& x)
        && rnorm > rtol ) {
 
     A.opVec_prod(*w, tmp, *q);          // q = A w
-
     this->ggfx_->doOp(*q, typename GGFX<decltype(q[0])>::Sum()); // q <- DSS q
 
     if ( bbv_ ) q->pointProd(*mask);    // Mask(q)
@@ -331,10 +331,13 @@ GINT GCG<Types>::solve_impl(Operator& A, const StateComp& b, StateComp& x)
     residmax_ = MAX(rnorm,residmax_);
     residmin_ = MIN(rnorm,residmin_);
     iter_++;
+//cout << "GCG::solve_impl: iter: ..............." << iter_ << " rnorm=" << rnorm << endl;
 
   } // end, CG loop
 
   if ( bbv_ ) x.pointProd(*mask);
+
+cout << "GCG::solve_impl: .....................bv=" << bbv_ << " iterations: " << iter_ << " rnorm=" << rnorm << " traits.tol=" << this->traits_.tol <<  " rtol=" << rtol << " iret=" << iret << endl;
 
   if ( iret == GCGERR_NONE 
     && iter_ >= this->traits_.maxit 
@@ -343,8 +346,8 @@ GINT GCG<Types>::solve_impl(Operator& A, const StateComp& b, StateComp& x)
   return iret;
 
 } // end of method solve_impl (1)
-#endif
 
+#endif
 
 //************************************************************************************
 //************************************************************************************
@@ -399,7 +402,8 @@ GFTYPE GCG<Types>::compute_norm(const StateComp& x, State& tmp)
   switch (this->traits_.normtype) {
     case LinSolverBase<Types>::GCG_NORM_INF:
      *tmp[0]  = x; 
-      lret[0] = tmp[0]->infnorm();
+//    lret[0] = tmp[0]->infnorm();
+      lret[0] = tmp[0]->amax();
       GComm::Allreduce(lret, gret, 1, T2GCDatatype<GFTYPE>() , GC_OP_MAX, comm_);
       break;
     case LinSolverBase<Types>::GCG_NORM_EUC:
