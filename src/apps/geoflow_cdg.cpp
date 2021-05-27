@@ -90,8 +90,6 @@ int main(int argc, char **argv) {
 
     do_terrain(ptree_, *grid_);
 
-    pio::pout << "geoflow: terrain added." << std::endl;
-
     //***************************************************
     // Create equation set:
     //***************************************************
