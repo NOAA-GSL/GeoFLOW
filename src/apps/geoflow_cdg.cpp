@@ -730,8 +730,8 @@ void do_terrain(const PropertyTree &ptree, Grid &grid) {
     // Cannot use utmp_ here because it
     // may not have been allocated yet, so
     // use local variable:
-    utmp.resize(2 * nc);
-    tmp.resize(nc);
+    utmp.resize(13 + nc);
+    tmp.resize(utmp.size() - nc);
     for (auto j = 0; j < utmp.size(); j++) utmp[j] = new GTVector<Ftype>(grid_->ndof());
 
     // Set terrain & tmp arrays from tmp array pool:
