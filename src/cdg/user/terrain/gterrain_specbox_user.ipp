@@ -233,6 +233,7 @@ GBOOL gterrainSpecBox<Types>::impl_schar_range(const PropertyTree &ptree, GStrin
 //std::vector<GFTYPE> dxyz = boxptree.getArray<GFTYPE>("delxyz");
   P0 = xyz0; 
 
+
   // Set initial bdy vector to be current coordinates:
   for ( auto j=0; j<xb.size(); j++ ) *xb[j] = 0.0;
   for ( auto j=0; j<igbdy->size(); j++ ) {
@@ -252,8 +253,8 @@ GBOOL gterrainSpecBox<Types>::impl_schar_range(const PropertyTree &ptree, GStrin
 //               h(x) = cos^2(pi x/lambda) h'(x),
 //               h'(x) = h0 cos^2(pi x/2a), |x| <= a;
       if ( abs(x) <= extent ) {
-        (*xb[1])[j] += h0*pow(cos(PI*x/lambda)    ,2)
-                         *pow(cos(PI*x/(2*extent)),2);
+        (*xb[1])[j] = h0*pow(cos(PI*x/lambda)      ,2)
+                        *pow(cos(PI*x/(2.0*extent)),2);
       }
     }
   }
