@@ -127,14 +127,18 @@ void GMConvDiag<EquationType>::do_L2(const Time &t, const Time &dt, const State 
   typename GMConv<EquationType>::Traits trsolver;
 
   trsolver = solver_->get_traits();
+  
+  lmax = 0.0;
 
   // Make things a little easier:
   GTVector<GTVector<GFTYPE>*> utmp(3);
   for ( auto j=0; j<utmp.size(); j++ ) utmp[j] = (*utmp_)[j];
 
-  // Find internal energy density, <e>:
-  e = u[solver_->ENERGY];
-  lmax[1] = grid_->integrate(*e, *utmp[0], FALSE);
+  if ( !trsolver.domassonly ) {
+    // Find internal energy density, <e>:
+    e = u[solver_->ENERGY];
+    lmax[1] = grid_->integrate(*e, *utmp[0], FALSE);
+  }
 
   // Find local integrated mass:
   d = u[solver_->DENSITY];
@@ -224,13 +228,17 @@ void GMConvDiag<EquationType>::do_max(const Time &t, const Time &dt, const State
 
   trsolver = solver_->get_traits();
 
+  lmax = 0.0;
+
   // Make things a little easier:
   GTVector<GTVector<GFTYPE>*> utmp(3);
   for ( auto j=0; j<utmp.size(); j++ ) utmp[j] = (*utmp_)[j];
 
-  // Find internal energy density:
-  e = u[solver_->ENERGY];
-  lmax[1] = e->amax();
+  if ( !trsolver.domassonly ) {
+    // Find internal energy density:
+    e = u[solver_->ENERGY];
+    lmax[1] = e->amax();
+  }
 
   // Find local integrated mass:
   d = u[solver_->DENSITY];
