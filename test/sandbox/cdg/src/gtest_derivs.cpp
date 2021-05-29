@@ -67,6 +67,7 @@ struct TypePack {
 using Types         = TypePack;                   // Define grid types used
 using Ftype         = typename Types::Ftype;
 using Grid          = typename Types::Grid;
+using GridBox       = typename Types::GridBox;
 using State         = typename Types::State;
 using StateComp     = typename Types::StateComp;
 using IOBaseType    = IOBase<Types>;              // IO Base type
@@ -94,7 +95,7 @@ int main(int argc, char **argv)
     GINT    errcode=0 ;
     GINT    nc=GDIM; // no. coords
     GFTYPE  eps=100.0*std::numeric_limits<GFTYPE>::epsilon();
-    GFTYPE  dnorm, told=0.0, tnew=0.0;
+    GFTYPE  dnorm, told=0.0, tnew=0.0, xn;
     GString sgrid;// name of JSON grid object to use
     GString sterrain;
     GTVector<GINT>
@@ -128,7 +129,7 @@ int main(int argc, char **argv)
     gridptree   = ptree.getPropertyTree(sgrid);
     polyptree   = ptree.getPropertyTree("poly_test");
     nc          = GDIM;
-    assert(sgrid == "grid_box"); // use only Cartesian grids
+ 
     assert(pstd.size() >= GDIM); 
 
     pvec.resize(pstd.size()); pvec = pstd; pvec.range(0,GDIM-1);
@@ -147,6 +148,14 @@ int main(int argc, char **argv)
     GGFX<Ftype> ggfx;
     init_ggfx(ptree, *grid_, ggfx);
     grid_->set_ggfx(ggfx);
+
+    GridBox  *box   = dynamic_cast <GridBox*>(grid_);
+    assert(box && "Must use a box grid");
+
+    GTPoint<GFTYPE> dP(GDIM), P0(GDIM), P1(GDIM);
+    P0 = box->getP0();
+    P1 = box->getP1();
+    dP = P1 - P0; dP.x3 = dP.x3 == 0.0 ? 1.0 : dP.x3;
 
     // Do terrain, if necessary:
     if ( sterrain != "" ) do_terrain(ptree, *grid_);
@@ -181,27 +190,26 @@ int main(int argc, char **argv)
     GINT    ncyc  = polyptree.getValue<GINT>("ncycles",100);
     GINT    idir  = polyptree.getValue<GINT>("idir",2);
     GFTYPE  p, q, r, x, y, z;
+    GFTYPE  ix, iy, iz;
     GTVector<GTVector<GFTYPE>> 
            *xnodes = &grid_->xNodes();   
 
     assert(vpoly.size() >= GDIM); 
     assert(idir >= 1 && idir <= GDIM);
     p = vpoly[0]; q = vpoly[1]; r = GDIM == 3 ? vpoly[2] : 0.0;
-
+    ix = 1.0/dP.x1; iy = 1.0/dP.x2; iz = 1.0 / dP.x3;
     // Set scalar field, and analytic derivative:
-    dnorm = 0.0;
     for ( auto j=0; j<(*xnodes)[0].size(); j++ ) {
-      x = (*xnodes)[0][j];
-      y = (*xnodes)[1][j];
-      z = GDIM == 3 ? (*xnodes)[2][j] : 1.0;
-        u     [j] = pow(x,p)*pow(y,q)*pow(z,r);
-      (*da[0])[j] = p==0 ? 0.0 : p*pow(x,p-1)*pow(y,q)*pow(z,r);
-      (*da[1])[j] = q==0 ? 0.0 : q*pow(x,p)*pow(y,q-1)*pow(z,r);
+      x = (*xnodes)[0][j]; 
+      y = (*xnodes)[1][j]; 
+      z = GDIM == 3 ? (*xnodes)[2][j] : 1.0; 
+        u     [j] = pow(x*ix,p)*pow(y*ix,q)*pow(z*iz,r);
+      (*da[0])[j] = p==0 ? 0.0 : ix*p*pow(x*ix,p-1)*pow(y*iy,q)*pow(z*iz,r);
+      (*da[1])[j] = q==0 ? 0.0 : iy*q*pow(x*ix,p)*pow(y*iy,q-1)*pow(z*iz,r);
       if ( GDIM == 3 ) (*da[2])[j] = r==0 ? 0.0 
-                        : r*pow(x,p)*pow(y,q)*pow(z,r-1);
+                        : iz*r*pow(x*ix,p)*pow(y*iy,q)*pow(z*iz,r-1);
     } // end, loop over grid points
 
-    for ( auto j=0; j<nc; j++ ) dnorm = MAX(dnorm, da[j]->amax());
 
     // Compute numerical derivs of u in each direction, using
     // different methods:
@@ -219,8 +227,8 @@ int main(int argc, char **argv)
     }
     GEOFLOW_TRACE_STOP();
 
-//cout << "da_y  =" << *da   [idir-1] << endl;
-//cout << "dnew_y=" <<  dunew << endl;
+  //cout << "da_x  =" << *da   [idir-1] << endl;
+  //cout << "dnew_x=" <<  dunew << endl;
 
     // Find inf-norm and L2-norm errors for each method::
     GTMatrix<GFTYPE> errs(NMETH,2); // for each method, Linf and L2 errs
@@ -236,14 +244,22 @@ int main(int argc, char **argv)
      *utmp [0] = diff;                   // for inf-norm
      *utmp [1] = diff; utmp[1]->rpow(2); // for L2 norm
 
-      lnorm[0] = utmp[0]->infnorm (); 
-      gnorm[1] = sqrt(grid_->integrate(*utmp[1],*utmp[2]))/dnorm;
+      xn    = da[idir-1]->amax();
+      GComm::Allreduce(&xn, &dnorm, 1, T2GCDatatype<GFTYPE>(), GC_OP_MAX, comm);
+      dnorm = dnorm < eps ? 1.0 : dnorm;
 
-      // Accumulate to find global inf-norm:
+      lnorm[0] = utmp[0]->amax();
       GComm::Allreduce(lnorm.data(), gnorm.data(), 1, T2GCDatatype<GFTYPE>(), GC_OP_MAX, comm);
+      gnorm[0] /= dnorm;
+
+     *utmp[0]  = *da[idir-1]; utmp[0]->rpow(2);
+      dnorm    = sqrt(grid_->integrate(*utmp[0],*utmp[2]));
+      dnorm    = dnorm < eps ? 1.0 : dnorm;
+      gnorm[1] = sqrt(grid_->integrate(*utmp[1],*utmp[2])/dnorm);
+
       errs(n,0) = gnorm[0]; errs(n,1) = gnorm[1];
       if ( myrank == 0 ) {
-        if ( errs(n,1) > eps ) {
+        if ( errs(n,0) > eps ) {
           std::cout << "main: ---------------------------derivative FAILED: " << errs(n,1) << " : direction=" << idir << " method: " << smethod[n]  << std::endl;
           errcode += 1;
         } else {
