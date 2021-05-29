@@ -105,10 +105,11 @@ gshapefcn_       (NULLPTR)
   if ( b2 != NULLPTR ) b[1] = b2;
   if ( b3 != NULLPTR ) b[2] = b3;
 
-  if ( elemtype_ == GE_REGULAR || elemtype_ == GE_DEFORMED ) {
-    gshapefcn_ = new GShapeFcn_hostd<GFTYPE>(dim_);
+  if ( elemtype_ == GE_REGULAR ) {
+//  gshapefcn_ = new GShapeFcn_hostd<GFTYPE>(dim_);
+    gshapefcn_ = new GShapeFcn_embed<GFTYPE>(dim_);
   }
-  else if ( elemtype_ == GE_2DEMBEDDED ) { 
+  else if ( elemtype_ == GE_2DEMBEDDED || elemtype_ == GE_DEFORMED ) { 
     gshapefcn_ = new GShapeFcn_embed<GFTYPE>(dim_);
   }
 
@@ -145,10 +146,11 @@ gshapefcn_       (NULLPTR)
   gbasis_.resize(dim_);
   gbasis_ = NULLPTR;
 
-  if ( elemtype_ == GE_REGULAR || elemtype_ == GE_DEFORMED ) {
-    gshapefcn_ = new GShapeFcn_hostd<GFTYPE>(dim_);
+  if ( elemtype_ == GE_REGULAR ) {
+//  gshapefcn_ = new GShapeFcn_hostd<GFTYPE>(dim_);
+    gshapefcn_ = new GShapeFcn_embed<GFTYPE>(dim_);
   }
-  else if ( elemtype_ == GE_2DEMBEDDED ) { 
+  else if ( elemtype_ == GE_2DEMBEDDED || elemtype_ == GE_DEFORMED ) { 
     gshapefcn_ = new GShapeFcn_embed<GFTYPE>(dim_);
   }
   set_basis(b);
@@ -240,10 +242,11 @@ void GElem_base::set_elemtype(GElemType etype)
 
   if ( gshapefcn_ != NULLPTR ) delete gshapefcn_; gshapefcn_ = NULLPTR;
 
-  if ( elemtype_ == GE_REGULAR || elemtype_ == GE_DEFORMED ) {
-    gshapefcn_ = new GShapeFcn_hostd<GFTYPE>(dim_);
+  if ( elemtype_ == GE_REGULAR ) {
+//  gshapefcn_ = new GShapeFcn_hostd<GFTYPE>(dim_);
+    gshapefcn_ = new GShapeFcn_embed<GFTYPE>(dim_);
   }
-  else if ( elemtype_ == GE_2DEMBEDDED ) {
+  else if ( elemtype_ == GE_2DEMBEDDED || elemtype_ == GE_DEFORMED ) {
     gshapefcn_ = new GShapeFcn_embed<GFTYPE>(dim_);
   }
 
