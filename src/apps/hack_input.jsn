@@ -23,7 +23,7 @@
     "bdy_y_0"   : "fully_periodic",
     "bdy_y_1"   : "fully_periodic",
     "bdy_z_0"   : "fully_periodic",
-    "bdy_z_1"   : "fully_periodic"
+    "bdy_z_1"   : "fully_periodic",
     "maxit"     : 4096,
     "tol"       : 1.0e-12,
     "norm_type" : "GCG_NORM_INF"
