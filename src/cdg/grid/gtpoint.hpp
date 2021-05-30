@@ -199,6 +199,10 @@ public:
 
   inline T mag() { T v=0.0; for ( auto j=0; j<gdim_; j++ ) v += pow(*px_[j],2.0); return sqrt(v); }
 
+  inline void inv() { for ( auto j=0; j<gdim_; j++ ) *px_[j] = 1.0/ (*px_[j]); }
+
+  inline T prod() { T v=1.0; for ( auto j=0; j<gdim_; j++ ) v *= *px_[j]; return v; }
+
   friend std::ostream &operator<<(std::ostream &str, GTPoint<T> &obj) {
     str << "("  << *obj.px_[0];
     for ( auto i=1; i<obj.gdim_; i++ ) {
