@@ -85,6 +85,7 @@ GINT szMatCache_ = _G_MAT_CACHE_SIZE;
 GINT szVecCache_ = _G_VEC_CACHE_SIZE;
 
 
+enum    TErr   {ERR_INF=0, ERR_L2};
 #define NMETH 2
 
 
@@ -93,9 +94,10 @@ int main(int argc, char **argv)
 	GEOFLOW_TRACE_INITIALIZE();
 
     GINT    errcode=0 ;
+    TErr    ierr=ERR_INF;  // which error to use for success/fail
     GINT    nc=GDIM; // no. coords
     GFTYPE  eps=100.0*std::numeric_limits<GFTYPE>::epsilon();
-    GFTYPE  dnorm, told=0.0, tnew=0.0, xn;
+    GFTYPE  dnorm[2], gn, xn;
     GString sgrid;// name of JSON grid object to use
     GString sterrain;
     GTVector<GINT>
@@ -189,6 +191,7 @@ int main(int argc, char **argv)
     
     GINT    ncyc  = polyptree.getValue<GINT>("ncycles",100);
     GINT    idir  = polyptree.getValue<GINT>("idir",2);
+            ierr  = (TErr)polyptree.getValue<GINT>("ierr",ERR_INF);
     GFTYPE  p, q, r, x, y, z;
     GFTYPE  ix, iy, iz;
     GTVector<GTVector<GFTYPE>> 
@@ -197,7 +200,8 @@ int main(int argc, char **argv)
     assert(vpoly.size() >= GDIM); 
     assert(idir >= 1 && idir <= GDIM);
     p = vpoly[0]; q = vpoly[1]; r = GDIM == 3 ? vpoly[2] : 0.0;
-    ix = 1.0/dP.x1; iy = 1.0/dP.x2; iz = 1.0 / dP.x3;
+//  ix = 1.0/dP.x1; iy = 1.0/dP.x2; iz = 1.0 / dP.x3;
+    ix = 1.0      ; iy = 1.0      ; iz = 1.0        ;
     // Set scalar field, and analytic derivative:
     for ( auto j=0; j<(*xnodes)[0].size(); j++ ) {
       x = (*xnodes)[0][j]; 
@@ -206,10 +210,11 @@ int main(int argc, char **argv)
         u     [j] = pow(x*ix,p)*pow(y*ix,q)*pow(z*iz,r);
       (*da[0])[j] = p==0 ? 0.0 : ix*p*pow(x*ix,p-1)*pow(y*iy,q)*pow(z*iz,r);
       (*da[1])[j] = q==0 ? 0.0 : iy*q*pow(x*ix,p)*pow(y*iy,q-1)*pow(z*iz,r);
-      if ( GDIM == 3 ) (*da[2])[j] = r==0 ? 0.0 
-                        : iz*r*pow(x*ix,p)*pow(y*iy,q)*pow(z*iz,r-1);
+      if ( GDIM == 3 ) (*da[2])[j] = 
+                    r==0 ? 0.0 : iz*r*pow(x*ix,p)*pow(y*iy,q)*pow(z*iz,r-1);
     } // end, loop over grid points
 
+//  dnorm[0] = (u.gmax() - u.gmin()) / ( (*xnodes)[idir-1].gmax() - (*xnodes)[idir-1].gmin() );
 
     // Compute numerical derivs of u in each direction, using
     // different methods:
@@ -227,17 +232,19 @@ int main(int argc, char **argv)
     }
     GEOFLOW_TRACE_STOP();
 
-  //cout << "da_x  =" << *da   [idir-1] << endl;
-  //cout << "dnew_x=" <<  dunew << endl;
+    cout << "da_x  =" << *da   [idir-1] << endl;
+    cout << "dnew_x=" <<  dunew << endl;
 
     // Find inf-norm and L2-norm errors for each method::
     GTMatrix<GFTYPE> errs(NMETH,2); // for each method, Linf and L2 errs
     StateComp        lnorm(2), gnorm(2);
     std::string      smethod[NMETH] = {"old", "new"};
+    GTVector<GString> serr(2);
 
     /////////////////////////////////////////////////////////////////
     //////////////////////// Compute Errors /////////////////////////
     /////////////////////////////////////////////////////////////////
+    serr[0] = "Inf"; serr[1] = "L2";
     du[0] = &duold; du[1] = &dunew;
     for ( auto n=0; n<NMETH; n++ ) { // over old and new methods
       diff     = (*da[idir-1]) - (*du[n]);
@@ -245,25 +252,28 @@ int main(int argc, char **argv)
      *utmp [1] = diff; utmp[1]->rpow(2); // for L2 norm
 
       xn    = da[idir-1]->amax();
-      GComm::Allreduce(&xn, &dnorm, 1, T2GCDatatype<GFTYPE>(), GC_OP_MAX, comm);
-      dnorm = dnorm < eps ? 1.0 : dnorm;
+      GComm::Allreduce(&xn, &gn, 1, T2GCDatatype<GFTYPE>(), GC_OP_MAX, comm);
+      dnorm[0] = gn < eps ? 1.0 : gn;
 
       lnorm[0] = utmp[0]->amax();
       GComm::Allreduce(lnorm.data(), gnorm.data(), 1, T2GCDatatype<GFTYPE>(), GC_OP_MAX, comm);
-      gnorm[0] /= dnorm;
+      xn       = grid_->integrate(*utmp[1],*utmp[2]); // int (u-ua)^2 dV
+      dnorm[1] = xn < eps ? 1.0 : dnorm[0]*dnorm[0]*grid_->volume();
+      gnorm[1] = xn;
+if ( myrank == 0 ) {
+cout << " ............rel Inf diff : " << gnorm[0] << endl; 
+cout << " ............rel Inf norm : " << dnorm[0] << endl; 
+cout << " ............rel L2 diff  : " << sqrt(gnorm[1]) << endl; 
+cout << " ............rel L2 norm  : " << sqrt(dnorm[1]) << endl; 
+}
 
-     *utmp[0]  = *da[idir-1]; utmp[0]->rpow(2);
-      dnorm    = sqrt(grid_->integrate(*utmp[0],*utmp[2]));
-      dnorm    = dnorm < eps ? 1.0 : dnorm;
-      gnorm[1] = sqrt(grid_->integrate(*utmp[1],*utmp[2])/dnorm);
-
-      errs(n,0) = gnorm[0]; errs(n,1) = gnorm[1];
+      errs(n,0) = gnorm[0]/dnorm[0]; errs(n,1) = sqrt(gnorm[1]/dnorm[1]);
       if ( myrank == 0 ) {
-        if ( errs(n,0) > eps ) {
-          std::cout << "main: ---------------------------derivative FAILED: " << errs(n,1) << " : direction=" << idir << " method: " << smethod[n]  << std::endl;
+        if ( errs(n,ierr) > eps ) {
+          std::cout << "main: ---------------------------derivative FAILED: " << serr[ierr] << " norm=" << errs(n,ierr) << " : direction=" << idir << " method: " << smethod[n]  << std::endl;
           errcode += 1;
         } else {
-          std::cout << "main: ---------------------------derivative OK: " << errs(n,1) << " : direction=" << idir << " method: " << smethod[n] << std::endl;
+          std::cout << "main: ---------------------------derivative OK: " << serr[ierr] << " norm=" << errs(n,ierr) << " : direction=" << idir << " method: " << smethod[n] << std::endl;
           errcode += 0;
         }
       }
@@ -277,20 +287,22 @@ int main(int argc, char **argv)
     itst.open("deriv_err.txt");
     ios.open("deriv_err.txt",std::ios_base::app);
 
-    // Write header, if required:
-    if ( itst.peek() == std::ofstream::traits_type::eof() ) {
-    ios << "#  idir   p      num_elems  ncyc  inf_err_old  L2_err_old  t_old   inf_err_new  L2_err_new   t_new" << std::endl;
-    }
-    itst.close();
+    if ( myrank == 0 ) {
+      // Write header, if required:
+      if ( itst.peek() == std::ofstream::traits_type::eof() ) {
+      ios << "#  idir   p      num_elems  ncyc  inf_err_old  L2_err_old   inf_err_new  L2_err_new  " << std::endl;
+      }
+      itst.close();
 
-    ios << idir << "  " << pvec[0] ;
-        for ( auto j=1; j<GDIM; j++ ) ios << " " <<  pvec[j]; 
-    ios << "  " << grid_->ngelems() 
-        << "  " << ncyc
-        << "  " << errs(0,0) << "  " << errs(0,1) << "  " << told
-        << "  " << errs(1,0) << "  " << errs(1,1) << "  " << tnew
-        << std::endl;
-    ios.close();
+      ios << idir << "  " << pvec[0] ;
+          for ( auto j=1; j<GDIM; j++ ) ios << " " <<  pvec[j]; 
+      ios << "  " << grid_->ngelems() 
+          << "  " << ncyc
+          << "  " << errs(0,0) << "  " << errs(0,1) 
+          << "  " << errs(1,0) << "  " << errs(1,1) 
+          << std::endl;
+      ios.close();
+    }
  
     pio::finalize();
     GEOFLOW_TRACE_STOP();
