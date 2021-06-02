@@ -105,7 +105,7 @@ GBOOL G0FluxBdy<Types>::update_impl(
     zt           = 1.0/(t.x1*n.x2 - t.x2*n.x1);
     (*u[0])[ind] =  n.x2*ut * zt;
     (*u[1])[ind] = -n.x1*ut * zt;
-cout << "G0FLUX:: j=" << j << " ind=" << ind << " iloc=" << iloc << endl;
+//cout << "G0FLUX:: j=" << j << " ind=" << ind << " iloc=" << iloc << endl;
   
 #elif defined(_G_IS3D)
 
