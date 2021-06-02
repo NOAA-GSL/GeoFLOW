@@ -156,18 +156,26 @@ template <class T> class GTVector
         GBOOL isfinite(GSIZET &iwhere);
     
         T max();
+
+        T gmax(GC_COMM comm=GC_COMM_WORLD);
     
         T amax();
     
         T amaxdiff(T tiny);
     
+        T gamax(GC_COMM comm=GC_COMM_WORLD);
+
         T maxn(GSIZET n);
     
         GSIZET imax();
     
         T min();
+
+        T gmin(GC_COMM comm=GC_COMM_WORLD);
     
         T amin();
+
+        T gamin(GC_COMM comm=GC_COMM_WORLD);
     
         T amindiff(T tiny);
     

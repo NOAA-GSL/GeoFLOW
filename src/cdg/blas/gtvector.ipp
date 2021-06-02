@@ -1464,6 +1464,31 @@ GTVector<T>::max()
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD : gmax
+// DESC   : Find global max of all members (over all MPI ranks)
+// ARGS   : none.
+// RETURNS: T-type max
+//**********************************************************************************
+template<class T>
+T
+GTVector<T>::gmax(GC_COMM comm)
+{
+  GEOFLOW_TRACE();
+  T lm = std::numeric_limits<T>::min();
+  T gm;
+
+  for ( auto j=this->gindex_.beg(); j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
+    lm = MAX(lm,this->data_[j]);
+  }
+  GComm::Allreduce(&lm, &gm, 1, T2GCDatatype<T>() , GC_OP_MAX, comm);
+ 
+  return gm;
+
+} // end gmax
+
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD : amax
 // DESC   : Find absolute max of all members
 // ARGS   : none.
@@ -1485,6 +1510,31 @@ GTVector<T>::amax()
   return fm;
 
 } // end amax
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : gamax
+// DESC   : Find global |max| of all members (over all MPI ranks)
+// ARGS   : none.
+// RETURNS: T-type max
+//**********************************************************************************
+template<class T>
+T
+GTVector<T>::gamax(GC_COMM comm)
+{
+  GEOFLOW_TRACE();
+  T lm = std::numeric_limits<T>::min();
+  T gm;
+
+  for ( auto j=this->gindex_.beg(); j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
+    lm = MAX(lm,fabs(this->data_[j]));
+  }
+  GComm::Allreduce(&lm, &gm, 1, T2GCDatatype<T>() , GC_OP_MAX, comm);
+ 
+  return gm;
+
+} // end gamax
 
 
 //**********************************************************************************
@@ -1589,6 +1639,56 @@ GTVector<T>::min()
   return fm;
 
 } // end min
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : gmin
+// DESC   : Find global min of all members (over all MPI ranks)
+// ARGS   : none.
+// RETURNS: T-type max
+//**********************************************************************************
+template<class T>
+T
+GTVector<T>::gmin(GC_COMM comm)
+{
+  GEOFLOW_TRACE();
+  T lm = std::numeric_limits<T>::max();
+  T gm;
+
+  for ( auto j=this->gindex_.beg(); j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
+    lm = MIN(lm,this->data_[j]);
+  }
+  GComm::Allreduce(&lm, &gm, 1, T2GCDatatype<T>() , GC_OP_MIN, comm);
+ 
+  return gm;
+
+} // end gmin
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : gamin
+// DESC   : Find global |min| of all members (over all MPI ranks)
+// ARGS   : none.
+// RETURNS: T-type max
+//**********************************************************************************
+template<class T>
+T
+GTVector<T>::gamin(GC_COMM comm)
+{
+  GEOFLOW_TRACE();
+  T lm = std::numeric_limits<T>::max();
+  T gm;
+
+  for ( auto j=this->gindex_.beg(); j<=this->gindex_.end(); j+=this->gindex_.stride() ) {
+    lm = MIN(lm,fabs(this->data_[j]));
+  }
+  GComm::Allreduce(&lm, &gm, 1, T2GCDatatype<T>() , GC_OP_MIN, comm);
+ 
+  return gm;
+
+} // end gamin
 
 
 //**********************************************************************************
