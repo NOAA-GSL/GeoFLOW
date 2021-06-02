@@ -92,10 +92,10 @@ GBOOL G0FluxBdy<Types>::update_impl(
     iloc = traits_.ibdyloc[j];      // index into bdy arrays
     ind  = traits_.ibdyvol[j];      // index into volume array
 
-    n .assign(*bdyNormals,j);
-    t .assign((*bdyTangents)[0],j);
+    n .assign(*bdyNormals,iloc);
+    t .assign((*bdyTangents)[0],iloc);
     if ( GDIM > 2 ) {
-      s .assign((*bdyTangents)[1],j);
+      s .assign((*bdyTangents)[1],iloc);
     }
     pu.assign(u, nv, ind);
 
@@ -105,6 +105,7 @@ GBOOL G0FluxBdy<Types>::update_impl(
     zt           = 1.0/(t.x1*n.x2 - t.x2*n.x1);
     (*u[0])[ind] =  n.x2*ut * zt;
     (*u[1])[ind] = -n.x1*ut * zt;
+cout << "G0FLUX:: j=" << j << " ind=" << ind << " iloc=" << iloc << endl;
   
 #elif defined(_G_IS3D)
 
