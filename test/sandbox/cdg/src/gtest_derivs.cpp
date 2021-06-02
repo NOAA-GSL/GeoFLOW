@@ -96,6 +96,7 @@ int main(int argc, char **argv)
     GINT    errcode=0 ;
     TErr    ierr=ERR_INF;  // which error to use for success/fail
     GINT    nc=GDIM; // no. coords
+    GSIZET  ibeg, iend;
     GFTYPE  eps=100.0*std::numeric_limits<GFTYPE>::epsilon();
     GFTYPE  dnorm[2], gn, xn;
     GString sgrid;// name of JSON grid object to use
@@ -199,9 +200,10 @@ int main(int argc, char **argv)
 
     assert(vpoly.size() >= GDIM); 
     assert(idir >= 1 && idir <= GDIM);
+
     p = vpoly[0]; q = vpoly[1]; r = GDIM == 3 ? vpoly[2] : 0.0;
-//  ix = 1.0/dP.x1; iy = 1.0/dP.x2; iz = 1.0 / dP.x3;
-    ix = 1.0      ; iy = 1.0      ; iz = 1.0        ;
+    ix = 1.0/dP.x1; iy = 1.0/dP.x2; iz = 1.0 / dP.x3;
+//  ix = 1.0      ; iy = 1.0      ; iz = 1.0        ;
     // Set scalar field, and analytic derivative:
     for ( auto j=0; j<(*xnodes)[0].size(); j++ ) {
       x = (*xnodes)[0][j]; 
@@ -214,7 +216,11 @@ int main(int argc, char **argv)
                     r==0 ? 0.0 : iz*r*pow(x*ix,p)*pow(y*iy,q)*pow(z*iz,r-1);
     } // end, loop over grid points
 
-//  dnorm[0] = (u.gmax() - u.gmin()) / ( (*xnodes)[idir-1].gmax() - (*xnodes)[idir-1].gmin() );
+    // dnorm[0] = (u.gmax() - u.gmin()) / ( (*xnodes)[idir-1].gmax() - (*xnodes)[idir-1].gmin() );
+ //    dnorm[0] = (u.gamax() - u.gamin()) / grid_->minnodedist();
+       dnorm[0] = 1.0 / grid_->minnodedist();
+if ( myrank == 0 ) 
+cout << "main: dnorm[0]=" << dnorm[0] << endl;
 
     // Compute numerical derivs of u in each direction, using
     // different methods:
@@ -232,8 +238,8 @@ int main(int argc, char **argv)
     }
     GEOFLOW_TRACE_STOP();
 
-    cout << "da_x  =" << *da   [idir-1] << endl;
-    cout << "dnew_x=" <<  dunew << endl;
+    //cout << "da_x  =" << *da   [idir-1] << endl;
+    //cout << "dnew_x=" <<  dunew << endl;
 
     // Find inf-norm and L2-norm errors for each method::
     GTMatrix<GFTYPE> errs(NMETH,2); // for each method, Linf and L2 errs
@@ -251,23 +257,24 @@ int main(int argc, char **argv)
      *utmp [0] = diff;                   // for inf-norm
      *utmp [1] = diff; utmp[1]->rpow(2); // for L2 norm
 
-      xn    = da[idir-1]->amax();
-      GComm::Allreduce(&xn, &gn, 1, T2GCDatatype<GFTYPE>(), GC_OP_MAX, comm);
+#if 0
+      xn    = da[idir-1]->gamax();
       dnorm[0] = gn < eps ? 1.0 : gn;
+#endif
 
       lnorm[0] = utmp[0]->amax();
       GComm::Allreduce(lnorm.data(), gnorm.data(), 1, T2GCDatatype<GFTYPE>(), GC_OP_MAX, comm);
       xn       = grid_->integrate(*utmp[1],*utmp[2]); // int (u-ua)^2 dV
       dnorm[1] = xn < eps ? 1.0 : dnorm[0]*dnorm[0]*grid_->volume();
       gnorm[1] = xn;
-if ( myrank == 0 ) {
+if ( myrank == 0 && n == 0 ) {
 cout << " ............rel Inf diff : " << gnorm[0] << endl; 
 cout << " ............rel Inf norm : " << dnorm[0] << endl; 
 cout << " ............rel L2 diff  : " << sqrt(gnorm[1]) << endl; 
 cout << " ............rel L2 norm  : " << sqrt(dnorm[1]) << endl; 
 }
 
-      errs(n,0) = gnorm[0]/dnorm[0]; errs(n,1) = sqrt(gnorm[1]/dnorm[1]);
+      for ( auto j=0; j<2; j++ ) errs(n,j) = gnorm[j]/dnorm[j]; // errors
       if ( myrank == 0 ) {
         if ( errs(n,ierr) > eps ) {
           std::cout << "main: ---------------------------derivative FAILED: " << serr[ierr] << " norm=" << errs(n,ierr) << " : direction=" << idir << " method: " << smethod[n]  << std::endl;
