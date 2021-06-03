@@ -105,11 +105,11 @@ gshapefcn_       (NULLPTR)
   if ( b2 != NULLPTR ) b[1] = b2;
   if ( b3 != NULLPTR ) b[2] = b3;
 
-  if ( elemtype_ == GE_REGULAR ) {
-//  gshapefcn_ = new GShapeFcn_hostd<GFTYPE>(dim_);
-    gshapefcn_ = new GShapeFcn_embed<GFTYPE>(dim_);
+  if ( elemtype_ == GE_REGULAR || elemtype_ == GE_DEFORMED ) {
+    gshapefcn_ = new GShapeFcn_hostd<GFTYPE>(dim_);
+//  gshapefcn_ = new GShapeFcn_embed<GFTYPE>(dim_);
   }
-  else if ( elemtype_ == GE_2DEMBEDDED || elemtype_ == GE_DEFORMED ) { 
+  else if ( elemtype_ == GE_2DEMBEDDED ) {
     gshapefcn_ = new GShapeFcn_embed<GFTYPE>(dim_);
   }
 
@@ -146,11 +146,11 @@ gshapefcn_       (NULLPTR)
   gbasis_.resize(dim_);
   gbasis_ = NULLPTR;
 
-  if ( elemtype_ == GE_REGULAR ) {
-//  gshapefcn_ = new GShapeFcn_hostd<GFTYPE>(dim_);
-    gshapefcn_ = new GShapeFcn_embed<GFTYPE>(dim_);
+  if ( elemtype_ == GE_REGULAR || elemtype_ == GE_DEFORMED ) {
+    gshapefcn_ = new GShapeFcn_hostd<GFTYPE>(dim_);
+//  gshapefcn_ = new GShapeFcn_embed<GFTYPE>(dim_);
   }
-  else if ( elemtype_ == GE_2DEMBEDDED || elemtype_ == GE_DEFORMED ) { 
+  else if ( elemtype_ == GE_2DEMBEDDED ) {
     gshapefcn_ = new GShapeFcn_embed<GFTYPE>(dim_);
   }
   set_basis(b);
@@ -242,11 +242,11 @@ void GElem_base::set_elemtype(GElemType etype)
 
   if ( gshapefcn_ != NULLPTR ) delete gshapefcn_; gshapefcn_ = NULLPTR;
 
-  if ( elemtype_ == GE_REGULAR ) {
-//  gshapefcn_ = new GShapeFcn_hostd<GFTYPE>(dim_);
-    gshapefcn_ = new GShapeFcn_embed<GFTYPE>(dim_);
+  if ( elemtype_ == GE_REGULAR || elemtype_ == GE_DEFORMED ) {
+    gshapefcn_ = new GShapeFcn_hostd<GFTYPE>(dim_);
+//  gshapefcn_ = new GShapeFcn_embed<GFTYPE>(dim_);
   }
-  else if ( elemtype_ == GE_2DEMBEDDED || elemtype_ == GE_DEFORMED ) {
+  else if ( elemtype_ == GE_2DEMBEDDED ) {
     gshapefcn_ = new GShapeFcn_embed<GFTYPE>(dim_);
   }
 
@@ -912,7 +912,7 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
 
 
   // Can have 'embedded' coords, so # Cartesian coordinates may be > dim_
-  // but the total number of node points in each metrix element will 
+  // but the total number of node points in each metric element will 
   // still be (h1-order+1) X (h2-order+1):
   GSIZET nxy = elemtype_ == GE_2DEMBEDDED ? dim_+1: dim_;
   if ( elemtype_ == GE_2DEMBEDDED || elemtype_ == GE_DEFORMED ) {
@@ -922,7 +922,7 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
         tmp  = 0.0;
         for ( j=0, n=0; j<gbasis_[1]->getOrder()+1; j++ ) { // evaluate gbasis at xi_ev
           for ( i=0; i<gbasis_[0]->getOrder()+1; i++, n++ ) { // evaluate gbasis at xi_ev
-            I[0] = i; I[1] = j;
+            I[0] = i; I[1] = j;    // mode
             gshapefcn_->dNdXi(I, m+1, xi_ev, dNi); // deriv in m_th dir of shape function I
             dNi *= xNodes_[k][n];  // multiply by spatial coord
             tmp += dNi;
@@ -939,6 +939,8 @@ void GElem_base::dogeom2d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
     for ( k=0; k<nxy; k++ ) { // rij matrix element col
       rij (k,0) = 0.5*L[k]; 
       irij(k,0) = 2.0/L[k];
+//cout << "GElemBase::dogeom2d: rij =" <<  rij(k,0) << endl;
+//cout << "GElemBase::dogeom2d: irij=" << irij(k,0) << endl;
     } // k-loop
   }
 
@@ -1129,13 +1131,13 @@ cout << serr << "cos(_x_, _G_)=" << cost << " |G|=" << jacv[n] << " xGx=" << x*G
       for ( k=0; k<nind; k++ ) { // loop over desired indices only
         n = pind[k];
         jacv[k] = G(0,0)[n]*G(1,1)[n] - G(0,1)[n]*G(1,0)[n];
-//      pChk = pChk && fabs(jacv[k]) > fabs(std::numeric_limits<GFTYPE>::epsilon());  // test for zero Jac 
+        pChk = pChk && fabs(jacv[k]) > fabs(std::numeric_limits<GFTYPE>::epsilon());  // test for zero Jac 
       }
     }
     else  {
       for ( n=0; n<jacv.size(); n++ ) {
         jacv[n] = G(0,0)[n]*G(1,1)[n] - G(0,1)[n]*G(1,0)[n];
-//      pChk = pChk && fabs(jacv[n]) > fabs(std::numeric_limits<GFTYPE>::epsilon());  // test for zero Jac 
+        pChk = pChk && fabs(jacv[n]) > fabs(std::numeric_limits<GFTYPE>::epsilon());  // test for zero Jac 
       }
     }
     return;
