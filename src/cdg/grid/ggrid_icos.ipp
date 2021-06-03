@@ -49,17 +49,16 @@ lshapefcn_                    (NULLPTR)
   ilevel_  = gridptree.getValue<GINT>("ilevel");
   sreftype_= gridptree.getValue<GString>("refine_type","GICOS_LAGRANGIAN");
 
-  
   if ( ndim_ == 2 ) {
     assert(GDIM == 2 && "GDIM must be 2");
-    radiusi_ = gridptree.getValue<Ftype>("radius");
+    radiusi_      = gridptree.getValue<Ftype>("radius");
     init2d();
   }
   else if ( ndim_ == 3 ) {
     assert(GDIM == 3 && "GDIM must be 3");
     std::vector<GINT> ne(3);
-    radiusi_   = gridptree.getValue<Ftype>("radiusi");
-    radiuso_   = gridptree.getValue<Ftype>("radiuso");
+    radiusi_      = gridptree.getValue<Ftype>("radiusi");
+    radiuso_      = gridptree.getValue<Ftype>("radiuso");
     nradelem_  = gridptree.getValue<GINT>("num_radial_elems");
     init3d();
   }
