@@ -1442,6 +1442,7 @@ std::size_t GGridIcos<Types>::max_duplicates() const {
       return 12;
   }
   ASSERT(not "Unrecognized Number of Dimensions");
+  return 0;
 }
 
 //**********************************************************************************
