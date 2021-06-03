@@ -38,11 +38,11 @@
   },
   "grid_sphere" : {
     "grid_name"       : "grid_icos",
-    "ilevel"          : 6,
+    "ilevel"          : 1,
     "refine_type"     : "GICOS_BISECTION",
-    "radiusi"         : 6371e3,
-    "radiuso"         : 6451e3,
-    "num_radial_elems": 6,
+    "radiusi"         : 1,
+    "radiuso"         : 2,
+    "num_radial_elems": 1,
     "bdy_inner"       : "my_diriclet",
     "bdy_outer"       : "my_diriclet",
     "maxit"           : 128,
@@ -63,7 +63,7 @@
   "pde_mconv": {
     "docoriolis"      : false,
     "dodry"           : true,
-    "usebase_state"   : false,
+    "usebase_state"   : true,
     "dofallout"       : false,
     "dogravity"       : true,
     "bconserved"      : false,
@@ -88,16 +88,16 @@
     "stepping_method"  : "GSTEPPER_EXRK",
     "time_deriv_order" : 2,
     "nstage"           : 2,
-    "stab_preserving"  : false,
+    "stab_preserving"  : true,
     "extrap_order"     : 2,
     "variable_dt"      : false,
     "courant"          : 0.1
   },
   "dissipation_traits": {
-    "nu"      : 200.0,
-    "eta"     : 200.0, 
-    "zeta"    : 200.0,
-    "lambda"  : 200.0,
+    "nu"      : 0.0,
+    "eta"     : 0.0, 
+    "zeta"    : 0.0,
+    "lambda"  : 0.0,
     "nu_type" : "constant"
   },
   "gio": {
@@ -161,7 +161,7 @@
     "integ_type" : "cycle",
     "time_end"   : 2001.0,
     "cycle_end"  : 10,
-    "dt"         : 1.0e-6
+    "dt"         : 1.0e-8
   }
 
 }
