@@ -6,11 +6,13 @@
  */
 
 #include "tbox/tracer.hpp"
+#include "tbox/mpixx.hpp"
 
 #if defined( GEOFLOW_USE_TRACER )
 
 #if defined( GEOFLOW_TRACER_USE_GPTL )
 #include "gptl.h"
+#include "gptlmpi.h"
 #endif
 
 #if defined( GEOFLOW_TRACER_USE_NVTX )
@@ -20,8 +22,6 @@
 #if defined( GEOFLOW_TRACER_USE_PIO )
 #include "tbox/pio.hpp"
 #endif
-
-#include "boost/mpi.hpp"
 
 namespace geoflow {
 namespace tbox {
@@ -85,8 +85,9 @@ void TracerOps::initialize(){
 }
 void TracerOps::finalize(){
 #if defined( GEOFLOW_TRACER_USE_GPTL )
+	using namespace ::geoflow::tbox;
 	GPTLpr_file("timing.txt");
-    GPTLpr_summary();
+    GPTLpr_summary( mpixx::communicator() );
     GPTLfinalize();
 #endif
 }
