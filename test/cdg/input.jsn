@@ -15,7 +15,7 @@
   "do_comparison"     : true,
   "observer_list"     : ["gio_observer", "gmconv_diag"],
   "IO_implementation" : "gio",
-  "terrain_type"      : "boxschar_range",
+  "terrain_type"      : "",
   "boxschar_range": {
     "name"       : "boxschar_range",
     "lambda"     : 8000.0,
@@ -36,7 +36,7 @@
   "test": {
     "bdy_class"        : "uniform",
     "base_type"        : ["GBDY_0FLUX", "GBDY_DIRICHLET"],
-    "istate"           : [[0, 1], [2]],
+    "istate"           : [[0, 1], [2, 3]],
     "value"            : [[0, 0], [0, 0]],
     "use_init"         : [false, true],
     "compute_once"     : [false, true]
@@ -56,7 +56,7 @@
     "dofallout"       : false,
     "dogravity"       : true,
     "bconserved"      : false,
-    "divopcolloc"     : false,
+    "divopcolloc"     : true,
     "usebdydat"       : true,
     "Stokeshyp"       : false,
     "bindepdiss"      : false,
@@ -71,19 +71,19 @@
       "filter_type" : "boyd_filter",
       "strength"    : [1e-3, 1e-3, 1e-3],
       "pdelta"      : [1, 1, 1],
-      "istate"      : [0, 1, 2]
+      "istate"      : [0, 1, 2, 3]
     },
     "proj_filter" : {
       "filter_type" : "projection_filter",
       "strength"    : [0.05 , 0.05, 0.05],
       "pdelta"      : [2, 2, 2],
-      "istate"      : [0, 1, 2]
+      "istate"      : [0, 1, 2, 3]
     }
   },
   "grid_box": {
     "grid_name" : "grid_box",
-    "xyz0"      : [-75000, 0, 0],
-    "delxyz"    : [ 150000, 15000, 1.0],
+    "xyz0"      : [-150000, 0, 0],
+    "delxyz"    : [ 300000, 25000, 1.0],
     "num_elems" : [38, 8, 1],
     "bdy_x_0"   : "0-flux",
     "bdy_x_1"   : "0-flux",
@@ -92,14 +92,14 @@
     "bdy_z_0"   : "0-flux",
     "bdy_z_1"   : "0-flux",
     "maxit"     : 3072,
-    "tol"       : 2.0e-4,
+    "tol"       : 1.0e-8,
     "norm_type" : "GCG_NORM_INF"
   },
   "stepper_props": {
     "stepping_method"  : "GSTEPPER_EXRK",
-    "time_deriv_order" : 2,
-    "nstage"           : 2,
-    "stab_preserving"  : false,
+    "time_deriv_order" : 3,
+    "nstage"           : 3,
+    "stab_preserving"  : true,
     "extrap_order"     : 2,
     "variable_dt"      : false,
     "courant"          : 0.1
@@ -164,7 +164,7 @@
     "idir"               : "outs",
     "odir"               : "outs",
     "cadence_type"       : "time",
-    "cycle_interval"     : 10,
+    "cycle_interval"     : 1,
     "time_interval"      : 100.0,
     "state_names"        : ["v1", "v2", "d"],
     "grid_names"         : ["xgrid", "ygrid", "zgrid"],
@@ -182,9 +182,9 @@
   },
   "time_integration": {
     "integ_type" : "time",
-    "time_end"   : 2500.0,
+    "time_end"   : 2500.1,
     "cycle_end"  : 10,
-    "dt"         : 5.0
+    "dt"         : 2.0
   }
 
 }

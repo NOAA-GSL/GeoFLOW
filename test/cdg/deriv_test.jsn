@@ -1,5 +1,5 @@
 { 
-  "exp_order"         : [3, 3, 4],
+  "exp_order"         : [6, 6, 4],
   "exp_order_type"    : "constant",
   "do_dealiasing"     : false,
   "qdealias_order"    : [16, 16, 7],
@@ -19,13 +19,14 @@
     "name"       : "boxschar_range",
     "lambda"     : 8000.0,
     "extent"     : 25000.0,
-    "h0"         : 30.0,
+    "h0"         : 3.0e4,
     "x0"         : 0.0
   },
   "poly_test": {
-    "poly"     : [2, 2, 1],
+    "poly"     : [4, 2, 1],
     "ncycles"  : 1,
-    "idir"     : 1
+    "idir"     : 1,
+    "ierr"     : 1
   },
   "0-flux": {
     "bdy_class"        : "uniform",
@@ -36,9 +37,9 @@
   },
   "grid_box": {
     "grid_name" : "grid_box",
-    "xyz0"      : [0, 0, 0],
-    "delxyz"    : [ 1, 1.0, 1.0],
-    "num_elems" : [2, 2, 1],
+    "xyz0"      : [-150000.0, 0.0, 0.0],
+    "delxyz"    : [300000.0, 25000.0, 1.0],
+    "num_elems" : [38, 8, 1],
     "bdy_x_0"   : "0-flux",
     "bdy_x_1"   : "0-flux",
     "bdy_y_0"   : "0-flux",
@@ -46,7 +47,7 @@
     "bdy_z_0"   : "0-flux",
     "bdy_z_1"   : "0-flux",
     "maxit"     : 4096,
-    "tol"       : 1.0e-12,
+    "tol"       : 1.0e-10,
     "norm_type" : "GCG_NORM_INF"
   }
 }
