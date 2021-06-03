@@ -1197,21 +1197,21 @@ void GGrid<Types>::deriv(GTVector<Ftype> &u, GINT idir, GTVector<Ftype> &utmp,
   assert(bInitialized_ && "Object not inititialized");
 
 
+  GINT nc =  gtype_ == GE_2DEMBEDDED ? GDIM+1 : GDIM;
   GTMatrix<GTVector<Ftype>> *dXidX = &this->dXidX();
-
 
   // du/dx_idir = Sum_j=[1:N] dXi_j/dX_idir D_j u:
   if ( this->gtype() == GE_REGULAR ) {
-    assert(idir > 0 && idir <= GDIM && "Invalid derivative");
+    assert(idir > 0 && idir <= GDIM && "Invalid spatial derivative");
     compute_grefderiv(u, etmp_, idir, FALSE, du); // D_idir u
 
     du.pointProd((*dXidX)(idir-1, 0));
   }
   else {  // compute dXi_j/dX_idir D^j u:
-    assert(idir > 0 && idir <= GDIM+1 && "Invalid derivative");
+    assert(idir > 0 && idir <= nc && "Invalid spatial derivative");
     compute_grefderiv(u, etmp_, 1, FALSE, du); // D_xi u
     du.pointProd((*dXidX)(0,idir-1));
-    for ( auto j=1; j<GDIM; j++ ) {
+    for ( auto j=1; j<nc; j++ ) {
       compute_grefderiv(u, etmp_, j+1, FALSE, utmp); // D_xi^j u
       utmp.pointProd((*dXidX)(j,idir-1));
       du += utmp; 
@@ -1248,7 +1248,7 @@ void GGrid<Types>::wderiv(GTVector<Ftype> &u, GINT idir, GBOOL dotrans,
 
 GTVector<Ftype> t1(ndof());
 
-  assert(idir > 0 && idir <= nxy && "Invalid derivative");
+  assert(idir > 0 && idir <= nxy && "Invalid spatial derivative");
 
   // du/dx_idir = Sum_j=[1:N] dxi_j/dx_idir D_j u:
   if ( this->gtype() == GE_REGULAR ) {
@@ -1326,12 +1326,12 @@ void GGrid<Types>::wderiv(GTVector<Ftype> &u, GINT idir, GBOOL bwghts, GTVector<
 
   // du/dx_idir = Sum_j=[1:N] dxi_j/dx_idir D_j u:
   if ( this->gtype() == GE_REGULAR ) {
-    assert(idir > 0 && idir <= GDIM && "Invalid derivative");
+    assert(idir > 0 && idir <= GDIM && "Invalid spatial derivative");
     compute_grefderivW(u, etmp_, idir, FALSE, du); 
     du.pointProd((*dXidX)(idir-1, 0));
   }
   else {  // compute dXi_j/dX_idir D^j u:
-    assert(idir > 0 && idir <= GDIM+1 && "Invalid derivative");
+    assert(idir > 0 && idir <= GDIM+1 && "Invalid spatial derivative");
     compute_grefderivW(u, etmp_, 1, FALSE, du); 
     du.pointProd((*dXidX)(0,idir-1));
     for ( auto j=1; j<GDIM; j++ ) {
