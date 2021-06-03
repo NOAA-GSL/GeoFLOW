@@ -190,14 +190,14 @@ void GShapeFcn_embed<T>::Ni_2d(GTVector<GINT> &ishape,
       && this->gbasis_[1] != NULLPTR
       && "No basis set" );
   d_.resizem(xi.size());
-  for ( GSIZET j=0; j<xi.size(); j++ ) {
+  for ( auto j=0; j<xi.size(); j++ ) {
     d_[j].resize(xi[j]->size());
     this->gbasis_[j]->evalBasis(ishape[j], *xi[j], d_[j]);
   }
 
   GSIZET n = 0;
-  for ( GSIZET j=0; j<xi[1]->size(); j++ ) {
-    for ( GSIZET i=0; i<xi[0]->size(); i++ ) {
+  for ( auto j=0; j<xi[1]->size(); j++ ) {
+    for ( auto i=0; i<xi[0]->size(); i++ ) {
       N [n++] = d_[0][i]*d_[1][j];
     }
   }
@@ -236,15 +236,15 @@ void GShapeFcn_embed<T>::Ni_3d(GTVector<GINT> &ishape,
       && "No basis set" );
 
   d_.resizem(xi.size());
-  for ( GSIZET j=0; j<xi.size(); j++ ) {
+  for ( auto j=0; j<xi.size(); j++ ) {
     d_[j].resize(xi[j]->size());
     this->gbasis_[0]->evalBasis(ishape[j], *xi[j], d_[j]);
   }
 
   GSIZET n=0;
-  for ( GSIZET k=0; k<xi[1]->size(); k++ ) {
-    for ( GSIZET j=0; j<xi[1]->size(); j++ ) {
-      for ( GSIZET i=0; i<xi[0]->size(); i++ ) {
+  for ( auto k=0; k<xi[1]->size(); k++ ) {
+    for ( auto j=0; j<xi[1]->size(); j++ ) {
+      for ( auto i=0; i<xi[0]->size(); i++ ) {
         N[n++] = d_[0][i]*d_[1][j]*d_[2][k];
       }
     }
@@ -366,7 +366,7 @@ void GShapeFcn_embed<T>::dNdXi_2d(GTVector<GINT> &ishape, GINT jder,
       && "No basis set" );
 
   d_.resizem(GDIM);
-  for ( GSIZET j=0; j<GDIM; j++ ) { 
+  for ( auto j=0; j<GDIM+1; j++ ) { 
     d_[j].resizem(xi[j]->size());
     if ( j == (jder-1) ) { // covers the case where jder=3
       this->gbasis_[j]->evalDBasis(ishape[j], *xi[j], d_[j]);
@@ -378,8 +378,8 @@ void GShapeFcn_embed<T>::dNdXi_2d(GTVector<GINT> &ishape, GINT jder,
 
   // Do tensor product:
   GSIZET n = 0;
-  for ( GSIZET j=0; j<xi[1]->size(); j++ ) {
-    for ( GSIZET i=0; i<xi[0]->size(); i++ ) {
+  for ( auto j=0; j<xi[1]->size(); j++ ) {
+    for ( auto i=0; i<xi[0]->size(); i++ ) {
       dNdxi[n++] = d_[0][i]*d_[1][j];
     }
   }
@@ -419,9 +419,9 @@ void GShapeFcn_embed<T>::dNdXi_3d(GTVector<GINT> &ishape, GINT jder,
 
 
   d_.resizem(xi.size());
-  for ( GSIZET j=0; j<xi.size(); j++ ) {
+  for ( auto j=0; j<xi.size(); j++ ) {
     d_[j].resize(xi[j]->size());
-    if ( (j+1) != jder ) {
+    if ( j != (jder-1) ) {
       this->gbasis_[j]->evalBasis (ishape[j], *xi[j], d_[j]);
     }
     else {
@@ -430,9 +430,9 @@ void GShapeFcn_embed<T>::dNdXi_3d(GTVector<GINT> &ishape, GINT jder,
   }
 
   GSIZET n = 0;
-  for ( GSIZET k=0; k<xi[2]->size(); k++ ) {
-    for ( GSIZET j=0; j<xi[1]->size(); j++ ) {
-      for ( GSIZET i=0; i<xi[0]->size(); i++ ) {
+  for ( auto k=0; k<xi[2]->size(); k++ ) {
+    for ( auto j=0; j<xi[1]->size(); j++ ) {
+      for ( auto i=0; i<xi[0]->size(); i++ ) {
         dNdxi[n++] = d_[0][i]*d_[1][j]*d_[2][k];
       }
     }

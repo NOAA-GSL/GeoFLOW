@@ -338,6 +338,7 @@ void GShapeFcn_hostd<T>::dNdXi_2d(GTVector<GINT> &ishape, GINT jder,
 
   d_.resizem(xi.size());
 
+  // Compute 1d components of derivative of full basis:
   for ( auto j=0; j<xi.size(); j++ ) {
     d_[j].resize(xi[j]->size());
     if ( j == (jder-1)) {
@@ -348,6 +349,7 @@ void GShapeFcn_hostd<T>::dNdXi_2d(GTVector<GINT> &ishape, GINT jder,
     }
   }
 
+  // Compute tensor product function, dNdxi:
   GSIZET n = 0;
   for ( auto j=0; j<xi[1]->size(); j++ ) {
     for ( auto i=0; i<xi[0]->size(); i++ ) {
@@ -385,6 +387,7 @@ void GShapeFcn_hostd<T>::dNdXi_3d(GTVector<GINT> &ishape, GINT jder,
 
   d_.resizem(xi.size());
 
+  // Compute 1d components of derivative of full basis:
   for ( auto j=0; j<xi.size(); j++ ) {
     d_[j].resize(xi[j]->size());
     if ( j == (jder-1) ) {
@@ -395,6 +398,7 @@ void GShapeFcn_hostd<T>::dNdXi_3d(GTVector<GINT> &ishape, GINT jder,
     }
   }
 
+  // Compute tensor product function, dNdxi:
   GSIZET n = 0;
   for ( auto k=0; k<xi[2]->size(); k++ ) {
     for ( auto j=0; j<xi[1]->size(); j++ ) {
