@@ -64,10 +64,10 @@ lshapefcn_             (NULLPTR)
   dP_.resize(GDIM);
   for ( auto j=0; j<GDIM; j++ ) P0_[j] = spt[j];
   spt = gridptree.getArray<Ftype>("delxyz");
+  for ( auto j=0; j<GDIM; j++ ) dP_[j] = spt[j];
   sne = gridptree.getArray<int>("num_elems");
 
-  // compute global bdy range, and global vertices:
-  for ( auto j=0; j<GDIM; j++ ) dP_[j] = spt[j];
+  // Compute global bdy range, and global vertices:
   P1_ = P0_ + dP_;
   gverts_.resize(pow(2,ndim_));
   for ( auto j=0; j<gverts_.size(); j++ ) gverts_[j].resize(GDIM);
@@ -1338,17 +1338,17 @@ void GGridBox<Types>::do_gbdy_normals2d(const GTMatrix<GTVector<Ftype>> &dXdXi,
      for ( auto j=0; j<igbdy.size(); j++ ) { // all points on global bdy 
        ib = igbdy[j];
        id = GET_NDHOST(debdy[j]); // host face id
-       xm = id == 1 || id == 2 ? -1.0 : 1.0;
+//     xm = id == 1 || id == 2 ? -1.0 : 1.0;
        for ( auto i=0; i<dXdXi.size(2); i++ ) { // over _X_
          p1[i] = dXdXi(id%2,i)[ib]; 
        }
        kp.cross(p1, xp);   // xp = k X p1
-       xp *= xm;
+//     xp *= xm;
        xp.unit();
        for ( auto i=0; i<normals.size(); i++ ) normals[i][j] = xp[i];
        // k X tangent = n ==>
-       tangents[0][id%2][j] =  normals[1][j]; 
-       tangents[0][id%2][j] = -normals[0][j];
+       tangents[0][0][j] =  normals[1][j]; 
+       tangents[0][1][j] = -normals[0][j];
      }
    }
    else if ( this->gtype_ == GE_2DEMBEDDED ) {
@@ -2046,6 +2046,5 @@ void GGridBox<Types>::elem_face_data3d(GTMatrix<GTVector<Ftype>>       &dXdXi,
    }
 
 } // end, method elem_face_data3d
-
 
 

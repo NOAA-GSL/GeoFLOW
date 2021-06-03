@@ -144,7 +144,6 @@ private:
          GBOOL              on_global_edge(GINT iface, GTPoint<Ftype> &pt);// pt on global edge?
 
 
-
          GINT                ndim_;          // grid dimensionality (2 or 3)
          GDD_base<Ftype>    *gdd_;           // domain decomposition/partitioning object
          GShapeFcn_linear<Ftype> 
