@@ -35,3 +35,4 @@ done.35. terrain-following coordinates
     methods that accept a vector of word sizes.
 40. Maybe for an intern: characterize GIO performance
 41. Refactor grids. Big job.
+42. Remove stateinfo structure from APIs; no longer needed, but must check this first
