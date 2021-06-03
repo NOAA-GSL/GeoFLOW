@@ -524,6 +524,7 @@ void GGrid<Types>::grid_init()
   GSIZET nelems = gelems_.size();
   GComm::Allreduce(&nelems, &ngelems_, 1, T2GCDatatype<GSIZET>() , GC_OP_SUM, comm_);
 
+
   // Set element id vector:
   set_elemids();
 
@@ -670,28 +671,25 @@ void GGrid<Types>::def_geom_init()
      }
    }
 
+
    // Now, set the geometry/metric quanties from the elements:
    GSIZET ibeg, iend; // beg, end indices for global arrays
-   GSIZET ibbeg, ibend; // beg, end indices for global arrays for bdy quantities
-   GSIZET ifbeg, ifend; // beg, end indices for global arrays for face quantities
    for ( auto e=0; e<gelems_.size(); e++ ) {
      ibeg  = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
-     ifbeg = gelems_[e]->ifbeg(); ifend = gelems_[e]->ifend();
-//   ibbeg = gelems_[e]->ibbeg(); ibend = gelems_[e]->ibend();
 
      xe    = &gelems_[e]->xNodes();
 
      // Restrict global arrays to local scope:
+     Jac_.range(ibeg, iend);
      for ( auto j=0; j<nxy; j++ ) {
        for ( auto i=0; i<nxy; i++ )  {
          dXidX_(i,j).range(ibeg, iend);
          dXdXi_(i,j).range(ibeg, iend);
        }
      }
-     Jac_.range(ibeg, iend);
-//   faceJac_.range(ifbeg, ifend);
 
      // Set the geom/metric quantities using element data:
+     // (Note: faceJac_ is not modified in this call)
      if ( GDIM == 2 ) {
        gelems_[e]->dogeom2d(dXdXi_, dXidX_, Jac_, faceJac_);
      }
@@ -704,14 +702,13 @@ void GGrid<Types>::def_geom_init()
      
    } // end, element loop
 
+   Jac_.range_reset();
    for ( auto j=0; j<nxy; j++ )  {
      for ( auto i=0; i<nxy; i++ )  {
        dXidX_(i,j).range_reset();
        dXdXi_(i,j).range_reset();
      }
    }
-   Jac_.range_reset();
-// faceJac_.range_reset();
 
    do_face_data();
 
@@ -770,21 +767,16 @@ void GGrid<Types>::reg_geom_init()
 
    // Now, set the geometry/metric quanties from the elements:
    GSIZET ibeg, iend; // beg, end indices for global arrays
-   GSIZET ibbeg, ibend; // beg, end indices for global arrays for bdy quantities
-   GSIZET ifbeg, ifend; // beg, end indices for global arrays for face quantities
    for ( auto e=0; e<gelems_.size(); e++ ) {
      ibeg  = gelems_[e]->igbeg(); iend  = gelems_[e]->igend();
-     ifbeg = gelems_[e]->ifbeg(); ifend = gelems_[e]->ifend();
-//   ibbeg = gelems_[e]->ibbeg(); ibend = gelems_[e]->ibend();
-  
      xe    = &gelems_[e]->xNodes();
-
+     Jac_.range(ibeg, iend);
      for ( auto j=0; j<dXidX_.size(2); j++ ) {
        for ( auto i=0; i<dXidX_.size(1); i++ )  {
          dXidX_(i,j).range(ibeg, iend);
+         dXdXi_(i,j).range(ibeg, iend);
        }
      }
-     Jac_.range(ibeg, iend);
 
      // Set the geom/metric quantities using element data:
      if ( GDIM == 2 ) {
@@ -799,12 +791,13 @@ void GGrid<Types>::reg_geom_init()
 
    } // end, element loop
 
+   Jac_.range_reset();
    for ( auto j=0; j<dXidX_.size(2); j++ )  {
      for ( auto i=0; i<dXidX_.size(1); i++ )  {
        dXidX_(i,j).range_reset();
+       dXdXi_(i,j).range_reset();
      }
    }
-   Jac_.range_reset();
 
    do_face_data();
 
@@ -1207,10 +1200,11 @@ void GGrid<Types>::deriv(GTVector<Ftype> &u, GINT idir, GTVector<Ftype> &utmp,
   GTMatrix<GTVector<Ftype>> *dXidX = &this->dXidX();
 
 
-  // du/dx_idir = Sum_j=[1:N] dxi_j/dx_idir D_j u:
+  // du/dx_idir = Sum_j=[1:N] dXi_j/dX_idir D_j u:
   if ( this->gtype() == GE_REGULAR ) {
     assert(idir > 0 && idir <= GDIM && "Invalid derivative");
     compute_grefderiv(u, etmp_, idir, FALSE, du); // D_idir u
+
     du.pointProd((*dXidX)(idir-1, 0));
   }
   else {  // compute dXi_j/dX_idir D^j u:
@@ -1533,6 +1527,8 @@ void GGrid<Types>::add_terrain(const State &xb, State &utmp)
   StateComp *x0=utmp[0];
   StateComp *b =utmp[1];
   State      tmp(utmp.size()-2);
+  GTVector<GTVector<Ftype>> *xe;
+
 
   for ( auto j=0; j<tmp.size(); j++ ) tmp[j] = utmp[j+2];
 
@@ -1544,7 +1540,6 @@ void GGrid<Types>::add_terrain(const State &xb, State &utmp)
 
   H.use_metric(TRUE); // do Laplacian in real space
 
-
   // Solve Nabla^2 (Xnew + Xb ) = 0 
   // for new (homgogeneous) grid solution, Xnew, 
   // given terrain, Xb, and // 'base' grid, XNodes:
@@ -1553,7 +1548,7 @@ void GGrid<Types>::add_terrain(const State &xb, State &utmp)
    *b  = 0.0;
    *x0 = 0.0; // first guess
     iret = cg.solve(H, *b, *xb[j], *x0);
-//cout << "GGrid<Types>::add_terrain: iret=" << iret << endl;
+
     assert(iret == GCG<CGTypePack>::GCGERR_NONE);
 //cout << "GGrid<Types>::add_terrain: xb_new[" << j << "]=" << *x0 << endl;
     xNodes_[j] = *x0;             // Reset XNodes = x0
@@ -1573,8 +1568,15 @@ void GGrid<Types>::add_terrain(const State &xb, State &utmp)
 
 
   // Now, with new coordinates, recompute metric terms, 
-  // Jacobian, normals:
+  // Jacobian:
   def_geom_init();
+
+  // Re-compute Mass matrices:
+  if ( mass_  != NULLPTR ) delete mass_;
+  if ( imass_ != NULLPTR ) delete imass_;
+  mass_  = new Mass(*this, FALSE);
+  imass_ = new Mass(*this, TRUE);
+
 
   // Configure and initialize domain bdy data:
   init_bc_info(TRUE); // TRUE ==> adding terrain
