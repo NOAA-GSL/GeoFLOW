@@ -966,6 +966,8 @@ GBOOL ginitstate<Types>::impl_icosabcconv(const PropertyTree &ptree, GString &sc
  *u[0]  = 0.0; // sx
  *u[1]  = 0.0; // sy
  *u[2]  = 0.0; // sz
+ *vh[0] = 0.0;
+ *vh[1] = 0.0;
  *d     = 0.0;
 
   r     = ri;
@@ -987,8 +989,15 @@ GBOOL ginitstate<Types>::impl_icosabcconv(const PropertyTree &ptree, GString &sc
       (*u[1])[j] +=  ( A*sin(k*lon) + C*cos(k*lat) ) / pow(k,poly);
       (*u[2])[j] +=  ( A*cos(k*lon) + B*sin(k*lat) ) / pow(k,poly);
 #else
-      (*vh[0])[j] +=  fact*A*cos    (k*lat+alpha) / pow(k,poly); // lat
-      (*vh[1])[j] +=  fact*B*sin(2.0*k*lat+alpha) / pow(k,poly); // long
+//    (*vh[0])[j] +=  fact*A*cos    (k*lat+alpha) / pow(k,poly); // lat
+//    (*vh[1])[j] +=  fact*B*sin(2.0*k*lat+alpha) / pow(k,poly); // long
+      (*vh[0])[j] +=  fact*A*cos    (k*lat+alpha); // lat
+      (*vh[1])[j] +=  fact*B*sin(2.0*k*lat+alpha); // long
+if ( !std::isfinite((*vh[0])[j]) || !std::isfinite((*vh[1])[j]) ) {
+cout << " (A,B,C)=" << A << " " << B << " " << C << endl;
+cout << " (lat,lon)=" << lat << " " << lon << "; fact=" << fact << "; k=" << k << "; alpha=" << alpha << " vh0=" << (*vh[0])[j] << " vh1=" << (*vh[1])[j] << endl;
+exit(1);
+}
 #endif
       p           = (*d)[j] * RD * T0;
       exner       = pow(p/P0, RD/CPD);
@@ -999,7 +1008,9 @@ GBOOL ginitstate<Types>::impl_icosabcconv(const PropertyTree &ptree, GString &sc
   // Convert from 2d surface to 3d Cartesian 
   // momentum densities:
   GMTK::vsphere2cart<Grid,GFTYPE>(grid, vh, GVECTYPE_PHYS, u);
-  for ( auto j=0; j<3; j++ ) *u[j] *=  *d;
+  for ( auto j=0; j<3; j++ ) {
+    *u[j] *=  *d;
+  }
 
   if ( distribution != NULLPTR ) delete distribution;
 
