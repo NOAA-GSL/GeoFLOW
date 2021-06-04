@@ -35,10 +35,6 @@
 #include "gtools.h"
 //#include "gio.h"
 
-#if defined(GEOFLOW_USE_GPTL)
-    #include "gptl.h"
-#endif
-
 using namespace geoflow::pdeint;
 using namespace geoflow::tbox;
 using namespace std;
@@ -94,7 +90,6 @@ void create_observers(PropertyTree &ptree, GSIZET icycle, GFTYPE time,
 std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers);
 void create_mixer(PropertyTree &ptree, MixBasePtr &pMixer);
 void gresetart(PropertyTree &ptree);
-void do_bench(GString sbench, GSIZET ncyc);
 
 //#include "init_pde.h"
 
@@ -226,10 +221,6 @@ int main(int argc, char **argv)
     nu_.resize(1); 
     nu_ = nu_scalar; 
     
-#if defined(GEOFLOW_USE_GPTL)
-    // Set GTPL options:
-    GPTLsetoption (GPTLcpu, 1);
-#endif
     // Initialize timer:
     GTimerInit();
 
@@ -454,13 +445,6 @@ int main(int argc, char **argv)
 
 #endif
 
-    do_bench("benchmark.txt", pIntegrator->get_numsteps());
- 
-#if defined(GEOFLOW_USE_GPTL)
-//  GPTLpr(myrank);
-    GPTLpr_file("timings.txt");
-    GPTLpr_summary();
-#endif
     GTimerFinal();
 
     EH_MESSAGE("main: do shutdown...");
@@ -1351,67 +1335,4 @@ std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>> &pObservers
 } // end method create_observers
 
 
-//**********************************************************************************
-//**********************************************************************************
-// METHOD: do_bench
-// DESC  : Do benchmark from GPTL timers
-// ARGS  : fname     : filename
-//         ncyc      : number time cycles to average over
-//**********************************************************************************
-void do_bench(GString fname, GSIZET ncyc)
-{
-    if ( !bench_ ) return;
 
-#if defined(GEOFLOW_USE_GPTL)
-
-    GINT   myrank   = GComm::WorldRank(comm_);
-    GINT   ntasks   = GComm::WorldSize(comm_);
-    GINT   nthreads = 0;
-    GFTYPE ttotal;
-    GFTYPE tggfx;
-    GFTYPE texch;
-    std::ifstream itst;
-    std::ofstream ios;
-    GTVector<GSIZET> lsz(2), gsz(2);
-
-    // Get global no elements and dof:
-    lsz[0] = grid_->nelems();
-    lsz[1] = grid_->ndof();
-    GComm::Allreduce(lsz.data(), gsz.data(), 2, T2GCDatatype<GSIZET>() , GC_OP_SUM, comm_);
-    if ( myrank == 0 ) {
-      itst.open(fname);
-      ios.open(fname,std::ios_base::app);
-  
-      // Write header, if required:
-      if ( itst.peek() == std::ofstream::traits_type::eof() ) {
-        ios << "#nelems"  << "  ";
-        ios << "ndof"     << "  ";
-        ios << "ntasks"   << "  ";
-        ios << "nthreads" << "  ";
-        ios << "ttotal"   << "  ";
-        ios << "tggfx"    << "  ";
-        ios << "texch"           ;
-        ios << endl;
-      }
-      itst.close();
-
-      GPTLget_wallclock("time_loop"     , 0,  &ttotal); ttotal /= ncyc;
-      GPTLget_wallclock("ggfx_doop"     , 0,  &tggfx ); tggfx  /= ncyc;
-      GPTLget_wallclock("ggfx_doop_exch", 0,  &texch ); texch  /= ncyc;
-  
-      ios << gsz[0]          << "   " ;
-      ios << gsz[1]          << "   " ;
-      ios << ntasks          << "   " ;
-      ios << nthreads        << "   ";
-      ios << ttotal          << "   ";
-      ios << tggfx           << "   ";
-      ios << texch                   ;
-      ios << endl;
-
-      ios.close();
-    }
-#endif
-
-    return;
-
-} // end method do_bench
