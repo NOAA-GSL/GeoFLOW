@@ -17,10 +17,6 @@
 #include "gmtk.hpp"
 #include "gllbasis.hpp"
 
-#if defined(GEOFLOW_USE_GPTL)
-    #include "gptl.h"
-#endif
-
 GINT szMatCache_ = _G_MAT_CACHE_SIZE;
 GINT szVecCache_ = _G_VEC_CACHE_SIZE;
 
@@ -77,15 +73,6 @@ int main(int argc, char **argv)
     GINT myrank  = GComm::WorldRank();
     GINT nprocs  = GComm::WorldSize();
 
-
-
-#if defined(GEOFLOW_USE_GPTL)
-    // Set GTPL options:
-    GPTLsetoption (GPTLcpu, 1);
-
-    // Initialize GPTL:
-    GPTLinitialize();
-#endif
 
     GTVector<GSIZET> N(3);
     N[0] = np+1; N[1] = np+2; N[2] = np+3;
@@ -308,12 +295,6 @@ std::cout << "y3a  = " << u3da << std::endl;
 
 
   gerrcode = errcode;
-  
-#if defined(GEOFLOW_USE_GPTL)
-  GPTLpr_file("timing.txt");
-  GPTLfinalize();
-#endif
-
 
 term:
     if ( gerrcode != 0 ) {
