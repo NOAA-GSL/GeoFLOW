@@ -51,9 +51,9 @@ bdy_apply_callback_           (NULLPTR)
   PropertyTree gridptree = ptree.getPropertyTree(gname);
 
   // Get solver traits for terrain:
-  cgtraits_.maxit = gridptree.getValue<GDOUBLE>("maxit");
-  cgtraits_.tol   = gridptree.getValue<GDOUBLE>("tol");
-  snorm           = gridptree.getValue<GString>("norm_type");
+  cgtraits_.maxit = gridptree.getValue<GDOUBLE>("maxit", 128);
+  cgtraits_.tol   = gridptree.getValue<GDOUBLE>("tol", 1.0e-8);
+  snorm           = gridptree.getValue<GString>("norm_type", "GCG_NORM_INF");
   cgtraits_.normtype = LinSolverBase<CGTypePack>::str2normtype(snorm);
 
   cudat_.nstreams = ptree.getValue<GINT>("nstreams",1);
