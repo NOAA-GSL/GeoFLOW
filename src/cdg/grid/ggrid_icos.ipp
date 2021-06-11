@@ -983,6 +983,9 @@ void GGridIcos<Types>::config_gbdy(const geoflow::tbox::PropertyTree &ptree,
   igbdy_start = 0;
   for ( auto j=0; j<2; j++ ) { // cycle over 2 spherical surfaces
     sbdy         = gridptree.getValue<GString>(bdynames[j]);
+    if ( "none" == sbdy || "" == sbdy ) {
+      continue;
+    }
     bdytree      = ptree.getPropertyTree(sbdy);
     bdyclass     = bdytree.getValue<GString>("bdy_class", "uniform");
     find_gbdy_ind3d(rbdy[j], itmp, utmp); // bdy node ids only

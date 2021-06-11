@@ -1055,6 +1055,9 @@ void GGridBox<Types>::config_gbdy(const PropertyTree           &ptree,
   igbdy_start = 0;
   for ( auto j=0; j<2*GDIM; j++ ) { // over each canonical bdy
     sbdy         = gridptree.getValue<GString>(bdynames[j]);
+    if ( "none" == sbdy || "" == sbdy ) {
+      continue;
+    }
     bdytree      = ptree.getPropertyTree(sbdy);
     bdyclass     = bdytree.getValue<GString>("bdy_class", "uniform");
     find_gbdy_ind  (j, FALSE, ikeep, itmp, utmp); // bdy node ids only
