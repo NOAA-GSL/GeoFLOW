@@ -1,5 +1,5 @@
 { 
-  "exp_order"         : [6, 6, 4],
+  "exp_order"         : [4, 4, 4],
   "exp_order_type"    : "constant",
   "do_dealiasing"     : false,
   "qdealias_order"    : [16, 16, 7],
@@ -19,11 +19,11 @@
     "name"       : "boxschar_range",
     "lambda"     : 8000.0,
     "extent"     : 25000.0,
-    "h0"         : 3.0e4,
+    "h0"         : 3000.0,
     "x0"         : 0.0
   },
   "poly_test": {
-    "poly"     : [4, 2, 1],
+    "poly"     : [2, 2, 1],
     "ncycles"  : 1,
     "idir"     : 1,
     "ierr"     : 1
@@ -47,7 +47,7 @@
     "bdy_z_0"   : "0-flux",
     "bdy_z_1"   : "0-flux",
     "maxit"     : 4096,
-    "tol"       : 1.0e-10,
+    "tol"       : 1.0e-12,
     "norm_type" : "GCG_NORM_INF"
   }
 }
