@@ -1213,7 +1213,8 @@ void GGrid<Types>::deriv(GTVector<Ftype> &u, GINT idir, GTVector<Ftype> &utmp,
     du.pointProd((*dXidX)(0,idir-1));
     for ( auto j=1; j<nc; j++ ) {
       compute_grefderiv(u, etmp_, j+1, FALSE, utmp); // D_xi^j u
-      utmp.pointProd((*dXidX)(j,idir-1));
+//    utmp.pointProd((*dXidX)(j,idir-1));
+      utmp.pointProd((*dXidX)(idir-1,j));
       du += utmp; 
 
     }
@@ -1276,7 +1277,7 @@ GTVector<Ftype> t1(ndof());
       utmp.pointProd(*mass);
       compute_grefderiv(utmp, etmp_, 1, dotrans, du); // D_xi u
       for ( auto j=1; j<GDIM; j++ ) {
-        u.pointProd((*dXidX)(j,idir-1),t1);
+        u.pointProd((*dXidX)(idir-1,j),t1);
         t1.pointProd(*mass);
         compute_grefderiv(t1, etmp_, j+1, dotrans, utmp); // D_xi^j u
         du += utmp; 
@@ -1287,7 +1288,7 @@ GTVector<Ftype> t1(ndof());
       du.pointProd((*dXidX)(0,idir-1));
       for ( auto j=1; j<GDIM; j++ ) {
         compute_grefderiv(u, etmp_, j+1, dotrans, utmp); // D_xi^j u
-        utmp.pointProd((*dXidX)(j,idir-1));
+        utmp.pointProd((*dXidX)(idir-1,j));
         utmp.pointProd(*mass);
         du += utmp; 
       }
@@ -1336,7 +1337,7 @@ void GGrid<Types>::wderiv(GTVector<Ftype> &u, GINT idir, GBOOL bwghts, GTVector<
     du.pointProd((*dXidX)(0,idir-1));
     for ( auto j=1; j<GDIM; j++ ) {
       compute_grefderivW(u, etmp_, j+1, FALSE, utmp); 
-      utmp.pointProd((*dXidX)(j,idir-1 ));
+      utmp.pointProd((*dXidX)(idir-1,j ));
       du += utmp; 
     }
   }
