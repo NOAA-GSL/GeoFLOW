@@ -678,9 +678,9 @@ void compare(const PropertyTree &ptree, Grid &grid, EqnBasePtr &peqn, Time &t, S
 
         // Write header, if required:
         if (itst.peek() == std::ofstream::traits_type::eof()) {
-            ios << "Time"
+            ios << "#Time"
                 << "  ";
-            ios << "#ntasks"
+            ios << "ntasks"
                 << "  ";
             ios << "ncyc"
                 << "  ";
