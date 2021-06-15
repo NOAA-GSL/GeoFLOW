@@ -84,6 +84,9 @@ GBOOL GSpecTerrainFactory<Types>::spec_box(const PropertyTree& ptree, Grid &grid
   else if ( "boxschar_range"   == sname ) {
     bret = gterrainSpecBox<Types>::impl_schar_range   (ptree, stype, grid, utmp, xb);
   }
+  else if ( "boxschar_range2"  == sname ) {
+    bret = gterrainSpecBox<Types>::impl_schar_range2  (ptree, stype, grid, utmp, xb);
+  }
   else                                        {
     assert(FALSE && "Terrain specification method unknown");
 
