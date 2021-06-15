@@ -1197,3 +1197,114 @@ GBOOL ginitstate<Types>::impl_boxdryscharadv(const PropertyTree &ptree, GString 
 } // end of method impl_boxdryscharadv
 
 
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : impl_boxmtnwave
+// DESC   : Initialize state for GMConv solver with idealized 
+//          mountain wave test, intended to be in the presence of
+//          topography. Taken from Schar 2002 MWR 130:2549.
+// ARGS   : ptree  : main prop tree
+//          sconfig: ptree block name containing variable config
+//          eqn    : equation implementation
+//          grid   : grid
+//          t      : time
+//          utmp   : tmp arrays
+//          u      : current state
+// RETURNS: TRUE on success; else FALSE 
+//**********************************************************************************
+template<typename Types>
+GBOOL ginitstate<Types>::impl_boxmtnwave(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
+{
+  GString             serr = "impl_boxmtnwave: ";
+  GSIZET              nxy;
+  GFTYPE              x, y, z, zmin,r;
+  GFTYPE              dj, ds, N, N2U, P0, pj, T0, Tb, Ts, U0;
+  GFTYPE              eps=100.0*std::numeric_limits<GFTYPE>::epsilon();
+  GTVector<GFTYPE>   *db, *d, *e, *pb, *T;
+  std::vector<GFTYPE> xc, xr;  
+  GString             sblock;
+  typename Types::State
+                     *ubase;
+ 
+  GTVector<GTVector<GFTYPE>> 
+                     *xnodes = &grid.xNodes();
+  GTVector<GTVector<GFTYPE>> 
+                     *xb     = &grid.xb();
+  GMConv<Types>      *ceqn;
+
+  PropertyTree inittree    = ptree.getPropertyTree(sconfig);
+  sblock                   = ptree.getValue<GString>("pde_name");
+  PropertyTree convptree   = ptree.getPropertyTree(sblock);
+  PropertyTree terrptree   = ptree.getPropertyTree("terrain_type");
+
+
+  // Check solver type 
+  // Remember: eqn is a shared_ptr, so must check 
+  //           against its contets
+  
+  ceqn = dynamic_cast<GMConv<Types>*>(eqn.get());
+  assert(ceqn != NULLPTR && "Must initialize for Equation GMConv");
+
+  // Check grid type:
+  GridBox  *box   = dynamic_cast <GridBox*>(&grid);
+  assert(box && "Must use a box grid");
+
+  // Check state size:
+  assert(u.size() == ceqn->state_size());
+
+  // Check tmp size:
+  assert(utmp.size() >= 1 );
+
+  // Get base state:
+  typename GMConv<Types>::Traits traits = ceqn->get_traits();
+  ubase = &ceqn->get_base_state();
+//assert( traits.usebase && ubase->size() == 2 );
+  assert( ubase->size() == 2 );
+   
+
+  T     = utmp[0];  // background temp
+  d     = u  [ceqn->DENSITY]; // density
+  e     = u  [ceqn->ENERGY]; // int. energy density
+  db    = (*ubase)[0];// background density 
+  pb    = (*ubase)[1];// background pressure
+  nxy   = (*xnodes)[0].size(); // same size for x, y, z
+
+  N     = inittree.getValue<GFTYPE>("N");          // Brunt-Vaisalla freq
+  N2U   = inittree.getValue<GFTYPE>("N2U");        // N / U0
+  U0    = N / N2U;                                  // ux_0 (m/s)
+  P0    = convptree.getValue<GFTYPE>("P0");        // ref pressure (mb or hPa)
+  P0   *= 100.0;                                   // convert to Pa
+  Ts    = convptree.getValue<GFTYPE>("T_surf");    // surf temp
+
+  assert(xc.size() >= GDIM && xr.size() >= GDIM);
+
+  // Initialize momentum:
+  for ( auto j=0; j<ceqn->ENERGY; j++ ) *u[j] = 0.0;
+  ds = P0 / (RD * Ts); // surf. density
+
+  for ( auto j=0; j<nxy; j++ ) { 
+    x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; 
+    if ( GDIM == 3 ) z = (*xnodes)[2][j];
+    r = GDIM == 3 ? z : y;
+    zmin = (*xb)[GDIM-1][j];
+    if ( traits.usebase ) { // There is a base-state
+      Tb        = Ts*pow((*pb)[j]/P0,RD/CPD); 
+      (*d) [j]  = ds - (*db)[j] + N*N*ds/GG * (zmin - r); // d fluct.
+      pj        = (*pb)[j]; 
+    }
+    else {                  // No base-state
+      Tb        = Ts;
+      (*d) [j]  = N*N*ds/GG * (zmin - r); // d fluct.
+      pj        = P0; 
+   }
+   (*e)[j]   = CVD * pj / RD; // e = Cv * p / R
+   (*u[0])[j]= U0;
+   
+  }
+//cout << "boxdrybubble: db=" << *db << endl;
+
+  return TRUE;
+
+} // end of method impl_boxmtnwave
+
+
