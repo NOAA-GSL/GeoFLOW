@@ -34,6 +34,7 @@ struct gterrainSpecBox
 static GBOOL impl_gauss_range     (const PropertyTree& ptree, GString sblk, Grid &grid,  State &utmp, State &xb);
 static GBOOL impl_poly_range      (const PropertyTree& ptree, GString sblk, Grid &grid,  State &utmp, State &xb);
 static GBOOL impl_schar_range     (const PropertyTree& ptree, GString sblk, Grid &grid,  State &utmp, State &xb);
+static GBOOL impl_schar_range2    (const PropertyTree& ptree, GString sblk, Grid &grid,  State &utmp, State &xb);
 
 };
 
