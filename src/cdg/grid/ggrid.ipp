@@ -1540,6 +1540,7 @@ void GGrid<Types>::add_terrain(const State &xb, State &utmp)
   TerrainOp         H(*this);
 
   H.use_metric(TRUE); // do Laplacian in real space
+  xb_.resize(xNodes_.size());
 
   // Solve Nabla^2 (Xnew + Xb ) = 0 
   // for new (homgogeneous) grid solution, Xnew, 
@@ -1548,6 +1549,7 @@ void GGrid<Types>::add_terrain(const State &xb, State &utmp)
   for ( auto j=0; j<xNodes_.size(); j++ ) {
    *b  = 0.0;
    *x0 = 0.0; // first guess
+    xb_[j].resize(xb[j]->size()); xb_[j] = *xb[j];
     iret = cg.solve(H, *b, *xb[j], *x0);
 
     assert(iret == GCG<CGTypePack>::GCGERR_NONE);
@@ -1569,7 +1571,8 @@ void GGrid<Types>::add_terrain(const State &xb, State &utmp)
 
 
   // Now, with new coordinates, recompute metric terms, 
-  // Jacobian:
+  // Jacobian. Only deformed element grids can have terrain,
+  // so only these are updated:
   def_geom_init();
 
   // Re-compute Mass matrices:

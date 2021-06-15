@@ -186,6 +186,8 @@ virtual void                 print(const GString &filename){}          // print 
         GTVector<Ftype>     &dXidX(GSIZET i,GSIZET j);                // Rij matrix element 
         GTVector<GTVector<Ftype>>
                             &xNodes() { return xNodes_; }             // get all nodes coords (Cart)
+        GTVector<GTVector<Ftype>>
+                            &xb() { return xb_; }                     // get bdy toplogy
         GTVector<Ftype>     &xNodes(GSIZET i) { return xNodes_[i]; }  // get all nodes coords (Cart)
                             
 
@@ -321,6 +323,7 @@ virtual void                 elem_face_data(
         GTVector<Ftype>             Jac_;              // interior Jacobian, global
         GTVector<Ftype>             faceJac_;          // face Jacobians, global
         GTVector<Ftype>             faceMass_;         // elem face mass * Jacobians
+        GTVector<GTVector<Ftype>>   xb_;               // bdy topology
         GTVector<GTVector<Ftype>>   faceNormals_;      // normal to elem faces each face node point (2d & 3d), global
         GTVector<GSIZET>            gieface_;          // index into global field indicating elem face node
         VVecFtype                   bdyNormals_;       // normals to surface at each bdy node point (2d & 3d), global
