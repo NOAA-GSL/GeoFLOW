@@ -25,7 +25,7 @@
     "a"          : 5000.0
   },
   "initstate_mtvwave": {
-    "N"          : 0.01,
+    "N"          : 0.01
   },
   "dirichlet": {
     "bdy_class"        : "uniform",
