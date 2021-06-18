@@ -196,6 +196,9 @@ virtual void                 print(const GString &filename){}          // print 
         GTVector<Ftype>     &Jac();                                    // global Jacobian
         GTVector<Ftype>
                             &faceJac();                                // global face Jacobian
+        GTMatrix<GTVector<Ftype>>   
+                            &dXdXi()  
+                             { return dXdXi_; }                        // matrix Rij = dXi^j/dX^i, global
         BdyUpdateList       &bdy_update_list() 
                              { return bdy_update_list_; }              // bdy_update_list pointers
         GTVector<GTVector<Ftype>>
