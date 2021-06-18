@@ -49,10 +49,11 @@ public:
           GTVector<GSIZET> ibdyvol;  // indir. inidices into comput volume
           GTVector<GINT>   istate;   // state indices to operate on
           GTVector<Ftype>  farfield; // far-field solution for each istate
-          GTVector<Ftype>  exponent; // fall-off exponent for solution
-          GTVector<Ftype>  sigma;    // 'diffusion' factor in sponge layer
-          GTVector<Ftype>  rs;       // vector defining sponge surface
-          Ftype            ro;       // outer-most surface (may be negative)
+          GTVector<Ftype>  falloff;  // fall-off rate for solution
+          GTVector<Ftype>  exponent; // decay exponents 
+          vector<GSIZET>   isponge;  // contains grid indices of sponge layer points; 
+
+          Ftype            xstart;   // number defining sponge surface start
         };
 
         GSpongeBdy() = delete; 
@@ -72,8 +73,8 @@ protected:
         
 private:
 
-//      void                init(GSpongeBdy::Traits &);                     // initialize 
-        GBOOL               update_cart (
+        void                init(Grid &grid);                     // initialize 
+        GBOOL               update_box(
                               EqnBasePtr &eqn,
                               Grid       &grid,
                               Time       &time,
@@ -88,7 +89,10 @@ private:
                               State      &u);
        
 
+        GBOOL               binit_;         // object initialized?
+        GFTYPE              xmax_;          // max coord in direction idir
         Traits              traits_;        // Traits structure
+        GTVector<GSIZET>    isponge_;       // contains grid indices of sponge layer points; 
 
 };
 
