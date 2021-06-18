@@ -33,7 +33,7 @@ GUpdateBdyFactory<Types>::build(const PropertyTree& ptree, const GString &sbdy, 
     || ""             == sbdy ) {
     using UpdateImpl = NullUpdateBdy<Types>;
 
-    // Allocate update implementation
+    // Instantiate update implementation
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl());
 
     // Set back to base type
@@ -137,7 +137,7 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree &ptree, Grid &grid, s
     traits.value .resize(bcblock.value.size())  ; 
     traits.value       = bcblock.value;;
 
-    // Allocate update implementation
+    // Instantiate update implementation
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
 
     // Set back to base type
@@ -163,7 +163,7 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree &ptree, Grid &grid, s
       traits.callback = GUpdateBdyFactory<Types>::get_inflow_callback(bcblock.smethod, bcblock.bdyid);
     }
     traits.ptree = ptree;
-    // Allocate update implementation
+    // Instantiate update implementation
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
 
     // Set back to base type
@@ -175,7 +175,7 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree &ptree, Grid &grid, s
     using UpdateImpl = GNoSlipBdy<Types>;
     typename GNoSlipBdy<Types>::Traits traits;
 
-    // Allocate update implementation
+    // Instantiate update implementation
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
 
     // Set back to base type
@@ -203,7 +203,7 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree &ptree, Grid &grid, s
       traits.ibdyloc[j] = iloc;
     }
     
-    // Allocate update implementation
+    // Instantiate update implementation
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
 
     // Set back to base type
@@ -222,7 +222,7 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree &ptree, Grid &grid, s
     traits.istate      = bcblock.istate;
     traits.ibdyvol     = ibdy;
     
-    // Allocate update implementation
+    // Instantiate update implementation
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
 
     // Set back to base type
@@ -251,7 +251,7 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree &ptree, Grid &grid, s
     traits.falloff  = bcblock.falloff;
     traits.exponent = bcblock.exponent;
     
-    // Allocate update implementation
+    // Instantiate update implementation
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
 
     // Set back to base type
@@ -381,7 +381,7 @@ GBOOL GUpdateBdyFactory<Types>::get_bdy_block(const geoflow::tbox::PropertyTree 
   if ( stypes[ibc] == "GBDY_DIRICHLET" ) {
     fvecvec = sptree.getArray2D<GFTYPE>("value");
     if ( fvecvec.size() != nbc ) {
-      cout << "GUtils::get_bdy_block: DIRICHLET bc is specified; 2d JSON vector of size(base_type) must specify DIRICHLET values for each istate ('[]' is valid for non-DIRICHLET entries)" << endl;
+      cout << "GUtils::get_bdy_block: DIRICHLET bc is specified; 2d JSON vector of size(base_type) must specify DIRICHLET values for each istate ('[dummy data]' is valid for non-DIRICHLET entries)" << endl;
       assert(FALSE); 
     }
     stblock.value.resize(nstate);
@@ -421,7 +421,7 @@ GBOOL GUpdateBdyFactory<Types>::get_bdy_block(const geoflow::tbox::PropertyTree 
   else if ( stypes[ibc] == "GBDY_SPONGE" ) { 
     fvecvec = sptree.getArray2D<GFTYPE>("farfield");
     if ( fvecvec.size() != nbc ) {
-      cout << "GUtils::get_bdy_block: SPONGE bc is specified; a vector of size(base_type) must specify farfield values for each state group for each bc entry in 'base_type'   ('[]' is valid for non-SPONGE entries)" << endl;
+      cout << "GUtils::get_bdy_block: SPONGE bc is specified; a vector of size(base_type) must specify farfield values for each state group for each bc entry in 'base_type'   ('[dummy data]' is valid for non-SPONGE entries)" << endl;
       assert(FALSE); 
     }
     stblock.farfield.resize(nstate);
@@ -429,7 +429,7 @@ GBOOL GUpdateBdyFactory<Types>::get_bdy_block(const geoflow::tbox::PropertyTree 
 
     fvecvec = sptree.getArray2D<GFTYPE>("falloff_rate");
     if ( fvecvec.size() != nbc ) {
-      cout << "GUtils::get_bdy_block: SPONGE bc is specified; a vector of size(base_type) must specify falloff rates for each state for each bc entry in 'base_type'   ('[]' is valid for non-SPONGE entries)" << endl;
+      cout << "GUtils::get_bdy_block: SPONGE bc is specified; a vector of size(base_type) must specify falloff rates for each state for each bc entry in 'base_type'   ('[dumy data]' is valid for non-SPONGE entries)" << endl;
       assert(FALSE); 
     }
     stblock.falloff.resize(nstate);
@@ -437,7 +437,7 @@ GBOOL GUpdateBdyFactory<Types>::get_bdy_block(const geoflow::tbox::PropertyTree 
 
     fvecvec = sptree.getArray2D<GFTYPE>("exponent");
     if ( fvecvec.size() != nbc ) {
-      cout << "GUtils::get_bdy_block: SPONGE bc is specified; a vector of size(base_type) must specify diffusion exponents for each state for each bc entry in 'base_type'   ('[]' is valid for non-SPONGE entries)" << endl;
+      cout << "GUtils::get_bdy_block: SPONGE bc is specified; a vector of size(base_type) must specify diffusion exponents for each state for each bc entry in 'base_type'   ('[dummy data]' is valid for non-SPONGE entries)" << endl;
       assert(FALSE); 
     }
     stblock.exponent.resize(nstate);
