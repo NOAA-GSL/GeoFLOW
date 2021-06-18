@@ -239,17 +239,17 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree &ptree, Grid &grid, s
     traits.bdyid       = bcblock.bdyid;
     traits.istate      = bcblock.istate;
     traits.ibdyvol     = ibdy;
-    traits.idir     = bcblock.idir;
-    traits.rs       = bcblock.xstart;
-    traits.ro       = bcblock.xmax;
+    traits.idir        = bcblock.idir;
+    traits.xstart      = bcblock.xstart;
+//  traits.xend        = bcblock.xmax;
 
     traits.farfield.resize(bcblock.farfield.size());
-    traits.exponent.resize(bcblock.falloff .size());
-    traits.sigma   .resize(bcblock.diffusion.size());
+    traits.falloff .resize(bcblock.falloff .size());
+    traits.exponent.resize(bcblock.exponent.size());
 
     traits.farfield = bcblock.farfield;
-    traits.exponent = bcblock.falloff;
-    traits.sigma    = bcblock.diffusion;
+    traits.falloff  = bcblock.falloff;
+    traits.exponent = bcblock.exponent;
     
     // Allocate update implementation
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
@@ -340,15 +340,15 @@ GBOOL GUpdateBdyFactory<Types>::get_bdy_block(const geoflow::tbox::PropertyTree 
   stblock.value    .clear();
   stblock.farfield .clear();
   stblock.falloff  .clear();
-  stblock.diffusion.clear();
+  stblock.exponent .clear();
   stblock.bdyclass .clear();
   stblock.smethod  .clear();
 
   stblock.use_init    = FALSE;
+  stblock.idir        = 0;
   stblock.bdyid       = -1;
   stblock.tbdy        = GBDY_NONE;
   stblock.xstart      = 0.0;
-  stblock.xmax        = 0.0;
   stblock.bdyid       = -1;
   stblock.tbdy        = GBDY_NONE;
   stblock.bdyclass    = "";
@@ -427,7 +427,7 @@ GBOOL GUpdateBdyFactory<Types>::get_bdy_block(const geoflow::tbox::PropertyTree 
     stblock.farfield.resize(nstate);
     stblock.farfield  = fvecvec[ibc];
 
-    fvecvec = sptree.getArray2D<GFTYPE>("falloff");
+    fvecvec = sptree.getArray2D<GFTYPE>("falloff_rate");
     if ( fvecvec.size() != nbc ) {
       cout << "GUtils::get_bdy_block: SPONGE bc is specified; a vector of size(base_type) must specify falloff rates for each state for each bc entry in 'base_type'   ('[]' is valid for non-SPONGE entries)" << endl;
       assert(FALSE); 
@@ -435,28 +435,27 @@ GBOOL GUpdateBdyFactory<Types>::get_bdy_block(const geoflow::tbox::PropertyTree 
     stblock.falloff.resize(nstate);
     stblock.falloff = fvecvec[ibc];
 
-    fvecvec = sptree.getArray2D<GFTYPE>("diffusion");
+    fvecvec = sptree.getArray2D<GFTYPE>("exponent");
     if ( fvecvec.size() != nbc ) {
-      cout << "GUtils::get_bdy_block: SPONGE bc is specified; a vector of size(base_type) must specify diffusion factors for each state for each bc entry in 'base_type'   ('[]' is valid for non-SPONGE entries)" << endl;
+      cout << "GUtils::get_bdy_block: SPONGE bc is specified; a vector of size(base_type) must specify diffusion exponents for each state for each bc entry in 'base_type'   ('[]' is valid for non-SPONGE entries)" << endl;
       assert(FALSE); 
     }
-    stblock.falloff.resize(nstate);
-    stblock.falloff = fvecvec[ibc];
+    stblock.exponent.resize(nstate);
+    stblock.exponent= fvecvec[ibc];
 
-    ivec = sptree.getArray<GINT>("idir");
-    if ( fvecvec.size() != nbc ) {
-      cout << "GUtils::get_bdy_block: SPONGE bc is specified; a vector of size(base_type) must specify sponge surface direction idir for each bc entry in 'base_type'" << endl;
+    if ( !sptree.keyExists("idir" ) ) {
+      cout << "GUtils::get_bdy_block: SPONGE bc is specified; a constant integer is required that specifies sponge surface direction, idir, for all fields in 'istate'" << endl;
       assert(FALSE); 
     }
-    stblock.idir = ivec[ibc];
+    stblock.idir = sptree.getValue<GINT>("idir");
 
-    fvec = sptree.getArray<GFTYPE>("xstart");
-    if ( fvecvec.size() != nbc ) {
-      cout << "GUtils::get_bdy_block: SPONGE bc is specified; a vector of size(base_type) must specify start positions in direction idir for each bc entry in 'base_type'" << endl;
+    if ( !sptree.keyExists("xstart" ) ) {
+      cout << "GUtils::get_bdy_block: SPONGE bc is specified; a coordinate value in direction idir must be provided specifying start positions in direction idir for all fields in 'istate'" << endl;
       assert(FALSE); 
     }
-    stblock.xstart = fvec[ibc];
+    stblock.xstart = sptree.getValue<GFTYPE>("xstart");
 
+#if 0
     fvec = sptree.getArray<GFTYPE>("xmax");
     if ( fvecvec.size() != nbc ) {
       cout << "GUtils::get_bdy_block: SPONGE bc is specified; a vector of size(base_type) must specify max positions in direction idir for each bc entry in 'base_type'" << endl;
@@ -464,6 +463,7 @@ GBOOL GUpdateBdyFactory<Types>::get_bdy_block(const geoflow::tbox::PropertyTree 
     }
     stblock.xmax = fvec[ibc];
 
+#endif
   }
 
   return TRUE;
