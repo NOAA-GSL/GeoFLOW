@@ -26,7 +26,15 @@
   },
   "initstate_mtvwave": {
     "N"          : 0.01,
-    "N2U"        : 0.1,
+    "N2U"        : 0.1
+  },
+  "dirichlet": {
+    "bdy_class"        : "uniform",
+    "base_type"        : ["GBDY_DIRICHLET"],
+    "istate"           : [[0]],
+    "value"            : [[0.1]],
+    "use_init"         : [false],
+    "compute_once"     : [false]
   },
   "0-flux": {
     "bdy_class"        : "uniform",
@@ -35,10 +43,22 @@
     "use_init"         : [false],
     "compute_once"     : [false]
   },
+  "sponge": {
+    "bdy_class"        : "uniform",
+    "base_type"        : ["GBDY_SPONGE"],
+    "istate"           : [[0, 1]],
+    "use_init"         : [false],
+    "compute_once"     : [false],
+    "farfield"         : [[0,0]],
+    "falloff_rate"     : [[0.1, 0.1]],
+    "exponent"         : [[2,2]],
+    "idir"             : 2,
+    "xstart"           : 18000.0
+  },
   "pde_mconv": {
     "docoriolis"      : false,
     "dodry"           : true,
-    "domassonly"      : true,
+    "domassonly"      : false,
     "usebase_state"   : false,
     "dofallout"       : false,
     "dogravity"       : true,
@@ -51,7 +71,7 @@
     "nice"            : 0,
     "use_forcing"     : false,
     "forcing_comp"    : [],
-    "T_surf"          : 300.0,
+    "T_surf"          : 288.0,
     "P0"              : 1000.0,
     "filter_list"     : [],
     "boyd_filter" : {
@@ -70,12 +90,12 @@
   "grid_box": {
     "grid_name" : "grid_box",
     "xyz0"      : [0, 0, 0],
-    "delxyz"    : [ 200000, 19500, 1.0],
-    "num_elems" : [75, 12, 1],
+    "delxyz"    : [ 200000, 20000, 1.0],
+    "num_elems" : [500, 50, 1],
     "bdy_x_0"   : "0-flux",
     "bdy_x_1"   : "0-flux",
     "bdy_y_0"   : "0-flux",
-    "bdy_y_1"   : "0-flux",
+    "bdy_y_1"   : "sponge",
     "bdy_z_0"   : "0-flux",
     "bdy_z_1"   : "0-flux",
     "maxit"     : 3072,
@@ -153,12 +173,13 @@
     "cadence_type"       : "time",
     "cycle_interval"     : 1,
     "time_interval"      : 100.0,
-    "state_names"        : ["v1", "v2", "d"],
+    "state_names"        : ["v1", "v2", "d", "e"],
     "grid_names"         : ["xgrid", "ygrid", "zgrid"],
     "agg_state_name"     : "u",
     "agg_grid_name "     : "grid",
     "derived_quantities"       : [],
-    "state_derived_quantities" : []
+    "state_derived_quantities" : ["temp","press","vel","cs","ptemp","de","dpress","dptemp","den","dden"]
+
   },
   "gmconv_diag": {
     "observer_name"      : "gmconv_diag",
