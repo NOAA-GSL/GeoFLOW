@@ -93,7 +93,7 @@ GBOOL GInitStateFactory<Types>::set_by_direct(const PropertyTree& ptree, EqnBase
   else if ( "initstate_boxdryscharadv"     == sinit ) {
     bret = ginitstate<Types>::impl_boxdryscharadv   (ptree, sinit, eqn, grid, time, utmp, u);
   }
-  else if ( "initstate__boxmtnwave"        == sinit ) {
+  else if ( "initstate_boxmtnwave"        == sinit ) {
     bret = ginitstate<Types>::impl_boxmtnwave       (ptree, sinit, eqn, grid, time, utmp, u);
   }
   else if ( "initstate_boxsod"             == sinit ) {
