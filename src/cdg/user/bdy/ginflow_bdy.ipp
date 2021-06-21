@@ -168,7 +168,7 @@ GBOOL GInflowBdy<Types>::compute_bdy_data(
     }
     else {
 
-      bret = traits_.callback(eqn, grid, time, traits_.bdyid, utmp_, unew_,  ub);
+      bret = traits_.callback(traits_.ptree, traits_.sconfig, eqn, grid, time, traits_.bdyid, utmp_, unew_,  ub);
 
     }
     assert(bret);

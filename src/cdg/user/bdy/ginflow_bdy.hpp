@@ -52,8 +52,11 @@ public:
           GTVector<GINT>        istate; // state indices to operate on
           GTVector<GSIZET>     ibdyvol; // indir. inidices into comput volume
           GString              smethod; // init method if use_init==TRUE
+          GString              sconfig; // ptree config method
 
-          std::function<GBOOL(EqnBasePtr &eqn,
+          std::function<GBOOL(const PropertyTree& ptree, 
+                              GString    &sconfig,
+                              EqnBasePtr &eqn,
                               Grid       &grid, 
                               Time       &time,
                               const GINT  id,
