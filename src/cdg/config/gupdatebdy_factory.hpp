@@ -42,6 +42,7 @@ struct stBdyBlock {
   vector<GFTYPE>   exponent;          // vector of dissipation exponents
   GString          bdyclass;          // bdy ('uniform', 'mixed')
   GString          smethod;           // name of method providing bdy values (e.g. for inflow)
+  GString          sconfig;           // name of configuration block in .jsn file
 };
 
 
@@ -60,6 +61,8 @@ class GUpdateBdyFactory
         using BdyBasePtr       = std::shared_ptr<BdyBase>;
         using BdyUpdateList    = GTVector<GTVector<BdyBasePtr>>;
         using CallbackPtr      = std::function<GBOOL(
+                                const PropertyTree& ptree, 
+                                GString &sconfig,
                                 EqnBasePtr &eqn,
                                 Grid       &grid,
                                 Time       &time,

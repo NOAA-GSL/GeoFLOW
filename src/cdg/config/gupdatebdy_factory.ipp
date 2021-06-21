@@ -78,13 +78,15 @@ GUpdateBdyFactory<Types>::get_inflow_callback(const GString& sname, const GINT i
   if      ( "myinflow"     == sname ) {
     callback = 
 
-         [](EqnBasePtr &eqn,
+         [](const PropertyTree &ptree,
+            GString    &sconfig,
+            EqnBasePtr &eqn,
             Grid       &grid,
             Time       &time,
             const GINT id,
             State      &u,
             State      &utmp,
-            State      &ub)-> GBOOL{return GInflowUser<Types>::myinflow(eqn, grid, time, id, u, utmp, ub);}; 
+            State      &ub)-> GBOOL{return GInflowUser<Types>::myinflow(ptree, sconfig, eqn, grid, time, id, u, utmp, ub);}; 
 
   }
   else {
@@ -155,6 +157,7 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree &ptree, Grid &grid, s
     traits.istate       = bcblock.istate;
     traits.ibdyvol      = ibdy;
     traits.use_init     = bcblock.use_init;
+    traits.sconfig      = bcblock.sconfig;
     traits.compute_once = bcblock.compute_once;
     if ( traits.use_init ) {
       traits.smethod = ptree.getValue<GString>("initstate_block");
@@ -343,6 +346,7 @@ GBOOL GUpdateBdyFactory<Types>::get_bdy_block(const geoflow::tbox::PropertyTree 
   stblock.exponent .clear();
   stblock.bdyclass .clear();
   stblock.smethod  .clear();
+  stblock.sconfig  .clear();
 
   stblock.use_init    = FALSE;
   stblock.idir        = 0;
@@ -353,6 +357,7 @@ GBOOL GUpdateBdyFactory<Types>::get_bdy_block(const geoflow::tbox::PropertyTree 
   stblock.tbdy        = GBDY_NONE;
   stblock.bdyclass    = "";
   stblock.smethod     = "";
+  stblock.sconfig     = "";
 
   // Get bdy block data:
   
@@ -411,6 +416,13 @@ GBOOL GUpdateBdyFactory<Types>::get_bdy_block(const geoflow::tbox::PropertyTree 
         assert(FALSE); 
       }
       stblock.smethod = svec[ibc];
+
+      svec = sptree.getArray<GString>("sconfig");
+      if ( svec.size() != nbc ) {
+        cout << "GUtils::get_bdy_block: INFLOW bc is specified; a vector of size(base_type) must specify configuration block names for inflow methods for each bc entry in 'base_type' (\"\" is valid for non-INFLOW entries)" << endl;
+        assert(FALSE); 
+      }
+      stblock.sconfig = svec[ibc];
     }
   } 
 
