@@ -148,19 +148,35 @@ end
   clear u;
 
   dx = diff(x);
-  I  = find(abs(dx) > 1.0e-6 );
+  I  = find(abs(dx) > 1.0e-5*abs(max(x)-min(x)) );
   ngridx = ( max(x) - min(x) ) / min(abs(dx(I)));
   ngridx = int32(ngridx);
 
   dx = diff(z);
-  I  = find(abs(dx) > 1.0e-6 );
+  I  = find(abs(dx) > 1.0e-5*abs(max(x)-min(x)) );
   ngridy = ( max(z) - min(z) ) / min(abs(dx(I)));
   ngridy = int32(ngridy);
  
   [X,Y] = ndgrid(linspace(min(x),max(x),ngridx),linspace(min(z),max(z),ngridy));
 
-  Z = griddata(x,z,U(:),X,Y,'linear');
-% clear x, z, U;
+  Z     = griddata(x,z,U(:),X,Y,'linear');
+
+if 1
+  % In case there's topography, we set values to nan 'inside' it:
+  K       = boundary(x, z, 0.9);
+  PGON    = polyshape(x(K), z(K),'Simplify', false);
+%plot(PGON)
+%whos PGON
+%fieldnames(PGON,'-full')
+  VERTS   = getfield(PGON,'Vertices');
+
+% IDX     = isinterior(PGON, X(:), Y(:));
+  IDX     = inpolygon(X,Y,VERTS(:,1),VERTS(:,2));
+  Z(~IDX) = nan;
+
+numel(IDX)
+numel(Z)
+end
 
 
   zmin = min(min(Z));
@@ -180,16 +196,18 @@ end
     levels = dcvec;
   end
 
-  [c h] = contour(X, Y, Z, levels); 
-  axis equal;
+  [c h] = contourf(X, Y, Z, levels); 
+  axis normal;
 
   hold on;
 
 end % end, task loop
-sminmax = sprintf('min=%0.5g; max=%0.5g', umin, umax)
+
+sminmax = sprintf('min=%0.5g; max=%0.5g', umin, umax);
 stitle  = sprintf('%s, t=%0.5g: \n %s', svar, time, sminmax);
 title(stitle);
 xlabel('x (m)');
 ylabel('z (m)');
+
 
 end
