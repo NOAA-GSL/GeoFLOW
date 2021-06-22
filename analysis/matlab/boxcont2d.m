@@ -148,14 +148,14 @@ end
   clear u;
 
   dx = diff(x);
-  I  = find(abs(dx) > 1.0e-5*abs(max(x)-min(x)) );
+  I  = find(abs(dx) > 5.0e-4*abs(max(x)-min(x)) );
   ngridx = ( max(x) - min(x) ) / min(abs(dx(I)));
   ngridx = int32(ngridx);
 
   dx = diff(z);
-  I  = find(abs(dx) > 1.0e-5*abs(max(x)-min(x)) );
+  I  = find(abs(dx) > 5.0e-4*abs(max(x)-min(x)) );
   ngridy = ( max(z) - min(z) ) / min(abs(dx(I)));
-  ngridy = int32(ngridy);
+  ngridy = int32(ngridy)
  
   [X,Y] = ndgrid(linspace(min(x),max(x),ngridx),linspace(min(z),max(z),ngridy));
 
@@ -163,7 +163,7 @@ end
 
 if 1
   % In case there's topography, we set values to nan 'inside' it:
-  K       = boundary(x, z, 0.9);
+  K       = boundary(x, z, 1.0);
   PGON    = polyshape(x(K), z(K),'Simplify', false);
 %plot(PGON)
 %whos PGON
