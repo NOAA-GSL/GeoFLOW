@@ -1029,10 +1029,10 @@ void GGridBox<Types>::config_gbdy(const PropertyTree           &ptree,
 
 
 
-  bdynames[0] = "bdy_x_0";
-  bdynames[1] = "bdy_y_1";
-  bdynames[2] = "bdy_x_1";
-  bdynames[3] = "bdy_y_0";
+  bdynames[0] = "bdy_y_0";
+  bdynames[1] = "bdy_x_1";
+  bdynames[2] = "bdy_y_1";
+  bdynames[3] = "bdy_x_0";
   if ( GDIM == 3 ) {
     bdynames[4] = "bdy_z_0";
     bdynames[5] = "bdy_z_1";
