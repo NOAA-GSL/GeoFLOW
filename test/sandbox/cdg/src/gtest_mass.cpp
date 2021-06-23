@@ -28,10 +28,6 @@
 #include "ggrid_factory.hpp"
 #include "gio_observer.hpp"
 #include "gio.hpp"
-#if defined(GEOFLOW_USE_GPTL)
-  #include "gptl.h"
-#endif
-
 
 using namespace geoflow::pdeint;
 using namespace geoflow::tbox;
@@ -120,13 +116,6 @@ int main(int argc, char **argv)
     GINT myrank  = GComm::WorldRank();
     GINT nprocs  = GComm::WorldSize();
 
-#if defined(GEOFLOW_USE_GPTL)
-    // Set GTPL options:
-    GPTLsetoption (GPTLcpu, 1);
-
-    // Initialize GPTL:
-    GPTLinitialize();
-#endif
     EH_MESSAGE("main: Read prop tree...");
 
     // Get minimal property tree:
@@ -152,16 +141,8 @@ int main(int argc, char **argv)
     EH_MESSAGE("main: Generate grid...");
 
     // Generate grid:
-#if defined(GEOFLOW_USE_GPTL)
-    GPTLstart("gen_grid");
-#endif
-
     ObserverFactory<MyTypes>::get_traits(ptree, "gio_observer", binobstraits);
     grid_ = GGridFactory<MyTypes>::build(ptree, gbasis, pIO, binobstraits, comm_);
-
-#if defined(GEOFLOW_USE_GPTL)
-    GPTLstop("gen_grid");
-#endif
 
     EH_MESSAGE("main: Initialize gather-scatter...");
 
@@ -257,10 +238,6 @@ int main(int argc, char **argv)
       cout << serr << " Success!" << endl;
     }
 
-#if defined(GEOFLOW_USE_GPTL)
-    GPTLpr_file("timing.txt");
-    GPTLfinalize();
-#endif
 
     GComm::TermComm();
 

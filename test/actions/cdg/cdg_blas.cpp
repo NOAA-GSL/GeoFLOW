@@ -13,9 +13,7 @@
 #include "gtvector.hpp"
 #include "gtmatrix.hpp"
 
-#if defined(GEOFLOW_USE_GPTL)
-    #include "gptl.h"
-#endif
+
 using namespace std;
 
 int main(int argc, char **argv)
@@ -23,14 +21,6 @@ int main(int argc, char **argv)
     GString serr ="main: ";
     GBOOL   bret;
     GINT    errcode=0;
-
-#if defined(GEOFLOW_USE_GPTL)
-    // Set GTPL options:
-    GPTLsetoption (GPTLcpu, 1);
-
-    // Initialize GPTL:
-    GPTLinitialize();
-#endif
 
     // Set matrices:
     GFLOAT a[16] = { 1 , 5 , 9 , 13,
@@ -86,10 +76,6 @@ int main(int argc, char **argv)
     B(3,0) = 29; B(3,1) = 30; B(3,2) = 31; B(3,3) = 32; 
 
     v  [0] = 3 ; v  [1] = 5 ; v  [2] = 7 ; v  [3] = 9 ;
-
-#if defined(GEOFLOW_USE_GPTL)
-    GPTLstart("blas_stuff");
-#endif
 
     // A + B  solution:
     D(0,0) = 18; D(0,1) = 20; D(0,2) = 22; D(0,3) = 24; 
@@ -322,14 +308,6 @@ std::cout << "Transpose(A)=" << C << std::endl;
     } else {
       std::cout << "main: -------------------------------------sortincreasing isort OK" << std::endl;
     }
-
-
-#if defined(GEOFLOW_USE_GPTL)
-    GPTLstop("blas_stuff");
-
-    GPTLpr_file("timing.txt");
-    GPTLfinalize();
-#endif
 
 
 term:

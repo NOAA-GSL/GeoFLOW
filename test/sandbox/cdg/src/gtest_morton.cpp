@@ -10,9 +10,6 @@
 #include <cstdio>
 #include <unistd.h>
 #include <iostream>
-#if defined(GEOFLOW_USE_GPTL)
-#include "gptl.h"
-#endif
 #include <random>
 #include "gcomm.hpp"
 #include "gllbasis.hpp"
@@ -68,15 +65,6 @@ int main(int argc, char **argv)
 
     GINT myrank  = GComm::WorldRank();
     GINT nprocs  = GComm::WorldSize();
-
-#if defined(GEOFLOW_USE_GPTL)
-    // Set GTPL options:
-    GPTLsetoption (GPTLcpu, 1);
-
-    // Initialize GPTL:
-    GPTLinitialize();
-#endif
-
 
     // Create basis:
     GTVector<GNBasis<GCTYPE,GFTYPE>*> gbasis(GDIM);
@@ -139,12 +127,6 @@ std::cout << "main: glob_indices[" << i << "]=" << glob_indices << std::endl;
     GComm::Allreduce(&errcode, &gerrcode, 1, T2GCDatatype<GINT>() , GC_OP_MAX, comm);
 
  
-#if defined(GEOFLOW_USE_GPTL)
-    GPTLpr_file("timing.txt");
-    GPTLfinalize();
-#endif
-
-
 term:
     if ( gerrcode != 0 ) {
       GPP(comm,serr << " Error: code=" << errcode);

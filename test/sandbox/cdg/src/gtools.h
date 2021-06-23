@@ -27,10 +27,6 @@
 #include "ggrid_icos.hpp"
 #include "tbox/property_tree.hpp"
 
-#if defined(GEOFLOW_USE_GPTL)
-    #include "gptl.h"
-#endif
-
 using namespace geoflow::tbox;
 using namespace std;
 
