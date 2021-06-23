@@ -35,6 +35,15 @@
     "use_init"         : [false],
     "compute_once"     : [false]
   },
+  "inflow": {
+    "bdy_class"        : "uniform",
+    "base_type"        : ["GBDY_INFLOW"],
+    "istate"           : [[0, 1]],
+    "use_init"         : [false],
+    "compute_once"     : [false],
+    "method"           : ["myinflow"],
+    "sconfig"          : ["initstate_mtnwave"]
+  },
   "0-flux": {
     "bdy_class"        : "uniform",
     "base_type"        : ["GBDY_0FLUX"],
@@ -42,7 +51,7 @@
     "use_init"         : [false],
     "compute_once"     : [false]
   },
-  "sponge": {
+  "xsponge": {
     "bdy_class"        : "uniform",
     "base_type"        : ["GBDY_SPONGE"],
     "istate"           : [[0, 1]],
@@ -51,8 +60,20 @@
     "farfield"         : [[0,0]],
     "falloff_rate"     : [[0.1, 0.1]],
     "exponent"         : [[2,2]],
-    "idir"             : 2,
-    "xstart"           : 18000.0
+    "idir"             : [1],
+    "xstart"           : [180000.0]
+  },
+  "ysponge": {
+    "bdy_class"        : "uniform",
+    "base_type"        : ["GBDY_SPONGE"],
+    "istate"           : [[0, 1]],
+    "use_init"         : [false],
+    "compute_once"     : [false],
+    "farfield"         : [[0,0]],
+    "falloff_rate"     : [[0.1, 0.1]],
+    "exponent"         : [[2,2]],
+    "idir"             : [2],
+    "xstart"           : [18000.0]
   },
   "pde_mconv": {
     "docoriolis"      : false,
@@ -88,13 +109,13 @@
   },
   "grid_box": {
     "grid_name" : "grid_box",
-    "xyz0"      : [0, 0, 0],
+    "xyz0"      : [-100000, 0    , 0],
     "delxyz"    : [ 200000, 20000, 1.0],
-    "num_elems" : [500, 50, 1],
-    "bdy_x_0"   : "0-flux",
-    "bdy_x_1"   : "0-flux",
+    "num_elems" : [250, 25, 1],
+    "bdy_x_0"   : "inflow",
+    "bdy_x_1"   : "xsponge",
     "bdy_y_0"   : "0-flux",
-    "bdy_y_1"   : "sponge",
+    "bdy_y_1"   : "ysponge",
     "bdy_z_0"   : "0-flux",
     "bdy_z_1"   : "0-flux",
     "maxit"     : 3072,
@@ -107,7 +128,7 @@
     "nstage"           : 2,
     "stab_preserving"  : false,
     "extrap_order"     : 2,
-    "variable_dt"      : false,
+    "variable_dt"      : true,
     "courant"          : 0.1
   },
   "dissipation_traits": {
