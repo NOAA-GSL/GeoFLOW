@@ -37,7 +37,7 @@ GBOOL GInflowUser<Types>::myinflow(const PropertyTree& ptree, GString &sconfig, 
   GFTYPE              dj, ds, N, P0, pj, T0, Tb, Ts, U0;
   GFTYPE              eps=100.0*std::numeric_limits<GFTYPE>::epsilon();
   GTVector<GFTYPE>   *db, *d, *e, *pb, *T;
-  GTVector<GSIZET>   *igbdy = &traits_.ibdyvol;
+  GTVector<GSIZET>   *igbdy = &(grid.igbdy_bdyface()[id]);
 
   GString             sblock;
   typename Types::State
@@ -78,8 +78,8 @@ GBOOL GInflowUser<Types>::myinflow(const PropertyTree& ptree, GString &sconfig, 
    
 
   T     = utmp[0];  // background temp
-  d     = u  [ceqn->DENSITY]; // density
-  e     = u  [ceqn->ENERGY]; // int. energy density
+  d     = ub [ceqn->DENSITY]; // density
+  e     = ub [ceqn->ENERGY]; // int. energy density
   db    = (*ubase)[0];// background density 
   pb    = (*ubase)[1];// background pressure
 
@@ -90,7 +90,7 @@ GBOOL GInflowUser<Types>::myinflow(const PropertyTree& ptree, GString &sconfig, 
   Ts    = convptree.getValue<GFTYPE>("T_surf");    // surf temp
 
   // Initialize momentum:
-  for ( auto j=0; j<ceqn->ENERGY; j++ ) *u[j] = 0.0;
+  for ( auto j=0; j<ceqn->ENERGY; j++ ) *ub[j] = 0.0;
 //ds = P0 / (RD * Ts); // surf. density
 
   zmin = 0.0;
@@ -104,20 +104,20 @@ GBOOL GInflowUser<Types>::myinflow(const PropertyTree& ptree, GString &sconfig, 
     // Compute den from constant Brunt-Vaisalla freq,
     //    N^2 = -g/rho_0 drho/dz:
     pj = (*pb)[j]; 
-    dj = pj / ( RD * Ts );
+    dj = (*db)[j]; 
     if ( traits.usebase ) { // There is a base-state
-//    (*d) [j]  = ds - (*db)[j] + N*N*ds/GG * (zmin - r); // d fluct.
-      (*d) [j]  = dj - (*db)[j];
+//    (*d) [jj]  = ds - (*db)[j] + N*N*ds/GG * (zmin - r); // d fluct.
+      (*d) [jj]  = dj - (*db)[j];
     }
     else {                  // No base-state
-//    (*d) [j]  = ds + N*N*ds/GG * (zmin - r); 
-      (*d) [j]  = dj;
+//    (*d) [jj]  = ds + N*N*ds/GG * (zmin - r); 
+      (*d) [jj]  = dj;
    }
-   (*u[0])[j] = dj * U0;
-   (*e)[j]    = CVD * pj / RD; // e = Cv * p / R
+   (*ub[0])[jj] = dj * U0;
+   (*e)[jj]     = CVD * pj / RD; // e = Cv * p / R
+//cout << "myinflow: pj=" << pj << " dj=" << dj << " Ts=" << Ts << " ux=" << (*ub[0])[jj] <<  endl;
    
   }
-
   
   return TRUE;
 
