@@ -338,10 +338,11 @@ GBOOL gterrainSpecBox<Types>::impl_schar_range2(const PropertyTree &ptree, GStri
     x        = (*xnodes)[0][j] - x0;
     if ( FUZZYEQ(P0.x2,(*xnodes)[1][j],eps) ) {
 //               h(x) = cos^2(pi x/lambda) h'(x),
-//               h'(x) = h0 cos^2(pi x/2a), |x| <= a;
+//               h'(x) = h0 exp( -(x/a)^2 ), |x| <= extent:
       if ( abs(x) <= extent ) {
-        (*xb[1])[j] = h0*pow(cos(PI*x/lambda)      ,2)
+        (*xb[1])[j] = h0*pow(cos(PI*x/lambda),2)
                         *exp(-pow(x/a,2));
+//cout << "impl_schar_range2: yb[" << j << "]=" << (*xb[1])[j] << endl;
       }
     }
   }
