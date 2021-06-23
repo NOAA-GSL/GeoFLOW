@@ -64,13 +64,14 @@ public:
 private:
 // Private methods:
         void               print_derived(const Time &t, const State &u);
+        void               print_griddat(StateInfo &);
 // Private data:
         GBOOL              bprgrid_    ;// print grid flag
         GBOOL              bInit_      ;// is initialized?
         GSIZET             cycle_last_ ;// most recent output cycle
         GSIZET             cycle_      ;// continuously-running cycle
         GSIZET             ocycle_     ;// output cycle number
-        GFTYPE             time_last_  ;// most recent output time
+        Ftype              time_last_  ;// most recent output time
         GTVector<GINT>     state_index_;// list of state indices to print
         GTVector<GString>  state_names_;// list of names of state files
         GTVector<GString>  grid_names_ ;// list of names of grid comp files

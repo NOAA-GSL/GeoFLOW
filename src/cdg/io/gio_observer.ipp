@@ -59,17 +59,9 @@ void GIOObserver<EquationType>::observe_impl(const Time &t, const Time &dt, cons
 
   mpixx::communicator comm;
   GINT                nstate=0;
-  GString             sagg   = "xbdy";
-  GString             snagg  = "nbdy";
   vector<GString>     svtmp;
-  vector<GString>     svbdy  = {"xbdy" , "ybdy" , "zbdy" };
-  vector<GString>     svnbdy = {"xnbdy", "ynbdy", "znbdy"};
-  GTVector<GTVector<GFTYPE>>
+  GTVector<GTVector<Ftype >>
                      *xnodes = &(this->grid_->xNodes());
-  GTVector<GTVector<GFTYPE>>
-                     *gbdyNormals = &(this->grid_->bdyNormals());
-  GTVector<GTVector<GFTYPE>>
-                     *gbdyNodes   = &(this->grid_->gbdyNodes());
 
   if ( (this->traits_.itype == ObserverBase<EquationType>::OBS_CYCLE 
         && (cycle_-cycle_last_+1) >= this->traits_.cycle_interval)
@@ -113,16 +105,7 @@ void GIOObserver<EquationType>::observe_impl(const Time &t, const Time &dt, cons
       pIO_->write_state(this->traits_.agg_grid_name, gridinfo_, gp_);
 
       // Write global bdy normals and positions:
-      for ( auto j=0; j<gp_.size(); j++ ) gp_[j] = &(*gbdyNodes)[j];
-      svtmp = gridinfo_.svars;
-
-      gridinfo_.svars      = svbdy;
-      pIO_->write_state(sagg, gridinfo_, gp_);
-
-      gridinfo_.svars      = svnbdy;
-      pIO_->write_state(snagg, gridinfo_, gp_);
-
-      gridinfo_.svars      = svtmp;;
+      print_griddat(gridinfo_);
 
       bprgrid_ = FALSE;
 
@@ -237,3 +220,102 @@ void GIOObserver<EquationType>::print_derived(const Time &t, const State &u)
 
 } // end of method print_derived
 
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD     : print_griddat
+// DESCRIPTION: Write grid boundary normals and locations
+// ARGUMENTS  : info: StateInfo object
+// RETURNS    : none.
+//**********************************************************************************
+template<typename EquationType>
+void GIOObserver<EquationType>::print_griddat(StateInfo &info)
+{
+  GINT    iret, rank, ndata, ntasks;       
+  GINT    gnnorms, lnnorms;
+  Ftype   *fdata;
+  GC_COMM comm        = this->grid_->get_comm(); 
+  GString sfile;
+  GTVector<GINT>
+          count, disp;
+  GTVector<GTVector<Ftype>>
+          gx, gn;
+  GTVector<GTVector<Ftype>>
+         *gbdyNorms   = &(this->grid_->bdyNormals());
+  GTVector<GTVector<Ftype>>
+         *gbdyNodes   = &(this->grid_->gbdyNodes());
+
+
+  rank   = GComm::WorldRank(comm);
+  ntasks = GComm::WorldSize(comm);
+
+
+  // Find norm/position counts and displacements:
+  count   .resize(ntasks);
+  disp    .resize(ntasks);
+  lnnorms = (*gbdyNodes)[0].size(); // same as for gbdyNorms
+  iret = GComm::Allgather(&lnnorms, 1, T2GCDatatype<GINT>(), count.data(), 1, T2GCDatatype<GINT>(), comm);
+  gnnorms = count.sum(); disp = 0;
+  for ( auto i=1; i<disp.size(); i++ ) {
+    disp[i] = count.sum(0,i-1);
+  }
+
+  // Gather all node and location data to task 0:
+  gx.resize(gbdyNodes->size());
+  gn.resize(gbdyNodes->size());
+  for ( auto j=0; j<gbdyNodes->size(); j++ ) {
+    ndata = (*gbdyNodes)[j].size();
+    fdata = (*gbdyNodes)[j].data();
+    gx[j].resize(gnnorms);
+    gn[j].resize(gnnorms);
+    iret = GComm::Gatherv(fdata, ndata, T2GCDatatype<Ftype>(),
+                          gn[j].data(), count.data(), disp.data(), 
+                          T2GCDatatype<Ftype>(), 0, comm);
+    GComm::Synch(comm);
+  }
+
+
+  // Write data collected to task 0:
+  std::ofstream out;
+  if ( rank == 0 ) {
+    sfile = info.odir + "/" + "gbdy.out";
+    out.open(sfile, ios::out | ios::binary);
+    if ( !out.good() ) {
+      cout << "GIOObserver<EquationType>::print_griddat: Error file: " << sfile << endl;
+      assert(FALSE);
+    }
+    // Write header:
+    lnnorms = gx.size();
+    out.write((char*) &lnnorms, sizeof(GINT));
+    out.write((char*) &gnnorms, sizeof(GINT));
+
+    // Write data:
+    if ( gx.size() == 2 ) {
+      out.write((char*) gx[0].data(), gnnorms*sizeof(Ftype));
+      out.write((char*) gx[1].data(), gnnorms*sizeof(Ftype));
+      out.write((char*) gn[0].data(), gnnorms*sizeof(Ftype));
+      out.write((char*) gn[1].data(), gnnorms*sizeof(Ftype));
+    }
+    else if ( gx.size() == 3 ) {
+      out.write((char*) gx[0].data(), gnnorms*sizeof(Ftype));
+      out.write((char*) gx[1].data(), gnnorms*sizeof(Ftype));
+      out.write((char*) gx[2].data(), gnnorms*sizeof(Ftype));
+      out.write((char*) gn[0].data(), gnnorms*sizeof(Ftype));
+      out.write((char*) gn[1].data(), gnnorms*sizeof(Ftype));
+      out.write((char*) gn[2].data(), gnnorms*sizeof(Ftype));
+    }
+    else {
+      assert(FALSE);
+    }
+
+    out.close();
+    if ( !out.good() ) {
+      cout << "GIOObserver<EquationType>::print_griddat: Error writing file" << endl;
+      assert(FALSE);
+    }
+  } // end, rank=0
+
+  GComm::Synch(comm);
+
+} // end of method print_griddat
