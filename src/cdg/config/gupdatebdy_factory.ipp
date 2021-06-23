@@ -455,17 +455,19 @@ GBOOL GUpdateBdyFactory<Types>::get_bdy_block(const geoflow::tbox::PropertyTree 
     stblock.exponent.resize(nstate);
     stblock.exponent= fvecvec[ibc];
 
-    if ( !sptree.keyExists("idir" ) ) {
-      cout << "GUtils::get_bdy_block: SPONGE bc is specified; a constant integer is required that specifies sponge surface direction, idir, for all fields in 'istate'" << endl;
+    ivec = sptree.getArray<GINT>("idir");
+    if ( ivec.size() != nbc ) {
+      cout << "GUtils::get_bdy_block: SPONGE bc is specified; a constant integer is required that specifies sponge surface direction, idir, for each bc specified in 'base_type'. Only the idir corresp. to a SPONGE layer is read." << endl;
       assert(FALSE); 
     }
-    stblock.idir = sptree.getValue<GINT>("idir");
+    stblock.idir = ivec[ibc];
 
+    fvec = sptree.getArray<Ftype>("xstart");
     if ( !sptree.keyExists("xstart" ) ) {
-      cout << "GUtils::get_bdy_block: SPONGE bc is specified; a coordinate value in direction idir must be provided specifying start positions in direction idir for all fields in 'istate'" << endl;
+      cout << "GUtils::get_bdy_block: SPONGE bc is specified; a coordinate value in direction idir must be provided specifying start positions in direction idir for each bc specified in 'base_type'. Only the idir corresp. to a SPONGE layer is read." << endl;
       assert(FALSE); 
     }
-    stblock.xstart = sptree.getValue<GFTYPE>("xstart");
+    stblock.xstart = fvec[ibc];
 
 #if 0
     fvec = sptree.getArray<GFTYPE>("xmax");
