@@ -1500,6 +1500,14 @@ void GGrid<Types>::init_bc_info(GBOOL bterrain)
     }
   }
 
+  // Compute node locations of bdy nodes:
+  gbdyNodes_.resize(xNodes_.size());
+  for ( auto i=0; i<gbdyNodes_.size(); i++ ) {
+    gbdyNodes_[i].resize(igbdy_.size());
+    for ( auto j=0; j<igbdy_.size(); j++ ) { 
+      gbdyNodes_[i][j] = xNodes_[i][igbdy_[j]];
+    }
+  }
 
 } // end of method init_bc_info
 
@@ -1550,10 +1558,11 @@ void GGrid<Types>::add_terrain(const State &xb, State &utmp)
    *b  = 0.0;
    *x0 = 0.0; // first guess
     xb_[j].resize(xb[j]->size()); xb_[j] = *xb[j];
+//if ( j == 1 )
+//cout << "GGrid<Types>::add_terrain: xb[" << j << "]=" << *xb[j] << endl;
     iret = cg.solve(H, *b, *xb[j], *x0);
 
     assert(iret == GCG<CGTypePack>::GCGERR_NONE);
-//cout << "GGrid<Types>::add_terrain: xb_new[" << j << "]=" << *x0 << endl;
     xNodes_[j] = *x0;             // Reset XNodes = x0
 //GPP(comm_,"GGrid<Types>::add_terrain: new_xNodes[" << j << "]=" << xNodes_[j]);
   }

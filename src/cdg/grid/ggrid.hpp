@@ -218,6 +218,7 @@ virtual void                 print(const GString &filename){}          // print 
         GTVector<GTVector<GBdyType>>  
                             &igbdyt_bdyface() { return igbdyt_bdyface_;}// bdy types for each face node
         VVecFtype           &bdyNormals() { return bdyNormals_; }      // bdy normals
+        VVecFtype           &gbdyNodes() { return gbdyNodes_; }        // bdy normals
         GTVector<VVecFtype> &bdyTangents() { return bdyTangents_; }    // bdy tangents
         VVecFtype           &bdyTangents(GINT iwhich) { 
                             assert(iwhich >=0 && iwhich < GDIM);
@@ -321,6 +322,7 @@ virtual void                 elem_face_data(
         GTMatrix<GTVector<Ftype>>   dXidX_;            // matrix Rij = dXi^j/dX^i, global
         GTMatrix<GTVector<Ftype>>   dXdXi_;            // matrix Bij = dX^j/dXi^i, global, used for constructing normals
         GTVector<GTVector<Ftype>>   xNodes_;           // Cart coords of all node points
+        GTVector<GTVector<Ftype>>   gbdyNodes_;        // Cart coords of gbdy nodes
         Mass                       *mass_;             // mass operator
         Mass                       *imass_;            // inverse of mass operator
         GTVector<Ftype>             Jac_;              // interior Jacobian, global
