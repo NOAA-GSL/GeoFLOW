@@ -667,7 +667,7 @@ GBOOL ginitstate<Types>::impl_boxdrywarmbubble(const PropertyTree &ptree, GStrin
 
   // Check solver type 
   // Remember: eqn is a shared_ptr, so must check 
-  //           against its contets
+  //           against its contents
   
   ceqn = dynamic_cast<GMConv<Types>*>(eqn.get());
   assert(ceqn && "Must use GMConv solver");
@@ -791,7 +791,7 @@ GBOOL ginitstate<Types>::impl_boxdrybubble(const PropertyTree &ptree, GString &s
 
   // Check solver type 
   // Remember: eqn is a shared_ptr, so must check 
-  //           against its contets
+  //           against its contents
   
   ceqn = dynamic_cast<GMConv<Types>*>(eqn.get());
   assert(ceqn != NULLPTR && "Must initialize for Equation GMConv");
@@ -1128,7 +1128,7 @@ GBOOL ginitstate<Types>::impl_boxdryscharadv(const PropertyTree &ptree, GString 
 
   // Check solver type 
   // Remember: eqn is a shared_ptr, so must check 
-  //           against its contets
+  //           against its contents
   ceqn = dynamic_cast<GMConv<Types>*>(eqn.get());
   assert(ceqn != NULLPTR && "Must initialize for Equation GMConv");
 
@@ -1218,10 +1218,9 @@ GBOOL ginitstate<Types>::impl_boxmtnwave(const PropertyTree &ptree, GString &sco
   GString             serr = "impl_boxmtnwave: ";
   GSIZET              nxy;
   GFTYPE              x, y, z, zmin,r;
-  GFTYPE              dj, ds, N, N2U, P0, pj, T0, Tb, Ts, U0;
+  GFTYPE              dj, ds, N, P0, pj, T0, Tb, Ts, U0;
   GFTYPE              eps=100.0*std::numeric_limits<GFTYPE>::epsilon();
   GTVector<GFTYPE>   *db, *d, *e, *pb, *T;
-  std::vector<GFTYPE> xc, xr;  
   GString             sblock;
   typename Types::State
                      *ubase;
@@ -1235,12 +1234,11 @@ GBOOL ginitstate<Types>::impl_boxmtnwave(const PropertyTree &ptree, GString &sco
   PropertyTree inittree    = ptree.getPropertyTree(sconfig);
   sblock                   = ptree.getValue<GString>("pde_name");
   PropertyTree convptree   = ptree.getPropertyTree(sblock);
-  PropertyTree terrptree   = ptree.getPropertyTree("terrain_type");
 
 
   // Check solver type 
   // Remember: eqn is a shared_ptr, so must check 
-  //           against its contets
+  //           against its contents
   
   ceqn = dynamic_cast<GMConv<Types>*>(eqn.get());
   assert(ceqn != NULLPTR && "Must initialize for Equation GMConv");
@@ -1270,35 +1268,38 @@ GBOOL ginitstate<Types>::impl_boxmtnwave(const PropertyTree &ptree, GString &sco
   nxy   = (*xnodes)[0].size(); // same size for x, y, z
 
   N     = inittree.getValue<GFTYPE>("N");          // Brunt-Vaisalla freq
-  N2U   = inittree.getValue<GFTYPE>("N2U");        // N / U0
-  U0    = N / N2U;                                  // ux_0 (m/s)
+  U0    = inittree.getValue<GFTYPE>("U0");         // Inflow velocity
   P0    = convptree.getValue<GFTYPE>("P0");        // ref pressure (mb or hPa)
   P0   *= 100.0;                                   // convert to Pa
   Ts    = convptree.getValue<GFTYPE>("T_surf");    // surf temp
 
-  assert(xc.size() >= GDIM && xr.size() >= GDIM);
-
   // Initialize momentum:
   for ( auto j=0; j<ceqn->ENERGY; j++ ) *u[j] = 0.0;
-  ds = P0 / (RD * Ts); // surf. density
+//ds = P0 / (RD * Ts); // surf. density
 
+  zmin = 0.0;
   for ( auto j=0; j<nxy; j++ ) { 
     x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; 
     if ( GDIM == 3 ) z = (*xnodes)[2][j];
     r = GDIM == 3 ? z : y;
-    zmin = (*xb)[GDIM-1][j];
+    zmin = xb->size() > 0 ? (*xb)[GDIM-1][j] : (*xnodes)[GDIM-1].min();
+
+    // Compute den from constant Brunt-Vaisalla freq,
+    //    N^2 = -g/rho_0 drho/dz:
+    pj = (*pb)[j]; 
+    dj = pj / ( RD * Ts );
     if ( traits.usebase ) { // There is a base-state
-      Tb        = Ts*pow((*pb)[j]/P0,RD/CPD); 
-      (*d) [j]  = ds - (*db)[j] + N*N*ds/GG * (zmin - r); // d fluct.
-      pj        = (*pb)[j]; 
+//    (*d) [j]  = ds - (*db)[j] + N*N*ds/GG * (zmin - r); // d fluct.
+      (*d) [j]  = dj - (*db)[j];
     }
     else {                  // No base-state
-      Tb        = Ts;
-      (*d) [j]  = N*N*ds/GG * (zmin - r); // d fluct.
-      pj        = P0; 
+//    (*d) [j]  = ds + N*N*ds/GG * (zmin - r); 
+      (*d) [j]  = dj;
    }
-   (*e)[j]   = CVD * pj / RD; // e = Cv * p / R
-   (*u[0])[j]= U0;
+   (*u[0])[j] = dj * U0;
+   (*e)[j]    = CVD * pj / RD; // e = Cv * p / R
+//if ( j < 200 )
+//cout << "boxmtnwave: j=" << j << " d=" << (*d)[j] << " e=" << (*e)[j] << endl;
    
   }
 //cout << "boxdrybubble: db=" << *db << endl;
