@@ -1213,7 +1213,8 @@ void GGrid<Types>::deriv(GTVector<Ftype> &u, GINT idir, GTVector<Ftype> &utmp,
     du.pointProd((*dXidX)(0,idir-1));
     for ( auto j=1; j<nc; j++ ) {
       compute_grefderiv(u, etmp_, j+1, FALSE, utmp); // D_xi^j u
-      utmp.pointProd((*dXidX)(j,idir-1));
+//    utmp.pointProd((*dXidX)(j,idir-1));
+      utmp.pointProd((*dXidX)(idir-1,j));
       du += utmp; 
 
     }
@@ -1276,7 +1277,7 @@ GTVector<Ftype> t1(ndof());
       utmp.pointProd(*mass);
       compute_grefderiv(utmp, etmp_, 1, dotrans, du); // D_xi u
       for ( auto j=1; j<GDIM; j++ ) {
-        u.pointProd((*dXidX)(j,idir-1),t1);
+        u.pointProd((*dXidX)(idir-1,j),t1);
         t1.pointProd(*mass);
         compute_grefderiv(t1, etmp_, j+1, dotrans, utmp); // D_xi^j u
         du += utmp; 
@@ -1287,7 +1288,7 @@ GTVector<Ftype> t1(ndof());
       du.pointProd((*dXidX)(0,idir-1));
       for ( auto j=1; j<GDIM; j++ ) {
         compute_grefderiv(u, etmp_, j+1, dotrans, utmp); // D_xi^j u
-        utmp.pointProd((*dXidX)(j,idir-1));
+        utmp.pointProd((*dXidX)(idir-1,j));
         utmp.pointProd(*mass);
         du += utmp; 
       }
@@ -1336,7 +1337,7 @@ void GGrid<Types>::wderiv(GTVector<Ftype> &u, GINT idir, GBOOL bwghts, GTVector<
     du.pointProd((*dXidX)(0,idir-1));
     for ( auto j=1; j<GDIM; j++ ) {
       compute_grefderivW(u, etmp_, j+1, FALSE, utmp); 
-      utmp.pointProd((*dXidX)(j,idir-1 ));
+      utmp.pointProd((*dXidX)(idir-1,j ));
       du += utmp; 
     }
   }
@@ -1499,6 +1500,14 @@ void GGrid<Types>::init_bc_info(GBOOL bterrain)
     }
   }
 
+  // Compute node locations of bdy nodes:
+  gbdyNodes_.resize(xNodes_.size());
+  for ( auto i=0; i<gbdyNodes_.size(); i++ ) {
+    gbdyNodes_[i].resize(igbdy_.size());
+    for ( auto j=0; j<igbdy_.size(); j++ ) { 
+      gbdyNodes_[i][j] = xNodes_[i][igbdy_[j]];
+    }
+  }
 
 } // end of method init_bc_info
 
@@ -1539,6 +1548,7 @@ void GGrid<Types>::add_terrain(const State &xb, State &utmp)
   TerrainOp         H(*this);
 
   H.use_metric(TRUE); // do Laplacian in real space
+  xb_.resize(xNodes_.size());
 
   // Solve Nabla^2 (Xnew + Xb ) = 0 
   // for new (homgogeneous) grid solution, Xnew, 
@@ -1547,10 +1557,12 @@ void GGrid<Types>::add_terrain(const State &xb, State &utmp)
   for ( auto j=0; j<xNodes_.size(); j++ ) {
    *b  = 0.0;
    *x0 = 0.0; // first guess
+    xb_[j].resize(xb[j]->size()); xb_[j] = *xb[j];
+//if ( j == 1 )
+//cout << "GGrid<Types>::add_terrain: xb[" << j << "]=" << *xb[j] << endl;
     iret = cg.solve(H, *b, *xb[j], *x0);
 
     assert(iret == GCG<CGTypePack>::GCGERR_NONE);
-//cout << "GGrid<Types>::add_terrain: xb_new[" << j << "]=" << *x0 << endl;
     xNodes_[j] = *x0;             // Reset XNodes = x0
 //GPP(comm_,"GGrid<Types>::add_terrain: new_xNodes[" << j << "]=" << xNodes_[j]);
   }
@@ -1568,7 +1580,8 @@ void GGrid<Types>::add_terrain(const State &xb, State &utmp)
 
 
   // Now, with new coordinates, recompute metric terms, 
-  // Jacobian:
+  // Jacobian. Only deformed element grids can have terrain,
+  // so only these are updated:
   def_geom_init();
 
   // Re-compute Mass matrices:

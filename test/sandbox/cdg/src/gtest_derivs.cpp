@@ -262,15 +262,16 @@ int main(int argc, char **argv)
 
       xn       = grid_->integrate(*utmp[1],*utmp[2]); // int (u-ua)^2 dV
       gnorm[1] = xn;
-      dnorm[1] = grid_->integrate(*utmp[0],*utmp[2]); // int ua^2 dV
+      xn       = grid_->integrate(*utmp[0],*utmp[2]); // int ua^2 dV
+      dnorm[1] = xn < eps ? 1.0 : xn;
+      errs(n,0) = gnorm[0]/dnorm[0]; errs(n,1) = sqrt(gnorm[1]/dnorm[1]);
 if ( myrank == 0 && n == 0 ) {
-cout << " .........rel Inf err: " << gnorm[0]/dnorm[0] << endl; 
-cout << " .........rel L2  err: " << sqrt(gnorm[1]/dnorm[1])  << endl; 
+cout << " .........rel Inf err: " << errs(n,0) << " numerInf=" << gnorm[0] << " denomInf=" << dnorm[0]  << endl; 
+cout << " .........rel L2  err: " << errs(n,1) << " numerL2 =" << gnorm[1] << " denomL2 =" << dnorm[1]  << endl; 
 }
 
-      errs(n,0) = gnorm[0]/dnorm[0]; errs(n,1) = sqrt(gnorm[1]/dnorm[1]);
       if ( myrank == 0 ) {
-        if ( errs(n,ierr) > eps ) {
+        if ( errs(n,ierr) > eps || std::isinf(errs(n,ierr)) || std::isnan(errs(n,ierr)) ) {
           std::cout << "main: ---------------------------derivative FAILED: " << serr[ierr] << " norm=" << errs(n,ierr) << " : direction=" << idir << " method: " << smethod[n]  << std::endl;
           errcode += 1;
         } else {

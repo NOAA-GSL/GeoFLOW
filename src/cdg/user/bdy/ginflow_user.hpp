@@ -39,7 +39,7 @@ public:
         static_assert(std::is_same<State,GTVector<GTVector<Ftype>*>>::value,
                "State is of incorrect type");
 
-static GBOOL myinflow  (EqnBasePtr &eqn, Grid &grid, Time &time, const GINT id, State &u, State &utmp, State &ub);
+static GBOOL myinflow  (const PropertyTree& ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, const GINT id, State &u, State &utmp, State &ub);
 
 };
 

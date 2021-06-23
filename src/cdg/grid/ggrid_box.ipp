@@ -1040,10 +1040,10 @@ void GGridBox<Types>::config_gbdy(const PropertyTree           &ptree,
 
 
 
-  bdynames[0] = "bdy_x_0";
+  bdynames[0] = "bdy_y_0";
   bdynames[1] = "bdy_x_1";
-  bdynames[2] = "bdy_y_0";
-  bdynames[3] = "bdy_y_1";
+  bdynames[2] = "bdy_y_1";
+  bdynames[3] = "bdy_x_0";
   if ( GDIM == 3 ) {
     bdynames[4] = "bdy_z_0";
     bdynames[5] = "bdy_z_1";
@@ -1066,6 +1066,9 @@ void GGridBox<Types>::config_gbdy(const PropertyTree           &ptree,
   igbdy_start = 0;
   for ( auto j=0; j<2*GDIM; j++ ) { // over each canonical bdy
     sbdy         = gridptree.getValue<GString>(bdynames[j]);
+    if ( "none" == sbdy || "" == sbdy ) {
+      continue;
+    }
     bdytree      = ptree.getPropertyTree(sbdy);
     bdyclass     = bdytree.getValue<GString>("bdy_class", "uniform");
     find_gbdy_ind  (j, FALSE, ikeep, itmp, utmp); // bdy node ids only

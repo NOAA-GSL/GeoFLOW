@@ -59,8 +59,17 @@ void GIOObserver<EquationType>::observe_impl(const Time &t, const Time &dt, cons
 
   mpixx::communicator comm;
   GINT                nstate=0;
+  GString             sagg   = "xbdy";
+  GString             snagg  = "nbdy";
+  vector<GString>     svtmp;
+  vector<GString>     svbdy  = {"xbdy" , "ybdy" , "zbdy" };
+  vector<GString>     svnbdy = {"xnbdy", "ynbdy", "znbdy"};
   GTVector<GTVector<GFTYPE>>
                      *xnodes = &(this->grid_->xNodes());
+  GTVector<GTVector<GFTYPE>>
+                     *gbdyNormals = &(this->grid_->bdyNormals());
+  GTVector<GTVector<GFTYPE>>
+                     *gbdyNodes   = &(this->grid_->gbdyNodes());
 
   if ( (this->traits_.itype == ObserverBase<EquationType>::OBS_CYCLE 
         && (cycle_-cycle_last_+1) >= this->traits_.cycle_interval)
@@ -102,7 +111,21 @@ void GIOObserver<EquationType>::observe_impl(const Time &t, const Time &dt, cons
       gp_.resize(xnodes->size());
       for ( auto j=0; j<gp_.size(); j++ ) gp_[j] = &(*xnodes)[j];
       pIO_->write_state(this->traits_.agg_grid_name, gridinfo_, gp_);
+
+      // Write global bdy normals and positions:
+      for ( auto j=0; j<gp_.size(); j++ ) gp_[j] = &(*gbdyNodes)[j];
+      svtmp = gridinfo_.svars;
+
+      gridinfo_.svars      = svbdy;
+      pIO_->write_state(sagg, gridinfo_, gp_);
+
+      gridinfo_.svars      = svnbdy;
+      pIO_->write_state(snagg, gridinfo_, gp_);
+
+      gridinfo_.svars      = svtmp;;
+
       bprgrid_ = FALSE;
+
     }
 
     // Cycle through derived quantities, and write:

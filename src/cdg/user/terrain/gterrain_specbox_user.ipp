@@ -275,3 +275,91 @@ GBOOL gterrainSpecBox<Types>::impl_schar_range(const PropertyTree &ptree, GStrin
 
 
 
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : impl_schar_range2
+// DESC   : Specify terrange as given in Schar et al., MWR 130:2459 2002:
+//               h(x) = h0 exp(-x/a)^2) cos^2(pi x/lambda) 
+//          Currently works only for 2D.
+//         
+//          Starting values might be:
+//            h0 = 250m
+//            lambda = 4km
+//            a = extent = 5km, and may be non-dimensionalized.
+//            on a domain of [-75, 75] x [0, 15] km^2
+//          
+// ARGS   : ptree: main prop tree 
+//          sblk : data block name
+//          grid : grid
+//          utmp : tmp arrays
+//          xb   : terrain vectors
+// RETURNS: TRUE on success; else FALSE 
+//**********************************************************************************
+template<typename Types>
+GBOOL gterrainSpecBox<Types>::impl_schar_range2(const PropertyTree &ptree, GString sblk, Grid &grid, State &utmp, State &xb)
+{
+
+
+  PropertyTree ttree     = ptree.getPropertyTree(sblk);
+  PropertyTree boxptree  = ptree.getPropertyTree("grid_box");
+
+  GSIZET i, nxy;
+  GFTYPE eps, x;
+  GTVector<GSIZET> *igbdy = &grid.igbdy();
+  GTVector<GTVector<GFTYPE>> *xnodes = &grid.xNodes();
+  GTPoint<GFTYPE>  P0(3);
+  
+  nxy = (*xnodes)[0].size();
+
+  GFTYPE lambda  = ttree.getValue<GFTYPE>("lambda");       // perturbation wavelength
+  GFTYPE extent  = ttree.getValue<GFTYPE>("extent");       // range extent
+  GFTYPE h0      = ttree.getValue<GFTYPE>("h0");           // height
+  GFTYPE x0      = ttree.getValue<GFTYPE>("x0");           // packet center
+  GFTYPE a       = ttree.getValue<GFTYPE>("a");            // packet length
+  std::vector<GFTYPE> xyz0 = boxptree.getArray<GFTYPE>("xyz0");
+//std::vector<GFTYPE> dxyz = boxptree.getArray<GFTYPE>("delxyz");
+  P0 = xyz0; 
+
+
+  // Set initial bdy vector to be current coordinates:
+  for ( auto j=0; j<xb.size(); j++ ) *xb[j] = 0.0;
+  for ( auto j=0; j<igbdy->size(); j++ ) {
+    i = (*igbdy)[j];
+    (*xb[0])[i] = (*xnodes)[0][i];
+    (*xb[1])[i] = (*xnodes)[1][i];
+  }
+
+  eps =  100*std::numeric_limits<GFTYPE>::epsilon();
+
+
+  // Build terrain height vector:
+#if defined(_G_IS2D)
+  for ( auto j=0; j<nxy; j++ ) {
+    x        = (*xnodes)[0][j] - x0;
+    if ( FUZZYEQ(P0.x2,(*xnodes)[1][j],eps) ) {
+//               h(x) = cos^2(pi x/lambda) h'(x),
+//               h'(x) = h0 exp( -(x/a)^2 ), |x| <= extent:
+      if ( abs(x) <= extent ) {
+        (*xb[1])[j] = h0*pow(cos(PI*x/lambda),2)
+                        *exp(-pow(x/a,2));
+//cout << "impl_schar_range2: yb[" << j << "]=" << (*xb[1])[j] << endl;
+      }
+    }
+  }
+#elif defined(_G_IS3D)
+  assert(FALSE && "Method undefined in 3D");
+#endif
+
+ 
+  // Do smoothing:
+  for ( auto j=0; j<xb.size(); j++ ) {
+    grid.smooth(*utmp[0], *xb[j]);
+  }
+
+  return TRUE;
+
+} // end, impl_schar_range2
+
+
+
+
