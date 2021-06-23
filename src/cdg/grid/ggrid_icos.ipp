@@ -1441,6 +1441,26 @@ void GGridIcos<Types>::do_gbdy_normals3d(const GTMatrix<GTVector<Ftype>> &dXdXi,
 
 } // end, method do_gbdy_normals3d
 
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : max_duplicates
+// DESC   : Maximum duplicate points found within the grid
+// ARGS   : none.
+// RETURNS: Maximum duplicate
+//**********************************************************************************
+template<typename Types>
+std::size_t GGridIcos<Types>::max_duplicates() const {
+  switch(ndim_) {
+    case 1 :
+      return  2;
+    case 2 :
+      return  6;
+    case 3 :
+      return 12;
+  }
+  ASSERT(not "Unrecognized Number of Dimensions");
+  return 0;
+}
 
 //**********************************************************************************
 //**********************************************************************************

@@ -838,6 +838,17 @@ void GGridBox<Types>::unperiodize()
 
 } // end of method unperiodize
 
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : max_duplicates
+// DESC   : Maximum duplicate points found within the grid
+// ARGS   : none.
+// RETURNS: Maximum duplicate
+//**********************************************************************************
+template<typename Types>
+std::size_t GGridBox<Types>::max_duplicates() const {
+  return std::pow(2,ndim_);
+}
 
 //**********************************************************************************
 //**********************************************************************************
