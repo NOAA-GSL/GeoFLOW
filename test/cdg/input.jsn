@@ -5,7 +5,7 @@
   "qdealias_order"    : [7, 7, 7],
   "grid_type"         : "grid_box",
   "pde_name"          : "pde_mconv",
-  "initstate_block"   : "initstate_mtnwave",
+  "initstate_block"   : "initstate_boxmtnwave",
   "initforce_block"   : "",
   "use_forcing"       : false,
   "initstate_type"    : "direct",
@@ -15,7 +15,7 @@
   "do_comparison"     : true,
   "observer_list"     : ["gio_observer", "gmconv_diag"],
   "IO_implementation" : "gio",
-  "terrain_type"      : "boxschar_range",
+  "terrain_type"      : "",
   "boxschar_range": {
     "name"       : "boxschar_range2",
     "lambda"     : 4000.0,
@@ -24,8 +24,9 @@
     "x0"         : 100000.0,
     "a"          : 5000.0
   },
-  "initstate_mtvwave": {
-    "N"          : 0.01
+  "initstate_boxmtnwave": {
+    "N"          : 0.01,
+    "U0"         : 10.0
   },
   "dirichlet": {
     "bdy_class"        : "uniform",
@@ -38,11 +39,11 @@
   "inflow": {
     "bdy_class"        : "uniform",
     "base_type"        : ["GBDY_INFLOW"],
-    "istate"           : [[0, 1]],
+    "istate"           : [[0, 1, 2, 3]],
     "use_init"         : [false],
     "compute_once"     : [false],
     "method"           : ["myinflow"],
-    "sconfig"          : ["initstate_mtnwave"]
+    "sconfig"          : ["initstate_boxmtnwave"]
   },
   "0-flux": {
     "bdy_class"        : "uniform",
