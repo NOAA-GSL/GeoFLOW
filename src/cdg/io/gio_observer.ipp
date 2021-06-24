@@ -270,6 +270,11 @@ void GIOObserver<EquationType>::print_griddat(StateInfo &info)
     gx[j].resize(gnnorms);
     gn[j].resize(gnnorms);
     iret = GComm::Gatherv(fdata, ndata, T2GCDatatype<Ftype>(),
+                          gx[j].data(), count.data(), disp.data(), 
+                          T2GCDatatype<Ftype>(), 0, comm);
+
+    fdata = (*gbdyNorms)[j].data();
+    iret = GComm::Gatherv(fdata, ndata, T2GCDatatype<Ftype>(),
                           gn[j].data(), count.data(), disp.data(), 
                           T2GCDatatype<Ftype>(), 0, comm);
     GComm::Synch(comm);
