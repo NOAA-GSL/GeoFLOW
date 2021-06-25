@@ -149,12 +149,12 @@ end
 
   dx = diff(x);
   I  = find(abs(dx) > 5.0e-4*abs(max(x)-min(x)) );
-  ngridx = ( max(x) - min(x) ) / min(abs(dx(I)));
+  ngridx = 1.25*( max(x) - min(x) ) / min(abs(dx(I)));
   ngridx = int32(ngridx);
 
   dx = diff(z);
   I  = find(abs(dx) > 5.0e-4*abs(max(x)-min(x)) );
-  ngridy = ( max(z) - min(z) ) / min(abs(dx(I)));
+  ngridy = 1.1*( max(z) - min(z) ) / min(abs(dx(I)));
   ngridy = int32(ngridy)
  
   [X,Y] = ndgrid(linspace(min(x),max(x),ngridx),linspace(min(z),max(z),ngridy));
@@ -200,6 +200,13 @@ end
   axis normal;
 
   hold on;
+
+if 1
+  % Read normal vectors and plot:
+  [pos, vec] = rposvec('gbdy.out', isz)
+  dn = 1;
+  quiver(pos(1:dn:end,1), pos(1:dn:end,2), vec(1:dn:end,1), vec(1:dn:end,2), 0.1);
+end
 
 end % end, task loop
 
