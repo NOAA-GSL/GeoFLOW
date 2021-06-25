@@ -118,9 +118,15 @@ private:
 
 
 
-struct TracerOps {
-	static void initialize();
-	static void finalize();
+struct TraceManager {
+	static TraceManager& instance();
+	void initialize();
+	void finalize();
+	bool is_initialized() const;
+
+	private:
+	TraceManager();
+	bool initialized_;
 };
 
 
@@ -152,8 +158,8 @@ struct TracerOps {
  * \param	msg	Message to insert after prefix.
  */
 //#define GEOFLOW_TRACE() ::geoflow::tbox::StackTracer UNIQUE_NAME(trace)(__FUNCTION__);
-#define GEOFLOW_TRACE_INITIALIZE() ::geoflow::tbox::TracerOps::initialize();
-#define GEOFLOW_TRACE_FINALIZE() ::geoflow::tbox::TracerOps::finalize();
+#define GEOFLOW_TRACE_INITIALIZE() ::geoflow::tbox::TraceManager::instance().initialize();
+#define GEOFLOW_TRACE_FINALIZE() ::geoflow::tbox::TraceManager::instance().finalize();
 #define GEOFLOW_TRACE() ::geoflow::tbox::StackTracer macro_inserted_tracer(__FUNCTION__);
 #define GEOFLOW_TRACE_RENAME(name) ::geoflow::tbox::StackTracer macro_inserted_tracer(name);
 #define GEOFLOW_TRACE_START(msg) macro_inserted_tracer.start(msg);

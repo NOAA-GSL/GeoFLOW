@@ -51,7 +51,9 @@ Tracer::Tracer(const std::string message) : name_(message) {
 //	 nvtxRangePushA(message.c_str());
 #endif
 #if defined(GEOFLOW_TRACER_USE_GPTL)
-    GPTLstart(name_.c_str());
+    if (TraceManager::instance().is_initialized()) {
+        GPTLstart(name_.c_str());
+    }
 #endif
 }
 
@@ -64,7 +66,9 @@ Tracer::~Tracer() {
     nvtxRangePop();
 #endif
 #if defined(GEOFLOW_TRACER_USE_GPTL)
-    GPTLstop(name_.c_str());
+    if (TraceManager::instance().is_initialized()) {
+        GPTLstop(name_.c_str());
+    }
 #endif
 }
 
@@ -73,21 +77,38 @@ std::size_t& Tracer::indent() {
     return m_current_indent;
 }
 
-void TracerOps::initialize() {
+
+
+TraceManager::TraceManager() : initialized_(false){
+}
+
+TraceManager& TraceManager::instance() {
+    static TraceManager instance_;
+	return instance_;
+}
+
+void TraceManager::initialize() {
 #if defined(GEOFLOW_TRACER_USE_GPTL)
     GPTLsetoption(GPTLcpu, 1);
     GPTLsetoption(GPTLsync_mpi, 1);
     GPTLinitialize();
 #endif
+    initialized_ = true;
 }
-void TracerOps::finalize() {
+void TraceManager::finalize() {
 #if defined(GEOFLOW_TRACER_USE_GPTL)
     using namespace ::geoflow::tbox;
     GPTLpr_file("timing.txt");
     GPTLpr_summary(mpixx::communicator());
     GPTLfinalize();
 #endif
+    initialized_ = false;
 }
+
+bool TraceManager::is_initialized() const {
+    return initialized_;
+}
+
 
 }  // namespace tbox
 }  // namespace geoflow
