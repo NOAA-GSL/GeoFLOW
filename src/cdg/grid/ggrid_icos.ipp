@@ -983,6 +983,9 @@ void GGridIcos<Types>::config_gbdy(const geoflow::tbox::PropertyTree &ptree,
   igbdy_start = 0;
   for ( auto j=0; j<2; j++ ) { // cycle over 2 spherical surfaces
     sbdy         = gridptree.getValue<GString>(bdynames[j]);
+    if ( "none" == sbdy || "" == sbdy ) {
+      continue;
+    }
     bdytree      = ptree.getPropertyTree(sbdy);
     bdyclass     = bdytree.getValue<GString>("bdy_class", "uniform");
     find_gbdy_ind3d(rbdy[j], itmp, utmp); // bdy node ids only
@@ -1438,6 +1441,26 @@ void GGridIcos<Types>::do_gbdy_normals3d(const GTMatrix<GTVector<Ftype>> &dXdXi,
 
 } // end, method do_gbdy_normals3d
 
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : max_duplicates
+// DESC   : Maximum duplicate points found within the grid
+// ARGS   : none.
+// RETURNS: Maximum duplicate
+//**********************************************************************************
+template<typename Types>
+std::size_t GGridIcos<Types>::max_duplicates() const {
+  switch(ndim_) {
+    case 1 :
+      return  2;
+    case 2 :
+      return  6;
+    case 3 :
+      return 12;
+  }
+  ASSERT(not "Unrecognized Number of Dimensions");
+  return 0;
+}
 
 //**********************************************************************************
 //**********************************************************************************

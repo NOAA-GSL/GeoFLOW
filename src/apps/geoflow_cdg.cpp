@@ -153,11 +153,6 @@ int main(int argc, char **argv) {
     pio::pout << "geoflow: time stepping done." << std::endl;
 
     //***************************************************
-    // Do benchmarking if required:
-    //***************************************************
-    do_bench("benchmark.txt", pIntegrator_->get_numsteps());
-
-    //***************************************************
     // Compare solution if required:
     //***************************************************
     compare(ptree_, *grid_, pEqn_, t, utmp_, u_);
@@ -363,107 +358,6 @@ void create_basis_pool(PropertyTree &ptree, BasisBase &gbasis) {
     }
 
 }  // end method create_basis_pool
-
-//**********************************************************************************
-//**********************************************************************************
-// METHOD:
-// DESC  : Do benchmark from timers
-// ARGS  : fname     : filename
-//         ncyc      : number time cycles to average over
-//**********************************************************************************
-#if defined(GEOFLOW_USE_GPTL)
-#include "gptl.h"
-#endif
-void do_bench(GString fname, GSIZET ncyc) {
-    GEOFLOW_TRACE();
-    if (!bench_) return;
-
-#if defined(GEOFLOW_USE_GPTL)
-
-    GINT  myrank = GComm::WorldRank(comm_);
-    GINT  ntasks = GComm::WorldSize(comm_);
-    GINT  nthreads = 1;
-    Ftype dxmin, lmin;
-    Ftype ttotal;
-    Ftype tggfx;
-    Ftype texch;
-    Ftype tgrid;
-    Ftype tggfxinit;
-    std::ifstream itst;
-    std::ofstream ios;
-    GTVector<GSIZET> lsz(2), gsz(2);
-
-#pragma omp parallel  //num_threads(3)
-    {
-        nthreads = omp_get_num_threads();
-    }
-
-    // Get global no elements and dof & lengths:
-    lsz[0] = grid_->nelems();
-    lsz[1] = grid_->ndof();
-    GComm::Allreduce(lsz.data(), gsz.data(), 2, T2GCDatatype<GSIZET>(), GC_OP_SUM, comm_);
-    dxmin = grid_->minnodedist();
-    lmin = grid_->minlength();
-    if (myrank == 0) {
-        itst.open(fname);
-        ios.open(fname, std::ios_base::app);
-
-        // Write header, if required:
-        if (itst.peek() == std::ofstream::traits_type::eof()) {
-            ios << "#nelems"
-                << "  ";
-            ios << "ndof"
-                << "  ";
-            ios << "dxmin"
-                << "  ";
-            ios << "elmin"
-                << "  ";
-            ios << "ntasks"
-                << "  ";
-            ios << "nthreads"
-                << "  ";
-            ios << "ttotal"
-                << "  ";
-            ios << "tggfx"
-                << "  ";
-            ios << "texch"
-                << "  ";
-            ios << "tgrid"
-                << "  ";
-            ios << "tggfxinit";
-            ios << endl;
-        }
-        itst.close();
-
-        GPTLget_wallclock("time_loop", 0, &ttotal);
-        ttotal /= ncyc;
-        GPTLget_wallclock("ggfx_doop", 0, &tggfx);
-        tggfx /= ncyc;
-        GPTLget_wallclock("ggfx_doop_exch", 0, &texch);
-        texch /= ncyc;
-        GPTLget_wallclock("gen_grid", 0, &tgrid);
-        GPTLget_wallclock("init_ggfx_op", 0, &tggfxinit);
-
-        ios << gsz[0] << "   ";
-        ios << gsz[1] << "   ";
-        ios << dxmin << "   ";
-        ios << lmin << "   ";
-        ios << ntasks << "   ";
-        ios << nthreads << "   ";
-        ios << ttotal << "   ";
-        ios << tggfx << "   ";
-        ios << texch << "   ";
-        ios << tgrid << "   ";
-        ios << tggfxinit;
-        ios << endl;
-
-        ios.close();
-    }
-#endif
-
-    return;
-
-}  // end method do_bench
 
 //**********************************************************************************
 //**********************************************************************************
@@ -678,9 +572,9 @@ void compare(const PropertyTree &ptree, Grid &grid, EqnBasePtr &peqn, Time &t, S
 
         // Write header, if required:
         if (itst.peek() == std::ofstream::traits_type::eof()) {
-            ios << "Time"
+            ios << "#Time"
                 << "  ";
-            ios << "#ntasks"
+            ios << "ntasks"
                 << "  ";
             ios << "ncyc"
                 << "  ";
@@ -792,6 +686,7 @@ void do_restart(const PropertyTree &ptree, Grid &, State &u,
 
 void init_ggfx(PropertyTree &ptree, Grid &grid, GGFX<Ftype> *&ggfx) {
     GEOFLOW_TRACE();
+    constexpr auto ndim = GGFX<Ftype>::NDIM;
 
     // Periodize coords if needed
     if (typeid(grid) == typeid(GGridBox<MyTypes>)) {
@@ -799,10 +694,15 @@ void init_ggfx(PropertyTree &ptree, Grid &grid, GGFX<Ftype> *&ggfx) {
     }
 
     const auto ndof = grid_->ndof();
-    std::vector<std::array<Ftype, GDIM>> xyz(ndof);
+    const auto nxyz = grid.xNodes().size();
+    ASSERT( nxyz <= ndim );
+    std::vector<std::array<Ftype, ndim>> xyz(ndof);
     for (std::size_t i = 0; i < ndof; i++) {
-        for (std::size_t d = 0; d < GDIM; d++) {
+        for (std::size_t d = 0; d < nxyz; d++) {
             xyz[i][d] = grid.xNodes()[d][i];
+        }
+        for (std::size_t d = nxyz; d < ndim; d++) {
+            xyz[i][d] = 0.0;
         }
     }
 
@@ -811,11 +711,20 @@ void init_ggfx(PropertyTree &ptree, Grid &grid, GGFX<Ftype> *&ggfx) {
         static_cast<GGridBox<MyTypes> *>(&grid)->unperiodize();
     }
 
+    // Get max duplicate points
+    std::size_t maxdups = 0;
+    if (typeid(grid) == typeid(GGridBox<MyTypes>)) {
+        maxdups = static_cast<GGridBox<MyTypes> *>(&grid)->max_duplicates();
+    }
+    else if(typeid(grid) == typeid(GGridIcos<MyTypes>)) {
+        maxdups = static_cast<GGridIcos<MyTypes> *>(&grid)->max_duplicates();
+    }
+
     // Create GGFX
     ASSERT(ggfx == nullptr);
     ggfx = new GGFX<Ftype>();
     ASSERT(ggfx != nullptr);
-    pio::pout << "Calling ggfx->init(xyz)" << std::endl;
-    ggfx->init(0.1 * grid.minnodedist(), xyz);
+    pio::pout << "Calling ggfx->init(...)" << std::endl;
+    ggfx->init(maxdups, static_cast<Ftype>(0.001)*grid.minnodedist(), xyz);
 
 }  // end method init_ggfx

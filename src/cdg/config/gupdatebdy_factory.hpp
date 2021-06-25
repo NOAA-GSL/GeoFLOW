@@ -30,8 +30,8 @@ using namespace std;
 struct stBdyBlock {
   GBOOL            use_init=FALSE;    // use initialisation method for setting bdy conditions
   GBOOL            compute_once=FALSE;// compute data once (not time-dep)
-  GINT             idir=-1;           // coord direction of bdy surface
-  GINT             bdyid=-1;          // bdy id 
+  GINT             idir=0;            // coord direction of bdy surface
+  GINT             bdyid=0;           // bdy id 
   GBdyType         tbdy=GBDY_NONE;    // bdy type
   GFTYPE           xstart=0.0;        // start of sponge surf in idir direction
   GFTYPE           xmax=0.0;          // max coord in direction idir
@@ -39,9 +39,10 @@ struct stBdyBlock {
   vector<GFTYPE>   value;             // vector of Dirichlet values for each istate
   vector<GFTYPE>   farfield;          // vector of far field bdys for SPONGE bcs for each istate
   vector<GFTYPE>   falloff;           // vector of fall-off rates for SPONGE bcs for each istate
-  vector<GFTYPE>   diffusion;         // vector of diffusion factors for SPONGE bcs for each istate
+  vector<GFTYPE>   exponent;          // vector of dissipation exponents
   GString          bdyclass;          // bdy ('uniform', 'mixed')
   GString          smethod;           // name of method providing bdy values (e.g. for inflow)
+  GString          sconfig;           // name of configuration block in .jsn file
 };
 
 
@@ -60,6 +61,8 @@ class GUpdateBdyFactory
         using BdyBasePtr       = std::shared_ptr<BdyBase>;
         using BdyUpdateList    = GTVector<GTVector<BdyBasePtr>>;
         using CallbackPtr      = std::function<GBOOL(
+                                const PropertyTree& ptree, 
+                                GString &sconfig,
                                 EqnBasePtr &eqn,
                                 Grid       &grid,
                                 Time       &time,
@@ -69,11 +72,11 @@ class GUpdateBdyFactory
                                 State      &ub)>;
 
 
-	static BdyBasePtr build(const PropertyTree &ptree, const GString &sbdy, Grid &grid, stBdyBlock &bcblock, GTVector<GSIZET> &ibdy, GTVector<GUINT> &dbdy, GSIZET igbdy_start);
+	static BdyBasePtr      build(const PropertyTree &ptree, const GString &sbdy, Grid &grid, stBdyBlock &bcblock, GTVector<GSIZET> &ibdy, GTVector<GUINT> &dbdy, GSIZET igbdy_start);
 
-	static BdyBasePtr  get_bdy_class (const PropertyTree& ptree, Grid &grid, stBdyBlock &bcblock,  GTVector<GSIZET> &ibdy, GTVector<GUINT> &dbdy, GSIZET igbdy_start);
+	static BdyBasePtr       get_bdy_class (const PropertyTree& ptree, Grid &grid, stBdyBlock &bcblock,  GTVector<GSIZET> &ibdy, GTVector<GUINT> &dbdy, GSIZET igbdy_start);
 
-        static GBOOL             get_bdy_block(const geoflow::tbox::PropertyTree &sptree, GString &sbdy, GINT ibc, stBdyBlock &stblock);
+        static GBOOL            get_bdy_block(const geoflow::tbox::PropertyTree &sptree, GString &sbdy, GINT ibc, stBdyBlock &stblock);
 
         static GINT              bdy_block_conform_per(const geoflow::tbox::PropertyTree &sptree);
 

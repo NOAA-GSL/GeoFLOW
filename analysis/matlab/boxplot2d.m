@@ -147,6 +147,18 @@ nelems
     else
       puu = uu;
     end
+
+if 0
+   % print max(u) and its position:
+   aumax = max(abs(umax),abs(umin));
+   aumin = min(abs(umax),abs(umin));
+%  I = find(abs(uu) > 0.95*aumax & abs(uu) <= aumax);
+   I = find(uu < 0.0);
+   for j=1:10:numel(I)
+     sprintf('(%f, %f); u=%f',xx(I(j)), yy(I(j)), uu(I(j)) )
+   end
+end
+
     h = quadmesh(imat,xx,yy,puu,'FaceColor','interp');
 %   h = quadmesh(imat,xx,yy,varargin{:});
 %   set(h, 'FaceColor', 'blue', 'EdgeColor', 'none');
@@ -165,7 +177,7 @@ nelems
     
   end % end, elem loop
 
-view(2); % std 2d view
+  view(2); % std 2d view
 
 end % end, task loop
 

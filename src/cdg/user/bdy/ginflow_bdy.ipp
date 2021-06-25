@@ -22,6 +22,7 @@ bcomputed_               (FALSE),
 ballocated_              (FALSE),
 traits_                 (traits)
 {
+
   // Allocate bdy arrays foreach state component:
   bdydata_.resize(traits_.istate.size());
   bdydata_ = NULLPTR;
@@ -163,11 +164,12 @@ GBOOL GInflowBdy<Types>::compute_bdy_data(
           (*ub[n])[j] = (*unew_[idstate])[ind];
         }
       }
- 
+
     }
     else {
 
-      bret = traits_.callback(eqn, grid, time, traits_.bdyid, utmp_, unew_,  ub);
+      for ( auto j=0; j<unew_.size(); j++ ) *unew_[j] = *u[j];
+      bret = traits_.callback(traits_.ptree, traits_.sconfig, eqn, grid, time, traits_.bdyid, utmp_, unew_,  ub);
 
     }
     assert(bret);

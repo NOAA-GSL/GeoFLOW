@@ -667,7 +667,7 @@ GBOOL ginitstate<Types>::impl_boxdrywarmbubble(const PropertyTree &ptree, GStrin
 
   // Check solver type 
   // Remember: eqn is a shared_ptr, so must check 
-  //           against its contets
+  //           against its contents
   
   ceqn = dynamic_cast<GMConv<Types>*>(eqn.get());
   assert(ceqn && "Must use GMConv solver");
@@ -791,7 +791,7 @@ GBOOL ginitstate<Types>::impl_boxdrybubble(const PropertyTree &ptree, GString &s
 
   // Check solver type 
   // Remember: eqn is a shared_ptr, so must check 
-  //           against its contets
+  //           against its contents
   
   ceqn = dynamic_cast<GMConv<Types>*>(eqn.get());
   assert(ceqn != NULLPTR && "Must initialize for Equation GMConv");
@@ -1128,7 +1128,7 @@ GBOOL ginitstate<Types>::impl_boxdryscharadv(const PropertyTree &ptree, GString 
 
   // Check solver type 
   // Remember: eqn is a shared_ptr, so must check 
-  //           against its contets
+  //           against its contents
   ceqn = dynamic_cast<GMConv<Types>*>(eqn.get());
   assert(ceqn != NULLPTR && "Must initialize for Equation GMConv");
 
@@ -1195,5 +1195,117 @@ GBOOL ginitstate<Types>::impl_boxdryscharadv(const PropertyTree &ptree, GString 
   return TRUE;
 
 } // end of method impl_boxdryscharadv
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : impl_boxmtnwave
+// DESC   : Initialize state for GMConv solver with idealized 
+//          mountain wave test, intended to be in the presence of
+//          topography. Taken from Schar 2002 MWR 130:2549.
+// ARGS   : ptree  : main prop tree
+//          sconfig: ptree block name containing variable config
+//          eqn    : equation implementation
+//          grid   : grid
+//          t      : time
+//          utmp   : tmp arrays
+//          u      : current state
+// RETURNS: TRUE on success; else FALSE 
+//**********************************************************************************
+template<typename Types>
+GBOOL ginitstate<Types>::impl_boxmtnwave(const PropertyTree &ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, State &utmp, State &u)
+{
+  GString             serr = "impl_boxmtnwave: ";
+  GSIZET              nxy;
+  GFTYPE              x, y, z, zmin,r;
+  GFTYPE              dj, ds, N, P0, pj, T0, Tb, Ts, U0;
+  GFTYPE              eps=100.0*std::numeric_limits<GFTYPE>::epsilon();
+  GTVector<GFTYPE>   *db, *d, *e, *pb, *T;
+  GString             sblock;
+  typename Types::State
+                     *ubase;
+ 
+  GTVector<GTVector<GFTYPE>> 
+                     *xnodes = &grid.xNodes();
+  GTVector<GTVector<GFTYPE>> 
+                     *xb     = &grid.xb();
+  GMConv<Types>      *ceqn;
+
+  PropertyTree inittree    = ptree.getPropertyTree(sconfig);
+  sblock                   = ptree.getValue<GString>("pde_name");
+  PropertyTree convptree   = ptree.getPropertyTree(sblock);
+
+
+  // Check solver type 
+  // Remember: eqn is a shared_ptr, so must check 
+  //           against its contents
+  
+  ceqn = dynamic_cast<GMConv<Types>*>(eqn.get());
+  assert(ceqn != NULLPTR && "Must initialize for Equation GMConv");
+
+  // Check grid type:
+  GridBox  *box   = dynamic_cast <GridBox*>(&grid);
+  assert(box && "Must use a box grid");
+
+  // Check state size:
+  assert(u.size() == ceqn->state_size());
+
+  // Check tmp size:
+  assert(utmp.size() >= 1 );
+
+  // Get base state:
+  typename GMConv<Types>::Traits traits = ceqn->get_traits();
+  ubase = &ceqn->get_base_state();
+//assert( traits.usebase && ubase->size() == 2 );
+  assert( ubase->size() == 2 );
+   
+
+  T     = utmp[0];  // background temp
+  d     = u  [ceqn->DENSITY]; // density
+  e     = u  [ceqn->ENERGY]; // int. energy density
+  db    = (*ubase)[0];// background density 
+  pb    = (*ubase)[1];// background pressure
+  nxy   = (*xnodes)[0].size(); // same size for x, y, z
+
+  N     = inittree.getValue<GFTYPE>("N");          // Brunt-Vaisalla freq
+  U0    = inittree.getValue<GFTYPE>("U0");         // Inflow velocity
+  P0    = convptree.getValue<GFTYPE>("P0");        // ref pressure (mb or hPa)
+  P0   *= 100.0;                                   // convert to Pa
+  Ts    = convptree.getValue<GFTYPE>("T_surf");    // surf temp
+
+  // Initialize momentum:
+  for ( auto j=0; j<ceqn->ENERGY; j++ ) *u[j] = 0.0;
+//ds = P0 / (RD * Ts); // surf. density
+
+  zmin = 0.0;
+  for ( auto j=0; j<nxy; j++ ) { 
+    x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; 
+    if ( GDIM == 3 ) z = (*xnodes)[2][j];
+    r = GDIM == 3 ? z : y;
+    zmin = xb->size() > 0 ? (*xb)[GDIM-1][j] : (*xnodes)[GDIM-1].min();
+
+    // Compute den from constant Brunt-Vaisalla freq,
+    //    N^2 = -g/rho_0 drho/dz:
+    pj = (*pb)[j]; 
+    dj = pj / ( RD * Ts );
+    if ( traits.usebase ) { // There is a base-state
+//    (*d) [j]  = ds - (*db)[j] + N*N*ds/GG * (zmin - r); // d fluct.
+      (*d) [j]  = dj - (*db)[j];
+    }
+    else {                  // No base-state
+//    (*d) [j]  = ds + N*N*ds/GG * (zmin - r); 
+      (*d) [j]  = dj;
+   }
+   (*u[0])[j] = dj * U0;
+   (*e)[j]    = CVD * pj / RD; // e = Cv * p / R
+//if ( j < 200 )
+//cout << "boxmtnwave: j=" << j << " d=" << (*d)[j] << " e=" << (*e)[j] << endl;
+   
+  }
+//cout << "boxdrybubble: db=" << *db << endl;
+
+  return TRUE;
+
+} // end of method impl_boxmtnwave
 
 

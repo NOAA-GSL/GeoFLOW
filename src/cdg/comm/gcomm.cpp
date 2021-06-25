@@ -551,7 +551,7 @@ GINT GComm::Gatherv(void *sbuff, GINT sendcount, GCommDatatype stype, void *rbuf
 {
 
   GINT    iret=sendcount, rank=GComm::WorldRank(comm);
-  GString serr = "GComm::Allgather: ";
+  GString serr = "GComm::Gatherv: ";
 
 #if defined(GEOFLOW_USE_MPI)
   if ( sbuff == NULLPTR ) {

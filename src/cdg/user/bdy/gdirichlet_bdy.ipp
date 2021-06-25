@@ -63,7 +63,7 @@ GBOOL GDirichletBdy<Types>::update_impl(
    GINT       idstate;
    GSIZET     ind;
 
-  GTVector<GSIZET> *igbdy = &traits_.ibdyvol;
+   GTVector<GSIZET> *igbdy = &traits_.ibdyvol;
 
 
 
