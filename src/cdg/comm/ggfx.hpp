@@ -347,6 +347,7 @@ GBOOL GGFX<T>::doOp(ValueArray& u, ReductionOp oper) {
     GEOFLOW_TRACE();
     using namespace geoflow::tbox;
 
+
     // Get size of data being used
     const auto N = u.size();
 
@@ -355,6 +356,7 @@ GBOOL GGFX<T>::doOp(ValueArray& u, ReductionOp oper) {
     mpi::communicator world;
     auto my_rank = world.rank();
     auto num_ranks = world.size();
+    GEOFLOW_TRACE_START("ggfx_doop");
 
     // Submit the Non-Blocking receive requests
     GEOFLOW_TRACE_START("Submit Receive Requests");
@@ -438,6 +440,8 @@ GBOOL GGFX<T>::doOp(ValueArray& u, ReductionOp oper) {
 
     // Clear all send requests
     mpi::wait_all(send_requests.begin(), send_requests.end());
+
+    GEOFLOW_TRACE_STOP();
 
     return true;
 }
