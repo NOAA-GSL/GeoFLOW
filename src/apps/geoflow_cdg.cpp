@@ -79,7 +79,7 @@ int main(int argc, char **argv) {
 #endif
     grid_ = GGridFactory<MyTypes>::build(ptree_, gbasis_, pIO_, binobstraits, comm_);
 #if defined(GEOFLOW_USE_GPTL)
-    GPTLstop("gen_gen");
+    GPTLstop("gen_grid");
 #endif
     pio::pout << "geoflow: grid built." << std::endl;
 
