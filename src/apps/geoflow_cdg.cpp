@@ -153,6 +153,11 @@ int main(int argc, char **argv) {
     pio::pout << "geoflow: time stepping done." << std::endl;
 
     //***************************************************
+    // Do benchmarking if required:
+    //***************************************************
+    do_bench("benchmark.txt", pIntegrator_->get_numsteps());
+
+    //***************************************************
     // Compare solution if required:
     //***************************************************
     compare(ptree_, *grid_, pEqn_, t, utmp_, u_);
@@ -728,3 +733,106 @@ void init_ggfx(PropertyTree &ptree, Grid &grid, GGFX<Ftype> *&ggfx) {
     ggfx->init(maxdups, static_cast<Ftype>(0.001)*grid.minnodedist(), xyz);
 
 }  // end method init_ggfx
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD:
+// DESC  : Do benchmark from timers
+// ARGS  : fname     : filename
+//         ncyc      : number time cycles to average over
+//**********************************************************************************
+#if defined(GEOFLOW_USE_GPTL)
+#include "gptl.h"
+#endif
+void do_bench(GString fname, GSIZET ncyc) {
+    GEOFLOW_TRACE();
+    if (!bench_) return;
+
+#if defined(GEOFLOW_USE_GPTL)
+
+    GINT  myrank = GComm::WorldRank(comm_);
+    GINT  ntasks = GComm::WorldSize(comm_);
+    GINT  nthreads = 1;
+    Ftype dxmin, lmin;
+    Ftype ttotal;
+    Ftype tggfx;
+    Ftype texch;
+    Ftype tgrid;
+    Ftype tggfxinit;
+    std::ifstream itst;
+    std::ofstream ios;
+    GTVector<GSIZET> lsz(2), gsz(2);
+
+#pragma omp parallel  //num_threads(3)
+    {
+        nthreads = omp_get_num_threads();
+    }
+
+    // Get global no elements and dof & lengths:
+    lsz[0] = grid_->nelems();
+    lsz[1] = grid_->ndof();
+    GComm::Allreduce(lsz.data(), gsz.data(), 2, T2GCDatatype<GSIZET>(), GC_OP_SUM, comm_);
+    dxmin = grid_->minnodedist();
+    lmin = grid_->minlength();
+    if (myrank == 0) {
+        itst.open(fname);
+        ios.open(fname, std::ios_base::app);
+
+        // Write header, if required:
+        if (itst.peek() == std::ofstream::traits_type::eof()) {
+            ios << "#nelems"
+                << "  ";
+            ios << "ndof"
+                << "  ";
+            ios << "dxmin"
+                << "  ";
+            ios << "elmin"
+                << "  ";
+            ios << "ntasks"
+                << "  ";
+            ios << "nthreads"
+                << "  ";
+            ios << "ttotal"
+                << "  ";
+            ios << "tggfx"
+                << "  ";
+            ios << "texch"
+                << "  ";
+            ios << "tgrid"
+                << "  ";
+            ios << "tggfxinit";
+            ios << endl;
+        }
+        itst.close();
+
+        GPTLget_wallclock("time_loop", 0, &ttotal);
+        ttotal /= ncyc;
+        GPTLget_wallclock("ggfx_doop", 0, &tggfx);
+        tggfx /= ncyc;
+        GPTLget_wallclock("ggfx_doop_exch", 0, &texch);
+        texch /= ncyc;
+        GPTLget_wallclock("gen_grid", 0, &tgrid);
+        GPTLget_wallclock("init_ggfx_op", 0, &tggfxinit);
+
+        ios << gsz[0] << "   ";
+        ios << gsz[1] << "   ";
+        ios << dxmin << "   ";
+        ios << lmin << "   ";
+        ios << ntasks << "   ";
+        ios << nthreads << "   ";
+        ios << ttotal << "   ";
+        ios << tggfx << "   ";
+        ios << texch << "   ";
+        ios << tgrid << "   ";
+        ios << tggfxinit;
+        ios << endl;
+
+        ios.close();
+    }
+#endif
+
+    return;
+
+}  // end method do_bench
+
