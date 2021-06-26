@@ -152,7 +152,6 @@ void init_ggfx        (PropertyTree &ptree, Grid &grid, GGFX<GFTYPE> *&ggfx);
 void gresetart        (PropertyTree &ptree);
 void compare          (const PropertyTree &ptree, Grid &, EqnBasePtr &pEqn, Time &t, State &utmp, State &u);
 void do_restart       (const PropertyTree &ptree, Grid &, State &u, GTMatrix<GINT>&p,  GSIZET &cycle, Time &t);
-void do_bench         (GString sbench, GSIZET ncyc);
 
 //#include "init_pde.h"
 
