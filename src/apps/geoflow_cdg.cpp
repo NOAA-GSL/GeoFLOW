@@ -8,6 +8,10 @@
 //==================================================================================
 #include "geoflow_cdg.h"
 
+#if defined(GEOFLOW_USE_GPTL)
+#include "gptl.h"
+#endif
+
 //#if !defined(_GMTK_GLOBAL_DATA)
 //  #define _GMTK_GLOBAL_DATA
   GINT szMatCache_ = _G_MAT_CACHE_SIZE;
@@ -70,7 +74,13 @@ int main(int argc, char **argv) {
     pio::pout << "geoflow: build grid..." << std::endl;
     ObserverFactory<MyTypes>::get_traits(ptree_, "gio_observer", binobstraits);
     comm_ = world;
+#if defined(GEOFLOW_USE_GPTL)
+    GPTLstart("gen_grid");
+#endif
     grid_ = GGridFactory<MyTypes>::build(ptree_, gbasis_, pIO_, binobstraits, comm_);
+#if defined(GEOFLOW_USE_GPTL)
+    GPTLstop("gen_gen");
+#endif
     pio::pout << "geoflow: grid built." << std::endl;
 
     //***************************************************
@@ -148,7 +158,13 @@ int main(int argc, char **argv) {
     GComm::Synch();
     pio::pout << "geoflow: do time stepping..." << std::endl;
 
+#if defined(GEOFLOW_USE_GPTL)
+    GPTLstart("time_loop");
+#endif
     pIntegrator_->time_integrate(t, uf_, u_);
+#if defined(GEOFLOW_USE_GPTL)
+    GPTLstop("time_loop");
+#endif
 
     pio::pout << "geoflow: time stepping done." << std::endl;
 
@@ -742,9 +758,6 @@ void init_ggfx(PropertyTree &ptree, Grid &grid, GGFX<Ftype> *&ggfx) {
 // ARGS  : fname     : filename
 //         ncyc      : number time cycles to average over
 //**********************************************************************************
-#if defined(GEOFLOW_USE_GPTL)
-#include "gptl.h"
-#endif
 void do_bench(GString fname, GSIZET ncyc) {
     GEOFLOW_TRACE();
 
@@ -761,9 +774,7 @@ cout << "main: Using GPTL ..." << endl;
     Ftype dxmin, lmin;
     Ftype ttotal;
     Ftype tggfx;
-    Ftype texch;
     Ftype tgrid;
-    Ftype tggfxinit;
     std::ifstream itst;
     std::ofstream ios;
     GTVector<GSIZET> lsz(2), gsz(2);
@@ -806,24 +817,16 @@ cout << "main: opening file ..." << endl;
                 << "  ";
             ios << "tggfx"
                 << "  ";
-            ios << "texch"
-                << "  ";
-            ios << "tgrid"
-                << "  ";
-            ios << "tggfxinit";
+            ios << "tgrid";
             ios << endl;
         }
         itst.close();
 
-cout << "main: Extracting from GPTL e ..." << endl;
         GPTLget_wallclock("time_loop", 0, &ttotal);
         ttotal /= ncyc;
         GPTLget_wallclock("ggfx_doop", 0, &tggfx);
         tggfx /= ncyc;
-        GPTLget_wallclock("ggfx_doop_exch", 0, &texch);
-        texch /= ncyc;
         GPTLget_wallclock("gen_grid", 0, &tgrid);
-        GPTLget_wallclock("init_ggfx_op", 0, &tggfxinit);
 
         ios << gsz[0] << "   ";
         ios << gsz[1] << "   ";
@@ -833,9 +836,7 @@ cout << "main: Extracting from GPTL e ..." << endl;
         ios << nthreads << "   ";
         ios << ttotal << "   ";
         ios << tggfx << "   ";
-        ios << texch << "   ";
         ios << tgrid << "   ";
-        ios << tggfxinit;
         ios << endl;
 
         ios.close();
