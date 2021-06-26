@@ -78,6 +78,7 @@
  */
 #if defined(GEOFLOW_TRACER_USE_NVTX) || defined(GEOFLOW_TRACER_USE_PIO) || defined(GEOFLOW_TRACER_USE_GPTL)
 #define GEOFLOW_USE_TRACER
+#define GEOFLOW_USE_GPTL
 #endif
 
 // Constants to compare against
