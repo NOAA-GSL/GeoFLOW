@@ -747,9 +747,13 @@ void init_ggfx(PropertyTree &ptree, Grid &grid, GGFX<Ftype> *&ggfx) {
 #endif
 void do_bench(GString fname, GSIZET ncyc) {
     GEOFLOW_TRACE();
+
+cout << "main: Entering do_bench..." << endl;
+
     if (!bench_) return;
 
 #if defined(GEOFLOW_USE_GPTL)
+cout << "main: Using GPTL ..." << endl;
 
     GINT  myrank = GComm::WorldRank(comm_);
     GINT  ntasks = GComm::WorldSize(comm_);
@@ -764,10 +768,14 @@ void do_bench(GString fname, GSIZET ncyc) {
     std::ofstream ios;
     GTVector<GSIZET> lsz(2), gsz(2);
 
+#if defined(_OPENMP)
 #pragma omp parallel  //num_threads(3)
     {
         nthreads = omp_get_num_threads();
     }
+#else
+        nthreads = 1;
+#endif
 
     // Get global no elements and dof & lengths:
     lsz[0] = grid_->nelems();
@@ -776,6 +784,7 @@ void do_bench(GString fname, GSIZET ncyc) {
     dxmin = grid_->minnodedist();
     lmin = grid_->minlength();
     if (myrank == 0) {
+cout << "main: opening file ..." << endl;
         itst.open(fname);
         ios.open(fname, std::ios_base::app);
 
@@ -806,6 +815,7 @@ void do_bench(GString fname, GSIZET ncyc) {
         }
         itst.close();
 
+cout << "main: Extracting from GPTL e ..." << endl;
         GPTLget_wallclock("time_loop", 0, &ttotal);
         ttotal /= ncyc;
         GPTLget_wallclock("ggfx_doop", 0, &tggfx);
