@@ -11,11 +11,11 @@
   "initstate_type"    : "direct",
   "initforce_type"    : "",
   "restart_index"     : 0,
-  "benchmark"         : false,
+  "benchmark"         : true,
   "do_comparison"     : false,
   "observer_list"     : ["gio_observer", "gmconv_diag"],
   "IO_implementation" : "gio",
-  "terrain_type"      : "none",
+  "terrain_type"      : "",
   "initstate_icosabcconv": {
     "T0"     : 300.0,
     "P0"     : 1.0,
