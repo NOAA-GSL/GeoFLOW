@@ -553,6 +553,7 @@ void GGrid<Types>::grid_init()
     cudat_.ieblk[j] = j<cudat_.nstreams-1 ? cudat_.ibblk[j] + idel
                     : nelems-1;
   }
+
   
 } // end of method grid_init (1)
 
@@ -617,7 +618,7 @@ void GGrid<Types>::grid_init(GTMatrix<GINT> &p,
   volume_  = integrate(tmp0, tmp1);
   ivolume_ = 1.0 / volume_;
 
-} // end of method grid_init
+} // end of method grid_init (2)
 
 
 //**********************************************************************************
@@ -1462,7 +1463,6 @@ void GGrid<Types>::init_bc_info(GBOOL bterrain)
   GSIZET           n, nbdy;
   GTVector<GSIZET> iunique;
 
-//cout << "init_bc_info: igbdy=" << igbdy_ << endl;
    
   nind = 0; 
   // Compute 'binned' structures for global indices
@@ -1471,7 +1471,6 @@ void GGrid<Types>::init_bc_info(GBOOL bterrain)
   n = 0; // cycle over all bdy nodes
   igbdy_binned_.resize(igbdy_bdyface_.size());
   for ( auto k=0; k<igbdy_bdyface_.size(); k++ ) { // cycle over canonical bdy face
-//cout << "init_bc_info: igbdy[" << k << "]=" << igbdy_bdyface_[k] << endl;
     nbdy = igbdyt_bdyface_[k].size();
     igbdy_binned_ [k].resize(GBDY_MAX);
     for ( auto j=0; j<GBDY_MAX; j++ ) { // cycle over each bc type
@@ -1558,8 +1557,6 @@ void GGrid<Types>::add_terrain(const State &xb, State &utmp)
    *b  = 0.0;
    *x0 = 0.0; // first guess
     xb_[j].resize(xb[j]->size()); xb_[j] = *xb[j];
-//if ( j == 1 )
-//cout << "GGrid<Types>::add_terrain: xb[" << j << "]=" << *xb[j] << endl;
     iret = cg.solve(H, *b, *xb[j], *x0);
 
     assert(iret == GCG<CGTypePack>::GCGERR_NONE);

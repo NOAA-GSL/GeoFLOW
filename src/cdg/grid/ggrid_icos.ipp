@@ -1015,7 +1015,6 @@ cout << "          GGridIcos::config_gbdy: bdyclass[" << j << "]=" << bdyclass <
       // step through them in order to point to correct bdy indices:
       k = 0;
       while ( GUpdateBdyFactory<Types>::get_bdy_block(ptree, sbdy, k, bcblock) ) {;
-cout << "          GGridIcos::config_gbdy: block[" << k << "]=" << " retrieved..." << endl;
         bcblock.bdyid = j;
         base_ptr = GUpdateBdyFactory<Types>::build(ptree, sbdy, *this, bcblock, itmp, utmp, igbdy_start);
         igbdyft[j] = bcblock.tbdy;
@@ -1037,10 +1036,8 @@ cout << "          GGridIcos::config_gbdy: block[" << k << "]=" << " done." << e
   } // end, canonical bdy loop
 
 
-cout << "          GGridIcos::config_gbdy: do_gbdy_normals..." << endl;
   // With global list of domain boundaries, compute bdy data:
   do_gbdy_normals(this->dXdXi_, igbdy, degbdy, this->bdyNormals_, this->bdyTangents_); 
-cout << "          GGridIcos::config_gbdy: done." << endl;
 
 } // end of method config_gbdy
 
@@ -1407,7 +1404,6 @@ void GGridIcos<Types>::do_gbdy_normals3d(const GTMatrix<GTVector<Ftype>> &dXdXi,
   // one for inner and one for outer surfaces:
   assert(normals .size() == 2 );
   assert(tangents.size() == 2 );
-cout << "          GGridIcos::do_gbdy_normals: entering ..." << endl;
 
    for ( auto j=0; j<normals.size(); j++ ) {
      normals[j].resize(igbdy.size());
@@ -1422,7 +1418,6 @@ cout << "          GGridIcos::do_gbdy_normals: entering ..." << endl;
    }   
 
   if ( this->gtype_ == GE_DEFORMED ) {
-cout << "          GGridIcos::do_gbdy_normals: DEFORMED elems..." << endl;
      // Bdy normal is dvec{X} / dxi_xi X dvec{X} / dxi_eta
      for ( auto j=0; j<igbdy.size(); j++ ) { // all points on face
        ib = igbdy[j];
@@ -1452,11 +1447,9 @@ cout << "          GGridIcos::do_gbdy_normals: DEFORMED elems..." << endl;
      }
    }
    else {
-cout << "          GGridIcos::do_gbdy_normals: UNKNOWN elems..." << endl;
      assert(FALSE && "Invalid grid type");
    }
 
-cout << "          GGridIcos::do_gbdy_normals: done." << endl;
 } // end, method do_gbdy_normals3d
 
 //**********************************************************************************
