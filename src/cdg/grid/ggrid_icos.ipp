@@ -974,6 +974,7 @@ void GGridIcos<Types>::config_gbdy(const geoflow::tbox::PropertyTree &ptree,
 
   this->bdy_update_list_.resize(2);
  
+cout << "GGridIcos::config_gbdy: enter bdy loop..." << endl;
 
   // Get properties from the main prop tree. 
   // Note: bdys are configured by way of geometry's
@@ -1001,6 +1002,7 @@ void GGridIcos<Types>::config_gbdy(const geoflow::tbox::PropertyTree &ptree,
       igbdy[nind] = igbdyf[j][i];
       degbdy[nind++] = igbdyf[j][i];
     }
+cout << "          GGridIcos::config_gbdy: bdyclass[" << j << "]=" << bdyclass << endl;
 
     if ( "uniform" == bdyclass ) { // uniform bdy conditions
       iret = GUpdateBdyFactory<Types>::bdy_block_conform_per(bdytree);
@@ -1013,11 +1015,13 @@ void GGridIcos<Types>::config_gbdy(const geoflow::tbox::PropertyTree &ptree,
       // step through them in order to point to correct bdy indices:
       k = 0;
       while ( GUpdateBdyFactory<Types>::get_bdy_block(ptree, sbdy, k, bcblock) ) {;
+cout << "          GGridIcos::config_gbdy: block[" << k << "]=" << " retrieved..." << endl;
         bcblock.bdyid = j;
         base_ptr = GUpdateBdyFactory<Types>::build(ptree, sbdy, *this, bcblock, itmp, utmp, igbdy_start);
         igbdyft[j] = bcblock.tbdy;
         this->bdy_update_list_[j].push_back(base_ptr);
         k++;
+cout << "          GGridIcos::config_gbdy: block[" << k << "]=" << " done." << endl;
       }
     }
     else if ( "mixed" == bdyclass ) { // mixed bdy conditions
@@ -1032,8 +1036,11 @@ void GGridIcos<Types>::config_gbdy(const geoflow::tbox::PropertyTree &ptree,
 
   } // end, canonical bdy loop
 
+
+cout << "          GGridIcos::config_gbdy: do_gbdy_normals..." << endl;
   // With global list of domain boundaries, compute bdy data:
   do_gbdy_normals(this->dXdXi_, igbdy, degbdy, this->bdyNormals_, this->bdyTangents_); 
+cout << "          GGridIcos::config_gbdy: done." << endl;
 
 } // end of method config_gbdy
 
@@ -1396,14 +1403,18 @@ void GGridIcos<Types>::do_gbdy_normals3d(const GTMatrix<GTVector<Ftype>> &dXdXi,
 
   tiny  = 100.0*std::numeric_limits<Ftype>::epsilon();
 
-  // There must be 2 tangent vectors defining tangent plane:
+  // There must be 2 sets of normal & tangent vectors:
+  // one for inner and one for outer surfaces:
+  assert(normals .size() == 2 );
   assert(tangents.size() == 2 );
+cout << "          GGridIcos::do_gbdy_normals: entering ..." << endl;
 
    for ( auto j=0; j<normals.size(); j++ ) {
      normals[j].resize(igbdy.size());
      normals[j] = 0.0;
    } 
    for ( auto j=0; j<tangents.size(); j++ ) {
+     assert(tangents[j].size() == GDIM ); // must have 3 components for each bdy node
      for ( auto i=0; i<tangents[j].size(); i++ ) {
        tangents[j][i].resize(igbdy.size());
        tangents[j][i] = 0.0;
@@ -1411,14 +1422,17 @@ void GGridIcos<Types>::do_gbdy_normals3d(const GTMatrix<GTVector<Ftype>> &dXdXi,
    }   
 
   if ( this->gtype_ == GE_DEFORMED ) {
+cout << "          GGridIcos::do_gbdy_normals: DEFORMED elems..." << endl;
      // Bdy normal is dvec{X} / dxi_xi X dvec{X} / dxi_eta
      for ( auto j=0; j<igbdy.size(); j++ ) { // all points on face
        ib = igbdy[j];
        id = GET_NDHOST(debdy[j]); // host face id
        xm = id == 1 || id == 2 || id == 5 ? 1.0 : -1.0;
        for ( auto i=0; i<dXdXi.size(2); i++ ) { // over _X_
+#if 0
          p1[i] = dXdXi(ixi[id][0],i)[ib]; // d_X_/dxi
          p2[i] = dXdXi(ixi[id][1],i)[ib]; // d_X_/deta
+#endif
        }
        p1.cross(p2, xp);   // xp = p1 X p2
        xp *= xm;
@@ -1429,16 +1443,20 @@ void GGridIcos<Types>::do_gbdy_normals3d(const GTMatrix<GTVector<Ftype>> &dXdXi,
        // the orthogonal vectors for tangent space. Let p1 be one  
        // vector; create the other by subtracting from p2 the component 
        // of p2 parallel to p1: xp = p2 - (p1.p2)/p2^2 p1:
+#if 0
        xp = p1; xp *= -p2.dot(p1)/pow(p1.mag(),2); xp += p2;
        p1.unit(); xp.unit();
        for ( auto i=0; i<GDIM; i++ ) tangents[0][i][j] = p1[i];
        for ( auto i=0; i<GDIM; i++ ) tangents[1][i][j] = xp[i];
+#endif
      }
    }
    else {
+cout << "          GGridIcos::do_gbdy_normals: UNKNOWN elems..." << endl;
      assert(FALSE && "Invalid grid type");
    }
 
+cout << "          GGridIcos::do_gbdy_normals: done." << endl;
 } // end, method do_gbdy_normals3d
 
 //**********************************************************************************
