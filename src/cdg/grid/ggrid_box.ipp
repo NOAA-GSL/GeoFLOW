@@ -1452,7 +1452,7 @@ void GGridBox<Types>::do_gbdy_normals3d(const GTMatrix<GTVector<Ftype>> &dXdXi,
        xm = id == 1 || id == 2 || id == 5 ? 1.0 : -1.0;
        for ( auto i=0; i<normals.size(); i++ ) normals[i][j] = 0.0; 
        normals[ip][j] = xm;
-       for ( auto i=0; i<2; i++ ) tangents[i][(GSIZET)ixi[i]][j] = 1.0;
+       for ( auto i=0; i<2; i++ ) tangents[i][ixi[id][i]][j] = 1.0;
      }
    }
    else if ( this->gtype_ == GE_DEFORMED ) {
@@ -1509,7 +1509,7 @@ void GGridBox<Types>::find_gbdy_ind(GINT bdyid, GBOOL bunique,
 #if defined(_G_IS2D)
   find_gbdy_ind2d(bdyid, bunique, ikeep, ibdy, debdy);
 #elif defined(_G_IS3D)
-  find_gbdy_ind2d(bdyid, bunique, ikeep, ibdy, debdy);
+  find_gbdy_ind3d(bdyid, bunique, ikeep, ibdy, debdy);
 #else
   #error "Dimensionality undefined"
 #endif
@@ -2015,7 +2015,8 @@ void GGridBox<Types>::elem_face_data3d(GTMatrix<GTVector<Ftype>>       &dXdXi,
            fi = (*face_ind)[i]; // index into elem data
            ib = fi + istart;    // index into global volume data
            gieface    [nbdy] = ib;
-           jac               = dXdXi(if2r[j][0],0)[ib] * dXdXi(if2r[j][0],1)[ib];
+//         jac               = dXdXi(if2r[j][0],0)[ib] * dXdXi(if2r[j][0],1)[ib];
+jac = 1.0;
            normals[ip][nbdy] = xm;
            face_mass[nbdy++] = (*mass)[fi] * jac;
          }
