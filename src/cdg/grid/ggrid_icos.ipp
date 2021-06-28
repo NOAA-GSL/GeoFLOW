@@ -974,8 +974,6 @@ void GGridIcos<Types>::config_gbdy(const geoflow::tbox::PropertyTree &ptree,
 
   this->bdy_update_list_.resize(2);
  
-cout << "GGridIcos::config_gbdy: enter bdy loop..." << endl;
-
   // Get properties from the main prop tree. 
   // Note: bdys are configured by way of geometry's
   //       natural decomposition: here, by inner and
@@ -1002,7 +1000,6 @@ cout << "GGridIcos::config_gbdy: enter bdy loop..." << endl;
       igbdy[nind] = igbdyf[j][i];
       degbdy[nind++] = igbdyf[j][i];
     }
-cout << "          GGridIcos::config_gbdy: bdyclass[" << j << "]=" << bdyclass << endl;
 
     if ( "uniform" == bdyclass ) { // uniform bdy conditions
       iret = GUpdateBdyFactory<Types>::bdy_block_conform_per(bdytree);
@@ -1020,7 +1017,6 @@ cout << "          GGridIcos::config_gbdy: bdyclass[" << j << "]=" << bdyclass <
         igbdyft[j] = bcblock.tbdy;
         this->bdy_update_list_[j].push_back(base_ptr);
         k++;
-cout << "          GGridIcos::config_gbdy: block[" << k << "]=" << " done." << endl;
       }
     }
     else if ( "mixed" == bdyclass ) { // mixed bdy conditions
@@ -1402,7 +1398,7 @@ void GGridIcos<Types>::do_gbdy_normals3d(const GTMatrix<GTVector<Ftype>> &dXdXi,
 
   // There must be 2 sets of normal & tangent vectors:
   // one for inner and one for outer surfaces:
-  assert(normals .size() == 2 );
+  assert(normals .size() == 3 );
   assert(tangents.size() == 2 );
 
    for ( auto j=0; j<normals.size(); j++ ) {
