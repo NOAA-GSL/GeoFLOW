@@ -76,7 +76,8 @@ class GGFX {
     };
 
    public:
-    GGFX() = default;
+    GGFX():tdoop_(0.0) {};
+//  GGFX():tdoop_(0.0) {}= default;
     GGFX(const GGFX& other) = default;
     GGFX(GGFX&& other) = default;
     ~GGFX() = default;
@@ -90,6 +91,8 @@ class GGFX {
     GBOOL doOp(ValueArray& u, ReductionOp op);
 
     GC_COMM getComm() const;
+
+    double get_tdoop() { return tdoop_;}
 
     template <typename CountArray>
     void get_mult(CountArray& imult) const;
@@ -106,6 +109,7 @@ class GGFX {
     using size_type = std::size_t;
     using value_type = ValueType;
     size_type max_duplicates_;
+    double tdoop_;
 
     std::map<rank_type, std::set<size_type>> send_map_;                       // [Rank][1:Nsend] = Local Index
     std::map<rank_type, std::map<size_type, std::set<size_type>>> recv_map_;  // [Rank][1:Nrecv][1:Nshare] = Local Index
@@ -356,7 +360,11 @@ GBOOL GGFX<T>::doOp(ValueArray& u, ReductionOp oper) {
     mpi::communicator world;
     auto my_rank = world.rank();
     auto num_ranks = world.size();
+    double t0;
     GEOFLOW_TRACE_START("ggfx_doop");
+#if !defined(GEOFLOW_USE_GPTL) && defined(GEOFLOW_USE_MPI)
+    t0 = MPI_Wtime();
+#endif
 
     // Submit the Non-Blocking receive requests
     GEOFLOW_TRACE_START("Submit Receive Requests");
@@ -441,6 +449,9 @@ GBOOL GGFX<T>::doOp(ValueArray& u, ReductionOp oper) {
     // Clear all send requests
     mpi::wait_all(send_requests.begin(), send_requests.end());
 
+#if !defined(GEOFLOW_USE_GPTL) && defined(GEOFLOW_USE_MPI)
+    tdoop_ += MPI_Wtime() - t0;
+#endif
     GEOFLOW_TRACE_STOP();
 
     return true;
