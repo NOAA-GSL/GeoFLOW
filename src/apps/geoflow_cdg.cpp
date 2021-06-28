@@ -34,6 +34,7 @@ int main(int argc, char **argv) {
     GINT iopt;
     GSIZET itindex = 0;            // restart flag/index
     GSIZET icycle = 0;             // curr time cycle
+    Ftype  t0;
     std::vector<GINT> pstd(GDIM);  // order in each direction
     GTMatrix<GINT> p;              // needed for restart, but is dummy
     ObsTraitsType binobstraits;
@@ -77,7 +78,13 @@ int main(int argc, char **argv) {
 #if defined(GEOFLOW_USE_GPTL)
     GPTLstart("gen_grid");
 #endif
+#if !defined(GEOFLOW_USE_GPTL) && defined(GEOFLOW_USE_MPI)
+    t0 = MPI_Wtime();
+#endif
     grid_ = GGridFactory<MyTypes>::build(ptree_, gbasis_, pIO_, binobstraits, comm_);
+#if !defined(GEOFLOW_USE_GPTL) && defined(GEOFLOW_USE_MPI)
+    tgrid_ = MPI_Wtime() - t0;
+#endif
 #if defined(GEOFLOW_USE_GPTL)
     GPTLstop("gen_grid");
 #endif
@@ -161,7 +168,13 @@ int main(int argc, char **argv) {
 #if defined(GEOFLOW_USE_GPTL)
     GPTLstart("time_loop");
 #endif
+#if !defined(GEOFLOW_USE_GPTL) && defined(GEOFLOW_USE_MPI)
+    t0 = MPI_Wtime();
+#endif
     pIntegrator_->time_integrate(t, uf_, u_);
+#if !defined(GEOFLOW_USE_GPTL) && defined(GEOFLOW_USE_MPI)
+    ttot_ = MPI_Wtime() - t0;
+#endif
 #if defined(GEOFLOW_USE_GPTL)
     GPTLstop("time_loop");
 #endif
@@ -764,7 +777,6 @@ void do_bench(GString fname, GSIZET ncyc) {
 
     if (!bench_) return;
 
-#if defined(GEOFLOW_USE_GPTL)
 
     GINT  myrank = GComm::WorldRank(comm_);
     GINT  ntasks = GComm::WorldSize(comm_);
@@ -819,11 +831,17 @@ void do_bench(GString fname, GSIZET ncyc) {
         }
         itst.close();
 
+#if defined(GEOFLOW_USE_GPTL)
         GPTLget_wallclock("time_loop", 0, &ttotal);
-        ttotal /= ncyc;
         GPTLget_wallclock("ggfx_doop", 0, &tggfx);
-        tggfx /= ncyc;
-        GPTLget_wallclock("gen_grid", 0, &tgrid);
+        GPTLget_wallclock("gen_grid" , 0, &tgrid);
+        ttotal /= ncyc;
+        tggfx  /= ncyc;
+#else   
+        ttotal = ttot_ / ncyc; 
+        tggfx  =  ggfx_->get_tdoop() / ncyc;
+        tgrid  = tgrid_;
+#endif
 
         ios << gsz[0] << "   ";
         ios << gsz[1] << "   ";
@@ -838,7 +856,6 @@ void do_bench(GString fname, GSIZET ncyc) {
 
         ios.close();
     }
-#endif
 
     return;
 

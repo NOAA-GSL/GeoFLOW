@@ -31,9 +31,6 @@
 #include "gmconv.hpp"
 #include "gio.hpp"
 #include "gstateinfo.hpp"
-//#include "ggrid.hpp"
-//#include "ggrid_box.hpp"
-//#include "ggrid_icos.hpp"
 #include "ghelmholtz.hpp"
 #include "ggrid_factory.hpp"
 #include "ginitstate_factory.hpp"
@@ -133,6 +130,8 @@ std::shared_ptr<std::vector<std::shared_ptr<ObserverBase<MyTypes>>>>
                  pObservers_(new std::vector<std::shared_ptr<ObserverBase<MyTypes>>>()); // observer array
 GC_COMM          comm_ ;       // communicator
 
+Ftype            ttot_;            
+Ftype            tgrid_;            
 
 // Callback functions:
 void update_forcing   (const Time &t, State &u, State &uf);     // forcing vec update
