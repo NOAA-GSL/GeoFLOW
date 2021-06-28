@@ -761,12 +761,10 @@ void init_ggfx(PropertyTree &ptree, Grid &grid, GGFX<Ftype> *&ggfx) {
 void do_bench(GString fname, GSIZET ncyc) {
     GEOFLOW_TRACE();
 
-cout << "main: Entering do_bench..." << endl;
 
     if (!bench_) return;
 
 #if defined(GEOFLOW_USE_GPTL)
-cout << "main: Using GPTL ..." << endl;
 
     GINT  myrank = GComm::WorldRank(comm_);
     GINT  ntasks = GComm::WorldSize(comm_);
@@ -795,7 +793,6 @@ cout << "main: Using GPTL ..." << endl;
     dxmin = grid_->minnodedist();
     lmin = grid_->minlength();
     if (myrank == 0) {
-cout << "main: opening file ..." << endl;
         itst.open(fname);
         ios.open(fname, std::ios_base::app);
 
