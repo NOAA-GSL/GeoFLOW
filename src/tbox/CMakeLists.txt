@@ -56,6 +56,7 @@ target_link_libraries(tbox
 		"$<$<BOOL:${CUDAToolkit_FOUND}>:CUDA::nvToolsExt>"
 		"$<$<BOOL:${OpenMP_FOUND}>:OpenMP::OpenMP_CXX>"
 		"$<$<BOOL:${MPI_CXX_FOUND}>:MPI::MPI_CXX>"
+		"$<$<BOOL:${GPTL_FOUND}>:GPTL::GPTL>"
 )
 
 #target_link_options(tbox 
@@ -70,7 +71,7 @@ install(
 	DIRECTORY "${MY_PROJECT_INCDIR}/tbox"
 	DESTINATION "${MY_INSTALL_INCDIR}"  
 	FILES_MATCHING
-		PATTERN "*.hpp"
+	PATTERN "*.hpp"
 )
 
 #
