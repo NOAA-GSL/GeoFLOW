@@ -5,7 +5,7 @@
   "nstreams"             : 1,
   "poly_test": {
     "poly"     : [2, 2, 1],
-    "ncycles"  : 10,
+    "ncycles"  : 110,
     "idir"     : 1
   },
   "fully_periodic": {

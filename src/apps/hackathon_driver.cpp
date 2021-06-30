@@ -23,6 +23,7 @@
 #include "tbox/global_manager.hpp"
 #include "tbox/input_manager.hpp"
 #include "tbox/tracer.hpp"
+#include "tbox/timer.hpp"
 
 #include <cassert>
 //#include <cstdio>
@@ -189,18 +190,43 @@ int main(int argc, char **argv)
 
     // Compute numerical derivs of u in each direction, using
     // different methods:
+    const int skip_first_cycles = 10;
+    std::vector<double> variable_order_times(ncyc, 0.0);
     grid_->set_derivtype(GGrid<Types>::GDV_VARP); // variable order
     GEOFLOW_TRACE_START("old_deriv");
     for ( auto n=0; n<ncyc; n++ ) {
-       grid_->deriv(u, idir, *utmp[0], duold);
+
+      auto t0 = ::geoflow::tbox::maxres_nonsleep_clock::now();
+      grid_->deriv(u, idir, *utmp[0], duold);
+      auto t1 = ::geoflow::tbox::maxres_nonsleep_clock::now();
+      auto ns_int = ::std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0);
+      variable_order_times[n] = double(ns_int.count()) / double(1.0e+9);
     }
+    auto variable_total_time = std::accumulate(variable_order_times.begin()+skip_first_cycles, variable_order_times.end(), 0.0);
+    pio::pout << std::endl;
+    pio::pout << "--- Variable Order Derivative ---" << std::endl;
+    pio::pout << "Total Wall Time (seconds) = " << variable_total_time << std::endl;
+    pio::pout << "Cycle Wall Time (seconds) = " << variable_total_time / (ncyc-skip_first_cycles) << std::endl;
+    pio::pout << std::endl;
     GEOFLOW_TRACE_STOP();
 
+    std::vector<double> constant_order_times(ncyc, 0.0);
     grid_->set_derivtype(GGrid<Types>::GDV_CONSTP); // const order
     GEOFLOW_TRACE_START("new_deriv");
     for ( auto n=0; n<ncyc; n++ ) {
-       grid_->deriv(u, idir, *utmp[0], dunew);
+
+      auto t0 = ::geoflow::tbox::maxres_nonsleep_clock::now();
+      grid_->deriv(u, idir, *utmp[0], dunew);
+      auto t1 = ::geoflow::tbox::maxres_nonsleep_clock::now();
+      auto ns_int = ::std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0);
+      constant_order_times[n] = double(ns_int.count()) / double(1.0e+9);    
     }
+    auto constant_total_time = std::accumulate(constant_order_times.begin()+skip_first_cycles, constant_order_times.end(), 0.0);
+    pio::pout << std::endl;
+    pio::pout << "--- Constant Order Derivative ---" << std::endl;
+    pio::pout << "Total Wall Time (seconds) = " << constant_total_time << std::endl;
+    pio::pout << "Cycle Wall Time (seconds) = " << constant_total_time / (ncyc-skip_first_cycles) << std::endl;
+    pio::pout << std::endl;
     GEOFLOW_TRACE_STOP();
 
 //cout << "da_y  =" << *da   [idir-1] << endl;
