@@ -617,7 +617,7 @@ void GGrid<Types>::grid_init(GTMatrix<GINT> &p,
   volume_  = integrate(tmp0, tmp1);
   ivolume_ = 1.0 / volume_;
 
-} // end of method grid_init
+} // end of method grid_init (2)
 
 
 //**********************************************************************************
