@@ -355,6 +355,7 @@ GSIZET in_poly(GTVector<GTPoint<T>> &verts, const GTVector<GTVector<T>> &x, T ep
       if ( (fabs(dotdrN) > eps && dotdrN < 0) 
         ||  fabs(dotdrc) > eps ) {
         ind[nfound++] = i;
+        break;
       }
     } // end, vert loop
   }   // end, test point loop
