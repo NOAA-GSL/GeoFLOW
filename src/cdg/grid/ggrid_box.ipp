@@ -1341,7 +1341,7 @@ void GGridBox<Types>::do_gbdy_normals2d(const GTMatrix<GTVector<Ftype>> &dXdXi,
        ib = igbdy[j];
        id = GET_NDHOST(debdy[j]); // host face id
        ip = (id+1) % 2;
-       xm = id == 1 || id == 2 ? 1.0 : -1.0;
+       xm = id == 1 || id == 2 ? -1.0 : 1.0;
        normals[ip][j] = xm;
        tangents[0][id%2][j] = 1;
      }
@@ -1352,12 +1352,13 @@ void GGridBox<Types>::do_gbdy_normals2d(const GTMatrix<GTVector<Ftype>> &dXdXi,
      for ( auto j=0; j<igbdy.size(); j++ ) { // all points on global bdy 
        ib = igbdy[j];
        id = GET_NDHOST(debdy[j]); // host face id
-//     xm = id == 1 || id == 2 ? -1.0 : 1.0;
+       xm = id == 2 || id == 3 ? -1.0 : 1.0;
+       p1 = 0.0;
        for ( auto i=0; i<dXdXi.size(2); i++ ) { // over _X_
-         p1[i] = dXdXi(id%2,i)[ib]; 
+         p1[i] = dXdXi(i,id%2)[ib]; 
        }
        kp.cross(p1, xp);   // xp = k X p1
-//     xp *= xm;
+       xp *= xm;
        xp.unit();
        for ( auto i=0; i<normals.size(); i++ ) normals[i][j] = xp[i];
        // k X tangent = n ==>
@@ -1461,8 +1462,8 @@ void GGridBox<Types>::do_gbdy_normals3d(const GTMatrix<GTVector<Ftype>> &dXdXi,
        ib = igbdy[j];
        xm = id == 1 || id == 2 || id == 5 ? 1.0 : -1.0;
        for ( auto i=0; i<dXdXi.size(2); i++ ) { // over _X_
-         p1[i] = dXdXi(ixi[id][0],i)[ib]; // d_X_/dxi
-         p2[i] = dXdXi(ixi[id][1],i)[ib]; // d_X_/deta
+         p1[i] = dXdXi(i,ixi[id][0])[ib]; // d_X_/dxi
+         p2[i] = dXdXi(i,ixi[id][1])[ib]; // d_X_/deta
        }
        p1.cross(p2, xp);   // xp = p1 X p2
        xp.unit(); 
