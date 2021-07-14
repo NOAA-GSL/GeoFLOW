@@ -201,14 +201,15 @@ end
 
   hold on;
 
-if 1
-  % Read normal vectors and plot:
-  [pos, vec] = rposvec('gbdy.out', isz)
-  dn = 1;
-  quiver(pos(1:dn:end,1), pos(1:dn:end,2), vec(1:dn:end,1), vec(1:dn:end,2), 0.1);
-end
 
 end % end, task loop
+
+if 1
+% Read normal vectors and plot:
+[pos, vec] = rposvec('gbdy.out', isz)
+dn = 1;
+quiver(pos(1:dn:end,1), pos(1:dn:end,2), vec(1:dn:end,1), vec(1:dn:end,2), 0.1);
+end
 
 sminmax = sprintf('min=%0.5g; max=%0.5g', umin, umax);
 stitle  = sprintf('%s, t=%0.5g: \n %s', svar, time, sminmax);
