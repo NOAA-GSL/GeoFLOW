@@ -163,8 +163,8 @@ end
 
 if 1
   % In case there's topography, we set values to nan 'inside' it:
-  K       = boundary(x, z, 1.0);
-  PGON    = polyshape(x(K), z(K),'Simplify', false);
+  K       = boundary(x, z, 0);
+  PGON    = polyshape(x(K), z(K),'Simplify', true);
 %plot(PGON)
 %whos PGON
 %fieldnames(PGON,'-full')
