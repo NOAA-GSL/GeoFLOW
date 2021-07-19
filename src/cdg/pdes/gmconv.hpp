@@ -85,6 +85,7 @@
 //#include "gflux.hpp"
 #include "gexrk_stepper.hpp"
 #include "gbutcherrk.hpp"
+#include "g0flux_bdy.hpp"
 #include "ggfx.hpp"
 #include "gutils.hpp"
 #include "gmtk.hpp"
@@ -218,6 +219,7 @@ protected:
 
         void                dt_impl(const Time &t, State &u, Time &dt);   // get dt
         void                apply_bc_impl(const Time &t, State &u);       // apply bdy conditions
+        void                apply_neumann(const Time &t, State &u);       // apply Neumann bdy conditions
 private:
 
         void                dudt_impl  (const Time &t, const State &u, const State &uf, 
@@ -270,6 +272,7 @@ GTVector<GSIZET> iupstream_;
         State               utmp_;          // tmp pool
         State               urhstmp_;       // helper arrays set from utmp
         State               urktmp_;        // helper arrays set from utmp
+        State               gradp_;         // p-gradient vector
         State               qi_;            // full mass fraction vector
         State               qice_;          // ice mass fraction vector
         State               qliq_;          // liquid mass fraction vector
@@ -312,7 +315,8 @@ GTVector<GSIZET> iupstream_;
         std::function<void(const Time &t, State &u, const Time &dt)>
                            steptop_callback_;
 
-
+        GTVector<typename Grid::UpdateBasePtr> 
+                            neumannupdatelist_; // Bdy update methods for Neumann bdys
 
 };
 
