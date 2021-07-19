@@ -8,6 +8,29 @@
 
 //**********************************************************************************
 //**********************************************************************************
+// METHOD : isterrain
+// DESC   : Check if user wants to use terrain. Note: this
+//          method does not check if terrain can be loaded, or
+//          is successful.
+// ARGS   : ptree  : main property tree
+// RETURNS: TRUE on yes; else FALSE
+//**********************************************************************************
+template<typename Types>
+GBOOL GSpecTerrainFactory<Types>::isterrain(const PropertyTree& ptree)
+{
+  GBOOL            bret = TRUE;
+  GString          stype;  
+
+  stype = ptree.getValue<GString>("terrain_type","");
+  bret = "none" == stype
+       || ""    == stype;
+  return bret;
+ 
+} // end, method isterrain
+
+
+//**********************************************************************************
+//**********************************************************************************
 // METHOD : spec
 // DESC   : Do specification of terrain
 // ARGS   : ptree  : main property tree
@@ -28,10 +51,9 @@ GBOOL GSpecTerrainFactory<Types>::spec(const PropertyTree& ptree, Grid &grid, St
 
   // Get type of initialization: by-name or by-block:
   stype = ptree.getValue<GString>("terrain_type","");
-  if ( "none"   == stype 
-    || ""       == stype ) {
+  if ( !isterrain(ptree) ) {
     bterr = FALSE;         // terrain not loaded into xb
-    return TRUE;
+    return TRUE;           // no terrain to load
   }
 
   // Terrain makes no sense if we don't have deformed elements,

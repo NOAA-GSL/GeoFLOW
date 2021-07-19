@@ -30,6 +30,7 @@ class GSpecTerrainFactory
         using Ftype         = typename Types::Ftype;
 
 
+	static GBOOL isterrain(const PropertyTree& ptree);
 	static GBOOL spec(const PropertyTree& ptree, Grid &grid, State &utmp, State &xb, GBOOL &bterr);
 
   private:
