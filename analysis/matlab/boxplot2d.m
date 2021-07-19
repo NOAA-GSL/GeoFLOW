@@ -1,4 +1,4 @@
-function h = boxplot2d(svar, tindex, blog, bwire, dtype, isz, varargin)
+function [h pos vec] = boxplot2d(svar, tindex, blog, bwire, dtype, isz, varargin)
 %
 %   function h = boxplot2d(svar, tindex, blog, bwire, dtype, isz, varargin)
 %
@@ -159,6 +159,7 @@ if 0
    end
 end
 
+
     h = quadmesh(imat,xx,yy,puu,'FaceColor','interp');
 %   h = quadmesh(imat,xx,yy,varargin{:});
 %   set(h, 'FaceColor', 'blue', 'EdgeColor', 'none');
@@ -173,6 +174,7 @@ end
     end
 
 
+
     icurr = icurr + lelem; 
     
   end % end, elem loop
@@ -181,5 +183,13 @@ end
 
 end % end, task loop
 
+if 0
+  % Read normal vectors and plot:
+    hold on;
+    [pos, vec] = rposvec('gbdy.out', isz)
+    dn = 1;
+    quiver(pos(1:dn:end,1), pos(1:dn:end,2), vec(1:dn:end,1), vec(1:dn:end,2),0.2, 'color', [1,0,0], 'linewidth',2);
+    hold on;
+end
 
 end
