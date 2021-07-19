@@ -1082,12 +1082,13 @@ void GGridBox<Types>::config_gbdy(const PropertyTree           &ptree,
       igbdy.push_back(itmp[k]);
       degbdy.push_back(utmp[k]);
     }
+    bperiodic = FALSE;
     if ( "uniform" == bdyclass ) { // uniform bdy conditions
       iret = GUpdateBdyFactory<Types>::bdy_block_conform_per(bdytree);
       if ( iret == 1 ) {
         bdytype [j] = GBDY_PERIODIC;
         igbdyft [j] = GBDY_PERIODIC;
-        bperiodic    = bperiodic || bdytype[j] == GBDY_PERIODIC;
+        bperiodic    = bdytype[j] == GBDY_PERIODIC;
       }
       else if ( iret == 2 ) {
         cout << "GGridBox<Types>:: config_gbdy: Attempt to specify PERIODIC boundary failed" << endl;
@@ -1097,7 +1098,8 @@ void GGridBox<Types>::config_gbdy(const PropertyTree           &ptree,
       // May have different uniform bdys for different state comps;
       // step through them in order to point to correct bdy indices:
       k = 0;
-      while ( !bperiodic && GUpdateBdyFactory<Types>::get_bdy_block(ptree, sbdy, k, bcblock) ) {
+      while ( !bperiodic 
+           && GUpdateBdyFactory<Types>::get_bdy_block(ptree, sbdy, k, bcblock) ) {
         bcblock.bdyid = j;
         base_ptr = GUpdateBdyFactory<Types>::build(ptree, sbdy, *this, bcblock, itmp, utmp, igbdy_start);
         igbdyft[j] = bcblock.tbdy;
