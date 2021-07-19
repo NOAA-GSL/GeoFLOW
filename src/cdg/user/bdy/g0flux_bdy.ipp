@@ -65,6 +65,7 @@ GBOOL G0FluxBdy<Types>::update_impl(
    GString    serr = "G0FluxBdy<Types>::update_impl: ";
 // GBdyType   itype;
    GINT       idd, k, nv;
+   GINT       I0, I1, I2;
    GSIZET     il, iloc, ind;
    Ftype      sum, tiny, us, ut;
    Ftype      xs, ys, zs;
@@ -75,12 +76,15 @@ GBOOL G0FluxBdy<Types>::update_impl(
 // GTVector<GTVector<Ftype>>  *xnodes;
 
    tiny  = 100.0*std::numeric_limits<Ftype>::epsilon();
+   I0 = traits_.istate[0];
+   I1 = traits_.istate[1];
+   I2 = traits_.istate[2];
 
   // Handle 0-Flux bdy conditions. This
   // is enforced by solving
   //    vec{n} \cdot vec{u} = 0.
   //
-  // Note: The following isn't good for vectorization;
+  // Note: The following isn't great for vectorization;
   //       will revisit later.
   
   bdyNormals = &grid.bdyNormals();  // bdy normal vector
@@ -93,9 +97,9 @@ GBOOL G0FluxBdy<Types>::update_impl(
     ind  = traits_.ibdyvol[j];      // index into volume array
 
     n .assign(*bdyNormals,iloc);
-    t .assign((*bdyTangents)[0],iloc);
+    t .assign((*bdyTangents)[I0],iloc);
     if ( GDIM > 2 ) {
-      s .assign((*bdyTangents)[1],iloc);
+      s .assign((*bdyTangents)[I1],iloc);
     }
     pu.assign(u, nv, ind);
 
@@ -103,8 +107,8 @@ GBOOL G0FluxBdy<Types>::update_impl(
 
     ut           = pu.dot(t);  // u.tangent: tangential vel.
     zt           = 1.0/(t.x1*n.x2 - t.x2*n.x1);
-    (*u[0])[ind] =  n.x2*ut * zt;
-    (*u[1])[ind] = -n.x1*ut * zt;
+    (*u[I0])[ind] =  n.x2*ut * zt;
+    (*u[I1])[ind] = -n.x1*ut * zt;
 //cout << "G0FLUX:: j=" << j << " ind=" << ind << " iloc=" << iloc << endl;
   
 #elif defined(_G_IS3D)
@@ -113,11 +117,11 @@ GBOOL G0FluxBdy<Types>::update_impl(
     us           = pu.dot(s);  // u.tangent2: tangential vel.
     (*u[2])[ind] =  t.x3*ut + s.x3*us;
     (*u[1])[ind] =  s.x3 > tiny 
-                 ?    n.x1*ut + s.x2*(*u[2])[ind]
-                 :    (*u[1])[ind];
-    (*u[0])[ind] =  n.x1 > tiny 
-                 ?    -n.x2*(*u[0])[ind] - n.x3*(*u[2])[ind]
-                 :    (*u[0])[ind];
+                 ?    n.x1*ut + s.x2*(*u[I2])[ind]
+                 :    (*u[I1])[ind];
+    (*u[I0])[ind] =  n.x1 > tiny 
+                 ?    -n.x2*(*u[I0])[ind] - n.x3*(*u[I2])[ind]
+                 :    (*u[I0])[ind];
 
 #endif
 

@@ -40,9 +40,9 @@ public:
 
         // GOutflowBdy solver traits:
         struct Traits {
-          GINT             bdyid;    // bdy id
-          GTVector<GINT>   istate;   // state indices to operate on
-          GTVector<GSIZET> ibdyvol;  // indir. inidices into comput volume
+          GINT           bdyid;    // bdy id
+          vector<GINT>   istate;   // state indices to operate on
+          vector<GSIZET> ibdyvol;  // indir. inidices into comput volume
 
         };
 
@@ -60,6 +60,10 @@ protected:
                               Time       &time,
                               State      &utmp,
                               State      &u);
+
+        std::vector<int>&   get_istate_impl() { return traits_.istate; }
+
+
         
 private:
 

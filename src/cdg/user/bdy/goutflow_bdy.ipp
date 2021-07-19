@@ -64,7 +64,7 @@ GBOOL GOutflowBdy<Types>::update_impl(
    GINT       idstate;
    GSIZET     ind;
 
-  GTVector<GSIZET> *igbdy = &traits_.ibdyvol;
+  vector<GSIZET> *igbdy = &traits_.ibdyvol;
 
   assert(FALSE);
 
