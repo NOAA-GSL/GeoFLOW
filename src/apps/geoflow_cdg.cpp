@@ -78,7 +78,7 @@ int main(int argc, char **argv) {
     //***************************************************
     pio::pout << "geoflow: initialize gather/scatter..." << std::endl;
 
-    init_ggfx(ptree_, *grid_, ggfx_);
+    init_ggfx(ptree_, *grid_, !GSpecTerrainFactory<MyTypes>::isterrain(ptree_), ggfx_);
     grid_->set_ggfx(*ggfx_);
 
     pio::pout << "geoflow: gather/scatter initialized." << std::endl;
@@ -612,17 +612,22 @@ void compare(const PropertyTree &ptree, Grid &grid, EqnBasePtr &peqn, Time &t, S
 //**********************************************************************************
 void do_terrain(const PropertyTree &ptree, Grid &grid) {
     GEOFLOW_TRACE();
-    GBOOL bret, bterr;
-    GINT iret, nc;
-    State xb, tmp, utmp;
+    GBOOL             bret, bterr;
+    GINT              iret, nc;
+    constexpr auto    ndim  = GGFX<Ftype>::NDIM;
+    GTVector<GSIZET> *igbdy = &grid.igbdy();
+    GTVector<Ftype>   mskcpy=  grid.get_mask();
+    State             xb, tmp, utmp;
 
+    if ( !GSpecTerrainFactory<MyTypes>::isterrain(ptree) ) return;
+    
     nc = grid.xNodes().size();
     xb.resize(nc);
 
     // Cannot use utmp_ here because it
     // may not have been allocated yet, so
     // use local variable:
-    utmp.resize(13 + nc);
+    utmp.resize(15 + nc);
     tmp.resize(utmp.size() - nc);
     for (auto j = 0; j < utmp.size(); j++) utmp[j] = new GTVector<Ftype>(grid_->ndof());
 
@@ -630,12 +635,33 @@ void do_terrain(const PropertyTree &ptree, Grid &grid) {
     for (auto j = 0; j < nc; j++) xb[j] = utmp[j];
     for (auto j = 0; j < tmp.size(); j++) tmp[j] = utmp[j + nc];
 
+    // xb is _entire_ global boundary:
     bret = GSpecTerrainFactory<MyTypes>::spec(ptree, grid, tmp, xb, bterr);
-    assert(bret);
+    assert(bterr && bret); // must be terrain spec desired
 
-    if (bterr) grid.add_terrain(xb, tmp);
+    
+    // Mask off _all_ global bdy nodes if adding terrain.
+    // Note: This is required in case there are PERIODIC conditions
+    // in one direction (this method won't execute if we are
+    // fully PERIODIC):
+    grid.get_mask().set(igbdy->data(), igbdy->size(), 0);
+    grid.add_terrain(xb, tmp);
+
+    // Reset mas:
+    grid.get_mask() = mskcpy;
 
     for (auto j = 0; j < utmp.size(); j++) delete utmp[j];
+
+#if 1
+    // With terrain added, re-do conectivity map. 
+    // Note: this is done in case there are
+    // PERIDOC conditions in one direction,
+    // which will change the connectivity map:
+    delete ggfx_; ggfx_ = NULLPTR;
+    init_ggfx(ptree_, grid, TRUE, ggfx_);
+    grid.set_ggfx(*ggfx_);
+#endif
+
 
 }  // end of method do_terrain
 
@@ -684,16 +710,28 @@ void do_restart(const PropertyTree &ptree, Grid &, State &u,
 
 }  // end of method do_restart
 
-void init_ggfx(PropertyTree &ptree, Grid &grid, GGFX<Ftype> *&ggfx) {
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : init_ggfx
+// DESC   : Initialize gather-scatter operator
+// ARGS   :
+//          ptree   : main prop tree
+//          grid    : grid object
+//          doperiod: if TRUE, 'periodize' coords before establishing
+//                    connectivity map; else, do not
+//          ggfx    : pointer to GGFX operator, returned
+// RETURNS: none.
+//**********************************************************************************
+void init_ggfx(PropertyTree &ptree, Grid &grid, GBOOL doperiod, GGFX<Ftype> *&ggfx) {
     GEOFLOW_TRACE();
-    constexpr auto ndim = GGFX<Ftype>::NDIM;
+    constexpr auto    ndim = GGFX<Ftype>::NDIM;
 
     // Periodize coords if needed
-    if (typeid(grid) == typeid(GGridBox<MyTypes>)) {
+    if ( doperiod && typeid(grid) == typeid(GGridBox<MyTypes>)) {
         static_cast<GGridBox<MyTypes> *>(&grid)->periodize();
     }
 
-    const auto ndof = grid_->ndof();
+    const auto ndof = grid.ndof();
     const auto nxyz = grid.xNodes().size();
     ASSERT( nxyz <= ndim );
     std::vector<std::array<Ftype, ndim>> xyz(ndof);
@@ -707,7 +745,7 @@ void init_ggfx(PropertyTree &ptree, Grid &grid, GGFX<Ftype> *&ggfx) {
     }
 
     // Unperiodize nodes now that connectivity map is generated
-    if (typeid(grid) == typeid(GGridBox<MyTypes>)) {
+    if (doperiod && typeid(grid) == typeid(GGridBox<MyTypes>)) {
         static_cast<GGridBox<MyTypes> *>(&grid)->unperiodize();
     }
 
