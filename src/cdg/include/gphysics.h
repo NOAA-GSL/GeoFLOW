@@ -18,7 +18,7 @@
   #define CVL     4186.0    // sp. heat const press, liq. water J/Kg-K
   #define GG         9.81   // accel due to gravity m/s^2
   #define LV0        2.50e6 // latent heat of vaporization, reference J/kg
-  #define RD       287.0    // gas const for dry air J/kg-K
+  #define RD       287.058  // gas const for dry air J/kg-K
   #define RV       461.0    // gas const for water vapor J/kg-K
   #define TKREF    273.15   // ref temp K
   #define KBOLTZ   1.38064852e-23 // Boltznann constat, kg m^2/s^2-K
