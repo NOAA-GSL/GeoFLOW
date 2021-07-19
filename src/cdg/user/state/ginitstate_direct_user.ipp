@@ -1217,8 +1217,9 @@ GBOOL ginitstate<Types>::impl_boxmtnwave(const PropertyTree &ptree, GString &sco
 {
   GString             serr = "impl_boxmtnwave: ";
   GSIZET              nxy;
-  GFTYPE              x, y, z, zmin,r;
-  GFTYPE              dj, ds, N, P0, pj, T0, Tb, Ts, U0;
+  GFTYPE              x, y, z, r;
+  GFTYPE              gam, igam;
+  GFTYPE              dj, ds, N, P0, pj, pt, th, T0, Tb, Ts, U0;
   GFTYPE              eps=100.0*std::numeric_limits<GFTYPE>::epsilon();
   GTVector<GFTYPE>   *db, *d, *e, *pb, *T;
   GString             sblock;
@@ -1276,24 +1277,22 @@ GBOOL ginitstate<Types>::impl_boxmtnwave(const PropertyTree &ptree, GString &sco
   // Initialize momentum:
   for ( auto j=0; j<ceqn->ENERGY; j++ ) *u[j] = 0.0;
 //ds = P0 / (RD * Ts); // surf. density
-
-  zmin = 0.0;
+  gam  = RD / CPD;
+  igam = 1.0/gam;
   for ( auto j=0; j<nxy; j++ ) { 
     x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; 
     if ( GDIM == 3 ) z = (*xnodes)[2][j];
     r = GDIM == 3 ? z : y;
-    zmin = xb->size() > 0 ? (*xb)[GDIM-1][j] : (*xnodes)[GDIM-1].min();
 
     // Compute den from constant Brunt-Vaisalla freq,
-    //    N^2 = -g/rho_0 drho/dz:
-    pj = (*pb)[j]; 
+    //    N^2 = -g/th_0 d theta/dz = const:
+    th = Ts * ( N*N*r/GG + 1.0);
+    pj = P0 * pow(th/Ts, -igam);
     dj = pj / ( RD * Ts );
     if ( traits.usebase ) { // There is a base-state
-//    (*d) [j]  = ds - (*db)[j] + N*N*ds/GG * (zmin - r); // d fluct.
       (*d) [j]  = dj - (*db)[j];
     }
     else {                  // No base-state
-//    (*d) [j]  = ds + N*N*ds/GG * (zmin - r); 
       (*d) [j]  = dj;
    }
    (*u[0])[j] = dj * U0;
