@@ -91,6 +91,7 @@ template <class T> class GTVector
   
     
     void               set(T b);
+    void               set(GSIZET *indir, GSIZET n, T b);
     
     void               set(T *b, GSIZET n);
 
