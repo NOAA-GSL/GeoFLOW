@@ -759,7 +759,7 @@ void GGridBox<Types>::periodize()
   GTVector<Ftype>  x(this->xNodes_.size()); // coord values to set to
 
   assert(this->minnodedist_ > 0.0);
-  this->eps_ = 0.125*this->minnodedist_;
+  this->eps_ = 0.00125*this->minnodedist_;
 
   periodicids_.clear();
   periodicdirs_.clear();
@@ -1020,7 +1020,7 @@ void GGridBox<Types>::config_gbdy(const PropertyTree           &ptree,
   UpdateBasePtr      base_ptr;
 
   assert(this->minnodedist_ > 0.0);
-  this->eps_ = 0.125*this->minnodedist_;
+  this->eps_ = 0.00125*this->minnodedist_;
 
 
   this->bdyNormals_.resize(GDIM);
@@ -1097,7 +1097,7 @@ void GGridBox<Types>::config_gbdy(const PropertyTree           &ptree,
       // May have different uniform bdys for different state comps;
       // step through them in order to point to correct bdy indices:
       k = 0;
-      while ( GUpdateBdyFactory<Types>::get_bdy_block(ptree, sbdy, k, bcblock) && !bperiodic ) {
+      while ( !bperiodic && GUpdateBdyFactory<Types>::get_bdy_block(ptree, sbdy, k, bcblock) ) {
         bcblock.bdyid = j;
         base_ptr = GUpdateBdyFactory<Types>::build(ptree, sbdy, *this, bcblock, itmp, utmp, igbdy_start);
         igbdyft[j] = bcblock.tbdy;
@@ -1192,7 +1192,7 @@ GBOOL GGridBox<Types>::on_global_edge(GINT iface, GTPoint<Ftype> &pt)
 //GTPoint<Ftype> pt(ndim_);
 
   assert(this->minnodedist_ > 0.0);
-  this->eps_ = 0.125*this->minnodedist_;
+  this->eps_ = 0.00125*this->minnodedist_;
 
   // Find faces point belongs to:
   for ( GINT j=0; j<ndim_; j++ ) {
@@ -1239,7 +1239,7 @@ GBOOL GGridBox<Types>::on_global_edge(GINT iface, GTPoint<Ftype> &pt)
 // DESC   : Compute normals to each domain bdy 
 // ARGS   : 
 //          dXdXi    : matrix of dX_i/dXi_j matrix elements, s.t.
-//                     dXdX_i(i,j) = dx^j/dxi^i
+//                     dXdX_i(i,j) = dx^i/dxi^j
 //          igbdy    : vector of bdy indices into global volume fields 
 //          debdy    : array of node 'descriptions'
 //          normals  : vector of normal components
@@ -1292,7 +1292,7 @@ void GGridBox<Types>::do_gbdy_normals(const GTMatrix<GTVector<Ftype>> &dXdXi,
 //          after terrain is added.
 // ARGS   : 
 //          dXdXi    : matrix of dX_i/dXi_j matrix elements, s.t.
-//                     dXdX_i(i,j) = dx^j/dxi^i
+//                     dXdX_i(i,j) = dx^i/dxi^j
 //          igbdy    : vector of bdy indices into global volume fields 
 //          debdy    : array of node 'descriptions', with dimension of igbdy
 //          normals  : vector of normal components, each of dim of igbdy
@@ -1407,7 +1407,7 @@ void GGridBox<Types>::do_gbdy_normals2d(const GTMatrix<GTVector<Ftype>> &dXdXi,
 //          igbdy    : vector of bdy indices into global volume fields 
 //          debdy    : array of node 'descriptions', with dimension of igbdy
 //          dXdXi    : matrix of dX_i/dXi_j matrix elements, s.t.
-//                     dXdX_i(i,j) = dx^j/dxi^i
+//                     dXdX_i(i,j) = dx^i/dxi^j
 //          normals  : vector of normal components, each of dim of igbdy
 //          tangents : vector of tangent vector components, each of dim of igbdy
 // RETURNS: none
@@ -1558,7 +1558,7 @@ void GGridBox<Types>::find_gbdy_ind2d(GINT bdyid, GBOOL bunique,
   nkeep = ikeep.size();
 
   assert(this->minnodedist_ > 0.0);
-  this->eps_ = 0.125*this->minnodedist_;
+  this->eps_ = 0.00125*this->minnodedist_;
   
   ntmp  = bunique ? this->xNodes_[0].size()
         : this->xNodes_[0].size() + pow(2,GDIM) + (GDIM > 2 ? 2*GDIM : 0);
@@ -1685,7 +1685,7 @@ void GGridBox<Types>::find_gbdy_ind3d(GINT bdyid, GBOOL bunique,
   nkeep = ikeep.size();
 
   assert(this->minnodedist_ > 0.0);
-  this->eps_ = 0.125*this->minnodedist_;
+  this->eps_ = 0.00125*this->minnodedist_;
   
   ntmp  = bunique ? this->xNodes_[0].size()
         : this->xNodes_[0].size() + pow(2,GDIM) + (GDIM > 2 ? 2*GDIM : 0);

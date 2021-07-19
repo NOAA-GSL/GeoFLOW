@@ -1462,7 +1462,6 @@ void GGrid<Types>::init_bc_info(GBOOL bterrain)
   GSIZET           n, nbdy;
   GTVector<GSIZET> iunique;
 
-//cout << "init_bc_info: igbdy=" << igbdy_ << endl;
    
   nind = 0; 
   // Compute 'binned' structures for global indices
@@ -1558,13 +1557,10 @@ void GGrid<Types>::add_terrain(const State &xb, State &utmp)
    *b  = 0.0;
    *x0 = 0.0; // first guess
     xb_[j].resize(xb[j]->size()); xb_[j] = *xb[j];
-//if ( j == 1 )
-//cout << "GGrid<Types>::add_terrain: xb[" << j << "]=" << *xb[j] << endl;
     iret = cg.solve(H, *b, *xb[j], *x0);
 
     assert(iret == GCG<CGTypePack>::GCGERR_NONE);
     xNodes_[j] = *x0;             // Reset XNodes = x0
-//GPP(comm_,"GGrid<Types>::add_terrain: new_xNodes[" << j << "]=" << xNodes_[j]);
   }
   GEOFLOW_TRACE_STOP();
  
