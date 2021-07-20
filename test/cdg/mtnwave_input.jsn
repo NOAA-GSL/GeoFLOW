@@ -20,7 +20,7 @@
     "name"       : "boxschar_range2",
     "lambda"     : 4000.0,
     "extent"     : 25000.0,
-    "h0"         : 2500.0,
+    "h0"         : 0.0,
     "x0"         : 0.0,
     "a"          : 5000.0
   },
@@ -51,6 +51,11 @@
     "istate"           : [[0, 1]],
     "use_init"         : [false],
     "compute_once"     : [false]
+  },
+  "periodic": {
+    "bdy_class"        : "uniform",
+    "base_type"        : ["GBDY_PERIODIC"],
+    "istate"           : [[0, 1, 2, 3]]
   },
   "xsponge": {
     "bdy_class"        : "uniform",
@@ -86,13 +91,13 @@
     "bconserved"      : false,
     "divopcolloc"     : true,
     "usebdydat"       : true,
-    "Stokeshyp"       : false,
+    "Stokeshyp"       : true,
     "bindepdiss"      : false,
     "nliq"            : 0,
     "nice"            : 0,
     "use_forcing"     : false,
     "forcing_comp"    : [],
-    "T_surf"          : 288.0,
+    "T_surf"          : 280.0,
     "P0"              : 1000.0,
     "filter_list"     : [],
     "boyd_filter" : {
@@ -113,8 +118,8 @@
     "xyz0"      : [-100000, 0    , 0],
     "delxyz"    : [ 200000, 20000, 1.0],
     "num_elems" : [250, 25, 1],
-    "bdy_x_0"   : "inflow",
-    "bdy_x_1"   : "xsponge",
+    "bdy_x_0"   : "periodic",
+    "bdy_x_1"   : "periodic",
     "bdy_y_0"   : "0-flux",
     "bdy_y_1"   : "ysponge",
     "bdy_z_0"   : "0-flux",
@@ -127,16 +132,16 @@
     "stepping_method"  : "GSTEPPER_EXRK",
     "time_deriv_order" : 2,
     "nstage"           : 2,
-    "stab_preserving"  : false,
+    "stab_preserving"  : true,
     "extrap_order"     : 2,
     "variable_dt"      : true,
     "courant"          : 0.1
   },
   "dissipation_traits": {
-    "nu"      : 75.0,
-    "eta"     : 75.0,
-    "zeta"    : 75.0,
-    "lambda"  : 75.0,
+    "nu"      : 300.0,
+    "eta"     : 300.0,
+    "zeta"    : 300.0,
+    "lambda"  : 300.0,
     "nu_type" : "constant"
   },
   "gio": {
@@ -191,9 +196,9 @@
     "observer_name"      : "gio_observer",
     "idir"               : "outs",
     "odir"               : "outs",
-    "cadence_type"       : "time",
+    "cadence_type"       : "cycle",
     "cycle_interval"     : 1,
-    "time_interval"      : 0.1,
+    "time_interval"      : 0.0001,
     "state_names"        : ["v1", "v2", "d", "e"],
     "grid_names"         : ["xgrid", "ygrid", "zgrid"],
     "agg_state_name"     : "u",
@@ -210,9 +215,9 @@
     "treat_as_1d"        : false
   },
   "time_integration": {
-    "integ_type" : "time",
-    "time_end"   : 1.1,
-    "cycle_end"  : 10,
+    "integ_type" : "cycle",
+    "time_end"   : 1.12,
+    "cycle_end"  : 50,
     "dt"         : 2.0
   }
 
