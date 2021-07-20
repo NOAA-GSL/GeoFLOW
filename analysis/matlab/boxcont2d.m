@@ -145,20 +145,20 @@ end
   [x z] = deal(xd(:,1), xd(:,2));
   clear xd xorig;
   U = u(IA);
+  clear u;
 
-if 0
+if 1
    [umin, umax] = gminmax_gio(svar, tindex, dtype, isz, 'ieee-le');
-
    % print max(u) and its position:
    aumax = max(abs(umax),abs(umin));
    aumin = min(abs(umax),abs(umin));
-   I = find(abs(u) > 0.95*aumax & abs(u) <= aumax);
-%  I = find(u < 0.0);
+   I = find(abs(U) > 0.95*aumax & abs(U) <= aumax);
+%  I = find(U < 0.0);
+
    for j=1:1:numel(I)
-     sprintf('(%f, %f); u=%f',x(I(j)), z(I(j)), u(I(j)) )
+     sprintf('(%f, %f); U=%f',x(I(j)), z(I(j)), U(I(j)) )
    end
 end
-clear u;
 
 
   dx = diff(x);
