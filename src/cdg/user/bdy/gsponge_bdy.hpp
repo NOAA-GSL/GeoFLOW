@@ -2,7 +2,7 @@
 // Module       : gsponge_bdy.hpp
 // Date         : 7/5/20 (DLR)
 // Description  : Object that handles the the time updates for 
-//                'sponge' boundaries.
+//                'sponge' boundaries (Rayleigh filtering).
 //                
 // Copyright    : Copyright 2020. Colorado State University. All rights reserved.
 // Derived From : UpdateBdyBase.
@@ -93,7 +93,8 @@ private:
        
 
         GBOOL               binit_;         // object initialized?
-        GFTYPE              xmax_;          // max coord in direction idir
+        Ftype               xmax_;          // max coord in direction idir
+        Time                told_;          // max coord in direction idir
         Traits              traits_;        // Traits structure
         GTVector<GSIZET>    isponge_;       // contains grid indices of sponge layer points; 
 
