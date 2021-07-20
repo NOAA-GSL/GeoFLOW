@@ -42,31 +42,45 @@ public:
         using Size       = typename Types::Size;
         using EqnBase    = typename Types::EqnBase;
         using EqnBasePtr = typename Types::EqnBasePtr;
+
+#if 0
+        struct Traits {
+          bool   compute_once=FALSE;
+          bool       use_init=FALSE;
+          int                  idir;    // // canonical coord direction definining surfaces 
+          int                 bdyid;    // bdy id
+          Ftype               xstart;   // number defining sponge surface start
+          std::vector<Ftype>  value;    // Diriclet value for each istate 
+          std::vector<int>    istate;   // state indices to operate on
+          std::vector<size_t> ibdyvol;  // indir. inidices into comput volume
+          std::vector<size_t> ibdyloc;  // inidices of ubdyvol in global bdy array, grid->igbdy
+          std::vector<unsigned int> 
+                              ibdysrc;  // bdy descriptor
+          std::vector<Ftype>  farfield; // far-field solution for each istate
+          std::vector<Ftype>  falloff;  // fall-off rate for solution
+          std::vector<Ftype>  exponent; // decay exponents 
+          std::vector<size_t> isponge;  // contains grid indices of sponge layer points; 
+          std::string         smethod;  // init method if use_init==TRUE
+          std::string         sconfig;  // ptree config method
+
+          std::function<bool(const PropertyTree& ptree,
+                              std::string &sconfig,
+                              EqnBasePtr  &eqn,
+                              Grid        &grid,
+                              Time        &time,
+                              const int    id,
+                              State       &utmp,
+                              State       &u,
+                              State       &ub)> callback = NULLPTR;
+          geoflow::tbox::PropertyTree ptree;
+
+        }
+#endif
       
 	UpdateBdyBase() = default;
 	UpdateBdyBase(const UpdateBdyBase& I) = default;
 	~UpdateBdyBase() = default;
 	UpdateBdyBase& operator=(const UpdateBdyBase& I) = default;
-
-#if 0
-	/**
-	 * spec bdy conditions 
-	 *
-	 * @param[in]     sptree : property tree block for specification
-	 * @param[in]     grid   : grid object
-	 * @param[in]     bdyid  : bdy id
-	 * @param[in]     ibdy   : indirection array into volmume indicating bdy indices
-	 * @param[in,out] tbdy   : bdy types for each ibdy element
-	 */
-	bool spec   (PropertyTree &sptree,
-                     Grid         &grid, 
-                     int           bdyid, 
-                     IBdyVol      &ibdy, 
-                     TBdyvol      &tbdy){
-                        return this->spec_impl(sptree, grid, bdyid, ibdy, tbdy);
-                     }
-#endif
-
 
 	/**
 	 * Update bdy conditions with state at t
@@ -85,16 +99,29 @@ public:
                         return this->update_impl(eqn, grid, time, utmp, u);
                      }
 
+	/**
+	 * Get list of state ids that bdy condition acts upon
+	 *
+	 */
+	std::vector<int> 
+             get_istate(){
+               return get_istate_impl();
+             }
+
+#if 0
+        /**
+         * Get traits.
+         *
+         */
+        Traits &get_traits() {return traits_;}
+#endif
+
+
 protected:
 
 #if 0
-	virtual bool spec   (PropertyTree &sptree,
-                     Grid         &grid, 
-                     int           bdyid, 
-                     IBdyVol      &ibdy, 
-                     TBdyvol      &tbdy) { return true;}
+        Traits       traits_;
 #endif
-                     
 	virtual bool update_impl (
                      EqnBasePtr &eqn,
                      Grid       &grid, 
@@ -102,6 +129,8 @@ protected:
                      State      &utmp, 
                      State      &u) = 0; 
 
+	virtual std::vector<int>&
+             get_istate_impl() = 0;
 };
 
 

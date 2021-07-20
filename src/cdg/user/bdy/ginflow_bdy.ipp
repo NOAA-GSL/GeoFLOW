@@ -133,7 +133,7 @@ GBOOL GInflowBdy<Types>::compute_bdy_data(
    Ftype      tt = 0.0;
    State      tmpnew, unew;
 
-   GTVector<GSIZET> *igbdy = &traits_.ibdyvol;
+   vector<GSIZET> *igbdy = &traits_.ibdyvol;
 
 
 

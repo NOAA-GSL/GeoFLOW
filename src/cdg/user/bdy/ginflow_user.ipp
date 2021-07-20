@@ -30,11 +30,10 @@
 template<typename Types>
 GBOOL GInflowUser<Types>::myinflow(const PropertyTree& ptree, GString &sconfig, EqnBasePtr &eqn, Grid &grid, Time &time, const GINT id, State &utmp, State &u, State &ub)
 {
-
-  GString             serr = "myinflow: ";
-  GSIZET              j;
-  GFTYPE              x, y, z, zmin, r;
-  GFTYPE              dj, ds, N, P0, pj, T0, Tb, Ts, U0;
+  GSIZET              j, nxy;
+  GFTYPE              x, y, z, r;
+  GFTYPE              gam, igam;
+  GFTYPE              dj, ds, N, P0, pj, pt, th, T0, Tb, Ts, U0;
   GFTYPE              eps=100.0*std::numeric_limits<GFTYPE>::epsilon();
   GTVector<GFTYPE>   *db, *d, *e, *pb, *T;
   GTVector<GSIZET>   *igbdy = &(grid.igbdy_bdyface()[id]);
@@ -74,6 +73,7 @@ GBOOL GInflowUser<Types>::myinflow(const PropertyTree& ptree, GString &sconfig, 
   // Get base state:
   typename GMConv<Types>::Traits traits = ceqn->get_traits();
   ubase = &ceqn->get_base_state();
+//assert( traits.usebase && ubase->size() == 2 );
   assert( ubase->size() == 2 );
    
 
@@ -92,37 +92,32 @@ GBOOL GInflowUser<Types>::myinflow(const PropertyTree& ptree, GString &sconfig, 
   // Initialize momentum:
   for ( auto j=0; j<ceqn->ENERGY; j++ ) *ub[j] = 0.0;
 //ds = P0 / (RD * Ts); // surf. density
-
-  zmin = 0.0;
-  for ( auto jj=0; jj<igbdy->size(); jj++ ) { 
+  gam  = RD / CPD;
+  igam = 1.0/gam;
+  for ( auto jj=0; jj<igbdy->size(); jj++ ) {
     j = (*igbdy)[jj];
     x = (*xnodes)[0][j]; y = (*xnodes)[1][j]; 
     if ( GDIM == 3 ) z = (*xnodes)[2][j];
     r = GDIM == 3 ? z : y;
-    zmin = xb->size() > 0 ? (*xb)[GDIM-1][j] : (*xnodes)[GDIM-1].min();
 
     // Compute den from constant Brunt-Vaisalla freq,
-    //    N^2 = -g/rho_0 drho/dz:
-    pj = (*pb)[j]; 
-    dj = (*db)[j]; 
+    //    N^2 = -g/th_0 d theta/dz = const:
+    th = Ts * ( N*N*r/GG + 1.0);
+    pj = P0 * pow(th/Ts, -igam);
+    dj = pj / ( RD * Ts );
     if ( traits.usebase ) { // There is a base-state
-//    (*d) [jj]  = ds - (*db)[j] + N*N*ds/GG * (zmin - r); // d fluct.
       (*d) [jj]  = dj - (*db)[j];
     }
     else {                  // No base-state
-//    (*d) [jj]  = ds + N*N*ds/GG * (zmin - r); 
       (*d) [jj]  = dj;
    }
    (*ub[0])[jj] = dj * U0;
-   (*e)[jj]     = CVD * pj / RD; // e = Cv * p / R
-//cout << "myinflow: pj=" << pj << " dj=" << dj << " Ts=" << Ts << " ux=" << (*ub[0])[jj] <<  endl;
+   (*e)[jj]    = CVD * pj / RD; // e = Cv * p / R
    
   }
-  
+
   return TRUE;
 
-} // end, myinflow
-
-
+} // end of method myinflow
 
 

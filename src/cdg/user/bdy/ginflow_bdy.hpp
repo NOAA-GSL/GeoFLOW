@@ -49,8 +49,8 @@ public:
           GBOOL     compute_once=FALSE; // compute bdy cond once?
           GBOOL         use_init=FALSE; // set via state initialzation method?
           GINT                   bdyid; // bdy id
-          GTVector<GINT>        istate; // state indices to operate on
-          GTVector<GSIZET>     ibdyvol; // indir. inidices into comput volume
+          vector<GINT>          istate; // state indices to operate on
+          vector<GSIZET>       ibdyvol; // indir. inidices into comput volume
           GString              smethod; // init method if use_init==TRUE
           GString              sconfig; // ptree config method
 
@@ -80,6 +80,9 @@ protected:
                               Time       &time,
                               State      &utmp,
                               State      &u);
+
+        std::vector<int>&   get_istate_impl() { return traits_.istate; }
+
         
 private:
         GBOOL               compute_bdy_data (

@@ -45,14 +45,13 @@ public:
            
           GINT             idir  = GDIM;  
                                      // canonical coord direction definining surfaces
-          GINT             bdyid;    // bdy id
-          GTVector<GSIZET> ibdyvol;  // indir. inidices into comput volume
-          GTVector<GINT>   istate;   // state indices to operate on
-          GTVector<Ftype>  farfield; // far-field solution for each istate
-          GTVector<Ftype>  falloff;  // fall-off rate for solution
-          GTVector<Ftype>  exponent; // decay exponents 
+          GINT           bdyid;    // bdy id
+          vector<GSIZET> ibdyvol;  // indir. inidices into comput volume
+          vector<GINT>   istate;   // state indices to operate on
+          vector<Ftype>  farfield; // far-field solution for each istate
+          vector<Ftype>  falloff;  // fall-off rate for solution
+          vector<Ftype>  exponent; // decay exponents 
           vector<GSIZET>   isponge;  // contains grid indices of sponge layer points; 
-
           Ftype            xstart;   // number defining sponge surface start
         };
 
@@ -70,6 +69,10 @@ protected:
                               Time       &time,
                               State      &utmp,
                               State      &u);
+
+        std::vector<int>&   get_istate_impl() { return traits_.istate; }
+
+
         
 private:
 

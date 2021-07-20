@@ -145,7 +145,21 @@ end
   [x z] = deal(xd(:,1), xd(:,2));
   clear xd xorig;
   U = u(IA);
-  clear u;
+
+if 0
+   [umin, umax] = gminmax_gio(svar, tindex, dtype, isz, 'ieee-le');
+
+   % print max(u) and its position:
+   aumax = max(abs(umax),abs(umin));
+   aumin = min(abs(umax),abs(umin));
+   I = find(abs(u) > 0.95*aumax & abs(u) <= aumax);
+%  I = find(u < 0.0);
+   for j=1:1:numel(I)
+     sprintf('(%f, %f); u=%f',x(I(j)), z(I(j)), u(I(j)) )
+   end
+end
+clear u;
+
 
   dx = diff(x);
   I  = find(abs(dx) > 5.0e-4*abs(max(x)-min(x)) );
@@ -161,9 +175,10 @@ end
 
   Z     = griddata(x,z,U(:),X,Y,'linear');
 
-if 1
+
+if 0
   % In case there's topography, we set values to nan 'inside' it:
-  K       = boundary(x, z, 1.0);
+  K       = boundary(x, z, 1);
   PGON    = polyshape(x(K), z(K),'Simplify', false);
 %plot(PGON)
 %whos PGON
@@ -196,19 +211,21 @@ end
     levels = dcvec;
   end
 
-  [c h] = contourf(X, Y, Z, levels); 
+% [c h] = contourf(X, Y, Z, levels); 
+  [c h] = contour (X, Y, Z, levels); 
   axis normal;
 
   hold on;
 
-if 1
-  % Read normal vectors and plot:
-  [pos, vec] = rposvec('gbdy.out', isz)
-  dn = 1;
-  quiver(pos(1:dn:end,1), pos(1:dn:end,2), vec(1:dn:end,1), vec(1:dn:end,2), 0.1);
-end
 
 end % end, task loop
+
+if 0
+% Read normal vectors and plot:
+[pos, vec] = rposvec('gbdy.out', isz)
+dn = 1;
+quiver(pos(1:dn:end,1), pos(1:dn:end,2), vec(1:dn:end,1), vec(1:dn:end,2), 0.1);
+end
 
 sminmax = sprintf('min=%0.5g; max=%0.5g', umin, umax);
 stitle  = sprintf('%s, t=%0.5g: \n %s', svar, time, sminmax);

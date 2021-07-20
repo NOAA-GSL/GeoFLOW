@@ -245,6 +245,7 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
 
   GString    serr = "GMConv<TypePack>::dudt_dry: ";
   GINT       nice, nliq ;
+  Time       tt = t;
   StateComp *irhoT;
   StateComp *dd, *e, *p, *rhoT, *T; // energy, den, pressure, temperature
   StateComp *Mass=grid_->massop().data();
@@ -268,6 +269,8 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
   irhoT = urhstmp_[stmp.size()+1];
   tmp1  = urhstmp_[stmp.size()+2];
   tmp2  = urhstmp_[stmp.size()+3];
+  for ( auto j=0; j<gradp_.size(); j++ ) gradp_[j]=urhstmp_[stmp.size()+4+j];
+  
 
 #if 0
   init_stagnation();
@@ -343,13 +346,21 @@ void GMConv<TypePack>::dudt_dry(const Time &t, const State &u, const State &uf, 
      *dd -= *ubase_[0];                  // density fluctuation
      *p  -= *ubase_[1];                  // pressure fluctuation
     }
+
+    // Get Neumann-set conditions on pressure gradient:
+    for ( auto j=0; j<s_.size(); j++ ) { // for each component
+      grid_->deriv(*p, j+1, *tmp2, *gradp_[j]);  
+    }
+    apply_neumann(tt, gradp_);
+    for ( auto j=0; j<s_.size(); j++ ) { // for each component
+      *gradp_[j] *= *Mass;  
+    }
+
     for ( auto j=0; j<s_.size(); j++ ) { // for each component
   
       gdiv_->apply(*s_[j], v_, stmp, *dudt[j], j+1 );
 
-      grid_->deriv(*p, j+1, *tmp2, *tmp1);              // Grad p'
-     *tmp1 *= *Mass;                                    // M Grad p' 
-#if defined(GEOFLOW_USE_NEUMANN_HACK)
+#if 0 // defined(GEOFLOW_USE_NEUMANN_HACK)
 if ( j==0) {
 GMTK::zero<Ftype>(*tmp1,(*igb)[1][GBDY_0FLUX]);
 GMTK::zero<Ftype>(*tmp1,(*igb)[3][GBDY_0FLUX]);
@@ -358,12 +369,12 @@ GMTK::zero<Ftype>(*tmp1,(*igb)[0][GBDY_0FLUX]);
 GMTK::zero<Ftype>(*tmp1,(*igb)[2][GBDY_0FLUX]);
 }
 #endif
-     *dudt[j] += *tmp1;                                 // += Grad p'
+     *dudt[j] += *gradp_[j];                             // += Grad p'
 
       if ( traits_.docoriolis ) {
         GMTK::cross_prod_s<Ftype>(traits_.omega, s_, j+1, *tmp1);
        *tmp1 *= *Mass;             
-        GMTK::saxpby<Ftype>(*dudt[j], 1.0, *tmp1, 2.0);  // += 2 Omega X (rhoT v) M J
+        GMTK::saxpby<Ftype>(*dudt[j], 1.0, *tmp1, 2.0); // += 2 Omega X (rhoT v) M J
       }
 
       if ( traits_.dograv || traits_.usebase ) {
@@ -371,7 +382,8 @@ GMTK::zero<Ftype>(*tmp1,(*igb)[2][GBDY_0FLUX]);
         compute_vpref(*tmp1, j+1, *tmp2);               // compute grav component
         tmp2->pointProd(*dd);
        *tmp2 *= *Mass;             
-#if defined(GEOFLOW_USE_NEUMANN_HACK)
+
+#if 0 // defined(GEOFLOW_USE_NEUMANN_HACK)
 if ( j==0) {
 GMTK::zero<Ftype>(*tmp2,(*igb)[0][GBDY_0FLUX]);
 GMTK::zero<Ftype>(*tmp2,(*igb)[2][GBDY_0FLUX]);
@@ -381,10 +393,10 @@ GMTK::zero<Ftype>(*tmp2,(*igb)[2][GBDY_0FLUX]);
       }
 
       gstressen_->apply(*rhoT, v_, j+1, stmp, 
-                                         *tmp1);      // [mu s^{ij}],j
+                                         *tmp1);        // [mu s^{ij}],j
 //cout << "GMCONV::stress_mom: max=" << tmp1->max() << " min=" << tmp1->min() << endl;
 //  tmp1->pointProd(*mask);
-   *dudt[j] -= *tmp1;                                 //  -= [mu s^{ij}],j
+     *dudt[j] -= *tmp1;                                 //  -= [mu s^{ij}],j
 
     } // end, momentum loop
 
@@ -1029,6 +1041,7 @@ void GMConv<TypePack>::init_impl(State &u, State &tmp)
   tvice_.resize(traits_.nisector); // term vel. of ice
   fv_   .resize(nc_); 
   s_    .resize(nc_); 
+  gradp_.resize(nc_); 
 
   assert(nmoist_ == 0 && "Terminal velocity must be figured out!");
   for ( n=0; n<tvi_.size(); n++ ) tvi_[n] = utmp_[ntmp+n];
@@ -1040,9 +1053,26 @@ void GMConv<TypePack>::init_impl(State &u, State &tmp)
   tvice_= NULLPTR;
   fv_   = NULLPTR;
   s_    = NULLPTR;
+  gradp_= NULLPTR;
 
 
+  // Compute base state:
   compute_base(u);
+
+  // Assemble only 0-FLUX bcs in order to
+  // apply Neumann bdy conditions:
+  typename Grid::BdyUpdateList *updatelist = &grid_->bdy_update_list();;
+  G0FluxBdy<TypePack> *btest;
+
+  // Update bdy values if required to:
+  for ( auto k=0; k<updatelist->size(); k++ ) { // for each canonical grid bdy
+    for ( auto j=0; j<(*updatelist)[k].size(); j++ ) { // each update method
+      btest = dynamic_cast <G0FluxBdy<TypePack>*>((*updatelist)[k][j].get());
+      if ( btest != NULLPTR ) {
+        neumannupdatelist_.push_back((*updatelist)[k][j]);
+      }
+    }
+  }
 
   bInit_ = TRUE;
 
@@ -1117,6 +1147,40 @@ void GMConv<TypePack>::apply_bc_impl(const Time &t, State &u)
   }
 
 } // end of method apply_bc_impl
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : apply_neumann
+// DESC   : Apply Neumann domain boundary conditions to all
+//          u components (must be a vector of full embedded 
+//          space size)
+// RETURNS: none.
+//**********************************************************************************
+template<typename TypePack>
+void GMConv<TypePack>::apply_neumann(const Time &t, State &u)
+{
+  Time ttime = t;
+
+  // Update bdy values if required to. Only 0-FLUX bdys are included
+  // in neumannupdatelist_ in init_impl method. Note: the 'istate' 
+  // is _assumed_ to be the same as required for this update:
+#if 1
+  for ( auto j=0; j<neumannupdatelist_.size(); j++ ) { 
+    neumannupdatelist_[j]->update(pthis_, *grid_, ttime, urhstmp_, u);
+  }
+#else
+  typename Grid::BdyUpdateList *updatelist = &grid_->bdy_update_list();;
+
+  // Update bdy values if required to:
+  for ( auto k=0; k<updatelist->size(); k++ ) { // for each canonical grid bdy
+    for ( auto j=0; j<(*updatelist)[k].size(); j++ ) { // each update method
+      (*updatelist)[k][j]->update(pthis_, *grid_, ttime, urhstmp_, u);
+    }
+  }
+#endif
+
+} // end of method apply_neumann
 
 
 //**********************************************************************************
@@ -1631,6 +1695,7 @@ GINT GMConv<TypePack>::szrhstmp()
   if ( traits_.dofallout && !traits_.dodry ) maxop = MAX(5,maxop);
 
   sum += maxop;
+  sum += nc_;            // gradient op tmp space
   sum += 6;              // size for misc tmp space in dudt_impl
 
 

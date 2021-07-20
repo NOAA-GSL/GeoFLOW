@@ -68,7 +68,7 @@ GBOOL GNoSlipBdy<Types>::update_impl(
   GString    serr = "GNoSlipBdy<Types>::update_impl: ";
 
   GSIZET            ind;
-  GTVector<GSIZET> *igbdy = &traits_.ibdyvol;
+  vector<GSIZET> *igbdy = &traits_.ibdyvol;
 
 
   for ( auto k=0; k<nstate_; k++ ) { // for each vector component

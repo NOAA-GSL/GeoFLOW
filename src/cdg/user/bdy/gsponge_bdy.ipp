@@ -114,7 +114,7 @@ GBOOL GSpongeBdy<Types>::update_box(
   GINT             adir, idstate;
   GSIZET           j, ind;
   GFTYPE           beta, ifact, rtst, sig0, sgn;
-  GTVector<GSIZET> *igbdy = &traits_.ibdyvol;
+  vector<GSIZET> *igbdy = &traits_.ibdyvol;
 
   GTVector<GTVector<GFTYPE>> 
                   *xnodes = &grid.xNodes();
@@ -185,7 +185,7 @@ GBOOL GSpongeBdy<Types>::update_sphere (
   GSIZET           j, ind;
   GFTYPE           beta, ifact, sig0;
   GFTYPE           r, x, y, z;
-  GTVector<GSIZET> *igbdy = &traits_.ibdyvol;
+  vector<GSIZET> *igbdy = &traits_.ibdyvol;
 
   GTVector<GTVector<GFTYPE>> 
                   *xnodes = &grid.xNodes();

@@ -135,7 +135,7 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree &ptree, Grid &grid, s
   
     traits.bdyid       = bcblock.bdyid;
     traits.istate      = bcblock.istate;
-    traits.ibdyvol     = ibdy;
+    traits.ibdyvol.assign(ibdy.data(), ibdy.data()+ibdy.size());
     traits.value .resize(bcblock.value.size())  ; 
     traits.value       = bcblock.value;;
 
@@ -155,7 +155,7 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree &ptree, Grid &grid, s
   
     traits.bdyid        = bcblock.bdyid;
     traits.istate       = bcblock.istate;
-    traits.ibdyvol      = ibdy;
+    traits.ibdyvol.assign(ibdy.data(), ibdy.data()+ibdy.size());
     traits.use_init     = bcblock.use_init;
     traits.sconfig      = bcblock.sconfig;
     traits.compute_once = bcblock.compute_once;
@@ -192,11 +192,12 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree &ptree, Grid &grid, s
 
     traits.istate.resize(bcblock.istate.size()) ; 
     traits.ibdyvol.resize(ibdy.size()); 
+    traits.ibdydsc.resize(dbdy.size());
   
     traits.bdyid       = bcblock.bdyid;
     traits.istate      = bcblock.istate;
-    traits.ibdyvol     = ibdy;
-    traits.ibdydsc     = dbdy;
+    traits.ibdyvol.assign(ibdy.data(), ibdy.data()+ibdy.size());
+    traits.ibdydsc.assign(dbdy.data(), dbdy.data()+dbdy.size());
 
     traits.ibdyloc.resize(traits.ibdyvol.size());
     // Find index of ibdyvol in global bdy vector:
@@ -223,7 +224,7 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree &ptree, Grid &grid, s
   
     traits.bdyid       = bcblock.bdyid;
     traits.istate      = bcblock.istate;
-    traits.ibdyvol     = ibdy;
+    traits.ibdyvol.assign(ibdy.data(), ibdy.data()+ibdy.size());
     
     // Instantiate update implementation
     std::shared_ptr<UpdateImpl> update_impl(new UpdateImpl(traits));
@@ -241,7 +242,7 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree &ptree, Grid &grid, s
   
     traits.bdyid       = bcblock.bdyid;
     traits.istate      = bcblock.istate;
-    traits.ibdyvol     = ibdy;
+    traits.ibdyvol.assign(ibdy.data(), ibdy.data()+ibdy.size());
     traits.idir        = bcblock.idir;
     traits.xstart      = bcblock.xstart;
 //  traits.xend        = bcblock.xmax;
@@ -262,7 +263,7 @@ GUpdateBdyFactory<Types>::get_bdy_class(const PropertyTree &ptree, Grid &grid, s
     return base_ptr;
   }
   else {
-    assert(FALSE && "Specified bdy update method unknown");
+      assert(FALSE && "Specified bdy update method unknown");
   }
 
   return base_ptr;

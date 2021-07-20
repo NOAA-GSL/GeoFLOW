@@ -869,7 +869,7 @@ void GElem_base::dogeom1d(GTMatrix<GTVector<GFTYPE>> &rij, GTMatrix<GTVector<GFT
 //                global, and simply restricted to its range
 //                in this element.
 // ARGS   : 
-//          rij       : dx^j/dxi^i, computed here, but otherwise may be 
+//          rij       : dx^i/dxi^j, computed here, but otherwise may be 
 //                      global temp space that MUST NOT be reallocated HERE!
 //          irij      : dxi^j/dx^i matrix to be created; may be global; don't
 //                      reallocate

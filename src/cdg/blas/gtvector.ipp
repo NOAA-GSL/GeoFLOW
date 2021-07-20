@@ -874,8 +874,32 @@ void GTVector<T>::set(T a)
 //**********************************************************************************
 //**********************************************************************************
 // METHOD : set
+// DESC   : Set vector to input constant only at 
+//          specified indirection indices
+// ARGS   : indir : indices of (*this) vector to set to 'a'
+//          n     : number of indices, indir
+// RETURNS: none.
+//**********************************************************************************
+template<class T> 
+void GTVector<T>::set(GSIZET *indir, GSIZET n, T a)
+{ 
+  GEOFLOW_TRACE();
+  for ( auto j=0; j<n; j++ ) {
+    data_[indir[j]] = a;
+  }
+
+  #if defined(_G_AUTO_UPDATE_DEV)
+  updatedev();
+  #endif
+} // end of method set
+
+
+//**********************************************************************************
+//**********************************************************************************
+// METHOD : set
 // DESC   : Set vector to input elements up to max specified
-// ARGS   : T-type array 
+// ARGS   : a : input array
+//          n : size of 'a'
 // RETURNS: none.
 //**********************************************************************************
 template<class T> 

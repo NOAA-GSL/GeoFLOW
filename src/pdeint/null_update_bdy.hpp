@@ -63,6 +63,12 @@ protected:
                 return true;
               }
 
+        std::vector<int>&
+             get_istate_impl(){ return idummy_; }
+
+private:
+        std::vector<int> idummy_;
+
 };
 
 

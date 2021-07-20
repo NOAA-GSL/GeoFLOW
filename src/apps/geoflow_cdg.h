@@ -148,7 +148,7 @@ void create_equation  (const PropertyTree &ptree, EqnBasePtr &pEqn);
 void create_mixer     (PropertyTree &ptree, MixBasePtr &pMixer);
 void create_basis_pool(PropertyTree &ptree, BasisBase &gbasis);
 void do_terrain       (const PropertyTree &ptree, Grid &grid);
-void init_ggfx        (PropertyTree &ptree, Grid &grid, GGFX<GFTYPE> *&ggfx);
+void init_ggfx        (PropertyTree &ptree, Grid &grid, GBOOL doperiod,  GGFX<GFTYPE> *&ggfx);
 void gresetart        (PropertyTree &ptree);
 void compare          (const PropertyTree &ptree, Grid &, EqnBasePtr &pEqn, Time &t, State &utmp, State &u);
 void do_restart       (const PropertyTree &ptree, Grid &, State &u, GTMatrix<GINT>&p,  GSIZET &cycle, Time &t);
