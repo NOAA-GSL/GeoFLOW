@@ -18,12 +18,11 @@
 template<typename Types>
 GBOOL GSpecTerrainFactory<Types>::isterrain(const PropertyTree& ptree)
 {
-  GBOOL            bret = TRUE;
+  GBOOL            bret;
   GString          stype;  
 
   stype = ptree.getValue<GString>("terrain_type","");
-  bret = "none" == stype
-       || ""    == stype;
+  bret = !("none" == stype || ""    == stype);
   return bret;
  
 } // end, method isterrain
