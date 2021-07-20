@@ -1,5 +1,5 @@
 { 
-  "exp_order"         : [3, 3, 1],
+  "exp_order"         : [3, 3, 6],
   "exp_order_type"    : "constant",
   "grid_type"         : "grid_sphere",
   "pde_name"          : "pde_mconv",
