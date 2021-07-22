@@ -764,7 +764,7 @@ void GGridBox<Types>::periodize()
   periodicids_.clear();
   periodicdirs_.clear();
 
-  // Coords set to correspond to bottom-most domain point:
+  // Coords set to correspond to bottom-left-most domain point:
   for( auto k=0; k<x.size(); k++ ) x[k] = P0_[k];
 
   GUINT  bit;
@@ -1088,7 +1088,7 @@ void GGridBox<Types>::config_gbdy(const PropertyTree           &ptree,
       if ( iret == 1 ) {
         bdytype [j] = GBDY_PERIODIC;
         igbdyft [j] = GBDY_PERIODIC;
-        bperiodic    = bdytype[j] == GBDY_PERIODIC;
+        bperiodic   = bdytype[j] == GBDY_PERIODIC;
       }
       else if ( iret == 2 ) {
         cout << "GGridBox<Types>:: config_gbdy: Attempt to specify PERIODIC boundary failed" << endl;
