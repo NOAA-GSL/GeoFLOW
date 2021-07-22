@@ -914,6 +914,7 @@ GBOOL ginitstate<Types>::impl_icosabcconv(const PropertyTree &ptree, GString &sc
   GString             sblock;
   std::default_random_engine        generator(time(0));
   std::normal_distribution<GFTYPE> *distribution=NULLPTR;
+  GGFX<GFTYPE>       *ggfx = &grid.get_ggfx();
 
 
   PropertyTree inittree    = ptree.getPropertyTree(sconfig);
@@ -1013,6 +1014,12 @@ exit(1);
   }
 
   if ( distribution != NULLPTR ) delete distribution;
+
+  // Since we're using random data, we have to make it continuous:
+   for ( auto n=0; ggfx!=NULLPTR && n<u.size(); n++ ) { 
+     ggfx->doOp(*u[n], typename GGFX<GFTYPE>::Smooth());
+   }
+
 
   return TRUE;
 
