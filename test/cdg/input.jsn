@@ -1,17 +1,17 @@
 { 
-  "exp_order"         : [4, 4, 4],
+  "exp_order"         : [8, 8, 8],
   "exp_order_type"    : "constant",
   "do_dealiasing"     : false,
   "qdealias_order"    : [7, 7, 7],
-  "grid_type"         : "grid_box",
+  "grid_type"         : "grid_sphere",
   "pde_name"          : "pde_mconv",
-  "initstate_block"   : "initstate_boxdrybubble",
+  "initstate_block"   : "initstate_icosabcconv",
   "initforce_block"   : "",
   "use_forcing"       : false,
   "initstate_type"    : "direct",
   "initforce_type"    : "",
   "restart_index"     : 0,
-  "benchmark"         : false,
+  "benchmark"         : true,
   "do_comparison"     : false,
   "observer_list"     : ["gio_observer", "gmconv_diag"],
   "IO_implementation" : "gio",
@@ -43,11 +43,11 @@
   },
   "grid_sphere" : {
     "grid_name"       : "grid_icos",
-    "ilevel"          : 1,
+    "ilevel"          : 5,
     "refine_type"     : "GICOS_BISECTION",
     "radiusi"         : 1,
     "radiuso"         : 2,
-    "num_radial_elems": 1,
+    "num_radial_elems": 12,
     "bdy_inner"       : "my_diriclet",
     "bdy_outer"       : "my_diriclet",
     "maxit"           : 128,
@@ -58,7 +58,7 @@
     "grid_name" : "grid_box",
     "xyz0"      : [0.0, 0.0, 0.0],
     "delxyz"    : [20000.0, 20000.0, 10000.0],
-    "num_elems" : [8, 8, 8],
+    "num_elems" : [32, 32, 24],
     "bdy_x_0"   : "0-flux",
     "bdy_x_1"   : "0-flux",
     "bdy_y_0"   : "0-flux",
@@ -87,7 +87,7 @@
     "dofallout"       : false,
     "dogravity"       : true,
     "bconserved"      : false,
-    "divopcolloc"     : false,
+    "divopcolloc"     : true,
     "Stokeshyp"       : true,
     "bindepdiss"      : false,
     "nliq"            : 0,
@@ -181,7 +181,7 @@
     "integ_type" : "cycle",
     "time_end"   : 2001.0,
     "cycle_end"  : 10,
-    "dt"         : 1.0e-8
+    "dt"         : 1.0e-9
   }
 
 }
