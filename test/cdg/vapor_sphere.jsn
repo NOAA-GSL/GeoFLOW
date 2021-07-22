@@ -1,5 +1,5 @@
 { 
-  "exp_order"         : [3, 3, 3],
+  "exp_order"         : [4, 4, 4],
   "exp_order_type"    : "constant",
   "do_dealiasing"     : false,
   "qdealias_order"    : [7, 7, 7],
@@ -15,7 +15,7 @@
   "do_comparison"     : false,
   "observer_list"     : ["gio_observer", "gmconv_diag"],
   "IO_implementation" : "gio",
-  "terrain_type"      : "none",
+  "terrain_type"      : "",
   "initstate_icosabcconv": {
     "T0"     : 300.0,
     "P0"     : 1.0,
@@ -27,27 +27,47 @@
     "kdn"    : 1,
     "kup"    : 20
   },
+  "initstate_boxdrybubble": {
+    "T_pert"     : 1.0,
+    "x_center"   : [10000.0, 10000.0, 2000.0],
+    "x_width"    : [2000.0, 2000.0, 2000.0]
+  },
   "grid_icos": {
     "grid_name"   : "grid_icos",
     "ilevel"      : 0,
     "refine_type" : "GICOS_BISECTION",
-    "radius"      : 6378e3,
+    "radius"      : 6371e3,
     "maxit"       : 128,
     "tol"         : 1.0e-8,
     "norm_type"   : "GCG_NORM_INF"
   },
   "grid_sphere" : {
     "grid_name"       : "grid_icos",
-    "ilevel"          : 0,
+    "ilevel"          : 1,
     "refine_type"     : "GICOS_BISECTION",
-    "radiusi"         : 6378e3,
-    "radiuso"         : 6395e3,
+    "radiusi"         : 1,
+    "radiuso"         : 2,
     "num_radial_elems": 1,
     "bdy_inner"       : "my_diriclet",
     "bdy_outer"       : "my_diriclet",
     "maxit"           : 128,
     "tol"             : 1.0e-8,
     "norm_type"       : "GCG_NORM_INF"
+  },
+  "grid_box": {
+    "grid_name" : "grid_box",
+    "xyz0"      : [0.0, 0.0, 0.0],
+    "delxyz"    : [20000.0, 20000.0, 10000.0],
+    "num_elems" : [8, 8, 8],
+    "bdy_x_0"   : "0-flux",
+    "bdy_x_1"   : "0-flux",
+    "bdy_y_0"   : "0-flux",
+    "bdy_y_1"   : "0-flux",
+    "bdy_z_0"   : "0-flux",
+    "bdy_z_1"   : "0-flux",
+    "maxit"     : 128,
+    "tol"       : 1.0e-8,
+    "norm_type" : "GCG_NORM_INF"
   },
   "my_diriclet": {
     "bdy_class"       : "uniform",
@@ -63,11 +83,11 @@
   "pde_mconv": {
     "docoriolis"      : false,
     "dodry"           : true,
-    "usebase_state"   : false,
+    "usebase_state"   : true,
     "dofallout"       : false,
     "dogravity"       : true,
     "bconserved"      : false,
-    "divopcolloc"     : true,
+    "divopcolloc"     : false,
     "Stokeshyp"       : true,
     "bindepdiss"      : false,
     "nliq"            : 0,
@@ -88,16 +108,16 @@
     "stepping_method"  : "GSTEPPER_EXRK",
     "time_deriv_order" : 2,
     "nstage"           : 2,
-    "stab_preserving"  : false,
+    "stab_preserving"  : true,
     "extrap_order"     : 2,
-    "variable_dt"      : true,
+    "variable_dt"      : false,
     "courant"          : 0.1
   },
   "dissipation_traits": {
-    "nu"      : 200.0,
-    "eta"     : 200.0, 
-    "zeta"    : 200.0,
-    "lambda"  : 200.0,
+    "nu"      : 0.0,
+    "eta"     : 0.0, 
+    "zeta"    : 0.0,
+    "lambda"  : 0.0,
     "nu_type" : "constant"
   },
   "gio": {
@@ -161,7 +181,7 @@
     "integ_type" : "cycle",
     "time_end"   : 2001.0,
     "cycle_end"  : 10,
-    "dt"         : 0.0000175
+    "dt"         : 1.0e-8
   }
 
 }
