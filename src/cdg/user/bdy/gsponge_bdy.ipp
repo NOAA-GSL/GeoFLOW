@@ -291,7 +291,6 @@ void GSpongeBdy<Types>::init(Grid &grid)
    adir = abs(idir);
    sgn  = idir / adir;
  
-cout << "......................Init:  sgn=" << sgn << endl;
 
    assert(grid.ispconst()); // Object requires const p
 
