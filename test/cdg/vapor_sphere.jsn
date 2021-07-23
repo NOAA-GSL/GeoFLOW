@@ -43,11 +43,11 @@
   },
   "grid_sphere" : {
     "grid_name"       : "grid_icos",
-    "ilevel"          : 4,
+    "ilevel"          : 1,
     "refine_type"     : "GICOS_BISECTION",
     "radiusi"         : 1,
     "radiuso"         : 2,
-    "num_radial_elems": 1,
+    "num_radial_elems": 4,
     "bdy_inner"       : "my_diriclet",
     "bdy_outer"       : "my_diriclet",
     "maxit"           : 128,
