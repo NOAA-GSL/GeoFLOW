@@ -768,6 +768,8 @@ void GGridBox<Types>::periodize()
   for( auto k=0; k<x.size(); k++ ) x[k] = P0_[k];
 
   GUINT  bit;
+  GINT   idir;
+  GINT   ib2dir[] = { 1, 0, 1, 0, 2, 2}; // bdy id map to coord. direction
   GSIZET id, n, num=0;
   for ( auto k=0; k<this->igbdy_binned_.size(); k++ ) {
     num += this->igbdy_binned_[k][GBDY_PERIODIC].size();
@@ -781,10 +783,9 @@ void GGridBox<Types>::periodize()
       id = this->igbdy_binned_[k][GBDY_PERIODIC][j];
       periodicids_ [n] = id;       
       periodicdirs_[n] = 0;
-      for( auto i=0; i<this->xNodes_.size(); i++ ) { // for x, y, z dirs
-        if ( FUZZYEQ(P1_[i],this->xNodes_[i][id],this->eps_) ) { // right/top-most block.tbdy[k];i coord will change
-          periodicdirs_[n] |= 1U << i;  // position right-most direction bit  
-        }
+      idir             = ib2dir[k];
+      if ( FUZZYEQ(P1_[idir],this->xNodes_[idir][id],this->eps_) ) { // right/top-most block.tbdy[k];i coord will change
+          periodicdirs_[n] |= 1U << idir;  // position right-most direction bit  
       }
     }
   }
